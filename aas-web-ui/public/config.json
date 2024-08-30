@@ -1,0 +1,16 @@
+{
+  "logoPath": "Logo/Logo.svg",
+  "basePath": "",
+  "aasDiscoveryPath": "",
+  "aasRegistryPath": "",
+  "submodelRegistryPath": "",
+  "aasRepoPath": "",
+  "submodelRepoPath": "",
+  "cdRepoPath": "",
+  "dashboardServicePath": "",
+  "primaryColor": "#0cb2f0",
+  "influxdbToken": "",
+  "keycloakUrl": "",
+  "keycloakRealm": "",
+  "keycloakClientId": ""
+}
