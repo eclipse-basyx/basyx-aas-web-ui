@@ -7,14 +7,14 @@
                     <!-- Reload Button -->
                     <v-col cols="auto" class="pr-0">
                         <v-tooltip open-delay="600" location="bottom" :disabled="isMobile">
-                            <template v-slot:activator="{ props }">
+                            <template #activator="{ props }">
                                 <v-btn
                                     icon="mdi-reload"
                                     variant="plain"
-                                    @click="reloadList()"
                                     :loading="listLoading"
-                                    v-bind="props">
-                                    <template v-slot:loader>
+                                    v-bind="props"
+                                    @click="reloadList()">
+                                    <template #loader>
                                         <span class="custom-loader"><v-icon light>mdi-cached</v-icon></span>
                                     </template>
                                 </v-btn>
@@ -30,7 +30,7 @@
                             hide-details
                             label="Search for AAS..."
                             clearable
-                            @update:modelValue="filterAASList"></v-text-field>
+                            @update:model-value="filterAASList"></v-text-field>
                     </v-col>
                     <!-- Add existing AAS -->
                     <v-col cols="auto" class="px-0">
@@ -47,10 +47,9 @@
                     item-height="48"
                     :height="isMobile ? 'calc(100svh - 170px)' : 'calc(100vh - 218px)'"
                     class="pb-2 bg-card">
-                    <template v-slot:default="{ item }">
+                    <template #default="{ item }">
                         <!-- Single AAS -->
                         <v-list-item
-                            @click="selectAAS(item)"
                             class="bg-listItem mt-2 mx-2"
                             style="border-top: solid; border-right: solid; border-bottom: solid; border-width: 1px"
                             :style="{
@@ -59,7 +58,8 @@
                                     : isDark
                                       ? '#686868 !important'
                                       : '#ABABAB !important',
-                            }">
+                            }"
+                            @click="selectAAS(item)">
                             <!-- Tooltip with idShort and id -->
                             <v-tooltip
                                 activator="parent"
@@ -76,15 +76,15 @@
                                 </div>
                             </v-tooltip>
                             <!-- idShort of the AAS -->
-                            <template v-if="drawerState" v-slot:title>
+                            <template v-if="drawerState" #title>
                                 <div class="text-primary" style="z-index: 9999">{{ aasNameToDisplay(item) }}</div>
                             </template>
                             <!-- id of the AAS -->
-                            <template v-if="drawerState" v-slot:subtitle>
+                            <template v-if="drawerState" #subtitle>
                                 <div>{{ item['id'] }}</div>
                             </template>
                             <!-- open Details Button (with Status Badge) -->
-                            <template v-if="drawerState" v-slot:append>
+                            <template v-if="drawerState" #append>
                                 <!-- Badge that show's the Status of the AAS -->
                                 <v-badge
                                     :model-value="item['status'] && item['status'] == 'offline'"
@@ -94,26 +94,26 @@
                                     inline></v-badge>
                                 <!-- Information Button -->
                                 <v-btn
-                                    @click.stop="showAASDetails(item)"
                                     icon="mdi-information-outline"
                                     size="x-small"
                                     variant="plain"
-                                    style="z-index: 9000"></v-btn>
+                                    style="z-index: 9000"
+                                    @click.stop="showAASDetails(item)"></v-btn>
                                 <!-- Download AAS -->
                                 <v-btn
                                     v-if="aasRepoURL"
-                                    @click.stop="downloadAAS(item)"
                                     icon="mdi-download"
                                     size="x-small"
                                     variant="plain"
-                                    style="z-index: 9000; margin-left: -6px"></v-btn>
+                                    style="z-index: 9000; margin-left: -6px"
+                                    @click.stop="downloadAAS(item)"></v-btn>
                                 <!-- Remove from AAS Registry Button -->
                                 <v-btn
-                                    @click.stop="showDeleteDialog(item)"
                                     icon="mdi-close"
                                     size="x-small"
                                     variant="plain"
-                                    style="z-index: 9000; margin-left: -6px"></v-btn>
+                                    style="z-index: 9000; margin-left: -6px"
+                                    @click.stop="showDeleteDialog(item)"></v-btn>
                             </template>
                             <v-overlay
                                 :model-value="isSelected(item)"
@@ -127,15 +127,15 @@
             </v-list>
             <!-- AAS Details (only visible if the Information Button is pressed on an AAS) -->
             <AASListDetails
-                :detailsObject="detailsObject"
-                :showDetailsCard="showDetailsCard"
+                :details-object="detailsObject"
+                :show-details-card="showDetailsCard"
                 @close-details="showDetailsCard = false" />
             <!-- Collapse/extend Sidebar Button -->
             <v-list v-if="!isMobile" nav style="width: 100%; z-index: 9000" class="bg-detailsCard pa-0">
                 <v-divider style="margin-left: -8px; margin-right: -8px"></v-divider>
                 <!-- Button to collapse the Sidebar -->
-                <v-list-item @click="collapseSidebar()" class="ma-0">
-                    <template v-slot:prepend>
+                <v-list-item class="ma-0" @click="collapseSidebar()">
+                    <template #prepend>
                         <v-icon class="ml-2">mdi-chevron-double-left</v-icon>
                     </template>
                     <v-list-item-title class="text-caption">Close Sidebar</v-list-item-title>
@@ -150,14 +150,14 @@
             <v-card-text class="pb-0">
                 <span>Are you sure you want to delete the AAS?</span>
                 <v-checkbox v-model="deleteSubmodels" label="Also delete Submodels" hide-details></v-checkbox>
-                <v-alert class="mb-2" variant="tonal" border v-if="deleteSubmodels" color="warning"
+                <v-alert v-if="deleteSubmodels" class="mb-2" variant="tonal" border color="warning"
                     >Warning: If other shells refer to the same submodels, those references are not deleted!</v-alert
                 >
             </v-card-text>
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn @click="deleteDialogShowing = false">Cancel</v-btn>
-                <v-btn variant="tonal" color="error" @click="confirmDelete" :loading="deleteLoading">Delete</v-btn>
+                <v-btn variant="tonal" color="error" :loading="deleteLoading" @click="confirmDelete">Delete</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -167,10 +167,10 @@
     import { defineComponent } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
-    import { useNavigationStore } from '@/store/NavigationStore';
-    import { useAASStore } from '@/store/AASDataStore';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useAASStore } from '@/store/AASDataStore';
+    import { useNavigationStore } from '@/store/NavigationStore';
     import AASListDetails from './AASListDetails.vue';
     // import RegisterAAS from './RegisterAAS.vue';
     import UploadAAS from './UploadAAS.vue';
@@ -212,62 +212,6 @@
                 aasToDelete: {} as any, // Variable to store the AAS to be deleted
                 deleteLoading: false, // Variable to store if the AAS is being deleted
             };
-        },
-
-        mounted() {
-            // Load the AAS List on Startup if the AAS Registry URL is set
-            if (this.aasRegistryURL !== '') {
-                this.getAASData();
-            }
-
-            // check if the aas Query is set in the URL and if so load the AAS
-            const searchParams = new URL(window.location.href).searchParams;
-            const aasEndpoint = searchParams.get('aas');
-            if (aasEndpoint) {
-                // console.log('AAS Query is set: ', aasEndpoint);
-                let aas = {} as any;
-                let endpoints = [];
-                endpoints.push({ protocolInformation: { href: aasEndpoint } });
-                aas.endpoints = endpoints;
-                // dispatch the AAS set by the URL to the store
-                this.aasStore.dispatchSelectedAAS(aas);
-            }
-
-            // check if the status-check is set in the local storage and if so set the status-check state in the store
-            const statusCheck = localStorage.getItem('statusCheck');
-            if (statusCheck) {
-                // console.log('Status Check is set: ', statusCheck);
-                this.navigationStore.dispatchUpdateStatusCheck(statusCheck === 'true');
-            }
-        },
-
-        watch: {
-            // Watch the AAS Registry URL for changes and reload the AAS List if the URL changes
-            aasRegistryURL() {
-                if (this.aasRegistryURL !== '') {
-                    this.reloadList();
-                    if (this.statusCheck) {
-                        this.addConnectionInterval();
-                    }
-                } else {
-                    this.AASData = [];
-                }
-            },
-
-            // watch for changes in the status-check state and add/remove the connection interval
-            statusCheck() {
-                if (this.statusCheck) {
-                    this.addConnectionInterval();
-                }
-            },
-
-            // watch for changes in the trigger for AAS List reload
-            triggerAASListReload(triggerVal) {
-                if (triggerVal === true) {
-                    this.reloadList();
-                    this.navigationStore.dispatchTriggerAASListReload(false);
-                }
-            },
         },
 
         computed: {
@@ -326,6 +270,62 @@
             aasRepoURL() {
                 return this.navigationStore.getAASRepoURL;
             },
+        },
+
+        watch: {
+            // Watch the AAS Registry URL for changes and reload the AAS List if the URL changes
+            aasRegistryURL() {
+                if (this.aasRegistryURL !== '') {
+                    this.reloadList();
+                    if (this.statusCheck) {
+                        this.addConnectionInterval();
+                    }
+                } else {
+                    this.AASData = [];
+                }
+            },
+
+            // watch for changes in the status-check state and add/remove the connection interval
+            statusCheck() {
+                if (this.statusCheck) {
+                    this.addConnectionInterval();
+                }
+            },
+
+            // watch for changes in the trigger for AAS List reload
+            triggerAASListReload(triggerVal) {
+                if (triggerVal === true) {
+                    this.reloadList();
+                    this.navigationStore.dispatchTriggerAASListReload(false);
+                }
+            },
+        },
+
+        mounted() {
+            // Load the AAS List on Startup if the AAS Registry URL is set
+            if (this.aasRegistryURL !== '') {
+                this.getAASData();
+            }
+
+            // check if the aas Query is set in the URL and if so load the AAS
+            const searchParams = new URL(window.location.href).searchParams;
+            const aasEndpoint = searchParams.get('aas');
+            if (aasEndpoint) {
+                // console.log('AAS Query is set: ', aasEndpoint);
+                let aas = {} as any;
+                let endpoints = [];
+                endpoints.push({ protocolInformation: { href: aasEndpoint } });
+                aas.endpoints = endpoints;
+                // dispatch the AAS set by the URL to the store
+                this.aasStore.dispatchSelectedAAS(aas);
+            }
+
+            // check if the status-check is set in the local storage and if so set the status-check state in the store
+            const statusCheck = localStorage.getItem('statusCheck');
+            if (statusCheck) {
+                // console.log('Status Check is set: ', statusCheck);
+                this.navigationStore.dispatchUpdateStatusCheck(statusCheck === 'true');
+            }
         },
 
         methods: {

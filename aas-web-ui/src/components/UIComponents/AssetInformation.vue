@@ -3,10 +3,10 @@
         <v-list lines="one" nav class="bg-detailsCard">
             <IdentificationElement
                 class="mb-2"
-                :identificationObject="assetInfo"
-                :modelType="assetObject.assetKind"
-                :idType="'Global Asset ID'"
-                :nameType="'assetType'"></IdentificationElement>
+                :identification-object="assetInfo"
+                :model-type="assetObject.assetKind"
+                :id-type="'Global Asset ID'"
+                :name-type="'assetType'"></IdentificationElement>
             <v-img
                 v-if="assetObject.defaultThumbnail"
                 :src="assetObject.defaultThumbnail.path"
@@ -20,15 +20,12 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-
     import IdentificationElement from '@/components/UIComponents/IdentificationElement.vue';
-    import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
 
     export default defineComponent({
         name: 'AssetInformation',
         components: {
             IdentificationElement,
-            DescriptionElement,
         },
         props: ['assetObject'],
 

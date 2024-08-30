@@ -9,7 +9,7 @@
                 </div>
             </v-tooltip>
             <!-- DisplayName Title -->
-            <template v-slot:title>
+            <template #title>
                 <div class="mt-2" :class="small ? 'text-caption' : 'text-subtitle-2 '">
                     {{ displayNameTitle + ':' }}
                 </div>

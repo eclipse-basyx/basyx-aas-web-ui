@@ -3,7 +3,7 @@
         <v-list-item v-if="!IsOperationVariable" class="px-1 pb-1 pt-0">
             <v-list-item-title class="text-subtitle-2 mt-2">{{ 'Value: ' }}</v-list-item-title>
         </v-list-item>
-        <v-card color="elevatedCard" v-if="propertyObject">
+        <v-card v-if="propertyObject" color="elevatedCard">
             <!-- Value of the Property -->
             <v-list nav class="pt-0" :class="IsOperationVariable ? '' : 'bg-elevatedCard'">
                 <!-- valueId -->
@@ -21,10 +21,10 @@
                             {{ valueId.value }}
                         </div>
                     </v-tooltip>
-                    <template v-slot:title>
+                    <template #title>
                         <span class="text-caption">{{ 'ValueId: ' }}</span>
                     </template>
-                    <template v-slot:subtitle>
+                    <template #subtitle>
                         <v-list-item-subtitle v-for="(valueId, i) in propertyObject.valueId.keys" :key="i">
                             <div class="pt-2">
                                 <v-chip label size="x-small" border class="mr-2">{{ valueId.type }}</v-chip>
@@ -43,28 +43,28 @@
                 <!-- Value Representation depending on the valueType -->
                 <NumberType
                     v-if="isNumber(propertyObject.valueType)"
-                    :numberValue="propertyObject"
-                    :isOperationVariable="isOperationVariable"
-                    :variableType="variableType"
-                    @updateValue="updateValue"></NumberType>
+                    :number-value="propertyObject"
+                    :is-operation-variable="isOperationVariable"
+                    :variable-type="variableType"
+                    @update-value="updateValue"></NumberType>
                 <BooleanType
                     v-else-if="propertyObject.valueType == 'xs:boolean'"
-                    :booleanValue="propertyObject"
-                    :isOperationVariable="isOperationVariable"
-                    :variableType="variableType"
-                    @updateValue="updateValue"></BooleanType>
+                    :boolean-value="propertyObject"
+                    :is-operation-variable="isOperationVariable"
+                    :variable-type="variableType"
+                    @update-value="updateValue"></BooleanType>
                 <DateTimeStampType
                     v-else-if="propertyObject.valueType == 'xs:dateTime'"
-                    :dateTimeStampValue="propertyObject"
-                    :isOperationVariable="isOperationVariable"
-                    :variableType="variableType"
-                    @updateValue="updateValue"></DateTimeStampType>
+                    :date-time-stamp-value="propertyObject"
+                    :is-operation-variable="isOperationVariable"
+                    :variable-type="variableType"
+                    @update-value="updateValue"></DateTimeStampType>
                 <StringType
                     v-else
-                    :stringValue="propertyObject"
-                    :isOperationVariable="isOperationVariable"
-                    :variableType="variableType"
-                    @updateValue="updateValue"></StringType>
+                    :string-value="propertyObject"
+                    :is-operation-variable="isOperationVariable"
+                    :variable-type="variableType"
+                    @update-value="updateValue"></StringType>
             </v-list>
         </v-card>
     </v-container>
@@ -72,21 +72,17 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import { useAASStore } from '@/store/AASDataStore';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-
-    import StringType from './ValueTypes/StringType.vue';
-    import NumberType from './ValueTypes/NumberType.vue';
+    import { useAASStore } from '@/store/AASDataStore';
     import BooleanType from './ValueTypes/BooleanType.vue';
     import DateTimeStampType from './ValueTypes/DateTimeStampType.vue';
+    import NumberType from './ValueTypes/NumberType.vue';
+    import StringType from './ValueTypes/StringType.vue';
 
     export default defineComponent({
         name: 'Property',
         components: {
-            RequestHandling, // Mixin to handle the requests to the AAS
-            SubmodelElementHandling, // Mixin to handle the SubmodelElements
-
             // Value Types
             StringType,
             NumberType,

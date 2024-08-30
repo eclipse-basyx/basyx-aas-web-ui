@@ -3,7 +3,7 @@
         <!-- Options -->
         <v-list v-if="!hideSettings || editDialog" nav class="pa-0" style="margin-left: -8px; margin-top: -14px">
             <v-list-item class="pb-0">
-                <template v-slot:title>
+                <template #title>
                     <div class="text-subtitle-2">{{ 'Options: ' }}</div>
                 </template>
             </v-list-item>
@@ -11,20 +11,20 @@
         <v-row v-if="!hideSettings || editDialog" align="center">
             <v-col cols="auto">
                 <v-text-field
+                    v-model="numberOfCategories"
                     type="number"
                     hide-details
                     density="compact"
-                    v-model="numberOfCategories"
-                    @blur="initializeSeries()"
-                    @keydown.native.enter="initializeSeries()"
                     label="Bins"
-                    variant="outlined"></v-text-field>
+                    variant="outlined"
+                    @blur="initializeSeries()"
+                    @keydown.enter="initializeSeries()"></v-text-field>
             </v-col>
             <v-col cols="auto">
                 <v-switch
+                    v-model="stacked"
                     hide-details
                     label="stacked"
-                    v-model="stacked"
                     density="compact"
                     @change="changeVariant()"></v-switch>
             </v-col>
@@ -34,18 +34,17 @@
 </template>
 
 <script lang="ts">
-    import { defineComponent } from 'vue';
     import _ from 'lodash';
+    import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import WidgetHandling from '@/mixins/WidgetHandling';
     import DashboardHandling from '@/mixins/DashboardHandling';
-
+    import WidgetHandling from '@/mixins/WidgetHandling';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'Histogram',
-        props: ['chartData', 'timeVariable', 'yVariables', 'chartOptionsExternal', 'editDialog'],
         mixins: [WidgetHandling, DashboardHandling],
+        props: ['chartData', 'timeVariable', 'yVariables', 'chartOptionsExternal', 'editDialog'],
 
         setup() {
             const theme = useTheme();
@@ -97,17 +96,11 @@
             };
         },
 
-        mounted() {
-            this.$nextTick(() => {
-                const chart = (this.$refs.histogram as any).chart;
-                if (chart) {
-                    // console.log('Chart has rendered')
-                    // apply the theme on component mount
-                    this.applyTheme();
-                    // append the series to the chart
-                    this.initializeSeries();
-                }
-            });
+        computed: {
+            // Check if the current Theme is dark
+            isDark() {
+                return this.theme.global.current.value.dark;
+            },
         },
 
         watch: {
@@ -123,11 +116,17 @@
             },
         },
 
-        computed: {
-            // Check if the current Theme is dark
-            isDark() {
-                return this.theme.global.current.value.dark;
-            },
+        mounted() {
+            this.$nextTick(() => {
+                const chart = (this.$refs.histogram as any).chart;
+                if (chart) {
+                    // console.log('Chart has rendered')
+                    // apply the theme on component mount
+                    this.applyTheme();
+                    // append the series to the chart
+                    this.initializeSeries();
+                }
+            });
         },
 
         methods: {
@@ -146,7 +145,7 @@
                     let completeOptions = _.merge({}, this.chartOptions, this.chartOptionsExternal);
                     this.stacked = completeOptions.chart.stacked;
                 }
-                let newSeries = histograms.map((histogram: any, index: number) => {
+                let newSeries = histograms.map((histogram: any) => {
                     return {
                         name: 'Number of values in bin',
                         data: histogram,

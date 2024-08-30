@@ -13,13 +13,13 @@
                     hide-details
                     style="width: 300px"
                     clearable
-                    @keydown.native.enter="updateValue(element, i)">
+                    @keydown.enter="updateValue(element, i)">
                     <!-- Current Value -->
-                    <template v-slot:prepend-inner>
+                    <template #prepend-inner>
                         <v-chip label size="x-small" border>{{ element.value }}</v-chip>
                         <v-divider class="ml-3 mr-1" vertical inset style="margin-top: 4px"></v-divider>
                     </template>
-                    <template v-slot:append-inner>
+                    <template #append-inner>
                         <!-- Suffix with Unit -->
                         <span v-if="element.unit" class="text-subtitleText">{{ element.unit }}</span>
                         <!-- Update Button -->
@@ -45,9 +45,6 @@
 
     export default defineComponent({
         name: 'InputField',
-        components: {
-            RequestHandling,
-        },
         mixins: [RequestHandling],
 
         props: ['submodelElementData', 'selectedNode', 'widgetSettings'],
@@ -63,9 +60,7 @@
             };
         },
 
-        mounted() {
-            this.initializeView(); // initialize list
-        },
+        computed: {},
 
         watch: {
             // Watch for changes in the submodelElementData and (re-)initialize the Component
@@ -77,7 +72,9 @@
             },
         },
 
-        computed: {},
+        mounted() {
+            this.initializeView(); // initialize list
+        },
 
         methods: {
             // Initialize the Component

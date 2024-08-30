@@ -11,24 +11,20 @@ interface PluginType {
 }
 
 // Components
-import App from './App.vue';
-import { createAppRouter } from './router';
-import { useNavigationStore } from './store/NavigationStore';
-import { useEnvStore } from './store/EnvironmentStore';
-import { useAuthStore } from './store/AuthStore';
-import { reactive } from 'vue';
-
-import VueApexCharts from 'vue3-apexcharts';
-
+import Keycloak from 'keycloak-js';
+import { KeycloakOnLoad } from 'keycloak-js';
+import { createPinia } from 'pinia';
 // Composables
 import { createApp } from 'vue';
 import { defineComponent } from 'vue';
-import { createPinia } from 'pinia';
-
+import VueApexCharts from 'vue3-apexcharts';
 // Plugins
 import { registerPlugins } from '@/plugins';
-import Keycloak from 'keycloak-js';
-import { KeycloakOnLoad } from 'keycloak-js';
+import App from './App.vue';
+import { createAppRouter } from './router';
+import { useAuthStore } from './store/AuthStore';
+import { useEnvStore } from './store/EnvironmentStore';
+import { useNavigationStore } from './store/NavigationStore';
 
 const app = createApp(App);
 
@@ -48,7 +44,7 @@ async function loadUserPlugins() {
     if (envStore.getKeycloakUrl !== '' && envStore.getKeycloakRealm !== '' && envStore.getKeycloakClientId !== '') {
         try {
             await initKeycloak(envStore.getKeycloakUrl, envStore.getKeycloakRealm, envStore.getKeycloakClientId);
-        } catch (error) {
+        } catch {
             alert('Could not connect to Keycloak.');
             return;
         }
@@ -60,7 +56,7 @@ async function loadUserPlugins() {
     const pluginFiles = import.meta.glob('./UserPlugins/*.vue');
     const files = Object.keys(pluginFiles);
 
-    let plugins = [] as Array<PluginType>;
+    const plugins = [] as Array<PluginType>;
 
     await Promise.all(
         files.map(async (path) => {
@@ -80,7 +76,7 @@ async function initKeycloak(keycloakUrl: string, keycloakRealm: string, keycloak
     return new Promise<void>((resolve, reject) => {
         let keycloak: Keycloak | null = null;
 
-        let initOptions = {
+        const initOptions = {
             url: keycloakUrl,
             realm: keycloakRealm,
             clientId: keycloakClientId,
@@ -120,9 +116,6 @@ async function initKeycloak(keycloakUrl: string, keycloakRealm: string, keycloak
                                     // console.log('Token refreshed');
                                     authStore.setToken(keycloak.token);
                                     authStore.setRefreshToken(keycloak.refreshToken);
-                                } else {
-                                    const exp = keycloak?.tokenParsed?.exp as number;
-                                    const timeScew = keycloak?.timeSkew as number;
                                 }
                                 authStore.setAuthStatus(true);
                             })

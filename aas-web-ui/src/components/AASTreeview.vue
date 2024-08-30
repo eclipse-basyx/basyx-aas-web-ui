@@ -22,8 +22,8 @@
                 </div>
                 <!-- TODO: Replace with Vuetify Treeview Component when it get's released in Q1 2023 -->
                 <VTreeview
-                    v-else
                     v-for="item in submodelData"
+                    v-else
                     :key="item.id"
                     class="root"
                     :item="item"
@@ -35,19 +35,16 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import { useNavigationStore } from '@/store/NavigationStore';
-    import { useAASStore } from '@/store/AASDataStore';
-    import { useEnvStore } from '@/store/EnvironmentStore';
+    import VTreeview from '@/components/UIComponents/VTreeview.vue';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-
-    import VTreeview from '@/components/UIComponents/VTreeview.vue';
+    import { useAASStore } from '@/store/AASDataStore';
+    import { useEnvStore } from '@/store/EnvironmentStore';
+    import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'AASTreeview',
         components: {
-            RequestHandling, // Mixin to handle the requests to the AAS
-
             VTreeview,
         },
         mixins: [RequestHandling, SubmodelElementHandling],
@@ -71,44 +68,6 @@
                 initialNode: {} as any, // Initial Node to set the Treeview to
                 // SMPath: '', // Path of the selected SubmodelElement (used for the initial load of the Treeview when the app is started with a path Query)
             };
-        },
-
-        mounted() {
-            this.initTreeWithRouteParams();
-        },
-
-        watch: {
-            // initialize Treeview when AAS gets selected
-            triggerAAS() {
-                this.initializeTree();
-            },
-
-            // Resets the Treeview when the AAS Registry changes
-            aasRegistryServerURL() {
-                if (!this.aasRegistryServerURL) {
-                    this.submodelData = [];
-                }
-            },
-
-            // Resets the Treeview when the Submodel Registry changes
-            submodelRegistryServerURL() {
-                if (!this.submodelRegistryURL) {
-                    this.submodelData = [];
-                }
-            },
-
-            // change the submodelData Object when the updated Node changes
-            updatedNode() {
-                this.updateNode(this.updatedNode);
-            },
-
-            // initialize Treeview when the initTree flag changes
-            initTree() {
-                if (this.initTree) {
-                    this.initTreeWithRouteParams();
-                    this.aasStore.dispatchInitTreeByReferenceElement(false); // reset the initTree flag
-                }
-            },
         },
 
         computed: {
@@ -145,6 +104,44 @@
             initTree() {
                 return this.aasStore.getInitTreeByReferenceElement;
             },
+        },
+
+        watch: {
+            // initialize Treeview when AAS gets selected
+            triggerAAS() {
+                this.initializeTree();
+            },
+
+            // Resets the Treeview when the AAS Registry changes
+            aasRegistryServerURL() {
+                if (!this.aasRegistryServerURL) {
+                    this.submodelData = [];
+                }
+            },
+
+            // Resets the Treeview when the Submodel Registry changes
+            submodelRegistryServerURL() {
+                if (!this.submodelRegistryURL) {
+                    this.submodelData = [];
+                }
+            },
+
+            // change the submodelData Object when the updated Node changes
+            updatedNode() {
+                this.updateNode(this.updatedNode);
+            },
+
+            // initialize Treeview when the initTree flag changes
+            initTree() {
+                if (this.initTree) {
+                    this.initTreeWithRouteParams();
+                    this.aasStore.dispatchInitTreeByReferenceElement(false); // reset the initTree flag
+                }
+            },
+        },
+
+        mounted() {
+            this.initTreeWithRouteParams();
         },
 
         methods: {

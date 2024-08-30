@@ -83,17 +83,11 @@
             };
         },
 
-        mounted() {
-            this.$nextTick(() => {
-                const chart = (this.$refs.columnchart as any).chart;
-                if (chart && this.submodelElementData && Object.keys(this.submodelElementData).length > 0) {
-                    // console.log('Chart has rendered')
-                    // apply the theme on component mount
-                    this.applyTheme();
-                    // append the series to the chart
-                    this.initializeSeries();
-                }
-            });
+        computed: {
+            // Check if the current Theme is dark
+            isDark() {
+                return this.theme.global.current.value.dark;
+            },
         },
 
         watch: {
@@ -109,11 +103,17 @@
             },
         },
 
-        computed: {
-            // Check if the current Theme is dark
-            isDark() {
-                return this.theme.global.current.value.dark;
-            },
+        mounted() {
+            this.$nextTick(() => {
+                const chart = (this.$refs.columnchart as any).chart;
+                if (chart && this.submodelElementData && Object.keys(this.submodelElementData).length > 0) {
+                    // console.log('Chart has rendered')
+                    // apply the theme on component mount
+                    this.applyTheme();
+                    // append the series to the chart
+                    this.initializeSeries();
+                }
+            });
         },
 
         methods: {

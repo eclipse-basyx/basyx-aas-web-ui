@@ -1,6 +1,6 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-hover v-slot:default="{ isHovering, props }">
+        <v-hover v-slot="{ isHovering, props }">
             <v-list-item>
                 <!-- Tooltip with idShort and identification id -->
                 <v-tooltip activator="parent" open-delay="600" transition="slide-x-transition">
@@ -14,17 +14,17 @@
                     </div>
                 </v-tooltip>
                 <!-- idShort -->
-                <template v-slot:title>
+                <template #title>
                     <div class="text-primary text-subtitle-1">{{ nameToDisplay(identificationObject) }}</div>
                     <div v-if="identificationObject.id">{{ idType + ':' }}</div>
                 </template>
                 <!-- identification id -->
-                <template v-slot:subtitle>
+                <template #subtitle>
                     <div
                         v-if="identificationObject.id"
-                        @click="copyToClipboard()"
                         v-bind="props"
-                        :class="isHovering ? 'cursor-pointer' : ''">
+                        :class="isHovering ? 'cursor-pointer' : ''"
+                        @click="copyToClipboard()">
                         <v-icon v-if="isHovering" color="subtitleText" size="x-small" class="mr-1">{{
                             copyIcon
                         }}</v-icon>
@@ -32,7 +32,7 @@
                     </div>
                 </template>
                 <!-- modelType -->
-                <template v-slot:append>
+                <template #append>
                     <v-chip size="x-small" color="primary">{{ modelType }}</v-chip>
                 </template>
             </v-list-item>
@@ -42,8 +42,8 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import { useNavigationStore } from '@/store/NavigationStore';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'IdentificationElement',

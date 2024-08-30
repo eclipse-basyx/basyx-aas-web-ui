@@ -9,11 +9,11 @@
                 </div>
             </v-tooltip>
             <!-- Description Title -->
-            <template v-slot:title>
+            <template #title>
                 <div
-                    v-html="descriptionTitle + ':'"
                     class="mt-2"
-                    :class="small ? 'text-caption' : 'text-subtitle-2 '"></div>
+                    :class="small ? 'text-caption' : 'text-subtitle-2 '"
+                    v-html="descriptionTitle + ':'"></div>
             </template>
             <!-- Descriptions List (different Languages) -->
             <v-list-item-subtitle v-for="(description, i) in descriptionObject" :key="i">

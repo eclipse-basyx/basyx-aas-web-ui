@@ -1,11 +1,9 @@
 import { defineComponent } from 'vue';
 import { useRoute } from 'vue-router';
-
-import { useAASStore } from '@/store/AASDataStore';
-import { useEnvStore } from '@/store/EnvironmentStore';
-
 import RequestHandling from '@/mixins/RequestHandling';
 import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+import { useAASStore } from '@/store/AASDataStore';
+import { useEnvStore } from '@/store/EnvironmentStore';
 
 export default defineComponent({
     name: 'DashboardHandling',
@@ -52,9 +50,9 @@ export default defineComponent({
     methods: {
         async dashboardAdd(item: any) {
             // console.log(item)
-            let group = await this.getAAS();
+            const group = await this.getAAS();
             // console.log(group);
-            let dashboardObj = {
+            const dashboardObj = {
                 title: item.title,
                 endpoint: this.SelectedNode.path,
                 group: {
@@ -74,13 +72,13 @@ export default defineComponent({
             };
             // console.log('Add Element to Dasboard: ', dashboardObj);
             // construct the request
-            let path = this.dashboardServicePath + '/addElement';
-            let headers: Headers = new Headers();
+            const path = this.dashboardServicePath + '/addElement';
+            const headers: Headers = new Headers();
             headers.append('Content-Type', 'application/json');
             headers.append('accept', '*/*');
-            let content = JSON.stringify(dashboardObj);
-            let context = 'adding element to dashboard';
-            let disableMessage = false;
+            const content = JSON.stringify(dashboardObj);
+            const context = 'adding element to dashboard';
+            const disableMessage = false;
             // send the request
             this.postRequest(path, content, headers, context, disableMessage).then((response: any) => {
                 if (response.success) {
@@ -90,9 +88,9 @@ export default defineComponent({
         },
 
         async getGroups() {
-            let path = this.dashboardServicePath + '/groups/summary';
-            let context = 'fetching all groups';
-            let disableMessage = false;
+            const path = this.dashboardServicePath + '/groups/summary';
+            const context = 'fetching all groups';
+            const disableMessage = false;
             const response: any = await this.getRequest(path, context, disableMessage);
             if (response.success) {
                 // console.log(response.data)
@@ -101,10 +99,10 @@ export default defineComponent({
         },
 
         async getElements(group: any) {
-            let pathGroup = this.URLEncode(group);
-            let path = this.dashboardServicePath + '/findGroup/' + pathGroup;
-            let context = 'fetching all elements of a group';
-            let disableMessage = false;
+            const pathGroup = this.URLEncode(group);
+            const path = this.dashboardServicePath + '/findGroup/' + pathGroup;
+            const context = 'fetching all elements of a group';
+            const disableMessage = false;
             const response: any = await this.getRequest(path, context, disableMessage);
             if (response.success) {
                 // console.log(response);
@@ -114,10 +112,10 @@ export default defineComponent({
 
         async deleteGroup(groups: any, groupId: any): Promise<any[]> {
             // console.log(groups)
-            let pathGroup = this.URLEncode(groupId);
-            let path = this.dashboardServicePath + '/deleteGroup/' + pathGroup;
-            let context = 'deleting all elements of a group';
-            let disableMessage = false;
+            const pathGroup = this.URLEncode(groupId);
+            const path = this.dashboardServicePath + '/deleteGroup/' + pathGroup;
+            const context = 'deleting all elements of a group';
+            const disableMessage = false;
             const response: any = await this.deleteRequest(path, context, disableMessage);
             if (response.success) {
                 // console.log(response);
@@ -131,9 +129,9 @@ export default defineComponent({
         },
 
         async deleteSingle(elementId: any): Promise<string | undefined> {
-            let path = this.dashboardServicePath + '/deleteElement/' + elementId;
-            let context = 'deleting one element of a group';
-            let disableMessage = false;
+            const path = this.dashboardServicePath + '/deleteElement/' + elementId;
+            const context = 'deleting one element of a group';
+            const disableMessage = false;
             const response: any = await this.deleteRequest(path, context, disableMessage);
             if (response.success) {
                 return elementId;
@@ -143,13 +141,13 @@ export default defineComponent({
 
         async updateElement(element: any): Promise<any | undefined> {
             // console.log(element)
-            let path = this.dashboardServicePath + '/updateElement/' + element.id;
-            let headers: Headers = new Headers();
+            const path = this.dashboardServicePath + '/updateElement/' + element.id;
+            const headers: Headers = new Headers();
             headers.append('Content-Type', 'application/json');
             headers.append('accept', '*/*');
-            let content = JSON.stringify(element);
-            let context = 'adding element to dashboard';
-            let disableMessage = false;
+            const content = JSON.stringify(element);
+            const context = 'adding element to dashboard';
+            const disableMessage = false;
             // send the request
             const response: any = await this.putRequest(path, content, headers, context, disableMessage);
             if (response.success) {
@@ -163,10 +161,10 @@ export default defineComponent({
                 // console.log(this.SelectedAAS)
                 return this.SelectedAAS;
             } else {
-                let path = this.SelectedAAS.endpoints[0].protocolInformation.href;
-                let context = 'getting aas from endpoint';
-                let disableMessage = false;
-                let response = await this.getRequest(path, context, disableMessage);
+                const path = this.SelectedAAS.endpoints[0].protocolInformation.href;
+                const context = 'getting aas from endpoint';
+                const disableMessage = false;
+                const response = await this.getRequest(path, context, disableMessage);
                 if (response && response.success) {
                     return response.data;
                 }

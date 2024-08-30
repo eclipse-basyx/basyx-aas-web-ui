@@ -29,14 +29,14 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import { useAASStore } from '@/store/AASDataStore';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import RequestHandling from '@/mixins/RequestHandling';
+    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'ImagePreview',
-        props: ['submodelElementData'],
         mixins: [SubmodelElementHandling, RequestHandling],
+        props: ['submodelElementData'],
 
         setup() {
             const theme = useTheme();
@@ -56,16 +56,11 @@
             };
         },
 
-        mounted() {
-            this.Base64Image = '';
-            this.imageUrl = '';
-            if (this.submodelElementData.modelType == 'File') {
-                // console.log('SubmodelElementData: ', this.submodelElementData);
-                this.getImageBlob();
-            } else if (this.submodelElementData.modelType == 'Blob') {
-                this.getDecodedImageBlob();
-            }
-            this.errorLoadingImage = false;
+        computed: {
+            // Get the selected Treeview Node (SubmodelElement) from the store
+            SelectedNode() {
+                return this.aasStore.getSelectedNode;
+            },
         },
 
         watch: {
@@ -81,11 +76,16 @@
             },
         },
 
-        computed: {
-            // Get the selected Treeview Node (SubmodelElement) from the store
-            SelectedNode() {
-                return this.aasStore.getSelectedNode;
-            },
+        mounted() {
+            this.Base64Image = '';
+            this.imageUrl = '';
+            if (this.submodelElementData.modelType == 'File') {
+                // console.log('SubmodelElementData: ', this.submodelElementData);
+                this.getImageBlob();
+            } else if (this.submodelElementData.modelType == 'Blob') {
+                this.getDecodedImageBlob();
+            }
+            this.errorLoadingImage = false;
         },
 
         methods: {

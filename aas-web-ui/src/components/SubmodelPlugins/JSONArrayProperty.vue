@@ -67,32 +67,6 @@
             return {};
         },
 
-        mounted() {
-            this.$nextTick(() => {
-                const chart = (this.$refs.areachart as any).chart;
-                if (chart && this.submodelElementData && Object.keys(this.submodelElementData).length > 0) {
-                    // console.log('Chart has rendered')
-                    // apply the theme on component mount
-                    this.applyTheme();
-                    // append the series to the chart
-                    this.initChart();
-                }
-            });
-        },
-
-        watch: {
-            // watch for changes in the vuetify theme and update the chart options
-            isDark() {
-                this.applyTheme();
-            },
-
-            // watch for changes in the selected node and update the chart data
-            submodelElementData() {
-                // console.log('submodelElementData changed: ', this.submodelElementData);
-                this.initChart();
-            },
-        },
-
         computed: {
             // get selected AAS from Store
             SelectedAAS() {
@@ -108,6 +82,32 @@
             isDark() {
                 return this.theme.global.current.value.dark;
             },
+        },
+
+        watch: {
+            // watch for changes in the vuetify theme and update the chart options
+            isDark() {
+                this.applyTheme();
+            },
+
+            // watch for changes in the selected node and update the chart data
+            submodelElementData() {
+                // console.log('submodelElementData changed: ', this.submodelElementData);
+                this.initChart();
+            },
+        },
+
+        mounted() {
+            this.$nextTick(() => {
+                const chart = (this.$refs.areachart as any).chart;
+                if (chart && this.submodelElementData && Object.keys(this.submodelElementData).length > 0) {
+                    // console.log('Chart has rendered')
+                    // apply the theme on component mount
+                    this.applyTheme();
+                    // append the series to the chart
+                    this.initChart();
+                }
+            });
         },
 
         methods: {

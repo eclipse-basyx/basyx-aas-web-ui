@@ -3,7 +3,7 @@
         <v-list-item class="px-1 pb-1 pt-0">
             <v-list-item-title class="text-subtitle-2 mt-2">{{ 'Range: ' }}</v-list-item-title>
         </v-list-item>
-        <v-card color="elevatedCard" v-if="rangeObject" class="pt-10 pb-5 px-3">
+        <v-card v-if="rangeObject" color="elevatedCard" class="pt-10 pb-5 px-3">
             <v-range-slider
                 v-model="range"
                 :min="min"
@@ -19,7 +19,7 @@
                 <template v-slot:append>
                     <v-text-field v-model="range[1]" hide-details single-line variant="outlined" style="width: 90px" density="compact" readonly></v-text-field>
                 </template> -->
-                <template v-slot:thumb-label="{ modelValue }">
+                <template #thumb-label="{ modelValue }">
                     {{ modelValue + unitSuffix(rangeObject) }}
                 </template>
             </v-range-slider>
@@ -29,16 +29,12 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import { useAASStore } from '@/store/AASDataStore';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'Range',
-        components: {
-            RequestHandling, // Mixin to handle the requests to the AAS
-            SubmodelElementHandling, // Mixin to handle the SubmodelElements
-        },
         mixins: [RequestHandling, SubmodelElementHandling],
         props: ['rangeObject'],
 

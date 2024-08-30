@@ -12,14 +12,14 @@
             ">
             <HTWFuehrungskomponente
                 v-if="checkSemanticId(submodelElementData, 'http://htw-berlin.de/smc_statemachine')"
-                :submodelElementData="submodelElementData"
-                :selectedNode="selectedNode"></HTWFuehrungskomponente>
+                :submodel-element-data="submodelElementData"
+                :selected-node="selectedNode"></HTWFuehrungskomponente>
             <DigitalNameplate
                 v-else-if="checkSemanticId(submodelElementData, 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate')"
-                :submodelElementData="submodelElementData"></DigitalNameplate>
+                :submodel-element-data="submodelElementData"></DigitalNameplate>
             <TimeSeriesData
                 v-else-if="checkSemanticId(submodelElementData, 'https://admin-shell.io/idta/TimeSeries/1/1')"
-                :submodelElementData="submodelElementData"></TimeSeriesData>
+                :submodel-element-data="submodelElementData"></TimeSeriesData>
             <BillsOfMaterial
                 v-else-if="
                     checkSemanticId(
@@ -31,10 +31,10 @@
                         'https://admin-shell.io/idta/HierarchicalStructures/1/1/Submodel'
                     )
                 "
-                :submodelElementData="submodelElementData"></BillsOfMaterial>
+                :submodel-element-data="submodelElementData"></BillsOfMaterial>
             <HandoverDocumentation
                 v-else-if="checkSemanticId(submodelElementData, '0173-1#01-AHF578#001')"
-                :submodelElementData="submodelElementData"></HandoverDocumentation>
+                :submodel-element-data="submodelElementData"></HandoverDocumentation>
             <ContactInformation
                 v-else-if="
                     checkSemanticId(
@@ -42,24 +42,24 @@
                         'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations'
                     )
                 "
-                :submodelElementData="submodelElementData"></ContactInformation>
+                :submodel-element-data="submodelElementData"></ContactInformation>
             <TechnicalData
                 v-else-if="
                     checkSemanticId(submodelElementData, 'https://admin-shell.io/ZVEI/TechnicalData/Submodel/1/2')
                 "
-                :submodelElementData="submodelElementData"></TechnicalData>
+                :submodel-element-data="submodelElementData"></TechnicalData>
             <JSONArrayProperty
                 v-else-if="checkSemanticId(submodelElementData, 'http://iese.fraunhofer.de/prop_jsonarray')"
-                :submodelElementData="submodelElementData"></JSONArrayProperty>
+                :submodel-element-data="submodelElementData"></JSONArrayProperty>
             <GenericDataVisu
                 v-else-if="viewerMode"
-                :submodelElementData="submodelElementData.submodelElements"></GenericDataVisu>
+                :submodel-element-data="submodelElementData.submodelElements"></GenericDataVisu>
             <!-- Plugins added by the user are dynamically registered here -->
             <component
+                :is="plugin.name"
                 v-for="(plugin, i) in filteredPlugins"
                 :key="i"
-                :is="plugin.name"
-                :submodelElementData="submodelElementData"></component>
+                :submodel-element-data="submodelElementData"></component>
         </template>
         <template
             v-else-if="
@@ -67,7 +67,7 @@
             ">
             <GenericDataVisu
                 v-if="viewerMode"
-                :submodelElementData="submodelElementData.submodelElements"></GenericDataVisu>
+                :submodel-element-data="submodelElementData.submodelElements"></GenericDataVisu>
         </template>
         <!-- List of all File/Blob-Plugins matched by their contentType -->
         <template
@@ -79,10 +79,10 @@
             ">
             <ImagePreview
                 v-if="submodelElementData.contentType && submodelElementData.contentType.includes('image')"
-                :submodelElementData="submodelElementData"></ImagePreview>
+                :submodel-element-data="submodelElementData"></ImagePreview>
             <PDFPreview
                 v-if="submodelElementData.contentType && submodelElementData.contentType.includes('pdf')"
-                :submodelElementData="submodelElementData"></PDFPreview>
+                :submodel-element-data="submodelElementData"></PDFPreview>
             <CADPreview
                 v-if="
                     submodelElementData.contentType &&
@@ -92,7 +92,7 @@
                         submodelElementData.contentType.includes('obj') ||
                         submodelElementData.contentType.includes('gltf'))
                 "
-                :submodelElementData="submodelElementData"></CADPreview>
+                :submodel-element-data="submodelElementData"></CADPreview>
         </template>
     </v-container>
 </template>
@@ -100,24 +100,21 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useRoute } from 'vue-router';
-    import { useNavigationStore } from '@/store/NavigationStore';
-    import { useAASStore } from '@/store/AASDataStore';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-
-    import HTWFuehrungskomponente from './HTWFuehrungskomponente.vue';
-    import DigitalNameplate from './DigitalNameplate.vue';
-    import TimeSeriesData from './TimeSeriesData.vue';
-    import BillsOfMaterial from './BillsOfMaterial.vue';
-    import HandoverDocumentation from './HandoverDocumentation.vue';
-    import ContactInformation from './ContactInformation.vue';
-    import TechnicalData from './TechnicalData.vue';
-    import JSONArrayProperty from './JSONArrayProperty.vue';
-
     import GenericDataVisu from '@/components/UIComponents/GenericDataVisu.vue';
-
-    import ImagePreview from './ImagePreview.vue';
-    import PDFPreview from './PDFPreview.vue';
+    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useAASStore } from '@/store/AASDataStore';
+    import { useNavigationStore } from '@/store/NavigationStore';
+    import BillsOfMaterial from './BillsOfMaterial.vue';
     import CADPreview from './CADPreview.vue';
+    import ContactInformation from './ContactInformation.vue';
+    import DigitalNameplate from './DigitalNameplate.vue';
+    import HandoverDocumentation from './HandoverDocumentation.vue';
+    import HTWFuehrungskomponente from './HTWFuehrungskomponente.vue';
+    import ImagePreview from './ImagePreview.vue';
+    import JSONArrayProperty from './JSONArrayProperty.vue';
+    import PDFPreview from './PDFPreview.vue';
+    import TechnicalData from './TechnicalData.vue';
+    import TimeSeriesData from './TimeSeriesData.vue';
 
     export default defineComponent({
         name: 'SubmodelEntrypoint',

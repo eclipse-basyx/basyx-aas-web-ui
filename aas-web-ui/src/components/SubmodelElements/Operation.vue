@@ -1,17 +1,17 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-card color="elevatedCard" v-if="operationObject" class="mt-4">
+        <v-card v-if="operationObject" color="elevatedCard" class="mt-4">
             <!-- Operation with Variable(s) -->
             <v-list
-                nav
-                class="bg-elevatedCard py-0"
                 v-if="
                     operationObject.inputVariables.length > 0 ||
                     operationObject.inoutputVariables.length > 0 ||
                     operationObject.outputVariables.length > 0
-                ">
+                "
+                nav
+                class="bg-elevatedCard py-0">
                 <!-- List with the Variable Types -->
-                <v-container class="ma-0 pa-0" fluid v-for="variableType in variableTypes" :key="variableType.id">
+                <v-container v-for="variableType in variableTypes" :key="variableType.id" class="ma-0 pa-0" fluid>
                     <template
                         v-if="operationObject[variableType.type] && operationObject[variableType.type].length > 0">
                         <!-- Title of the Variable Type -->
@@ -25,8 +25,8 @@
                             <!-- Variable Description -->
                             <DescriptionElement
                                 v-if="variable.value && variable.value.description"
-                                :descriptionObject="variable.value.description"
-                                :descriptionTitle="'Description'"
+                                :description-object="variable.value.description"
+                                :description-title="'Description'"
                                 :small="true"></DescriptionElement>
                             <v-divider v-if="variable.value && variable.value.description" class="mt-1"></v-divider>
                             <!-- Variable Value -->
@@ -36,24 +36,26 @@
                                     <!-- Value Representation depending on the ModelType -->
                                     <Property
                                         v-if="variable.value.modelType === 'Property'"
-                                        :propertyObject="variable.value"
-                                        :isOperationVariable="true"
-                                        :variableType="variableType.type"
-                                        @updateValue="updateOperationVariable($event, variable.value)"></Property>
+                                        :property-object="variable.value"
+                                        :is-operation-variable="true"
+                                        :variable-type="variableType.type"
+                                        @update-value="updateOperationVariable($event, variable.value)"></Property>
                                     <ReferenceElement
                                         v-else-if="variable.value.modelType === 'ReferenceElement'"
-                                        :referenceElementObject="variable.value"
-                                        :isOperationVariable="true"
-                                        :variableType="variableType.type"
-                                        @updateValue="
+                                        :reference-element-object="variable.value"
+                                        :is-operation-variable="true"
+                                        :variable-type="variableType.type"
+                                        @update-value="
                                             updateOperationVariable($event, variable.value)
                                         "></ReferenceElement>
                                     <InvalidElement
                                         v-else
-                                        :invalidElementObject="variable.value"
-                                        :isOperationVariable="true"
-                                        :variableType="variableType.type"
-                                        @updateValue="updateOperationVariable($event, variable.value)"></InvalidElement>
+                                        :invalid-element-object="variable.value"
+                                        :is-operation-variable="true"
+                                        :variable-type="variableType.type"
+                                        @update-value="
+                                            updateOperationVariable($event, variable.value)
+                                        "></InvalidElement>
                                 </v-list-item-title>
                             </v-list-item>
                         </v-card>
@@ -61,7 +63,7 @@
                 </v-container>
             </v-list>
             <!-- Warning when Operation has no variable(s) -->
-            <v-list nav class="bg-elevatedCard pt-0" v-else>
+            <v-list v-else nav class="bg-elevatedCard pt-0">
                 <v-list-item>
                     <v-list-item-title class="pt-2">
                         <v-alert
@@ -76,18 +78,18 @@
             <!-- Action Buttons for the Operation -->
             <v-list nav class="bg-elevatedCard pa-0">
                 <v-list-item>
-                    <template v-slot:append>
+                    <template #append>
                         <!-- Clear-Button -->
-                        <v-btn @click="clearFields()" size="small" variant="outlined" color="primary" class="mr-3"
+                        <v-btn size="small" variant="outlined" color="primary" class="mr-3" @click="clearFields()"
                             >clear</v-btn
                         >
                         <!-- Execute-Button -->
                         <v-btn
-                            @click="executeOperation()"
                             size="small"
                             class="text-buttonText"
                             color="primary"
                             :loading="loading"
+                            @click="executeOperation()"
                             >execute</v-btn
                         >
                     </template>
@@ -99,23 +101,18 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import { useNavigationStore } from '@/store/NavigationStore';
-    import { useAASStore } from '@/store/AASDataStore';
+    import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-
-    import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
-
+    import { useAASStore } from '@/store/AASDataStore';
+    import { useNavigationStore } from '@/store/NavigationStore';
+    import InvalidElement from './InvalidElement.vue';
     import Property from './Property.vue';
     import ReferenceElement from './ReferenceElement.vue';
-    import InvalidElement from './InvalidElement.vue';
 
     export default defineComponent({
         name: 'Operation',
         components: {
-            RequestHandling, // Mixin to handle the requests to the AAS
-            SubmodelElementHandling, // Mixin to handle the SubmodelElements
-
             DescriptionElement,
 
             Property,
@@ -148,6 +145,20 @@
             };
         },
 
+        computed: {
+            // get selected AAS from Store
+            SelectedAAS() {
+                return this.aasStore.getSelectedAAS;
+            },
+
+            // Get the selected Treeview Node (SubmodelElement) from the store
+            SelectedNode() {
+                return this.aasStore.getSelectedNode;
+            },
+        },
+
+        watch: {},
+
         mounted() {
             // console.log(this.operationObject)
             // create local copy of the Operation Object
@@ -162,20 +173,6 @@
             if (!this.localOperationObject.outputVariables) {
                 this.localOperationObject.outputVariables = [];
             }
-        },
-
-        watch: {},
-
-        computed: {
-            // get selected AAS from Store
-            SelectedAAS() {
-                return this.aasStore.getSelectedAAS;
-            },
-
-            // Get the selected Treeview Node (SubmodelElement) from the store
-            SelectedNode() {
-                return this.aasStore.getSelectedNode;
-            },
         },
 
         methods: {

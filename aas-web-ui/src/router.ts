@@ -1,12 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import MainWindow from '@/components/MainWindow.vue';
-import AASList from '@/components/AppNavigation/AASList.vue';
-import SubmodelList from '@/components/SubmodelList.vue';
-import ComponentVisualization from '@/components/ComponentVisualization.vue';
 import AASViewer from '@/components/AASViewer.vue';
 import About from '@/components/About.vue';
+import AASList from '@/components/AppNavigation/AASList.vue';
+import ComponentVisualization from '@/components/ComponentVisualization.vue';
 import Dashboard from '@/components/Dashboard/Dashboard.vue';
 import DashboardGroup from '@/components/Dashboard/DashboardGroup.vue';
+import MainWindow from '@/components/MainWindow.vue';
+import SubmodelList from '@/components/SubmodelList.vue';
 
 const routes = [
     { path: '/', name: 'MainWindow', component: MainWindow },

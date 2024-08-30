@@ -1,11 +1,11 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-card color="elevatedCard" v-if="multiLanguagePropertyObject" class="mt-4">
+        <v-card v-if="multiLanguagePropertyObject" color="elevatedCard" class="mt-4">
             <!-- Value(s) of the MultiLanguageProperty -->
             <v-list
+                v-if="multiLanguagePropertyObject.value && multiLanguagePropertyObject.value.length > 0"
                 nav
-                class="bg-elevatedCard pt-0"
-                v-if="multiLanguagePropertyObject.value && multiLanguagePropertyObject.value.length > 0">
+                class="bg-elevatedCard pt-0">
                 <v-list-item v-for="(value, i) in mlpValue" :key="i">
                     <v-list-item-title class="pt-2">
                         <!-- Input Field containing the Variable Value -->
@@ -18,8 +18,8 @@
                             append-icon="mdi-delete"
                             @click:append="removeEntry(i)"
                             @update:focused="setFocus($event, value)"
-                            @keydown.native.enter="updateValue()">
-                            <template v-slot:prepend-inner>
+                            @keydown.enter="updateValue()">
+                            <template #prepend-inner>
                                 <!-- language -->
                                 <v-chip label size="x-small" border>
                                     <span>{{ value.language ? value.language : 'no-lang' }}</span>
@@ -38,7 +38,7 @@
                                 </v-chip>
                             </template>
                             <!-- Update Value Button -->
-                            <template v-slot:append-inner>
+                            <template #append-inner>
                                 <v-btn
                                     v-if="value.isFocused"
                                     size="small"
@@ -55,7 +55,7 @@
                 </v-list-item>
             </v-list>
             <!-- Warning when MultiLanguageProperty has no value(s) -->
-            <v-list nav class="bg-elevatedCard pt-0" v-else>
+            <v-list v-else nav class="bg-elevatedCard pt-0">
                 <v-list-item>
                     <v-list-item-title class="pt-2">
                         <v-alert
@@ -70,7 +70,7 @@
             <!-- Edit the MultiLanguageProperty -->
             <v-list nav class="bg-elevatedCard py-0">
                 <v-list-item>
-                    <template v-slot:append>
+                    <template #append>
                         <v-btn
                             color="primary"
                             size="small"
@@ -89,14 +89,11 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import { useAASStore } from '@/store/AASDataStore';
     import RequestHandling from '@/mixins/RequestHandling';
+    import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'MultiLanguageProperty',
-        components: {
-            RequestHandling, // Mixin to handle the requests to the AAS
-        },
         mixins: [RequestHandling],
         props: ['multiLanguagePropertyObject'],
 
@@ -110,6 +107,7 @@
 
         data() {
             return {
+                localMultiLanguagePropertyObject: {} as any,
                 mlpValue: {} as any,
                 languages: [
                     { id: 1, text: 'Deutsch', short: 'de' },
@@ -123,8 +121,16 @@
             };
         },
 
-        mounted() {
-            this.mlpValue = this.multiLanguagePropertyObject.value;
+        computed: {
+            // get selected AAS from Store
+            SelectedAAS() {
+                return this.aasStore.getSelectedAAS;
+            },
+
+            // Get the selected Treeview Node (SubmodelElement) from the store
+            SelectedNode() {
+                return this.aasStore.getSelectedNode;
+            },
         },
 
         watch: {
@@ -145,16 +151,9 @@
             },
         },
 
-        computed: {
-            // get selected AAS from Store
-            SelectedAAS() {
-                return this.aasStore.getSelectedAAS;
-            },
-
-            // Get the selected Treeview Node (SubmodelElement) from the store
-            SelectedNode() {
-                return this.aasStore.getSelectedNode;
-            },
+        mounted() {
+            this.localMultiLanguagePropertyObject = this.multiLanguagePropertyObject;
+            this.mlpValue = this.multiLanguagePropertyObject.value;
         },
 
         methods: {
@@ -162,7 +161,7 @@
             removeEntry(position: number) {
                 // console.log('removeEntry: ', value);
                 this.mlpValue.splice(position, 1);
-                this.multiLanguagePropertyObject.value = this.mlpValue;
+                this.localMultiLanguagePropertyObject.value = this.mlpValue;
                 this.updateMLP();
             },
 
@@ -172,7 +171,7 @@
                     language: '',
                     text: '',
                 });
-                this.multiLanguagePropertyObject.value = this.mlpValue;
+                this.localMultiLanguagePropertyObject.value = this.mlpValue;
                 // console.log('addEntry: ', this.multiLanguagePropertyObject)
                 this.updateMLP();
             },
@@ -188,24 +187,24 @@
             updateValue() {
                 // console.log('updateValue: ', this.mlpValue);
                 if (document.activeElement) (document.activeElement as HTMLElement).blur(); // remove focus from input field
-                this.multiLanguagePropertyObject.value = this.mlpValue;
+                this.localMultiLanguagePropertyObject.value = this.mlpValue;
                 this.updateMLP();
             },
 
             // Function to update the value of the property
             updateMLP() {
                 // console.log("Update Value: ", this.multiLanguagePropertyObject);
-                let path = this.multiLanguagePropertyObject.path + '/$value';
+                let path = this.localMultiLanguagePropertyObject.path + '/$value';
                 let content = JSON.stringify(
-                    this.multiLanguagePropertyObject.value.map((item: any) => ({ [item.language]: item.text }))
+                    this.localMultiLanguagePropertyObject.value.map((item: any) => ({ [item.language]: item.text }))
                 );
                 let headers = new Headers();
                 headers.append('Content-Type', 'application/json');
                 let context =
                     'updating ' +
-                    this.multiLanguagePropertyObject.modelType +
+                    this.localMultiLanguagePropertyObject.modelType +
                     ' "' +
-                    this.multiLanguagePropertyObject.idShort +
+                    this.localMultiLanguagePropertyObject.idShort +
                     '"';
                 let disableMessage = false;
                 // Send Request to update the value of the property

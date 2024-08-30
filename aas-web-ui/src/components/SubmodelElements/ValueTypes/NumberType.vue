@@ -2,19 +2,19 @@
     <v-list-item class="pt-0">
         <v-list-item-title :class="IsOperationVariable ? 'pt-2' : ''">
             <v-text-field
+                v-model="newNumberValue"
                 type="number"
                 variant="outlined"
                 density="compact"
                 clearable
-                @keydown.native.enter="updateValue()"
-                v-model="newNumberValue"
                 :readonly="IsOutputVariable"
                 :hint="isOperationVariable ? '' : 'greyed out value on the left shows the current value in the AAS'"
                 :label="isOperationVariable ? numberValue.idShort : ''"
-                @update:focused="setFocus"
-                :hide-details="IsOperationVariable ? true : false">
+                :hide-details="IsOperationVariable ? true : false"
+                @keydown.enter="updateValue()"
+                @update:focused="setFocus">
                 <!-- Current Value -->
-                <template v-slot:prepend-inner>
+                <template #prepend-inner>
                     <v-chip
                         v-if="(isFocused || numberValue.value != newNumberValue) && !IsOperationVariable"
                         label
@@ -33,7 +33,7 @@
                     }}</v-chip>
                 </template>
                 <!-- Update Value Button -->
-                <template v-slot:append-inner>
+                <template #append-inner>
                     <span class="text-subtitleText">{{ unitSuffix(numberValue) }}</span>
                     <v-btn
                         v-if="isFocused && !IsOperationVariable"
@@ -53,16 +53,12 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import { useAASStore } from '@/store/AASDataStore';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'NumberType',
-        components: {
-            RequestHandling, // Mixin to handle the requests to the AAS
-            SubmodelElementHandling, // Mixin to handle the Submodel Elements
-        },
         mixins: [RequestHandling, SubmodelElementHandling],
         props: ['numberValue', 'isOperationVariable', 'variableType'],
 
@@ -79,30 +75,6 @@
                 newNumberValue: '', // new value of the property
                 isFocused: false, // boolean to check if the input field is focused
             };
-        },
-
-        mounted() {
-            this.newNumberValue = this.numberValue.value;
-        },
-
-        watch: {
-            // Watch for changes in the selected Node and reset input
-            SelectedNode: {
-                deep: true,
-                handler() {
-                    this.newNumberValue = '';
-                },
-            },
-
-            // Watch for changes in the numberValue and update the newNumberValue if the input field is not focused
-            numberValue: {
-                deep: true,
-                handler() {
-                    if (!this.isFocused) {
-                        this.newNumberValue = this.numberValue.value;
-                    }
-                },
-            },
         },
 
         computed: {
@@ -135,6 +107,30 @@
                     return false;
                 }
             },
+        },
+
+        watch: {
+            // Watch for changes in the selected Node and reset input
+            SelectedNode: {
+                deep: true,
+                handler() {
+                    this.newNumberValue = '';
+                },
+            },
+
+            // Watch for changes in the numberValue and update the newNumberValue if the input field is not focused
+            numberValue: {
+                deep: true,
+                handler() {
+                    if (!this.isFocused) {
+                        this.newNumberValue = this.numberValue.value;
+                    }
+                },
+            },
+        },
+
+        mounted() {
+            this.newNumberValue = this.numberValue.value;
         },
 
         methods: {

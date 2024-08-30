@@ -2,20 +2,20 @@
     <v-list-item class="pt-0">
         <v-list-item-title :class="IsOperationVariable ? 'pt-2' : ''">
             <v-text-field
+                v-model="newDateTimeStampValue"
                 type="text"
                 variant="outlined"
                 density="compact"
                 clearable
-                @keydown.native.enter="updateValue()"
-                v-model="newDateTimeStampValue"
                 :color="dateTimeStampValue.value == newDateTimeStampValue ? '' : 'warning'"
                 :persistent-hint="!IsOperationVariable"
                 :hint="dateTimeStampValue.value == newDateTimeStampValue ? '' : 'Current Value not yet saved.'"
+                :hide-details="IsOperationVariable ? true : false"
+                @keydown.enter="updateValue()"
                 @click:clear="clearDateTimeStamp"
-                @update:focused="setFocus"
-                :hide-details="IsOperationVariable ? true : false">
+                @update:focused="setFocus">
                 <!-- Update Value Button -->
-                <template v-slot:append-inner>
+                <template #append-inner>
                     <span class="text-subtitleText">{{ unitSuffix(dateTimeStampValue) }}</span>
                     <v-btn
                         v-if="!IsOperationVariable"
@@ -33,11 +33,11 @@
         <v-row v-if="!IsOutputVariable" class="mt-0">
             <!-- Date Picker -->
             <v-col cols="auto">
-                <v-date-picker color="primary" @update:modelValue="applyDate" elevation="1"></v-date-picker>
+                <v-date-picker color="primary" elevation="1" @update:model-value="applyDate"></v-date-picker>
             </v-col>
             <!-- Time Picker -->
             <v-col cols="auto">
-                <v-text-field type="time" variant="solo" v-model="time" @change="applyTime"></v-text-field>
+                <v-text-field v-model="time" type="time" variant="solo" @change="applyTime"></v-text-field>
             </v-col>
             <!-- Timezone Picker -->
         </v-row>
@@ -46,18 +46,13 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import { useAASStore } from '@/store/AASDataStore';
+    import { useDate } from 'vuetify';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-
-    import { useDate } from 'vuetify';
+    import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'DateTimeStampType',
-        components: {
-            RequestHandling, // Mixin to handle the requests to the AAS
-            SubmodelElementHandling, // Mixin to handle the SubmodelElements
-        },
         mixins: [RequestHandling, SubmodelElementHandling],
         props: ['dateTimeStampValue', 'isOperationVariable', 'variableType'],
 
@@ -76,38 +71,6 @@
                 newDateTimeStampValue: '', // new value of the property
                 time: '', // string to store the time
             };
-        },
-
-        mounted() {
-            if (!this.dateTimeStampValue.value || this.dateTimeStampValue.value == '') {
-                this.newDateTimeStampValue = '';
-            } else {
-                this.newDateTimeStampValue = this.dateTimeStampValue.value;
-            }
-            let date = this.createDateObject(this.newDateTimeStampValue); // create a new Date Object from the given string
-            this.time = this.getTimeFromDate(date); // get the time from the date
-        },
-
-        watch: {
-            // Watch for changes in the selected Node and reset input
-            SelectedNode: {
-                deep: true,
-                handler() {
-                    this.newDateTimeStampValue = '';
-                },
-            },
-
-            // Watch for changes in the dateTimeStampValue and update the newDateTimeStampValue if the input field is not focused
-            dateTimeStampValue: {
-                deep: true,
-                handler() {
-                    if (!this.dateTimeStampValue.value || this.dateTimeStampValue.value == '') {
-                        this.newDateTimeStampValue = '';
-                    } else {
-                        this.newDateTimeStampValue = this.dateTimeStampValue.value;
-                    }
-                },
-            },
         },
 
         computed: {
@@ -140,6 +103,38 @@
                     return false;
                 }
             },
+        },
+
+        watch: {
+            // Watch for changes in the selected Node and reset input
+            SelectedNode: {
+                deep: true,
+                handler() {
+                    this.newDateTimeStampValue = '';
+                },
+            },
+
+            // Watch for changes in the dateTimeStampValue and update the newDateTimeStampValue if the input field is not focused
+            dateTimeStampValue: {
+                deep: true,
+                handler() {
+                    if (!this.dateTimeStampValue.value || this.dateTimeStampValue.value == '') {
+                        this.newDateTimeStampValue = '';
+                    } else {
+                        this.newDateTimeStampValue = this.dateTimeStampValue.value;
+                    }
+                },
+            },
+        },
+
+        mounted() {
+            if (!this.dateTimeStampValue.value || this.dateTimeStampValue.value == '') {
+                this.newDateTimeStampValue = '';
+            } else {
+                this.newDateTimeStampValue = this.dateTimeStampValue.value;
+            }
+            let date = this.createDateObject(this.newDateTimeStampValue); // create a new Date Object from the given string
+            this.time = this.getTimeFromDate(date); // get the time from the date
         },
 
         methods: {

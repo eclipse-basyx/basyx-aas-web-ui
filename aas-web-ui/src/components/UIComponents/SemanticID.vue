@@ -9,8 +9,8 @@
                 </div>
             </v-tooltip>
             <!-- SemanticIId Title -->
-            <template v-slot:title>
-                <div v-html="semanticTitle + ':'" class="text-subtitle-2 mt-2"></div>
+            <template #title>
+                <div class="text-subtitle-2 mt-2" v-html="semanticTitle + ':'"></div>
             </template>
             <!-- SemanticId List -->
             <v-list-item-subtitle v-for="(semanticId, i) in semanticIdObject.keys" :key="i">

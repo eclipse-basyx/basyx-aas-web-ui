@@ -7,13 +7,14 @@
                 <v-list>
                     <v-list-item
                         v-for="group in groups"
+                        :key="group.groupId"
                         rounded
                         class="mb-1"
                         variant="tonal"
                         @click="openDashboard(group)">
                         <v-list-item-title>{{ group.groupName }}</v-list-item-title>
                         <v-list-item-subtitle>Number of widgets: {{ group.elementCount }}</v-list-item-subtitle>
-                        <template v-slot:append>
+                        <template #append>
                             <v-btn
                                 icon="mdi-delete"
                                 density="compact"
@@ -28,7 +29,7 @@
         <!-- Dialog for deleting a group -->
         <v-dialog v-model="deleteDialog" width="550px">
             <v-card>
-                <v-form @submit.prevent v-model="form">
+                <v-form v-model="form" @submit.prevent>
                     <v-card-title>{{ 'Are you sure?' }}</v-card-title>
                     <v-divider></v-divider>
                     <v-card-text>
@@ -56,9 +57,9 @@
                             variant="flat"
                             class="text-buttonText"
                             color="error"
-                            @click="deleteGroupFromDashboard(groups, selectedGroup.groupId)"
                             type="submit"
                             :disabled="!form"
+                            @click="deleteGroupFromDashboard(groups, selectedGroup.groupId)"
                             >{{ 'delete' }}</v-btn
                         >
                     </v-card-actions>
@@ -72,14 +73,11 @@
     import { defineComponent } from 'vue';
     import { useRouter } from 'vue-router';
     import DashboardHandling from '@/mixins/DashboardHandling';
-    import { useNavigationStore } from '@/store/NavigationStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
+    import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'DashboardGroups',
-        components: {
-            DashboardHandling,
-        },
         mixins: [DashboardHandling],
 
         setup() {
@@ -105,10 +103,6 @@
             };
         },
 
-        async mounted() {
-            this.groups = await this.getGroups();
-        },
-
         computed: {
             deleteRules() {
                 return [
@@ -116,6 +110,10 @@
                     (v: any) => v === this.selectedGroup.groupName || 'Name does not match',
                 ];
             },
+        },
+
+        async mounted() {
+            this.groups = await this.getGroups();
         },
 
         methods: {

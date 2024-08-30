@@ -2,12 +2,12 @@
     <v-container fluid class="pa-0">
         <template v-for="switchElement in inputElements" :key="switchElement.idShort">
             <v-switch
+                v-model="switchElement.value"
                 inset
                 hide-details
                 color="primary"
-                @change="sendSwitch(switchElement)"
-                v-model="switchElement.value"
-                :label="switchElement.name"></v-switch>
+                :label="switchElement.name"
+                @change="sendSwitch(switchElement)"></v-switch>
         </template>
     </v-container>
 </template>
@@ -17,10 +17,7 @@
     import RequestHandling from '@/mixins/RequestHandling';
 
     export default defineComponent({
-        name: 'Switch',
-        components: {
-            RequestHandling,
-        },
+        name: 'SwitchElement',
         mixins: [RequestHandling],
 
         props: ['submodelElementData', 'selectedNode', 'widgetSettings'],
@@ -35,9 +32,7 @@
             };
         },
 
-        mounted() {
-            this.initializeView(); // initialize list
-        },
+        computed: {},
 
         watch: {
             // Watch for changes in the submodelElementData and (re-)initialize the Component
@@ -49,7 +44,9 @@
             },
         },
 
-        computed: {},
+        mounted() {
+            this.initializeView(); // initialize list
+        },
 
         methods: {
             // Initialize the Component
@@ -105,7 +102,7 @@
                 let disableMessage = false;
                 // Send Request to update the value of the property
                 // console.log('Switch Value: ', path, content, headers, context, disableMessage);
-                this.putRequest(path, content, headers, context, disableMessage).then((response: any) => {});
+                this.putRequest(path, content, headers, context, disableMessage);
             },
         },
     });

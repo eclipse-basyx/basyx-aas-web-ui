@@ -1,11 +1,11 @@
 <template>
     <v-switch
-        @change="updateStatusCheck()"
         v-model="statusCheckStatus"
         color="primary"
         class="ml-2"
         hide-details
-        label="AAS Status Checks"></v-switch>
+        label="AAS Status Checks"
+        @change="updateStatusCheck()"></v-switch>
 </template>
 
 <script lang="ts">
@@ -29,15 +29,15 @@
             };
         },
 
-        mounted() {
-            this.statusCheckStatus = this.statusCheck;
-        },
-
         computed: {
             // get the status-check state from the store
             statusCheck() {
                 return this.navigationStore.getStatusCheck;
             },
+        },
+
+        mounted() {
+            this.statusCheckStatus = this.statusCheck;
         },
 
         methods: {

@@ -1,6 +1,6 @@
 <template>
     <v-container fluid class="pa-0">
-        <RelationshipElement :relationshipElementObject="annotatedRelationshipElementObject"></RelationshipElement>
+        <RelationshipElement :relationship-element-object="annotatedRelationshipElementObject"></RelationshipElement>
         <!-- Annotations -->
         <v-list-item class="px-1 pb-1 pt-0">
             <v-list-item-title class="text-subtitle-2 mt-2">{{ 'Annotations: ' }}</v-list-item-title>
@@ -16,7 +16,7 @@
                 :is="SubmodelElementWrapper"
                 v-if="SubmodelElementWrapper"
                 :SubmodelElementObject="SubmodelElement"
-                :cardStyle="'outlined'"></component>
+                :card-style="'outlined'"></component>
         </div>
     </v-container>
 </template>

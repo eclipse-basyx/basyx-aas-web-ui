@@ -9,34 +9,36 @@
                 <v-expansion-panel-text>
                     <GenericDataVisu
                         v-if="Array.isArray(submodelElement.value) && submodelElement.value.length > 0"
-                        :submodelElementData="submodelElement.value"></GenericDataVisu>
+                        :submodel-element-data="submodelElement.value"></GenericDataVisu>
                     <v-list v-else nav class="px-4 pt-0 pb-0">
                         <!-- SubmodelELement Representation for different modelTypes -->
                         <Property
                             v-if="submodelElement.modelType === 'Property'"
-                            :propertyObject="submodelElement"></Property>
+                            :property-object="submodelElement"></Property>
                         <MultyLanguageProperty
                             v-else-if="submodelElement.modelType === 'MultiLanguageProperty'"
-                            :multiLanguagePropertyObject="submodelElement"></MultyLanguageProperty>
+                            :multi-language-property-object="submodelElement"></MultyLanguageProperty>
                         <Operation
                             v-else-if="submodelElement.modelType === 'Operation'"
-                            :operationObject="submodelElement"></Operation>
-                        <File v-else-if="submodelElement.modelType === 'File'" :fileObject="submodelElement"></File>
-                        <Blob v-else-if="submodelElement.modelType === 'Blob'" :blobObject="submodelElement"></Blob>
+                            :operation-object="submodelElement"></Operation>
+                        <File v-else-if="submodelElement.modelType === 'File'" :file-object="submodelElement"></File>
+                        <Blob v-else-if="submodelElement.modelType === 'Blob'" :blob-object="submodelElement"></Blob>
                         <ReferenceElement
                             v-else-if="submodelElement.modelType === 'ReferenceElement'"
-                            :referenceElementObject="submodelElement"></ReferenceElement>
-                        <Range v-else-if="submodelElement.modelType === 'Range'" :rangeObject="submodelElement"></Range>
+                            :reference-element-object="submodelElement"></ReferenceElement>
+                        <Range
+                            v-else-if="submodelElement.modelType === 'Range'"
+                            :range-object="submodelElement"></Range>
                         <Entity
                             v-else-if="submodelElement.modelType === 'Entity'"
-                            :entityObject="submodelElement"></Entity>
+                            :entity-object="submodelElement"></Entity>
                         <RelationshipElement
                             v-else-if="submodelElement.modelType === 'RelationshipElement'"
-                            :relationshipElementObject="submodelElement"></RelationshipElement>
+                            :relationship-element-object="submodelElement"></RelationshipElement>
                         <AnnotatedRelationshipElement
                             v-else-if="submodelElement.modelType === 'AnnotatedRelationshipElement'"
-                            :annotatedRelationshipElementObject="submodelElement"></AnnotatedRelationshipElement>
-                        <InvalidElement v-else :invalidElementObject="submodelElement"></InvalidElement>
+                            :annotated-relationship-element-object="submodelElement"></AnnotatedRelationshipElement>
+                        <InvalidElement v-else :invalid-element-object="submodelElement"></InvalidElement>
                     </v-list>
                 </v-expansion-panel-text>
             </v-expansion-panel>
@@ -47,37 +49,24 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import { useAASStore } from '@/store/AASDataStore';
-    import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-
-    import IdentificationElement from '@/components/UIComponents/IdentificationElement.vue';
-    import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
-
-    import SubmodelElementList from '@/components/SubmodelElements/SubmodelElementList.vue';
-    import Property from '@/components/SubmodelElements/Property.vue';
+    import AnnotatedRelationshipElement from '@/components/SubmodelElements/AnnotatedRelationshipElement.vue';
+    import Blob from '@/components/SubmodelElements/Blob.vue';
+    import Entity from '@/components/SubmodelElements/Entity.vue';
+    import File from '@/components/SubmodelElements/File.vue';
+    import InvalidElement from '@/components/SubmodelElements/InvalidElement.vue';
     import MultyLanguageProperty from '@/components/SubmodelElements/MultiLanguageProperty.vue';
     import Operation from '@/components/SubmodelElements/Operation.vue';
-    import File from '@/components/SubmodelElements/File.vue';
-    import Blob from '@/components/SubmodelElements/Blob.vue';
-    import ReferenceElement from '@/components/SubmodelElements/ReferenceElement.vue';
+    import Property from '@/components/SubmodelElements/Property.vue';
     import Range from '@/components/SubmodelElements/Range.vue';
-    import Entity from '@/components/SubmodelElements/Entity.vue';
+    import ReferenceElement from '@/components/SubmodelElements/ReferenceElement.vue';
     import RelationshipElement from '@/components/SubmodelElements/RelationshipElement.vue';
-    import AnnotatedRelationshipElement from '@/components/SubmodelElements/AnnotatedRelationshipElement.vue';
-    import InvalidElement from '@/components/SubmodelElements/InvalidElement.vue';
+    import RequestHandling from '@/mixins/RequestHandling';
+    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'GenericDataVisu',
         components: {
-            RequestHandling, // Mixin to handle the requests to the AAS
-
-            // UI Components
-            IdentificationElement,
-            DescriptionElement,
-
-            // SubmodelElements
-            SubmodelElementList,
             Property,
             MultyLanguageProperty,
             Operation,

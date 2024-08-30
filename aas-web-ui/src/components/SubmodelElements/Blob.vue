@@ -3,7 +3,7 @@
         <v-list-item class="px-1 pb-1 pt-0">
             <v-list-item-title class="text-subtitle-2 mt-2">{{ 'Path: ' }}</v-list-item-title>
         </v-list-item>
-        <v-card color="elevatedCard" v-if="blobObject">
+        <v-card v-if="blobObject" color="elevatedCard">
             <!-- Path (Value) of the File Element -->
             <v-list nav class="bg-elevatedCard pt-0">
                 <v-list-item class="pb-0">
@@ -15,7 +15,7 @@
                         }}</v-chip>
                     </v-list-item-title>
                     <!-- Donwload File Button -->
-                    <template v-slot:append>
+                    <template #append>
                         <v-btn
                             v-if="blobObject.value && blobObject.contentType"
                             size="small"
@@ -30,18 +30,18 @@
                 <v-list-item class="pt-0">
                     <v-list-item-title>
                         <v-textarea
+                            v-model="truncatetBlobValue"
                             variant="outlined"
                             density="compact"
                             :hide-details="isTruncated ? false : true"
                             clearable
-                            @keydown.native.enter="updateBlob()"
-                            v-model="truncatetBlobValue"
-                            @click:clear="clearBlob()"
-                            @update:focused="setFocus"
                             :hint="isTruncated ? 'Blob string is truncated!' : ''"
-                            persistent-hint>
+                            persistent-hint
+                            @keydown.enter="updateBlob()"
+                            @click:clear="clearBlob()"
+                            @update:focused="setFocus">
                             <!-- Update Blob Button -->
-                            <template v-slot:append-inner="{ isFocused }">
+                            <template #append-inner="{ isFocused }">
                                 <v-btn
                                     v-if="isFocused"
                                     size="small"
@@ -61,17 +61,17 @@
             <!-- Action Button to upload a File as Blob -->
             <v-list nav class="bg-elevatedCard pa-0">
                 <v-list-item>
-                    <template v-slot:title>
+                    <template #title>
                         <!-- Upload-Button -->
                         <v-file-input
+                            v-model="newFile"
                             variant="outlined"
                             density="compact"
                             :multiple="false"
-                            v-model="newFile"
                             clearable
                             hide-details
                             class="my-1">
-                            <template v-slot:append-inner>
+                            <template #append-inner>
                                 <v-btn
                                     size="small"
                                     variant="elevated"
@@ -92,14 +92,11 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import { useAASStore } from '@/store/AASDataStore';
     import RequestHandling from '@/mixins/RequestHandling';
+    import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'Blob',
-        components: {
-            RequestHandling, // Mixin to handle the requests to the AAS
-        },
         mixins: [RequestHandling],
         props: ['blobObject'],
 
@@ -122,15 +119,16 @@
             };
         },
 
-        mounted() {
-            this.newBlobValue = this.blobObject.value;
-            if (this.blobObject.value.length > this.maxLength) {
-                this.truncatetBlobValue = this.blobObject.value.substring(0, this.maxLength);
-                this.isTruncated = true;
-            } else {
-                this.truncatetBlobValue = this.blobObject.value;
-                this.isTruncated = false;
-            }
+        computed: {
+            // get selected AAS from Store
+            SelectedAAS() {
+                return this.aasStore.getSelectedAAS;
+            },
+
+            // Get the selected Treeview Node (SubmodelElement) from the store
+            SelectedNode() {
+                return this.aasStore.getSelectedNode;
+            },
         },
 
         watch: {
@@ -161,16 +159,15 @@
             },
         },
 
-        computed: {
-            // get selected AAS from Store
-            SelectedAAS() {
-                return this.aasStore.getSelectedAAS;
-            },
-
-            // Get the selected Treeview Node (SubmodelElement) from the store
-            SelectedNode() {
-                return this.aasStore.getSelectedNode;
-            },
+        mounted() {
+            this.newBlobValue = this.blobObject.value;
+            if (this.blobObject.value.length > this.maxLength) {
+                this.truncatetBlobValue = this.blobObject.value.substring(0, this.maxLength);
+                this.isTruncated = true;
+            } else {
+                this.truncatetBlobValue = this.blobObject.value;
+                this.isTruncated = false;
+            }
         },
 
         methods: {

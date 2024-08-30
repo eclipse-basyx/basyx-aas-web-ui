@@ -21,9 +21,8 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useAASStore } from '@/store/AASDataStore';
-
-    import SubmodelList from './SubmodelList.vue';
     import ComponentVisualization from './ComponentVisualization.vue';
+    import SubmodelList from './SubmodelList.vue';
 
     export default defineComponent({
         name: 'AASViewer',

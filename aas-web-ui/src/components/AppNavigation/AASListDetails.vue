@@ -20,11 +20,11 @@
                         <v-spacer></v-spacer>
                         <!-- Close Button -->
                         <v-btn
-                            @click="closeDetails()"
                             icon="mdi-close-circle-outline"
                             size="small"
                             variant="plain"
-                            style="z-index: 2000; margin-right: -8px"></v-btn>
+                            style="z-index: 2000; margin-right: -8px"
+                            @click="closeDetails()"></v-btn>
                     </v-row>
                 </v-card-title>
                 <v-divider></v-divider>
@@ -33,23 +33,23 @@
                     <!-- AAS Identification -->
                     <IdentificationElement
                         class="mb-2"
-                        :identificationObject="detailsObject"
-                        :modelType="'AAS'"
-                        :idType="'Identification (ID)'"
-                        :nameType="'idShort'"></IdentificationElement>
+                        :identification-object="detailsObject"
+                        :model-type="'AAS'"
+                        :id-type="'Identification (ID)'"
+                        :name-type="'idShort'"></IdentificationElement>
                     <v-divider v-if="detailsObject.description && detailsObject.description.length > 0"></v-divider>
                     <!-- AAS Description -->
                     <DescriptionElement
                         v-if="detailsObject.description && detailsObject.description.length > 0"
-                        :descriptionObject="detailsObject.description"
-                        :descriptionTitle="'Description'"
+                        :description-object="detailsObject.description"
+                        :description-title="'Description'"
                         :small="false"></DescriptionElement>
                 </v-list>
                 <v-divider v-if="assetInformation"></v-divider>
                 <!-- Asset Information -->
                 <AssetInformation
                     v-if="assetInformation && Object.keys(assetInformation).length > 0"
-                    :assetObject="assetInformation"></AssetInformation>
+                    :asset-object="assetInformation"></AssetInformation>
             </div>
         </v-expand-transition>
     </v-container>
@@ -57,12 +57,12 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import { useNavigationStore } from '@/store/NavigationStore';
+    import AssetInformation from '@/components/UIComponents/AssetInformation.vue';
+    import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
+    import IdentificationElement from '@/components/UIComponents/IdentificationElement.vue';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-    import IdentificationElement from '@/components/UIComponents/IdentificationElement.vue';
-    import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
-    import AssetInformation from '@/components/UIComponents/AssetInformation.vue';
+    import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'AASListDetails',
@@ -88,19 +88,19 @@
             };
         },
 
+        computed: {
+            // Check if the current Device is a Mobile Device
+            isMobile() {
+                return this.navigationStore.getIsMobile;
+            },
+        },
+
         watch: {
             detailsObject() {
                 // If the AAS Details Card is opened, request asset-information
                 if (this.showDetailsCard) {
                     this.fetchAssetDetails();
                 }
-            },
-        },
-
-        computed: {
-            // Check if the current Device is a Mobile Device
-            isMobile() {
-                return this.navigationStore.getIsMobile;
             },
         },
 

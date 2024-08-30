@@ -1,6 +1,6 @@
 <template>
     <v-menu :close-on-content-click="false" location="bottom">
-        <template v-slot:activator="{ props }">
+        <template #activator="{ props }">
             <v-btn v-bind="props" icon="mdi-cog" class="ml-3"></v-btn>
         </template>
         <v-card
@@ -18,7 +18,6 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useNavigationStore } from '@/store/NavigationStore';
-
     import ThemeSwitch from './Settings/ThemeSwitch.vue';
 
     export default defineComponent({

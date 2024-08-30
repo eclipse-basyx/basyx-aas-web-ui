@@ -1,17 +1,17 @@
 <template>
     <v-container fluid class="pa-0">
         <!-- Header -->
-        <v-card class="mb-4" v-if="!hideSettings">
+        <v-card v-if="!hideSettings" class="mb-4">
             <v-card-title>
                 <div class="text-subtitle-1">{{ 'Time Series Data:' }}</div>
             </v-card-title>
         </v-card>
         <!-- Data Preview Config -->
-        <v-card class="mb-4" v-if="!hideSettings || editDialog">
+        <v-card v-if="!hideSettings || editDialog" class="mb-4">
             <!-- Title -->
-            <v-list nav class="py-0" v-if="!hideSettings || editDialog">
+            <v-list v-if="!hideSettings || editDialog" nav class="py-0">
                 <v-list-item class="pb-0">
-                    <template v-slot:title>
+                    <template #title>
                         <div class="text-subtitle-2">{{ 'Preview Configuration: ' }}</div>
                     </template>
                 </v-list-item>
@@ -20,6 +20,7 @@
             <v-card-text class="pt-1">
                 <!-- Segment Selection -->
                 <v-select
+                    v-model="selectedSegment"
                     variant="outlined"
                     density="compact"
                     clearable
@@ -28,12 +29,12 @@
                     item-title="idShort"
                     item-value="idShort"
                     return-object
-                    v-model="selectedSegment"
-                    @update:modelValue="emitSegment"></v-select>
+                    @update:model-value="emitSegment"></v-select>
                 <!-- Record Selection -->
                 <v-row>
                     <v-col cols="12" md="6">
                         <v-select
+                            v-model="timeVariable"
                             variant="outlined"
                             density="compact"
                             clearable
@@ -42,11 +43,11 @@
                             item-title="idShort"
                             item-value="idShort"
                             return-object
-                            v-model="timeVariable"
-                            @update:modelValue="emitTimeValue"></v-select>
+                            @update:model-value="emitTimeValue"></v-select>
                     </v-col>
                     <v-col cols="12" md="6">
                         <v-select
+                            v-model="yVariables"
                             variant="outlined"
                             density="compact"
                             clearable
@@ -56,46 +57,45 @@
                             item-value="idShort"
                             return-object
                             multiple
-                            v-model="yVariables"
-                            @update:modelValue="emitYValue"></v-select>
+                            @update:model-value="emitYValue"></v-select>
                     </v-col>
                 </v-row>
                 <!-- API Token -->
                 <v-text-field
                     v-if="segmentType == 'LinkedSegment' && showTokenInput"
+                    v-model="apiToken"
                     variant="outlined"
                     density="compact"
                     clearable
                     label="API Token"
-                    hide-details
-                    v-model="apiToken"></v-text-field>
+                    hide-details></v-text-field>
             </v-card-text>
             <v-divider></v-divider>
             <v-list nav class="pr-2 pt-0">
                 <v-list-item>
-                    <template v-slot:append>
+                    <template #append>
                         <v-btn
                             v-if="segmentType == 'LinkedSegment'"
-                            @click="fetchLinkedData()"
                             size="small"
                             class="text-buttonText"
                             color="primary"
+                            @click="fetchLinkedData()"
                             >Fetch Data</v-btn
                         >
                         <v-btn
                             v-if="segmentType == 'InternalSegment'"
-                            @click="fetchInternalData()"
                             size="small"
                             class="text-buttonText"
                             color="primary"
+                            @click="fetchInternalData()"
                             >Fetch Data</v-btn
                         >
                         <v-btn
                             v-if="segmentType == 'ExternalSegment'"
-                            @click="fetchExternalData()"
                             size="small"
                             class="text-buttonText"
                             color="primary"
+                            @click="fetchExternalData()"
                             >Fetch Data</v-btn
                         >
                     </template>
@@ -105,20 +105,20 @@
         <!-- Data Preview Chart -->
         <v-card :flat="hideSettings">
             <!-- Title -->
-            <v-list nav class="py-0" v-if="!hideSettings || editDialog">
+            <v-list v-if="!hideSettings || editDialog" nav class="py-0">
                 <v-list-item>
-                    <template v-slot:title>
+                    <template #title>
                         <div class="text-subtitle-2">{{ 'Preview Chart: ' }}</div>
                     </template>
-                    <template v-slot:append>
+                    <template #append>
                         <v-btn
                             v-if="selectedChartType && !hideSettings"
                             color="primary"
                             class="text-buttonText"
                             size="small"
                             variant="elevated"
-                            @click="createObject()"
                             append-icon="mdi-plus"
+                            @click="createObject()"
                             >Dashboard</v-btn
                         >
                     </template>
@@ -128,6 +128,7 @@
                 <!-- Chart Type Selection -->
                 <v-select
                     v-if="!hideSettings || editDialog"
+                    v-model="selectedChartType"
                     variant="outlined"
                     density="compact"
                     clearable
@@ -136,54 +137,53 @@
                     item-title="name"
                     item-value="name"
                     return-object
-                    v-model="selectedChartType"
-                    @update:modelValue="clearChartOptions"></v-select>
+                    @update:model-value="clearChartOptions"></v-select>
                 <!-- Chart Preview -->
                 <LineChart
                     v-if="selectedChartType && selectedChartType.id == 1"
-                    :chartData="timeSeriesValues"
-                    :timeVariable="timeVariable"
-                    :yVariables="yVariables"
-                    :chartOptionsExternal="chartOptions"
-                    :editDialog="editDialog"
-                    @chartOptions="getChartOptions"></LineChart>
+                    :chart-data="timeSeriesValues"
+                    :time-variable="timeVariable"
+                    :y-variables="yVariables"
+                    :chart-options-external="chartOptions"
+                    :edit-dialog="editDialog"
+                    @chart-options="getChartOptions"></LineChart>
                 <AreaChart
                     v-if="selectedChartType && selectedChartType.id == 2"
-                    :chartData="timeSeriesValues"
-                    :timeVariable="timeVariable"
-                    :yVariables="yVariables"
-                    :chartOptionsExternal="chartOptions"
-                    :editDialog="editDialog"
-                    @chartOptions="getChartOptions"></AreaChart>
+                    :chart-data="timeSeriesValues"
+                    :time-variable="timeVariable"
+                    :y-variables="yVariables"
+                    :chart-options-external="chartOptions"
+                    :edit-dialog="editDialog"
+                    @chart-options="getChartOptions"></AreaChart>
                 <ScatterChart
                     v-if="selectedChartType && selectedChartType.id == 3"
-                    :chartData="timeSeriesValues"
-                    :timeVariable="timeVariable"
-                    :yVariables="yVariables"
-                    :chartOptionsExternal="chartOptions"
-                    :editDialog="editDialog"
-                    @chartOptions="getChartOptions"></ScatterChart>
+                    :chart-data="timeSeriesValues"
+                    :time-variable="timeVariable"
+                    :y-variables="yVariables"
+                    :chart-options-external="chartOptions"
+                    :edit-dialog="editDialog"
+                    @chart-options="getChartOptions"></ScatterChart>
                 <Histogram
                     v-if="selectedChartType && selectedChartType.id == 4"
-                    :chartData="timeSeriesValues"
-                    :timeVariable="timeVariable"
-                    :yVariables="yVariables"
-                    :chartOptionsExternal="chartOptions"
-                    :editDialog="editDialog"
-                    @chartOptions="getChartOptions"></Histogram>
+                    :chart-data="timeSeriesValues"
+                    :time-variable="timeVariable"
+                    :y-variables="yVariables"
+                    :chart-options-external="chartOptions"
+                    :edit-dialog="editDialog"
+                    @chart-options="getChartOptions"></Histogram>
                 <Gauge
                     v-if="selectedChartType && selectedChartType.id == 5"
-                    :chartData="timeSeriesValues"
-                    :timeVariable="timeVariable"
-                    :yVariables="yVariables"
-                    :chartOptionsExternal="chartOptions"
-                    :editDialog="editDialog"
-                    @chartOptions="getChartOptions"></Gauge>
+                    :chart-data="timeSeriesValues"
+                    :time-variable="timeVariable"
+                    :y-variables="yVariables"
+                    :chart-options-external="chartOptions"
+                    :edit-dialog="editDialog"
+                    @chart-options="getChartOptions"></Gauge>
                 <DisplayField
                     v-if="selectedChartType && selectedChartType.id == 6"
-                    :chartData="timeSeriesValues"
-                    :timeVariable="timeVariable"
-                    :yVariables="yVariables"></DisplayField>
+                    :chart-data="timeSeriesValues"
+                    :time-variable="timeVariable"
+                    :y-variables="yVariables"></DisplayField>
             </v-card-text>
         </v-card>
     </v-container>
@@ -192,27 +192,22 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import { useAASStore } from '@/store/AASDataStore';
-    import { useEnvStore } from '@/store/EnvironmentStore';
-    import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-    import DashboardHandling from '@/mixins/DashboardHandling';
-
+    import AreaChart from '@/components/Widgets/AreaChart.vue';
+    import DisplayField from '@/components/Widgets/DisplayField.vue';
+    import Gauge from '@/components/Widgets/Gauge.vue';
+    import Histogram from '@/components/Widgets/Histogram.vue';
     // Widget imports
     import LineChart from '@/components/Widgets/LineChart.vue';
-    import AreaChart from '@/components/Widgets/AreaChart.vue';
     import ScatterChart from '@/components/Widgets/ScatterChart.vue';
-    import Histogram from '@/components/Widgets/Histogram.vue';
-    import Gauge from '@/components/Widgets/Gauge.vue';
-    import DisplayField from '@/components/Widgets/DisplayField.vue';
+    import DashboardHandling from '@/mixins/DashboardHandling';
+    import RequestHandling from '@/mixins/RequestHandling';
+    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useAASStore } from '@/store/AASDataStore';
+    import { useEnvStore } from '@/store/EnvironmentStore';
 
     export default defineComponent({
         name: 'TimeSeriesData',
         components: {
-            RequestHandling, // Mixin to handle the requests to the AAS
-            DashboardHandling,
-
-            // Widgets
             LineChart,
             AreaChart,
             ScatterChart,
@@ -244,7 +239,7 @@
                 records: [] as Array<any>, // Array to store the records of the time series smt
                 timeVariable: null as any, // Object to store the selected time variable of the time series smt
                 yVariables: [] as Array<any>, // Array to store the selected y variables of the time series smt
-                yVariableTemplate: '{{y-value}}' as String, // String that is used to inject y-variable in linkedSeg Query
+                yVariableTemplate: '{{y-value}}' as string, // String that is used to inject y-variable in linkedSeg Query
                 apiToken: '', // API Token for the Time Series Database
                 showTokenInput: true, // Boolean to show the API Token Input
                 timeSeriesValues: [] as Array<any>, // Array to store the values of the time series smt
@@ -259,28 +254,6 @@
                 selectedChartType: null as any, // Object to store the selected chart type
                 chartOptions: {} as any, // Object to store the chart options
             };
-        },
-
-        mounted() {
-            this.initializeTimeSeriesData(); // initialize TimeSeriesData Plugin
-            this.initDashboardTSD();
-            const influxDBToken = this.envStore.getEnvInfluxdbToken;
-            if (influxDBToken && influxDBToken !== '') {
-                this.apiToken = influxDBToken;
-                this.showTokenInput = false;
-            }
-        },
-
-        watch: {
-            loadTrigger() {
-                this.initializeTimeSeriesData();
-                this.initDashboardTSD();
-                const influxDBToken = this.envStore.getEnvInfluxdbToken;
-                if (influxDBToken && influxDBToken !== '') {
-                    this.apiToken = influxDBToken;
-                    this.showTokenInput = false;
-                }
-            },
         },
 
         computed: {
@@ -321,6 +294,28 @@
                 // return null if no Segment Type was found
                 return null;
             },
+        },
+
+        watch: {
+            loadTrigger() {
+                this.initializeTimeSeriesData();
+                this.initDashboardTSD();
+                const influxDBToken = this.envStore.getEnvInfluxdbToken;
+                if (influxDBToken && influxDBToken !== '') {
+                    this.apiToken = influxDBToken;
+                    this.showTokenInput = false;
+                }
+            },
+        },
+
+        mounted() {
+            this.initializeTimeSeriesData(); // initialize TimeSeriesData Plugin
+            this.initDashboardTSD();
+            const influxDBToken = this.envStore.getEnvInfluxdbToken;
+            if (influxDBToken && influxDBToken !== '') {
+                this.apiToken = influxDBToken;
+                this.showTokenInput = false;
+            }
         },
 
         methods: {
@@ -496,7 +491,7 @@
                 let currentTable = null as any;
                 let headerLine = '';
 
-                lines.forEach((line: any, index: number) => {
+                lines.forEach((line: any) => {
                     const columns = line.split(',');
 
                     // Skip the header line (because it's not including data)
@@ -570,7 +565,7 @@
                 return columns[columns.length - 1];
             },
 
-            processDataset(headerLine: String, datasetLines: any) {
+            processDataset(headerLine: string, datasetLines: any) {
                 // console.log('Dataset Lines: ', datasetLines, ' Header Line: ', headerLine)
                 const headers = headerLine.split(',');
                 const valueIndex = headers.indexOf('_value');

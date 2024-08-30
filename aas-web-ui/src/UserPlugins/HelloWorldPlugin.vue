@@ -11,7 +11,7 @@
             <!-- Display SubmodelElement -->
             <SubmodelElementWrapper
                 :SubmodelElementObject="SubmodelElement"
-                @updateValue="updatePluginValue"></SubmodelElementWrapper>
+                @update-value="updatePluginValue"></SubmodelElementWrapper>
         </div>
     </v-container>
 </template>
@@ -19,20 +19,19 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import { useAASStore } from '@/store/AASDataStore';
+    import SubmodelElementWrapper from '@/components/UIComponents/SubmodelElementWrapper.vue';
     import RequestHandling from '@/mixins/RequestHandling'; // Mixin to handle the requests to the AAS
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling'; // Mixin to handle typical SubmodelElement-Actions
-
-    import SubmodelElementWrapper from '@/components/UIComponents/SubmodelElementWrapper.vue';
+    import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'PluginJSONArray',
-        SemanticID: 'http://hello.world.de/plugin_submodel', // SemanticID of the HelloWorld-Plugin
-        props: ['submodelElementData'],
+        SemanticID: 'http://hello.world.de/plugin_submodel',
         components: {
             SubmodelElementWrapper,
         },
-        mixins: [RequestHandling, SubmodelElementHandling],
+        mixins: [RequestHandling, SubmodelElementHandling], // SemanticID of the HelloWorld-Plugin
+        props: ['submodelElementData'],
 
         setup() {
             const theme = useTheme();
@@ -50,16 +49,16 @@
             };
         },
 
-        mounted() {
-            // console.log('HelloWorldPlugin mounted');
-            this.initializePlugin(); // Initialize the HelloWorld-Plugin when the component is mounted
-        },
-
         computed: {
             // Get the selected Treeview Node (SubmodelElement) from the store
             SelectedNode() {
                 return this.aasStore.getSelectedNode;
             },
+        },
+
+        mounted() {
+            // console.log('HelloWorldPlugin mounted');
+            this.initializePlugin(); // Initialize the HelloWorld-Plugin when the component is mounted
         },
 
         methods: {

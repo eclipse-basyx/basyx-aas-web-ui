@@ -1,6 +1,6 @@
 import { defineComponent } from 'vue';
-import { useNavigationStore } from '@/store/NavigationStore';
 import { useAuthStore } from '@/store/AuthStore';
+import { useNavigationStore } from '@/store/NavigationStore';
 
 export default defineComponent({
     name: 'RequestHandling',
@@ -65,7 +65,7 @@ export default defineComponent({
                 })
                 .then((data) => {
                     // Check if the Server responded with an error
-                    if (data && data.hasOwnProperty('status') && data.status >= 400) {
+                    if (data && Object.prototype.hasOwnProperty.call(data, 'status') && data.status >= 400) {
                         // Error response from the server
                         if (!disableMessage) this.errorHandler(data, context); // Call the error handler
                         return { success: false };
@@ -117,7 +117,7 @@ export default defineComponent({
                 })
                 .then((data) => {
                     // Check if the Server responded with an error
-                    if (data && data.hasOwnProperty('status') && data.status >= 400) {
+                    if (data && Object.prototype.hasOwnProperty.call(data, 'status') && data.status >= 400) {
                         // Error response from the server
                         if (!disableMessage) this.errorHandler(data, context); // Call the error handler
                         return { success: false };
@@ -167,7 +167,7 @@ export default defineComponent({
                 })
                 .then((data) => {
                     // Check if the Server responded with an error
-                    if (data && data.hasOwnProperty('status') && data.status >= 400) {
+                    if (data && Object.prototype.hasOwnProperty.call(data, 'status') && data.status >= 400) {
                         // Error response from the server
                         if (!disableMessage) this.errorHandler(data, context); // Call the error handler
                         return { success: false };
@@ -217,7 +217,7 @@ export default defineComponent({
                 })
                 .then((data) => {
                     // Check if the Server responded with an error
-                    if (data && data.hasOwnProperty('status') && data.status >= 400) {
+                    if (data && Object.prototype.hasOwnProperty.call(data, 'status') && data.status >= 400) {
                         // Error response from the server
                         if (!disableMessage) this.errorHandler(data, context); // Call the error handler
                         return { success: false };
@@ -266,7 +266,7 @@ export default defineComponent({
                 })
                 .then((data) => {
                     // Check if the Server responded with an error
-                    if (data && data.hasOwnProperty('status') && data.status >= 400) {
+                    if (data && Object.prototype.hasOwnProperty.call(data, 'status') && data.status >= 400) {
                         // Error response from the server
                         if (!disableMessage) this.errorHandler(data, context); // Call the error handler
                         return { success: false };
@@ -296,7 +296,7 @@ export default defineComponent({
         // Function to handle errors
         errorHandler(errorData: any, context: string) {
             // console.log('Error: ', errorData, 'Context: ', context)
-            let initialErrorMessage = 'Error ' + context + '!';
+            const initialErrorMessage = 'Error ' + context + '!';
             let errorMessage = '';
 
             // Building error message based on the new error response structure
@@ -307,7 +307,7 @@ export default defineComponent({
                 errorMessage += '\nError: ' + errorData.error;
             }
             if (errorData.timestamp) {
-                let errorDate = new Date(errorData.timestamp).toLocaleString();
+                const errorDate = new Date(errorData.timestamp).toLocaleString();
                 errorMessage += '\nTimestamp: ' + errorDate;
             }
             if (errorData.path) {

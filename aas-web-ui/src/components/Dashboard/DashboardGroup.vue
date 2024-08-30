@@ -26,6 +26,8 @@
         </v-card>
         <v-row justify="start" class="mt-2 px-1">
             <v-col
+                v-for="dashboardElement in filteredElements"
+                :key="dashboardElement.id"
                 class="pa-2"
                 cols="12"
                 xs="12"
@@ -33,15 +35,13 @@
                 md="6"
                 lg="6"
                 xl="4"
-                xxl="3"
-                v-for="dashboardElement in filteredElements"
-                :key="dashboardElement.id">
+                xxl="3">
                 <!-- Single Dashboard Element -->
                 <DashboardElement
-                    :dashboardData="dashboardElement"
-                    :globalSyncStatus="syncStatus"
-                    @deleteElement="updateGroup"
-                    @updateElement="updateElementVisibility"></DashboardElement>
+                    :dashboard-data="dashboardElement"
+                    :global-sync-status="syncStatus"
+                    @delete-element="updateGroup"
+                    @update-element="updateElementVisibility"></DashboardElement>
             </v-col>
         </v-row>
     </v-container>
@@ -50,16 +50,14 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
-    import { useEnvStore } from '@/store/EnvironmentStore';
     import DashboardHandling from '@/mixins/DashboardHandling';
-
+    import { useEnvStore } from '@/store/EnvironmentStore';
     import DashboardElement from './DashboardElement.vue';
 
     export default defineComponent({
         name: 'Dashboard',
         components: {
             DashboardElement,
-            DashboardHandling,
         },
         mixins: [DashboardHandling],
 

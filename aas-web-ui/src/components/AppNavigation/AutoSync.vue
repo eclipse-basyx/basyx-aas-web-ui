@@ -19,13 +19,13 @@
                 <!-- Switch to activate/deactive auto-sync -->
                 <v-list-item class="py-0">
                     <v-switch
+                        v-model="autoSyncStatus"
                         label="Auto Sync"
                         color="primary"
                         class="mx-3"
                         hide-details
-                        v-model="autoSyncStatus"
                         @change="updateAutoSync()">
-                        <template v-slot:append>
+                        <template #append>
                             <v-icon>mdi-autorenew</v-icon>
                         </template>
                     </v-switch>
@@ -40,13 +40,13 @@
                 <!-- Input Field to set the sync-interval -->
                 <v-list-item class="py-0">
                     <v-text-field
+                        v-model="intervalTime"
                         density="compact"
                         variant="outlined"
                         type="number"
-                        v-model="intervalTime"
                         hide-details
                         @update:focused="checkMin">
-                        <template v-slot:append-inner>
+                        <template #append-inner>
                             <span>ms</span>
                         </template>
                     </v-text-field>
@@ -69,7 +69,6 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useNavigationStore } from '@/store/NavigationStore';
-
     import StatusSwitch from './Settings/StatusSwitch.vue';
 
     export default defineComponent({
@@ -94,10 +93,6 @@
             };
         },
 
-        mounted() {
-            this.autoSyncStatus = this.autoSync;
-        },
-
         computed: {
             // Get the auto-sync state from the store
             autoSync() {
@@ -108,6 +103,10 @@
             isMobile() {
                 return this.navigationStore.getIsMobile;
             },
+        },
+
+        mounted() {
+            this.autoSyncStatus = this.autoSync;
         },
 
         methods: {

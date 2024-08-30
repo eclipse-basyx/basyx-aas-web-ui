@@ -1,10 +1,10 @@
 <template>
     <v-list-item class="pt-0">
-        <template v-slot:title>
+        <template #title>
             <v-switch
+                v-model="newBooleanValue"
                 inset
                 density="compact"
-                v-model="newBooleanValue"
                 :readonly="IsOutputVariable"
                 color="primary"
                 :messages="
@@ -12,12 +12,12 @@
                 "
                 :hide-details="IsOperationVariable ? true : false"
                 @update:model-value="changeState">
-                <template v-slot:label>
+                <template #label>
                     <span style="display: inline; white-space: nowrap">{{ booleanValue.value }}</span>
                 </template>
             </v-switch>
         </template>
-        <template v-slot:append>
+        <template #append>
             <v-btn
                 v-if="!IsOperationVariable"
                 size="small"
@@ -34,14 +34,11 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import { useAASStore } from '@/store/AASDataStore';
     import RequestHandling from '@/mixins/RequestHandling';
+    import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'BooleanType',
-        components: {
-            RequestHandling, // Mixin to handle the requests to the AAS
-        },
         mixins: [RequestHandling],
         props: ['booleanValue', 'isOperationVariable', 'variableType'],
 
@@ -57,40 +54,6 @@
             return {
                 newBooleanValue: false as boolean, // new value of the property
             };
-        },
-
-        mounted() {
-            // check if this.booleanValue.value is of type string
-            if (typeof this.booleanValue.value === 'string') {
-                // convert string to boolean
-                this.booleanValue.value = this.booleanValue.value === 'true';
-            } else {
-                this.newBooleanValue = this.booleanValue.value;
-            }
-        },
-
-        watch: {
-            // Watch for changes in the selected Node and reset input
-            SelectedNode: {
-                deep: true,
-                handler() {
-                    this.newBooleanValue = false;
-                },
-            },
-
-            // Watch for changes in the booleanValue and update the newBooleanValue if the input field is not focused
-            booleanValue: {
-                deep: true,
-                handler() {
-                    // check if this.booleanValue.value is of type string
-                    if (typeof this.booleanValue.value === 'string') {
-                        // convert string to boolean
-                        this.booleanValue.value = this.booleanValue.value === 'true';
-                    } else {
-                        this.newBooleanValue = this.booleanValue.value;
-                    }
-                },
-            },
         },
 
         computed: {
@@ -123,6 +86,42 @@
                     return false;
                 }
             },
+        },
+
+        watch: {
+            // Watch for changes in the selected Node and reset input
+            SelectedNode: {
+                deep: true,
+                handler() {
+                    this.newBooleanValue = false;
+                },
+            },
+
+            // Watch for changes in the booleanValue and update the newBooleanValue if the input field is not focused
+            booleanValue: {
+                deep: true,
+                handler() {
+                    // check if this.booleanValue.value is of type string
+                    if (typeof this.booleanValue.value === 'string') {
+                        // convert string to boolean
+                        const convertedValue = this.booleanValue.value === 'true';
+                        this.newBooleanValue = convertedValue;
+                    } else {
+                        this.newBooleanValue = this.booleanValue.value;
+                    }
+                },
+            },
+        },
+
+        mounted() {
+            // check if this.booleanValue.value is of type string
+            if (typeof this.booleanValue.value === 'string') {
+                // convert string to boolean
+                const convertedValue = this.booleanValue.value === 'true';
+                this.newBooleanValue = convertedValue;
+            } else {
+                this.newBooleanValue = this.booleanValue.value;
+            }
         },
 
         methods: {

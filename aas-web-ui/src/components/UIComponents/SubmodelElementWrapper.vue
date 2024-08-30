@@ -4,26 +4,26 @@
             <v-list nav class="pt-0">
                 <MultiLanguageProperty
                     v-if="SubmodelElementObject.modelType == 'MultiLanguageProperty'"
-                    :multiLanguagePropertyObject="SubmodelElementObject"></MultiLanguageProperty>
+                    :multi-language-property-object="SubmodelElementObject"></MultiLanguageProperty>
                 <Property
                     v-if="SubmodelElementObject.modelType == 'Property'"
-                    :propertyObject="SubmodelElementObject"
-                    @updateValue="updatePropertyValue"></Property>
-                <File v-if="SubmodelElementObject.modelType == 'File'" :fileObject="SubmodelElementObject"></File>
-                <Blob v-if="SubmodelElementObject.modelType == 'Blob'" :blobObject="SubmodelElementObject"></Blob>
+                    :property-object="SubmodelElementObject"
+                    @update-value="updatePropertyValue"></Property>
+                <File v-if="SubmodelElementObject.modelType == 'File'" :file-object="SubmodelElementObject"></File>
+                <Blob v-if="SubmodelElementObject.modelType == 'Blob'" :blob-object="SubmodelElementObject"></Blob>
                 <Operation
                     v-if="SubmodelElementObject.modelType == 'Operation'"
-                    :operationObject="SubmodelElementObject"></Operation>
+                    :operation-object="SubmodelElementObject"></Operation>
                 <ReferenceElement
                     v-if="SubmodelElementObject.modelType == 'ReferenceElement'"
-                    :referenceElementObject="SubmodelElementObject"></ReferenceElement>
-                <Range v-if="SubmodelElementObject.modelType == 'Range'" :rangeObject="SubmodelElementObject"></Range>
+                    :reference-element-object="SubmodelElementObject"></ReferenceElement>
+                <Range v-if="SubmodelElementObject.modelType == 'Range'" :range-object="SubmodelElementObject"></Range>
                 <RelationshipElement
                     v-if="SubmodelElementObject.modelType == 'RelationshipElement'"
-                    :relationshipElementObject="SubmodelElementObject"></RelationshipElement>
+                    :relationship-element-object="SubmodelElementObject"></RelationshipElement>
                 <AnnotatedRelationshipElement
                     v-if="SubmodelElementObject.modelType == 'AnnotatedRelationshipElement'"
-                    :annotatedRelationshipElementObject="SubmodelElementObject"></AnnotatedRelationshipElement>
+                    :annotated-relationship-element-object="SubmodelElementObject"></AnnotatedRelationshipElement>
             </v-list>
         </v-card>
     </v-container>
@@ -31,16 +31,15 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-
-    import Property from '@/components/SubmodelElements/Property.vue';
-    import MultiLanguageProperty from '@/components/SubmodelElements/MultiLanguageProperty.vue';
-    import File from '@/components/SubmodelElements/File.vue';
-    import Blob from '@/components/SubmodelElements/Blob.vue';
-    import Operation from '@/components/SubmodelElements/Operation.vue';
-    import ReferenceElement from '@/components/SubmodelElements/ReferenceElement.vue';
-    import Range from '@/components/SubmodelElements/Range.vue';
-    import RelationshipElement from '@/components/SubmodelElements/RelationshipElement.vue';
     import AnnotatedRelationshipElement from '@/components/SubmodelElements/AnnotatedRelationshipElement.vue';
+    import Blob from '@/components/SubmodelElements/Blob.vue';
+    import File from '@/components/SubmodelElements/File.vue';
+    import MultiLanguageProperty from '@/components/SubmodelElements/MultiLanguageProperty.vue';
+    import Operation from '@/components/SubmodelElements/Operation.vue';
+    import Property from '@/components/SubmodelElements/Property.vue';
+    import Range from '@/components/SubmodelElements/Range.vue';
+    import ReferenceElement from '@/components/SubmodelElements/ReferenceElement.vue';
+    import RelationshipElement from '@/components/SubmodelElements/RelationshipElement.vue';
 
     export default defineComponent({
         name: 'SubmodelELementWrapper',

@@ -25,13 +25,13 @@
 </template>
 
 <script lang="ts">
+    import mermaid from 'mermaid';
     import { defineComponent } from 'vue';
     import { useRouter } from 'vue-router';
-    import mermaid from 'mermaid';
     import { useTheme } from 'vuetify';
-    import { useAASStore } from '@/store/AASDataStore';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useAASStore } from '@/store/AASDataStore';
 
     declare global {
         interface Window {
@@ -41,9 +41,6 @@
 
     export default defineComponent({
         name: 'BillsOfMaterial',
-        components: {
-            RequestHandling, // Mixin to handle the requests to the AAS
-        },
         mixins: [RequestHandling, SubmodelElementHandling],
         props: ['submodelElementData'],
 
@@ -75,22 +72,6 @@
             };
         },
 
-        mounted() {
-            window.callback = this.callback; // set the callback function
-            this.initializeBoM(); // initialize BoM Plugin
-        },
-
-        beforeUnmount() {
-            window.callback = null; // remove the callback function
-        },
-
-        watch: {
-            // watch for changes in the vuetify theme and update the chart options
-            isDark() {
-                this.applyTheme();
-            },
-        },
-
         computed: {
             // Check if the current Theme is dark
             isDark() {
@@ -101,6 +82,22 @@
             primaryColor() {
                 return this.theme.current.value.colors.primary;
             },
+        },
+
+        watch: {
+            // watch for changes in the vuetify theme and update the chart options
+            isDark() {
+                this.applyTheme();
+            },
+        },
+
+        mounted() {
+            window.callback = this.callback; // set the callback function
+            this.initializeBoM(); // initialize BoM Plugin
+        },
+
+        beforeUnmount() {
+            window.callback = null; // remove the callback function
         },
 
         methods: {

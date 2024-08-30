@@ -1,6 +1,6 @@
 <template>
     <v-container fluid class="pa-0">
-        <apexchart type="donut" ref="donutchart" height="420" :options="chartOptions" :series="chartSeries"></apexchart>
+        <apexchart ref="donutchart" type="donut" height="420" :options="chartOptions" :series="chartSeries"></apexchart>
     </v-container>
 </template>
 
@@ -49,17 +49,11 @@
             };
         },
 
-        mounted() {
-            this.$nextTick(() => {
-                const chart = (this.$refs.donutchart as any).chart;
-                if (chart && this.submodelElementData && Object.keys(this.submodelElementData).length > 0) {
-                    // console.log('Chart has rendered')
-                    // apply the theme on component mount
-                    this.applyTheme();
-                    // append the series to the chart
-                    this.initializeSeries();
-                }
-            });
+        computed: {
+            // Check if the current Theme is dark
+            isDark() {
+                return this.theme.global.current.value.dark;
+            },
         },
 
         watch: {
@@ -75,11 +69,17 @@
             },
         },
 
-        computed: {
-            // Check if the current Theme is dark
-            isDark() {
-                return this.theme.global.current.value.dark;
-            },
+        mounted() {
+            this.$nextTick(() => {
+                const chart = (this.$refs.donutchart as any).chart;
+                if (chart && this.submodelElementData && Object.keys(this.submodelElementData).length > 0) {
+                    // console.log('Chart has rendered')
+                    // apply the theme on component mount
+                    this.applyTheme();
+                    // append the series to the chart
+                    this.initializeSeries();
+                }
+            });
         },
 
         methods: {
@@ -91,7 +91,7 @@
                 let maxValue = 0;
                 let series = [] as any;
                 // determine the target and actual value
-                this.submodelElementData.value.forEach((element: any, i: number) => {
+                this.submodelElementData.value.forEach((element: any) => {
                     // Actual Value
                     if (this.widgetSettings.actualValue == element.idShort) {
                         actualValue = element.value;

@@ -22,15 +22,15 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import { useNavigationStore } from '@/store/NavigationStore';
-    import { useAASStore } from '@/store/AASDataStore';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useAASStore } from '@/store/AASDataStore';
+    import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'PDFPreview',
-        props: ['submodelElementData'],
         mixins: [RequestHandling, SubmodelElementHandling],
+        props: ['submodelElementData'],
 
         setup() {
             const theme = useTheme();
@@ -53,15 +53,11 @@
             };
         },
 
-        mounted() {
-            this.Base64PDF = '';
-            this.pdfUrl = '';
-            if (this.submodelElementData.modelType == 'File') {
-                // console.log('SubmodelElementData: ', this.submodelElementData);
-                this.getPDFBlob();
-            } else if (this.submodelElementData.modelType == 'Blob') {
-                this.getDecodedPDFBlob();
-            }
+        computed: {
+            // Get the selected Treeview Node (SubmodelElement) from the store
+            SelectedNode() {
+                return this.aasStore.getSelectedNode;
+            },
         },
 
         watch: {
@@ -77,11 +73,15 @@
             },
         },
 
-        computed: {
-            // Get the selected Treeview Node (SubmodelElement) from the store
-            SelectedNode() {
-                return this.aasStore.getSelectedNode;
-            },
+        mounted() {
+            this.Base64PDF = '';
+            this.pdfUrl = '';
+            if (this.submodelElementData.modelType == 'File') {
+                // console.log('SubmodelElementData: ', this.submodelElementData);
+                this.getPDFBlob();
+            } else if (this.submodelElementData.modelType == 'Blob') {
+                this.getDecodedPDFBlob();
+            }
         },
 
         methods: {

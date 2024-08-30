@@ -1,10 +1,8 @@
 import { defineComponent } from 'vue';
-
-import { useNavigationStore } from '@/store/NavigationStore';
-import { useAASStore } from '@/store/AASDataStore';
-
 import RequestHandling from '@/mixins/RequestHandling';
 import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+import { useAASStore } from '@/store/AASDataStore';
+import { useNavigationStore } from '@/store/NavigationStore';
 
 export default defineComponent({
     name: 'WidgetHandling',
@@ -28,8 +26,8 @@ export default defineComponent({
 
     methods: {
         prepareSeriesValues(chartData: any, yVariables: any) {
-            let newSeries = chartData.map((series: any, index: number) => {
-                let chartValues = series.map((element: any) => ({
+            const newSeries = chartData.map((series: any, index: number) => {
+                const chartValues = series.map((element: any) => ({
                     x: new Date(element.time),
                     y: Number(element.value).toFixed(2),
                 }));
@@ -81,9 +79,9 @@ export default defineComponent({
         },
 
         prepareHistogramData(chartData: any, numberOfCategories: any) {
-            let bins = Number(numberOfCategories);
+            const bins = Number(numberOfCategories);
             // Flatten the array and sort values
-            let allValues = chartData.flat().map((item: any) => Number(item.value));
+            const allValues = chartData.flat().map((item: any) => Number(item.value));
             allValues.sort((a: any, b: any) => a - b);
 
             // Determine range and interval
@@ -93,21 +91,21 @@ export default defineComponent({
             const interval = range / bins;
 
             // Create bins for histogram for each series
-            let histograms = chartData.map((series: any) => {
-                let histogram = new Array(bins).fill(0);
+            const histograms = chartData.map((series: any) => {
+                const histogram = new Array(bins).fill(0);
                 series.forEach((item: any) => {
-                    let value = Number(item.value);
-                    let index = Math.min(Math.floor((value - minValue) / interval), bins - 1);
+                    const value = Number(item.value);
+                    const index = Math.min(Math.floor((value - minValue) / interval), bins - 1);
                     histogram[index]++;
                 });
                 return histogram;
             });
 
             // Prepare categories array
-            let categories = new Array(bins);
+            const categories = new Array(bins);
             for (let i = 0; i < bins; i++) {
-                let rangeStart = minValue + i * interval;
-                let rangeEnd = rangeStart + interval;
+                const rangeStart = minValue + i * interval;
+                const rangeEnd = rangeStart + interval;
                 categories[i] = `${rangeStart.toFixed(2)} - ${rangeEnd.toFixed(2)}`;
             }
 

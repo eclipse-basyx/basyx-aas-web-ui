@@ -8,10 +8,10 @@
                     <img :src="EnvLogoPath" style="min-height: 42px; max-height: 42px" alt="Logo" />
                 </v-card>
                 <!-- Menu Toggle (Desktop) -->
-                <v-menu v-if="!isMobile" :close-on-content-click="false" v-model="mainMenu">
-                    <template v-slot:activator="{ props: menu }">
+                <v-menu v-if="!isMobile" v-model="mainMenu" :close-on-content-click="false">
+                    <template #activator="{ props: menu }">
                         <v-tooltip text="Main Menu" location="bottom" :open-delay="600">
-                            <template v-slot:activator="{ props: tooltip }">
+                            <template #activator="{ props: tooltip }">
                                 <v-app-bar-nav-icon
                                     class="ml-3"
                                     v-bind="mergeProps(menu, tooltip)"></v-app-bar-nav-icon>
@@ -19,7 +19,7 @@
                         </v-tooltip>
                     </template>
                     <!-- Main Menu Component -->
-                    <MainMenu @closeMenu="mainMenu = false"></MainMenu>
+                    <MainMenu @close-menu="mainMenu = false"></MainMenu>
                 </v-menu>
                 <v-spacer></v-spacer>
                 <!-- Settings-Menu for Auto-Sync and Sync-Interval -->
@@ -35,8 +35,8 @@
                     </template>
                 </v-img>
                 <!-- Menu Toggle (Mobile) -->
-                <v-dialog v-if="isMobile" fullscreen v-model="mainMenu" :z-index="9993" :transition="false">
-                    <template v-slot:activator="{ props }">
+                <v-dialog v-if="isMobile" v-model="mainMenu" fullscreen :z-index="9993" :transition="false">
+                    <template #activator="{ props }">
                         <v-btn icon="mdi-cog" v-bind="props" variant="text"></v-btn>
                     </template>
                     <v-card color="card">
@@ -44,7 +44,7 @@
                             <v-toolbar-title>Settings</v-toolbar-title>
                             <v-spacer></v-spacer>
                             <v-toolbar-items>
-                                <v-btn icon="mdi-close" @click="mainMenu = false" class="mr-3"></v-btn>
+                                <v-btn icon="mdi-close" class="mr-3" @click="mainMenu = false"></v-btn>
                             </v-toolbar-items>
                         </v-toolbar>
                         <!-- Auto-Sync and Theme Settings in Mobile View -->
@@ -55,14 +55,14 @@
                         </v-row>
                         <v-divider></v-divider>
                         <!-- Main Menu Component -->
-                        <MainMenu @closeMenu="mainMenu = false"></MainMenu>
+                        <MainMenu @close-menu="mainMenu = false"></MainMenu>
                     </v-card>
                 </v-dialog>
                 <!-- Settings Menu -->
                 <Settings v-if="!isMobile"></Settings>
                 <!-- Auth Status -->
                 <v-tooltip text="Authorization Status" location="bottom" :open-delay="600">
-                    <template v-slot:activator="{ props }">
+                    <template #activator="{ props }">
                         <v-icon v-bind="props" class="mr-3">{{
                             isAuthEnabled ? (authStatus ? 'mdi-lock-check' : 'mdi-lock-remove') : 'mdi-lock-off'
                         }}</v-icon>
@@ -77,7 +77,7 @@
                     text="Authorization Status"
                     location="bottom"
                     :open-delay="600">
-                    <template v-slot:activator="{ props }">
+                    <template #activator="{ props }">
                         <v-icon v-bind="props" @click="logout">mdi-logout</v-icon>
                     </template>
                     <span>Logout</span>
@@ -95,7 +95,7 @@
                 </v-card-text>
             </v-card>
             <span v-else class="text-buttonText">{{ Snackbar.text }}</span>
-            <template v-slot:actions>
+            <template #actions>
                 <v-btn :color="Snackbar.btnColor" variant="plain" @click="closeSnackbar()">
                     <v-icon>mdi-close</v-icon>
                 </v-btn>
@@ -113,27 +113,27 @@
 
         <!-- left Side Menu with the AAS List -->
         <v-navigation-drawer
+            v-if="showAASList && !isMobile"
+            v-model="drawerVisibility"
             :width="336"
             color="appNavigation"
             class="leftMenu"
-            v-if="showAASList && !isMobile"
-            v-model="drawerVisibility"
             @update:model-value="updateDrawerState">
             <AASList />
         </v-navigation-drawer>
         <v-btn
             v-if="showAASList && !isMobile && !drawerVisibility"
-            @click="extendSidebar()"
             style="position: fixed; bottom: 50px; left: 10px; z-index: 10"
-            icon="mdi-chevron-double-right"></v-btn>
+            icon="mdi-chevron-double-right"
+            @click="extendSidebar()"></v-btn>
 
         <!-- Mobile Menu -->
         <v-menu
-            transition="slide-y-reverse-transition"
-            v-model="mobileMenu"
             v-if="showMobileMenu"
+            v-model="mobileMenu"
+            transition="slide-y-reverse-transition"
             style="z-index: 9992">
-            <template v-slot:activator="{ props }">
+            <template #activator="{ props }">
                 <v-btn
                     v-bind="props"
                     :icon="mobileMenu ? 'mdi-close' : 'mdi-dots-vertical'"
@@ -200,22 +200,19 @@
     import { mergeProps } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
-    import { useNavigationStore } from '@/store/NavigationStore';
-    import { useEnvStore } from '@/store/EnvironmentStore';
-    import { useAuthStore } from '@/store/AuthStore';
     import RequestHandling from '@/mixins/RequestHandling';
-
+    import { useAuthStore } from '@/store/AuthStore';
+    import { useEnvStore } from '@/store/EnvironmentStore';
+    import { useNavigationStore } from '@/store/NavigationStore';
     import AASList from './AASList.vue';
     import AutoSync from './AutoSync.vue';
-    import ThemeSwitch from './Settings/ThemeSwitch.vue';
     import MainMenu from './MainMenu.vue';
     import Settings from './Settings.vue';
+    import ThemeSwitch from './Settings/ThemeSwitch.vue';
 
     export default defineComponent({
         name: 'AppNavigation', // Name of the Component
         components: {
-            RequestHandling,
-
             AASList, // Component to display the AAS List
             AutoSync, // Component to display the Auto-Sync Settings
             ThemeSwitch, // Component to display the Theme Switch
@@ -256,6 +253,120 @@
                 dashboardAvailable: false, // Dashboard Availability
                 drawerVisibility: true, // Variable to show the AAS List Drawer
             };
+        },
+
+        computed: {
+            // Check if the current Device is a Mobile Device
+            isMobile() {
+                return this.navigationStore.getIsMobile;
+            },
+
+            // Check if the current Theme is dark
+            isDark() {
+                return this.theme.global.current.value.dark;
+            },
+
+            // get snackbar data from store
+            Snackbar() {
+                return this.navigationStore.getSnackbar;
+            },
+
+            // to check if the MainWindow is the current Route
+            showAASList() {
+                return ['MainWindow', 'AASViewer'].includes(this.route.name as string);
+            },
+
+            // get Drawer State from store
+            drawerState() {
+                // Computed Property to control the state of the Navigation Drawer (true -> collapsed, false -> extended)
+                return this.navigationStore.getDrawerState;
+            },
+
+            // Get the Env Variable for the AAS Discovery URL from the store
+            EnvAASDiscoveryPath() {
+                return this.envStore.getEnvAASDiscoveryPath;
+            },
+
+            // Get the Env Variable for the AAS Registry URL from the store
+            EnvAASRegistryPath() {
+                return this.envStore.getEnvAASRegistryPath;
+            },
+
+            // Get the Env Variable for the Submodel Registry URL from the store
+            EnvSubmodelRegistryPath() {
+                return this.envStore.getEnvSubmodelRegistryPath;
+            },
+
+            // Get the Env Variable for the AAS Repo URL from the store
+            EnvAASRepoPath() {
+                return this.envStore.getEnvAASRepoPath;
+            },
+
+            // Get the Env Variable for the Submodel Repo URL from the store
+            EnvSubmodelRepoPath() {
+                return this.envStore.getEnvSubmodelRepoPath;
+            },
+
+            // Get the Env Variable for the Concept Description Repo URL from the store
+            EnvConceptDescriptionRepoPath() {
+                return this.envStore.getEnvConceptDescriptionRepoPath;
+            },
+
+            // Get the Env Variable for the logo path from the store
+            EnvLogoPath() {
+                return this.envStore.getEnvLogoPath;
+            },
+
+            dashboardServicePath() {
+                return this.envStore.getEnvDashboardServicePath;
+            },
+
+            // Determine if Mobile Menu should be shown
+            showMobileMenu() {
+                let showMenu = false;
+                if (this.isMobile && !this.mainMenu) {
+                    showMenu = true;
+                }
+                return showMenu;
+            },
+
+            // Determine if Auto-Sync should be shown
+            showAutoSync() {
+                let showAutoSync = false;
+                if (
+                    this.route.name === 'MainWindow' ||
+                    this.route.name === 'AASList' ||
+                    this.route.name === 'SubmodelList' ||
+                    this.route.name === 'ComponentVisualization' ||
+                    this.route.name === 'AASViewer'
+                ) {
+                    showAutoSync = true;
+                }
+                return showAutoSync;
+            },
+
+            // get the keycloak authStatus from the store
+            authStatus() {
+                return this.authStore.getAuthStatus ? 'Authenticated' : 'Not Authenticated';
+            },
+
+            // Determine if Authorization is enabled
+            isAuthEnabled() {
+                return this.authStore.getAuthEnabled;
+            },
+        },
+
+        watch: {
+            // Watch for changes in the Snackbar Object and close it after the Timeout
+            Snackbar() {
+                if (this.Snackbar.status) {
+                    setTimeout(() => this.closeSnackbar(), this.Snackbar.timeout);
+                }
+            },
+
+            drawerState() {
+                this.drawerVisibility = this.drawerState;
+            },
         },
 
         mounted() {
@@ -365,120 +476,6 @@
                     this.connectToEnvironment('ConceptDescription');
                 }
             }
-        },
-
-        watch: {
-            // Watch for changes in the Snackbar Object and close it after the Timeout
-            Snackbar() {
-                if (this.Snackbar.status) {
-                    setTimeout(() => this.closeSnackbar(), this.Snackbar.timeout);
-                }
-            },
-
-            drawerState() {
-                this.drawerVisibility = this.drawerState;
-            },
-        },
-
-        computed: {
-            // Check if the current Device is a Mobile Device
-            isMobile() {
-                return this.navigationStore.getIsMobile;
-            },
-
-            // Check if the current Theme is dark
-            isDark() {
-                return this.theme.global.current.value.dark;
-            },
-
-            // get snackbar data from store
-            Snackbar() {
-                return this.navigationStore.getSnackbar;
-            },
-
-            // to check if the MainWindow is the current Route
-            showAASList() {
-                return ['MainWindow', 'AASViewer'].includes(this.route.name as string);
-            },
-
-            // get Drawer State from store
-            drawerState() {
-                // Computed Property to control the state of the Navigation Drawer (true -> collapsed, false -> extended)
-                return this.navigationStore.getDrawerState;
-            },
-
-            // Get the Env Variable for the AAS Discovery URL from the store
-            EnvAASDiscoveryPath() {
-                return this.envStore.getEnvAASDiscoveryPath;
-            },
-
-            // Get the Env Variable for the AAS Registry URL from the store
-            EnvAASRegistryPath() {
-                return this.envStore.getEnvAASRegistryPath;
-            },
-
-            // Get the Env Variable for the Submodel Registry URL from the store
-            EnvSubmodelRegistryPath() {
-                return this.envStore.getEnvSubmodelRegistryPath;
-            },
-
-            // Get the Env Variable for the AAS Repo URL from the store
-            EnvAASRepoPath() {
-                return this.envStore.getEnvAASRepoPath;
-            },
-
-            // Get the Env Variable for the Submodel Repo URL from the store
-            EnvSubmodelRepoPath() {
-                return this.envStore.getEnvSubmodelRepoPath;
-            },
-
-            // Get the Env Variable for the Concept Description Repo URL from the store
-            EnvConceptDescriptionRepoPath() {
-                return this.envStore.getEnvConceptDescriptionRepoPath;
-            },
-
-            // Get the Env Variable for the logo path from the store
-            EnvLogoPath() {
-                return this.envStore.getEnvLogoPath;
-            },
-
-            dashboardServicePath() {
-                return this.envStore.getEnvDashboardServicePath;
-            },
-
-            // Determine if Mobile Menu should be shown
-            showMobileMenu() {
-                let showMenu = false;
-                if (this.isMobile && !this.mainMenu) {
-                    showMenu = true;
-                }
-                return showMenu;
-            },
-
-            // Determine if Auto-Sync should be shown
-            showAutoSync() {
-                let showAutoSync = false;
-                if (
-                    this.route.name === 'MainWindow' ||
-                    this.route.name === 'AASList' ||
-                    this.route.name === 'SubmodelList' ||
-                    this.route.name === 'ComponentVisualization' ||
-                    this.route.name === 'AASViewer'
-                ) {
-                    showAutoSync = true;
-                }
-                return showAutoSync;
-            },
-
-            // get the keycloak authStatus from the store
-            authStatus() {
-                return this.authStore.getAuthStatus ? 'Authenticated' : 'Not Authenticated';
-            },
-
-            // Determine if Authorization is enabled
-            isAuthEnabled() {
-                return this.authStore.getAuthEnabled;
-            },
         },
 
         methods: {

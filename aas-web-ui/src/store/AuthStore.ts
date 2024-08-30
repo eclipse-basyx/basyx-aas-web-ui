@@ -1,6 +1,5 @@
-import { get } from 'lodash';
-import { defineStore } from 'pinia';
 import Keycloak from 'keycloak-js';
+import { defineStore } from 'pinia';
 
 export const useAuthStore = defineStore({
     id: 'authStore',

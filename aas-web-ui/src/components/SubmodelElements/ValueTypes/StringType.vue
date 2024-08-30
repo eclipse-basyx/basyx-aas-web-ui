@@ -2,18 +2,18 @@
     <v-list-item class="pt-0">
         <v-list-item-title :class="IsOperationVariable ? 'pt-2' : ''">
             <v-textarea
+                v-model="newStringValue"
                 variant="outlined"
                 density="compact"
                 clearable
-                v-model="newStringValue"
                 :readonly="IsOutputVariable"
                 auto-grow
                 :rows="1"
                 :label="isOperationVariable ? stringValue.idShort : ''"
-                @update:focused="setFocus"
-                :hide-details="IsOperationVariable ? true : false">
+                :hide-details="IsOperationVariable ? true : false"
+                @update:focused="setFocus">
                 <!-- Update Value Button -->
-                <template v-slot:append-inner>
+                <template #append-inner>
                     <v-btn
                         v-if="!IsOperationVariable"
                         size="small"
@@ -32,14 +32,11 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import { useAASStore } from '@/store/AASDataStore';
     import RequestHandling from '@/mixins/RequestHandling';
+    import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'StringType',
-        components: {
-            RequestHandling, // Mixin to handle the requests to the AAS
-        },
         mixins: [RequestHandling],
         props: ['stringValue', 'isOperationVariable', 'variableType'],
 
@@ -55,28 +52,6 @@
             return {
                 newStringValue: '', // new value of the property
             };
-        },
-
-        mounted() {
-            this.newStringValue = this.stringValue.value;
-        },
-
-        watch: {
-            // Watch for changes in the selected Node and reset input
-            SelectedNode: {
-                deep: true,
-                handler() {
-                    this.newStringValue = '';
-                },
-            },
-
-            // Watch for changes in the stringValue and update the newStringValue if the input field is not focused
-            stringValue: {
-                deep: true,
-                handler() {
-                    this.newStringValue = this.stringValue.value;
-                },
-            },
         },
 
         computed: {
@@ -109,6 +84,28 @@
                     return false;
                 }
             },
+        },
+
+        watch: {
+            // Watch for changes in the selected Node and reset input
+            SelectedNode: {
+                deep: true,
+                handler() {
+                    this.newStringValue = '';
+                },
+            },
+
+            // Watch for changes in the stringValue and update the newStringValue if the input field is not focused
+            stringValue: {
+                deep: true,
+                handler() {
+                    this.newStringValue = this.stringValue.value;
+                },
+            },
+        },
+
+        mounted() {
+            this.newStringValue = this.stringValue.value;
         },
 
         methods: {

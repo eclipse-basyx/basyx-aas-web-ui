@@ -11,15 +11,14 @@
         </v-list-item>
         <!-- Group of contained SubmodelElements -->
         <SubmodelElementGroup
-            :smeObject="submodelObject"
-            :smeLocator="'submodelElements'"
-            :topMargin="submodelObject.kind ? 'mt-1' : 'mt-4'"></SubmodelElementGroup>
+            :sme-object="submodelObject"
+            :sme-locator="'submodelElements'"
+            :top-margin="submodelObject.kind ? 'mt-1' : 'mt-4'"></SubmodelElementGroup>
     </v-container>
 </template>
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-
     import SubmodelElementGroup from '@/components/UIComponents/SubmodelElementGroup.vue';
 
     export default defineComponent({

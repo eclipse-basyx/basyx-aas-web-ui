@@ -192,37 +192,26 @@
                 <div class="text-subtitle-1">{{ 'Asset Specific Properties' }}</div>
             </v-card-title>
             <v-card-text>
-                <GenericDataVisu :submodelElementData="assetSpecificProperties"></GenericDataVisu>
+                <GenericDataVisu :submodel-element-data="assetSpecificProperties"></GenericDataVisu>
             </v-card-text>
         </v-card>
     </v-container>
 </template>
 
 <script lang="ts">
+    import 'leaflet/dist/leaflet.css';
+    import { LMap, LMarker, LTileLayer } from '@vue-leaflet/vue-leaflet';
+    import { latLng } from 'leaflet';
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import { latLng } from 'leaflet';
-    import { useAASStore } from '@/store/AASDataStore';
+    import GenericDataVisu from '@/components/UIComponents/GenericDataVisu.vue';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-
-    import IdentificationElement from '@/components/UIComponents/IdentificationElement.vue';
-    import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
-    import ImagePreview from '@/components/SubmodelPlugins/ImagePreview.vue';
-
-    import GenericDataVisu from '@/components/UIComponents/GenericDataVisu.vue';
-
-    import { LMap, LTileLayer, LMarker } from '@vue-leaflet/vue-leaflet';
-    import 'leaflet/dist/leaflet.css';
+    import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'DigitalNameplate',
         components: {
-            RequestHandling, // Mixin to handle the requests to the AAS
-
-            // UI Components
-            IdentificationElement,
-            DescriptionElement,
             GenericDataVisu,
 
             // Leaflet Map
@@ -261,15 +250,15 @@
             };
         },
 
-        mounted() {
-            this.initializeDigitalNameplate(); // initialize DigitalNameplate Plugin
-        },
-
         computed: {
             // Get the selected Treeview Node (SubmodelElement) from the store
             SelectedNode() {
                 return this.aasStore.getSelectedNode;
             },
+        },
+
+        mounted() {
+            this.initializeDigitalNameplate(); // initialize DigitalNameplate Plugin
         },
 
         methods: {

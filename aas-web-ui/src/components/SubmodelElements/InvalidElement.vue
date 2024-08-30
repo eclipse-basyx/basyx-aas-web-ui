@@ -1,6 +1,6 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-card color="elevatedCard" v-if="invalidElementObject" class="mt-4">
+        <v-card v-if="invalidElementObject" color="elevatedCard" class="mt-4">
             <v-list nav class="pt-0" :class="IsOperationVariable ? '' : 'bg-elevatedCard'">
                 <!-- Alert when SubmodelElement is invalid -->
                 <v-list-item v-if="!IsOperationVariable">
@@ -22,11 +22,11 @@
                     </v-card>
                     <v-card v-else class="pa-0 ma-0">
                         <v-textarea
+                            v-model="jsonString"
                             variant="outlined"
                             hide-details
                             density="compact"
                             :rows="8"
-                            v-model="jsonString"
                             @update:focused="setFocus($event)"></v-textarea>
                     </v-card>
                 </v-list-item>
@@ -36,10 +36,10 @@
                     <v-list-item-subtitle class="pt-2">{{
                         'The selected SubmodelElement is either non existend or not yet implemented.'
                     }}</v-list-item-subtitle>
-                    <template v-slot:append>
+                    <template #append>
                         <!-- Tooltip showing all available SubmodelElements -->
                         <v-tooltip open-delay="600" transition="slide-x-transition">
-                            <template v-slot:activator="{ props }">
+                            <template #activator="{ props }">
                                 <v-icon v-bind="props">mdi-information-outline</v-icon>
                             </template>
                             <div>
@@ -90,13 +90,6 @@
             };
         },
 
-        mounted() {
-            // check if isOperationVariable is not undefined
-            if (this.isOperationVariable) {
-                this.jsonString = JSON.stringify(this.invalidElementObject, null, 2);
-            }
-        },
-
         computed: {
             // Check if the Property is an Operation Variable
             IsOperationVariable() {
@@ -117,6 +110,13 @@
                     return false;
                 }
             },
+        },
+
+        mounted() {
+            // check if isOperationVariable is not undefined
+            if (this.isOperationVariable) {
+                this.jsonString = JSON.stringify(this.invalidElementObject, null, 2);
+            }
         },
 
         methods: {

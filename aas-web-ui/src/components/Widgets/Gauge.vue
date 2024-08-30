@@ -22,16 +22,14 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import _ from 'lodash';
     import { useTheme } from 'vuetify';
     import DashboardHandling from '@/mixins/DashboardHandling';
-
     import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'Gauge',
-        props: ['chartData', 'timeVariable', 'yVariables', 'chartOptionsExternal', 'editDialog'],
         mixins: [DashboardHandling],
+        props: ['chartData', 'timeVariable', 'yVariables', 'chartOptionsExternal', 'editDialog'],
 
         setup() {
             const theme = useTheme();
@@ -89,17 +87,11 @@
             };
         },
 
-        mounted() {
-            this.$nextTick(() => {
-                const chart = (this.$refs.gauge as any).chart;
-                if (chart) {
-                    // console.log('Chart has rendered')
-                    // apply the theme on component mount
-                    this.applyTheme();
-                    // append the series to the chart
-                    this.initializeSeries();
-                }
-            });
+        computed: {
+            // Check if the current Theme is dark
+            isDark() {
+                return this.theme.global.current.value.dark;
+            },
         },
 
         watch: {
@@ -115,11 +107,17 @@
             },
         },
 
-        computed: {
-            // Check if the current Theme is dark
-            isDark() {
-                return this.theme.global.current.value.dark;
-            },
+        mounted() {
+            this.$nextTick(() => {
+                const chart = (this.$refs.gauge as any).chart;
+                if (chart) {
+                    // console.log('Chart has rendered')
+                    // apply the theme on component mount
+                    this.applyTheme();
+                    // append the series to the chart
+                    this.initializeSeries();
+                }
+            });
         },
 
         methods: {

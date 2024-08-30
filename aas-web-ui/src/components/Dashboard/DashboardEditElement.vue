@@ -1,10 +1,10 @@
 <template>
-    <v-dialog max-width="700px" height="auto" v-model="editDialog">
+    <v-dialog v-model="editDialog" max-width="700px" height="auto">
         <!-- Edit Button -->
-        <template v-slot:activator="{ props: activatorProps }">
+        <template #activator="{ props: activatorProps }">
             <v-btn v-bind="activatorProps" icon="mdi-pencil" variant="plain" size="small"></v-btn>
         </template>
-        <template v-slot:default="{ isActive }">
+        <template #default="{ isActive }">
             <v-card>
                 <v-row align="center" class="py-2 px-3">
                     <v-col>
@@ -45,7 +45,7 @@
                         density="compact"
                         hide-details="auto"
                         @keyup.enter="createGroup($event.target.value)">
-                        <template v-slot:no-data>
+                        <template #no-data>
                             <v-list-item>
                                 <v-list-item-title>
                                     No group matching "<strong>{{ searchGroup }}</strong
@@ -63,10 +63,10 @@
                                 )
                             "
                             class="py-2"
-                            :submodelElementData="aasData"
-                            :configData="dashboardData"
-                            :editDialog="true"
-                            @newOptions="setNewOptions"></TimeSeriesData>
+                            :submodel-element-data="aasData"
+                            :config-data="dashboardData"
+                            :edit-dialog="true"
+                            @new-options="setNewOptions"></TimeSeriesData>
                     </template>
                 </v-card-text>
                 <v-divider></v-divider>
@@ -74,11 +74,11 @@
                     <v-btn text="Close" @click="isActive.value = false"></v-btn>
                     <v-spacer></v-spacer>
                     <v-btn
-                        @click="saveConfig()"
                         text="Save"
                         color="primary"
                         class="text-buttonText"
-                        variant="flat"></v-btn>
+                        variant="flat"
+                        @click="saveConfig()"></v-btn>
                 </v-card-actions>
             </v-card>
         </template>
@@ -86,16 +86,15 @@
 </template>
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import { useEnvStore } from '@/store/EnvironmentStore';
+    import TimeSeriesData from '@/components/SubmodelPlugins/TimeSeriesData.vue';
     import DashboardHandling from '@/mixins/DashboardHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-    import TimeSeriesData from '@/components/SubmodelPlugins/TimeSeriesData.vue';
+    import { useEnvStore } from '@/store/EnvironmentStore';
 
     export default defineComponent({
         name: 'DashboardEditElement',
         components: {
             TimeSeriesData,
-            DashboardHandling,
         },
         mixins: [SubmodelElementHandling, DashboardHandling],
         props: ['aasData', 'dashboardData'],

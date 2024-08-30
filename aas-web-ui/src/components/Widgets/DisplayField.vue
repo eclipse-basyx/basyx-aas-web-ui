@@ -29,20 +29,13 @@
 
     export default defineComponent({
         name: 'DisplayField',
-        props: ['chartData', 'timeVariable', 'yVariables'],
-        components: {
-            SubmodelElementHandling,
-        },
         mixins: [SubmodelElementHandling],
+        props: ['chartData', 'timeVariable', 'yVariables'],
 
         data() {
             return {
                 localChartData: [] as Array<any>,
             };
-        },
-
-        mounted() {
-            this.initializeDisplay();
         },
 
         watch: {
@@ -52,6 +45,10 @@
                 },
                 deep: true,
             },
+        },
+
+        mounted() {
+            this.initializeDisplay();
         },
 
         methods: {

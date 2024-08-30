@@ -27,8 +27,8 @@
                 style="overflow-y: auto; height: calc(100svh - 170px)">
                 <!-- Add Plugins matched on SemanticId's inside the SubmodelEntrypoint -->
                 <SubmodelEntrypoint
-                    :submodelElementData="submodelElementData"
-                    :selectedNode="SelectedNodeToTransfer"></SubmodelEntrypoint>
+                    :submodel-element-data="submodelElementData"
+                    :selected-node="SelectedNodeToTransfer"></SubmodelEntrypoint>
             </v-card-text>
         </v-card>
     </v-container>
@@ -37,19 +37,15 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
-    import { useNavigationStore } from '@/store/NavigationStore';
-    import { useAASStore } from '@/store/AASDataStore';
+    import SubmodelEntrypoint from '@/components/SubmodelPlugins/_SubmodelEntrypoint.vue';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-
-    import SubmodelEntrypoint from '@/components/SubmodelPlugins/_SubmodelEntrypoint.vue';
+    import { useAASStore } from '@/store/AASDataStore';
+    import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'ComponentVisualization',
         components: {
-            RequestHandling, // Mixin to handle the requests to the AAS
-            SubmodelElementHandling, // Mixin to handle the SubmodelElements
-
             SubmodelEntrypoint, // Submodel Plugin Entrypoint Component
         },
         mixins: [RequestHandling, SubmodelElementHandling],
@@ -73,67 +69,6 @@
                 submodelElementData: {} as any, // SubmodelElement Data
                 requestInterval: null as any, // interval to send requests to the AAS
             };
-        },
-
-        mounted() {
-            if (Object.keys(this.SelectedNode).length > 0 && this.isMobile) {
-                // initialize if component got mounted on mobile devices (needed there because it is rendered in a separate view)
-                this.initializeView();
-            } else if (Object.keys(this.SelectedNode).length == 0 && this.route.path == '/componentvisualization') {
-                const searchParams = new URL(window.location.href).searchParams;
-                const aasEndpoint = searchParams.get('aas');
-                const path = searchParams.get('path');
-
-                // check if the aas Query and the path Query are set in the URL and if so initialize
-                if (aasEndpoint && path) {
-                    this.initializeViewWithRouteParams();
-                }
-            }
-        },
-
-        beforeUnmount() {
-            clearInterval(this.requestInterval); // clear old interval
-        },
-
-        watch: {
-            // Resets the submodelElementData when the AAS Registry changes
-            aasRegistryServerURL() {
-                if (!this.aasRegistryServerURL) {
-                    this.submodelElementData = {};
-                }
-            },
-
-            // Resets the submodelElementData when the Submodel Registry changes
-            submodelRegistryServerURL() {
-                if (!this.submodelRegistryServerURL) {
-                    this.submodelElementData = {};
-                }
-            },
-
-            // Resets the submodelElementData when the AAS changes
-            SelectedAAS() {
-                this.submodelElementData = {};
-            },
-
-            // Watch for changes in the SelectedNode and (re-)initialize the Component
-            SelectedNode: {
-                deep: true,
-                handler() {
-                    // clear old submodelElementData
-                    this.submodelElementData = {};
-                    this.initializeView(); // initialize list
-                },
-            },
-
-            // Watch for changes in the RealTimeDataObject and (re-)initialize the Component
-            RealTimeObject: {
-                deep: true,
-                handler() {
-                    // clear old submodelElementData
-                    this.submodelElementData = {};
-                    this.initializeView(); // initialize list
-                },
-            },
         },
 
         computed: {
@@ -177,6 +112,67 @@
             isMobile() {
                 return this.navigationStore.getIsMobile;
             },
+        },
+
+        watch: {
+            // Resets the submodelElementData when the AAS Registry changes
+            aasRegistryServerURL() {
+                if (!this.aasRegistryServerURL) {
+                    this.submodelElementData = {};
+                }
+            },
+
+            // Resets the submodelElementData when the Submodel Registry changes
+            submodelRegistryServerURL() {
+                if (!this.submodelRegistryServerURL) {
+                    this.submodelElementData = {};
+                }
+            },
+
+            // Resets the submodelElementData when the AAS changes
+            SelectedAAS() {
+                this.submodelElementData = {};
+            },
+
+            // Watch for changes in the SelectedNode and (re-)initialize the Component
+            SelectedNode: {
+                deep: true,
+                handler() {
+                    // clear old submodelElementData
+                    this.submodelElementData = {};
+                    this.initializeView(); // initialize list
+                },
+            },
+
+            // Watch for changes in the RealTimeDataObject and (re-)initialize the Component
+            RealTimeObject: {
+                deep: true,
+                handler() {
+                    // clear old submodelElementData
+                    this.submodelElementData = {};
+                    this.initializeView(); // initialize list
+                },
+            },
+        },
+
+        mounted() {
+            if (Object.keys(this.SelectedNode).length > 0 && this.isMobile) {
+                // initialize if component got mounted on mobile devices (needed there because it is rendered in a separate view)
+                this.initializeView();
+            } else if (Object.keys(this.SelectedNode).length == 0 && this.route.path == '/componentvisualization') {
+                const searchParams = new URL(window.location.href).searchParams;
+                const aasEndpoint = searchParams.get('aas');
+                const path = searchParams.get('path');
+
+                // check if the aas Query and the path Query are set in the URL and if so initialize
+                if (aasEndpoint && path) {
+                    this.initializeViewWithRouteParams();
+                }
+            }
+        },
+
+        beforeUnmount() {
+            clearInterval(this.requestInterval); // clear old interval
         },
 
         methods: {

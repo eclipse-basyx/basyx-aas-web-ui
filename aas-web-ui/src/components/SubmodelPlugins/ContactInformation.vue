@@ -14,7 +14,7 @@
             <v-expansion-panel v-for="(contact, index) in contacts" :key="index">
                 <v-expansion-panel-title>
                     <v-list-item class="pa-0">
-                        <template v-slot:prepend>
+                        <template #prepend>
                             <v-icon size="small">mdi-card-account-phone</v-icon>
                         </template>
                         <v-list-item-title>{{ nameToDisplay(contact) }}</v-list-item-title>
@@ -84,15 +84,12 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import { useAASStore } from '@/store/AASDataStore';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'ContactInformation',
-        components: {
-            RequestHandling, // Mixin to handle the requests to the AAS
-        },
         mixins: [RequestHandling, SubmodelElementHandling],
         props: ['submodelElementData'],
 
@@ -108,14 +105,11 @@
 
         data() {
             return {
-                panel: 0 as Number | null,
+                contactInformationData: {} as any,
+                panel: 0 as number | null,
                 contacts: [] as Array<any>,
                 loading: false,
             };
-        },
-
-        mounted() {
-            this.initContactInformation();
         },
 
         computed: {
@@ -123,6 +117,10 @@
             SelectedNode() {
                 return this.aasStore.getSelectedNode;
             },
+        },
+
+        mounted() {
+            this.initContactInformation();
         },
 
         methods: {
@@ -134,8 +132,9 @@
                     submodelElementData,
                     this.SelectedNode.path
                 );
+                this.contactInformationData = submodelElementData;
                 // create array of contacts
-                let contacts = this.submodelElementData.submodelElements.filter((element: any) => {
+                let contacts = this.contactInformationData.submodelElements.filter((element: any) => {
                     return (
                         element.semanticId.keys[0].value ===
                         'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation'

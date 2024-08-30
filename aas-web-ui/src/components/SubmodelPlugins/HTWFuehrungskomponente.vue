@@ -1030,8 +1030,8 @@
                 <v-card-title class="text-subtitle-2">Set Statemachine Mode</v-card-title>
                 <v-divider></v-divider>
                 <v-card-actions>
-                    <v-btn variant="elevated" @click="setMode(1)" class="mr-2">Production</v-btn>
-                    <v-btn variant="elevated" @click="setMode(2)" class="mr-2">Maintenance</v-btn>
+                    <v-btn variant="elevated" class="mr-2" @click="setMode(1)">Production</v-btn>
+                    <v-btn variant="elevated" class="mr-2" @click="setMode(2)">Maintenance</v-btn>
                     <v-btn variant="elevated" @click="setMode(3)">Manual</v-btn>
                 </v-card-actions>
             </v-card>
@@ -1042,65 +1042,65 @@
                 <v-card-actions>
                     <v-btn
                         v-if="resetStates.includes(makeUniform(submodelElementData.value[0].value))"
-                        @click="setState(1)"
                         variant="elevated"
                         class="mr-2"
+                        @click="setState(1)"
                         >Reset</v-btn
                     >
                     <v-btn
                         v-if="startStates.includes(makeUniform(submodelElementData.value[0].value))"
-                        @click="setState(2)"
                         variant="elevated"
                         class="mr-2"
+                        @click="setState(2)"
                         >Start</v-btn
                     >
                     <v-btn
                         v-if="stopStates.includes(makeUniform(submodelElementData.value[0].value))"
-                        @click="setState(3)"
                         variant="elevated"
                         class="mr-2"
+                        @click="setState(3)"
                         >Stop</v-btn
                     >
                     <v-btn
                         v-if="holdStates.includes(makeUniform(submodelElementData.value[0].value))"
-                        @click="setState(4)"
                         variant="elevated"
                         class="mr-2"
+                        @click="setState(4)"
                         >Hold</v-btn
                     >
                     <v-btn
                         v-if="unholdStates.includes(makeUniform(submodelElementData.value[0].value))"
-                        @click="setState(5)"
                         variant="elevated"
                         class="mr-2"
+                        @click="setState(5)"
                         >Unhold</v-btn
                     >
                     <v-btn
                         v-if="suspendStates.includes(makeUniform(submodelElementData.value[0].value))"
-                        @click="setState(6)"
                         variant="elevated"
                         class="mr-2"
+                        @click="setState(6)"
                         >Suspend</v-btn
                     >
                     <v-btn
                         v-if="unsuspendStates.includes(makeUniform(submodelElementData.value[0].value))"
-                        @click="setState(7)"
                         variant="elevated"
                         class="mr-2"
+                        @click="setState(7)"
                         >Unsuspend</v-btn
                     >
                     <v-btn
                         v-if="abortStates.includes(makeUniform(submodelElementData.value[0].value))"
-                        @click="setState(8)"
                         variant="elevated"
                         class="mr-2"
+                        @click="setState(8)"
                         >Abort</v-btn
                     >
                     <v-btn
                         v-if="clearStates.includes(makeUniform(submodelElementData.value[0].value))"
-                        @click="setState(9)"
                         variant="elevated"
                         class="mr-2"
+                        @click="setState(9)"
                         >Clear</v-btn
                     >
                 </v-card-actions>
@@ -1112,16 +1112,12 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import { useNavigationStore } from '@/store/NavigationStore';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'HTWFuehrungskomponente',
-        components: {
-            RequestHandling, // Mixin to handle the requests to the AAS
-            SubmodelElementHandling, // Mixin to handle the submodel elements
-        },
         mixins: [RequestHandling, SubmodelElementHandling],
         props: ['submodelElementData', 'selectedNode'],
 
@@ -1147,20 +1143,6 @@
                 abortStates: ['Idle', 'Held', 'Execute', 'Suspended', 'Complete'], // List of states that can be aborted
                 clearStates: ['Aborted'], // List of states that can be cleared
             };
-        },
-
-        mounted() {
-            this.updateSVG(); // set the visual state of the PackML SVG
-        },
-
-        watch: {
-            // Watch for changes in the submodelElementData and update the SVG
-            submodelElementData: {
-                handler() {
-                    this.updateSVG();
-                },
-                deep: true,
-            },
         },
 
         computed: {
@@ -1292,6 +1274,20 @@
             },
         },
 
+        watch: {
+            // Watch for changes in the submodelElementData and update the SVG
+            submodelElementData: {
+                handler() {
+                    this.updateSVG();
+                },
+                deep: true,
+            },
+        },
+
+        mounted() {
+            this.updateSVG(); // set the visual state of the PackML SVG
+        },
+
         methods: {
             // Function to update the visual state of the PackML SVG
             updateSVG() {
@@ -1366,7 +1362,7 @@
                 let context = 'updating Property "' + propName + '"';
                 let disableMessage = false;
                 // Send Request to update the value of the property
-                this.putRequest(path, content, headers, context, disableMessage).then((response: any) => {
+                this.putRequest(path, content, headers, context, disableMessage).then(() => {
                     this.navigationStore.dispatchSnackbar({
                         status: true,
                         timeout: 4000,

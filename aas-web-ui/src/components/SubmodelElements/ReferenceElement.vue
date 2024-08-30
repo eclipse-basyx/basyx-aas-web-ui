@@ -3,7 +3,7 @@
         <v-list-item v-if="!IsOperationVariable" class="px-1 pb-1 pt-0">
             <v-list-item-title class="text-subtitle-2 mt-2">{{ 'Reference: ' }}</v-list-item-title>
         </v-list-item>
-        <v-card color="elevatedCard" v-if="referenceElementObject">
+        <v-card v-if="referenceElementObject" color="elevatedCard">
             <!-- Value of the Reference -->
             <v-list nav class="pt-0" :class="IsOperationVariable ? '' : 'bg-elevatedCard'">
                 <template v-for="(value, i) in referenceValue" :key="i">
@@ -20,13 +20,13 @@
                             </div>
                         </v-tooltip>
                         <!-- Reference Title -->
-                        <template v-slot:title>
+                        <template #title>
                             <div
-                                v-html="IsOperationVariable ? 'Reference:' : 'Description:'"
-                                class="text-subtitle-2 mt-2"></div>
+                                class="text-subtitle-2 mt-2"
+                                v-html="IsOperationVariable ? 'Reference:' : 'Description:'"></div>
                         </template>
                         <!-- Reference Representation -->
-                        <template v-slot:subtitle>
+                        <template #subtitle>
                             <div v-if="!IsOperationVariable || IsOutputVariable" class="pt-2">
                                 <v-chip label size="x-small" border class="mr-2">{{ value.type }}</v-chip>
                                 <span v-html="value.value"></span>
@@ -41,9 +41,9 @@
                                 clearable
                                 append-icon="mdi-delete"
                                 @click:append="removeReferenceEntry(i)"
-                                @update:focused="setFocus($event, value)"
-                                @keydown.native.enter="updateReferenceObject()">
-                                <template v-slot:prepend-inner>
+                                @update:focused="setFocus($event)"
+                                @keydown.enter="updateReferenceObject()">
+                                <template #prepend-inner>
                                     <!-- Reference Entry -->
                                     <v-chip label size="x-small" border>
                                         <span>{{ value.type ? value.type : 'no-selection' }}</span>
@@ -64,7 +64,7 @@
                                     </v-chip>
                                 </template>
                                 <!-- Update Value Button -->
-                                <template v-slot:append-inner>
+                                <template #append-inner>
                                     <v-btn
                                         v-if="value.isFocused"
                                         size="small"
@@ -86,27 +86,27 @@
             <!-- Action Buttons -->
             <v-list nav class="pa-0" :class="IsOperationVariable ? '' : 'bg-elevatedCard'">
                 <v-list-item>
-                    <template v-slot:append>
+                    <template #append>
                         <!-- Jump-Button -->
                         <v-btn
                             v-if="!IsOperationVariable || IsOutputVariable"
-                            @click="jumpToReferencedElement(referencedAAS, referenceValue, referencedSubmodel)"
                             size="small"
                             class="text-buttonText"
                             color="primary"
                             :loading="loading"
                             :disabled="disabled"
+                            @click="jumpToReferencedElement(referencedAAS, referenceValue, referencedSubmodel)"
                             >Jump</v-btn
                         >
                         <!-- Add new Reference Entry -->
                         <v-btn
                             v-if="IsOperationVariable && !IsOutputVariable"
-                            @click="addReferenceEntry()"
                             size="small"
                             class="text-buttonText"
                             color="primary"
                             :loading="loading"
-                            :disabled="disabled">
+                            :disabled="disabled"
+                            @click="addReferenceEntry()">
                             <div>Add Entry</div>
                             <v-icon class="ml-2">mdi-plus</v-icon>
                         </v-btn>
@@ -120,8 +120,8 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useRouter } from 'vue-router';
-    import { useAASStore } from '@/store/AASDataStore';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'ReferenceElement',
@@ -175,31 +175,6 @@
             };
         },
 
-        mounted() {
-            // console.log('ReferenceElement Mounted:', this.referenceElementObject);
-            this.referenceValue = this.referenceElementObject?.value?.keys;
-            this.validateReference();
-        },
-
-        watch: {
-            // Watch for changes in the selected Node and reset input
-            SelectedNode: {
-                deep: true,
-                handler() {
-                    this.referenceValue = [];
-                },
-            },
-
-            // Watch for changes in the referenceElementObject
-            referenceElementObject: {
-                deep: true,
-                handler() {
-                    this.referenceValue = this.referenceElementObject?.value?.keys;
-                    this.validateReference();
-                },
-            },
-        },
-
         computed: {
             // Get the selected Treeview Node (SubmodelElement) from the store
             SelectedNode() {
@@ -225,6 +200,31 @@
                     return false;
                 }
             },
+        },
+
+        watch: {
+            // Watch for changes in the selected Node and reset input
+            SelectedNode: {
+                deep: true,
+                handler() {
+                    this.referenceValue = [];
+                },
+            },
+
+            // Watch for changes in the referenceElementObject
+            referenceElementObject: {
+                deep: true,
+                handler() {
+                    this.referenceValue = this.referenceElementObject?.value?.keys;
+                    this.validateReference();
+                },
+            },
+        },
+
+        mounted() {
+            // console.log('ReferenceElement Mounted:', this.referenceElementObject);
+            this.referenceValue = this.referenceElementObject?.value?.keys;
+            this.validateReference();
         },
 
         methods: {
@@ -275,7 +275,7 @@
             },
 
             // Function to set the focus on the input field
-            setFocus(e: boolean, value: any) {
+            setFocus(e: boolean) {
                 if (!e) {
                     this.updateReferenceObject();
                 }

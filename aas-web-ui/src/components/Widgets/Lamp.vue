@@ -26,9 +26,6 @@
 
     export default defineComponent({
         name: 'Lamp',
-        components: {
-            RequestHandling,
-        },
         mixins: [RequestHandling],
 
         props: ['submodelElementData', 'widgetSettings'],
@@ -43,9 +40,7 @@
             };
         },
 
-        mounted() {
-            this.initializeView(); // initialize list
-        },
+        computed: {},
 
         watch: {
             // Watch for changes in the submodelElementData and (re-)initialize the Component
@@ -57,7 +52,9 @@
             },
         },
 
-        computed: {},
+        mounted() {
+            this.initializeView(); // initialize list
+        },
 
         methods: {
             // Initialize the Component

@@ -4,23 +4,23 @@
         <!-- TODO: Fix weird Ripple effect on isActive change to false -->
         <v-lazy transition="fade-transition">
             <v-list-item
-                @click="toggleNode()"
                 :style="{ 'padding-left': depth * 22 + 'px' }"
                 density="compact"
                 class="py-0"
                 nav
                 color="primary"
-                :active="item.isActive">
+                :active="item.isActive"
+                @click="toggleNode()">
                 <v-list-item-title>{{ nameToDisplay(item) }}</v-list-item-title>
-                <template v-slot:prepend>
+                <template #prepend>
                     <!-- Button to show/hide children -->
                     <v-btn
                         v-if="item.children"
                         size="small"
                         variant="plain"
-                        @click.stop="toggleChildren()"
                         :icon="showChildren ? 'mdi-menu-down' : 'mdi-menu-right'"
-                        :ripple="false"></v-btn>
+                        :ripple="false"
+                        @click.stop="toggleChildren()"></v-btn>
                     <div v-else style="width: 40px; height: 40px"></div>
                     <!-- Empty Submodel Icon -->
                     <v-icon v-if="item.modelType === 'Submodel' && !item.children" color="primary"
@@ -53,7 +53,7 @@
                     <!-- Icon for every other SubmodelElement (like Property) -->
                     <v-icon v-else color="primary">mdi-file-code</v-icon>
                 </template>
-                <template v-slot:append="{ isActive }">
+                <template #append="{ isActive }">
                     <v-chip
                         v-if="item.modelType"
                         color="primary"
@@ -63,7 +63,7 @@
                     >
                     <!-- Button to Copy the Path to the Clipboard -->
                     <v-tooltip v-if="isActive" text="Copy Path to Clipboard" :open-delay="600" location="bottom">
-                        <template v-slot:activator="{ props }">
+                        <template #activator="{ props }">
                             <v-icon
                                 color="subtitleText"
                                 v-bind="props"
@@ -89,10 +89,10 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
-    import { useNavigationStore } from '@/store/NavigationStore';
-    import { useAASStore } from '@/store/AASDataStore';
     import { useTheme } from 'vuetify';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useAASStore } from '@/store/AASDataStore';
+    import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'VTreeview',
@@ -122,13 +122,6 @@
             };
         },
 
-        mounted() {
-            // Check if the current items showChildren Property is true if it exists
-            if ('showChildren' in this.item && this.item.showChildren) {
-                this.showChildren = true;
-            }
-        },
-
         computed: {
             // Check if the current Device is a Mobile Device
             isMobile() {
@@ -139,6 +132,13 @@
             SelectedAAS() {
                 return this.aasStore.getSelectedAAS;
             },
+        },
+
+        mounted() {
+            // Check if the current items showChildren Property is true if it exists
+            if ('showChildren' in this.item && this.item.showChildren) {
+                this.showChildren = true;
+            }
         },
 
         methods: {

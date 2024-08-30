@@ -5,15 +5,15 @@
         </v-list-item>
         <!-- Button toggle to switch theme -->
         <v-btn-toggle v-model="themeOption" color="primary" style="margin-top: -10px" variant="outlined" divided>
-            <v-btn @click="toggleTheme" value="system">
+            <v-btn value="system" @click="toggleTheme">
                 <span>System</span>
                 <v-icon class="ml-2">mdi-desktop-tower-monitor</v-icon>
             </v-btn>
-            <v-btn @click="toggleTheme" value="light">
+            <v-btn value="light" @click="toggleTheme">
                 <span>Light</span>
                 <v-icon class="ml-2">mdi-white-balance-sunny</v-icon>
             </v-btn>
-            <v-btn @click="toggleTheme" value="dark">
+            <v-btn value="dark" @click="toggleTheme">
                 <span>Dark</span>
                 <v-icon class="ml-2">mdi-weather-night</v-icon>
             </v-btn>
@@ -43,17 +43,17 @@
             };
         },
 
-        mounted() {
-            this.dark = this.isDark;
-            // get the theme preference from local storage
-            this.themeOption = localStorage.getItem('theme') || 'system';
-        },
-
         computed: {
             // Check if the current Theme is dark
             isDark() {
                 return this.theme.global.current.value.dark;
             },
+        },
+
+        mounted() {
+            this.dark = this.isDark;
+            // get the theme preference from local storage
+            this.themeOption = localStorage.getItem('theme') || 'system';
         },
 
         methods: {

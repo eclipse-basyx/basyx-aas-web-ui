@@ -16,12 +16,11 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
-    import { useNavigationStore } from '@/store/NavigationStore';
-    import { useAASStore } from '@/store/AASDataStore';
+    import AppNavigation from '@/components/AppNavigation/AppNavigation.vue';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-
-    import AppNavigation from '@/components/AppNavigation/AppNavigation.vue';
+    import { useAASStore } from '@/store/AASDataStore';
+    import { useNavigationStore } from '@/store/NavigationStore';
 
     interface AASType {
         endpoints: Array<{

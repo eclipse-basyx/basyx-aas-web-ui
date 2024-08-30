@@ -3,10 +3,10 @@
         <v-list nav class="pt-0 px-0">
             <!-- ConceptDescription Identification -->
             <IdentificationElement
-                :identificationObject="conceptDescriptionObject"
-                :modelType="conceptDescriptionObject.modelType"
-                :idType="'Identification (ID)'"
-                :nameType="'idShort'"
+                :identification-object="conceptDescriptionObject"
+                :model-type="conceptDescriptionObject.modelType"
+                :id-type="'Identification (ID)'"
+                :name-type="'idShort'"
                 :path="conceptDescriptionObject.path"></IdentificationElement>
             <v-divider
                 v-if="conceptDescriptionObject.displayName && conceptDescriptionObject.displayName.length > 0"
@@ -14,8 +14,8 @@
             <!-- ConceptDescription DisplayName -->
             <DisplayNameElement
                 v-if="conceptDescriptionObject.displayName && conceptDescriptionObject.displayName.length > 0"
-                :displayNameObject="conceptDescriptionObject.displayName"
-                :displayNameTitle="'DisplayName'"
+                :display-name-object="conceptDescriptionObject.displayName"
+                :display-name-title="'DisplayName'"
                 :small="false"></DisplayNameElement>
             <v-divider
                 v-if="conceptDescriptionObject.description && conceptDescriptionObject.description.length > 0"
@@ -23,8 +23,8 @@
             <!-- ConceptDescription Description -->
             <DescriptionElement
                 v-if="conceptDescriptionObject.description && conceptDescriptionObject.description.length > 0"
-                :descriptionObject="conceptDescriptionObject.description"
-                :descriptionTitle="'Description'"
+                :description-object="conceptDescriptionObject.description"
+                :description-title="'Description'"
                 :small="false"></DescriptionElement>
             <v-divider
                 v-if="
@@ -40,11 +40,11 @@
             "
             class="mt-2"></v-divider>
         <v-list
-            nav
             v-if="
                 conceptDescriptionObject.embeddedDataSpecifications &&
                 conceptDescriptionObject.embeddedDataSpecifications.length > 0
-            ">
+            "
+            nav>
             <v-card
                 v-for="(embeddedDataSpecification, i) in conceptDescriptionObject.embeddedDataSpecifications"
                 :key="i"
@@ -58,14 +58,14 @@
                             embeddedDataSpecification.dataSpecification.keys &&
                             embeddedDataSpecification.dataSpecification.keys.length > 0
                         "
-                        :semanticIdObject="embeddedDataSpecification.dataSpecification"
-                        :semanticTitle="'Data Specification'"
+                        :semantic-id-object="embeddedDataSpecification.dataSpecification"
+                        :semantic-title="'Data Specification'"
                         class="mb-2"></SemanticID>
                     <v-divider v-if="embeddedDataSpecification.dataSpecificationContent"></v-divider>
                     <!-- dataSpecificationContent -->
                     <DataSpecificationContent
                         v-if="embeddedDataSpecification.dataSpecificationContent"
-                        :dataSpecificationObject="
+                        :data-specification-object="
                             embeddedDataSpecification.dataSpecificationContent
                         "></DataSpecificationContent>
                 </v-list>
@@ -76,12 +76,10 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-
     import DataSpecificationContent from './DataSpecificationContent.vue';
-
-    import IdentificationElement from './IdentificationElement.vue';
-    import DisplayNameElement from './DisplayNameElement.vue';
     import DescriptionElement from './DescriptionElement.vue';
+    import DisplayNameElement from './DisplayNameElement.vue';
+    import IdentificationElement from './IdentificationElement.vue';
     import SemanticID from './SemanticID.vue';
 
     export default defineComponent({

@@ -1,12 +1,10 @@
+import md5 from 'md5';
+import { v4 as uuidv4 } from 'uuid';
 import { defineComponent } from 'vue';
 import { useRouter } from 'vue-router';
-import { v4 as uuidv4 } from 'uuid';
-import md5 from 'md5';
-
+import RequestHandling from '@/mixins/RequestHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useNavigationStore } from '@/store/NavigationStore';
-
-import RequestHandling from '@/mixins/RequestHandling';
 
 export default defineComponent({
     name: 'SubmodelElementHandling',
@@ -119,7 +117,7 @@ export default defineComponent({
                 return false;
 
             for (const key of submodelElement.semanticId.keys) {
-                if (key.value.startsWith('http://') || 'https://') {
+                if (key.value.startsWith('http://') || key.value.startsWith('https://')) {
                     // e.g. IDTA IRI like
                     if (new RegExp('/d/d/{0,1}' + '$').test(semanticId)) {
                         if (key.value === semanticId) return true;
@@ -146,7 +144,7 @@ export default defineComponent({
         isNumber(valueType: any) {
             if (!valueType) return false;
             // List of all number types
-            let numberTypes = [
+            const numberTypes = [
                 'double',
                 'float',
                 'integer',
@@ -191,7 +189,7 @@ export default defineComponent({
         },
 
         // Function to download a binary File
-        downloadFile(filename: string, fileContent: Blob, contentType: string) {
+        downloadFile(filename: string, fileContent: Blob) {
             const link = document.createElement('a');
             link.href = window.URL.createObjectURL(fileContent);
             link.download = filename;
@@ -209,14 +207,14 @@ export default defineComponent({
             if (!this.aasRegistryURLMixin.includes('/shell-descriptors')) {
                 this.aasRegistryURLMixin += '/shell-descriptors';
             }
-            let path = this.aasRegistryURLMixin;
-            let context = 'retrieving AAS Data';
-            let disableMessage = false;
+            const path = this.aasRegistryURLMixin;
+            const context = 'retrieving AAS Data';
+            const disableMessage = false;
             try {
                 const response = await this.getRequest(path, context, disableMessage);
                 // console.log('Response: ', response);
                 if (response.success && response.data.result && response.data.result.length > 0) {
-                    let aasList = response.data.result;
+                    const aasList = response.data.result;
                     if (referenceValue[0].type == 'AssetAdministrationShell') {
                         return await this.checkReferenceAAS(aasList, referenceValue);
                     }
@@ -225,7 +223,7 @@ export default defineComponent({
                     }
                 }
                 return { success: false, aas: {}, submodel: {} };
-            } catch (error) {
+            } catch {
                 // handle error
                 return { success: false, aas: {}, submodel: {} };
             }
@@ -259,9 +257,9 @@ export default defineComponent({
             referenceValue: Array<any>
         ): Promise<{ success: boolean; aas?: object; submodel?: object }> {
             const promises = aasList.map(async (aas: any) => {
-                let path = aas.endpoints[0].protocolInformation.href + '/submodel-refs';
-                let context = 'retrieving Submodel References';
-                let disableMessage = false;
+                const path = aas.endpoints[0].protocolInformation.href + '/submodel-refs';
+                const context = 'retrieving Submodel References';
+                const disableMessage = false;
 
                 const response = await this.getRequest(path, context, disableMessage);
                 if (response.success) {
@@ -289,7 +287,7 @@ export default defineComponent({
         // Function to jump to a referenced Element
         jumpToReferencedElement(referencedAAS: any, referenceValue: Array<any>, referencedSubmodel?: any) {
             // console.log('jumpToReferencedElement. AAS: ', referencedAAS, 'Submodel: ', referencedSubmodel);
-            let endpoint = referencedAAS.endpoints[0].protocolInformation.href;
+            const endpoint = referencedAAS.endpoints[0].protocolInformation.href;
             if (referencedSubmodel && Object.keys(referencedSubmodel).length > 0) {
                 // if the referenced Element is a Submodel or SubmodelElement
                 this.jumpToSubmodelElement(referencedSubmodel, referenceValue, referencedAAS, endpoint);
@@ -320,14 +318,14 @@ export default defineComponent({
                             if (referenceValue[index - 1].type == 'SubmodelElementList') {
                                 // console.log('SubmodelElementList: ', this.referenceValue[index - 1])
                                 // check in which position of the list the element is (list needs to be requested to get the position)
-                                let listPath = path;
-                                let context = 'retrieving SubmodelElementList';
-                                let disableMessage = false;
+                                const listPath = path;
+                                const context = 'retrieving SubmodelElementList';
+                                const disableMessage = false;
                                 this.getRequest(listPath, context, disableMessage)
                                     .then((response: any) => {
                                         if (response.success) {
                                             // execute if the Request was successful
-                                            let list = response.data;
+                                            const list = response.data;
                                             list.value.forEach((element: any, i: number) => {
                                                 if (element.idShort == SubmodelElement.value) {
                                                     path += encodeURIComponent('[') + i + encodeURIComponent(']');
@@ -371,9 +369,9 @@ export default defineComponent({
                     this.aasStore.dispatchSelectedAAS(referencedAAS);
                     this.navigationStore.dispatchTriggerAASSelected();
                     // Request the referenced SubmodelElement
-                    let elementPath = path;
-                    let context = 'retrieving SubmodelElement';
-                    let disableMessage = true;
+                    const elementPath = path;
+                    const context = 'retrieving SubmodelElement';
+                    const disableMessage = true;
                     this.getRequest(elementPath, context, disableMessage).then((response: any) => {
                         if (response.success) {
                             // execute if the Request was successful
@@ -483,15 +481,15 @@ export default defineComponent({
                 return Promise.resolve([]);
             }
 
-            let cdPromises = SelectedNode.semanticId.keys.map((key: any) => {
-                let path = conceptDescriptionRepoURL + '/' + this.URLEncode(key.value);
-                let context = 'retrieving ConceptDescriptions';
-                let disableMessage = true;
+            const cdPromises = SelectedNode.semanticId.keys.map((key: any) => {
+                const path = conceptDescriptionRepoURL + '/' + this.URLEncode(key.value);
+                const context = 'retrieving ConceptDescriptions';
+                const disableMessage = true;
 
                 return this.getRequest(path, context, disableMessage).then((response: any) => {
                     if (response.success) {
                         // console.log('ConceptDescription Data: ', response.data);
-                        let conceptDescription = response.data;
+                        const conceptDescription = response.data;
                         conceptDescription.path = path;
                         // Check if ConceptDescription has data to be displayed
                         if (
@@ -606,7 +604,7 @@ export default defineComponent({
         // Name to be displayed
         nameToDisplay(sme: any) {
             if (sme.displayName) {
-                let displayNameEn = sme.displayName.find((displayName: any) => {
+                const displayNameEn = sme.displayName.find((displayName: any) => {
                     return displayName.language === 'en' && displayName.text !== '';
                 });
                 if (displayNameEn && displayNameEn.text) return displayNameEn.text;

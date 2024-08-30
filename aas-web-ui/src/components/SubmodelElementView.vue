@@ -9,18 +9,18 @@
                     <v-list nav>
                         <!-- SubmodelELement Identification -->
                         <IdentificationElement
-                            :identificationObject="submodelElementData"
-                            :modelType="submodelElementData.modelType"
-                            :idType="'Identification (ID)'"
-                            :nameType="'idShort'"></IdentificationElement>
+                            :identification-object="submodelElementData"
+                            :model-type="submodelElementData.modelType"
+                            :id-type="'Identification (ID)'"
+                            :name-type="'idShort'"></IdentificationElement>
                         <v-divider
                             v-if="submodelElementData.displayName && submodelElementData.displayName.length > 0"
                             class="mt-2"></v-divider>
                         <!-- SubmodelELement DisplayName -->
                         <DisplayNameElement
                             v-if="submodelElementData.displayName && submodelElementData.displayName.length > 0"
-                            :displayNameObject="submodelElementData.displayName"
-                            :displayNameTitle="'DisplayName'"
+                            :display-name-object="submodelElementData.displayName"
+                            :display-name-title="'DisplayName'"
                             :small="false"></DisplayNameElement>
                         <v-divider
                             v-if="submodelElementData.description && submodelElementData.description.length > 0"
@@ -28,8 +28,8 @@
                         <!-- SubmodelELement Description -->
                         <DescriptionElement
                             v-if="submodelElementData.description && submodelElementData.description.length > 0"
-                            :descriptionObject="submodelElementData.description"
-                            :descriptionTitle="'Description'"
+                            :description-object="submodelElementData.description"
+                            :description-title="'Description'"
                             :small="false"></DescriptionElement>
                         <v-divider
                             v-if="
@@ -45,55 +45,55 @@
                                 submodelElementData.semanticId.keys &&
                                 submodelElementData.semanticId.keys.length > 0
                             "
-                            :semanticIdObject="submodelElementData.semanticId"
-                            :semanticTitle="'SemanticID'"></SemanticID>
+                            :semantic-id-object="submodelElementData.semanticId"
+                            :semantic-title="'SemanticID'"></SemanticID>
                     </v-list>
                     <v-divider></v-divider>
                     <v-list nav class="px-4 pt-0 pb-0">
                         <!-- SubmodelELement Representation for different modelTypes -->
                         <Submodel
                             v-if="submodelElementData.modelType === 'Submodel'"
-                            :submodelObject="submodelElementData"></Submodel>
+                            :submodel-object="submodelElementData"></Submodel>
                         <SubmodelElementCollection
                             v-else-if="submodelElementData.modelType === 'SubmodelElementCollection'"
-                            :submodelElementCollectionObject="submodelElementData"></SubmodelElementCollection>
+                            :submodel-element-collection-object="submodelElementData"></SubmodelElementCollection>
                         <SubmodelElementList
                             v-else-if="submodelElementData.modelType === 'SubmodelElementList'"
-                            :submodelElementListObject="submodelElementData"></SubmodelElementList>
+                            :submodel-element-list-object="submodelElementData"></SubmodelElementList>
                         <Property
                             v-else-if="submodelElementData.modelType === 'Property'"
-                            :propertyObject="submodelElementData"
-                            @updateValue="initializeView()"></Property>
+                            :property-object="submodelElementData"
+                            @update-value="initializeView()"></Property>
                         <MultiLanguageProperty
                             v-else-if="submodelElementData.modelType === 'MultiLanguageProperty'"
-                            :multiLanguagePropertyObject="submodelElementData"></MultiLanguageProperty>
+                            :multi-language-property-object="submodelElementData"></MultiLanguageProperty>
                         <Operation
                             v-else-if="submodelElementData.modelType === 'Operation'"
-                            :operationObject="submodelElementData"></Operation>
+                            :operation-object="submodelElementData"></Operation>
                         <File
                             v-else-if="submodelElementData.modelType === 'File'"
-                            :fileObject="submodelElementData"
-                            @updatePath="initializeView()"></File>
+                            :file-object="submodelElementData"
+                            @update-path="initializeView()"></File>
                         <Blob
                             v-else-if="submodelElementData.modelType === 'Blob'"
-                            :blobObject="submodelElementData"
-                            @updateBlob="initializeView"></Blob>
+                            :blob-object="submodelElementData"
+                            @update-blob="initializeView"></Blob>
                         <ReferenceElement
                             v-else-if="submodelElementData.modelType === 'ReferenceElement'"
-                            :referenceElementObject="submodelElementData"></ReferenceElement>
+                            :reference-element-object="submodelElementData"></ReferenceElement>
                         <Range
                             v-else-if="submodelElementData.modelType === 'Range'"
-                            :rangeObject="submodelElementData"></Range>
+                            :range-object="submodelElementData"></Range>
                         <Entity
                             v-else-if="submodelElementData.modelType === 'Entity'"
-                            :entityObject="submodelElementData"></Entity>
+                            :entity-object="submodelElementData"></Entity>
                         <RelationshipElement
                             v-else-if="submodelElementData.modelType === 'RelationshipElement'"
-                            :relationshipElementObject="submodelElementData"></RelationshipElement>
+                            :relationship-element-object="submodelElementData"></RelationshipElement>
                         <AnnotatedRelationshipElement
                             v-else-if="submodelElementData.modelType === 'AnnotatedRelationshipElement'"
-                            :annotatedRelationshipElementObject="submodelElementData"></AnnotatedRelationshipElement>
-                        <InvalidElement v-else :invalidElementObject="submodelElementData"></InvalidElement>
+                            :annotated-relationship-element-object="submodelElementData"></AnnotatedRelationshipElement>
+                        <InvalidElement v-else :invalid-element-object="submodelElementData"></InvalidElement>
                     </v-list>
                     <!-- ConceptDescriptions -->
                     <v-divider
@@ -103,15 +103,15 @@
                         "
                         class="mt-5"></v-divider>
                     <v-list
-                        nav
                         v-if="
                             submodelElementData.conceptDescriptions &&
                             submodelElementData.conceptDescriptions.length > 0
-                        ">
+                        "
+                        nav>
                         <v-list-item
                             v-for="(conceptDescription, index) in submodelElementData.conceptDescriptions"
                             :key="conceptDescription.id">
-                            <ConceptDescription :conceptDescriptionObject="conceptDescription"></ConceptDescription>
+                            <ConceptDescription :concept-description-object="conceptDescription"></ConceptDescription>
                             <v-divider
                                 v-if="index !== submodelElementData.conceptDescriptions.length - 1"
                                 class="mt-2"></v-divider>
@@ -141,39 +141,34 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import { useNavigationStore } from '@/store/NavigationStore';
-    import { useAASStore } from '@/store/AASDataStore';
-    import { useEnvStore } from '@/store/EnvironmentStore';
-    import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-
-    import IdentificationElement from '@/components/UIComponents/IdentificationElement.vue';
-    import DisplayNameElement from '@/components/UIComponents/DisplayNameElement.vue';
-    import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
-    import SemanticID from '@/components/UIComponents/SemanticID.vue';
-    import ConceptDescription from '@/components/UIComponents/ConceptDescription.vue';
-
+    import AnnotatedRelationshipElement from '@/components/SubmodelElements/AnnotatedRelationshipElement.vue';
+    import Blob from '@/components/SubmodelElements/Blob.vue';
+    import Entity from '@/components/SubmodelElements/Entity.vue';
+    import File from '@/components/SubmodelElements/File.vue';
+    import InvalidElement from '@/components/SubmodelElements/InvalidElement.vue';
+    import MultiLanguageProperty from '@/components/SubmodelElements/MultiLanguageProperty.vue';
+    import Operation from '@/components/SubmodelElements/Operation.vue';
+    import Property from '@/components/SubmodelElements/Property.vue';
+    import Range from '@/components/SubmodelElements/Range.vue';
+    import ReferenceElement from '@/components/SubmodelElements/ReferenceElement.vue';
+    import RelationshipElement from '@/components/SubmodelElements/RelationshipElement.vue';
     import Submodel from '@/components/SubmodelElements/Submodel.vue';
     import SubmodelElementCollection from '@/components/SubmodelElements/SubmodelElementCollection.vue';
     import SubmodelElementList from '@/components/SubmodelElements/SubmodelElementList.vue';
-    import Property from '@/components/SubmodelElements/Property.vue';
-    import MultiLanguageProperty from '@/components/SubmodelElements/MultiLanguageProperty.vue';
-    import Operation from '@/components/SubmodelElements/Operation.vue';
-    import File from '@/components/SubmodelElements/File.vue';
-    import Blob from '@/components/SubmodelElements/Blob.vue';
-    import ReferenceElement from '@/components/SubmodelElements/ReferenceElement.vue';
-    import Range from '@/components/SubmodelElements/Range.vue';
-    import Entity from '@/components/SubmodelElements/Entity.vue';
-    import RelationshipElement from '@/components/SubmodelElements/RelationshipElement.vue';
-    import AnnotatedRelationshipElement from '@/components/SubmodelElements/AnnotatedRelationshipElement.vue';
-    import InvalidElement from '@/components/SubmodelElements/InvalidElement.vue';
+    import ConceptDescription from '@/components/UIComponents/ConceptDescription.vue';
+    import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
+    import DisplayNameElement from '@/components/UIComponents/DisplayNameElement.vue';
+    import IdentificationElement from '@/components/UIComponents/IdentificationElement.vue';
+    import SemanticID from '@/components/UIComponents/SemanticID.vue';
+    import RequestHandling from '@/mixins/RequestHandling';
+    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useAASStore } from '@/store/AASDataStore';
+    import { useEnvStore } from '@/store/EnvironmentStore';
+    import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'SubmodelElementView',
         components: {
-            RequestHandling, // Mixin to handle the requests to the AAS
-            SubmodelElementHandling, // Mixin to handle the SubmodelElements
-
             IdentificationElement,
             DisplayNameElement,
             DescriptionElement,
@@ -217,21 +212,36 @@
             };
         },
 
-        mounted() {
-            if (this.autoSync.state) {
-                // create new interval
-                this.requestInterval = setInterval(() => {
-                    if (Object.keys(this.SelectedNode).length > 0) {
-                        this.initializeView();
-                    }
-                }, this.autoSync.interval);
-            } else {
-                this.initializeView(true);
-            }
-        },
+        computed: {
+            // get AAS Registry URL from Store
+            aasRegistryServerURL() {
+                return this.navigationStore.getAASRegistryURL;
+            },
 
-        beforeUnmount() {
-            clearInterval(this.requestInterval); // clear old interval
+            // get the Submodel Registry URL from Store
+            submodelRegistryServerURL() {
+                return this.navigationStore.getSubmodelRegistryURL;
+            },
+
+            // get selected AAS from Store
+            SelectedAAS() {
+                return this.aasStore.getSelectedAAS;
+            },
+
+            // Get the selected Treeview Node (SubmodelElement) from the store
+            SelectedNode() {
+                return this.aasStore.getSelectedNode;
+            },
+
+            // Get the auto-sync state from the store
+            autoSync() {
+                return this.navigationStore.getAutoSync;
+            },
+
+            // Get the Concept Description Repository URL from the Store
+            conceptDescriptionRepoURL() {
+                return this.navigationStore.getConceptDescriptionRepoURL;
+            },
         },
 
         watch: {
@@ -289,36 +299,21 @@
             },
         },
 
-        computed: {
-            // get AAS Registry URL from Store
-            aasRegistryServerURL() {
-                return this.navigationStore.getAASRegistryURL;
-            },
+        mounted() {
+            if (this.autoSync.state) {
+                // create new interval
+                this.requestInterval = setInterval(() => {
+                    if (Object.keys(this.SelectedNode).length > 0) {
+                        this.initializeView();
+                    }
+                }, this.autoSync.interval);
+            } else {
+                this.initializeView(true);
+            }
+        },
 
-            // get the Submodel Registry URL from Store
-            submodelRegistryServerURL() {
-                return this.navigationStore.getSubmodelRegistryURL;
-            },
-
-            // get selected AAS from Store
-            SelectedAAS() {
-                return this.aasStore.getSelectedAAS;
-            },
-
-            // Get the selected Treeview Node (SubmodelElement) from the store
-            SelectedNode() {
-                return this.aasStore.getSelectedNode;
-            },
-
-            // Get the auto-sync state from the store
-            autoSync() {
-                return this.navigationStore.getAutoSync;
-            },
-
-            // Get the Concept Description Repository URL from the Store
-            conceptDescriptionRepoURL() {
-                return this.navigationStore.getConceptDescriptionRepoURL;
-            },
+        beforeUnmount() {
+            clearInterval(this.requestInterval); // clear old interval
         },
 
         methods: {

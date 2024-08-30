@@ -37,7 +37,7 @@
         <br />
         <v-list class="bg-background">
             <v-list-item>
-                <template v-slot:prepend>
+                <template #prepend>
                     <v-avatar>
                         <v-icon>mdi-web</v-icon>
                     </v-avatar>
@@ -50,7 +50,7 @@
                 >
             </v-list-item>
             <v-list-item>
-                <template v-slot:prepend>
+                <template #prepend>
                     <v-avatar>
                         <v-icon>mdi-mail</v-icon>
                     </v-avatar>
@@ -67,7 +67,7 @@
         <h2>Contributors</h2>
         <v-list item-props lines="three" class="bg-background">
             <v-list-item>
-                <template v-slot:prepend>
+                <template #prepend>
                     <v-avatar>
                         <v-img src="Zielstorff.jpg">
                             <template #sources>
@@ -86,7 +86,7 @@
             </v-list-item>
             <v-divider inset></v-divider>
             <v-list-item>
-                <template v-slot:prepend>
+                <template #prepend>
                     <v-avatar>
                         <v-img src="Schnicke.jpg">
                             <template #sources>
@@ -105,7 +105,7 @@
             </v-list-item>
             <v-divider inset></v-divider>
             <v-list-item>
-                <template v-slot:prepend>
+                <template #prepend>
                     <v-avatar>
                         <v-img src="Buettner.jpg">
                             <template #sources>
@@ -124,7 +124,7 @@
             </v-list-item>
             <v-divider inset></v-divider>
             <v-list-item>
-                <template v-slot:prepend>
+                <template #prepend>
                     <v-avatar>
                         <v-img src="Fischer.jpg">
                             <template #sources>

@@ -20,7 +20,7 @@
                                 :class="isMobile ? 'bg-card' : 'bg-navigationMenuSecondary'">
                                 <v-list-item>
                                     <v-list-item-title>Endpoints</v-list-item-title>
-                                    <template v-slot:append>
+                                    <template #append>
                                         <v-icon>mdi-chevron-right</v-icon>
                                     </template>
                                 </v-list-item>
@@ -50,138 +50,138 @@
                     :class="isMobile ? 'pt-0 mb-2 px-6 bg-card' : 'pt-4 bg-navigationMenu'">
                     <!-- Configure AAS Discovery URL -->
                     <v-text-field
+                        v-model="aasDiscoveryURL"
                         variant="outlined"
                         density="compact"
                         hide-details
                         class="my-3"
                         :class="isMobile ? '' : 'mr-3'"
                         label="AAS Discovery URL"
-                        v-model="aasDiscoveryURL"
-                        @keydown.native.enter="connectToAASDiscovery()">
-                        <template v-slot:append-inner>
+                        @keydown.enter="connectToAASDiscovery()">
+                        <template #append-inner>
                             <v-btn
                                 size="small"
                                 variant="elevated"
                                 color="primary"
                                 class="text-buttonText"
                                 style="right: -4px"
-                                @click.stop="connectToAASDiscovery()"
                                 :loading="loadingAASDiscovery"
+                                @click.stop="connectToAASDiscovery()"
                                 >Connect</v-btn
                             >
                         </template>
                     </v-text-field>
                     <!-- Configure AAS Registry URL -->
                     <v-text-field
+                        v-model="aasRegistryURL"
                         variant="outlined"
                         density="compact"
                         hide-details
                         class="my-3"
                         :class="isMobile ? '' : 'mr-3'"
                         label="AAS Registry URL"
-                        v-model="aasRegistryURL"
-                        @keydown.native.enter="connectToAASRegistry()">
-                        <template v-slot:append-inner>
+                        @keydown.enter="connectToAASRegistry()">
+                        <template #append-inner>
                             <v-btn
                                 size="small"
                                 variant="elevated"
                                 color="primary"
                                 class="text-buttonText"
                                 style="right: -4px"
-                                @click.stop="connectToAASRegistry()"
                                 :loading="loadingAASRegistry"
+                                @click.stop="connectToAASRegistry()"
                                 >Connect</v-btn
                             >
                         </template>
                     </v-text-field>
                     <!-- Configure Submodel Registry URL -->
                     <v-text-field
+                        v-model="submodelRegistryURL"
                         variant="outlined"
                         density="compact"
                         hide-details
                         class="my-3"
                         :class="isMobile ? '' : 'mr-3'"
                         label="Submodel Registry URL"
-                        v-model="submodelRegistryURL"
-                        @keydown.native.enter="connectToSubmodelRegistry()">
-                        <template v-slot:append-inner>
+                        @keydown.enter="connectToSubmodelRegistry()">
+                        <template #append-inner>
                             <v-btn
                                 size="small"
                                 variant="elevated"
                                 color="primary"
                                 class="text-buttonText"
                                 style="right: -4px"
-                                @click.stop="connectToSubmodelRegistry()"
                                 :loading="loadingSubmodelRegistry"
+                                @click.stop="connectToSubmodelRegistry()"
                                 >Connect</v-btn
                             >
                         </template>
                     </v-text-field>
                     <!-- Configure AAS Repository URL -->
                     <v-text-field
+                        v-model="AASRepoURL"
                         variant="outlined"
                         density="compact"
                         hide-details
                         class="my-3"
                         :class="isMobile ? '' : 'mr-3'"
                         label="AAS Repository URL"
-                        v-model="AASRepoURL"
-                        @keydown.native.enter="connectToEnvironment('AAS')">
-                        <template v-slot:append-inner>
+                        @keydown.enter="connectToEnvironment('AAS')">
+                        <template #append-inner>
                             <v-btn
                                 size="small"
                                 variant="elevated"
                                 color="primary"
                                 class="text-buttonText"
                                 style="right: -4px"
-                                @click.stop="connectToEnvironment('AAS')"
                                 :loading="loadingAASRepo"
+                                @click.stop="connectToEnvironment('AAS')"
                                 >Connect</v-btn
                             >
                         </template>
                     </v-text-field>
                     <!-- Configure Submodel Repository URL -->
                     <v-text-field
+                        v-model="SubmodelRepoURL"
                         variant="outlined"
                         density="compact"
                         hide-details
                         class="my-3"
                         :class="isMobile ? '' : 'mr-3'"
                         label="Submodel Repository URL"
-                        v-model="SubmodelRepoURL"
-                        @keydown.native.enter="connectToEnvironment('Submodel')">
-                        <template v-slot:append-inner>
+                        @keydown.enter="connectToEnvironment('Submodel')">
+                        <template #append-inner>
                             <v-btn
                                 size="small"
                                 variant="elevated"
                                 color="primary"
                                 class="text-buttonText"
                                 style="right: -4px"
-                                @click.stop="connectToEnvironment('Submodel')"
                                 :loading="loadingSubmodelRepo"
+                                @click.stop="connectToEnvironment('Submodel')"
                                 >Connect</v-btn
                             >
                         </template>
                     </v-text-field>
                     <!-- Configure Concept Description Repository URL -->
                     <v-text-field
+                        v-model="ConceptDescriptionRepoURL"
                         variant="outlined"
                         density="compact"
                         hide-details
                         class="my-3"
                         :class="isMobile ? '' : 'mr-3'"
                         label="Concept Description Repository URL"
-                        v-model="ConceptDescriptionRepoURL"
-                        @keydown.native.enter="connectToEnvironment('ConceptDescription')">
-                        <template v-slot:append-inner>
+                        @keydown.enter="connectToEnvironment('ConceptDescription')">
+                        <template #append-inner>
                             <v-btn
                                 size="small"
                                 variant="elevated"
                                 color="primary"
                                 class="text-buttonText"
                                 style="right: -4px"
-                                @click.stop="connectToEnvironment('ConceptDescription')"
                                 :loading="loadingConceptDescriptionRepo"
+                                @click.stop="connectToEnvironment('ConceptDescription')"
                                 >Connect</v-btn
                             >
                         </template>
@@ -205,12 +205,12 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useRoute } from 'vue-router';
-    import { useNavigationStore } from '@/store/NavigationStore';
+    import { useTheme } from 'vuetify';
+    import DashboardHandling from '@/mixins/DashboardHandling';
+    import RequestHandling from '@/mixins/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
-    import { useTheme } from 'vuetify';
-    import RequestHandling from '@/mixins/RequestHandling';
-    import DashboardHandling from '@/mixins/DashboardHandling';
+    import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'MainMenu',
@@ -248,23 +248,6 @@
                 loadingConceptDescriptionRepo: false, // Loading State of the Concept Description Repository Connection
                 dashboardAvailable: false, // Dashboard Availability
             };
-        },
-
-        mounted() {
-            this.aasDiscoveryURL = this.aasDiscoveryServerURL;
-            this.aasRegistryURL = this.aasRegistryServerURL;
-            this.submodelRegistryURL = this.submodelRegistryServerURL;
-            this.AASRepoURL = this.aasRepoURL;
-            this.SubmodelRepoURL = this.submodelRepoURL;
-            this.ConceptDescriptionRepoURL = this.conceptDescriptionRepoURL;
-            this.isDashboardAvailable();
-        },
-
-        watch: {
-            // watch for route changes (name) and reset selected AAS and selected Node
-            currentRoute() {
-                this.aasStore.dispatchSelectedAAS({});
-            },
         },
 
         computed: {
@@ -312,6 +295,23 @@
             currentRoute() {
                 return this.route.name;
             },
+        },
+
+        watch: {
+            // watch for route changes (name) and reset selected AAS and selected Node
+            currentRoute() {
+                this.aasStore.dispatchSelectedAAS({});
+            },
+        },
+
+        mounted() {
+            this.aasDiscoveryURL = this.aasDiscoveryServerURL;
+            this.aasRegistryURL = this.aasRegistryServerURL;
+            this.submodelRegistryURL = this.submodelRegistryServerURL;
+            this.AASRepoURL = this.aasRepoURL;
+            this.SubmodelRepoURL = this.submodelRepoURL;
+            this.ConceptDescriptionRepoURL = this.conceptDescriptionRepoURL;
+            this.isDashboardAvailable();
         },
 
         methods: {

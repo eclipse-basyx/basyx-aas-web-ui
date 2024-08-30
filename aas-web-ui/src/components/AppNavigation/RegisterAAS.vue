@@ -2,7 +2,7 @@
     <v-btn variant="plain">
         <v-icon size="x-large">mdi-plus</v-icon>
         <v-tooltip activator="parent" open-delay="600" location="bottom">Add existing AAS to AAS Registry</v-tooltip>
-        <v-dialog activator="parent" v-model="RegisterAASDialog" width="600">
+        <v-dialog v-model="RegisterAASDialog" activator="parent" width="600">
             <v-card>
                 <v-card-title>
                     <span class="text-subtile-1">Add existing AAS to AAS Registry</span>
@@ -11,13 +11,13 @@
                 <v-card-text>
                     <!-- Endpoint Textfield of the AAS to be registered -->
                     <v-text-field
+                        v-model="aasEndpoint"
                         variant="outlined"
                         density="compact"
                         label="AAS Endpoint"
                         hint="E.g. http://localhost:4000/shells/<UTF8_BASE64_encoded_aasIdentification>"
                         persistent-hint
-                        clearable
-                        v-model="aasEndpoint"></v-text-field>
+                        clearable></v-text-field>
                 </v-card-text>
                 <v-divider></v-divider>
                 <v-card-actions>
@@ -30,8 +30,8 @@
                         class="text-buttonText"
                         variant="elevated"
                         color="primary"
-                        @click="addAAS()"
                         :loading="registrationLoading"
+                        @click="addAAS()"
                         >Add</v-btn
                     >
                 </v-card-actions>
@@ -44,25 +44,25 @@
                                 <v-row>
                                     <v-col cols="6">
                                         <v-text-field
+                                            v-model="aasIdentification"
                                             variant="outlined"
                                             density="compact"
                                             label="aasIdentification"
                                             clearable
-                                            v-model="aasIdentification"
                                             hide-details
                                             class="mb-2"
                                             @change="encodeIdentification()"></v-text-field>
                                     </v-col>
                                     <v-col cols="6">
                                         <v-text-field
+                                            v-model="EncodedAasIdentification"
                                             variant="outlined"
                                             density="compact"
                                             label="Encoded Identification"
-                                            v-model="EncodedAasIdentification"
                                             hide-details
                                             class="mb-2"
                                             readonly>
-                                            <template v-slot:append-inner>
+                                            <template #append-inner>
                                                 <v-btn
                                                     size="small"
                                                     variant="elevated"
@@ -87,9 +87,9 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import { useNavigationStore } from '@/store/NavigationStore';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'RegisterAAS',

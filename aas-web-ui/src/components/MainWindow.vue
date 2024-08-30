@@ -34,8 +34,8 @@
     import { defineComponent } from 'vue';
     import { useAASStore } from '@/store/AASDataStore';
     import AASTreeview from './AASTreeview.vue';
-    import SubmodelElementView from './SubmodelElementView.vue';
     import ComponentVisualization from './ComponentVisualization.vue';
+    import SubmodelElementView from './SubmodelElementView.vue';
 
     export default defineComponent({
         name: 'MainWindow',
@@ -53,6 +53,13 @@
             };
         },
 
+        computed: {
+            // returns the primary color of the current theme
+            primaryColor() {
+                return this.$vuetify.theme.themes.light.colors.primary;
+            },
+        },
+
         mounted() {
             // get the HTML Elements of all Columns (Windows) in the MainWindow
             let windows = document.getElementsByClassName('window');
@@ -66,22 +73,15 @@
             // remove all Event Listeners from the Resize Bars
             let divs = document.getElementsByClassName('resizeBar');
             for (let i = 0; i < divs.length; i++) {
-                divs[i].removeEventListener('mouseover', function (e: any) {});
-                divs[i].removeEventListener('mouseout', function (e: any) {});
-                divs[i].removeEventListener('mousedown', function (e: any) {});
-                document.removeEventListener('mousemove', function (e: any) {});
-                document.removeEventListener('mouseup', function (e: any) {});
+                divs[i].removeEventListener('mouseover', function () {});
+                divs[i].removeEventListener('mouseout', function () {});
+                divs[i].removeEventListener('mousedown', function () {});
+                document.removeEventListener('mousemove', function () {});
+                document.removeEventListener('mouseup', function () {});
             }
             // clear the current AAS and Node
             this.aasStore.dispatchSelectedAAS({});
             this.aasStore.dispatchNode({});
-        },
-
-        computed: {
-            // returns the primary color of the current theme
-            primaryColor() {
-                return this.$vuetify.theme.themes.light.colors.primary;
-            },
         },
 
         methods: {

@@ -11,10 +11,10 @@
             <v-col cols="auto" density="compact" justify="end" class="py-0">
                 <!-- Edit Button -->
                 <DashboardEditElement
-                    :aasData="AASData"
-                    :dashboardData="localDashboardData"
-                    :chartData="newChartOptions"
-                    @updateElement="updateDashboardElement"></DashboardEditElement>
+                    :aas-data="AASData"
+                    :dashboard-data="localDashboardData"
+                    :chart-data="newChartOptions"
+                    @update-element="updateDashboardElement"></DashboardEditElement>
                 <!-- Sync Button -->
                 <v-btn v-if="isLinkedSegment" icon variant="plain" size="small" @click="changeSync()">
                     <span :class="syncStatus ? 'custom-loader' : ''">
@@ -23,21 +23,21 @@
                 </v-btn>
                 <!-- Visibility Button -->
                 <v-btn
-                    @click="updateVisibility()"
                     :icon="localDashboardData.visibility ? 'mdi-eye' : 'mdi-eye-off'"
                     variant="plain"
-                    size="small"></v-btn>
+                    size="small"
+                    @click="updateVisibility()"></v-btn>
                 <!-- Delete Button -->
-                <v-btn @click="deleteDialog = true" icon="mdi-delete" variant="plain" size="small"></v-btn>
+                <v-btn icon="mdi-delete" variant="plain" size="small" @click="deleteDialog = true"></v-btn>
             </v-col>
         </v-row>
         <template v-if="AASData && Object.keys(AASData).length > 0">
             <TimeSeriesData
                 v-if="checkSemanticId(localDashboardData.configObject, 'https://admin-shell.io/idta/TimeSeries/1/1')"
-                :submodelElementData="AASData"
-                :configData="localDashboardData"
-                :editDialog="false"
-                :loadTrigger="trigger"></TimeSeriesData>
+                :submodel-element-data="AASData"
+                :config-data="localDashboardData"
+                :edit-dialog="false"
+                :load-trigger="trigger"></TimeSeriesData>
         </template>
     </v-card>
     <!-- Dialog for deleting a dashboard element -->
@@ -62,17 +62,15 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import { useEnvStore } from '@/store/EnvironmentStore';
+    import TimeSeriesData from '@/components/SubmodelPlugins/TimeSeriesData.vue';
     import DashboardHandling from '@/mixins/DashboardHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-
-    import TimeSeriesData from '@/components/SubmodelPlugins/TimeSeriesData.vue';
+    import { useEnvStore } from '@/store/EnvironmentStore';
     import DashboardEditElement from './DashboardEditElement.vue';
 
     export default defineComponent({
         name: 'DashboardElement',
         components: {
-            DashboardHandling,
             TimeSeriesData,
             DashboardEditElement,
         },
@@ -101,17 +99,16 @@
             };
         },
 
-        mounted() {
-            // console.log('Dashboard Element Data from MongoDB: ', this.dashboardData);
-            this.localDashboardData = { ...this.dashboardData };
-            this.fetchAASData();
-        },
-
-        beforeUnmount() {
-            if (this.timeout) {
-                window.clearTimeout(this.timeout);
-                this.timeout = null;
-            }
+        computed: {
+            isLinkedSegment() {
+                if (
+                    this.localDashboardData.configObject?.segment?.semanticId?.keys?.[0]?.value ===
+                    'https://admin-shell.io/idta/TimeSeries/Segments/LinkedSegment/1/1'
+                ) {
+                    return true;
+                }
+                return false;
+            },
         },
 
         watch: {
@@ -130,16 +127,17 @@
             },
         },
 
-        computed: {
-            isLinkedSegment() {
-                if (
-                    this.localDashboardData.configObject?.segment?.semanticId?.keys?.[0]?.value ===
-                    'https://admin-shell.io/idta/TimeSeries/Segments/LinkedSegment/1/1'
-                ) {
-                    return true;
-                }
-                return false;
-            },
+        mounted() {
+            // console.log('Dashboard Element Data from MongoDB: ', this.dashboardData);
+            this.localDashboardData = { ...this.dashboardData };
+            this.fetchAASData();
+        },
+
+        beforeUnmount() {
+            if (this.timeout) {
+                window.clearTimeout(this.timeout);
+                this.timeout = null;
+            }
         },
 
         methods: {

@@ -4,7 +4,7 @@
         <v-tooltip activator="parent" open-delay="600" location="bottom" :disabled="isMobile"
             >Upload AAS File to Environment</v-tooltip
         >
-        <v-dialog activator="parent" v-model="uploadAASDialog" width="600">
+        <v-dialog v-model="uploadAASDialog" activator="parent" width="600">
             <v-card :loading="loadingUpload">
                 <v-card-title>
                     <span class="text-subtile-1">Upload AAS to Environment</span>
@@ -13,15 +13,15 @@
                 <v-card-text>
                     <!-- AAS File Input -->
                     <v-file-input
+                        v-model="aasFile"
                         variant="outlined"
                         density="compact"
                         :multiple="false"
-                        v-model="aasFile"
                         clearable
                         class="my-1 mt-3"
                         label="AAS File Upload"
                         :accept="['.aasx', '.xml', '.json']">
-                        <template v-slot:append-inner>
+                        <template #append-inner>
                             <v-btn
                                 size="small"
                                 variant="elevated"
@@ -41,9 +41,9 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import { useNavigationStore } from '@/store/NavigationStore';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'UploadAAS',

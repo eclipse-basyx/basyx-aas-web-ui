@@ -3,23 +3,23 @@
         <!-- Options -->
         <v-list v-if="!hideSettings || editDialog" nav class="pa-0" style="margin-left: -8px; margin-top: -14px">
             <v-list-item class="pb-0">
-                <template v-slot:title>
+                <template #title>
                     <div class="text-subtitle-2">{{ 'Options: ' }}</div>
                 </template>
             </v-list-item>
         </v-list>
-        <v-row align="center" v-if="!hideSettings || editDialog">
+        <v-row v-if="!hideSettings || editDialog" align="center">
             <v-col cols="auto">
                 <v-text-field
+                    v-model="range"
                     type="number"
                     hide-details
                     density="compact"
-                    v-model="range"
                     label="Range"
                     variant="outlined"
                     suffix="ms"
                     @blur="changeRange()"
-                    @keydown.native.enter="changeRange()"></v-text-field>
+                    @keydown.enter="changeRange()"></v-text-field>
             </v-col>
         </v-row>
         <apexchart
@@ -32,16 +32,16 @@
 </template>
 
 <script lang="ts">
-    import { defineComponent } from 'vue';
     import _ from 'lodash';
+    import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import WidgetHandling from '@/mixins/WidgetHandling';
     import DashboardHandling from '@/mixins/DashboardHandling';
+    import WidgetHandling from '@/mixins/WidgetHandling';
 
     export default defineComponent({
         name: 'AreaChart',
-        props: ['chartData', 'timeVariable', 'yVariables', 'chartOptionsExternal', 'editDialog'],
         mixins: [WidgetHandling, DashboardHandling],
+        props: ['chartData', 'timeVariable', 'yVariables', 'chartOptionsExternal', 'editDialog'],
 
         setup() {
             const theme = useTheme();
@@ -107,17 +107,11 @@
             };
         },
 
-        mounted() {
-            this.$nextTick(() => {
-                const chart = (this.$refs.scatterchart as any).chart;
-                if (chart) {
-                    // console.log('Chart has rendered')
-                    // apply the theme on component mount
-                    this.applyTheme();
-                    // append the series to the chart
-                    this.initializeSeries();
-                }
-            });
+        computed: {
+            // Check if the current Theme is dark
+            isDark() {
+                return this.theme.global.current.value.dark;
+            },
         },
 
         watch: {
@@ -135,11 +129,17 @@
             },
         },
 
-        computed: {
-            // Check if the current Theme is dark
-            isDark() {
-                return this.theme.global.current.value.dark;
-            },
+        mounted() {
+            this.$nextTick(() => {
+                const chart = (this.$refs.scatterchart as any).chart;
+                if (chart) {
+                    // console.log('Chart has rendered')
+                    // apply the theme on component mount
+                    this.applyTheme();
+                    // append the series to the chart
+                    this.initializeSeries();
+                }
+            });
         },
 
         methods: {

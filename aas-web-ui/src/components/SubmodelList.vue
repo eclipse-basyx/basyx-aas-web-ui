@@ -24,10 +24,9 @@
                 </div>
                 <!-- List of Submodels -->
                 <v-list-item
-                    v-else
                     v-for="submodel in submodelData"
+                    v-else
                     :key="submodel.id"
-                    @click="toggleNode(submodel)"
                     color="primary"
                     nav
                     class="bg-listItem mb-2"
@@ -38,8 +37,9 @@
                             : isDark
                               ? '#686868 !important'
                               : '#ABABAB !important',
-                    }">
-                    <template v-slot:prepend>
+                    }"
+                    @click="toggleNode(submodel)">
+                    <template #prepend>
                         <v-chip label border color="primary" size="x-small" class="mr-3">SM</v-chip>
                     </template>
                     <v-list-item-title :class="submodel.isActive ? 'text-primary' : ''">{{
@@ -61,17 +61,14 @@
     import { defineComponent } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
-    import { useNavigationStore } from '@/store/NavigationStore';
-    import { useAASStore } from '@/store/AASDataStore';
-    import { useEnvStore } from '@/store/EnvironmentStore';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useAASStore } from '@/store/AASDataStore';
+    import { useEnvStore } from '@/store/EnvironmentStore';
+    import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'SubmodelList',
-        components: {
-            RequestHandling, // Mixin to handle the requests to the AAS
-        },
         mixins: [RequestHandling, SubmodelElementHandling],
 
         setup() {
@@ -98,34 +95,6 @@
                 initialUpdate: false, // Flag to check if the initial update of the Submodel List is needed and/or done
                 initialNode: {} as any, // Object to store the initial Node to be selected
             };
-        },
-
-        mounted() {
-            this.initSubmodelListWithRouteParameters();
-        },
-
-        watch: {
-            // initialize Submodel List when AAS gets selected or changes
-            SelectedAAS: {
-                deep: true,
-                handler() {
-                    this.initSubmodelList();
-                },
-            },
-
-            // Resets the Submodel List when the AAS Registry changes
-            aasRegistryServerURL() {
-                if (!this.aasRegistryServerURL) {
-                    this.submodelData = [];
-                }
-            },
-
-            // Resets the Submodel List when the Submodel Registry changes
-            submodelRegistryServerURL() {
-                if (!this.submodelRegistryURL) {
-                    this.submodelData = [];
-                }
-            },
         },
 
         computed: {
@@ -163,6 +132,34 @@
             isDark() {
                 return this.theme.global.current.value.dark;
             },
+        },
+
+        watch: {
+            // initialize Submodel List when AAS gets selected or changes
+            SelectedAAS: {
+                deep: true,
+                handler() {
+                    this.initSubmodelList();
+                },
+            },
+
+            // Resets the Submodel List when the AAS Registry changes
+            aasRegistryServerURL() {
+                if (!this.aasRegistryServerURL) {
+                    this.submodelData = [];
+                }
+            },
+
+            // Resets the Submodel List when the Submodel Registry changes
+            submodelRegistryServerURL() {
+                if (!this.submodelRegistryURL) {
+                    this.submodelData = [];
+                }
+            },
+        },
+
+        mounted() {
+            this.initSubmodelListWithRouteParameters();
         },
 
         methods: {

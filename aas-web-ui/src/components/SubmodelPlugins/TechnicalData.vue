@@ -17,7 +17,7 @@
             <v-expansion-panel>
                 <v-expansion-panel-title>
                     <v-list-item class="pa-0">
-                        <template v-slot:prepend>
+                        <template #prepend>
                             <v-icon size="small">mdi-file-document-outline</v-icon>
                         </template>
                         <v-list-item-title>{{ 'General Information' }}</v-list-item-title>
@@ -87,7 +87,7 @@
             <v-expansion-panel>
                 <v-expansion-panel-title>
                     <v-list-item class="pa-0">
-                        <template v-slot:prepend>
+                        <template #prepend>
                             <v-icon size="small">mdi-package-variant-closed</v-icon>
                         </template>
                         <v-list-item-title>{{ 'Product Classifications' }}</v-list-item-title>
@@ -141,7 +141,7 @@
             <v-expansion-panel>
                 <v-expansion-panel-title>
                     <v-list-item class="pa-0">
-                        <template v-slot:prepend>
+                        <template #prepend>
                             <v-icon size="small">mdi-cog-outline</v-icon>
                         </template>
                         <v-list-item-title>{{ 'Technical Properties' }}</v-list-item-title>
@@ -149,14 +149,14 @@
                 </v-expansion-panel-title>
                 <v-divider v-if="panel.includes(2)"></v-divider>
                 <v-expansion-panel-text>
-                    <GenericDataVisu class="mt-3" :submodelElementData="technicalProperties"></GenericDataVisu>
+                    <GenericDataVisu class="mt-3" :submodel-element-data="technicalProperties"></GenericDataVisu>
                 </v-expansion-panel-text>
             </v-expansion-panel>
             <!-- Further Information -->
             <v-expansion-panel>
                 <v-expansion-panel-title>
                     <v-list-item class="pa-0">
-                        <template v-slot:prepend>
+                        <template #prepend>
                             <v-icon size="small">mdi-information-outline</v-icon>
                         </template>
                         <v-list-item-title>{{ 'Further Information' }}</v-list-item-title>
@@ -214,17 +214,14 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import { useAASStore } from '@/store/AASDataStore';
+    import GenericDataVisu from '@/components/UIComponents/GenericDataVisu.vue';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-
-    import GenericDataVisu from '@/components/UIComponents/GenericDataVisu.vue';
+    import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'TechnicalData',
         components: {
-            RequestHandling, // Mixin to handle the requests to the AASDataStore
-
             GenericDataVisu,
         },
         mixins: [RequestHandling, SubmodelElementHandling],
@@ -254,15 +251,15 @@
             };
         },
 
-        mounted() {
-            this.initTechnicalData();
-        },
-
         computed: {
             // Get the selected Treeview Node (SubmodelElement) from the store
             SelectedNode() {
                 return this.aasStore.getSelectedNode;
             },
+        },
+
+        mounted() {
+            this.initTechnicalData();
         },
 
         methods: {

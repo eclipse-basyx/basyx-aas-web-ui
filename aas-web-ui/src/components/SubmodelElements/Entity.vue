@@ -12,18 +12,18 @@
         <v-divider v-if="entityObject.globalAssetId"></v-divider>
         <!-- globalAssetId -->
         <v-list-item v-if="entityObject.globalAssetId" class="px-1 pb-1 py-2 mb-3">
-            <template v-slot:title>
-                <div v-html="'Global Asset ID: '" class="text-subtitle-2 mt-2"></div>
+            <template #title>
+                <div class="text-subtitle-2 mt-2" v-html="'Global Asset ID: '"></div>
             </template>
-            <template v-slot:subtitle>
+            <template #subtitle>
                 <div class="pt-2">
                     <v-btn
                         size="small"
                         class="mr-2 text-buttonText"
                         color="primary"
                         :disabled="isDisabled(entityObject.globalAssetId)"
-                        @click="jump(entityObject.globalAssetId)"
                         :loading="isLoading(entityObject.globalAssetId)"
+                        @click="jump(entityObject.globalAssetId)"
                         >Jump</v-btn
                     >
                     <span v-html="entityObject.globalAssetId"></span>
@@ -35,18 +35,18 @@
         <v-list-item
             v-if="entityObject.specificAssetIds && entityObject.specificAssetIds.length > 0"
             class="px-1 pb-1 py-2 mb-3">
-            <template v-slot:title>
-                <div v-html="'Specific Asset IDs: '" class="text-subtitle-2 mt-2"></div>
+            <template #title>
+                <div class="text-subtitle-2 mt-2" v-html="'Specific Asset IDs: '"></div>
             </template>
-            <template v-slot:subtitle>
+            <template #subtitle>
                 <div v-for="specificAssetId in entityObject.specificAssetIds" :key="specificAssetId.name" class="pt-2">
                     <v-btn
                         size="small"
                         class="mr-2 text-buttonText"
                         color="primary"
                         :disabled="isDisabled(specificAssetId.value)"
-                        @click="jump(specificAssetId.value)"
                         :loading="isLoading(specificAssetId.value)"
+                        @click="jump(specificAssetId.value)"
                         >Jump</v-btn
                     >
                     <v-chip label size="x-small" border color="primary" class="mr-2" style="margin-top: -3px">{{
@@ -58,19 +58,18 @@
         </v-list-item>
         <!-- Group of contained SubmodelElements -->
         <SubmodelElementGroup
-            :smeObject="entityObject"
-            :smeLocator="'statements'"
-            :topMargin="'mt-1'"></SubmodelElementGroup>
+            :sme-object="entityObject"
+            :sme-locator="'statements'"
+            :top-margin="'mt-1'"></SubmodelElementGroup>
     </v-container>
 </template>
 
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useRouter } from 'vue-router';
-    import { useAASStore } from '@/store/AASDataStore';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-
     import SubmodelElementGroup from '@/components/UIComponents/SubmodelElementGroup.vue';
+    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'Entity',

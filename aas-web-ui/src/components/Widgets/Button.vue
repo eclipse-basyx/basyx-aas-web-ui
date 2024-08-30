@@ -2,7 +2,7 @@
     <v-container fluid class="px-0 py-1">
         <v-row v-for="buttonElement in inputElements" :key="buttonElement.idShort">
             <v-col>
-                <v-btn color="primary" @click="sendClick(buttonElement, true)" class="text-buttonText">{{
+                <v-btn color="primary" class="text-buttonText" @click="sendClick(buttonElement, true)">{{
                     buttonElement.name
                 }}</v-btn>
             </v-col>
@@ -15,10 +15,7 @@
     import RequestHandling from '@/mixins/RequestHandling';
 
     export default defineComponent({
-        name: 'Button',
-        components: {
-            RequestHandling,
-        },
+        name: 'ButtonElement',
         mixins: [RequestHandling],
         props: ['submodelElementData', 'selectedNode', 'widgetSettings'],
 
@@ -32,9 +29,7 @@
             };
         },
 
-        mounted() {
-            this.initializeView(); // initialize list
-        },
+        computed: {},
 
         watch: {
             // Watch for changes in the submodelElementData and (re-)initialize the Component
@@ -46,7 +41,9 @@
             },
         },
 
-        computed: {},
+        mounted() {
+            this.initializeView(); // initialize list
+        },
 
         methods: {
             // Initialize the Component

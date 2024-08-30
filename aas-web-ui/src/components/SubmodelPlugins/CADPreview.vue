@@ -8,26 +8,25 @@
 </template>
 
 <script lang="ts">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+    import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
+    import { ViewHelper } from 'three/examples/jsm/helpers/ViewHelper.js';
+    import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+    import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+    import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import { useNavigationStore } from '@/store/NavigationStore';
-    import { useAASStore } from '@/store/AASDataStore';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-
-    import * as THREE from 'three';
-    import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
-    import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
-    import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-    import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-    import { ViewHelper } from 'three/examples/jsm/helpers/ViewHelper.js';
-    import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
+    import { useAASStore } from '@/store/AASDataStore';
     import { useAuthStore } from '@/store/AuthStore';
+    import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'CADPreview',
-        props: ['submodelElementData'],
         mixins: [RequestHandling, SubmodelElementHandling],
+        props: ['submodelElementData'],
 
         setup() {
             const theme = useTheme();
@@ -49,11 +48,15 @@
             };
         },
 
-        mounted() {
-            if (this.submodelElementData.modelType == 'File') {
-                this.localPathValue = this.getLocalPath(this.submodelElementData.value, this.submodelElementData);
-                this.initThree();
-            }
+        computed: {
+            // Get the selected Treeview Node (SubmodelElement) from the store
+            SelectedNode() {
+                return this.aasStore.getSelectedNode;
+            },
+
+            authToken() {
+                return this.authStore.getToken;
+            },
         },
 
         watch: {
@@ -65,15 +68,11 @@
             },
         },
 
-        computed: {
-            // Get the selected Treeview Node (SubmodelElement) from the store
-            SelectedNode() {
-                return this.aasStore.getSelectedNode;
-            },
-
-            authToken() {
-                return this.authStore.getToken;
-            },
+        mounted() {
+            if (this.submodelElementData.modelType == 'File') {
+                this.localPathValue = this.getLocalPath(this.submodelElementData.value, this.submodelElementData);
+                this.initThree();
+            }
         },
 
         methods: {

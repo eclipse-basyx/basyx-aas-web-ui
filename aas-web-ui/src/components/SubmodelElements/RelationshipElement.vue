@@ -6,7 +6,7 @@
                     capitalizeFirstLetter(referenceKey) + ': '
                 }}</v-list-item-title>
             </v-list-item>
-            <v-card color="elevatedCard" v-if="relationshipElementObject">
+            <v-card v-if="relationshipElementObject" color="elevatedCard">
                 <!-- Value of the Property -->
                 <v-list nav class="bg-elevatedCard pt-0">
                     <template v-for="(value, i) in getReference[referenceKey as 'first' | 'second']" :key="i">
@@ -19,11 +19,11 @@
                                 </div>
                             </v-tooltip>
                             <!-- Reference Title -->
-                            <template v-slot:title>
-                                <div v-html="'Description:'" class="text-subtitle-2 mt-2"></div>
+                            <template #title>
+                                <div class="text-subtitle-2 mt-2" v-html="'Description:'"></div>
                             </template>
                             <!-- Reference Representation -->
-                            <template v-slot:subtitle>
+                            <template #subtitle>
                                 <div class="pt-2">
                                     <v-chip label size="x-small" border class="mr-2">{{ value.type }}</v-chip>
                                     <span v-html="value.value"></span>
@@ -39,9 +39,14 @@
                 <!-- Action Buttons for Reference Jump -->
                 <v-list nav class="bg-elevatedCard pa-0">
                     <v-list-item>
-                        <template v-slot:append>
+                        <template #append>
                             <!-- Jump-Button -->
                             <v-btn
+                                size="small"
+                                class="text-buttonText"
+                                color="primary"
+                                :loading="getLoadingState[referenceKey as 'first' | 'second']"
+                                :disabled="getDisabledState[referenceKey as 'first' | 'second']"
                                 @click="
                                     jumpToReferencedElement(
                                         getReferencedAAS[referenceKey as 'first' | 'second'],
@@ -49,11 +54,6 @@
                                         getReferencedSubmodel[referenceKey as 'first' | 'second']
                                     )
                                 "
-                                size="small"
-                                class="text-buttonText"
-                                color="primary"
-                                :loading="getLoadingState[referenceKey as 'first' | 'second']"
-                                :disabled="getDisabledState[referenceKey as 'first' | 'second']"
                                 >Jump</v-btn
                             >
                         </template>
@@ -67,8 +67,8 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useRouter } from 'vue-router';
-    import { useAASStore } from '@/store/AASDataStore';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'RelationshipElement',
@@ -99,36 +99,6 @@
                 firstReferencedSubmodel: Object as any, // first Submodel in which the referenced Element is included (if it exists)
                 secondReferencedSubmodel: Object as any, // second Submodel in which the referenced Element is included (if it exists)
             };
-        },
-
-        mounted() {
-            // console.log('RelationshipElement Mounted:', this.relationshipElementObject);
-            this.firstReference = this.relationshipElementObject.first.keys;
-            this.secondReference = this.relationshipElementObject.second.keys;
-            this.validateReference('first');
-            this.validateReference('second');
-        },
-
-        watch: {
-            // Watch for changes in the selected Node and reset input
-            SelectedNode: {
-                deep: true,
-                handler() {
-                    this.firstReference = [];
-                    this.secondReference = [];
-                },
-            },
-
-            // Watch for changes in the referenceElementObject
-            referenceElementObject: {
-                deep: true,
-                handler() {
-                    this.firstReference = this.relationshipElementObject.first.keys;
-                    this.secondReference = this.relationshipElementObject.second.keys;
-                    this.validateReference('first');
-                    this.validateReference('second');
-                },
-            },
         },
 
         computed: {
@@ -176,6 +146,36 @@
                     second: this.secondDisabled,
                 };
             },
+        },
+
+        watch: {
+            // Watch for changes in the selected Node and reset input
+            SelectedNode: {
+                deep: true,
+                handler() {
+                    this.firstReference = [];
+                    this.secondReference = [];
+                },
+            },
+
+            // Watch for changes in the referenceElementObject
+            referenceElementObject: {
+                deep: true,
+                handler() {
+                    this.firstReference = this.relationshipElementObject.first.keys;
+                    this.secondReference = this.relationshipElementObject.second.keys;
+                    this.validateReference('first');
+                    this.validateReference('second');
+                },
+            },
+        },
+
+        mounted() {
+            // console.log('RelationshipElement Mounted:', this.relationshipElementObject);
+            this.firstReference = this.relationshipElementObject.first.keys;
+            this.secondReference = this.relationshipElementObject.second.keys;
+            this.validateReference('first');
+            this.validateReference('second');
         },
 
         methods: {

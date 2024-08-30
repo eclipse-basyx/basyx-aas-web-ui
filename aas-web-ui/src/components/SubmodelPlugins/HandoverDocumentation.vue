@@ -14,7 +14,7 @@
             <v-expansion-panel v-for="(document, index) in documents" :key="document.idShort">
                 <v-expansion-panel-title>
                     <v-list-item class="pa-0">
-                        <template v-slot:prepend>
+                        <template #prepend>
                             <v-icon size="small">mdi-file-outline</v-icon>
                         </template>
                         <v-list-item-title>{{ document.idShort }}</v-list-item-title>
@@ -74,11 +74,11 @@
                         <v-row justify="center" class="mt-3">
                             <v-col cols="auto">
                                 <v-btn-toggle
+                                    v-model="documentVersion.fileToggle"
                                     color="primary"
                                     variant="outlined"
                                     divided
-                                    density="compact"
-                                    v-model="documentVersion.fileToggle">
+                                    density="compact">
                                     <v-btn value="preview">
                                         <span>Preview File</span>
                                     </v-btn>
@@ -90,19 +90,19 @@
                         </v-row>
                         <!-- File Preview (PreviewFile) -->
                         <template v-if="documentVersion.fileToggle === 'preview'">
-                            <div class="mt-3" v-if="documentVersion.previewFile">
+                            <div v-if="documentVersion.previewFile" class="mt-3">
                                 <ImagePreview
                                     v-if="
                                         documentVersion.previewFile.contentType &&
                                         documentVersion.previewFile.contentType.includes('image')
                                     "
-                                    :submodelElementData="documentVersion.previewFile"></ImagePreview>
+                                    :submodel-element-data="documentVersion.previewFile"></ImagePreview>
                                 <PDFPreview
                                     v-if="
                                         documentVersion.previewFile.contentType &&
                                         documentVersion.previewFile.contentType.includes('pdf')
                                     "
-                                    :submodelElementData="documentVersion.previewFile"></PDFPreview>
+                                    :submodel-element-data="documentVersion.previewFile"></PDFPreview>
                                 <CADPreview
                                     v-if="
                                         documentVersion.previewFile.contentType &&
@@ -112,16 +112,16 @@
                                             documentVersion.previewFile.contentType.includes('obj') ||
                                             documentVersion.previewFile.contentType.includes('gltf'))
                                     "
-                                    :submodelElementData="documentVersion.previewFile"></CADPreview>
+                                    :submodel-element-data="documentVersion.previewFile"></CADPreview>
                             </div>
                             <!-- Download Button -->
                             <v-btn
+                                v-if="documentVersion.previewFile"
                                 class="mt-3"
                                 block
                                 color="primary"
                                 variant="tonal"
-                                @click="downloadFile(documentVersion.previewFile)"
-                                v-if="documentVersion.previewFile">
+                                @click="downloadFile(documentVersion.previewFile)">
                                 <v-icon left>mdi-download</v-icon>
                                 <span>Download Preview File</span>
                             </v-btn>
@@ -135,19 +135,19 @@
                         </template>
                         <!-- File Preview (DigitalFile) -->
                         <template v-else-if="documentVersion.fileToggle === 'digital'">
-                            <div class="mt-3" v-if="documentVersion.digitalFile">
+                            <div v-if="documentVersion.digitalFile" class="mt-3">
                                 <ImagePreview
                                     v-if="
                                         documentVersion.digitalFile.contentType &&
                                         documentVersion.digitalFile.contentType.includes('image')
                                     "
-                                    :submodelElementData="documentVersion.digitalFile"></ImagePreview>
+                                    :submodel-element-data="documentVersion.digitalFile"></ImagePreview>
                                 <PDFPreview
                                     v-if="
                                         documentVersion.digitalFile.contentType &&
                                         documentVersion.digitalFile.contentType.includes('pdf')
                                     "
-                                    :submodelElementData="documentVersion.digitalFile"></PDFPreview>
+                                    :submodel-element-data="documentVersion.digitalFile"></PDFPreview>
                                 <CADPreview
                                     v-if="
                                         documentVersion.digitalFile.contentType &&
@@ -157,16 +157,16 @@
                                             documentVersion.digitalFile.contentType.includes('obj') ||
                                             documentVersion.digitalFile.contentType.includes('gltf'))
                                     "
-                                    :submodelElementData="documentVersion.digitalFile"></CADPreview>
+                                    :submodel-element-data="documentVersion.digitalFile"></CADPreview>
                             </div>
                             <!-- Download Button -->
                             <v-btn
+                                v-if="documentVersion.digitalFile"
                                 class="mt-3"
                                 block
                                 color="primary"
                                 variant="tonal"
-                                @click="downloadFile(documentVersion.digitalFile)"
-                                v-if="documentVersion.digitalFile">
+                                @click="downloadFile(documentVersion.digitalFile)">
                                 <v-icon left>mdi-download</v-icon>
                                 <span>Download Digital File</span>
                             </v-btn>
@@ -266,19 +266,16 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import { useAASStore } from '@/store/AASDataStore';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-
+    import { useAASStore } from '@/store/AASDataStore';
+    import CADPreview from './CADPreview.vue';
     import ImagePreview from './ImagePreview.vue';
     import PDFPreview from './PDFPreview.vue';
-    import CADPreview from './CADPreview.vue';
 
     export default defineComponent({
         name: 'HandoverDocumentation',
         components: {
-            RequestHandling, // Mixin to handle the requests to the AAS
-
             ImagePreview,
             PDFPreview,
             CADPreview,
@@ -298,14 +295,11 @@
 
         data() {
             return {
-                panel: null as Number | null,
+                handoverDocuData: {} as any,
+                panel: null as number | null,
                 documents: [] as Array<any>,
                 loading: false,
             };
-        },
-
-        mounted() {
-            this.initHandoverDocumentation();
         },
 
         computed: {
@@ -313,6 +307,10 @@
             SelectedNode() {
                 return this.aasStore.getSelectedNode;
             },
+        },
+
+        mounted() {
+            this.initHandoverDocumentation();
         },
 
         methods: {
@@ -324,8 +322,9 @@
                     submodelElementData,
                     this.SelectedNode.path
                 );
+                this.handoverDocuData = submodelElementData;
                 // create array of documents
-                let documents = this.submodelElementData.submodelElements.filter((element: any) => {
+                let documents = this.handoverDocuData.submodelElements.filter((element: any) => {
                     return this.checkSemanticId(element, '0173-1#02-ABI500#001/0173-1#01-AHF579#001');
                 });
                 documents.forEach((document: any) => {
