@@ -497,11 +497,7 @@
                             if (response.success) {
                                 // execute if the Request was successful
                                 let aasSerialization = response.data;
-                                this.downloadFile(
-                                    AAS.idShort + '.aasx',
-                                    aasSerialization,
-                                    'application/asset-administration-shell-package+xml'
-                                );
+                                this.downloadFile(AAS.idShort + '.aasx', aasSerialization);
                             }
                         });
                     }
