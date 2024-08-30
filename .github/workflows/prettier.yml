@@ -14,6 +14,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: List directory contents
+        run: ls -la
+
       - name: Check formatting
         uses: creyD/prettier_action@v4.3
         with:
