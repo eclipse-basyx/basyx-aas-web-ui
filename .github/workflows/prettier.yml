@@ -8,36 +8,18 @@ on:
 
 jobs:
   prettier:
-    name: Prettier Check
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          ref: ${{ github.head_ref }}
 
-      - name: Install Prettier
-        run: |
-          npm install --global prettier@latest
-          npm install --global prettier-plugin-vue
-
-      - name: Run Prettier
-        id: prettier-run
-        run: |
-          cd aas-web-ui
-          prettier_output=$(prettier --check --config ./.prettierrc --ignore-path ./.prettierignore --no-error-on-unmatched-pattern **/*.ts **/*.vue **/*.json **/*.js)
-          echo "$prettier_output"
-          if ! echo "$prettier_output" | grep -q 'All matched files use Prettier code style!'; then
-            echo "Formatting issues found"
-            exit 1
-          fi
-
-      - name: Prettier Output
-        if: ${{ failure() }}
-        shell: bash
-        run: |
-          echo "The following files are not formatted:"
-          echo "${{ steps.prettier-run.outputs.prettier_output }}"
+      - name: Prettify code
+        uses: creyD/prettier_action@v4.2
+        with:
+          prettier_options: --check **/*.{vue,ts,js,md,yml}
+          working_directory: aas-web-ui/
+          prettier_plugins: "@prettier/plugin-vue"
+          dry: true
