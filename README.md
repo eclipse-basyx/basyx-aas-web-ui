@@ -1,9 +1,9 @@
 ![Docker Pulls](https://img.shields.io/docker/pulls/eclipsebasyx/aas-gui)
 ![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/eclipsebasyx/aas-gui)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/eclipse-basyx/basyx-applications)
-![Libraries.io dependency status for GitHub repo](https://img.shields.io/librariesio/github/eclipse-basyx/basyx-applications)
-![GitHub](https://img.shields.io/github/license/eclipse-basyx/basyx-applications)
-![GitHub top language](https://img.shields.io/github/languages/top/eclipse-basyx/basyx-applications)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/eclipse-basyx/basyx-aas-web-ui)
+![Libraries.io dependency status for GitHub repo](https://img.shields.io/librariesio/github/eclipse-basyx/basyx-aas-web-ui)
+![GitHub](https://img.shields.io/github/license/eclipse-basyx/basyx-aas-web-ui)
+![GitHub top language](https://img.shields.io/github/languages/top/eclipse-basyx/basyx-aas-web-ui)
 
 # BaSyx AAS Web UI
 
