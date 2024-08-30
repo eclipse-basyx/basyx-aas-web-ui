@@ -14,13 +14,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: List directory contents
-        run: ls -la
+      - name: Change to aas-web-ui directory
+        run: cd aas-web-ui
 
       - name: Check formatting
         uses: creyD/prettier_action@v4.3
         with:
-          working_directory: aas-web-ui/
           prettier_plugins: "@prettier/plugin-vue"
           dry: true
           prettier_options: --check "**/*.{vue,ts,js,md,yml}"
