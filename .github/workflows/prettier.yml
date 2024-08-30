@@ -13,13 +13,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
 
-      - name: Prettify code
-        uses: creyD/prettier_action@v4.2
+      - name: Check formatting
+        uses: creyD/prettier_action@v4.3
         with:
-          prettier_options: --check **/*.{vue,ts,js,md,yml}
           working_directory: aas-web-ui/
           prettier_plugins: "@prettier/plugin-vue"
           dry: true
+          prettier_options: --check "**/*.{vue,ts,js,md,yml}"
