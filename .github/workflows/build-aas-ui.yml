@@ -6,6 +6,9 @@ on:
     paths:
       - 'aas-web-ui/**'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
