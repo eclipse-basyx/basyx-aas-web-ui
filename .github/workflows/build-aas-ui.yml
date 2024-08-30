@@ -3,9 +3,11 @@ name: Build AAS Web UI
 on:
   pull_request:
     branches: [ main ]
+    paths:
+      - 'aas-web-ui/**'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
