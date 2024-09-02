@@ -31,7 +31,7 @@
         components: {
             SubmodelElementWrapper,
         },
-        mixins: [RequestHandling, SubmodelElementHandling], // semanticId of the HelloWorld-Plugin
+        mixins: [RequestHandling, SubmodelElementHandling],
         props: ['submodelElementData'],
 
         setup() {
