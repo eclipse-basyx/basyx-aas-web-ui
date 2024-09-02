@@ -60,6 +60,24 @@ A Demo-Plugin can be found here:
 
 [HelloWorldPlugin.vue](./aas-web-ui/src/UserPlugins/HelloWorldPlugin.vue)
 
+### Prerequisites for developing on you own machine
+
+After you cloned the project to your local machine, it is recommendet to install `ESLint` globally:
+
+```
+npm install --global eslint
+```
+
+and the `ESLint` and `Prettier ESLint` extensions in VS Code.
+
+Before starting a dev server, run the
+
+```
+yarn
+```
+
+command inside the `aas-web-ui` directory. For more details for your specific OS, follow the instructions in the next subsections.
+
 ### How to develop on MacOS:
 
 1. Install Node and NPM ([Node installation Tutorial for Mac](https://treehouse.github.io/installation-guides/mac/node-mac.html))
