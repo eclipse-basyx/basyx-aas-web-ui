@@ -161,8 +161,17 @@
             // Filtered Plugins
             filteredPlugins() {
                 return this.ImportedPlugins.filter((plugin: any) => {
-                    // console.log(plugin.SemanticID === this.submodelElementData.semanticId.keys[0].value ? 'Plugin found: ' + plugin.SemanticID : 'Plugin not found: ' + plugin.SemanticID);
-                    return plugin.SemanticID === this.submodelElementData.semanticId.keys[0].value;
+                    if (!plugin.semanticId) return false;
+
+                    if (typeof plugin.semanticId === 'string') {
+                        return this.checkSemanticId(this.submodelElementData, plugin.semanticId);
+                    } else if (plugin.semanticId.constructor === Array) {
+                        for (const pluginSemanticId of plugin.semanticId) {
+                            if (this.checkSemanticId(this.submodelElementData, pluginSemanticId)) return true;
+                        }
+                        return false;
+                    }
+                    return false;
                 });
             },
 
