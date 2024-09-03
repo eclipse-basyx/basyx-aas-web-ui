@@ -48,6 +48,14 @@
                     checkSemanticId(submodelElementData, 'https://admin-shell.io/ZVEI/TechnicalData/Submodel/1/2')
                 "
                 :submodel-element-data="submodelElementData"></TechnicalData>
+            <AID
+                v-else-if="
+                    checkSemanticId(
+                        submodelElementData,
+                        'https://admin-shell.io/idta/AssetInterfacesDescription/1/0/Submodel'
+                    )
+                "
+                :submodel-element-data="submodelElementData"></AID>
             <JSONArrayProperty
                 v-else-if="checkSemanticId(submodelElementData, 'http://iese.fraunhofer.de/prop_jsonarray')"
                 :submodel-element-data="submodelElementData"></JSONArrayProperty>
@@ -114,6 +122,7 @@
     import JSONArrayProperty from './JSONArrayProperty.vue';
     import PDFPreview from './PDFPreview.vue';
     import TechnicalData from './TechnicalData.vue';
+    import AID from './AID.vue';
     import TimeSeriesData from './TimeSeriesData.vue';
 
     export default defineComponent({
@@ -126,6 +135,7 @@
             HandoverDocumentation,
             ContactInformation,
             TechnicalData,
+            AID,
             JSONArrayProperty,
             GenericDataVisu,
             ImagePreview,
