@@ -112,6 +112,7 @@
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import AID from './AID.vue';
     import BillsOfMaterial from './BillsOfMaterial.vue';
     import CADPreview from './CADPreview.vue';
     import ContactInformation from './ContactInformation.vue';
@@ -122,7 +123,6 @@
     import JSONArrayProperty from './JSONArrayProperty.vue';
     import PDFPreview from './PDFPreview.vue';
     import TechnicalData from './TechnicalData.vue';
-    import AID from './AID.vue';
     import TimeSeriesData from './TimeSeriesData.vue';
 
     export default defineComponent({
