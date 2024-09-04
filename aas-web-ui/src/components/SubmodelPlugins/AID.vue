@@ -13,18 +13,19 @@
                 :key="collection.idShort"
                 min-width="100%">
                 <v-expansion-panel-title>
-                    <v-list-item class="pa-0 pr-4 d-flex align-center">
-                        <v-list-item-title v-if="!collection.isEditing" class="text-subtitle-1">
-                            {{ collection.idShort || 'No title available' }}
-                        </v-list-item-title>
-                        <v-list-item-title v-else class="mr-344 text-subtitle-1">
+                    <div class="d-flex align-center" style="width: 93%">
+                        <div class="flex-grow-1 text-truncate">
+                            <v-list-item-title v-if="!collection.isEditing" class="text-subtitle-1">
+                                {{ collection.idShort || 'No title available' }}
+                            </v-list-item-title>
                             <v-text-field
+                                v-else
                                 v-model="collection.idShort"
-                                class="text-subtitle-1 bg-red textfield"
-                                style="min-width: -webkit-fill-available"
-                                label="Title"></v-text-field>
-                        </v-list-item-title>
-                    </v-list-item>
+                                class="text-subtitle-1 w-100"
+                                label="Title"
+                                dense></v-text-field>
+                        </div>
+                    </div>
                     <v-icon small @click="toggleCollectionEdit(collection)">
                         {{ collection.isEditing ? 'mdi-check' : 'mdi-pencil' }}
                     </v-icon>
@@ -73,7 +74,12 @@
                                 </v-icon>
                             </v-col>
                         </v-row>
+                        <!-- Delete Selected Properties Button -->
                     </v-card>
+                    <v-btn v-if="isAnyPropertySelected" color="red darken-1" class="my-4" @click="openDeleteDialog">
+                        Delete Selected
+                    </v-btn>
+                    <!-- //TODO Add a button to add new properties -->
                 </v-expansion-panel-text>
             </v-expansion-panel>
         </v-expansion-panels>
@@ -83,10 +89,8 @@
                 <div>No data available</div>
             </v-row>
         </v-card>
-        <!-- Delete Selected Properties Button -->
-        <v-btn v-if="isAnyPropertySelected" color="red darken-1" class="my-4" @click="openDeleteDialog">
-            Delete Selected
-        </v-btn>
+        <!-- TODO Add a button to delete the whole collection that works with a confirmation dialog -->
+        <!-- TODO Add a button to add a whole new collection, extensible with title a new properties -->
         <!-- Confirm Deletion Dialog -->
         <v-dialog v-model="deleteDialog" max-width="500px" persistent>
             <v-card>
