@@ -26,6 +26,16 @@
                                 dense></v-text-field>
                         </div>
                     </div>
+                    <!-- Checkbox for selecting multiple collections -->
+                    <v-checkbox
+                        v-model="collection.selected"
+                        color="primary"
+                        hide-details
+                        dense
+                        class="ml-2"
+                        @change="updateSelectedCollections"
+                        @click.stop></v-checkbox>
+                    <!-- Edit icon for toggling edit mode -->
                     <v-icon small @click="toggleCollectionEdit(collection)">
                         {{ collection.isEditing ? 'mdi-check' : 'mdi-pencil' }}
                     </v-icon>
@@ -67,19 +77,23 @@
                                     color="primary"
                                     hide-details
                                     dense
-                                    @change="updateSelectedProperties"></v-checkbox>
+                                    @change="updateSelectedProperties"
+                                    @click.stop></v-checkbox>
                                 <!-- Edit icon for toggling edit mode -->
                                 <v-icon small @click="toggleEdit(property)">
                                     {{ property.isEditing ? 'mdi-check' : 'mdi-pencil' }}
                                 </v-icon>
                             </v-col>
                         </v-row>
-                        <!-- Delete Selected Properties Button -->
                     </v-card>
+                    <!-- Delete Selected Properties Button -->
                     <v-btn v-if="isAnyPropertySelected" color="red darken-1" class="my-4" @click="openDeleteDialog">
-                        Delete Selected
+                        Delete Selected Properties
                     </v-btn>
-                    <!-- //TODO Add a button to add new properties -->
+                    <!-- Button to Add New Property -->
+                    <v-btn color="primary" class="my-4" @click="addPropertyToCollection(collection)"
+                        >Add Property</v-btn
+                    >
                 </v-expansion-panel-text>
             </v-expansion-panel>
         </v-expansion-panels>
@@ -89,13 +103,17 @@
                 <div>No data available</div>
             </v-row>
         </v-card>
-        <!-- TODO Add a button to delete the whole collection that works with a confirmation dialog -->
-        <!-- TODO Add a button to add a whole new collection, extensible with title a new properties -->
+        <!-- Delete Selected Collections Button -->
+        <v-btn v-if="isAnyCollectionSelected" color="red darken-1" class="my-4" @click="openDeleteDialog(true)">
+            Delete Selected Collections
+        </v-btn>
+        <!-- Button to Add a New Collection -->
+        <v-btn color="primary" class="my-4" @click="addNewCollection">Add New Collection</v-btn>
         <!-- Confirm Deletion Dialog -->
         <v-dialog v-model="deleteDialog" max-width="500px" persistent>
             <v-card>
                 <v-card-title class="headline">Confirm Deletion</v-card-title>
-                <v-card-text>Are you sure you want to delete the selected properties?</v-card-text>
+                <v-card-text>Are you sure you want to delete the selected items?</v-card-text>
                 <v-card-actions>
                     <v-spacer></v-spacer>
                     <v-btn color="green darken-1" @click="closeDeleteDialog"> Cancel </v-btn>
@@ -128,11 +146,11 @@
         idShort: string;
         properties: Property[];
         isEditing: boolean;
+        selected: boolean; // For collection deletion
     }
 
     export default defineComponent({
         name: 'AssetInterfacesDescription',
-        components: {},
         mixins: [RequestHandling, SubmodelElementHandling],
         props: {
             submodelElementData: {
@@ -145,7 +163,6 @@
             const navigationStore = useNavigationStore();
             const aasStore = useAASStore();
 
-            // Access AAS details dynamically
             const selectedAAS = computed(() => aasStore.getSelectedAAS);
 
             return {
@@ -159,16 +176,19 @@
             return {
                 submodelElementCollections: [] as Array<SubmodelElementCollection>,
                 deleteDialog: false,
+                deleteCollectionsMode: false,
                 collectionToDelete: null as SubmodelElementCollection | null,
                 propertyIndexToDelete: -1,
             };
         },
         computed: {
             isAnyPropertySelected() {
-                // Check if any property is selected across all collections
                 return this.submodelElementCollections.some((collection) =>
                     collection.properties.some((property) => property.selected)
                 );
+            },
+            isAnyCollectionSelected() {
+                return this.submodelElementCollections.some((collection) => collection.selected);
             },
         },
         mounted() {
@@ -181,12 +201,11 @@
                     return;
                 }
                 console.log('Component Mounted. SubmodelElementData:', this.submodelElementData);
-                // Find all SubmodelElementCollection
+
                 const submodelElementCollections = this.submodelElementData.submodelElements.filter(
                     (element: any) => element.modelType === 'SubmodelElementCollection'
                 );
 
-                // Fetch details for each collection
                 submodelElementCollections.forEach((collection: any) => {
                     const propertiesCollection = this.findNestedElement(collection.value, 'properties');
                     if (propertiesCollection) {
@@ -200,15 +219,16 @@
                                 unit: this.getPropertyValue(propertyDefinition, 'unit'),
                                 endpoint: `${baseEndpoint}${this.getPropertyValue(propertyDefinition, 'href')}`,
                                 semanticId: propertyDefinition.semanticId?.value || '',
-                                isEditing: false, // Initialize to false
-                                selected: false, // Initialize checkbox selection to false
+                                isEditing: false,
+                                selected: false,
                             } as Property;
                         });
 
                         this.submodelElementCollections.push({
                             idShort: collection.idShort,
                             properties,
-                            isEditing: false, // Initialize to false
+                            isEditing: false,
+                            selected: false,
                         });
                     }
                 });
@@ -216,55 +236,117 @@
             toggleEdit(property: Property) {
                 property.isEditing = !property.isEditing;
                 if (!property.isEditing) {
-                    // Save changes when exiting edit mode
                     this.saveChanges();
                 }
             },
             toggleCollectionEdit(collection: SubmodelElementCollection) {
                 collection.isEditing = !collection.isEditing;
                 if (!collection.isEditing) {
-                    // Save changes when exiting edit mode
                     this.saveChanges();
                 }
             },
+            updateSelectedProperties() {
+                // Recalculate the button visibility when properties are selected
+                this.isAnyPropertySelected = this.submodelElementCollections.some((collection) =>
+                    collection.properties.some((property) => property.selected)
+                );
+            },
+            updateSelectedCollections() {
+                // Recalculate the button visibility when collections are selected
+                this.isAnyCollectionSelected = this.submodelElementCollections.some(
+                    (collection) => collection.selected
+                );
+            },
             deleteSelectedProperties() {
+                // Debug: Before deletion
+                console.log('Before deletion:', JSON.stringify(this.submodelElementCollections, null, 2));
+
                 // Delete all selected properties
                 this.submodelElementCollections.forEach((collection) => {
-                    collection.properties = collection.properties.filter((property) => !property.selected);
+                    // Filter out properties that are not selected
+                    const updatedProperties = collection.properties.filter((property) => !property.selected);
+
+                    // Debug: Check if properties have been updated
+                    if (updatedProperties.length !== collection.properties.length) {
+                        console.log(`Properties updated in collection ${collection.idShort}:`, {
+                            before: collection.properties.length,
+                            after: updatedProperties.length,
+                        });
+                    }
+
+                    // Assign the filtered properties back to the collection
+                    collection.properties = updatedProperties;
                 });
+
+                // Trigger Vue reactivity for submodelElementCollections
+                this.submodelElementCollections = [...this.submodelElementCollections];
+
+                // Debug: After deletion
+                console.log('After deletion:', JSON.stringify(this.submodelElementCollections, null, 2));
+
                 this.saveChanges();
             },
-            updateSelectedProperties() {
-                // Hide or show the "Delete Selected" button based on checkbox selections
+            deleteSelectedCollections() {
+                // Delete all selected collections
+                this.submodelElementCollections = this.submodelElementCollections.filter(
+                    (collection) => !collection.selected
+                );
+
+                this.saveChanges();
             },
-            openDeleteDialog() {
+            openDeleteDialog(deleteCollections = false) {
+                this.deleteCollectionsMode = deleteCollections;
                 this.deleteDialog = true;
             },
             closeDeleteDialog() {
                 this.deleteDialog = false; // Close the dialog after deletion
             },
             confirmDelete() {
-                this.deleteSelectedProperties();
+                if (this.deleteCollectionsMode) {
+                    this.deleteSelectedCollections();
+                } else {
+                    this.deleteSelectedProperties();
+                }
                 this.closeDeleteDialog();
             },
+            addNewCollection() {
+                const newCollection: SubmodelElementCollection = {
+                    idShort: 'New Collection',
+                    properties: [],
+                    isEditing: false,
+                    selected: false,
+                };
+                this.submodelElementCollections.push(newCollection);
+                this.saveChanges();
+            },
+            addPropertyToCollection(collection: SubmodelElementCollection) {
+                const newProperty: Property = {
+                    idShort: 'New Property',
+                    title: '',
+                    unit: '',
+                    endpoint: '',
+                    isEditing: false,
+                    selected: false,
+                };
+                collection.properties.push(newProperty);
+                this.saveChanges();
+            },
             saveChanges() {
-                console.log('Saving changes:', this.submodelElementCollections);
+                console.log('Saving changes:', JSON.stringify(this.submodelElementCollections, null, 2));
                 const submodelPath = this.selectedAAS?.endpoints[0].protocolInformation.href;
 
                 if (submodelPath) {
-                    // Create a Headers object for the request
                     const headers = new Headers({
-                        'Content-Type': 'application/json', // Set the content type to JSON
-                        Authorization: 'Bearer your-auth-token', // Example, add your auth token here
+                        'Content-Type': 'application/json',
+                        Authorization: 'Bearer your-auth-token',
                     });
 
-                    const context = 'Updating SubmodelElement'; // Context of the request
+                    const context = 'Updating SubmodelElement';
                     const disableMessage = false;
 
-                    // Call the putRequest method with correct argument types
                     this.putRequest(
                         submodelPath,
-                        this.submodelElementCollections,
+                        JSON.stringify(this.submodelElementCollections),
                         headers,
                         context,
                         disableMessage
@@ -272,7 +354,7 @@
                         if (response.success) {
                             console.log('Changes saved successfully.');
                         } else {
-                            console.error('Failed to save changes.');
+                            console.error('Failed to save changes:', response);
                         }
                     });
                 }
