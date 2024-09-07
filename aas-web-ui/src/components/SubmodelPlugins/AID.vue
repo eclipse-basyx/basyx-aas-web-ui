@@ -1,3 +1,8 @@
+<!-- TODO: inclue the title to be editable - backend logic
+Add logic to the backend
+Create inside the edit dialog a button to delete the property and to add a new one - delete needs confirmation
+Add a button to add a new collection
+Logic to the backend -->
 <template>
     <v-container fluid class="pa-0">
         <!-- Header -->
@@ -6,6 +11,7 @@
                 <div class="text-subtitle-1">{{ 'Asset Interfaces Description:' }}</div>
             </v-card-title>
         </v-card>
+
         <v-expansion-panels>
             <!-- Iterate through each SubmodelElementCollection -->
             <v-expansion-panel
@@ -21,7 +27,7 @@
                         </div>
                     </div>
                     <!-- Single Edit Icon for Collection -->
-                    <v-icon small @click="openEditDialog(collection)" @click.stop> mdi-pencil </v-icon>
+                    <v-icon small @click="openEditDialog(collection)" @click.stop>mdi-pencil</v-icon>
                 </v-expansion-panel-title>
                 <v-expansion-panel-text>
                     <!-- Dynamically display each property's metadata and endpoint -->
@@ -42,6 +48,7 @@
                 </v-expansion-panel-text>
             </v-expansion-panel>
         </v-expansion-panels>
+
         <!-- Handle case when no properties are available -->
         <v-card v-if="!submodelElementCollections.length" class="mb-4 py-8">
             <v-row flex align="center" justify="center">
@@ -49,15 +56,28 @@
             </v-row>
         </v-card>
 
+        <!-- Add New Collection Button -->
+        <v-btn color="primary" @click="addNewCollection">Add New Collection</v-btn>
+
         <!-- Edit Properties Dialog -->
         <v-dialog v-model="editDialog" max-width="600px" persistent>
             <v-card>
                 <v-card-title class="headline">Edit Properties</v-card-title>
                 <v-card-text>
-                    <v-form>
+                    <v-form v-if="selectedCollection">
                         <v-container>
+                            <!-- Editable Title Field -->
+                            <v-row>
+                                <v-col cols="12">
+                                    <v-text-field
+                                        v-model="selectedCollection.idShort"
+                                        label="Title"
+                                        dense></v-text-field>
+                                </v-col>
+                            </v-row>
+
                             <!-- Iterate through each property of the selected collection -->
-                            <v-row v-for="(property, _index) in selectedCollection?.properties" :key="property.idShort">
+                            <v-row v-for="(property, index) in selectedCollection.properties" :key="property.idShort">
                                 <v-col cols="12" sm="6">
                                     <v-text-field v-model="property.title" label="Title" dense></v-text-field>
                                 </v-col>
@@ -67,7 +87,14 @@
                                 <v-col cols="12">
                                     <v-text-field v-model="property.endpoint" label="Endpoint" dense></v-text-field>
                                 </v-col>
+                                <!-- Delete Property Button -->
+                                <v-col cols="12">
+                                    <v-btn color="red" @click="deleteProperty(index)">Delete Property</v-btn>
+                                </v-col>
                             </v-row>
+
+                            <!-- Add New Property Button -->
+                            <v-btn color="primary" @click="addNewProperty">Add New Property</v-btn>
                         </v-container>
                     </v-form>
                 </v-card-text>
@@ -82,24 +109,19 @@
 </template>
 
 <script lang="ts">
-    import { defineComponent } from 'vue'; // Removed unused `ref` import
+    import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import RequestHandling from '../../mixins/RequestHandling';
     import SubmodelElementHandling from '../../mixins/SubmodelElementHandling';
+
     interface Property {
         idShort: string;
         title: string;
         unit: string;
         endpoint: string;
         semanticId?: string;
-    }
-
-    interface SubmodelElement {
-        idShort: string;
-        value: any;
-        modelType: string;
     }
 
     interface SubmodelElementCollection {
@@ -190,10 +212,37 @@
                     );
                     if (index !== -1) {
                         this.submodelElementCollections[index] = { ...this.selectedCollection };
+                        // Add logic to save updated collection to backend here
+                        this.saveCollection(this.selectedCollection); // Example backend call
                         this.closeEditDialog();
-                        // You can add logic here to send the updated data to the backend if needed
                     }
                 }
+            },
+            addNewCollection() {
+                const newCollection: SubmodelElementCollection = {
+                    idShort: 'New Collection',
+                    properties: [],
+                };
+                this.submodelElementCollections.push(newCollection);
+            },
+            addNewProperty() {
+                if (this.selectedCollection) {
+                    this.selectedCollection.properties.push({
+                        idShort: 'New Property',
+                        title: '',
+                        unit: '',
+                        endpoint: '',
+                    });
+                }
+            },
+            deleteProperty(index: number) {
+                if (this.selectedCollection) {
+                    this.selectedCollection.properties.splice(index, 1);
+                }
+            },
+            saveCollection(collection: SubmodelElementCollection) {
+                // Implement backend call to save collection
+                console.log('Saving collection to backend:', collection);
             },
             getEndpointBase(submodelElementCollection: any): string {
                 const endpointMetadata = submodelElementCollection.value.find(
@@ -220,7 +269,7 @@
                 }
                 return '';
             },
-            findNestedElement(elements: SubmodelElement[], idShort: string): SubmodelElement | null {
+            findNestedElement(elements: any[], idShort: string): any | null {
                 for (const element of elements) {
                     if (element.idShort === idShort) {
                         return element;
