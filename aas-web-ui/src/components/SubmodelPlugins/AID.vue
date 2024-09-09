@@ -87,9 +87,11 @@ Logic to the backend -->
                                 <v-col cols="12">
                                     <v-text-field v-model="property.endpoint" label="Endpoint" dense></v-text-field>
                                 </v-col>
-                                <!-- Delete Property Button -->
-                                <v-col cols="12">
-                                    <v-btn color="red" @click="deleteProperty(index)">Delete Property</v-btn>
+                                <!-- Trash Icon for Delete Property -->
+                                <v-col cols="12" class="d-flex justify-end">
+                                    <v-icon color="red" @click="confirmDeleteProperty(index)"
+                                        >mdi-trash-can-outline</v-icon
+                                    >
                                 </v-col>
                             </v-row>
 
@@ -102,6 +104,19 @@ Logic to the backend -->
                     <v-spacer></v-spacer>
                     <v-btn color="green darken-1" @click="closeEditDialog">Cancel</v-btn>
                     <v-btn color="blue darken-1" @click="saveChanges">Save</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+        <!-- Delete Confirmation Dialog -->
+        <v-dialog v-model="deleteConfirmationDialog" max-width="400px">
+            <v-card>
+                <v-card-title class="headline">Confirm Delete</v-card-title>
+                <v-card-text>Are you sure you want to delete this property?</v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn color="green darken-1" @click="closeDeleteConfirmationDialog">Cancel</v-btn>
+                    <v-btn color="red darken-1" @click="deleteProperty">Delete</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -153,7 +168,9 @@ Logic to the backend -->
             return {
                 submodelElementCollections: [] as Array<SubmodelElementCollection>,
                 editDialog: false,
+                deleteConfirmationDialog: false,
                 selectedCollection: null as SubmodelElementCollection | null,
+                propertyToDeleteIndex: null as number | null,
             };
         },
         computed: {
@@ -235,10 +252,20 @@ Logic to the backend -->
                     });
                 }
             },
-            deleteProperty(index: number) {
-                if (this.selectedCollection) {
-                    this.selectedCollection.properties.splice(index, 1);
+            confirmDeleteProperty(index: number) {
+                this.propertyToDeleteIndex = index;
+                this.deleteConfirmationDialog = true;
+            },
+            deleteProperty() {
+                if (this.selectedCollection && this.propertyToDeleteIndex !== null) {
+                    this.selectedCollection.properties.splice(this.propertyToDeleteIndex, 1);
+                    this.propertyToDeleteIndex = null;
+                    this.closeDeleteConfirmationDialog();
                 }
+            },
+            closeDeleteConfirmationDialog() {
+                this.deleteConfirmationDialog = false;
+                this.propertyToDeleteIndex = null;
             },
             saveCollection(collection: SubmodelElementCollection) {
                 // Implement backend call to save collection
