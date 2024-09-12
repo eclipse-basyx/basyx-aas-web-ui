@@ -1,5 +1,6 @@
 <!-- TODO: Add deleting icon and function for the whole collection. Add a confirmation dialog for deleting the collection.
-Save change in title when edit. Implement backedn endpoint -->
+Save change in title when edit. Implement backedn endpoint 
+NOTE: "watch" makes visible the data but gets duplicate-->
 <template>
     <v-container fluid class="pa-0">
         <!-- Header -->
@@ -168,9 +169,6 @@ Save change in title when edit. Implement backedn endpoint -->
                 deleteConfirmationDialog: false,
                 selectedCollection: null as SubmodelElementCollection | null,
                 propertyToDeleteIndex: null as number | null,
-                findNestedElement: this.findNestedElement,
-                getPropertyValue: this.getPropertyValue,
-                getEndpointBase: this.getEndpointBase,
             };
         },
         computed: {
@@ -178,8 +176,14 @@ Save change in title when edit. Implement backedn endpoint -->
                 return this.aasStore.getSelectedAAS;
             },
         },
-        mounted() {
-            this.fetchData();
+        watch: {
+            submodelElementData: {
+                handler() {
+                    this.fetchData();
+                },
+                immediate: true, // Run on component mount
+                deep: true, // Watch deeply for nested changes
+            },
         },
         methods: {
             fetchData() {
@@ -193,6 +197,7 @@ Save change in title when edit. Implement backedn endpoint -->
                 );
 
                 submodelElementCollections.forEach((collection: any) => {
+                    console.log('Processing collection:', collection); // Debugging output
                     const propertiesCollection = this.findNestedElement(collection.value, 'properties');
                     if (propertiesCollection) {
                         const propertyDefinitions = propertiesCollection.value;
@@ -210,8 +215,52 @@ Save change in title when edit. Implement backedn endpoint -->
                             idShort: collection.idShort,
                             properties,
                         });
+                        console.log('Properties for collection:', properties); // Debugging output
+                    } else {
+                        console.warn('No properties collection found for:', collection);
                     }
                 });
+
+                console.log('Final submodelElementCollections:', this.submodelElementCollections); // Debugging output
+            },
+            getEndpointBase(submodelElementCollection: any): string {
+                const endpointMetadata = submodelElementCollection.value.find(
+                    (property: any) => property.idShort === 'EndpointMetadata'
+                );
+                if (!endpointMetadata) {
+                    console.warn('EndpointMetadata not found in SubmodelElementCollection');
+                    return '';
+                }
+
+                const baseProperty = endpointMetadata.value.find((property: any) => property.idShort === 'base');
+                return baseProperty?.value || '';
+            },
+            getPropertyValue(propertyCollection: any, idShort: string): string {
+                const directProperty = propertyCollection.value?.find((prop: any) => prop.idShort === idShort);
+                if (directProperty) {
+                    return directProperty.value || '';
+                }
+
+                const propertyWithForms = propertyCollection.value?.find((prop: any) => prop.idShort === 'forms');
+                if (propertyWithForms) {
+                    const formProperty = propertyWithForms.value.find((form: any) => form.idShort === idShort);
+                    return formProperty?.value || '';
+                }
+                return '';
+            },
+            findNestedElement(elements: any[], idShort: string): any | null {
+                for (const element of elements) {
+                    if (element.idShort === idShort) {
+                        return element;
+                    }
+                    if (Array.isArray(element.value)) {
+                        const nestedElement = this.findNestedElement(element.value, idShort);
+                        if (nestedElement) {
+                            return nestedElement;
+                        }
+                    }
+                }
+                return null;
             },
             openEditDialog(collection: SubmodelElementCollection) {
                 this.selectedCollection = { ...collection };
