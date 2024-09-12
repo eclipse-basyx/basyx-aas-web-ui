@@ -1,8 +1,5 @@
-<!-- TODO: inclue the title to be editable - backend logic
-Add logic to the backend
-Create inside the edit dialog a button to delete the property and to add a new one - delete needs confirmation
-Add a button to add a new collection
-Logic to the backend -->
+<!-- TODO: Add deleting icon and function for the whole collection. Add a confirmation dialog for deleting the collection.
+Save change in title when edit. Implement backedn endpoint -->
 <template>
     <v-container fluid class="pa-0">
         <!-- Header -->
@@ -171,6 +168,9 @@ Logic to the backend -->
                 deleteConfirmationDialog: false,
                 selectedCollection: null as SubmodelElementCollection | null,
                 propertyToDeleteIndex: null as number | null,
+                findNestedElement: this.findNestedElement,
+                getPropertyValue: this.getPropertyValue,
+                getEndpointBase: this.getEndpointBase,
             };
         },
         computed: {
@@ -221,7 +221,7 @@ Logic to the backend -->
                 this.editDialog = false;
                 this.selectedCollection = null;
             },
-            saveChanges() {
+            async saveChanges() {
                 console.log('Saving changes:', this.selectedCollection);
                 if (this.selectedCollection) {
                     const index = this.submodelElementCollections.findIndex(
@@ -229,8 +229,8 @@ Logic to the backend -->
                     );
                     if (index !== -1) {
                         this.submodelElementCollections[index] = { ...this.selectedCollection };
-                        // Add logic to save updated collection to backend here
-                        this.saveCollection(this.selectedCollection); // Example backend call
+                        // Call backend to save updated collection
+                        await this.saveCollection(this.selectedCollection); // Backend call
                         this.closeEditDialog();
                     }
                 }
@@ -256,60 +256,59 @@ Logic to the backend -->
                 this.propertyToDeleteIndex = index;
                 this.deleteConfirmationDialog = true;
             },
-            deleteProperty() {
-                if (this.selectedCollection && this.propertyToDeleteIndex !== null) {
-                    this.selectedCollection.properties.splice(this.propertyToDeleteIndex, 1);
-                    this.propertyToDeleteIndex = null;
-                    this.closeDeleteConfirmationDialog();
-                }
-            },
             closeDeleteConfirmationDialog() {
                 this.deleteConfirmationDialog = false;
                 this.propertyToDeleteIndex = null;
             },
-            saveCollection(collection: SubmodelElementCollection) {
-                // Implement backend call to save collection
-                console.log('Saving collection to backend:', collection);
-            },
-            getEndpointBase(submodelElementCollection: any): string {
-                const endpointMetadata = submodelElementCollection.value.find(
-                    (property: any) => property.idShort === 'EndpointMetadata'
-                );
-                if (!endpointMetadata) {
-                    console.warn('EndpointMetadata not found in SubmodelElementCollection');
-                    return '';
+            deleteProperty() {
+                if (this.selectedCollection && this.propertyToDeleteIndex !== null) {
+                    this.selectedCollection.properties.splice(this.propertyToDeleteIndex, 1);
+                    this.closeDeleteConfirmationDialog();
                 }
+            },
+            async saveCollection(collection: SubmodelElementCollection) {
+                try {
+                    const apiUrl = '/api/aasx/updateCollection';
+                    const payload = {
+                        aasId: this.selectedAAS?.id,
+                        submodelId: this.submodelElementData?.id,
+                        collection: collection,
+                    };
 
-                const baseProperty = endpointMetadata.value.find((property: any) => property.idShort === 'base');
-                return baseProperty?.value || '';
-            },
-            getPropertyValue(propertyCollection: any, idShort: string): string {
-                const directProperty = propertyCollection.value?.find((prop: any) => prop.idShort === idShort);
-                if (directProperty) {
-                    return directProperty.value || '';
-                }
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(payload),
+                    });
 
-                const propertyWithForms = propertyCollection.value?.find((prop: any) => prop.idShort === 'forms');
-                if (propertyWithForms) {
-                    const formProperty = propertyWithForms.value.find((form: any) => form.idShort === idShort);
-                    return formProperty?.value || '';
-                }
-                return '';
-            },
-            findNestedElement(elements: any[], idShort: string): any | null {
-                for (const element of elements) {
-                    if (element.idShort === idShort) {
-                        return element;
+                    if (!response.ok) {
+                        throw new Error(`Failed to update collection: ${response.statusText}`);
                     }
-                    if (Array.isArray(element.value)) {
-                        const nestedElement = this.findNestedElement(element.value, idShort);
-                        if (nestedElement) {
-                            return nestedElement;
-                        }
-                    }
+
+                    const result = await response.json();
+                    console.log('Collection updated successfully:', result);
+                    this.$emit('showNotification', 'Collection updated successfully.');
+                } catch (error) {
+                    console.error('Error updating collection:', error);
+                    this.$emit('showNotification', `Error: ${(error as Error).message}`);
                 }
-                return null;
             },
         },
     });
 </script>
+
+<style scoped>
+    .d-flex {
+        display: flex;
+    }
+    .justify-end {
+        justify-content: flex-end;
+    }
+    .text-truncate {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>
