@@ -2400,10 +2400,10 @@ vue-tsc@^2.1.4:
     "@vue/language-core" "2.1.4"
     semver "^7.5.4"
 
-vue3-apexcharts@^1.5.3:
-  version "1.5.3"
-  resolved "https://registry.yarnpkg.com/vue3-apexcharts/-/vue3-apexcharts-1.5.3.tgz#45f685a2dd21058c0d76ab2145eb3ec27d8fb14c"
-  integrity sha512-yaHTPoj0iVKAtEVg8wEwIwwvf0VG+lPYNufCf3txRzYQOqdKPoZaZ9P3Dj3X+2A1XY9O1kcTk9HVqvLo+rppvQ==
+vue3-apexcharts@^1.6.0:
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/vue3-apexcharts/-/vue3-apexcharts-1.6.0.tgz#2ea6eb9acdd3c31cff790b67d6c2bf1b38cc09f6"
+  integrity sha512-gemKFXpw4TuVcllwyKJGYjTwiJQxxCUwbXsiiEEZjs0zc9jvOHvreN8frXz7QbnYqMqOHF9D1TBqwENvoPNjLw==
 
 vue@^3.2.25, vue@^3.5.5:
   version "3.5.5"
