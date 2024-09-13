@@ -191,6 +191,7 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
+    import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
     import AreaChart from '@/components/Widgets/AreaChart.vue';
     import DisplayField from '@/components/Widgets/DisplayField.vue';
@@ -223,11 +224,13 @@
             const theme = useTheme();
             const aasStore = useAASStore();
             const envStore = useEnvStore();
+            const route = useRoute();
 
             return {
                 theme, // Theme Object
                 aasStore, // AASStore Object
                 envStore, // EnvironmentStore Object
+                route, // Route Object
             };
         },
 

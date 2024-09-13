@@ -7,7 +7,7 @@
 // Types
 interface PluginType {
     name: string;
-    SemanticID: string;
+    semanticId: string;
 }
 
 // Components
@@ -63,7 +63,7 @@ async function loadUserPlugins() {
             const componentName = path.replace('./UserPlugins/', '').replace('.vue', '');
             const component: any = await pluginFiles[path]();
             app.component(componentName, (component.default || component) as ReturnType<typeof defineComponent>);
-            plugins.push({ name: componentName, SemanticID: component.default.SemanticID });
+            plugins.push({ name: componentName, semanticId: component.default.semanticId });
         })
     );
 
