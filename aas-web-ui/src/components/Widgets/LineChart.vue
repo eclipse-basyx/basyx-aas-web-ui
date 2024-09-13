@@ -61,12 +61,7 @@
 
         data() {
             return {
-                chartSeries: [
-                    {
-                        name: 'Value',
-                        data: [],
-                    },
-                ] as Array<any>,
+                chartSeries: [] as Array<any>,
                 chartOptions: {
                     chart: {
                         id: 'line',
@@ -74,9 +69,13 @@
                         height: 350,
                         background: '#ffffff00',
                     },
+                    dataLabels: {
+                        enabled: false,
+                    },
                     xaxis: {
                         type: 'datetime',
                         range: 60000,
+                        tickAmount: 10,
                         labels: {
                             datetimeFormatter: {
                                 year: 'yyyy',
@@ -98,7 +97,7 @@
                     grid: {
                         xaxis: {
                             lines: {
-                                show: true,
+                                show: false,
                             },
                         },
                     },
