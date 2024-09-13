@@ -27,7 +27,7 @@
     "uuid": "^10.0.0",
     "vue": "^3.4.38",
     "vue-router": "^4.4.3",
-    "vue3-apexcharts": "^1.5.3",
+    "vue3-apexcharts": "^1.6.0",
     "vuetify": "^3.7.1",
     "webfontloader": "^1.0.0"
   },
