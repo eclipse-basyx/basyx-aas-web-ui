@@ -36,6 +36,7 @@
 <script lang="ts">
     import _ from 'lodash';
     import { defineComponent } from 'vue';
+    import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
     import DashboardHandling from '@/mixins/DashboardHandling';
     import WidgetHandling from '@/mixins/WidgetHandling';
@@ -49,10 +50,12 @@
         setup() {
             const theme = useTheme();
             const navigationStore = useNavigationStore();
+            const route = useRoute();
 
             return {
                 theme, // Theme Object
                 navigationStore,
+                route, // Route Object
             };
         },
 
