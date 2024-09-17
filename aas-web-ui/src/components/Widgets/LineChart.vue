@@ -39,6 +39,7 @@
 <script lang="ts">
     import _ from 'lodash';
     import { defineComponent } from 'vue';
+    import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
     import DashboardHandling from '@/mixins/DashboardHandling';
     import WidgetHandling from '@/mixins/WidgetHandling';
@@ -50,20 +51,17 @@
 
         setup() {
             const theme = useTheme();
+            const route = useRoute();
 
             return {
                 theme, // Theme Object
+                route, // Route Object
             };
         },
 
         data() {
             return {
-                chartSeries: [
-                    {
-                        name: 'Value',
-                        data: [],
-                    },
-                ] as Array<any>,
+                chartSeries: [] as Array<any>,
                 chartOptions: {
                     chart: {
                         id: 'line',
@@ -71,9 +69,13 @@
                         height: 350,
                         background: '#ffffff00',
                     },
+                    dataLabels: {
+                        enabled: false,
+                    },
                     xaxis: {
                         type: 'datetime',
                         range: 60000,
+                        tickAmount: 10,
                         labels: {
                             datetimeFormatter: {
                                 year: 'yyyy',
@@ -95,7 +97,7 @@
                     grid: {
                         xaxis: {
                             lines: {
-                                show: true,
+                                show: false,
                             },
                         },
                     },

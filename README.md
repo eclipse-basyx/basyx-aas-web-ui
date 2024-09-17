@@ -10,6 +10,10 @@ The AAS Web UI is a Vue.js Webapplication to visualize and manage Asset Administ
 
 ![alt text](Docs/Figs/AAS_Web_UI.png "AAS GUI")
 
+## Documentation
+
+The documentation of the BaSyx AAS Web UI can be found in the [BaSyx Wiki](https://wiki.basyx.org/en/latest/content/user_documentation/basyx_components/web_ui/index.html).
+
 ## AAS Web UI Compatibility and Features
 
 ### Important Notice :warning:

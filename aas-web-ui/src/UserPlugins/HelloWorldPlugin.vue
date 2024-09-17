@@ -3,7 +3,7 @@
         <!-- Plugin Title -->
         <v-card class="mb-3">
             <v-card-title>
-                <div class="text-subtitle-1">{{ 'Hello World Plugin:' }}</div>
+                <div class="text-subtitle-1">{{ nameToDisplay(submodelElementData) }}</div>
             </v-card-title>
         </v-card>
         <!-- Iterate over all SubmodelElements of the HelloWorld-Plugin -->
@@ -25,12 +25,13 @@
     import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
-        name: 'PluginJSONArray',
-        SemanticID: 'http://hello.world.de/plugin_submodel',
+        name: 'HelloWorldPlugin',
+        // semanticId: 'http://hello.world.de/plugin_submodel', // semanticId of the HelloWorld-Plugin as string
+        semanticId: ['http://hello.world.de/plugin_submodel', 'http://hello.world.de/plugin_property'], // semanticId of the HelloWorld-Plugin as array to use multiple semanticIds
         components: {
             SubmodelElementWrapper,
         },
-        mixins: [RequestHandling, SubmodelElementHandling], // SemanticID of the HelloWorld-Plugin
+        mixins: [RequestHandling, SubmodelElementHandling],
         props: ['submodelElementData'],
 
         setup() {
