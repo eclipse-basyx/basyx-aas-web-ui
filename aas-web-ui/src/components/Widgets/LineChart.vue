@@ -69,6 +69,10 @@
                         height: 350,
                         background: '#ffffff00',
                     },
+                    legend: {
+                        show: true,
+                        showForSingleSeries: true,
+                    },
                     dataLabels: {
                         enabled: false,
                     },
@@ -158,6 +162,7 @@
                 // console.log('initializeSeries: ', this.chartData, this.timeVariable, this.yVariables);
                 // Prepare new series values
                 let newSeries = this.prepareSeriesValues(this.chartData, this.yVariables);
+                console.log('newSeries: ', newSeries);
                 // prepare the tooltip for the y-axis
                 let tooltip_y = this.prepareYValueTooltip(this.chartData, this.yVariables);
                 // prepare the legend for the series
