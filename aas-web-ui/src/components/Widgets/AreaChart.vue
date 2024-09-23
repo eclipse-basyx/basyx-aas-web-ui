@@ -69,6 +69,10 @@
                         height: 350,
                         background: '#ffffff00',
                     },
+                    legend: {
+                        show: true,
+                        showForSingleSeries: true,
+                    },
                     dataLabels: {
                         enabled: false,
                     },
