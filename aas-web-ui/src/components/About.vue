@@ -141,6 +141,32 @@
                     ></v-list-item-subtitle
                 >
             </v-list-item>
+            <v-divider inset></v-divider>
+            <v-list-item>
+                <template #prepend>
+                    <v-avatar>
+                        <v-img src="Eicke.jpg">
+                            <template #sources>
+                                <source srcset="@/assets/Contributors/Eicke.jpg" />
+                            </template>
+                        </v-img>
+                    </v-avatar>
+                </template>
+                <template #append>
+                    <a href="https://github.com/seicke" target="_blank">
+                        <v-icon>mdi-github</v-icon>
+                    </a>
+                    &nbsp;
+                    <a href="https://www.linkedin.com/in/seicke/" target="_blank">
+                        <v-icon>mdi-linkedin</v-icon>
+                    </a>
+                </template>
+                <v-list-item-title>Sebastian Eicke</v-list-item-title>
+                <v-list-item-subtitle>
+                    HARTING Technology Group &mdash;
+                    <a href="mailto:Sebastian.Eicke@HARTING.com">Sebastian.Eicke@HARTING.com</a>
+                </v-list-item-subtitle>
+            </v-list-item>
         </v-list>
 
         <br /><br />
