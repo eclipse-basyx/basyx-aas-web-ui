@@ -479,7 +479,7 @@
                 let context = 'fetching data from Time Series Database';
                 let disableMessage = false;
                 // send the request
-                this.postRequest(path, content, headers, context, disableMessage).then((response: any) => {
+                this.postRequest(path, content, headers, context, disableMessage, true).then((response: any) => {
                     if (response.success) {
                         // this.navigationStore.dispatchSnackbar({ status: true, timeout: 2000, color: 'success', btnColor: 'buttonText', text: 'Succesfully retrieved data!' });
                         this.convertInfluxCSVtoArray(response.data);
