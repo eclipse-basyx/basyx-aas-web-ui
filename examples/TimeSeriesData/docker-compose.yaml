@@ -1,5 +1,5 @@
-version: '3'
 services:
+
   # Time Series Database
   influxdb:
     image: influxdb:2
@@ -39,15 +39,13 @@ services:
       - '1883:1883'
     volumes:
       - ./mosquitto:/mosquitto
-    restart: always
     healthcheck:
-      test:
-        - CMD-SHELL
-        - mosquitto_sub -p 1883 -t 'topic' -C 1 -E -i probe -W 3
+      test: ["CMD-SHELL", mosquitto_sub -p 1883 -t 'topic' -C 1 -E -i probe -W 3]
       interval: 5s
       timeout: 10s
       start_period: 1s
       retries: 3
+    restart: always
 
   # MQTT Publisher (for testing)
   mqtt-publisher:
@@ -57,9 +55,8 @@ services:
       - mosquitto
     restart: always
 
-  # AAS Environment
   aas-env:
-    image: eclipsebasyx/aas-environment:2.0.0-milestone-02
+    image: eclipsebasyx/aas-environment:2.0.0-SNAPSHOT
     container_name: aas-env
     volumes:
       - ./aas:/application/aas
@@ -72,30 +69,24 @@ services:
         condition: service_healthy
       sm-registry:
         condition: service_healthy
-
-  # AAS Registry
   aas-registry:
-    image: eclipsebasyx/aas-registry-log-mem:2.0.0-milestone-02
+    image: eclipsebasyx/aas-registry-log-mem:2.0.0-SNAPSHOT
     container_name: aas-registry
     ports:
       - '8082:8080'
     volumes:
       - ./basyx/aas-registry.yml:/workspace/config/application.yml
     restart: always
-
-  # Submodel Registry
   sm-registry:
-    image: eclipsebasyx/submodel-registry-log-mem:2.0.0-milestone-02
+    image: eclipsebasyx/submodel-registry-log-mem:2.0.0-SNAPSHOT
     container_name: sm-registry
     ports:
       - '8083:8080'
     volumes:
       - ./basyx/sm-registry.yml:/workspace/config/application.yml
     restart: always
-
-  # AAS Web UI
   aas-web-ui:
-    image: eclipsebasyx/aas-gui:v2-240327
+    image: eclipsebasyx/aas-gui:v2-241006
     container_name: aas-ui
     ports:
       - '3000:3000'
