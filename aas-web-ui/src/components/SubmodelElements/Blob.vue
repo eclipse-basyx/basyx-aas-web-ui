@@ -200,7 +200,7 @@
                 // console.log("Upload File: ", this.newFile);
                 // check if a file is selected
                 if (this.newFile.length == 0) return;
-                let file = this.newFile[0];
+                let file = this.newFile;
                 let contentType = file.type;
                 // decode the file to base64
                 let reader = new FileReader();

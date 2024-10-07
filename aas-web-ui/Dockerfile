@@ -1,5 +1,5 @@
 # Build Stage
-FROM node:lts-alpine as build-stage
+FROM node:lts-slim AS build-stage
 # Set working directory
 WORKDIR /app
 # Copy the package.json and yarn.lock files
@@ -8,11 +8,11 @@ COPY package.json yarn.lock ./
 RUN yarn install
 # Copy project files
 COPY . .
-# Build the application
-RUN yarn build
+# Build the application and remove node_modules
+RUN yarn build && rm -rf node_modules
 
 # Production Stage
-FROM nginx:alpine as production-stage
+FROM nginx:mainline-alpine3.20-slim AS production-stage
 # Set working directory
 WORKDIR /usr/src/app
 # Install jq

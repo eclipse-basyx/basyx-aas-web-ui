@@ -31,7 +31,7 @@ export interface PlatformType {
 
 export interface PluginType {
     name: string;
-    SemanticID: string;
+    semanticId: string;
 }
 
 import { defineStore } from 'pinia';

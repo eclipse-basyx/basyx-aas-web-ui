@@ -91,7 +91,7 @@
                 let path = this.uploadURL;
                 var headers = new Headers();
                 var formData = new FormData();
-                formData.append('file', this.aasFile[0]);
+                formData.append('file', this.aasFile);
                 // Send Request to upload the file
                 this.postRequest(path, formData, headers, context, disableMessage).then((response: any) => {
                     if (response.success) {

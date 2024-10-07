@@ -39,6 +39,7 @@
 <script lang="ts">
     import _ from 'lodash';
     import { defineComponent } from 'vue';
+    import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
     import DashboardHandling from '@/mixins/DashboardHandling';
     import WidgetHandling from '@/mixins/WidgetHandling';
@@ -50,20 +51,17 @@
 
         setup() {
             const theme = useTheme();
+            const route = useRoute();
 
             return {
                 theme, // Theme Object
+                route, // Route Object
             };
         },
 
         data() {
             return {
-                chartSeries: [
-                    {
-                        name: 'Value',
-                        data: [],
-                    },
-                ] as Array<any>,
+                chartSeries: [] as Array<any>,
                 chartOptions: {
                     chart: {
                         id: 'line',
@@ -71,9 +69,17 @@
                         height: 350,
                         background: '#ffffff00',
                     },
+                    legend: {
+                        show: true,
+                        showForSingleSeries: true,
+                    },
+                    dataLabels: {
+                        enabled: false,
+                    },
                     xaxis: {
                         type: 'datetime',
                         range: 60000,
+                        tickAmount: 10,
                         labels: {
                             datetimeFormatter: {
                                 year: 'yyyy',
@@ -95,7 +101,7 @@
                     grid: {
                         xaxis: {
                             lines: {
-                                show: true,
+                                show: false,
                             },
                         },
                     },
@@ -156,6 +162,7 @@
                 // console.log('initializeSeries: ', this.chartData, this.timeVariable, this.yVariables);
                 // Prepare new series values
                 let newSeries = this.prepareSeriesValues(this.chartData, this.yVariables);
+                console.log('newSeries: ', newSeries);
                 // prepare the tooltip for the y-axis
                 let tooltip_y = this.prepareYValueTooltip(this.chartData, this.yVariables);
                 // prepare the legend for the series

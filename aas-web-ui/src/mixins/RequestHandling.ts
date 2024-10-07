@@ -93,8 +93,17 @@ export default defineComponent({
         },
 
         // Function to send post Request which returns a Promise
-        postRequest(path: string, body: any, headers: Headers, context: string, disableMessage: boolean): any {
-            headers = this.addAuthorizationHeader(headers); // Add the Authorization header
+        postRequest(
+            path: string,
+            body: any,
+            headers: Headers,
+            context: string,
+            disableMessage: boolean,
+            isTSRequest: boolean = false
+        ): any {
+            if (!isTSRequest) {
+                headers = this.addAuthorizationHeader(headers); // Add the Authorization header
+            }
             return fetch(path, { method: 'POST', body: body, headers: headers })
                 .then((response) => {
                     // Check if the Server responded with content
