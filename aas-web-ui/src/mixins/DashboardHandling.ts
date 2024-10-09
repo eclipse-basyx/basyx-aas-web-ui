@@ -60,7 +60,7 @@ export default defineComponent({
                     groupId: group.id,
                 },
                 configObject: {
-                    semanticId: this.SelectedNode.semanticId.keys[0].value,
+                    semanticId: this.SelectedNode.semanticId,
                     chartType: item.chartType,
                     chartOptions: item.chartOptions,
                     timeVal: item.timeValue,
