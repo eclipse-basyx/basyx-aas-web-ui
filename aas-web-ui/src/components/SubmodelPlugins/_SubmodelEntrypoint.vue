@@ -48,6 +48,14 @@
                     checkSemanticId(submodelElementData, 'https://admin-shell.io/ZVEI/TechnicalData/Submodel/1/2')
                 "
                 :submodel-element-data="submodelElementData"></TechnicalData>
+            <AID
+                v-else-if="
+                    checkSemanticId(
+                        submodelElementData,
+                        'https://admin-shell.io/idta/AssetInterfacesDescription/1/0/Submodel'
+                    )
+                "
+                :submodel-element-data="submodelElementData"></AID>
             <JSONArrayProperty
                 v-else-if="checkSemanticId(submodelElementData, 'http://iese.fraunhofer.de/prop_jsonarray')"
                 :submodel-element-data="submodelElementData"></JSONArrayProperty>
@@ -104,6 +112,7 @@
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import AID from './AID.vue';
     import BillsOfMaterial from './BillsOfMaterial.vue';
     import CADPreview from './CADPreview.vue';
     import ContactInformation from './ContactInformation.vue';
@@ -126,6 +135,7 @@
             HandoverDocumentation,
             ContactInformation,
             TechnicalData,
+            AID,
             JSONArrayProperty,
             GenericDataVisu,
             ImagePreview,
