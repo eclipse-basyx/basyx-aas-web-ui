@@ -96,8 +96,9 @@
             SelectedNodeToTransfer() {
                 let aas = { ...this.aasStore.getSelectedAAS };
                 let node = { ...this.aasStore.getSelectedNode };
-                if (aas && aas.endpoints && aas.endpoints[0] && aas.endpoints[0].protocolInformation.href) {
-                    node.pathFull = aas.endpoints[0].protocolInformation.href + '/' + node.path;
+                if (aas && aas.endpoints && aas.endpoints.length > 0) {
+                    const shellHref = this.extractEndpointHref(aas, 'AAS-3.0');
+                    node.pathFull = shellHref + '/' + node.path;
                 }
                 // console.log('SelectedNodeToTransfer: ', node);
                 return node;
@@ -198,7 +199,7 @@
                     // console.log('AAS and Path Queries are set: ', aasEndpoint, ' | ', path);
                     let aas = {} as any;
                     let endpoints = [];
-                    endpoints.push({ protocolInformation: { href: aasEndpoint } });
+                    endpoints.push({ protocolInformation: { href: aasEndpoint }, interface: 'AAS-3.0' });
                     aas.endpoints = endpoints;
                     // dispatch the AAS set by the URL to the store
                     this.aasStore.dispatchSelectedAAS(aas);

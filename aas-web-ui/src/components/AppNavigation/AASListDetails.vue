@@ -113,8 +113,9 @@
             // Function to fetch the Asset Details from the AAS Repository
             fetchAssetDetails() {
                 // console.log('fetch asset details: ', this.detailsObject);
-                // strip everything after /shells from detailsobject.endpoints[0].protocolInformation.href
-                let aasRepoEndpoint = this.detailsObject.endpoints[0].protocolInformation.href.split('/shells')[0];
+                const shellHref = this.extractEndpointHref(this.detailsObject, 'AAS-3.0');
+                // strip everything after /shells from the shells href
+                let aasRepoEndpoint = shellHref.split('/shells')[0];
                 let assetInformationEndpoint =
                     aasRepoEndpoint + '/shells/' + this.URLEncode(this.detailsObject.id) + '/asset-information';
                 // console.log('aasRepoEndpoint: ', assetInformationEndpoint);
