@@ -93,11 +93,12 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import RequestHandling from '@/mixins/RequestHandling';
+    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'Blob',
-        mixins: [RequestHandling],
+        mixins: [RequestHandling, SubmodelElementHandling],
         props: ['blobObject'],
 
         setup() {
@@ -174,8 +175,8 @@
             // Function to update the Blob of the File Element
             updateBlob() {
                 // console.log("Update Blob: " + this.newBlobValue);
-                let path =
-                    this.SelectedAAS.endpoints[0].protocolInformation.href + '/' + this.SelectedNode.path + '/value';
+                const shellHref = this.extractEndpointHref(this.SelectedAAS, 'AAS-3.0');
+                let path = shellHref + '/' + this.SelectedNode.path + '/value';
                 let content = "'" + this.newBlobValue + "'";
                 let headers = new Headers();
                 headers.append('Content-Type', 'application/json');

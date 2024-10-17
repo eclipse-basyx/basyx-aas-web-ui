@@ -27,6 +27,7 @@
             protocolInformation: {
                 href: string;
             };
+            interface: string;
         }>;
     }
 
@@ -118,7 +119,7 @@
                 // console.log('AAS Query is set: ', aasEndpoint);
                 let aas = {} as AASType;
                 let endpoints = [];
-                endpoints.push({ protocolInformation: { href: aasEndpoint } });
+                endpoints.push({ protocolInformation: { href: aasEndpoint }, interface: 'AAS-3.0' });
                 aas.endpoints = endpoints;
                 // dispatch the AAS set by the URL to the store
                 this.aasStore.dispatchSelectedAAS(aas);

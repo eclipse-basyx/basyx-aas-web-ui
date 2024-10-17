@@ -149,13 +149,7 @@
             initializeTree() {
                 // console.log('Initialize Treeview', this.initialUpdate, this.initialNode);
                 // return if no endpoints are available
-                if (
-                    !this.SelectedAAS ||
-                    !this.SelectedAAS.endpoints ||
-                    this.SelectedAAS.endpoints.length === 0 ||
-                    !this.SelectedAAS.endpoints[0].protocolInformation ||
-                    !this.SelectedAAS.endpoints[0].protocolInformation.href
-                ) {
+                if (!this.SelectedAAS || !this.SelectedAAS.endpoints || this.SelectedAAS.endpoints.length === 0) {
                     // TODO: this seems to get executed on reload with a selected AAS
                     // this.navigationStore.dispatchSnackbar({ status: true, timeout: 4000, color: 'error', btnColor: 'buttonText', text: 'AAS with no (valid) Endpoint selected!' });
                     this.submodelData = [];
@@ -165,7 +159,8 @@
                 this.aasStore.dispatchLoadingState(true); // set loading state to true
                 this.submodelData = []; // reset Treeview Data
                 // retrieve AAS from endpoint
-                let path = this.SelectedAAS.endpoints[0].protocolInformation.href + '/submodel-refs';
+                const shellHref = this.extractEndpointHref(this.selectedAAS, 'AAS-3.0');
+                let path = shellHref + '/submodel-refs';
                 let context = 'retrieving Submodel References';
                 let disableMessage = false;
                 this.getRequest(path, context, disableMessage).then(async (response: any) => {
@@ -223,9 +218,10 @@
                     return this.getRequest(path, context, disableMessage).then((response: any) => {
                         if (response.success) {
                             // execute if the Request was successful
-                            let submodelEndpoint = response.data;
+                            const fetchedSubmodel = response.data;
                             // console.log('SubmodelEndpoint: ', submodelEndpoint);
-                            let path = submodelEndpoint.endpoints[0].protocolInformation.href;
+                            const submodelHref = this.extractEndpointHref(fetchedSubmodel, 'SUBMODEL-3.0');
+                            let path = submodelHref;
                             let context = 'retrieving Submodel Data';
                             let disableMessage = true;
                             return this.getRequest(path, context, disableMessage).then((response: any) => {
@@ -400,13 +396,7 @@
             // Function to initialize the treeview with route params
             initTreeWithRouteParams() {
                 // check if the SelectedAAS is already set in the Store and initialize the Treeview if so
-                if (
-                    this.SelectedAAS &&
-                    this.SelectedAAS.endpoints &&
-                    this.SelectedAAS.endpoints[0] &&
-                    this.SelectedAAS.endpoints[0].protocolInformation &&
-                    this.SelectedAAS.endpoints[0].protocolInformation.href
-                ) {
+                if (this.SelectedAAS && this.SelectedAAS.endpoints && this.SelectedAAS.endpoints.length > 0) {
                     // console.log('init Tree from Route Params: ', this.SelectedAAS);
                     this.initializeTree();
                 }
