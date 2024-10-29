@@ -592,7 +592,7 @@
                 try {
                     if (this.deleteSubmodels) {
                         const shellHref = this.extractEndpointHref(this.aasToDelete, 'AAS-3.0');
-                        const path = `${shellHref}/submodel-refs`;
+                        const path = shellHref + '/submodel-refs';
                         const context = 'retrieving Submodel References';
                         const disableMessage = false;
                         const response = await this.getRequest(path, context, disableMessage);

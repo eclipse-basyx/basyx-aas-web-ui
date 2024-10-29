@@ -96,7 +96,7 @@
             SelectedNodeToTransfer() {
                 let aas = { ...this.aasStore.getSelectedAAS };
                 let node = { ...this.aasStore.getSelectedNode };
-                if (aas && aas.endpoints && aas.endpoints.length > 0) {
+                if (Array.isArray(aas?.endpoints) && aas?.endpoints.length > 0) {
                     const shellHref = this.extractEndpointHref(aas, 'AAS-3.0');
                     node.pathFull = shellHref + '/' + node.path;
                 }
