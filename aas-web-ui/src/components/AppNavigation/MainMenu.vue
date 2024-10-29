@@ -1,18 +1,20 @@
 <template>
     <v-container fluid class="pa-0">
         <v-card
-            :min-width="isMobile ? 0 : 700"
+            :min-width="isMobile || !endpointConfigAvailable ? 200 : 700"
             :flat="isMobile ? true : false"
             :color="isMobile ? 'card' : 'navigationMenu'"
             :style="{ 'border-style': isMobile ? '' : 'solid', 'border-width': isMobile ? '' : '1px' }">
             <v-row>
-                <v-col :cols="isMobile ? 12 : 4" :class="isMobile ? 'bg-card' : 'bg-navigationMenuSecondary'">
+                <v-col
+                    :cols="isMobile || !endpointConfigAvailable ? 12 : 4"
+                    :class="isMobile ? 'bg-card' : 'bg-navigationMenuSecondary'">
                     <v-card
                         variant="flat"
                         style="border-radius: 0px"
                         class="pt-3"
                         :color="isMobile ? 'card' : 'navigationMenuSecondary'">
-                        <template v-if="!isMobile">
+                        <template v-if="!isMobile && endpointConfigAvailable">
                             <span class="mx-3 text-primary">General Settings</span>
                             <v-list
                                 nav
@@ -46,6 +48,7 @@
                     </v-card>
                 </v-col>
                 <v-col
+                    v-if="endpointConfigAvailable"
                     :cols="isMobile ? 12 : 8"
                     :class="isMobile ? 'pt-0 mb-2 px-6 bg-card' : 'pt-4 bg-navigationMenu'">
                     <!-- Configure AAS Discovery URL -->
@@ -247,6 +250,7 @@
                 loadingSubmodelRepo: false, // Loading State of the Submodel Repository Connection
                 loadingConceptDescriptionRepo: false, // Loading State of the Concept Description Repository Connection
                 dashboardAvailable: false, // Dashboard Availability
+                endpointConfigAvailable: true,
             };
         },
 
@@ -286,6 +290,10 @@
                 return this.navigationStore.getConceptDescriptionRepoURL;
             },
 
+            getEndpointConfigAvailable() {
+                return this.envStore.getEndpointConfigAvailable;
+            },
+
             // Check if the current Theme is dark
             isDark() {
                 return this.theme.global.current.value.dark;
@@ -311,6 +319,7 @@
             this.AASRepoURL = this.aasRepoURL;
             this.SubmodelRepoURL = this.submodelRepoURL;
             this.ConceptDescriptionRepoURL = this.conceptDescriptionRepoURL;
+            this.endpointConfigAvailable = this.getEndpointConfigAvailable;
             this.isDashboardAvailable();
         },
 
@@ -331,10 +340,14 @@
                         this.loadingAASDiscovery = false;
                         if (response.success) {
                             this.navigationStore.dispatchAASDiscoveryURL(this.aasDiscoveryURL); // save the URL in the NavigationStore
-                            window.localStorage.setItem('aasDiscoveryURL', this.aasDiscoveryURL); // save the URL in the local storage
+                            if (this.endpointConfigAvailable) {
+                                window.localStorage.setItem('aasDiscoveryURL', this.aasDiscoveryURL); // save the URL in the local storage
+                            }
                         } else {
                             this.navigationStore.dispatchAASDiscoveryURL(''); // clear the AAS Discovery Service URL in the NavigationStore
-                            window.localStorage.removeItem('aasDiscoveryURL'); // remove the URL from the local storage
+                            if (this.endpointConfigAvailable) {
+                                window.localStorage.removeItem('aasDiscoveryURL'); // remove the URL from the local storage
+                            }
                         }
                     });
                 }
@@ -356,10 +369,14 @@
                         this.loadingAASRegistry = false;
                         if (response.success) {
                             this.navigationStore.dispatchAASRegistryURL(this.aasRegistryURL); // save the URL in the NavigationStore
-                            window.localStorage.setItem('aasRegistryURL', this.aasRegistryURL); // save the URL in the local storage
+                            if (this.endpointConfigAvailable) {
+                                window.localStorage.setItem('aasRegistryURL', this.aasRegistryURL); // save the URL in the local storage
+                            }
                         } else {
                             this.navigationStore.dispatchAASRegistryURL(''); // clear the AAS Registry URL in the NavigationStore
-                            window.localStorage.removeItem('aasRegistryURL'); // remove the URL from the local storage
+                            if (this.endpointConfigAvailable) {
+                                window.localStorage.removeItem('aasRegistryURL'); // remove the URL from the local storage
+                            }
                         }
                     });
                 }
@@ -381,10 +398,14 @@
                         this.loadingSubmodelRegistry = false;
                         if (response.success) {
                             this.navigationStore.dispatchSubmodelRegistryURL(this.submodelRegistryURL); // save the URL in the NavigationStore
-                            window.localStorage.setItem('submodelRegistryURL', this.submodelRegistryURL); // save the URL in the local storage
+                            if (this.endpointConfigAvailable) {
+                                window.localStorage.setItem('submodelRegistryURL', this.submodelRegistryURL); // save the URL in the local storage
+                            }
                         } else {
                             this.navigationStore.dispatchSubmodelRegistryURL(''); // clear the Submodel Registry URL in the NavigationStore
-                            window.localStorage.removeItem('submodelRegistryURL'); // remove the URL from the local storage
+                            if (this.endpointConfigAvailable) {
+                                window.localStorage.removeItem('submodelRegistryURL'); // remove the URL from the local storage
+                            }
                         }
                     });
                 }
@@ -405,10 +426,14 @@
                         (this as any)['loading' + RepoType + 'Repo'] = false;
                         if (response.success) {
                             this.navigationStore.dispatchRepoURL(RepoType, (this as any)[RepoType + 'RepoURL']); // save the URL in the NavigationStore
-                            window.localStorage.setItem(RepoType + 'RepoURL', (this as any)[RepoType + 'RepoURL']); // save the URL in the local storage
+                            if (this.endpointConfigAvailable) {
+                                window.localStorage.setItem(RepoType + 'RepoURL', (this as any)[RepoType + 'RepoURL']); // save the URL in the local storage
+                            }
                         } else {
                             this.navigationStore.dispatchRepoURL(RepoType, ''); // clear the URL in the NavigationStore
-                            window.localStorage.removeItem(RepoType + 'RepoURL'); // remove the URL from the local storage
+                            if (this.endpointConfigAvailable) {
+                                window.localStorage.removeItem(RepoType + 'RepoURL'); // remove the URL from the local storage
+                            }
                         }
                     });
                 }
