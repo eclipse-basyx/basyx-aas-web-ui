@@ -168,7 +168,8 @@
                         // execute if the Request was successful
                         try {
                             // request submodels from the retrieved AAS (top layer of the Treeview)
-                            let submodelData = await this.requestSubmodels(response.data.result);
+                            const submodelRefs = response.data.result;
+                            let submodelData = await this.requestSubmodels(submodelRefs);
                             // set the isActive prop of the initialNode if it exists and the initialUpdate flag is set
                             if (this.initialUpdate && this.initialNode) {
                                 let expandedSubmodelData = this.expandTree(submodelData, this.initialNode); // Update the Treeview to expand until the initially set node is reached
@@ -212,43 +213,86 @@
                     if (!this.submodelRegistryURL.includes('/submodel-descriptors')) {
                         this.submodelRegistryURL += '/submodel-descriptors';
                     }
-                    let path = this.submodelRegistryURL + '/' + this.URLEncode(submodelRef.keys[0].value);
+                    const submodelId = submodelRef.keys[0].value;
+                    let path = this.submodelRegistryURL + '/' + this.URLEncode(submodelId);
                     let context = 'retrieving Submodel Endpoint';
                     let disableMessage = false;
                     return this.getRequest(path, context, disableMessage).then((response: any) => {
                         if (response.success) {
                             // execute if the Request was successful
-                            const fetchedSubmodel = response.data;
-                            // console.log('SubmodelEndpoint: ', submodelEndpoint);
-                            const submodelHref = this.extractEndpointHref(fetchedSubmodel, 'SUBMODEL-3.0');
-                            let path = submodelHref;
-                            let context = 'retrieving Submodel Data';
-                            let disableMessage = true;
-                            return this.getRequest(path, context, disableMessage).then((response: any) => {
-                                if (response.success) {
-                                    // execute if the Request was successful
-                                    let submodel = response.data;
-                                    // give the Submodel a unique ID
-                                    submodel.id = this.UUID();
-                                    // set the active State of the Submodel
-                                    submodel.isActive = false;
-                                    // set the Path of the Submodel
-                                    submodel.path = path;
-                                    // check if submodel has SubmodelElements
-                                    if (submodel.submodelElements && submodel.submodelElements.length > 0) {
-                                        // recursively create treestructure for contained submodelElements
-                                        let submodelElements = this.prepareTreeviewData(
-                                            submodel.submodelElements,
-                                            submodel
-                                        );
-                                        // add the SubmodelElements to the Submodel
-                                        submodel.children = submodelElements;
-                                        // set showChildren to false (for the Treeview Component)
-                                        submodel.showChildren = false;
+                            if (response.data?.id) {
+                                const fetchedSubmodel = response.data;
+                                // console.log('SubmodelEndpoint: ', submodelEndpoint);
+                                const submodelHref = this.extractEndpointHref(fetchedSubmodel, 'SUBMODEL-3.0');
+                                let path = submodelHref;
+                                let context = 'retrieving Submodel Data';
+                                let disableMessage = true;
+                                return this.getRequest(path, context, disableMessage).then((response: any) => {
+                                    if (response.success && response?.data?.id) {
+                                        // execute if the Request was successful
+                                        let submodel = response.data;
+                                        // give the Submodel a unique ID
+                                        submodel.id = this.UUID();
+                                        // set the active State of the Submodel
+                                        submodel.isActive = false;
+                                        // set the Path of the Submodel
+                                        submodel.path = path;
+                                        // check if submodel has SubmodelElements
+                                        if (submodel.submodelElements && submodel.submodelElements.length > 0) {
+                                            // recursively create treestructure for contained submodelElements
+                                            let submodelElements = this.prepareTreeviewData(
+                                                submodel.submodelElements,
+                                                submodel
+                                            );
+                                            // add the SubmodelElements to the Submodel
+                                            submodel.children = submodelElements;
+                                            // set showChildren to false (for the Treeview Component)
+                                            submodel.showChildren = false;
+                                        }
+                                        return submodel;
+                                    } else {
+                                        let submodel = {
+                                            id: submodelId,
+                                            idShort: submodelId.split('/').pop(),
+                                            modelType: 'Submodel',
+                                            semanticId: null,
+                                            description: [],
+                                            displayName: [],
+                                            submodelElements: [],
+                                            isActive: false,
+                                            path: path,
+                                        };
+                                        this.navigationStore.dispatchSnackbar({
+                                            status: true,
+                                            timeout: 60000,
+                                            color: 'error',
+                                            btnColor: 'buttonText',
+                                            text: "Submodel '" + submodelId + "' not found in SubmodelRepository",
+                                        });
+                                        return submodel;
                                     }
-                                    return submodel;
-                                }
-                            });
+                                });
+                            } else {
+                                let submodel = {
+                                    id: submodelId,
+                                    idShort: submodelId.split('/').pop(),
+                                    modelType: 'Submodel',
+                                    semanticId: null,
+                                    description: [],
+                                    displayName: [],
+                                    submodelElements: [],
+                                    isActive: false,
+                                    path: path,
+                                };
+                                this.navigationStore.dispatchSnackbar({
+                                    status: true,
+                                    timeout: 60000,
+                                    color: 'error',
+                                    btnColor: 'buttonText',
+                                    text: "Submodel '" + submodelId + "' not found in SubmodelRegistry",
+                                });
+                                return submodel;
+                            }
                         }
                     });
                 });
@@ -358,6 +402,8 @@
                         if (!foundNode) {
                             foundNode = true;
                             element.isActive = true;
+                            this.aasStore.dispatchNode(element);
+                            this.aasStore.dispatchRealTimeObject(element);
                         }
                         // if prop showChildren exists, set it to true
                         if ('showChildren' in element) {
@@ -407,7 +453,7 @@
                 const path = searchParams.get('path');
 
                 if (aasEndpoint && path) {
-                    // console.log('AAS and Path Queris are set: ', aasEndpoint, path);
+                    console.log('AAS and Path Queris are set: ', aasEndpoint, path);
                     let node = {} as any;
                     node.path = path;
                     node.isActive = true;

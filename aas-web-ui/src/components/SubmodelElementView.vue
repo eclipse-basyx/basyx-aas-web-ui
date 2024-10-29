@@ -332,7 +332,7 @@
                 this.getRequest(path, context, disableMessage).then((response: any) => {
                     // save Concept Descriptions before overwriting the SubmodelElement Data
                     let conceptDescriptions = this.submodelElementData.conceptDescriptions;
-                    if (response.success) {
+                    if (response.success && (response.data?.id || response.data?.idShort)) {
                         // execute if the Request was successful
                         response.data.timestamp = this.formatDate(new Date()); // add timestamp to the SubmodelElement Data
                         response.data.path = this.SelectedNode.path; // add the path to the SubmodelElement Data
