@@ -314,7 +314,7 @@
                 // console.log('AAS Query is set: ', aasEndpoint);
                 let aas = {} as any;
                 let endpoints = [];
-                endpoints.push({ protocolInformation: { href: aasEndpoint } });
+                endpoints.push({ protocolInformation: { href: aasEndpoint }, interface: 'AAS-3.0' });
                 aas.endpoints = endpoints;
                 // dispatch the AAS set by the URL to the store
                 this.aasStore.dispatchSelectedAAS(aas);
@@ -396,7 +396,8 @@
                 // console.log('Check AAS Status: ', AAS);
                 // iterate over all AAS in the AAS List
                 this.AASData.forEach((AAS: any) => {
-                    let path = AAS.endpoints[0].protocolInformation.href;
+                    const shellHref = this.extractEndpointHref(AAS, 'AAS-3.0');
+                    let path = shellHref;
                     let context = 'evaluating AAS Status';
                     let disableMessage = true;
                     this.getRequest(path, context, disableMessage).then((response: any) => {
@@ -445,16 +446,16 @@
                     });
                     return;
                 }
-
+                const shellHref = this.extractEndpointHref(AAS, 'AAS-3.0');
                 if (this.isMobile) {
                     // Change to Treeview add AAS Endpoint as Query to the Router
                     this.router.push({
                         path: '/submodellist',
-                        query: { aas: AAS.endpoints[0].protocolInformation.href },
+                        query: { aas: shellHref },
                     });
                 } else {
                     // Add AAS Endpoint as Query to the Router
-                    this.router.push({ query: { aas: AAS.endpoints[0].protocolInformation.href } });
+                    this.router.push({ query: { aas: shellHref } });
                 }
                 // dispatch the selected AAS to the Store
                 this.aasStore.dispatchSelectedAAS(AAS);
@@ -466,7 +467,8 @@
             downloadAAS(AAS: any) {
                 // console.log('Download AAS: ', AAS);
                 // request the Submodel references for the AAS
-                let path = AAS.endpoints[0].protocolInformation.href + '/submodel-refs';
+                const shellHref = this.extractEndpointHref(AAS, 'AAS-3.0');
+                let path = shellHref + '/submodel-refs';
                 let context = 'retrieving Submodel References';
                 let disableMessage = false;
                 this.getRequest(path, context, disableMessage).then(async (response: any) => {
@@ -513,9 +515,9 @@
                 ) {
                     return false;
                 }
-                let isSelected =
-                    this.selectedAAS['endpoints'][0]['protocolInformation']['href'] ===
-                    AAS['endpoints'][0]['protocolInformation']['href'];
+                const shellHrefAASfromList = this.extractEndpointHref(AAS, 'AAS-3.0');
+                const shellHrefSelectedAAS = this.extractEndpointHref(this.selectedAAS, 'AAS-3.0');
+                let isSelected = shellHrefAASfromList === shellHrefSelectedAAS;
                 if (isSelected && this.showDetailsCard) {
                     // update data of detailsCard
                     this.detailsObject = AAS;
@@ -577,7 +579,8 @@
                     return;
                 }
                 // console.log('Remove AAS: ', AAS);
-                let path = AAS.endpoints[0].protocolInformation.href;
+                const shellHref = this.extractEndpointHref(AAS, 'AAS-3.0');
+                let path = shellHref;
                 let context = 'removing AAS';
                 let disableMessage = false;
                 this.deleteRequest(path, context, disableMessage);
@@ -588,7 +591,8 @@
                 let error = false;
                 try {
                     if (this.deleteSubmodels) {
-                        const path = `${this.aasToDelete.endpoints[0].protocolInformation.href}/submodel-refs`;
+                        const shellHref = this.extractEndpointHref(this.aasToDelete, 'AAS-3.0');
+                        const path = shellHref + '/submodel-refs';
                         const context = 'retrieving Submodel References';
                         const disableMessage = false;
                         const response = await this.getRequest(path, context, disableMessage);
@@ -606,7 +610,11 @@
                                     disableMessage
                                 );
                                 if (submodelResponse.success) {
-                                    const deletePath = submodelResponse.data.endpoints[0].protocolInformation.href;
+                                    const submodelHref = this.extractEndpointHref(
+                                        submodelResponse.data,
+                                        'SUBMODEL-3.0'
+                                    );
+                                    const deletePath = submodelHref;
                                     await this.deleteRequest(deletePath, 'removing Submodel', disableMessage);
                                 } else {
                                     error = true;

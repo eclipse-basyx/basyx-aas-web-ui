@@ -257,7 +257,8 @@ export default defineComponent({
             referenceValue: Array<any>
         ): Promise<{ success: boolean; aas?: object; submodel?: object }> {
             const promises = aasList.map(async (aas: any) => {
-                const path = aas.endpoints[0].protocolInformation.href + '/submodel-refs';
+                const shellHref = this.extractEndpointHref(aas, 'AAS-3.0');
+                const path = shellHref + '/submodel-refs';
                 const context = 'retrieving Submodel References';
                 const disableMessage = false;
 
@@ -287,7 +288,8 @@ export default defineComponent({
         // Function to jump to a referenced Element
         jumpToReferencedElement(referencedAAS: any, referenceValue: Array<any>, referencedSubmodel?: any) {
             // console.log('jumpToReferencedElement. AAS: ', referencedAAS, 'Submodel: ', referencedSubmodel);
-            const endpoint = referencedAAS.endpoints[0].protocolInformation.href;
+            const shellHref = this.extractEndpointHref(referencedAAS, 'AAS-3.0');
+            const endpoint = shellHref;
             if (referencedSubmodel && Object.keys(referencedSubmodel).length > 0) {
                 // if the referenced Element is a Submodel or SubmodelElement
                 this.jumpToSubmodelElement(referencedSubmodel, referenceValue, referencedAAS, endpoint);
@@ -610,6 +612,39 @@ export default defineComponent({
                 if (displayNameEn && displayNameEn.text) return displayNameEn.text;
             }
             return sme.idShort ? sme.idShort : '';
+        },
+
+        // Extract the right endpoints href from a descriptor
+        extractEndpointHref(descriptor: any, interfaceShortName: string): string {
+            const interfaceShortNames = [
+                'AAS',
+                'SUBMODEL',
+                'SERIALIZE',
+                'DESCRIPTION',
+                'AASX-FILE',
+                'AAS-REGISTRY',
+                'SUBMODEL-REGISTRY',
+                'AAS-REPOSITORY',
+                'SUBMODEL-REPOSITORY',
+                'CD-REPOSITORY',
+                'AAS-DISCOVERY',
+            ];
+            if (!interfaceShortNames.some((iShortName) => interfaceShortName.startsWith(`${iShortName}-`))) {
+                return '';
+            }
+            if (
+                !Array.isArray(descriptor?.endpoints) ||
+                descriptor?.endpoints.length === 0 ||
+                interfaceShortName === ''
+            ) {
+                return '';
+            }
+            const endpoints = descriptor.endpoints;
+            // find the right endpoint based on the interfaceShortName (has to match endpoint.interface)
+            const endpoint = endpoints.find((endpoint: any) => {
+                return endpoint?.interface === interfaceShortName;
+            });
+            return endpoint?.protocolInformation?.href ? endpoint.protocolInformation.href : '';
         },
     },
 });
