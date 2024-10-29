@@ -394,88 +394,98 @@
             }
 
             // auto connect to aas discovery that was saved in local storage
-            let aasDiscoveryURL = window.localStorage.getItem('aasDiscoveryURL');
-            if (aasDiscoveryURL) {
-                this.aasDiscoveryURL = aasDiscoveryURL;
-                this.connectToAASDiscovery();
-                // console.log('DiscoveryURL was found in local storage', DiscoveryURL);
-            } else {
-                // if no discovery server was saved in local storage, check if an environment variable is set
-                if (this.EnvAASDiscoveryPath && this.EnvAASDiscoveryPath != '') {
-                    this.aasDiscoveryURL = this.EnvAASDiscoveryPath;
+            if (this.endpointConfigAvailable) {
+                let aasDiscoveryURL = window.localStorage.getItem('aasDiscoveryURL');
+                if (aasDiscoveryURL) {
+                    this.aasDiscoveryURL = aasDiscoveryURL;
                     this.connectToAASDiscovery();
+                    // console.log('DiscoveryURL was found in local storage', DiscoveryURL);
                 }
+            }
+
+            if (!this.aasDiscoveryURL && this.EnvAASDiscoveryPath && this.EnvAASDiscoveryPath != '') {
+                this.aasDiscoveryURL = this.EnvAASDiscoveryPath;
+                this.connectToAASDiscovery();
             }
 
             // auto connect to aas registry that was saved in local storage
-            let aasRegistryURL = window.localStorage.getItem('aasRegistryURL');
-            if (aasRegistryURL) {
-                this.aasRegistryURL = aasRegistryURL;
-                this.connectToAASRegistry();
-                // console.log('RegistryURL was found in local storage', RegistryURL);
-            } else {
-                // if no registry server was saved in local storage, check if an environment variable is set
-                if (this.EnvAASRegistryPath && this.EnvAASRegistryPath != '') {
-                    this.aasRegistryURL = this.EnvAASRegistryPath;
+            if (this.endpointConfigAvailable) {
+                let aasRegistryURL = window.localStorage.getItem('aasRegistryURL');
+                if (aasRegistryURL) {
+                    this.aasRegistryURL = aasRegistryURL;
                     this.connectToAASRegistry();
+                    // console.log('RegistryURL was found in local storage', RegistryURL);
                 }
+            }
+
+            if (!this.aasRegistryURL && this.EnvAASRegistryPath && this.EnvAASRegistryPath != '') {
+                this.aasRegistryURL = this.EnvAASRegistryPath;
+                this.connectToAASRegistry();
             }
 
             // auto connect to submodel registry that was saved in local storage
-            let submodelRegistryURL = window.localStorage.getItem('submodelRegistryURL');
-            if (submodelRegistryURL) {
-                this.submodelRegistryURL = submodelRegistryURL;
-                this.connectToSubmodelRegistry();
-                // console.log('SubmodelRegistryURL was found in local storage', SubmodelRegistryURL);
-            } else {
-                // if no submodel registry server was saved in local storage, check if an environment variable is set
-                if (this.EnvSubmodelRegistryPath && this.EnvSubmodelRegistryPath != '') {
-                    this.submodelRegistryURL = this.EnvSubmodelRegistryPath;
+            if (this.endpointConfigAvailable) {
+                let submodelRegistryURL = window.localStorage.getItem('submodelRegistryURL');
+                if (submodelRegistryURL) {
+                    this.submodelRegistryURL = submodelRegistryURL;
                     this.connectToSubmodelRegistry();
+                    // console.log('SubmodelRegistryURL was found in local storage', SubmodelRegistryURL);
                 }
+            }
+            if (!this.submodelRegistryURL && this.EnvSubmodelRegistryPath && this.EnvSubmodelRegistryPath != '') {
+                this.submodelRegistryURL = this.EnvSubmodelRegistryPath;
+                this.connectToSubmodelRegistry();
             }
 
             // auto connect to AAS Repository that was saved in local storage
-            let aasRepoURL = window.localStorage.getItem('AASRepoURL');
-            if (aasRepoURL) {
-                this.AASRepoURL = aasRepoURL;
-                this.connectToEnvironment('AAS');
-                // console.log('AASRepoURL was found in local storage', AASRepoURL);
-            } else {
-                // if no aas server was saved in local storage, check if an environment variable is set
-                if (this.EnvAASRepoPath && this.EnvAASRepoPath != '') {
-                    this.AASRepoURL = this.EnvAASRepoPath;
+            if (this.endpointConfigAvailable) {
+                let aasRepoURL = window.localStorage.getItem('AASRepoURL');
+                if (aasRepoURL) {
+                    this.AASRepoURL = aasRepoURL;
                     this.connectToEnvironment('AAS');
+                    // console.log('AASRepoURL was found in local storage', AASRepoURL);
                 }
+            }
+
+            if (!this.AASRepoURL && this.EnvAASRepoPath && this.EnvAASRepoPath != '') {
+                this.AASRepoURL = this.EnvAASRepoPath;
+                this.connectToEnvironment('AAS');
             }
 
             // auto connect to Submodel Repository that was saved in local storage
-            let submodelRepoURL = window.localStorage.getItem('SubmodelRepoURL');
-            if (submodelRepoURL) {
-                this.SubmodelRepoURL = submodelRepoURL;
-                this.connectToEnvironment('Submodel');
-                // console.log('SubmodelRepoURL was found in local storage', SubmodelRepoURL);
-            } else {
-                // if no submodel server was saved in local storage, check if an environment variable is set
-                if (this.EnvSubmodelRepoPath && this.EnvSubmodelRepoPath != '') {
-                    this.SubmodelRepoURL = this.EnvSubmodelRepoPath;
+            if (this.endpointConfigAvailable) {
+                let submodelRepoURL = window.localStorage.getItem('SubmodelRepoURL');
+                if (submodelRepoURL) {
+                    this.SubmodelRepoURL = submodelRepoURL;
                     this.connectToEnvironment('Submodel');
+                    //     // console.log('SubmodelRepoURL was found in local storage', SubmodelRepoURL);
                 }
             }
 
+            if (!this.SubmodelRepoURL && this.EnvSubmodelRepoPath && this.EnvSubmodelRepoPath != '') {
+                this.SubmodelRepoURL = this.EnvSubmodelRepoPath;
+                this.connectToEnvironment('Submodel');
+            }
+
             // auto connect to Concept Description Repository that was saved in local storage
-            let conceptDescriptionRepoURL = window.localStorage.getItem('ConceptDescriptionRepoURL');
-            if (conceptDescriptionRepoURL) {
-                this.ConceptDescriptionRepoURL = conceptDescriptionRepoURL;
-                this.connectToEnvironment('ConceptDescription');
-                // console.log('ConceptDescriptionRepoURL was found in local storage', ConceptDescriptionRepoURL);
-            } else {
-                // if no concept description server was saved in local storage, check if an environment variable is set
-                if (this.EnvConceptDescriptionRepoPath && this.EnvConceptDescriptionRepoPath != '') {
-                    this.ConceptDescriptionRepoURL = this.EnvConceptDescriptionRepoPath;
+            if (this.endpointConfigAvailable) {
+                let conceptDescriptionRepoURL = window.localStorage.getItem('ConceptDescriptionRepoURL');
+                if (conceptDescriptionRepoURL) {
+                    this.ConceptDescriptionRepoURL = conceptDescriptionRepoURL;
                     this.connectToEnvironment('ConceptDescription');
+                    // console.log('ConceptDescriptionRepoURL was found in local storage', ConceptDescriptionRepoURL);
                 }
             }
+
+            if (
+                !this.ConceptDescriptionRepoURL &&
+                this.EnvConceptDescriptionRepoPath &&
+                this.EnvConceptDescriptionRepoPath != ''
+            ) {
+                this.ConceptDescriptionRepoURL = this.EnvConceptDescriptionRepoPath;
+                this.connectToEnvironment('ConceptDescription');
+            }
+            // }
         },
 
         methods: {
