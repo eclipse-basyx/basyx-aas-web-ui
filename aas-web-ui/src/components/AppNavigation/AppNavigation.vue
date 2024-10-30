@@ -251,6 +251,7 @@
                 mainMenu: false, // Variable to show the Main Menu
                 mobileMenu: false, // Variable to show the Mobile Menu
                 dashboardAvailable: false, // Dashboard Availability
+                endpointConfigAvailable: true,
                 drawerVisibility: true, // Variable to show the AAS List Drawer
             };
         },
@@ -317,6 +318,10 @@
                 return this.envStore.getEnvLogoPath;
             },
 
+            getEndpointConfigAvailable() {
+                return this.envStore.getEndpointConfigAvailable;
+            },
+
             dashboardServicePath() {
                 return this.envStore.getEnvDashboardServicePath;
             },
@@ -371,6 +376,7 @@
 
         mounted() {
             this.isDashboardAvailable();
+            this.endpointConfigAvailable = this.getEndpointConfigAvailable;
             // check the local storage for a saved theme preference
             let theme = localStorage.getItem('theme');
             if (theme) {
