@@ -259,47 +259,19 @@
                                         submodel.path = path;
                                         return submodel;
                                     } else {
-                                        let submodel = {
-                                            id: submodelId,
-                                            idShort: 'Submodel not found',
-                                            modelType: 'Submodel',
-                                            semanticId: null,
-                                            description: [],
-                                            displayName: [],
-                                            submodelElements: [],
-                                            isActive: false,
-                                            path: path,
-                                        };
-                                        this.navigationStore.dispatchSnackbar({
-                                            status: true,
-                                            timeout: 60000,
-                                            color: 'error',
-                                            btnColor: 'buttonText',
-                                            text: "Submodel '" + submodelId + "' not found in SubmodelRepository",
-                                        });
-                                        return submodel;
+                                        return this.smNotFound(
+                                            submodelId,
+                                            path,
+                                            "Submodel '" + submodelId + "' not found in SubmodelRepository"
+                                        );
                                     }
                                 });
                             } else {
-                                let submodel = {
-                                    id: submodelId,
-                                    idShort: 'Submodel not found',
-                                    modelType: 'Submodel',
-                                    semanticId: null,
-                                    description: [],
-                                    displayName: [],
-                                    submodelElements: [],
-                                    isActive: false,
-                                    path: path,
-                                };
-                                this.navigationStore.dispatchSnackbar({
-                                    status: true,
-                                    timeout: 60000,
-                                    color: 'error',
-                                    btnColor: 'buttonText',
-                                    text: "Submodel '" + submodelId + "' not found in SubmodelRegistry",
-                                });
-                                return submodel;
+                                return this.smNotFound(
+                                    submodelId,
+                                    path,
+                                    "Submodel '" + submodelId + "' not found in SubmodelRegistry"
+                                );
                             }
                         }
                     });

@@ -646,5 +646,29 @@ export default defineComponent({
             });
             return endpoint?.protocolInformation?.href ? endpoint.protocolInformation.href : '';
         },
+
+        smNotFound(submodelId: string, path: string, text: string) {
+            if (text.trim().length > 0) {
+                this.navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 60000,
+                    color: 'error',
+                    btnColor: 'buttonText',
+                    text: text,
+                });
+            }
+            const submodel = {
+                id: submodelId,
+                idShort: 'Submodel not found',
+                modelType: 'Submodel',
+                semanticId: null,
+                description: [],
+                displayName: [],
+                submodelElements: [],
+                isActive: false,
+                path: path,
+            };
+            return submodel;
+        },
     },
 });
