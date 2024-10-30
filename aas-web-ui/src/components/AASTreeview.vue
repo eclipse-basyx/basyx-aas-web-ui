@@ -253,7 +253,7 @@
                                     } else {
                                         let submodel = {
                                             id: submodelId,
-                                            idShort: submodelId.split('/').pop(),
+                                            idShort: 'Submodel not found',
                                             modelType: 'Submodel',
                                             semanticId: null,
                                             description: [],
@@ -275,7 +275,7 @@
                             } else {
                                 let submodel = {
                                     id: submodelId,
-                                    idShort: submodelId.split('/').pop(),
+                                    idShort: 'Submodel not found',
                                     modelType: 'Submodel',
                                     semanticId: null,
                                     description: [],
