@@ -51,15 +51,17 @@
             <JSONArrayProperty
                 v-else-if="checkSemanticId(submodelElementData, 'http://iese.fraunhofer.de/prop_jsonarray')"
                 :submodel-element-data="submodelElementData"></JSONArrayProperty>
+            <!-- Plugins added by the user are dynamically registered here -->
+            <template v-else-if="filteredPlugins.length > 0">
+                <component
+                    :is="plugin.name"
+                    v-for="(plugin, i) in filteredPlugins"
+                    :key="i"
+                    :submodel-element-data="submodelElementData"></component>
+            </template>
             <GenericDataVisu
                 v-else-if="viewerMode"
                 :submodel-element-data="submodelElementData.submodelElements"></GenericDataVisu>
-            <!-- Plugins added by the user are dynamically registered here -->
-            <component
-                :is="plugin.name"
-                v-for="(plugin, i) in filteredPlugins"
-                :key="i"
-                :submodel-element-data="submodelElementData"></component>
         </template>
         <template
             v-else-if="
