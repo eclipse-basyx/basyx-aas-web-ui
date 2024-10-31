@@ -163,44 +163,50 @@
                 let path = shellHref + '/submodel-refs';
                 let context = 'retrieving Submodel References';
                 let disableMessage = false;
-                this.getRequest(path, context, disableMessage).then(async (response: any) => {
-                    if (response.success) {
-                        // execute if the Request was successful
-                        try {
-                            // request submodels from the retrieved AAS (top layer of the Treeview)
-                            const submodelRefs = response.data.result;
-                            let submodelData = await this.requestSubmodels(submodelRefs);
-                            // set the isActive prop of the initialNode if it exists and the initialUpdate flag is set
-                            if (this.initialUpdate && this.initialNode) {
-                                let expandedSubmodelData = this.expandTree(submodelData, this.initialNode); // Update the Treeview to expand until the initially set node is reached
-                                // this.updateNode(this.initialNode); // set the isActive prop of the initialNode to true
-                                this.initialUpdate = false;
-                                this.initialNode = {};
-                                // console.log('Expanded Treeview Data: ', expandedSubmodelData)
-                                this.submodelData = expandedSubmodelData; // set the Treeview Data
-                            } else {
-                                this.submodelData = submodelData; // set the Treeview Data
-                                // console.log('Treeview Data: ', this.submodelData)
+                this.getRequest(path, context, disableMessage)
+                    .then(async (response: any) => {
+                        if (response.success) {
+                            // execute if the Request was successful
+                            try {
+                                // request submodels from the retrieved AAS (top layer of the Treeview)
+                                let submodelData = await this.requestSubmodels(response.data.result);
+                                // set the isActive prop of the initialNode if it exists and the initialUpdate flag is set
+                                if (this.initialUpdate && this.initialNode) {
+                                    let expandedSubmodelData = this.expandTree(submodelData, this.initialNode); // Update the Treeview to expand until the initially set node is reached
+                                    // this.updateNode(this.initialNode); // set the isActive prop of the initialNode to true
+                                    this.initialUpdate = false;
+                                    this.initialNode = {};
+                                    // console.log('Expanded Treeview Data: ', expandedSubmodelData)
+                                    this.submodelData = expandedSubmodelData; // set the Treeview Data
+                                } else {
+                                    this.submodelData = submodelData; // set the Treeview Data
+                                    // console.log('Treeview Data: ', this.submodelData)
+                                }
+                            } catch (error: any) {
+                                // console.error('Error while parsing the Submodel References: ', error);
+                                const errorMessage = error.message;
+                                const errorStack = error.stack;
+                                const errorLocation = errorStack ? errorStack.split('\n')[1] : '';
+                                this.navigationStore.dispatchSnackbar({
+                                    status: true,
+                                    timeout: 60000,
+                                    color: 'error',
+                                    btnColor: 'buttonText',
+                                    baseError: 'Error while parsing the Submodel References!',
+                                    extendedError: `Error: ${errorMessage}\nLocation: ${errorLocation.trim()}`,
+                                });
+                            } finally {
+                                this.aasStore.dispatchLoadingState(false);
                             }
-                        } catch (error: any) {
-                            // console.error('Error while parsing the Submodel References: ', error);
-                            const errorMessage = error.message;
-                            const errorStack = error.stack;
-                            const errorLocation = errorStack ? errorStack.split('\n')[1] : '';
-                            this.navigationStore.dispatchSnackbar({
-                                status: true,
-                                timeout: 60000,
-                                color: 'error',
-                                btnColor: 'buttonText',
-                                baseError: 'Error while parsing the Submodel References!',
-                                extendedError: `Error: ${errorMessage}\nLocation: ${errorLocation.trim()}`,
-                            });
+                        } else {
+                            // execute if the Request failed
+                            this.submodelData = [];
+                            this.aasStore.dispatchLoadingState(false);
                         }
-                    } else {
-                        // execute if the Request failed
-                        this.submodelData = [];
-                    }
-                });
+                    })
+                    .catch(() => {
+                        this.aasStore.dispatchLoadingState(false);
+                    });
             },
 
             // Function to request all Submodels for the selected AAS
@@ -268,9 +274,12 @@
                         }
                     });
                 });
-                let submodels = await Promise.all(submodelPromises);
-                this.aasStore.dispatchLoadingState(false); // set loading state to false
-                return submodels;
+                try {
+                    const submodels = await Promise.all(submodelPromises);
+                    return submodels;
+                } finally {
+                    this.aasStore.dispatchLoadingState(false);
+                }
             },
 
             // Function to prepare the Datastructure for the Treeview

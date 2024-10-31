@@ -179,47 +179,53 @@
                 let path = shellHref + '/submodel-refs';
                 let context = 'retrieving Submodel References';
                 let disableMessage = false;
-                this.getRequest(path, context, disableMessage).then(async (response: any) => {
-                    if (response.success) {
-                        // execute if the Request was successful
-                        try {
-                            // request submodels from the retrieved AAS
-                            const submodelRefs = response.data.result;
-                            let submodelData = await this.requestSubmodels(submodelRefs);
-                            if (this.initialUpdate && this.initialNode) {
-                                // set the isActive Property of the initial Node to true and dispatch it to the store
-                                submodelData.forEach((submodel: any) => {
-                                    if (submodel.path === this.initialNode.path) {
-                                        submodel.isActive = true;
-                                        this.aasStore.dispatchNode(submodel);
-                                        this.aasStore.dispatchRealTimeObject(submodel);
-                                    }
+                this.getRequest(path, context, disableMessage)
+                    .then(async (response: any) => {
+                        if (response.success) {
+                            // execute if the Request was successful
+                            try {
+                                // request submodels from the retrieved AAS
+                                let submodelData = await this.requestSubmodels(response.data.result);
+                                if (this.initialUpdate && this.initialNode) {
+                                    // set the isActive Property of the initial Node to true and dispatch it to the store
+                                    submodelData.forEach((submodel: any) => {
+                                        if (submodel.path === this.initialNode.path) {
+                                            submodel.isActive = true;
+                                            this.aasStore.dispatchNode(submodel);
+                                            this.aasStore.dispatchRealTimeObject(submodel);
+                                        }
+                                    });
+                                    this.initialUpdate = false;
+                                    this.initialNode = {};
+                                    this.submodelData = submodelData; // set the Submodel Data
+                                } else {
+                                    this.submodelData = submodelData; // set the Submodel Data
+                                }
+                            } catch (error: any) {
+                                // console.error('Error while parsing the Submodel References: ', error);
+                                const errorMessage = error.message;
+                                const errorStack = error.stack;
+                                const errorLocation = errorStack ? errorStack.split('\n')[1] : '';
+                                this.navigationStore.dispatchSnackbar({
+                                    status: true,
+                                    timeout: 60000,
+                                    color: 'error',
+                                    btnColor: 'buttonText',
+                                    baseError: 'Error while parsing the Submodel References!',
+                                    extendedError: `Error: ${errorMessage}\nLocation: ${errorLocation.trim()}`,
                                 });
-                                this.initialUpdate = false;
-                                this.initialNode = {};
-                                this.submodelData = submodelData; // set the Submodel Data
-                            } else {
-                                this.submodelData = submodelData; // set the Submodel Data
+                            } finally {
+                                this.aasStore.dispatchLoadingState(false);
                             }
-                        } catch (error: any) {
-                            // console.error('Error while parsing the Submodel References: ', error);
-                            const errorMessage = error.message;
-                            const errorStack = error.stack;
-                            const errorLocation = errorStack ? errorStack.split('\n')[1] : '';
-                            this.navigationStore.dispatchSnackbar({
-                                status: true,
-                                timeout: 60000,
-                                color: 'error',
-                                btnColor: 'buttonText',
-                                baseError: 'Error while parsing the Submodel References!',
-                                extendedError: `Error: ${errorMessage}\nLocation: ${errorLocation.trim()}`,
-                            });
+                        } else {
+                            // execute if the Request failed
+                            this.submodelData = [];
+                            this.aasStore.dispatchLoadingState(false);
                         }
-                    } else {
-                        // execute if the Request failed
-                        this.submodelData = [];
-                    }
-                });
+                    })
+                    .catch(() => {
+                        this.aasStore.dispatchLoadingState(false);
+                    });
             },
 
             // Function to request all Submodels for the selected AAS
@@ -276,9 +282,12 @@
                         }
                     });
                 });
-                let submodels = await Promise.all(submodelPromises);
-                this.aasStore.dispatchLoadingState(false); // set loading state to false
-                return submodels;
+                try {
+                    const submodels = await Promise.all(submodelPromises);
+                    return submodels;
+                } finally {
+                    this.aasStore.dispatchLoadingState(false);
+                }
             },
 
             // Function to toggle a Node
