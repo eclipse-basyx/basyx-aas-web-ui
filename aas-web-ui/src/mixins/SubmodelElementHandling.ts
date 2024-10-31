@@ -305,7 +305,8 @@ export default defineComponent({
             referencedAAS: any,
             endpoint: string
         ) {
-            let path = this.submodelRepoURL + '/' + this.URLEncode(referencedSubmodel.keys[0].value);
+            let path =
+                this.submodelRepoURL + '/' + this.URLEncode(referencedSubmodel.keys[0].value).replace(/%3D/g, '');
             if (referenceValue.length > 1) {
                 // this is the layer directly under the Submodel
                 path += '/submodel-elements/' + referenceValue[1].value;
