@@ -58,6 +58,7 @@
             <component
                 :is="plugin.name"
                 v-for="(plugin, i) in filteredPlugins"
+                v-else
                 :key="i"
                 :submodel-element-data="submodelElementData"></component>
         </template>
