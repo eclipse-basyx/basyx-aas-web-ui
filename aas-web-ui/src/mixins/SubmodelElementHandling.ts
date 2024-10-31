@@ -647,7 +647,7 @@ export default defineComponent({
             return endpoint?.protocolInformation?.href ? endpoint.protocolInformation.href : '';
         },
 
-        smNotFound(submodelId: string, path: string, text: string) {
+        smNotFound(submodelId: string, path: string, text: string): any {
             if (text.trim().length > 0) {
                 this.navigationStore.dispatchSnackbar({
                     status: true,

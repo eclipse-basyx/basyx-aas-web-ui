@@ -434,7 +434,7 @@
                 const path = searchParams.get('path');
 
                 if (aasEndpoint && path) {
-                    console.log('AAS and Path Queris are set: ', aasEndpoint, path);
+                    // console.log('AAS and Path Queris are set: ', aasEndpoint, path);
                     let node = {} as any;
                     node.path = path;
                     node.isActive = true;
