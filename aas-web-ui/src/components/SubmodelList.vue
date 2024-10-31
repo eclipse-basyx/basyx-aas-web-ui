@@ -239,31 +239,46 @@
                     if (!submodelRegistryURL.includes('/submodel-descriptors')) {
                         submodelRegistryURL += '/submodel-descriptors';
                     }
-                    let path = submodelRegistryURL + '/' + this.URLEncode(submodelRef.keys[0].value);
+                    const submodelId = submodelRef.keys[0].value;
+                    let path = submodelRegistryURL + '/' + this.URLEncode(submodelId);
                     let context = 'retrieving Submodel Endpoint';
                     let disableMessage = false;
                     return this.getRequest(path, context, disableMessage).then((response: any) => {
                         if (response.success) {
-                            // execute if the Request was successful
-                            const fetchedSubmodel = response.data;
-                            // console.log('SubmodelEndpoint: ', submodelEndpoint);
-                            const submodelHref = this.extractEndpointHref(fetchedSubmodel, 'SUBMODEL-3.0');
-                            let path = submodelHref;
-                            let context = 'retrieving Submodel Data';
-                            let disableMessage = true;
-                            return this.getRequest(path, context, disableMessage).then((response: any) => {
-                                if (response.success) {
-                                    // execute if the Request was successful
-                                    let submodel = response.data;
-                                    // give the Submodel a unique ID
-                                    submodel.id = this.UUID();
-                                    // set the active State of the Submodel
-                                    submodel.isActive = false;
-                                    // set the Path of the Submodel
-                                    submodel.path = path;
-                                    return submodel;
-                                }
-                            });
+                            if (response.data?.id) {
+                                // execute if the Request was successful
+                                const fetchedSubmodel = response.data;
+                                // console.log('SubmodelEndpoint: ', submodelEndpoint);
+                                const submodelHref = this.extractEndpointHref(fetchedSubmodel, 'SUBMODEL-3.0');
+                                let path = submodelHref;
+                                let context = 'retrieving Submodel Data';
+                                let disableMessage = true;
+                                return this.getRequest(path, context, disableMessage).then((response: any) => {
+                                    if (response.success && response?.data?.id) {
+                                        // execute if the Request was successful
+                                        let submodel = response.data;
+                                        // give the Submodel a unique ID
+                                        submodel.id = this.UUID();
+                                        // set the active State of the Submodel
+                                        submodel.isActive = false;
+                                        // set the Path of the Submodel
+                                        submodel.path = path;
+                                        return submodel;
+                                    } else {
+                                        return this.smNotFound(
+                                            submodelId,
+                                            path,
+                                            "Submodel '" + submodelId + "' not found in SubmodelRepository"
+                                        );
+                                    }
+                                });
+                            } else {
+                                return this.smNotFound(
+                                    submodelId,
+                                    path,
+                                    "Submodel '" + submodelId + "' not found in SubmodelRegistry"
+                                );
+                            }
                         }
                     });
                 });
