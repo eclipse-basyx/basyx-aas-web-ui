@@ -11,6 +11,7 @@
                 hide-details
                 class="align-center"
                 readonly
+                :disabled="!isEditable"
                 color="primary"
                 thumb-label="always">
                 <!-- <template v-slot:prepend>
@@ -36,7 +37,16 @@
     export default defineComponent({
         name: 'Range',
         mixins: [RequestHandling, SubmodelElementHandling],
-        props: ['rangeObject'],
+        props: {
+            rangeObject: {
+                type: Object,
+                default: () => ({}),
+            },
+            isEditable: {
+                type: Boolean,
+                default: true,
+            },
+        },
 
         setup() {
             const aasStore = useAASStore();

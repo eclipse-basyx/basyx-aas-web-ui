@@ -39,12 +39,14 @@
                                         :property-object="variable.value"
                                         :is-operation-variable="true"
                                         :variable-type="variableType.type"
+                                        :is-editable="isEditable"
                                         @update-value="updateOperationVariable($event, variable.value)"></Property>
                                     <ReferenceElement
                                         v-else-if="variable.value.modelType === 'ReferenceElement'"
                                         :reference-element-object="variable.value"
                                         :is-operation-variable="true"
                                         :variable-type="variableType.type"
+                                        :is-editable="isEditable"
                                         @update-value="
                                             updateOperationVariable($event, variable.value)
                                         "></ReferenceElement>
@@ -120,7 +122,16 @@
             InvalidElement,
         },
         mixins: [RequestHandling, SubmodelElementHandling],
-        props: ['operationObject'],
+        props: {
+            operationObject: {
+                type: Object,
+                default: () => ({}),
+            },
+            isEditable: {
+                type: Boolean,
+                default: true,
+            },
+        },
 
         setup() {
             const navigationStore = useNavigationStore();

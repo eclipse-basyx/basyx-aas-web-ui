@@ -39,6 +39,7 @@
                                 density="compact"
                                 hide-details
                                 clearable
+                                :disabled="!isEditable"
                                 append-icon="mdi-delete"
                                 @click:append="removeReferenceEntry(i)"
                                 @update:focused="setFocus($event)"
@@ -100,7 +101,7 @@
                         >
                         <!-- Add new Reference Entry -->
                         <v-btn
-                            v-if="IsOperationVariable && !IsOutputVariable"
+                            v-if="!isEditable && IsOperationVariable && !IsOutputVariable"
                             size="small"
                             class="text-buttonText"
                             color="primary"
@@ -126,7 +127,24 @@
     export default defineComponent({
         name: 'ReferenceElement',
         mixins: [SubmodelElementHandling],
-        props: ['referenceElementObject', 'isOperationVariable', 'variableType'],
+        props: {
+            referenceElementObject: {
+                type: Object,
+                default: () => ({}),
+            },
+            isOperationVariable: {
+                type: Boolean,
+                default: false,
+            },
+            variableType: {
+                type: String,
+                default: 'number',
+            },
+            isEditable: {
+                type: Boolean,
+                default: true,
+            },
+        },
 
         setup() {
             const aasStore = useAASStore();

@@ -77,7 +77,16 @@
             SubmodelElementGroup,
         },
         mixins: [SubmodelElementHandling],
-        props: ['entityObject'],
+        props: {
+            entityObject: {
+                type: Object,
+                default: () => ({}),
+            },
+            isEditable: {
+                type: Boolean,
+                default: true,
+            },
+        },
 
         setup() {
             const aasStore = useAASStore();

@@ -35,6 +35,7 @@
                             density="compact"
                             :hide-details="isTruncated ? false : true"
                             clearable
+                            :disabled="!isEditable"
                             :hint="isTruncated ? 'Blob string is truncated!' : ''"
                             persistent-hint
                             @keydown.enter="updateBlob()"
@@ -59,7 +60,7 @@
             </v-list>
             <v-divider></v-divider>
             <!-- Action Button to upload a File as Blob -->
-            <v-list nav class="bg-elevatedCard pa-0">
+            <v-list v-if="isEditable" nav class="bg-elevatedCard pa-0">
                 <v-list-item>
                     <template #title>
                         <!-- Upload-Button -->
@@ -99,7 +100,16 @@
     export default defineComponent({
         name: 'Blob',
         mixins: [RequestHandling, SubmodelElementHandling],
-        props: ['blobObject'],
+        props: {
+            blobObject: {
+                type: Object,
+                default: () => ({}),
+            },
+            isEditable: {
+                type: Boolean,
+                default: true,
+            },
+        },
 
         setup() {
             const aasStore = useAASStore();

@@ -14,30 +14,44 @@
                         <!-- SubmodelELement Representation for different modelTypes -->
                         <Property
                             v-if="submodelElement.modelType === 'Property'"
-                            :property-object="submodelElement"></Property>
+                            :property-object="submodelElement"
+                            :is-editable="false"></Property>
                         <MultyLanguageProperty
                             v-else-if="submodelElement.modelType === 'MultiLanguageProperty'"
-                            :multi-language-property-object="submodelElement"></MultyLanguageProperty>
+                            :multi-language-property-object="submodelElement"
+                            :is-editable="false"></MultyLanguageProperty>
                         <Operation
                             v-else-if="submodelElement.modelType === 'Operation'"
-                            :operation-object="submodelElement"></Operation>
-                        <File v-else-if="submodelElement.modelType === 'File'" :file-object="submodelElement"></File>
-                        <Blob v-else-if="submodelElement.modelType === 'Blob'" :blob-object="submodelElement"></Blob>
+                            :operation-object="submodelElement"
+                            :is-editable="false"></Operation>
+                        <File
+                            v-else-if="submodelElement.modelType === 'File'"
+                            :file-object="submodelElement"
+                            :is-editable="false"></File>
+                        <Blob
+                            v-else-if="submodelElement.modelType === 'Blob'"
+                            :blob-object="submodelElement"
+                            :is-editable="false"></Blob>
                         <ReferenceElement
                             v-else-if="submodelElement.modelType === 'ReferenceElement'"
-                            :reference-element-object="submodelElement"></ReferenceElement>
+                            :reference-element-object="submodelElement"
+                            :is-editable="false"></ReferenceElement>
                         <Range
                             v-else-if="submodelElement.modelType === 'Range'"
-                            :range-object="submodelElement"></Range>
+                            :range-object="submodelElement"
+                            :is-editable="false"></Range>
                         <Entity
                             v-else-if="submodelElement.modelType === 'Entity'"
-                            :entity-object="submodelElement"></Entity>
+                            :entity-object="submodelElement"
+                            :is-editable="false"></Entity>
                         <RelationshipElement
                             v-else-if="submodelElement.modelType === 'RelationshipElement'"
-                            :relationship-element-object="submodelElement"></RelationshipElement>
+                            :relationship-element-object="submodelElement"
+                            :is-editable="false"></RelationshipElement>
                         <AnnotatedRelationshipElement
                             v-else-if="submodelElement.modelType === 'AnnotatedRelationshipElement'"
-                            :annotated-relationship-element-object="submodelElement"></AnnotatedRelationshipElement>
+                            :annotated-relationship-element-object="submodelElement"
+                            :is-editable="false"></AnnotatedRelationshipElement>
                         <InvalidElement v-else :invalid-element-object="submodelElement"></InvalidElement>
                     </v-list>
                 </v-expansion-panel-text>

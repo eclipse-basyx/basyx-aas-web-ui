@@ -15,6 +15,7 @@
                             density="compact"
                             hide-details
                             clearable
+                            :disabled="!isEditable"
                             append-icon="mdi-delete"
                             @click:append="removeEntry(i)"
                             @update:focused="setFocus($event, value)"
@@ -95,7 +96,16 @@
     export default defineComponent({
         name: 'MultiLanguageProperty',
         mixins: [RequestHandling],
-        props: ['multiLanguagePropertyObject'],
+        props: {
+            multiLanguagePropertyObject: {
+                type: Object,
+                default: () => ({}),
+            },
+            isEditable: {
+                type: Boolean,
+                default: true,
+            },
+        },
 
         setup() {
             const aasStore = useAASStore();

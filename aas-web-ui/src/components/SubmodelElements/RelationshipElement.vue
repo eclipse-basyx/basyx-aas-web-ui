@@ -73,7 +73,16 @@
     export default defineComponent({
         name: 'RelationshipElement',
         mixins: [SubmodelElementHandling],
-        props: ['relationshipElementObject'],
+        props: {
+            relationshipElementObject: {
+                type: Object,
+                default: () => ({}),
+            },
+            isEditable: {
+                type: Boolean,
+                default: true,
+            },
+        },
 
         setup() {
             const aasStore = useAASStore();

@@ -6,6 +6,7 @@
                 variant="outlined"
                 density="compact"
                 clearable
+                :disabled="!isEditable"
                 :readonly="IsOutputVariable"
                 auto-grow
                 :rows="1"
@@ -38,7 +39,24 @@
     export default defineComponent({
         name: 'StringType',
         mixins: [RequestHandling],
-        props: ['stringValue', 'isOperationVariable', 'variableType'],
+        props: {
+            stringValue: {
+                type: Object,
+                default: () => ({}),
+            },
+            isOperationVariable: {
+                type: Boolean,
+                default: false,
+            },
+            variableType: {
+                type: String,
+                default: 'number',
+            },
+            isEditable: {
+                type: Boolean,
+                default: true,
+            },
+        },
 
         setup() {
             const aasStore = useAASStore();

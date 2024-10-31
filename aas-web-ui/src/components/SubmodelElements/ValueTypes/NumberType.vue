@@ -7,7 +7,8 @@
                 variant="outlined"
                 density="compact"
                 clearable
-                :readonly="IsOutputVariable"
+                :disabled="!isEditable"
+                :readonly="IsOutputVariable || !isEditable"
                 :hint="isOperationVariable ? '' : 'greyed out value on the left shows the current value in the AAS'"
                 :label="isOperationVariable ? numberValue.idShort : ''"
                 :hide-details="IsOperationVariable ? true : false"
@@ -60,7 +61,24 @@
     export default defineComponent({
         name: 'NumberType',
         mixins: [RequestHandling, SubmodelElementHandling],
-        props: ['numberValue', 'isOperationVariable', 'variableType'],
+        props: {
+            numberValue: {
+                type: Object,
+                default: () => ({}),
+            },
+            isOperationVariable: {
+                type: Boolean,
+                default: false,
+            },
+            variableType: {
+                type: String,
+                default: 'number',
+            },
+            isEditable: {
+                type: Boolean,
+                default: true,
+            },
+        },
 
         setup() {
             const aasStore = useAASStore();

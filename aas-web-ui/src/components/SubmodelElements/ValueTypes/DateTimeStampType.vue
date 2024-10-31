@@ -7,6 +7,7 @@
                 variant="outlined"
                 density="compact"
                 clearable
+                :disabled="!isEditable"
                 :color="dateTimeStampValue.value == newDateTimeStampValue ? '' : 'warning'"
                 :persistent-hint="!IsOperationVariable"
                 :hint="dateTimeStampValue.value == newDateTimeStampValue ? '' : 'Current Value not yet saved.'"
@@ -54,7 +55,24 @@
     export default defineComponent({
         name: 'DateTimeStampType',
         mixins: [RequestHandling, SubmodelElementHandling],
-        props: ['dateTimeStampValue', 'isOperationVariable', 'variableType'],
+        props: {
+            dateTimeStampValue: {
+                type: Object,
+                default: () => ({}),
+            },
+            isOperationVariable: {
+                type: Boolean,
+                default: false,
+            },
+            variableType: {
+                type: String,
+                default: 'number',
+            },
+            isEditable: {
+                type: Boolean,
+                default: true,
+            },
+        },
 
         setup() {
             const aasStore = useAASStore();
