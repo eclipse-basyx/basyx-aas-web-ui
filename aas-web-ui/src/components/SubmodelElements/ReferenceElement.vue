@@ -38,7 +38,8 @@
                                 variant="outlined"
                                 density="compact"
                                 hide-details
-                                clearable
+                                :clearable="isEditable"
+                                :readonly="!isEditable"
                                 append-icon="mdi-delete"
                                 @click:append="removeReferenceEntry(i)"
                                 @update:focused="setFocus($event)"
@@ -49,7 +50,7 @@
                                         <span>{{ value.type ? value.type : 'no-selection' }}</span>
                                         <v-icon site="x-small" style="margin-right: -3px">mdi-chevron-down</v-icon>
                                         <!-- Menu to select the Type of Element -->
-                                        <v-menu activator="parent">
+                                        <v-menu v-if="isEditable" activator="parent">
                                             <v-list density="compact" class="pa-0">
                                                 <v-list-item
                                                     v-for="elementType in elementTypes"
@@ -66,7 +67,7 @@
                                 <!-- Update Value Button -->
                                 <template #append-inner>
                                     <v-btn
-                                        v-if="value.isFocused"
+                                        v-if="value.isFocused && isEditable"
                                         size="small"
                                         variant="elevated"
                                         color="primary"
@@ -100,7 +101,7 @@
                         >
                         <!-- Add new Reference Entry -->
                         <v-btn
-                            v-if="IsOperationVariable && !IsOutputVariable"
+                            v-if="isEditable && IsOperationVariable && !IsOutputVariable"
                             size="small"
                             class="text-buttonText"
                             color="primary"
@@ -126,7 +127,24 @@
     export default defineComponent({
         name: 'ReferenceElement',
         mixins: [SubmodelElementHandling],
-        props: ['referenceElementObject', 'isOperationVariable', 'variableType'],
+        props: {
+            referenceElementObject: {
+                type: Object,
+                default: () => ({}),
+            },
+            isOperationVariable: {
+                type: Boolean,
+                default: false,
+            },
+            variableType: {
+                type: String,
+                default: 'number',
+            },
+            isEditable: {
+                type: Boolean,
+                default: true,
+            },
+        },
 
         setup() {
             const aasStore = useAASStore();

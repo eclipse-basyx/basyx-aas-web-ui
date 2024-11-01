@@ -8,24 +8,38 @@
                 </v-expansion-panel-title>
                 <v-expansion-panel-text>
                     <GenericDataVisu
-                        v-if="Array.isArray(submodelElement.value) && submodelElement.value.length > 0"
+                        v-if="
+                            Array.isArray(submodelElement.value) &&
+                            submodelElement.value.length > 0 &&
+                            submodelElement.modelType !== 'MultiLanguageProperty'
+                        "
                         :submodel-element-data="submodelElement.value"></GenericDataVisu>
                     <v-list v-else nav class="px-4 pt-0 pb-0">
                         <!-- SubmodelELement Representation for different modelTypes -->
                         <Property
                             v-if="submodelElement.modelType === 'Property'"
-                            :property-object="submodelElement"></Property>
+                            :property-object="submodelElement"
+                            :is-editable="false"></Property>
                         <MultyLanguageProperty
                             v-else-if="submodelElement.modelType === 'MultiLanguageProperty'"
-                            :multi-language-property-object="submodelElement"></MultyLanguageProperty>
+                            :multi-language-property-object="submodelElement"
+                            :is-editable="false"></MultyLanguageProperty>
                         <Operation
                             v-else-if="submodelElement.modelType === 'Operation'"
-                            :operation-object="submodelElement"></Operation>
-                        <File v-else-if="submodelElement.modelType === 'File'" :file-object="submodelElement"></File>
-                        <Blob v-else-if="submodelElement.modelType === 'Blob'" :blob-object="submodelElement"></Blob>
+                            :operation-object="submodelElement"
+                            :is-editable="false"></Operation>
+                        <File
+                            v-else-if="submodelElement.modelType === 'File'"
+                            :file-object="submodelElement"
+                            :is-editable="false"></File>
+                        <Blob
+                            v-else-if="submodelElement.modelType === 'Blob'"
+                            :blob-object="submodelElement"
+                            :is-editable="false"></Blob>
                         <ReferenceElement
                             v-else-if="submodelElement.modelType === 'ReferenceElement'"
-                            :reference-element-object="submodelElement"></ReferenceElement>
+                            :reference-element-object="submodelElement"
+                            :is-editable="false"></ReferenceElement>
                         <Range
                             v-else-if="submodelElement.modelType === 'Range'"
                             :range-object="submodelElement"></Range>
@@ -37,7 +51,8 @@
                             :relationship-element-object="submodelElement"></RelationshipElement>
                         <AnnotatedRelationshipElement
                             v-else-if="submodelElement.modelType === 'AnnotatedRelationshipElement'"
-                            :annotated-relationship-element-object="submodelElement"></AnnotatedRelationshipElement>
+                            :annotated-relationship-element-object="submodelElement"
+                            :is-editable="false"></AnnotatedRelationshipElement>
                         <InvalidElement v-else :invalid-element-object="submodelElement"></InvalidElement>
                     </v-list>
                 </v-expansion-panel-text>

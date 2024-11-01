@@ -6,7 +6,8 @@
                 type="text"
                 variant="outlined"
                 density="compact"
-                clearable
+                :clearable="isEditable"
+                :readonly="!isEditable"
                 :color="dateTimeStampValue.value == newDateTimeStampValue ? '' : 'warning'"
                 :persistent-hint="!IsOperationVariable"
                 :hint="dateTimeStampValue.value == newDateTimeStampValue ? '' : 'Current Value not yet saved.'"
@@ -18,7 +19,7 @@
                 <template #append-inner>
                     <span class="text-subtitleText">{{ unitSuffix(dateTimeStampValue) }}</span>
                     <v-btn
-                        v-if="!IsOperationVariable"
+                        v-if="!IsOperationVariable && isEditable"
                         size="small"
                         variant="elevated"
                         color="primary"
@@ -54,7 +55,24 @@
     export default defineComponent({
         name: 'DateTimeStampType',
         mixins: [RequestHandling, SubmodelElementHandling],
-        props: ['dateTimeStampValue', 'isOperationVariable', 'variableType'],
+        props: {
+            dateTimeStampValue: {
+                type: Object,
+                default: () => ({}),
+            },
+            isOperationVariable: {
+                type: Boolean,
+                default: false,
+            },
+            variableType: {
+                type: String,
+                default: 'number',
+            },
+            isEditable: {
+                type: Boolean,
+                default: true,
+            },
+        },
 
         setup() {
             const aasStore = useAASStore();

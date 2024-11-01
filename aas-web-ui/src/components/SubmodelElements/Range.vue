@@ -36,7 +36,12 @@
     export default defineComponent({
         name: 'Range',
         mixins: [RequestHandling, SubmodelElementHandling],
-        props: ['rangeObject'],
+        props: {
+            rangeObject: {
+                type: Object,
+                default: () => ({}),
+            },
+        },
 
         setup() {
             const aasStore = useAASStore();

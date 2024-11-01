@@ -46,24 +46,28 @@
                     :number-value="propertyObject"
                     :is-operation-variable="isOperationVariable"
                     :variable-type="variableType"
+                    :is-editable="isEditable"
                     @update-value="updateValue"></NumberType>
                 <BooleanType
                     v-else-if="propertyObject.valueType == 'xs:boolean'"
                     :boolean-value="propertyObject"
                     :is-operation-variable="isOperationVariable"
                     :variable-type="variableType"
+                    :is-editable="isEditable"
                     @update-value="updateValue"></BooleanType>
                 <DateTimeStampType
                     v-else-if="propertyObject.valueType == 'xs:dateTime'"
                     :date-time-stamp-value="propertyObject"
                     :is-operation-variable="isOperationVariable"
                     :variable-type="variableType"
+                    :is-editable="isEditable"
                     @update-value="updateValue"></DateTimeStampType>
                 <StringType
                     v-else
                     :string-value="propertyObject"
                     :is-operation-variable="isOperationVariable"
                     :variable-type="variableType"
+                    :is-editable="isEditable"
                     @update-value="updateValue"></StringType>
             </v-list>
         </v-card>
@@ -90,7 +94,24 @@
             DateTimeStampType,
         },
         mixins: [RequestHandling, SubmodelElementHandling],
-        props: ['propertyObject', 'isOperationVariable', 'variableType'],
+        props: {
+            propertyObject: {
+                type: Object,
+                default: () => ({}),
+            },
+            isOperationVariable: {
+                type: Boolean,
+                default: false,
+            },
+            variableType: {
+                type: String,
+                default: 'string',
+            },
+            isEditable: {
+                type: Boolean,
+                default: true,
+            },
+        },
 
         setup() {
             const aasStore = useAASStore();

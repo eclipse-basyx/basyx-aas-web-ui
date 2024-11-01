@@ -35,14 +35,15 @@
                             variant="outlined"
                             density="compact"
                             hide-details
-                            clearable
+                            :clearable="isEditable"
+                            :readonly="!isEditable"
                             @keydown.enter="updatePath()"
                             @click:clear="clearPath()"
                             @update:focused="setFocus">
                             <!-- Update Path Button -->
                             <template #append-inner="{ isFocused }">
                                 <v-btn
-                                    v-if="isFocused"
+                                    v-if="isFocused && isEditable"
                                     size="small"
                                     variant="elevated"
                                     color="primary"
@@ -69,7 +70,7 @@
             </v-list>
             <v-divider></v-divider>
             <!-- Action Button to upload a File -->
-            <v-list nav class="bg-elevatedCard pa-0">
+            <v-list v-if="isEditable" nav class="bg-elevatedCard pa-0">
                 <v-list-item>
                     <template #title>
                         <!-- Upload-Button -->
@@ -109,7 +110,16 @@
     export default defineComponent({
         name: 'File',
         mixins: [RequestHandling, SubmodelElementHandling],
-        props: ['fileObject'],
+        props: {
+            fileObject: {
+                type: Object,
+                default: () => ({}),
+            },
+            isEditable: {
+                type: Boolean,
+                default: true,
+            },
+        },
 
         setup() {
             const aasStore = useAASStore();

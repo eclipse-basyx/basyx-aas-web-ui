@@ -5,7 +5,7 @@
                 v-model="newBooleanValue"
                 inset
                 density="compact"
-                :readonly="IsOutputVariable"
+                :readonly="IsOutputVariable || !isEditable"
                 color="primary"
                 :messages="
                     isOperationVariable ? '' : 'greyed out value on the right shows the current value in the AAS'
@@ -17,9 +17,10 @@
                 </template>
             </v-switch>
         </template>
+        <!-- Update Value Button -->
         <template #append>
             <v-btn
-                v-if="!IsOperationVariable"
+                v-if="!IsOperationVariable && isEditable"
                 size="small"
                 variant="elevated"
                 color="primary"
@@ -40,7 +41,24 @@
     export default defineComponent({
         name: 'BooleanType',
         mixins: [RequestHandling],
-        props: ['booleanValue', 'isOperationVariable', 'variableType'],
+        props: {
+            booleanValue: {
+                type: Object,
+                default: () => ({}),
+            },
+            isOperationVariable: {
+                type: Boolean,
+                default: false,
+            },
+            variableType: {
+                type: String,
+                default: 'number',
+            },
+            isEditable: {
+                type: Boolean,
+                default: true,
+            },
+        },
 
         setup() {
             const aasStore = useAASStore();

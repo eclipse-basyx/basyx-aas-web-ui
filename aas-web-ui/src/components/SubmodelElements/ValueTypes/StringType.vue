@@ -5,8 +5,8 @@
                 v-model="newStringValue"
                 variant="outlined"
                 density="compact"
-                clearable
-                :readonly="IsOutputVariable"
+                :clearable="isEditable"
+                :readonly="IsOutputVariable || !isEditable"
                 auto-grow
                 :rows="1"
                 :label="isOperationVariable ? stringValue.idShort : ''"
@@ -15,7 +15,7 @@
                 <!-- Update Value Button -->
                 <template #append-inner>
                     <v-btn
-                        v-if="!IsOperationVariable"
+                        v-if="!IsOperationVariable && isEditable"
                         size="small"
                         variant="elevated"
                         color="primary"
@@ -38,7 +38,24 @@
     export default defineComponent({
         name: 'StringType',
         mixins: [RequestHandling],
-        props: ['stringValue', 'isOperationVariable', 'variableType'],
+        props: {
+            stringValue: {
+                type: Object,
+                default: () => ({}),
+            },
+            isOperationVariable: {
+                type: Boolean,
+                default: false,
+            },
+            variableType: {
+                type: String,
+                default: 'number',
+            },
+            isEditable: {
+                type: Boolean,
+                default: true,
+            },
+        },
 
         setup() {
             const aasStore = useAASStore();

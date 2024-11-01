@@ -6,8 +6,8 @@
                 type="number"
                 variant="outlined"
                 density="compact"
-                clearable
-                :readonly="IsOutputVariable"
+                :clearable="isEditable"
+                :readonly="IsOutputVariable || !isEditable"
                 :hint="isOperationVariable ? '' : 'greyed out value on the left shows the current value in the AAS'"
                 :label="isOperationVariable ? numberValue.idShort : ''"
                 :hide-details="IsOperationVariable ? true : false"
@@ -36,7 +36,7 @@
                 <template #append-inner>
                     <span class="text-subtitleText">{{ unitSuffix(numberValue) }}</span>
                     <v-btn
-                        v-if="isFocused && !IsOperationVariable"
+                        v-if="isFocused && !IsOperationVariable && isEditable"
                         size="small"
                         variant="elevated"
                         color="primary"
@@ -60,7 +60,24 @@
     export default defineComponent({
         name: 'NumberType',
         mixins: [RequestHandling, SubmodelElementHandling],
-        props: ['numberValue', 'isOperationVariable', 'variableType'],
+        props: {
+            numberValue: {
+                type: Object,
+                default: () => ({}),
+            },
+            isOperationVariable: {
+                type: Boolean,
+                default: false,
+            },
+            variableType: {
+                type: String,
+                default: 'number',
+            },
+            isEditable: {
+                type: Boolean,
+                default: true,
+            },
+        },
 
         setup() {
             const aasStore = useAASStore();

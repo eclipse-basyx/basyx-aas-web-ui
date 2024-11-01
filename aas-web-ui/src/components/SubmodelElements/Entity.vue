@@ -77,7 +77,12 @@
             SubmodelElementGroup,
         },
         mixins: [SubmodelElementHandling],
-        props: ['entityObject'],
+        props: {
+            entityObject: {
+                type: Object,
+                default: () => ({}),
+            },
+        },
 
         setup() {
             const aasStore = useAASStore();

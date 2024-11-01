@@ -15,8 +15,9 @@
             <component
                 :is="SubmodelElementWrapper"
                 v-if="SubmodelElementWrapper"
-                :SubmodelElementObject="SubmodelElement"
-                :card-style="'outlined'"></component>
+                :submodel-element-object="SubmodelElement"
+                :card-style="'outlined'"
+                :is-editable="isEditable"></component>
         </div>
     </v-container>
 </template>
@@ -32,7 +33,16 @@
             RelationshipElement,
             // SubmodelElementWrapper,
         },
-        props: ['annotatedRelationshipElementObject'],
+        props: {
+            annotatedRelationshipElementObject: {
+                type: Object,
+                default: () => ({}),
+            },
+            isEditable: {
+                type: Boolean,
+                default: true,
+            },
+        },
 
         setup() {
             const SubmodelElementWrapper = shallowRef(null) as any;

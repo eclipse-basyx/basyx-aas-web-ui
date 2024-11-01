@@ -39,12 +39,14 @@
                                         :property-object="variable.value"
                                         :is-operation-variable="true"
                                         :variable-type="variableType.type"
+                                        :is-editable="isEditable"
                                         @update-value="updateOperationVariable($event, variable.value)"></Property>
                                     <ReferenceElement
                                         v-else-if="variable.value.modelType === 'ReferenceElement'"
                                         :reference-element-object="variable.value"
                                         :is-operation-variable="true"
                                         :variable-type="variableType.type"
+                                        :is-editable="isEditable"
                                         @update-value="
                                             updateOperationVariable($event, variable.value)
                                         "></ReferenceElement>
@@ -80,7 +82,13 @@
                 <v-list-item>
                     <template #append>
                         <!-- Clear-Button -->
-                        <v-btn size="small" variant="outlined" color="primary" class="mr-3" @click="clearFields()"
+                        <v-btn
+                            v-if="isEditable"
+                            size="small"
+                            variant="outlined"
+                            color="primary"
+                            class="mr-3"
+                            @click="clearFields()"
                             >clear</v-btn
                         >
                         <!-- Execute-Button -->
@@ -120,7 +128,16 @@
             InvalidElement,
         },
         mixins: [RequestHandling, SubmodelElementHandling],
-        props: ['operationObject'],
+        props: {
+            operationObject: {
+                type: Object,
+                default: () => ({}),
+            },
+            isEditable: {
+                type: Boolean,
+                default: true,
+            },
+        },
 
         setup() {
             const navigationStore = useNavigationStore();

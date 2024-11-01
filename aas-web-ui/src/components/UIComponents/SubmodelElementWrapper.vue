@@ -3,27 +3,35 @@
         <v-card :variant="cardStyle ? cardStyle : 'elevated'">
             <v-list nav class="pt-0">
                 <MultiLanguageProperty
-                    v-if="SubmodelElementObject.modelType == 'MultiLanguageProperty'"
-                    :multi-language-property-object="SubmodelElementObject"></MultiLanguageProperty>
+                    v-if="submodelElementObject.modelType == 'MultiLanguageProperty'"
+                    :multi-language-property-object="submodelElementObject"
+                    :is-editable="isEditable"></MultiLanguageProperty>
                 <Property
-                    v-if="SubmodelElementObject.modelType == 'Property'"
-                    :property-object="SubmodelElementObject"
+                    v-if="submodelElementObject.modelType == 'Property'"
+                    :property-object="submodelElementObject"
+                    :is-editable="isEditable"
                     @update-value="updatePropertyValue"></Property>
-                <File v-if="SubmodelElementObject.modelType == 'File'" :file-object="SubmodelElementObject"></File>
-                <Blob v-if="SubmodelElementObject.modelType == 'Blob'" :blob-object="SubmodelElementObject"></Blob>
+                <File
+                    v-if="submodelElementObject.modelType == 'File'"
+                    :file-object="submodelElementObject"
+                    :is-editable="isEditable"></File>
+                <Blob v-if="submodelElementObject.modelType == 'Blob'" :blob-object="submodelElementObject"></Blob>
                 <Operation
-                    v-if="SubmodelElementObject.modelType == 'Operation'"
-                    :operation-object="SubmodelElementObject"></Operation>
+                    v-if="submodelElementObject.modelType == 'Operation'"
+                    :operation-object="submodelElementObject"
+                    :is-editable="isEditable"></Operation>
                 <ReferenceElement
-                    v-if="SubmodelElementObject.modelType == 'ReferenceElement'"
-                    :reference-element-object="SubmodelElementObject"></ReferenceElement>
-                <Range v-if="SubmodelElementObject.modelType == 'Range'" :range-object="SubmodelElementObject"></Range>
+                    v-if="submodelElementObject.modelType == 'ReferenceElement'"
+                    :reference-element-object="submodelElementObject"
+                    :is-editable="isEditable"></ReferenceElement>
+                <Range v-if="submodelElementObject.modelType == 'Range'" :range-object="submodelElementObject"></Range>
                 <RelationshipElement
-                    v-if="SubmodelElementObject.modelType == 'RelationshipElement'"
-                    :relationship-element-object="SubmodelElementObject"></RelationshipElement>
+                    v-if="submodelElementObject.modelType == 'RelationshipElement'"
+                    :relationship-element-object="submodelElementObject"></RelationshipElement>
                 <AnnotatedRelationshipElement
-                    v-if="SubmodelElementObject.modelType == 'AnnotatedRelationshipElement'"
-                    :annotated-relationship-element-object="SubmodelElementObject"></AnnotatedRelationshipElement>
+                    v-if="submodelElementObject.modelType == 'AnnotatedRelationshipElement'"
+                    :annotated-relationship-element-object="submodelElementObject"
+                    :is-editable="isEditable"></AnnotatedRelationshipElement>
             </v-list>
         </v-card>
     </v-container>
@@ -41,6 +49,8 @@
     import ReferenceElement from '@/components/SubmodelElements/ReferenceElement.vue';
     import RelationshipElement from '@/components/SubmodelElements/RelationshipElement.vue';
 
+    type Variant = 'elevated' | 'outlined' | 'flat' | 'text' | 'tonal' | 'plain' | undefined;
+
     export default defineComponent({
         name: 'SubmodelELementWrapper',
         components: {
@@ -55,7 +65,20 @@
             RelationshipElement,
             AnnotatedRelationshipElement,
         },
-        props: ['SubmodelElementObject', 'cardStyle'],
+        props: {
+            submodelElementObject: {
+                type: Object,
+                default: () => ({}),
+            },
+            cardStyle: {
+                type: String as () => Variant,
+                default: 'elevated',
+            },
+            isEditable: {
+                type: Boolean,
+                default: true,
+            },
+        },
 
         methods: {
             // Function to update the value of a property
