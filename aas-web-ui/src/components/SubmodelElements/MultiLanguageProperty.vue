@@ -16,7 +16,7 @@
                             hide-details
                             :clearable="isEditable"
                             :readonly="!isEditable"
-                            append-icon="mdi-delete"
+                            :append-icon="isEditable ? 'mdi-delete' : undefined"
                             @click:append="removeEntry(i)"
                             @update:focused="setFocus($event, value)"
                             @keydown.enter="updateValue()">
@@ -24,7 +24,9 @@
                                 <!-- language -->
                                 <v-chip label size="x-small" border>
                                     <span>{{ value.language ? value.language : 'no-lang' }}</span>
-                                    <v-icon site="x-small" style="margin-right: -3px">mdi-chevron-down</v-icon>
+                                    <v-icon v-if="isEditable" site="x-small" style="margin-right: -3px">
+                                        mdi-chevron-down
+                                    </v-icon>
                                     <!-- Menu to select the Language -->
                                     <v-menu v-if="isEditable" activator="parent">
                                         <v-list density="compact" class="pa-0">
@@ -69,7 +71,7 @@
             </v-list>
             <v-divider></v-divider>
             <!-- Edit the MultiLanguageProperty -->
-            <v-list nav class="bg-elevatedCard py-0">
+            <v-list v-if="isEditable" nav class="bg-elevatedCard py-0">
                 <v-list-item>
                     <template #append>
                         <v-btn

@@ -8,7 +8,11 @@
                 </v-expansion-panel-title>
                 <v-expansion-panel-text>
                     <GenericDataVisu
-                        v-if="Array.isArray(submodelElement.value) && submodelElement.value.length > 0"
+                        v-if="
+                            Array.isArray(submodelElement.value) &&
+                            submodelElement.value.length > 0 &&
+                            submodelElement.modelType !== 'MultiLanguageProperty'
+                        "
                         :submodel-element-data="submodelElement.value"></GenericDataVisu>
                     <v-list v-else nav class="px-4 pt-0 pb-0">
                         <!-- SubmodelELement Representation for different modelTypes -->
