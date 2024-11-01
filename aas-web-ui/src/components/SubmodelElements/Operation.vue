@@ -82,7 +82,13 @@
                 <v-list-item>
                     <template #append>
                         <!-- Clear-Button -->
-                        <v-btn size="small" variant="outlined" color="primary" class="mr-3" @click="clearFields()"
+                        <v-btn
+                            v-if="isEditable"
+                            size="small"
+                            variant="outlined"
+                            color="primary"
+                            class="mr-3"
+                            @click="clearFields()"
                             >clear</v-btn
                         >
                         <!-- Execute-Button -->
