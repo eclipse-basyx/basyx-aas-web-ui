@@ -6,8 +6,7 @@
                 type="number"
                 variant="outlined"
                 density="compact"
-                clearable
-                :disabled="!isEditable"
+                :clearable="isEditable"
                 :readonly="IsOutputVariable || !isEditable"
                 :hint="isOperationVariable ? '' : 'greyed out value on the left shows the current value in the AAS'"
                 :label="isOperationVariable ? numberValue.idShort : ''"
@@ -37,7 +36,7 @@
                 <template #append-inner>
                     <span class="text-subtitleText">{{ unitSuffix(numberValue) }}</span>
                     <v-btn
-                        v-if="isFocused && !IsOperationVariable"
+                        v-if="isFocused && !IsOperationVariable && isEditable"
                         size="small"
                         variant="elevated"
                         color="primary"

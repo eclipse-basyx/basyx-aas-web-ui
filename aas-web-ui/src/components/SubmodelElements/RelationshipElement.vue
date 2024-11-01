@@ -20,13 +20,13 @@
                             </v-tooltip>
                             <!-- Reference Title -->
                             <template #title>
-                                <div class="text-subtitle-2 mt-2" v-html="'Description:'"></div>
+                                <div class="text-subtitle-2 mt-2">Description:</div>
                             </template>
                             <!-- Reference Representation -->
                             <template #subtitle>
                                 <div class="pt-2">
                                     <v-chip label size="x-small" border class="mr-2">{{ value.type }}</v-chip>
-                                    <span v-html="value.value"></span>
+                                    <span>{{ value.value }}</span>
                                 </div>
                             </template>
                         </v-list-item>
@@ -77,10 +77,6 @@
             relationshipElementObject: {
                 type: Object,
                 default: () => ({}),
-            },
-            isEditable: {
-                type: Boolean,
-                default: true,
             },
         },
 

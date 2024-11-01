@@ -5,8 +5,7 @@
                 v-model="newBooleanValue"
                 inset
                 density="compact"
-                :disabled="isEditable"
-                :readonly="IsOutputVariable"
+                :readonly="IsOutputVariable || !isEditable"
                 color="primary"
                 :messages="
                     isOperationVariable ? '' : 'greyed out value on the right shows the current value in the AAS'
@@ -21,7 +20,7 @@
         <!-- Update Value Button -->
         <template #append>
             <v-btn
-                v-if="!IsOperationVariable"
+                v-if="!IsOperationVariable && isEditable"
                 size="small"
                 variant="elevated"
                 color="primary"

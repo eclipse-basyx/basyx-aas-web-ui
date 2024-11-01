@@ -11,7 +11,6 @@
                 hide-details
                 class="align-center"
                 readonly
-                :disabled="!isEditable"
                 color="primary"
                 thumb-label="always">
                 <!-- <template v-slot:prepend>
@@ -41,10 +40,6 @@
             rangeObject: {
                 type: Object,
                 default: () => ({}),
-            },
-            isEditable: {
-                type: Boolean,
-                default: true,
             },
         },
 

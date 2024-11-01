@@ -82,10 +82,6 @@
                 type: Object,
                 default: () => ({}),
             },
-            isEditable: {
-                type: Boolean,
-                default: true,
-            },
         },
 
         setup() {

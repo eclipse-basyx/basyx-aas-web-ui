@@ -38,16 +38,13 @@
                             :is-editable="false"></ReferenceElement>
                         <Range
                             v-else-if="submodelElement.modelType === 'Range'"
-                            :range-object="submodelElement"
-                            :is-editable="false"></Range>
+                            :range-object="submodelElement"></Range>
                         <Entity
                             v-else-if="submodelElement.modelType === 'Entity'"
-                            :entity-object="submodelElement"
-                            :is-editable="false"></Entity>
+                            :entity-object="submodelElement"></Entity>
                         <RelationshipElement
                             v-else-if="submodelElement.modelType === 'RelationshipElement'"
-                            :relationship-element-object="submodelElement"
-                            :is-editable="false"></RelationshipElement>
+                            :relationship-element-object="submodelElement"></RelationshipElement>
                         <AnnotatedRelationshipElement
                             v-else-if="submodelElement.modelType === 'AnnotatedRelationshipElement'"
                             :annotated-relationship-element-object="submodelElement"

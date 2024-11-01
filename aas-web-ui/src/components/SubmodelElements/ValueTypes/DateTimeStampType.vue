@@ -6,8 +6,8 @@
                 type="text"
                 variant="outlined"
                 density="compact"
-                clearable
-                :disabled="!isEditable"
+                :clearable="isEditable"
+                :readonly="!isEditable"
                 :color="dateTimeStampValue.value == newDateTimeStampValue ? '' : 'warning'"
                 :persistent-hint="!IsOperationVariable"
                 :hint="dateTimeStampValue.value == newDateTimeStampValue ? '' : 'Current Value not yet saved.'"
@@ -19,7 +19,7 @@
                 <template #append-inner>
                     <span class="text-subtitleText">{{ unitSuffix(dateTimeStampValue) }}</span>
                     <v-btn
-                        v-if="!IsOperationVariable"
+                        v-if="!IsOperationVariable && isEditable"
                         size="small"
                         variant="elevated"
                         color="primary"

@@ -14,8 +14,8 @@
                             variant="outlined"
                             density="compact"
                             hide-details
-                            clearable
-                            :disabled="!isEditable"
+                            :clearable="isEditable"
+                            :readonly="!isEditable"
                             append-icon="mdi-delete"
                             @click:append="removeEntry(i)"
                             @update:focused="setFocus($event, value)"
@@ -26,7 +26,7 @@
                                     <span>{{ value.language ? value.language : 'no-lang' }}</span>
                                     <v-icon site="x-small" style="margin-right: -3px">mdi-chevron-down</v-icon>
                                     <!-- Menu to select the Language -->
-                                    <v-menu activator="parent">
+                                    <v-menu v-if="isEditable" activator="parent">
                                         <v-list density="compact" class="pa-0">
                                             <v-list-item
                                                 v-for="language in languages"
@@ -41,7 +41,7 @@
                             <!-- Update Value Button -->
                             <template #append-inner>
                                 <v-btn
-                                    v-if="value.isFocused"
+                                    v-if="value.isFocused && isEditable"
                                     size="small"
                                     variant="elevated"
                                     color="primary"

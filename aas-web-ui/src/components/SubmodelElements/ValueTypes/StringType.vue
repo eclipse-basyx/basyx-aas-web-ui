@@ -5,9 +5,8 @@
                 v-model="newStringValue"
                 variant="outlined"
                 density="compact"
-                clearable
-                :disabled="!isEditable"
-                :readonly="IsOutputVariable"
+                :clearable="isEditable"
+                :readonly="IsOutputVariable || !isEditable"
                 auto-grow
                 :rows="1"
                 :label="isOperationVariable ? stringValue.idShort : ''"
@@ -16,7 +15,7 @@
                 <!-- Update Value Button -->
                 <template #append-inner>
                     <v-btn
-                        v-if="!IsOperationVariable"
+                        v-if="!IsOperationVariable && isEditable"
                         size="small"
                         variant="elevated"
                         color="primary"

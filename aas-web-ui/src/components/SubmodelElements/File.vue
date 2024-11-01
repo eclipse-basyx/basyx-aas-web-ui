@@ -35,15 +35,15 @@
                             variant="outlined"
                             density="compact"
                             hide-details
-                            clearable
-                            :disabled="!isEditable"
+                            :clearable="isEditable"
+                            :readonly="!isEditable"
                             @keydown.enter="updatePath()"
                             @click:clear="clearPath()"
                             @update:focused="setFocus">
                             <!-- Update Path Button -->
                             <template #append-inner="{ isFocused }">
                                 <v-btn
-                                    v-if="isFocused"
+                                    v-if="isFocused && isEditable"
                                     size="small"
                                     variant="elevated"
                                     color="primary"

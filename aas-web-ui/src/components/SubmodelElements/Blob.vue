@@ -34,8 +34,8 @@
                             variant="outlined"
                             density="compact"
                             :hide-details="isTruncated ? false : true"
-                            clearable
-                            :disabled="!isEditable"
+                            :clearable="isEditable"
+                            :readonly="!isEditable"
                             :hint="isTruncated ? 'Blob string is truncated!' : ''"
                             persistent-hint
                             @keydown.enter="updateBlob()"
@@ -44,7 +44,7 @@
                             <!-- Update Blob Button -->
                             <template #append-inner="{ isFocused }">
                                 <v-btn
-                                    v-if="isFocused"
+                                    v-if="isFocused && isEditable"
                                     size="small"
                                     variant="elevated"
                                     color="primary"
