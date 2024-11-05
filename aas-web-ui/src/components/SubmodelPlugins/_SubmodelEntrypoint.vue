@@ -48,6 +48,14 @@
                     checkSemanticId(submodelElementData, 'https://admin-shell.io/ZVEI/TechnicalData/Submodel/1/2')
                 "
                 :submodel-element-data="submodelElementData"></TechnicalData>
+            <PCF
+                v-else-if="
+                    checkSemanticId(
+                        'https://admin-shell.io/idta/CarbonFootprint/CarbonFootprint/0/9',
+                        submodelElementData
+                    )
+                "
+                :submodelElementData="submodelElementData"></PCF>
             <JSONArrayProperty
                 v-else-if="checkSemanticId(submodelElementData, 'http://iese.fraunhofer.de/prop_jsonarray')"
                 :submodel-element-data="submodelElementData"></JSONArrayProperty>
@@ -116,6 +124,7 @@
     import JSONArrayProperty from './JSONArrayProperty.vue';
     import PDFPreview from './PDFPreview.vue';
     import TechnicalData from './TechnicalData.vue';
+    import PCF from './PCF.vue';
     import TimeSeriesData from './TimeSeriesData.vue';
 
     export default defineComponent({
@@ -128,6 +137,7 @@
             HandoverDocumentation,
             ContactInformation,
             TechnicalData,
+            PCF,
             JSONArrayProperty,
             GenericDataVisu,
             ImagePreview,
