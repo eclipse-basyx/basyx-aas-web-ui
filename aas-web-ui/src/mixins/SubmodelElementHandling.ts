@@ -615,6 +615,54 @@ export default defineComponent({
             return sme.idShort ? sme.idShort : '';
         },
 
+        descriptionToDisplay(referable: any) {
+            if (referable && referable?.description) {
+                const descriptionEn = referable.description.find(
+                    (description: any) => description && description.language === 'en' && description.text !== ''
+                );
+                if (descriptionEn && descriptionEn.text) return descriptionEn.text;
+            }
+            return '';
+        },
+
+        valueToDisplay(submodelElement: any) {
+            if (submodelElement && submodelElement.modelType) {
+                switch (submodelElement.modelType) {
+                    case 'Property':
+                        if (!submodelElement.value) return '';
+                        return (
+                            submodelElement.value +
+                            (this.unitSuffix(submodelElement) ? ' ' + this.unitSuffix(submodelElement) : '')
+                        );
+                    case 'MultiLanguageProperty': {
+                        const valueEn = submodelElement.value.find((value: any) => {
+                            return value && value.language === 'en' && value.text !== '';
+                        });
+                        const valueDe = submodelElement.value.find((value: any) => {
+                            return value && value.language === 'de' && value.text !== '';
+                        });
+                        if (valueEn && valueEn.text) return valueEn.text;
+                        if (valueDe && valueDe.text) return valueDe.text;
+                        return '';
+                    }
+                    case 'File':
+                    case 'Blob':
+                        if (submodelElement.value.startsWith('http')) return submodelElement.value;
+                        return submodelElement.path + '/attachment';
+                    case 'Operation': // TODO
+                    case 'ReferenceElement': // TODO
+                    case 'Range': // TODO
+                    case 'Entity': // TODO
+                    case 'RelationshipElement': // TODO
+                    case 'AnnotatedRelationshipElement': // TODO
+                        return '';
+                    default:
+                        return '';
+                }
+            }
+            return '';
+        },
+
         // Extract the right endpoints href from a descriptor
         extractEndpointHref(descriptor: any, interfaceShortName: string): string {
             const interfaceShortNames = [
