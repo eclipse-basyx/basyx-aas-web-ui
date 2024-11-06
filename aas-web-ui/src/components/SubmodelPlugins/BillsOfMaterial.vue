@@ -78,9 +78,13 @@
                 return this.theme.global.current.value.dark;
             },
 
-            // get the vuetify primary color
+            // returns the primary color of the current theme
             primaryColor() {
-                return this.theme.current.value.colors.primary;
+                if (this.isDark) {
+                    return this.$vuetify.theme.themes.dark.colors.primary;
+                } else {
+                    return this.$vuetify.theme.themes.light.colors.primary;
+                }
             },
         },
 

@@ -220,6 +220,11 @@
                 return this.navigationStore.getIsMobile;
             },
 
+            // Check if the current Theme is dark
+            isDark() {
+                return this.theme.global.current.value.dark;
+            },
+
             // get Drawer State from store
             drawerState() {
                 // Computed Property to control the state of the Navigation Drawer (true -> collapsed, false -> extended)
@@ -241,11 +246,6 @@
                 return this.aasStore.getSelectedAAS;
             },
 
-            // Check if the current Theme is dark
-            isDark() {
-                return this.theme.global.current.value.dark;
-            },
-
             // gets loading State from Store
             loading() {
                 return this.aasStore.getLoadingState;
@@ -253,7 +253,11 @@
 
             // returns the primary color of the current theme
             primaryColor() {
-                return this.$vuetify.theme.themes.light.colors.primary;
+                if (this.isDark) {
+                    return this.$vuetify.theme.themes.dark.colors.primary;
+                } else {
+                    return this.$vuetify.theme.themes.light.colors.primary;
+                }
             },
 
             // get the status-check state from the store

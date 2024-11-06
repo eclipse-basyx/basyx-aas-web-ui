@@ -10,10 +10,13 @@ import 'vuetify/styles';
 // Composables
 import { createVuetify } from 'vuetify';
 
-export function initializeVuetify(primaryColor: string) {
+export function initializeVuetify(primaryLightColor: string, primaryDarkColor: string) {
     // check if primary color is set
-    if (!primaryColor) {
-        primaryColor = '#0cb2f0';
+    if (!primaryLightColor) {
+        primaryLightColor = '#0cb2f0';
+    }
+    if (!primaryDarkColor) {
+        primaryDarkColor = '#F69222';
     }
 
     // https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides
@@ -23,7 +26,7 @@ export function initializeVuetify(primaryColor: string) {
                 light: {
                     dark: false,
                     colors: {
-                        primary: primaryColor,
+                        primary: primaryLightColor,
                         background: '#FFFFFF',
                         appBar: '#F5F5F5',
                         navigationMenu: '#FFFFFF',
@@ -51,7 +54,7 @@ export function initializeVuetify(primaryColor: string) {
                 dark: {
                     dark: true,
                     colors: {
-                        primary: primaryColor,
+                        primary: primaryDarkColor,
                         background: '#121212',
                         appBar: '#1E1E1E',
                         navigationMenu: '#1E1E1E',

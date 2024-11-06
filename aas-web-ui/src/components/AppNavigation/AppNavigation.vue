@@ -5,7 +5,7 @@
             <v-row class="mx-0" align="center">
                 <v-card flat color="appBar" class="ml-2">
                     <!-- Logo in the App Bar -->
-                    <img :src="EnvLogoPath" style="min-height: 42px; max-height: 42px" alt="Logo" />
+                    <img :src="LogoPath" style="min-height: 42px; max-height: 42px" alt="Logo" />
                 </v-card>
                 <!-- Menu Toggle (Desktop) -->
                 <v-menu v-if="!isMobile" v-model="mainMenu" :close-on-content-click="false">
@@ -313,8 +313,12 @@
             },
 
             // Get the Env Variable for the logo path from the store
-            EnvLogoPath() {
-                return this.envStore.getEnvLogoPath;
+            LogoPath() {
+                if (this.isDark && this.envStore.getEnvLogoDarkPath.trim().length > 0) {
+                    return this.envStore.getEnvLogoDarkPath;
+                } else {
+                    return this.envStore.getEnvLogoLightPath;
+                }
             },
 
             dashboardServicePath() {

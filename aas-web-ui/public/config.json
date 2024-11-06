@@ -1,5 +1,6 @@
 {
-  "logoPath": "Logo/Logo.svg",
+  "logoLightPath": "Logo/Logo_light.svg",
+  "logoDarkPath": "Logo/Logo_dark.svg",
   "basePath": "",
   "aasDiscoveryPath": "",
   "aasRegistryPath": "",
@@ -8,7 +9,8 @@
   "submodelRepoPath": "",
   "cdRepoPath": "",
   "dashboardServicePath": "",
-  "primaryColor": "#0cb2f0",
+  "primaryLightColor": "#0cb2f0",
+  "primaryDarkColor": "#F69222",
   "influxdbToken": "",
   "keycloakUrl": "",
   "keycloakRealm": "",

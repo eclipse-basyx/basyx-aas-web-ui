@@ -1158,7 +1158,11 @@
 
             // returns the primary color of the current theme
             primaryColor() {
-                return this.$vuetify.theme.themes.light.colors.primary;
+                if (this.isDark) {
+                    return this.$vuetify.theme.themes.dark.colors.primary;
+                } else {
+                    return this.$vuetify.theme.themes.light.colors.primary;
+                }
             },
 
             // returns the primary lighten 2 color of the current theme

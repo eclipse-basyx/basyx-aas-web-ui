@@ -32,6 +32,7 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
+    import { useTheme } from 'vuetify';
     import { useAASStore } from '@/store/AASDataStore';
     import AASTreeview from './AASTreeview.vue';
     import ComponentVisualization from './ComponentVisualization.vue';
@@ -46,17 +47,28 @@
         },
 
         setup() {
+            const theme = useTheme();
             const aasStore = useAASStore();
 
             return {
+                theme, // Theme Object
                 aasStore, // AASStore Object
             };
         },
 
         computed: {
+            // Check if the current Theme is dark
+            isDark() {
+                return this.theme.global.current.value.dark;
+            },
+
             // returns the primary color of the current theme
             primaryColor() {
-                return this.$vuetify.theme.themes.light.colors.primary;
+                if (this.isDark) {
+                    return this.$vuetify.theme.themes.dark.colors.primary;
+                } else {
+                    return this.$vuetify.theme.themes.light.colors.primary;
+                }
             },
         },
 

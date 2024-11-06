@@ -98,6 +98,11 @@
         },
 
         computed: {
+            // Check if the current Theme is dark
+            isDark() {
+                return this.theme.global.current.value.dark;
+            },
+
             // get selected AAS from Store
             SelectedAAS() {
                 return this.aasStore.getSelectedAAS;
@@ -125,12 +130,11 @@
 
             // returns the primary color of the current theme
             primaryColor() {
-                return this.$vuetify.theme.themes.light.colors.primary;
-            },
-
-            // Check if the current Theme is dark
-            isDark() {
-                return this.theme.global.current.value.dark;
+                if (this.isDark) {
+                    return this.$vuetify.theme.themes.dark.colors.primary;
+                } else {
+                    return this.$vuetify.theme.themes.light.colors.primary;
+                }
             },
         },
 
