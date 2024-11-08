@@ -54,14 +54,14 @@
                                 <td>
                                     <!-- Files -->
                                     <v-img
-                                        v-if="generalProperty.idShort === 'ManufacturerLogo'"
+                                        v-if="checkIdShort(generalProperty, 'ManufacturerLogo')"
                                         :src="ManufacturerLogoUrl"
                                         max-width="100%"
                                         max-height="100%"
                                         contain
                                         class="my-2"></v-img>
                                     <v-img
-                                        v-else-if="generalProperty.idShort === 'ProductImage'"
+                                        v-else-if="checkIdShort(generalProperty, 'ProductImage')"
                                         :src="ProductImageUrl"
                                         max-width="100%"
                                         max-height="100%"
@@ -289,7 +289,7 @@
                 });
                 if (!generalInformation) return;
                 generalInformation.value.forEach((generalProperty: any) => {
-                    if (generalProperty.idShort === 'ManufacturerLogo') {
+                    if (this.checkIdShort(generalProperty.idShort, 'ManufacturerLogo')) {
                         this.getImageUrl(generalProperty, 'ManufacturerLogoUrl');
                     }
                     if (generalProperty.idShort.includes('ProductImage')) {

@@ -332,14 +332,18 @@
                 let timeSeriesData = { ...this.submodelElementData }; // create local copy of the TimeSeriesData
                 this.timeSeriesData = timeSeriesData; // set the local copy to the data object
                 // get the collection for segments
-                const segmentsSMC = timeSeriesData.submodelElements.find((smc: any) => smc.idShort === 'Segments');
+                const segmentsSMC = timeSeriesData.submodelElements.find((smc: any) =>
+                    this.checkIdShort(smc, 'Segments')
+                );
                 // create an array of segments
                 this.segments = segmentsSMC.value;
                 // console.log('Segments: ', this.segments)
                 // get the collection for metadata
-                const metadataSMC = timeSeriesData.submodelElements.find((smc: any) => smc.idShort === 'Metadata');
+                const metadataSMC = timeSeriesData.submodelElements.find((smc: any) =>
+                    this.checkIdShort(smc, 'Metadata')
+                );
                 // get the collection for records
-                const recordsSMC = metadataSMC.value.find((smc: any) => smc.idShort === 'Record');
+                const recordsSMC = metadataSMC.value.find((smc: any) => this.checkIdShort(smc, 'Record'));
                 // create an array of records
                 let records = recordsSMC.value;
                 // request the concept descriptions for the records (if they have semanticIds)
@@ -376,9 +380,9 @@
                     this.apiToken = this.configData.configObject.apiToken;
                     this.showTokenInput = false;
                 }
-                if (this.selectedSegment.idShort == 'LinkedSegment') this.fetchLinkedData();
-                if (this.selectedSegment.idShort == 'InternalSegment') this.fetchInternalData();
-                if (this.selectedSegment.idShort == 'ExternalSegment') this.fetchExternalData();
+                if (this.checkIdShort(this.selectedSegment, 'LinkedSegment')) this.fetchLinkedData();
+                if (this.checkIdShort(this.selectedSegment, 'InternalSegment')) this.fetchInternalData();
+                if (this.checkIdShort(this.selectedSegment, 'ExternalSegment')) this.fetchExternalData();
             },
 
             fetchInternalData() {
@@ -398,7 +402,7 @@
             getRecordValues() {
                 // console.log('Selected Segment: ', this.selectedSegment);
                 // get the records submodel element collection
-                const recordsSMC = this.selectedSegment.value.find((smc: any) => smc.idShort === 'Records');
+                const recordsSMC = this.selectedSegment.value.find((smc: any) => this.checkIdShort(smc, 'Records'));
                 // save the records in an array
                 const records = recordsSMC.value;
                 // console.log('Records: ', records, ' Time Variable: ', this.timeVariable, ' Y Variables: ', this.yVariables);
@@ -407,7 +411,7 @@
                         (yVar) =>
                             // Check if yVarEntry exists in all records
                             records.every((item: any) =>
-                                item.value.some((entry: any) => entry.idShort === yVar.idShort)
+                                item.value.some((entry: any) => this.checkIdShort(entry, yVar.idShort))
                             ) ||
                             // display an alert if the yVariable is not available in the records (specify the yVariable name)
                             this.navigationStore.dispatchSnackbar({
@@ -422,8 +426,8 @@
                         // For each yVariable, go through each item in the original array
                         return records.map((item: any) => {
                             // Extract the time value
-                            const timeEntry = item.value.find(
-                                (entry: any) => entry.idShort === this.timeVariable.idShort
+                            const timeEntry = item.value.find((entry: any) =>
+                                this.checkIdShort(entry, this.timeVariable.idShort)
                             );
                             // display an alert if the timeVariable is not available the Records
                             if (!timeEntry) {
@@ -441,7 +445,7 @@
                             const time = timeEntry ? timeEntry.value : null;
 
                             // Extract the yVariable value
-                            const yVarEntry = item.value.find((entry: any) => entry.idShort === yVar.idShort);
+                            const yVarEntry = item.value.find((entry: any) => entry, yVar.idShort);
                             const yVarValue = yVarEntry ? yVarEntry.value : null;
 
                             // Return an object with time and the yVariable value
@@ -460,9 +464,11 @@
                     return;
                 }
                 // get the Endpoint from the selected Segment
-                const endpoint = this.selectedSegment.value.find((smc: any) => smc.idShort === 'Endpoint').value;
+                const endpoint = this.selectedSegment.value.find((smc: any) =>
+                    this.checkIdShort(smc, 'Endpoint')
+                ).value;
                 // get the query from the selected Segment
-                let query = this.selectedSegment.value.find((smc: any) => smc.idShort === 'Query').value;
+                let query = this.selectedSegment.value.find((smc: any) => this.checkIdShort(smc, 'Query')).value;
                 if (this.yVariables.length > 0)
                     query = query.replace(this.yVariableTemplate, this.yVariables[0].idShort);
 
@@ -600,7 +606,7 @@
             getFileData() {
                 // console.log('Selected Segment: ', this.selectedSegment);
                 // get the Data File/Blob submodel element
-                const dataFile = this.selectedSegment.value.find((smc: any) => smc.idShort === 'Data');
+                const dataFile = this.selectedSegment.value.find((smc: any) => this.checkIdShort(smc, 'Data'));
                 // determine the path to the file
                 let path = dataFile.value;
                 if (path.startsWith('/')) {
