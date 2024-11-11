@@ -20,7 +20,7 @@
     "leaflet": "^1.9.4",
     "lodash": "^4.17.21",
     "md5": "^2.3.0",
-    "mermaid": "^11.2.0",
+    "mermaid": "^11.4.0",
     "pinia": "^2.2.6",
     "roboto-fontface": "*",
     "three": "^0.169.0",
