@@ -5,6 +5,7 @@
 # For backward compatibility
 if [ -n "$LOGO_PATH" ]; then
     jq '.logoLightPath = env.LOGO_PATH' /usr/src/app/dist/config.json > /tmp/config.json && mv /tmp/config.json /usr/src/app/dist/config.json
+    jq '.logoDarkPath = env.LOGO_PATH' /usr/src/app/dist/config.json > /tmp/config.json && mv /tmp/config.json /usr/src/app/dist/config.json
 fi
 
 if [ -n "$LOGO_LIGHT_PATH" ]; then
@@ -46,6 +47,7 @@ fi
 # For backward compatibility
 if [ -n "$PRIMARY_COLOR" ]; then
     jq '.primaryLightColor = env.PRIMARY_COLOR' /usr/src/app/dist/config.json > /tmp/config.json && mv /tmp/config.json /usr/src/app/dist/config.json
+    jq '.primaryDarkColor = env.PRIMARY_COLOR' /usr/src/app/dist/config.json > /tmp/config.json && mv /tmp/config.json /usr/src/app/dist/config.json
 fi
 
 if [ -n "$PRIMARY_LIGHT_COLOR" ]; then
