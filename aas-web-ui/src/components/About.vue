@@ -72,7 +72,7 @@
                         <v-avatar>
                             <v-img :src="contributor.image">
                                 <template #sources>
-                                    <source :srcset="'src/assets/Contributors/' + contributor.image" />
+                                    <source :srcset="'assets/Contributors/' + contributor.image" />
                                 </template>
                             </v-img>
                         </v-avatar>
