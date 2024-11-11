@@ -12,5 +12,6 @@
   "influxdbToken": "",
   "keycloakUrl": "",
   "keycloakRealm": "",
-  "keycloakClientId": ""
+  "keycloakClientId": "",
+  "endpointConfigAvailable": true
 }
