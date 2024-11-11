@@ -491,7 +491,6 @@
                 this.ConceptDescriptionRepoURL = this.EnvConceptDescriptionRepoPath;
                 this.connectToEnvironment('ConceptDescription');
             }
-            // }
         },
 
         methods: {
