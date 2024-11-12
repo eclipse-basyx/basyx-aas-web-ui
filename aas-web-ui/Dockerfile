@@ -1,5 +1,3 @@
-
-
 # Build Stage
 FROM node:lts-slim AS build-stage
 ARG HTTP_PROXY
