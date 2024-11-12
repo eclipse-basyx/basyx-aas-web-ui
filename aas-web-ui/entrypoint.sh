@@ -1,8 +1,19 @@
 #!/bin/sh
 
 # Check if environment variables are set and update config.json accordingly
+
+# For backward compatibility
 if [ -n "$LOGO_PATH" ]; then
-    jq '.logoPath = env.LOGO_PATH' /usr/src/app/dist/config.json > /tmp/config.json && mv /tmp/config.json /usr/src/app/dist/config.json
+    jq '.logoLightPath = env.LOGO_PATH' /usr/src/app/dist/config.json > /tmp/config.json && mv /tmp/config.json /usr/src/app/dist/config.json
+    jq '.logoDarkPath = env.LOGO_PATH' /usr/src/app/dist/config.json > /tmp/config.json && mv /tmp/config.json /usr/src/app/dist/config.json
+fi
+
+if [ -n "$LOGO_LIGHT_PATH" ]; then
+    jq '.logoLightPath = env.LOGO_PATH' /usr/src/app/dist/config.json > /tmp/config.json && mv /tmp/config.json /usr/src/app/dist/config.json
+fi
+
+if [ -n "$LOGO_DARK_PATH" ]; then
+    jq '.logoDarkPath = env.LOGO_DARK_PATH' /usr/src/app/dist/config.json > /tmp/config.json && mv /tmp/config.json /usr/src/app/dist/config.json
 fi
 
 if [ -n "$AAS_DISCOVERY_PATH" ]; then
@@ -33,8 +44,18 @@ if [ -n "$DASHBOARD_SERVICE_PATH" ]; then
     jq '.dashboardServicePath = env.DASHBOARD_SERVICE_PATH' /usr/src/app/dist/config.json > /tmp/config.json && mv /tmp/config.json /usr/src/app/dist/config.json
 fi
 
+# For backward compatibility
 if [ -n "$PRIMARY_COLOR" ]; then
-    jq '.primaryColor = env.PRIMARY_COLOR' /usr/src/app/dist/config.json > /tmp/config.json && mv /tmp/config.json /usr/src/app/dist/config.json
+    jq '.primaryLightColor = env.PRIMARY_COLOR' /usr/src/app/dist/config.json > /tmp/config.json && mv /tmp/config.json /usr/src/app/dist/config.json
+    jq '.primaryDarkColor = env.PRIMARY_COLOR' /usr/src/app/dist/config.json > /tmp/config.json && mv /tmp/config.json /usr/src/app/dist/config.json
+fi
+
+if [ -n "$PRIMARY_LIGHT_COLOR" ]; then
+    jq '.primaryLightColor = env.PRIMARY_LIGHT_COLOR' /usr/src/app/dist/config.json > /tmp/config.json && mv /tmp/config.json /usr/src/app/dist/config.json
+fi
+
+if [ -n "$PRIMARY_DARK_COLOR" ]; then
+    jq '.primaryDarkColor = env.PRIMARY_DARK_COLOR' /usr/src/app/dist/config.json > /tmp/config.json && mv /tmp/config.json /usr/src/app/dist/config.json
 fi
 
 if [ -n "$INFLUXDB_TOKEN" ]; then

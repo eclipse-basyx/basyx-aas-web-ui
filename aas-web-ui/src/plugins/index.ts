@@ -16,8 +16,9 @@ export async function registerPlugins(app: App) {
 
     const envStore = useEnvStore();
 
-    const primaryColor = envStore.getEnvPrimaryColor;
+    const primaryLightColor = envStore.getEnvPrimaryLightColor;
+    const primaryDarkColor = envStore.getEnvPrimaryDarkColor;
 
-    const vuetify = await initializeVuetify(primaryColor);
+    const vuetify = await initializeVuetify(primaryLightColor, primaryDarkColor);
     app.use(vuetify);
 }

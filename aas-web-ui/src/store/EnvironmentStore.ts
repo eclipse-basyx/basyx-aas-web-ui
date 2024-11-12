@@ -3,7 +3,8 @@ import { defineStore } from 'pinia';
 export const useEnvStore = defineStore({
     id: 'envStore',
     state: () => ({
-        logoPath: '',
+        logoLightPath: '',
+        logoDarkPath: '',
         basePath: '',
         aasDiscoveryPath: '',
         aasRegistryPath: '',
@@ -12,7 +13,8 @@ export const useEnvStore = defineStore({
         submodelRepoPath: '',
         conceptDescriptionRepoPath: '',
         dashboardServicePath: '',
-        primaryColor: '',
+        primaryLightColor: '',
+        primaryDarkColor: '',
         influxdbToken: '',
         keycloakUrl: '',
         keycloakRealm: '',
@@ -20,7 +22,8 @@ export const useEnvStore = defineStore({
         endpointConfigAvailable: true,
     }),
     getters: {
-        getEnvLogoPath: (state) => state.logoPath,
+        getEnvLogoLightPath: (state) => state.logoLightPath,
+        getEnvLogoDarkPath: (state) => state.logoDarkPath,
         getEnvBasePath: (state) => state.basePath,
         getEnvAASDiscoveryPath: (state) => state.aasDiscoveryPath,
         getEnvAASRegistryPath: (state) => state.aasRegistryPath,
@@ -29,7 +32,8 @@ export const useEnvStore = defineStore({
         getEnvSubmodelRepoPath: (state) => state.submodelRepoPath,
         getEnvConceptDescriptionRepoPath: (state) => state.conceptDescriptionRepoPath,
         getEnvDashboardServicePath: (state) => state.dashboardServicePath,
-        getEnvPrimaryColor: (state) => state.primaryColor,
+        getEnvPrimaryLightColor: (state) => state.primaryLightColor,
+        getEnvPrimaryDarkColor: (state) => state.primaryDarkColor,
         getEnvInfluxdbToken: (state) => state.influxdbToken,
         getKeycloakUrl: (state) => state.keycloakUrl,
         getKeycloakRealm: (state) => state.keycloakRealm,
@@ -41,7 +45,8 @@ export const useEnvStore = defineStore({
             try {
                 const configResponse = await fetch('config.json');
                 const config = await configResponse.json();
-                this.logoPath = config.logoPath;
+                this.logoLightPath = config.logoLightPath;
+                this.logoDarkPath = config.logoDarkPath;
                 this.basePath = config.basePath;
                 this.aasDiscoveryPath = config.aasDiscoveryPath;
                 this.aasRegistryPath = config.aasRegistryPath;
@@ -50,7 +55,8 @@ export const useEnvStore = defineStore({
                 this.submodelRepoPath = config.submodelRepoPath;
                 this.conceptDescriptionRepoPath = config.cdRepoPath;
                 this.dashboardServicePath = config.dashboardServicePath;
-                this.primaryColor = config.primaryColor;
+                this.primaryLightColor = config.primaryLightColor;
+                this.primaryDarkColor = config.primaryDarkColor;
                 this.influxdbToken = config.influxdbToken;
                 this.keycloakUrl = config.keycloakUrl;
                 this.keycloakRealm = config.keycloakRealm;
