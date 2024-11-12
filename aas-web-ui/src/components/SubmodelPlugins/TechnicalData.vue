@@ -174,8 +174,8 @@
                         :submodel-element-data="technicalProperties"></GenericDataVisu>
                     <template v-else>
                         <v-card variant="outlined" class="mt-3">
-                            <v-table density="comfortable">
-                                <thead class="bg-tableOdd">
+                            <v-table density="comfortable" :hover="true">
+                                <thead class="bg-primary">
                                     <tr>
                                         <th>SubmodelElement</th>
                                         <th>Description</th>
