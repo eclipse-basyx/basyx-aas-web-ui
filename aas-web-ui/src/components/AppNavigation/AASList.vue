@@ -2,7 +2,7 @@
     <v-container class="pa-0" fluid>
         <v-card color="card" elevation="0">
             <!-- Title Bar in the AAS List -->
-            <v-card-title class="pl-1 pr-3">
+            <v-card-title id="titleAasList" class="pl-1 pr-3">
                 <v-row align="center">
                     <!-- Reload Button -->
                     <v-col cols="auto" class="pr-0">
@@ -131,7 +131,12 @@
                 :show-details-card="showDetailsCard"
                 @close-details="showDetailsCard = false" />
             <!-- Collapse/extend Sidebar Button -->
-            <v-list v-if="!isMobile" nav style="width: 100%; z-index: 9000" class="bg-detailsCard pa-0">
+            <v-list
+                v-if="!isMobile"
+                id="closeAasList"
+                nav
+                style="width: 100%; z-index: 9000"
+                class="bg-detailsCard pa-0">
                 <v-divider style="margin-left: -8px; margin-right: -8px"></v-divider>
                 <!-- Button to collapse the Sidebar -->
                 <v-list-item class="ma-0" @click="collapseSidebar()">

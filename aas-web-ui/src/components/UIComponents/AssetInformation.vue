@@ -2,6 +2,7 @@
     <v-container class="pa-0" fluid>
         <v-list lines="one" nav class="bg-detailsCard">
             <IdentificationElement
+                id="assetInformationIdentification"
                 class="mb-2"
                 :identification-object="assetInfo"
                 :model-type="assetObject.assetKind"
@@ -60,7 +61,30 @@
 
         methods: {
             handleResize() {
-                this.thumbnailMaxHeight = 0.3 * this.screenHeight;
+                const toolbarHeight = document.getElementsByClassName('v-toolbar')[0]?.clientHeight as number;
+                const footerHeight = document.getElementsByClassName('v-footer')[0]?.clientHeight as number;
+                const closeSidebarHeight = document.getElementById('closeAasList')?.clientHeight as number;
+                const titleAasListHeight = document.getElementById('titleAasList')?.clientHeight as number;
+                const assetInformationIdentificationHeight = document.getElementById('assetInformationIdentification')
+                    ?.clientHeight as number;
+
+                const availableHeight = (this.screenHeight -
+                    (toolbarHeight ? toolbarHeight : 0) -
+                    (titleAasListHeight ? titleAasListHeight : 0) -
+                    (assetInformationIdentificationHeight ? closeSidebarHeight : 0) -
+                    (closeSidebarHeight ? closeSidebarHeight : 0) -
+                    (footerHeight ? footerHeight : 0)) as number;
+
+                if (this.screenHeight < 600) {
+                    // xs display
+                    this.thumbnailMaxHeight = 1 * availableHeight;
+                } else if (this.screenHeight >= 600 && this.screenHeight < 1280) {
+                    // sm & md display
+                    this.thumbnailMaxHeight = 0.5 * availableHeight;
+                } else if (this.screenHeight >= 1280) {
+                    // lg & xl & xxl display
+                    this.thumbnailMaxHeight = 0.4 * availableHeight;
+                }
             },
         },
     });
