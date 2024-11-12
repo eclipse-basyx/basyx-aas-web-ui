@@ -205,7 +205,8 @@ aas-web-gui:
         CD_REPO_PATH: "concept_description_repo_path"
         PRIMARY_LIGHT_COLOR: "<primary_light_color>"
         PRIMARY_DARK_COLOR: "<primary_dark_color>"
-        LOGO_PATH: "<logo_light_path>"
+        LOGO_LIGHT_PATH: "<logo_light_path>"
+
         LOGO_DARK_PATH: "<logo_dark_path>"
         BASE_PATH: "<base_path>"
     volumes:
