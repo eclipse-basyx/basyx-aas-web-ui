@@ -11,7 +11,7 @@
                 v-if="assetObject.defaultThumbnail"
                 :src="assetObject.defaultThumbnail.path"
                 max-width="100%"
-                max-height="100%"
+                :max-height="thumbnailMaxHeight"
                 contain
                 style="border-radius: 4px"></v-img>
         </v-list>
@@ -29,6 +29,12 @@
         },
         props: ['assetObject'],
 
+        data() {
+            return {
+                thumbnailMaxHeight: 0,
+            };
+        },
+
         computed: {
             assetInfo() {
                 let assetInfo = {
@@ -37,8 +43,25 @@
                 };
                 return assetInfo;
             },
+
+            screenHeight() {
+                return document.documentElement.clientHeight;
+            },
         },
 
-        methods: {},
+        mounted() {
+            window.addEventListener('resize', this.handleResize);
+            this.handleResize();
+        },
+
+        beforeUnmount() {
+            window.removeEventListener('resize', this.handleResize);
+        },
+
+        methods: {
+            handleResize() {
+                this.thumbnailMaxHeight = 0.3 * this.screenHeight;
+            },
+        },
     });
 </script>
