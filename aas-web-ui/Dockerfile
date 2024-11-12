@@ -1,5 +1,7 @@
 # Build Stage
 FROM node:lts-slim AS build-stage
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
 # Set working directory
 WORKDIR /app
 # Copy the package.json and yarn.lock files
@@ -13,6 +15,8 @@ RUN yarn build && rm -rf node_modules
 
 # Production Stage
 FROM nginx:mainline-alpine3.20-slim AS production-stage
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
 # Set working directory
 WORKDIR /usr/src/app
 # Install jq
