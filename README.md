@@ -203,10 +203,11 @@ aas-web-gui:
         AAS_REPO_PATH: "aas_repo_path"
         SUBMODEL_REPO_PATH: "submodel_repo_path"
         CD_REPO_PATH: "concept_description_repo_path"
+        PRIMARY_COLOR: "<primary_color>"
         PRIMARY_LIGHT_COLOR: "<primary_light_color>"
         PRIMARY_DARK_COLOR: "<primary_dark_color>"
+        LOGO_PATH: "<logo_path>"
         LOGO_LIGHT_PATH: "<logo_light_path>"
-
         LOGO_DARK_PATH: "<logo_dark_path>"
         BASE_PATH: "<base_path>"
     volumes:
