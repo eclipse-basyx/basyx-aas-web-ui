@@ -1329,7 +1329,7 @@
                 let propName = 'Prop_Mode';
                 // console.log('setState: ', state, this.selectedNode)
                 this.submodelElementData.value.forEach((element: any) => {
-                    if (element.idShort == 'Prop_UnitMode') propName = 'Prop_UnitMode';
+                    if (this.checkIdShort(element, 'Prop_UnitMode')) propName = 'Prop_UnitMode';
                 });
                 let path = this.selectedNode.pathFull + '/' + propName + '/value';
                 let content = "'" + mode + "'";
@@ -1357,7 +1357,7 @@
                 let propName = 'Prop_ControlCommand';
                 // console.log('setState: ', state, this.selectedNode)
                 this.submodelElementData.value.forEach((element: any) => {
-                    if (element.idShort == 'Prop_eCommand') propName = 'Prop_eCommand';
+                    if (this.checkIdShort(element, 'Prop_eCommand')) propName = 'Prop_eCommand';
                 });
                 let path = this.selectedNode.pathFull + '/' + propName + '/value';
                 let content = "'" + state + "'";

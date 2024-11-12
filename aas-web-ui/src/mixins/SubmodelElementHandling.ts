@@ -105,6 +105,28 @@ export default defineComponent({
             return string.charAt(0).toUpperCase() + string.slice(1);
         },
 
+        // Function to check if the idShort of a SubmodelElement matches the given idShort
+        checkIdShort(referable: any, idShort: string, startsWith: boolean = false, strict: boolean = false): boolean {
+            if (idShort.trim() === '') return false;
+
+            if (!referable || !referable.idShort || referable.idShort.length === 0) return false;
+
+            if (startsWith) {
+                // For matching e.g. ProductImage{00} with idShort ProductImage
+                if (strict) {
+                    return referable.idShort.startsWith(idShort);
+                } else {
+                    return referable.idShort.toLowerCase().startsWith(idShort.toLowerCase());
+                }
+            } else {
+                if (strict) {
+                    return referable.idShort === idShort;
+                } else {
+                    return referable.idShort.toLowerCase() === idShort.toLowerCase();
+                }
+            }
+        },
+
         // Function to check if the SemanticID of a SubmodelElement matches the given SemanticID
         checkSemanticId(submodelElement: any, semanticId: string): boolean {
             if (semanticId.trim() == '') return false;
@@ -330,7 +352,7 @@ export default defineComponent({
                                             // execute if the Request was successful
                                             const list = response.data;
                                             list.value.forEach((element: any, i: number) => {
-                                                if (element.idShort == SubmodelElement.value) {
+                                                if (this.checkIdShort(element, SubmodelElement.value, false, true)) {
                                                     path += encodeURIComponent('[') + i + encodeURIComponent(']');
                                                 }
                                             });

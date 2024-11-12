@@ -357,11 +357,11 @@
                     documentVersion.meta = documentVersion.value.filter((element: any) => {
                         // return elements with the following idShorts: Language, Title, SubTitle, Summary, KeyWords
                         return (
-                            element.idShort === 'Language' ||
-                            element.idShort === 'Title' ||
-                            element.idShort === 'SubTitle' ||
-                            element.idShort === 'Summary' ||
-                            element.idShort === 'KeyWords'
+                            this.checkIdShort(element, 'Language') ||
+                            this.checkIdShort(element, 'Title') ||
+                            this.checkIdShort(element, 'SubTitle') ||
+                            this.checkIdShort(element, 'Summary') ||
+                            this.checkIdShort(element, 'KeyWords')
                         );
                     });
                     documentVersion.fileToggle = 'preview';

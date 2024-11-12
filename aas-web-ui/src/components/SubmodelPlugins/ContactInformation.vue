@@ -145,29 +145,33 @@
                     // create Contact Person Property
                     let nameParts = [];
                     // find property with the idShort "Title"
-                    let title = contact.value.find((element: any) => element.idShort === 'Title');
+                    let title = contact.value.find((element: any) => this.checkIdShort(element, 'Title'));
                     if (title && title.value && title.value.length > 0) {
                         nameParts.push(title.value[0].text);
                     }
                     // find property with the idShort "FirstName"
-                    let firstName = contact.value.find((element: any) => element.idShort === 'FirstName');
+                    let firstName = contact.value.find((element: any) => this.checkIdShort(element, 'FirstName'));
                     if (firstName && firstName.value && firstName.value.length > 0) {
                         nameParts.push(firstName.value[0].text);
                     }
                     // find property with the idShort "MiddleNames"
-                    let middleNames = contact.value.find((element: any) => element.idShort === 'MiddleNames');
+                    let middleNames = contact.value.find((element: any) => this.checkIdShort(element, 'MiddleNames'));
                     if (middleNames && middleNames.value && middleNames.value.length > 0) {
                         nameParts.push(middleNames.value[0].text);
                     }
                     // find property with the idShort "NameOfContact"
-                    let nameOfContact = contact.value.find((element: any) => element.idShort === 'NameOfContact');
+                    let nameOfContact = contact.value.find((element: any) =>
+                        this.checkIdShort(element, 'NameOfContact')
+                    );
                     if (nameOfContact && nameOfContact.value && nameOfContact.value.length > 0) {
                         nameParts.push(nameOfContact.value[0].text);
                     }
                     // join all name parts with a space
                     let name = nameParts.filter(Boolean).join(' ');
                     // find property with the idShort "AcademicTitle"
-                    let academicTitle = contact.value.find((element: any) => element.idShort === 'AcademicTitle');
+                    let academicTitle = contact.value.find((element: any) =>
+                        this.checkIdShort(element, 'AcademicTitle')
+                    );
                     if (academicTitle && academicTitle.value && academicTitle.value.length > 0) {
                         // add a comma before the academic title if the name is not empty
                         name += (name ? ', ' : '') + academicTitle.value[0].text;
@@ -181,45 +185,45 @@
                         });
                     }
                     // find property with the idShort "Company" and add that element to the generalProperties
-                    let company = contact.value.find((element: any) => element.idShort === 'Company');
+                    let company = contact.value.find((element: any) => this.checkIdShort(element, 'Company'));
                     if (company) {
                         contact.generalProperties.push(company);
                     }
                     // find property with the idShort "Department" and add that element to the generalProperties
-                    let department = contact.value.find((element: any) => element.idShort === 'Department');
+                    let department = contact.value.find((element: any) => this.checkIdShort(element, 'Department'));
                     if (department) {
                         contact.generalProperties.push(department);
                     }
                     // find property with the idShort "RoleOfContactPerson" and add that element to the generalProperties
-                    let roleOfContactPerson = contact.value.find(
-                        (element: any) => element.idShort === 'RoleOfContactPerson'
+                    let roleOfContactPerson = contact.value.find((element: any) =>
+                        this.checkIdShort(element, 'RoleOfContactPerson')
                     );
                     if (roleOfContactPerson) {
                         contact.generalProperties.push(this.translateRole(roleOfContactPerson));
                     }
                     // find property with the idShort "Language" and add that element to the generalProperties
-                    let language = contact.value.find((element: any) => element.idShort === 'Language');
+                    let language = contact.value.find((element: any) => this.checkIdShort(element, 'Language'));
                     if (language) {
                         contact.generalProperties.push(language);
                     }
                     // find property with the idShort "Street" and add that element to the generalProperties
-                    let street = contact.value.find((element: any) => element.idShort === 'Street');
+                    let street = contact.value.find((element: any) => this.checkIdShort(element, 'Street'));
                     if (street) {
                         contact.generalProperties.push(street);
                     }
                     let address = '';
                     // find property with the idShort "NationalCode"
-                    let nationalCode = contact.value.find((element: any) => element.idShort === 'NationalCode');
+                    let nationalCode = contact.value.find((element: any) => this.checkIdShort(element, 'NationalCode'));
                     if (nationalCode) {
                         address += nationalCode.value[0].text + ' ';
                     }
                     // find property with the idShort "Zipcode"
-                    let zipcode = contact.value.find((element: any) => element.idShort === 'Zipcode');
+                    let zipcode = contact.value.find((element: any) => this.checkIdShort(element, 'Zipcode'));
                     if (zipcode) {
                         address += zipcode.value[0].text + ' ';
                     }
                     // find property with the idShort "City"
-                    let cityTown = contact.value.find((element: any) => element.idShort === 'CityTown');
+                    let cityTown = contact.value.find((element: any) => this.checkIdShort(element, 'CityTown'));
                     if (cityTown) {
                         address += cityTown.value[0].text;
                     }
@@ -228,35 +232,39 @@
                         contact.generalProperties.push({ idShort: 'Address', value: address, modelType: 'String' });
                     }
                     // get the Phone Information
-                    let phone = contact.value.find((element: any) => element.idShort === 'Phone');
+                    let phone = contact.value.find((element: any) => this.checkIdShort(element, 'Phone'));
                     if (phone) {
                         // find property with the idShort "TelephoneNumber" and add that element to the generalProperties
-                        let telephoneNumber = phone.value.find((element: any) => element.idShort === 'TelephoneNumber');
+                        let telephoneNumber = phone.value.find((element: any) =>
+                            this.checkIdShort(element, 'TelephoneNumber')
+                        );
                         if (telephoneNumber) {
                             contact.generalProperties.push(telephoneNumber);
                         }
                     }
                     // get the Fax Information
-                    let fax = contact.value.find((element: any) => element.idShort === 'Fax');
+                    let fax = contact.value.find((element: any) => this.checkIdShort(element, 'Fax'));
                     if (fax) {
                         // find property with the idShort "FaxNumber" and add that element to the generalProperties
-                        let faxNumber = fax.value.find((element: any) => element.idShort === 'FaxNumber');
+                        let faxNumber = fax.value.find((element: any) => this.checkIdShort(element, 'FaxNumber'));
                         if (faxNumber) {
                             contact.generalProperties.push(faxNumber);
                         }
                     }
                     // get the Email Information
-                    let email = contact.value.find((element: any) => element.idShort === 'Email');
+                    let email = contact.value.find((element: any) => this.checkIdShort(element, 'Email'));
                     if (email) {
                         // find property with the idShort "EmailAddress" and add that element to the generalProperties
-                        let emailAddress = email.value.find((element: any) => element.idShort === 'EmailAddress');
+                        let emailAddress = email.value.find((element: any) =>
+                            this.checkIdShort(element, 'EmailAddress')
+                        );
                         if (emailAddress) {
                             contact.generalProperties.push(emailAddress);
                         }
                     }
                     // find property with the idShort "AddressOfAdditionalLink" and add that element to the generalProperties
-                    let addressOfAdditionalLink = contact.value.find(
-                        (element: any) => element.idShort === 'AddressOfAdditionalLink'
+                    let addressOfAdditionalLink = contact.value.find((element: any) =>
+                        this.checkIdShort(element, 'AddressOfAdditionalLink')
                     );
                     if (addressOfAdditionalLink) {
                         contact.generalProperties.push(addressOfAdditionalLink);
@@ -272,37 +280,39 @@
                 let vCard = 'BEGIN:VCARD\n';
                 vCard += 'VERSION:3.0\n';
                 // add Contact Person Property to the vCard
-                let contactPerson = contact.generalProperties.find(
-                    (element: any) => element.idShort === 'ContactPerson'
+                let contactPerson = contact.generalProperties.find((element: any) =>
+                    this.checkIdShort(element, 'ContactPerson')
                 );
                 if (contactPerson) {
                     vCard += 'FN:' + contactPerson.value + '\n';
                 }
                 // add Company Property to the vCard
-                let company = contact.generalProperties.find((element: any) => element.idShort === 'Company');
+                let company = contact.generalProperties.find((element: any) => this.checkIdShort(element, 'Company'));
                 if (company) {
                     vCard += 'ORG:' + company.value[0].text + '\n';
                 }
                 // add Department Property to the vCard
-                let department = contact.generalProperties.find((element: any) => element.idShort === 'Department');
+                let department = contact.generalProperties.find((element: any) =>
+                    this.checkIdShort(element, 'Department')
+                );
                 if (department) {
                     vCard += 'TITLE:' + department.value[0].text + '\n';
                 }
                 // add RoleOfContactPerson Property to the vCard
-                let roleOfContactPerson = contact.generalProperties.find(
-                    (element: any) => element.idShort === 'RoleOfContactPerson'
+                let roleOfContactPerson = contact.generalProperties.find((element: any) =>
+                    this.checkIdShort(element, 'RoleOfContactPerson')
                 );
                 if (roleOfContactPerson) {
                     vCard += 'ROLE:' + roleOfContactPerson.value + '\n';
                 }
                 // add Language Property to the vCard
-                let language = contact.generalProperties.find((element: any) => element.idShort === 'Language');
+                let language = contact.generalProperties.find((element: any) => this.checkIdShort(element, 'Language'));
                 if (language) {
                     vCard += 'LANG:' + language.value + '\n';
                 }
                 // add Address Property to the vCard
-                let street = contact.generalProperties.find((element: any) => element.idShort === 'Street');
-                let address = contact.generalProperties.find((element: any) => element.idShort === 'Address');
+                let street = contact.generalProperties.find((element: any) => this.checkIdShort(element, 'Street'));
+                let address = contact.generalProperties.find((element: any) => this.checkIdShort(element, 'Address'));
                 if (address) {
                     vCard +=
                         'ADR;TYPE=WORK:;;' +
@@ -311,35 +321,37 @@
                         ';;;\n';
                 }
                 // get the Phone Information
-                let phone = contact.value.find((element: any) => element.idShort === 'Phone');
+                let phone = contact.value.find((element: any) => this.checkIdShort(element, 'Phone'));
                 if (phone) {
                     // find property with the idShort "TelephoneNumber" and add that element to the vCard
-                    let telephoneNumber = phone.value.find((element: any) => element.idShort === 'TelephoneNumber');
+                    let telephoneNumber = phone.value.find((element: any) =>
+                        this.checkIdShort(element, 'TelephoneNumber')
+                    );
                     if (telephoneNumber) {
                         vCard += 'TEL;TYPE=WORK,VOICE:' + telephoneNumber.value[0].text + '\n';
                     }
                 }
                 // get the Fax Information
-                let fax = contact.value.find((element: any) => element.idShort === 'Fax');
+                let fax = contact.value.find((element: any) => this.checkIdShort(element, 'Fax'));
                 if (fax) {
                     // find property with the idShort "FaxNumber" and add that element to the vCard
-                    let faxNumber = fax.value.find((element: any) => element.idShort === 'FaxNumber');
+                    let faxNumber = fax.value.find((element: any) => this.checkIdShort(element, 'FaxNumber'));
                     if (faxNumber) {
                         vCard += 'TEL;TYPE=WORK,FAX:' + faxNumber.value[0].text + '\n';
                     }
                 }
                 // get the Email Information
-                let email = contact.value.find((element: any) => element.idShort === 'Email');
+                let email = contact.value.find((element: any) => this.checkIdShort(element, 'Email'));
                 if (email) {
                     // find property with the idShort "EmailAddress" and add that element to the vCard
-                    let emailAddress = email.value.find((element: any) => element.idShort === 'EmailAddress');
+                    let emailAddress = email.value.find((element: any) => this.checkIdShort(element, 'EmailAddress'));
                     if (emailAddress) {
                         vCard += 'EMAIL;TYPE=WORK:' + emailAddress.value + '\n';
                     }
                 }
                 // add AddressOfAdditionalLink Property to the vCard
-                let addressOfAdditionalLink = contact.value.find(
-                    (element: any) => element.idShort === 'AddressOfAdditionalLink'
+                let addressOfAdditionalLink = contact.value.find((element: any) =>
+                    this.checkIdShort(element, 'AddressOfAdditionalLink')
                 );
                 if (addressOfAdditionalLink) {
                     vCard += 'URL:' + addressOfAdditionalLink.value + '\n';
