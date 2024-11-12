@@ -2,21 +2,9 @@
     <v-container fluid class="pa-0">
         <!-- Header -->
         <v-card class="mb-4">
-            <v-card-title class="pb-0">
-                {{ nameToDisplay(submodelElementData) }}
+            <v-card-title>
+                <div class="text-subtitle-1">{{ 'Technical Data:' }}</div>
             </v-card-title>
-            <v-card-subtitle>
-                <SemanticID
-                    v-if="
-                        submodelElementData.semanticId &&
-                        submodelElementData.semanticId.keys &&
-                        submodelElementData.semanticId.keys.length > 0
-                    "
-                    :semantic-id-object="submodelElementData.semanticId"></SemanticID>
-            </v-card-subtitle>
-            <v-card-text class="pt-0">
-                {{ descriptionToDisplay(submodelElementData) }}
-            </v-card-text>
         </v-card>
         <!-- Technical Data Collections -->
         <v-card v-if="loading">
@@ -178,13 +166,13 @@
                         :submodel-element-data="technicalProperties"></GenericDataVisu>
                     <template v-else>
                         <v-card border class="mt-3">
-                            <v-table density="comfortable" :hover="true">
-                                <thead class="bg-tableOdd">
+                            <v-table density="comfortable" hover>
+                                <thead class="bg-tableHeader">
                                     <tr>
-                                        <th>SubmodelElement</th>
-                                        <th>Description</th>
-                                        <th>Semantics</th>
-                                        <th>Value</th>
+                                        <th class="text-titleText">SubmodelElement</th>
+                                        <th class="text-titleText">Description</th>
+                                        <th class="text-titleText">Definition</th>
+                                        <th class="text-titleText">Value</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -262,7 +250,6 @@
     import { useTheme } from 'vuetify';
     import GenericDataTableView from '@/components/UIComponents/GenericDataTableView.vue';
     import GenericDataVisu from '@/components/UIComponents/GenericDataVisu.vue';
-    import SemanticID from '@/components/UIComponents/SemanticID.vue';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -270,7 +257,6 @@
     export default defineComponent({
         name: 'TechnicalData',
         components: {
-            SemanticID,
             GenericDataVisu,
             GenericDataTableView,
         },
@@ -298,7 +284,7 @@
                 ManufacturerLogoUrl: '',
                 ProductImageUrl: '',
                 loading: false,
-                tableView: false,
+                tableView: true,
             };
         },
 

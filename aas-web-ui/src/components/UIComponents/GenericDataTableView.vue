@@ -2,11 +2,11 @@
     <template v-if="submodelElementData && Array.isArray(submodelElementData) && submodelElementData.length > 0">
         <template v-for="(submodelElement, index) in submodelElementData" :key="index">
             <template v-if="['SubmodelElementCollection', 'SubmodelElementList'].includes(submodelElement.modelType)">
-                <tr class="bg-tableEven">
+                <tr class="bg-tableOdd">
                     <td colspan="4">
-                        <p class="font-weight-bold py-4" :class="'pl-' + level * 3">
-                            <v-icon class="mr-2" size="small">mdi-folder</v-icon>
-                            <span>{{ nameToDisplay(submodelElement) }}</span>
+                        <p class="text-subtitle-2 py-4" :class="'pl-' + level * 3">
+                            <v-icon class="mr-2" size="small" color="icon">mdi-folder</v-icon>
+                            <span class="text-titleText">{{ nameToDisplay(submodelElement) }}</span>
                         </p>
                     </td>
                 </tr>
@@ -23,7 +23,7 @@
                                 open-delay="250"
                                 :text="descriptionToDisplay(submodelElement)">
                                 <template #activator="{ props }">
-                                    <span v-bind="props">
+                                    <span v-bind="props" class="text-caption">
                                         {{ nameToDisplay(submodelElement) }}
                                     </span>
                                 </template>
@@ -31,19 +31,13 @@
                         </p>
                     </td>
                     <td>
-                        <p>{{ descriptionToDisplay(submodelElement) }}</p>
+                        <p class="text-caption" style="min-width: 100px">{{ descriptionToDisplay(submodelElement) }}</p>
                     </td>
                     <td>
-                        <SemanticID
-                            v-if="
-                                submodelElement.semanticId &&
-                                submodelElement.semanticId.keys &&
-                                submodelElement.semanticId.keys.length > 0
-                            "
-                            :semantic-id-object="submodelElement.semanticId"></SemanticID>
+                        <p class="text-caption" style="min-width: 200px">{{ cdDefinition(submodelElement) }}</p>
                     </td>
                     <td>
-                        <p>
+                        <p class="text-caption">
                             {{ valueToDisplay(submodelElement) }}
                         </p>
                     </td>
@@ -61,12 +55,10 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import SemanticID from '@/components/UIComponents/SemanticID.vue';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
 
     export default defineComponent({
         name: 'GenericDataTableView',
-        components: { SemanticID },
         mixins: [SubmodelElementHandling],
         inheritAttrs: false,
         props: {
