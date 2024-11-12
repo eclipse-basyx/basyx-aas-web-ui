@@ -74,6 +74,10 @@ if [ -n "$KEYCLOAK_CLIENT_ID" ]; then
     jq '.keycloakClientId = env.KEYCLOAK_CLIENT_ID' /usr/src/app/dist/config.json > /tmp/config.json && mv /tmp/config.json /usr/src/app/dist/config.json
 fi
 
+if [ -n "$ENDPOINT_CONFIG_AVAILABLE" ]; then
+    jq '.endpointConfigAvailable = env.ENDPOINT_CONFIG_AVAILABLE' /usr/src/app/dist/config.json > /tmp/config.json && mv /tmp/config.json /usr/src/app/dist/config.json
+fi
+
 if [ -n "$BASE_PATH" ]; then
     echo "====================="
     echo "BASE_PATH: $BASE_PATH"

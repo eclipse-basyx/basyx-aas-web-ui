@@ -19,6 +19,7 @@ export const useEnvStore = defineStore({
         keycloakUrl: '',
         keycloakRealm: '',
         keycloakClientId: '',
+        endpointConfigAvailable: true,
     }),
     getters: {
         getEnvLogoLightPath: (state) => state.logoLightPath,
@@ -37,6 +38,7 @@ export const useEnvStore = defineStore({
         getKeycloakUrl: (state) => state.keycloakUrl,
         getKeycloakRealm: (state) => state.keycloakRealm,
         getKeycloakClientId: (state) => state.keycloakClientId,
+        getEndpointConfigAvailable: (state) => state.endpointConfigAvailable,
     },
     actions: {
         async fetchConfig() {
@@ -59,6 +61,8 @@ export const useEnvStore = defineStore({
                 this.keycloakUrl = config.keycloakUrl;
                 this.keycloakRealm = config.keycloakRealm;
                 this.keycloakClientId = config.keycloakClientId;
+                this.endpointConfigAvailable =
+                    config.endpointConfigAvailable === true || config.endpointConfigAvailable === 'true' ? true : false;
             } catch (error) {
                 console.error('Error fetching config.json: ', error);
             }

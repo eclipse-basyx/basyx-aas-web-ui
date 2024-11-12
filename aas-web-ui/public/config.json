@@ -15,4 +15,5 @@
   "keycloakUrl": "",
   "keycloakRealm": "",
   "keycloakClientId": ""
+  "endpointConfigAvailable": true
 }

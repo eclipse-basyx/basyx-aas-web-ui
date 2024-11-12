@@ -176,6 +176,8 @@ docker run -p 3000:3000 eclipsebasyx/aas-ui
 
 `-e BASE_PATH=<base_path>`
 
+`-e ENDPOINT_CONFIG_AVAILABLE=<true/false>`
+
 4. If you want to use a custom logo, you can mount a folder containing the logo and the favicon.ico to the container by adding the following argument to the run command:
 
 `-v <local_path_to_logo_folder>:/usr/src/app/dist/Logo`
@@ -210,6 +212,7 @@ aas-web-gui:
         LOGO_LIGHT_PATH: "<logo_light_path>"
         LOGO_DARK_PATH: "<logo_dark_path>"
         BASE_PATH: "<base_path>"
+        ENDPOINT_CONFIG_AVAILABLE: "<true/false>"
     volumes:
         - <local_path_to_logo_folder>:/usr/src/app/dist/Logo
 ```
