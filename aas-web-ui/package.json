@@ -6,8 +6,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build && npm run copy-contributor-pics",
-    "copy-contributor-pics": "copyfiles -u 1 src/assets/Contributors/* dist/",
+    "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "lint:check": "eslint ./",
     "lint:fix": "eslint --fix ./"
@@ -17,7 +16,6 @@
     "@mdi/font": "^7.4.47",
     "@vue-leaflet/vue-leaflet": "^0.10.1",
     "apexcharts": "^3.54.1",
-    "copyfiles": "^2.4.1",
     "keycloak-js": "^25.0.4",
     "leaflet": "^1.9.4",
     "lodash": "^4.17.21",
