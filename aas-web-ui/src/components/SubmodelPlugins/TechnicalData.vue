@@ -2,15 +2,8 @@
     <v-container fluid class="pa-0">
         <!-- Header -->
         <v-card class="mb-4">
-            <v-card-title class="pb-0 d-flex justify-space-between align-center">
-                <span>{{ nameToDisplay(submodelElementData) }}</span>
-                <v-switch
-                    v-model="tableView"
-                    color="primary"
-                    label="Table View"
-                    hide-details
-                    density="compact"
-                    class="pa-0"></v-switch>
+            <v-card-title class="pb-0">
+                {{ nameToDisplay(submodelElementData) }}
             </v-card-title>
             <v-card-subtitle>
                 <SemanticID
@@ -31,7 +24,7 @@
                 type="list-item-avatar, divider, list-item-avatar, divider, list-item-avatar, divider, list-item-avatar"
                 :height="288"></v-skeleton-loader>
         </v-card>
-        <v-expansion-panels v-model="panel" multiple>
+        <v-expansion-panels v-else v-model="panel" multiple>
             <!-- General Information -->
             <v-expansion-panel>
                 <v-expansion-panel-title>
@@ -158,12 +151,23 @@
             </v-expansion-panel>
             <!-- Technical Properties -->
             <v-expansion-panel>
-                <v-expansion-panel-title>
+                <v-expansion-panel-title v-slot="{ expanded }">
                     <v-list-item class="pa-0">
                         <template #prepend>
                             <v-icon size="small">mdi-cog-outline</v-icon>
                         </template>
                         <v-list-item-title>{{ 'Technical Properties' }}</v-list-item-title>
+                        <template #append>
+                            <v-switch
+                                v-if="expanded"
+                                v-model="tableView"
+                                color="primary"
+                                label="Table view"
+                                hide-details
+                                density="compact"
+                                class="ml-5"
+                                @click.stop></v-switch>
+                        </template>
                     </v-list-item>
                 </v-expansion-panel-title>
                 <v-divider v-if="panel.includes(2)"></v-divider>
@@ -173,9 +177,9 @@
                         class="mt-3"
                         :submodel-element-data="technicalProperties"></GenericDataVisu>
                     <template v-else>
-                        <v-card variant="outlined" class="mt-3">
+                        <v-card border class="mt-3">
                             <v-table density="comfortable" :hover="true">
-                                <thead class="bg-primary">
+                                <thead class="bg-tableOdd">
                                     <tr>
                                         <th>SubmodelElement</th>
                                         <th>Description</th>
