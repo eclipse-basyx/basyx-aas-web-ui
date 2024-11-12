@@ -2,7 +2,7 @@
     <template v-if="submodelElementData && Array.isArray(submodelElementData) && submodelElementData.length > 0">
         <template v-for="(submodelElement, index) in submodelElementData" :key="index">
             <template v-if="['SubmodelElementCollection', 'SubmodelElementList'].includes(submodelElement.modelType)">
-                <tr>
+                <tr class="bg-tableEven">
                     <td colspan="4">
                         <p class="font-weight-bold py-4" :class="'pl-' + level * 3">
                             <v-icon class="mr-2" size="small">mdi-folder</v-icon>
