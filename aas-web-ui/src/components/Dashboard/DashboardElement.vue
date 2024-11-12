@@ -4,8 +4,8 @@
             <v-col cols="auto" class="pr-0">
                 <v-card-title>{{ localDashboardData.title }}</v-card-title>
             </v-col>
-            <v-col v-if="AASData?.idShort" cols="auto" class="pl-0">
-                <v-chip size="x-small" color="primary" label border>{{ 'AAS: ' + AASData?.idShort }}</v-chip>
+            <v-col v-if="nameToDisplay(AASData)" cols="auto" class="pl-0">
+                <v-chip size="x-small" color="primary" label border>{{ 'AAS: ' + nameToDisplay(AASData) }}</v-chip>
             </v-col>
             <v-spacer></v-spacer>
             <v-col cols="auto" density="compact" justify="end" class="py-0">

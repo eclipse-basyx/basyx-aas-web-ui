@@ -3,7 +3,16 @@
         <v-card color="rgba(0,0,0,0)" elevation="0">
             <v-card-title style="padding: 15px 16px 16px">
                 <!-- TODO: Add Searchfield to filter the Treeview -->
-                AAS Treeview
+                <v-row align="center">
+                    <v-col cols="auto">
+                        <span>AAS Treeview</span>
+                    </v-col>
+                    <v-col v-if="nameToDisplay(SelectedAAS)" cols="auto" class="pl-1">
+                        <v-chip size="x-small" color="primary" label border>{{
+                            'AAS: ' + nameToDisplay(SelectedAAS)
+                        }}</v-chip>
+                    </v-col>
+                </v-row>
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto; height: calc(100vh - 170px)">
