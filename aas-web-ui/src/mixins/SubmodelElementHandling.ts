@@ -352,7 +352,7 @@ export default defineComponent({
                                             // execute if the Request was successful
                                             const list = response.data;
                                             list.value.forEach((element: any, i: number) => {
-                                                if (this.checkIdShort(element, SubmodelElement.value)) {
+                                                if (this.checkIdShort(element, SubmodelElement.value, false, true)) {
                                                     path += encodeURIComponent('[') + i + encodeURIComponent(']');
                                                 }
                                             });
