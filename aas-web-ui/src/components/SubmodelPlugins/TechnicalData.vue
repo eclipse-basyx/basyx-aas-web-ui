@@ -175,7 +175,7 @@
                     <template v-else>
                         <v-card variant="outlined" class="mt-3">
                             <v-table density="comfortable">
-                                <thead>
+                                <thead class="bg-tableOdd">
                                     <tr>
                                         <th>SubmodelElement</th>
                                         <th>Description</th>
