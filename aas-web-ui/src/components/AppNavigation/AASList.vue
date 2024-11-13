@@ -339,6 +339,10 @@
             }
         },
 
+        activated() {
+            this.scrollToSelectedAAS();
+        },
+
         methods: {
             // Function to determine the name of the aas to be displayed
             aasNameToDisplay(AAS: any) {
