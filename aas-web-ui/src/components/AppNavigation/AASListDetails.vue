@@ -4,9 +4,10 @@
         <v-expand-transition>
             <div
                 v-if="showDetailsCard"
-                class="transition-fast-in-fast-out"
+                class="transition-fast-in-fast-out overflow-y-auto"
                 :class="isMobile ? 'v-card--reveal-mobile' : 'v-card--reveal-desktop'"
-                style="z-index: 9000">
+                style="z-index: 9000"
+                :max-height="detailsCardMaxHeight">
                 <v-divider></v-divider>
                 <v-card-title class="bg-detailsHeader pl-3">
                     <v-row align="center" class="pl-4">
@@ -85,6 +86,7 @@
         data() {
             return {
                 assetInformation: null as any, // Asset Information Object
+                detailsCardMaxHeight: 0,
             };
         },
 
@@ -92,6 +94,10 @@
             // Check if the current Device is a Mobile Device
             isMobile() {
                 return this.navigationStore.getIsMobile;
+            },
+
+            screenHeight() {
+                return document.documentElement.clientHeight;
             },
         },
 
@@ -102,6 +108,15 @@
                     this.fetchAssetDetails();
                 }
             },
+        },
+
+        mounted() {
+            window.addEventListener('resize', this.handleResize);
+            this.handleResize();
+        },
+
+        beforeUnmount() {
+            window.removeEventListener('resize', this.handleResize);
         },
 
         methods: {
@@ -135,6 +150,32 @@
                         this.assetInformation = assetInformation;
                     }
                 });
+            },
+
+            handleResize() {
+                this.calcDetailsCardMaxHeight();
+            },
+
+            calcDetailsCardMaxHeight() {
+                const toolbarHeight = document.getElementsByClassName('v-toolbar')[0]?.clientHeight as number;
+                const footerHeight = document.getElementsByClassName('v-footer')[0]?.clientHeight as number;
+                const closeSidebarHeight = document.getElementById('closeAasList')?.clientHeight as number;
+
+                const availableHeight = (this.screenHeight -
+                    (toolbarHeight ? toolbarHeight : 0) -
+                    (closeSidebarHeight ? closeSidebarHeight : 0) -
+                    (footerHeight ? footerHeight : 0)) as number;
+
+                if (this.screenHeight < 600) {
+                    // xs display
+                    this.detailsCardMaxHeight = 1 * availableHeight;
+                } else if (this.screenHeight >= 600 && this.screenHeight < 1280) {
+                    // sm & md display
+                    this.detailsCardMaxHeight = 0.5 * availableHeight;
+                } else if (this.screenHeight >= 1280) {
+                    // lg & xl & xxl display
+                    this.detailsCardMaxHeight = 0.4 * availableHeight;
+                }
             },
         },
     });

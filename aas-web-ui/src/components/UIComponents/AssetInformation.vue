@@ -61,6 +61,10 @@
 
         methods: {
             handleResize() {
+                this.calcThumbnailMaxHeight();
+            },
+
+            calcThumbnailMaxHeight() {
                 const toolbarHeight = document.getElementsByClassName('v-toolbar')[0]?.clientHeight as number;
                 const footerHeight = document.getElementsByClassName('v-footer')[0]?.clientHeight as number;
                 const closeSidebarHeight = document.getElementById('closeAasList')?.clientHeight as number;
