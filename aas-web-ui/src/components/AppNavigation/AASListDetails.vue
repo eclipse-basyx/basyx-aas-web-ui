@@ -29,6 +29,11 @@
                     </v-row>
                 </v-card-title>
                 <v-divider></v-divider>
+                <!-- Asset Information -->
+                <AssetInformation
+                    v-if="assetInformation && Object.keys(assetInformation).length > 0"
+                    :asset-object="assetInformation"></AssetInformation>
+                <v-divider v-if="assetInformation" style="border-width: 2px"></v-divider>
                 <!-- AAS Details -->
                 <v-list v-if="detailsObject" lines="one" nav class="bg-detailsCard">
                     <!-- AAS Identification -->
@@ -46,11 +51,6 @@
                         :description-title="'Description'"
                         :small="false"></DescriptionElement>
                 </v-list>
-                <v-divider v-if="assetInformation"></v-divider>
-                <!-- Asset Information -->
-                <AssetInformation
-                    v-if="assetInformation && Object.keys(assetInformation).length > 0"
-                    :asset-object="assetInformation"></AssetInformation>
             </div>
         </v-expand-transition>
     </v-container>
