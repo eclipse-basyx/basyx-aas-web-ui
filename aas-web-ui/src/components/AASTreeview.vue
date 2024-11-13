@@ -7,7 +7,7 @@
                     <v-col cols="auto">
                         <span>AAS Treeview</span>
                     </v-col>
-                    <v-col v-if="nameToDisplay(SelectedAAS)" cols="auto" class="pl-1">
+                    <v-col v-if="nameToDisplay(SelectedAAS)" cols="auto" class="pl-1 pt-2">
                         <v-chip size="x-small" color="primary" label border>{{
                             'AAS: ' + nameToDisplay(SelectedAAS)
                         }}</v-chip>
@@ -169,16 +169,19 @@
                 this.submodelData = []; // reset Treeview Data
                 // retrieve AAS from endpoint
                 const shellHref = this.extractEndpointHref(this.selectedAAS, 'AAS-3.0');
-                let path = shellHref + '/submodel-refs';
-                let context = 'retrieving Submodel References';
+                let path = shellHref;
+                let context = 'retrieving AAS Data';
                 let disableMessage = false;
                 this.getRequest(path, context, disableMessage)
                     .then(async (response: any) => {
                         if (response.success) {
                             // execute if the Request was successful
                             try {
+                                let AAS = response.data;
+                                AAS.endpoints = this.SelectedAAS.endpoints;
+                                this.aasStore.dispatchSelectedAAS(AAS); // dispatch the selected AAS to the Store
                                 // request submodels from the retrieved AAS (top layer of the Treeview)
-                                let submodelData = await this.requestSubmodels(response.data.result);
+                                let submodelData = await this.requestSubmodels(AAS.submodels);
                                 // set the isActive prop of the initialNode if it exists and the initialUpdate flag is set
                                 if (this.initialUpdate && this.initialNode) {
                                     let expandedSubmodelData = this.expandTree(submodelData, this.initialNode); // Update the Treeview to expand until the initially set node is reached
