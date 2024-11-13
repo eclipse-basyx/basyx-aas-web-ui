@@ -1,10 +1,9 @@
 <template>
     <v-container fluid class="pa-0">
         <v-card color="card" elevation="0">
-            <v-card-title v-if="!isMobile" style="padding: 15px 16px 16px"> Submodel List </v-card-title>
-            <v-card-title v-else style="padding: 15px 16px 16px">
+            <v-card-title style="padding: 15px 16px 16px">
                 <v-row align="center">
-                    <v-col cols="auto" class="pa-0">
+                    <v-col v-if="isMobile" cols="auto" class="pa-0">
                         <v-btn class="ml-2" variant="plain" icon="mdi-chevron-left" @click="backToAASList()"></v-btn>
                     </v-col>
                     <v-col cols="auto">
