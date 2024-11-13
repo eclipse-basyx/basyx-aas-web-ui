@@ -358,6 +358,25 @@
                         // execute if the AAS Registry is found
                         // sort data by identification id (ascending) and store it in the AASData variable
                         let registeredAAS = response.data.result;
+
+                        // check if the aas Query is set in the URL and if so load the AAS
+                        const searchParams = new URL(window.location.href).searchParams;
+                        const aasEndpoint = searchParams.get('aas');
+                        if (aasEndpoint) {
+                            registeredAAS.forEach((AAS: any) => {
+                                if (
+                                    AAS['endpoints'].find((endpoint: any) => {
+                                        return endpoint.protocolInformation.href === aasEndpoint;
+                                    })
+                                ) {
+                                    // dispatch AAS to the Store
+                                    this.aasStore.dispatchSelectedAAS(AAS);
+                                    // trigger the AAS Selected Event
+                                    this.navigationStore.dispatchTriggerAASSelected();
+                                }
+                            });
+                        }
+
                         let sortedData = registeredAAS.sort((a: { [x: string]: number }, b: { [x: string]: number }) =>
                             a['id'] > b['id'] ? 1 : -1
                         );
