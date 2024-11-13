@@ -1,39 +1,37 @@
 <template>
     <v-container class="pa-0" fluid>
         <!-- AAS Details Card (only visible if the Information Button is pressed on an AAS) -->
-        <v-expand-transition>
-            <div
-                v-if="showDetailsCard"
-                class="transition-fast-in-fast-out overflow-y-auto"
-                :class="isMobile ? 'v-card--reveal-mobile' : 'v-card--reveal-desktop'"
-                style="z-index: 9000"
-                :max-height="detailsCardMaxHeight">
-                <v-divider></v-divider>
-                <v-card-title class="bg-detailsHeader pl-3">
-                    <v-row align="center" class="pl-4">
-                        <!-- AAS Status -->
-                        <div class="text-caption">{{ 'Status: ' }}</div>
-                        <div
-                            class="text-caption ml-1"
-                            :class="detailsObject.status == 'online' ? 'text-success' : 'text-error'">
-                            {{ detailsObject.status }}
-                        </div>
-                        <v-spacer></v-spacer>
-                        <!-- Close Button -->
-                        <v-btn
-                            icon="mdi-close-circle-outline"
-                            size="small"
-                            variant="plain"
-                            style="z-index: 2000; margin-right: -8px"
-                            @click="closeDetails()"></v-btn>
-                    </v-row>
-                </v-card-title>
-                <v-divider></v-divider>
+        <v-card
+            v-if="showDetailsCard"
+            :height="detailsCardHeight"
+            :class="isMobile ? 'v-card--reveal-mobile' : 'v-card--reveal-desktop'">
+            <v-divider></v-divider>
+            <v-card-title class="bg-detailsHeader pl-3">
+                <v-row align="center" class="pl-4">
+                    <!-- AAS Status -->
+                    <div class="text-caption">{{ 'Status: ' }}</div>
+                    <div
+                        class="text-caption ml-1"
+                        :class="detailsObject.status == 'online' ? 'text-success' : 'text-error'">
+                        {{ detailsObject.status }}
+                    </div>
+                    <v-spacer></v-spacer>
+                    <!-- Close Button -->
+                    <v-btn
+                        icon="mdi-close-circle-outline"
+                        size="small"
+                        variant="plain"
+                        style="z-index: 2000; margin-right: -8px"
+                        @click="closeDetails()"></v-btn>
+                </v-row>
+            </v-card-title>
+            <v-divider></v-divider>
+            <v-card-text class="pa-0">
                 <!-- Asset Information -->
-                <AssetInformation
-                    v-if="assetInformation && Object.keys(assetInformation).length > 0"
-                    :asset-object="assetInformation"></AssetInformation>
-                <v-divider v-if="assetInformation" style="border-width: 2px"></v-divider>
+                <!-- <AssetInformation
+                v-if="assetInformation && Object.keys(assetInformation).length > 0"
+                :asset-object="assetInformation"></AssetInformation> -->
+                <!-- <v-divider v-if="assetInformation" style="border-width: 2px"></v-divider> -->
                 <!-- AAS Details -->
                 <v-list v-if="detailsObject" lines="one" nav class="bg-detailsCard">
                     <!-- AAS Identification -->
@@ -43,7 +41,18 @@
                         :model-type="'AAS'"
                         :id-type="'Identification (ID)'"
                         :name-type="'idShort'"></IdentificationElement>
-                    <v-divider v-if="detailsObject.description && detailsObject.description.length > 0"></v-divider>
+                    <v-divider
+                        v-if="detailsObject.displayName && detailsObject.displayName.length > 0"
+                        class="mt-2"></v-divider>
+                    <!-- SubmodelELement DisplayName -->
+                    <DisplayNameElement
+                        v-if="detailsObject.displayName && detailsObject.displayName.length > 0"
+                        :display-name-object="detailsObject.displayName"
+                        :display-name-title="'DisplayName'"
+                        :small="false"></DisplayNameElement>
+                    <v-divider
+                        v-if="detailsObject.description && detailsObject.description.length > 0"
+                        class="mt-2"></v-divider>
                     <!-- AAS Description -->
                     <DescriptionElement
                         v-if="detailsObject.description && detailsObject.description.length > 0"
@@ -51,8 +60,8 @@
                         :description-title="'Description'"
                         :small="false"></DescriptionElement>
                 </v-list>
-            </div>
-        </v-expand-transition>
+            </v-card-text>
+        </v-card>
     </v-container>
 </template>
 
@@ -60,6 +69,7 @@
     import { defineComponent } from 'vue';
     import AssetInformation from '@/components/UIComponents/AssetInformation.vue';
     import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
+    import DisplayNameElement from '@/components/UIComponents/DisplayNameElement.vue';
     import IdentificationElement from '@/components/UIComponents/IdentificationElement.vue';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
@@ -69,6 +79,7 @@
         name: 'AASListDetails',
         components: {
             IdentificationElement,
+            DisplayNameElement,
             DescriptionElement,
             AssetInformation,
         },
@@ -86,7 +97,8 @@
         data() {
             return {
                 assetInformation: null as any, // Asset Information Object
-                detailsCardMaxHeight: 0,
+                detailsCardHeight: 0,
+                detailsCardTextHeight: 0,
             };
         },
 
@@ -107,6 +119,10 @@
                 if (this.showDetailsCard) {
                     this.fetchAssetDetails();
                 }
+            },
+
+            showDetailsCard() {
+                this.calcDetailsCardHeight();
             },
         },
 
@@ -153,13 +169,14 @@
             },
 
             handleResize() {
-                this.calcDetailsCardMaxHeight();
+                this.calcDetailsCardHeight();
             },
 
-            calcDetailsCardMaxHeight() {
+            calcDetailsCardHeight() {
                 const toolbarHeight = document.getElementsByClassName('v-toolbar')[0]?.clientHeight as number;
                 const footerHeight = document.getElementsByClassName('v-footer')[0]?.clientHeight as number;
                 const closeSidebarHeight = document.getElementById('closeAasList')?.clientHeight as number;
+                const cardTitleHeight = document.getElementsByClassName('v-card-title')[0]?.clientHeight as number;
 
                 const availableHeight = (this.screenHeight -
                     (toolbarHeight ? toolbarHeight : 0) -
@@ -168,30 +185,44 @@
 
                 if (this.screenHeight < 600) {
                     // xs display
-                    this.detailsCardMaxHeight = 1 * availableHeight;
+
+                    this.detailsCardHeight = 1 * availableHeight;
                 } else if (this.screenHeight >= 600 && this.screenHeight < 1280) {
                     // sm & md display
-                    this.detailsCardMaxHeight = 0.5 * availableHeight;
+                    this.detailsCardHeight = 0.5 * availableHeight;
                 } else if (this.screenHeight >= 1280) {
                     // lg & xl & xxl display
-                    this.detailsCardMaxHeight = 0.4 * availableHeight;
+                    this.detailsCardHeight = 0.4 * availableHeight;
                 }
+
+                this.detailsCardTextHeight = this.detailsCardHeight - cardTitleHeight;
+
+                console.log('screenHeight', this.screenHeight);
+                console.log('detailsCardHeight', this.detailsCardHeight);
+                console.log('detailsCardTextHeight', this.detailsCardTextHeight);
             },
         },
     });
 </script>
 
-<style>
+<style lang="css" scoped>
     .v-card--reveal-mobile {
         bottom: 0px;
-        opacity: 0.96;
+        /* opacity: 0.96; */
         position: absolute;
         width: 100%;
+        z-index: 9000;
+        /* overflow-y: auto; */
     }
     .v-card--reveal-desktop {
         bottom: 48px;
-        opacity: 0.96;
+        /* opacity: 0.96; */
         position: absolute;
         width: 100%;
+        z-index: 9000;
+        /* overflow-y: auto; */
+    }
+    .v-card-text {
+        max-height: 100%;
     }
 </style>
