@@ -43,8 +43,9 @@
             <!-- AAS List -->
             <v-list nav class="bg-card card pa-0">
                 <v-virtual-scroll
+                    ref="virtualScroll"
                     :items="AASData"
-                    item-height="48"
+                    :item-height="56"
                     :height="isMobile ? 'calc(100svh - 170px)' : 'calc(100vh - 218px)'"
                     class="pb-2 bg-card">
                     <template #default="{ item }">
@@ -270,6 +271,11 @@
                 return this.navigationStore.getTriggerAASListReload;
             },
 
+            // get trigger signal for AAS List scroll from store
+            triggerAASListScroll() {
+                return this.navigationStore.getTriggerAASListScroll;
+            },
+
             // Get the AAS Repository URL from the Store
             aasRepoURL() {
                 return this.navigationStore.getAASRepoURL;
@@ -303,6 +309,11 @@
                     this.navigationStore.dispatchTriggerAASListReload(false);
                 }
             },
+
+            // watch for changes in the trigger for AAS List scroll
+            triggerAASListScroll() {
+                this.scrollToSelectedAAS();
+            },
         },
 
         mounted() {
@@ -330,6 +341,10 @@
                 // console.log('Status Check is set: ', statusCheck);
                 this.navigationStore.dispatchUpdateStatusCheck(statusCheck === 'true');
             }
+        },
+
+        activated() {
+            this.scrollToSelectedAAS();
         },
 
         methods: {
@@ -372,6 +387,7 @@
                         });
                         this.AASData = Object.freeze(sortedData); // store the sorted data in the AASData variable
                         this.unfilteredAASData = sortedData; // make a copy of the sorted data and store it in the unfilteredAASData variable
+                        this.scrollToSelectedAAS(); // scroll to the selected AAS
                         if (this.statusCheck) {
                             this.checkAASStatus(); // check the AAS Status
                         }
@@ -649,6 +665,22 @@
             showDeleteDialog(AAS: any) {
                 this.deleteDialogShowing = true;
                 this.aasToDelete = AAS;
+            },
+
+            async scrollToSelectedAAS() {
+                // Find the index of the selected item
+                const index = this.AASData.findIndex((item: any) => this.isSelected(item));
+                const virtualScrollRef = this.$refs.virtualScroll as any;
+
+                if (index !== -1 && virtualScrollRef) {
+                    const intervalId = setInterval(() => {
+                        if (virtualScrollRef.$el.querySelector('.v-virtual-scroll__container').children.length > 0) {
+                            // Access the scrollable container
+                            virtualScrollRef.scrollToIndex(index);
+                            clearInterval(intervalId);
+                        }
+                    }, 50);
+                }
             },
         },
     });

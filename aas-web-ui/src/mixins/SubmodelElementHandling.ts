@@ -393,6 +393,7 @@ export default defineComponent({
                     // dispatch the AAS set by the ReferenceElement to the store
                     this.aasStore.dispatchSelectedAAS(referencedAAS);
                     this.navigationStore.dispatchTriggerAASSelected();
+                    this.navigationStore.dispatchTriggerAASListScroll();
                     // Request the referenced SubmodelElement
                     const elementPath = path;
                     const context = 'retrieving SubmodelElement';
@@ -441,6 +442,7 @@ export default defineComponent({
             // console.log('AAS:', aas, 'Endpoint:', endpoint);
             this.aasStore.dispatchSelectedAAS(aas);
             this.navigationStore.dispatchTriggerAASSelected();
+            this.navigationStore.dispatchTriggerAASListScroll();
             this.aasStore.dispatchNode({});
         },
 
