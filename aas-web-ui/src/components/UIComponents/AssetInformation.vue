@@ -71,7 +71,7 @@
                 const availableHeight = (this.screenHeight -
                     (toolbarHeight ? toolbarHeight : 0) -
                     (titleAasListHeight ? titleAasListHeight : 0) -
-                    (assetInformationIdentificationHeight ? closeSidebarHeight : 0) -
+                    (assetInformationIdentificationHeight ? assetInformationIdentificationHeight : 0) -
                     (closeSidebarHeight ? closeSidebarHeight : 0) -
                     (footerHeight ? footerHeight : 0)) as number;
 
