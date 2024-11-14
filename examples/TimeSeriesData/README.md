@@ -48,12 +48,7 @@ The username and password for InfluxDB are `admin` and `influxpassword`.
 
 Prerequisites:
 
-1. Copy the Organization ID from the InfluxDB UI (http://localhost:8086) and edit the `Endpoint` Property of the `LinkedSegment` (see screenshots below). The Endpoint Property can be found here: http://localhost:3000/?aas=http://localhost:8081/shells/VGltZVNlcmllc0RlbW8x&path=http://localhost:8081/submodels/aHR0cHM6Ly9hZG1pbi1zaGVsbC5pby9pZHRhL1RpbWVTZXJpZXMvMS8x/submodel-elements/Segments.LinkedSegment.Endpoint
-
-![InfluxDB Organization ID](../../Docs/Figs/InfluxDBOrgID.png)
-![AAS Web UI Endpoint Property](../../Docs/Figs/AASWebUIEndpointProp.png)
-
-2. Check if the query property of the `LinkedSegment` corrosponds to the data you want to fetch from the database. If not, change the query property to the desired query (see images below).
+1. Check if the query property of the `LinkedSegment` corrosponds to the data you want to fetch from the database. If not, change the query property to the desired query (see images below).
 
 ![InfluxDB Data Explorer](../../Docs/Figs/InfluxDBQuery.png)
 ![AAS Web UI query property](../../Docs/Figs//AASWebUIQuery.png)
