@@ -1,67 +1,72 @@
 <template>
     <v-container class="pa-0" fluid>
         <!-- AAS Details Card (only visible if the Information Button is pressed on an AAS) -->
-        <v-card
-            v-if="showDetailsCard"
-            :height="detailsCardHeight"
-            :class="isMobile ? 'v-card--reveal-mobile' : 'v-card--reveal-desktop'">
-            <v-divider></v-divider>
-            <v-card-title class="bg-detailsHeader pl-3">
-                <v-row align="center" class="pl-4">
-                    <!-- AAS Status -->
-                    <div class="text-caption">{{ 'Status: ' }}</div>
-                    <div
-                        class="text-caption ml-1"
-                        :class="detailsObject.status == 'online' ? 'text-success' : 'text-error'">
-                        {{ detailsObject.status }}
-                    </div>
-                    <v-spacer></v-spacer>
-                    <!-- Close Button -->
-                    <v-btn
-                        icon="mdi-close-circle-outline"
-                        size="small"
-                        variant="plain"
-                        style="z-index: 2000; margin-right: -8px"
-                        @click="closeDetails()"></v-btn>
-                </v-row>
-            </v-card-title>
-            <v-divider></v-divider>
-            <v-card-text class="pa-0">
-                <!-- Asset Information -->
-                <!-- <AssetInformation
-                v-if="assetInformation && Object.keys(assetInformation).length > 0"
-                :asset-object="assetInformation"></AssetInformation> -->
-                <!-- <v-divider v-if="assetInformation" style="border-width: 2px"></v-divider> -->
-                <!-- AAS Details -->
-                <v-list v-if="detailsObject" lines="one" nav class="bg-detailsCard">
-                    <!-- AAS Identification -->
-                    <IdentificationElement
-                        class="mb-2"
-                        :identification-object="detailsObject"
-                        :model-type="'AAS'"
-                        :id-type="'Identification (ID)'"
-                        :name-type="'idShort'"></IdentificationElement>
-                    <v-divider
-                        v-if="detailsObject.displayName && detailsObject.displayName.length > 0"
-                        class="mt-2"></v-divider>
-                    <!-- SubmodelELement DisplayName -->
-                    <DisplayNameElement
-                        v-if="detailsObject.displayName && detailsObject.displayName.length > 0"
-                        :display-name-object="detailsObject.displayName"
-                        :display-name-title="'DisplayName'"
-                        :small="false"></DisplayNameElement>
-                    <v-divider
-                        v-if="detailsObject.description && detailsObject.description.length > 0"
-                        class="mt-2"></v-divider>
-                    <!-- AAS Description -->
-                    <DescriptionElement
-                        v-if="detailsObject.description && detailsObject.description.length > 0"
-                        :description-object="detailsObject.description"
-                        :description-title="'Description'"
-                        :small="false"></DescriptionElement>
-                </v-list>
-            </v-card-text>
-        </v-card>
+        <v-expand-transition>
+            <v-card
+                v-if="showDetailsCard"
+                flat
+                tile
+                color="detailsCard"
+                style="display: flex; flex-direction: column; max-height: 75vh"
+                :class="isMobile ? 'v-card--reveal-mobile' : 'v-card--reveal-desktop'">
+                <v-divider></v-divider>
+                <v-card-title class="bg-detailsHeader pl-3">
+                    <v-row align="center" class="pl-4">
+                        <!-- AAS Status -->
+                        <div class="text-caption">{{ 'Status: ' }}</div>
+                        <div
+                            class="text-caption ml-1"
+                            :class="detailsObject.status == 'online' ? 'text-success' : 'text-error'">
+                            {{ detailsObject.status }}
+                        </div>
+                        <v-spacer></v-spacer>
+                        <!-- Close Button -->
+                        <v-btn
+                            icon="mdi-close-circle-outline"
+                            size="small"
+                            variant="plain"
+                            style="z-index: 2000; margin-right: -8px"
+                            @click="closeDetails()"></v-btn>
+                    </v-row>
+                </v-card-title>
+                <v-divider></v-divider>
+                <v-card-text class="pa-0" style="overflow-y: auto">
+                    <!-- Asset Information -->
+                    <AssetInformation
+                        v-if="assetInformation && Object.keys(assetInformation).length > 0"
+                        :asset-object="assetInformation"></AssetInformation>
+                    <v-divider v-if="assetInformation"></v-divider>
+                    <!-- AAS Details -->
+                    <v-list v-if="detailsObject" lines="one" nav class="bg-detailsCard">
+                        <!-- AAS Identification -->
+                        <IdentificationElement
+                            class="mb-2"
+                            :identification-object="detailsObject"
+                            :model-type="'AAS'"
+                            :id-type="'Identification (ID)'"
+                            :name-type="'idShort'"></IdentificationElement>
+                        <v-divider
+                            v-if="detailsObject.displayName && detailsObject.displayName.length > 0"
+                            class="mt-2"></v-divider>
+                        <!-- SubmodelELement DisplayName -->
+                        <DisplayNameElement
+                            v-if="detailsObject.displayName && detailsObject.displayName.length > 0"
+                            :display-name-object="detailsObject.displayName"
+                            :display-name-title="'DisplayName'"
+                            :small="false"></DisplayNameElement>
+                        <v-divider
+                            v-if="detailsObject.description && detailsObject.description.length > 0"
+                            class="mt-2"></v-divider>
+                        <!-- AAS Description -->
+                        <DescriptionElement
+                            v-if="detailsObject.description && detailsObject.description.length > 0"
+                            :description-object="detailsObject.description"
+                            :description-title="'Description'"
+                            :small="false"></DescriptionElement>
+                    </v-list>
+                </v-card-text>
+            </v-card>
+        </v-expand-transition>
     </v-container>
 </template>
 
@@ -84,7 +89,13 @@
             AssetInformation,
         },
         mixins: [RequestHandling, SubmodelElementHandling],
-        props: ['detailsObject', 'showDetailsCard'], // Props from the parent component with the AAS Details Object and the boolean to show the AAS Details Card
+        props: {
+            detailsObject: {
+                type: Object,
+                default: () => ({}), // Object with the AAS Details
+            },
+            showDetailsCard: Boolean, // Boolean to show the AAS Details Card
+        },
 
         setup() {
             const navigationStore = useNavigationStore();
@@ -98,7 +109,6 @@
             return {
                 assetInformation: null as any, // Asset Information Object
                 detailsCardHeight: 0,
-                detailsCardTextHeight: 0,
             };
         },
 
@@ -114,15 +124,12 @@
         },
 
         watch: {
-            detailsObject() {
+            showDetailsCard() {
                 // If the AAS Details Card is opened, request asset-information
                 if (this.showDetailsCard) {
                     this.fetchAssetDetails();
+                    this.calcDetailsCardHeight();
                 }
-            },
-
-            showDetailsCard() {
-                this.calcDetailsCardHeight();
             },
         },
 
@@ -164,6 +171,7 @@
                         }
                         // console.log('asset information thumbnail: ', assetInformation.defaultThumbnail);
                         this.assetInformation = assetInformation;
+                        console.log('assetInformation: ', this.assetInformation);
                     }
                 });
             },
@@ -176,7 +184,6 @@
                 const toolbarHeight = document.getElementsByClassName('v-toolbar')[0]?.clientHeight as number;
                 const footerHeight = document.getElementsByClassName('v-footer')[0]?.clientHeight as number;
                 const closeSidebarHeight = document.getElementById('closeAasList')?.clientHeight as number;
-                const cardTitleHeight = document.getElementsByClassName('v-card-title')[0]?.clientHeight as number;
 
                 const availableHeight = (this.screenHeight -
                     (toolbarHeight ? toolbarHeight : 0) -
@@ -194,12 +201,6 @@
                     // lg & xl & xxl display
                     this.detailsCardHeight = 0.4 * availableHeight;
                 }
-
-                this.detailsCardTextHeight = this.detailsCardHeight - cardTitleHeight;
-
-                console.log('screenHeight', this.screenHeight);
-                console.log('detailsCardHeight', this.detailsCardHeight);
-                console.log('detailsCardTextHeight', this.detailsCardTextHeight);
             },
         },
     });
@@ -221,8 +222,5 @@
         width: 100%;
         z-index: 9000;
         /* overflow-y: auto; */
-    }
-    .v-card-text {
-        max-height: 100%;
     }
 </style>

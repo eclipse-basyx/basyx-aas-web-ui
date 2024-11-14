@@ -2,7 +2,7 @@
     <v-container class="pa-0" fluid>
         <v-card color="card" elevation="0">
             <!-- Title Bar in the AAS List -->
-            <v-card-title id="titleAasList" class="pl-1 pr-3">
+            <v-card-title class="pl-1 pr-3">
                 <v-row align="center">
                     <!-- Reload Button -->
                     <v-col cols="auto" class="pr-0">
@@ -523,10 +523,6 @@
                 const shellHrefAASfromList = this.extractEndpointHref(AAS, 'AAS-3.0');
                 const shellHrefSelectedAAS = this.extractEndpointHref(this.selectedAAS, 'AAS-3.0');
                 let isSelected = shellHrefAASfromList === shellHrefSelectedAAS;
-                if (isSelected && this.showDetailsCard) {
-                    // update data of detailsCard
-                    this.detailsObject = AAS;
-                }
                 return isSelected;
             },
 
@@ -534,7 +530,14 @@
             showAASDetails(AAS: any) {
                 // console.log('Show Details: ', AAS);
                 this.detailsObject = AAS;
-                if (AAS) this.showDetailsCard = true;
+                if (this.showDetailsCard) {
+                    this.showDetailsCard = false;
+                    this.$nextTick(() => {
+                        this.showDetailsCard = true;
+                    });
+                } else {
+                    if (AAS) this.showDetailsCard = true;
+                }
             },
 
             // Function to remove the AAS from the AAS Registry
