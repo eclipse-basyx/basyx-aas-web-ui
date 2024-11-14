@@ -299,6 +299,13 @@
                     this.navigationStore.dispatchTriggerAASListReload(false);
                 }
             },
+
+            // watch for changes in the selected AAS
+            selectedAAS() {
+                if (this.selectedAAS && Object.keys(this.selectedAAS).length > 0) {
+                    this.showDetailsCard = false;
+                }
+            },
         },
 
         mounted() {
