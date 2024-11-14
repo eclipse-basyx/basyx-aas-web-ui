@@ -2,11 +2,18 @@
     <v-container class="pa-0" fluid>
         <!-- AAS Details Card (only visible if the Information Button is pressed on an AAS) -->
         <v-expand-transition>
-            <div
+            <v-card
                 v-if="showDetailsCard"
-                class="transition-fast-in-fast-out"
-                :class="isMobile ? 'v-card--reveal-mobile' : 'v-card--reveal-desktop'"
-                style="z-index: 9000">
+                flat
+                tile
+                color="detailsCard"
+                :style="{
+                    display: 'flex',
+                    'flex-direction': 'column',
+                    height: isMobile ? 'calc(100vh - 104px)' : '',
+                    'max-height': isMobile ? '' : '50vh',
+                }"
+                :class="isMobile ? 'v-card--reveal-mobile' : 'v-card--reveal-desktop'">
                 <v-divider></v-divider>
                 <v-card-title class="bg-detailsHeader pl-3">
                     <v-row align="center" class="pl-4">
@@ -28,29 +35,42 @@
                     </v-row>
                 </v-card-title>
                 <v-divider></v-divider>
-                <!-- AAS Details -->
-                <v-list v-if="detailsObject" lines="one" nav class="bg-detailsCard">
-                    <!-- AAS Identification -->
-                    <IdentificationElement
-                        class="mb-2"
-                        :identification-object="detailsObject"
-                        :model-type="'AAS'"
-                        :id-type="'Identification (ID)'"
-                        :name-type="'idShort'"></IdentificationElement>
-                    <v-divider v-if="detailsObject.description && detailsObject.description.length > 0"></v-divider>
-                    <!-- AAS Description -->
-                    <DescriptionElement
-                        v-if="detailsObject.description && detailsObject.description.length > 0"
-                        :description-object="detailsObject.description"
-                        :description-title="'Description'"
-                        :small="false"></DescriptionElement>
-                </v-list>
-                <v-divider v-if="assetInformation"></v-divider>
-                <!-- Asset Information -->
-                <AssetInformation
-                    v-if="assetInformation && Object.keys(assetInformation).length > 0"
-                    :asset-object="assetInformation"></AssetInformation>
-            </div>
+                <v-card-text class="pa-0" style="overflow-y: auto">
+                    <!-- Asset Information -->
+                    <AssetInformation
+                        v-if="assetInformation && Object.keys(assetInformation).length > 0"
+                        :asset-object="assetInformation"></AssetInformation>
+                    <v-divider v-if="assetInformation"></v-divider>
+                    <!-- AAS Details -->
+                    <v-list v-if="detailsObject" lines="one" nav class="bg-detailsCard">
+                        <!-- AAS Identification -->
+                        <IdentificationElement
+                            class="mb-2"
+                            :identification-object="detailsObject"
+                            :model-type="'AAS'"
+                            :id-type="'Identification (ID)'"
+                            :name-type="'idShort'"></IdentificationElement>
+                        <v-divider
+                            v-if="detailsObject.displayName && detailsObject.displayName.length > 0"
+                            class="mt-2"></v-divider>
+                        <!-- SubmodelELement DisplayName -->
+                        <DisplayNameElement
+                            v-if="detailsObject.displayName && detailsObject.displayName.length > 0"
+                            :display-name-object="detailsObject.displayName"
+                            :display-name-title="'DisplayName'"
+                            :small="false"></DisplayNameElement>
+                        <v-divider
+                            v-if="detailsObject.description && detailsObject.description.length > 0"
+                            class="mt-2"></v-divider>
+                        <!-- AAS Description -->
+                        <DescriptionElement
+                            v-if="detailsObject.description && detailsObject.description.length > 0"
+                            :description-object="detailsObject.description"
+                            :description-title="'Description'"
+                            :small="false"></DescriptionElement>
+                    </v-list>
+                </v-card-text>
+            </v-card>
         </v-expand-transition>
     </v-container>
 </template>
@@ -59,6 +79,7 @@
     import { defineComponent } from 'vue';
     import AssetInformation from '@/components/UIComponents/AssetInformation.vue';
     import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
+    import DisplayNameElement from '@/components/UIComponents/DisplayNameElement.vue';
     import IdentificationElement from '@/components/UIComponents/IdentificationElement.vue';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
@@ -68,11 +89,18 @@
         name: 'AASListDetails',
         components: {
             IdentificationElement,
+            DisplayNameElement,
             DescriptionElement,
             AssetInformation,
         },
         mixins: [RequestHandling, SubmodelElementHandling],
-        props: ['detailsObject', 'showDetailsCard'], // Props from the parent component with the AAS Details Object and the boolean to show the AAS Details Card
+        props: {
+            detailsObject: {
+                type: Object,
+                default: () => ({}), // Object with the AAS Details
+            },
+            showDetailsCard: Boolean, // Boolean to show the AAS Details Card
+        },
 
         setup() {
             const navigationStore = useNavigationStore();
@@ -96,7 +124,7 @@
         },
 
         watch: {
-            detailsObject() {
+            showDetailsCard() {
                 // If the AAS Details Card is opened, request asset-information
                 if (this.showDetailsCard) {
                     this.fetchAssetDetails();
@@ -140,17 +168,17 @@
     });
 </script>
 
-<style>
+<style lang="css" scoped>
     .v-card--reveal-mobile {
         bottom: 0px;
-        opacity: 0.96;
         position: absolute;
         width: 100%;
+        z-index: 9000;
     }
     .v-card--reveal-desktop {
         bottom: 48px;
-        opacity: 0.96;
         position: absolute;
         width: 100%;
+        z-index: 9000;
     }
 </style>

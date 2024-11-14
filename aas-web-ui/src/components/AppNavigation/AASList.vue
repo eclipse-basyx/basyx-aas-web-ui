@@ -310,6 +310,13 @@
                 }
             },
 
+            // watch for changes in the selected AAS
+            selectedAAS() {
+                if (this.selectedAAS && Object.keys(this.selectedAAS).length > 0) {
+                    this.showDetailsCard = false;
+                }
+            },
+
             // watch for changes in the trigger for AAS List scroll
             triggerAASListScroll() {
                 this.scrollToSelectedAAS();
@@ -538,10 +545,6 @@
                 const shellHrefAASfromList = this.extractEndpointHref(AAS, 'AAS-3.0');
                 const shellHrefSelectedAAS = this.extractEndpointHref(this.selectedAAS, 'AAS-3.0');
                 let isSelected = shellHrefAASfromList === shellHrefSelectedAAS;
-                if (isSelected && this.showDetailsCard) {
-                    // update data of detailsCard
-                    this.detailsObject = AAS;
-                }
                 return isSelected;
             },
 
@@ -549,7 +552,14 @@
             showAASDetails(AAS: any) {
                 // console.log('Show Details: ', AAS);
                 this.detailsObject = AAS;
-                if (AAS) this.showDetailsCard = true;
+                if (this.showDetailsCard) {
+                    this.showDetailsCard = false;
+                    this.$nextTick(() => {
+                        this.showDetailsCard = true;
+                    });
+                } else {
+                    if (AAS) this.showDetailsCard = true;
+                }
             },
 
             // Function to remove the AAS from the AAS Registry
