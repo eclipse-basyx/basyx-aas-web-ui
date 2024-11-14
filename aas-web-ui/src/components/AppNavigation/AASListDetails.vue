@@ -27,14 +27,14 @@
                     </v-row>
                 </v-card-title>
                 <v-divider></v-divider>
-                <v-card-text class="pa-0 bg-detailsCard">
+                <v-card-text class="pa-0">
                     <!-- Asset Information -->
                     <AssetInformation
                         v-if="assetInformation && Object.keys(assetInformation).length > 0"
                         :asset-object="assetInformation"></AssetInformation>
                     <v-divider v-if="assetInformation" style="border-width: 2px"></v-divider>
                     <!-- AAS Details -->
-                    <v-list v-if="detailsObject" lines="one" nav>
+                    <v-list v-if="detailsObject" lines="one" nav class="bg-detailsCard">
                         <!-- AAS Identification -->
                         <IdentificationElement
                             class="mb-2"
@@ -119,13 +119,11 @@
                 // If the AAS Details Card is opened, request asset-information
                 if (this.showDetailsCard) {
                     this.fetchAssetDetails();
-                    this.calcDetailsCardHeight();
                 }
             },
+
             showDetailsCard() {
-                if (this.showDetailsCard) {
-                    this.calcDetailsCardHeight();
-                }
+                this.calcDetailsCardHeight();
             },
         },
 
@@ -201,17 +199,17 @@
 </script>
 
 <style lang="css" scoped>
-    .v-card {
+    .v-card--reveal-mobile {
         position: absolute;
-        opacity: 0.96;
+        bottom: 0px;
         width: 100%;
         z-index: 9000;
     }
-    .v-card--reveal-mobile {
-        bottom: 0px;
-    }
     .v-card--reveal-desktop {
+        position: absolute;
         bottom: 48px;
+        width: 100%;
+        z-index: 9000;
     }
     .v-card-text {
         position: absolute;
