@@ -7,7 +7,12 @@
                 flat
                 tile
                 color="detailsCard"
-                style="display: flex; flex-direction: column; max-height: 75vh"
+                :style="{
+                    display: 'flex',
+                    'flex-direction': 'column',
+                    height: isMobile ? 'calc(100vh - 104px)' : '',
+                    'max-height': isMobile ? '' : '50vh',
+                }"
                 :class="isMobile ? 'v-card--reveal-mobile' : 'v-card--reveal-desktop'">
                 <v-divider></v-divider>
                 <v-card-title class="bg-detailsHeader pl-3">
@@ -108,7 +113,6 @@
         data() {
             return {
                 assetInformation: null as any, // Asset Information Object
-                detailsCardHeight: 0,
             };
         },
 
@@ -117,10 +121,6 @@
             isMobile() {
                 return this.navigationStore.getIsMobile;
             },
-
-            screenHeight() {
-                return document.documentElement.clientHeight;
-            },
         },
 
         watch: {
@@ -128,18 +128,8 @@
                 // If the AAS Details Card is opened, request asset-information
                 if (this.showDetailsCard) {
                     this.fetchAssetDetails();
-                    this.calcDetailsCardHeight();
                 }
             },
-        },
-
-        mounted() {
-            window.addEventListener('resize', this.handleResize);
-            this.handleResize();
-        },
-
-        beforeUnmount() {
-            window.removeEventListener('resize', this.handleResize);
         },
 
         methods: {
@@ -174,33 +164,6 @@
                         console.log('assetInformation: ', this.assetInformation);
                     }
                 });
-            },
-
-            handleResize() {
-                this.calcDetailsCardHeight();
-            },
-
-            calcDetailsCardHeight() {
-                const toolbarHeight = document.getElementsByClassName('v-toolbar')[0]?.clientHeight as number;
-                const footerHeight = document.getElementsByClassName('v-footer')[0]?.clientHeight as number;
-                const closeSidebarHeight = document.getElementById('closeAasList')?.clientHeight as number;
-
-                const availableHeight = (this.screenHeight -
-                    (toolbarHeight ? toolbarHeight : 0) -
-                    (closeSidebarHeight ? closeSidebarHeight : 0) -
-                    (footerHeight ? footerHeight : 0)) as number;
-
-                if (this.screenHeight < 600) {
-                    // xs display
-
-                    this.detailsCardHeight = 1 * availableHeight;
-                } else if (this.screenHeight >= 600 && this.screenHeight < 1280) {
-                    // sm & md display
-                    this.detailsCardHeight = 0.5 * availableHeight;
-                } else if (this.screenHeight >= 1280) {
-                    // lg & xl & xxl display
-                    this.detailsCardHeight = 0.4 * availableHeight;
-                }
             },
         },
     });
