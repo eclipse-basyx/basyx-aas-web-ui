@@ -172,18 +172,14 @@
 <style lang="css" scoped>
     .v-card--reveal-mobile {
         bottom: 0px;
-        /* opacity: 0.96; */
         position: absolute;
         width: 100%;
         z-index: 9000;
-        /* overflow-y: auto; */
     }
     .v-card--reveal-desktop {
         bottom: 48px;
-        /* opacity: 0.96; */
         position: absolute;
         width: 100%;
         z-index: 9000;
-        /* overflow-y: auto; */
     }
 </style>
