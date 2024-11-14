@@ -161,7 +161,6 @@
                         }
                         // console.log('asset information thumbnail: ', assetInformation.defaultThumbnail);
                         this.assetInformation = assetInformation;
-                        console.log('assetInformation: ', this.assetInformation);
                     }
                 });
             },
