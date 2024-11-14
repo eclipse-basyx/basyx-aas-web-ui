@@ -10,10 +10,13 @@ import 'vuetify/styles';
 // Composables
 import { createVuetify } from 'vuetify';
 
-export function initializeVuetify(primaryColor: string) {
+export function initializeVuetify(primaryLightColor: string, primaryDarkColor: string) {
     // check if primary color is set
-    if (!primaryColor) {
-        primaryColor = '#0cb2f0';
+    if (!primaryLightColor) {
+        primaryLightColor = '#0cb2f0';
+    }
+    if (!primaryDarkColor) {
+        primaryDarkColor = '#F69222';
     }
 
     // https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides
@@ -23,7 +26,7 @@ export function initializeVuetify(primaryColor: string) {
                 light: {
                     dark: false,
                     colors: {
-                        primary: primaryColor,
+                        primary: primaryLightColor,
                         background: '#FFFFFF',
                         appBar: '#F5F5F5',
                         navigationMenu: '#FFFFFF',
@@ -42,16 +45,19 @@ export function initializeVuetify(primaryColor: string) {
                         subtitleText: '#626262',
                         normalText: '#000000',
                         lamp: '#7A7A7A',
+                        tableHeader: '#EBEBEB',
                         tableOdd: '#F5F5F5',
                         tableEven: '#FAFAFA',
                         invertedButton: '#121212',
                         lightButton: '#5E5E5E',
+                        icon: '#7A7A7A',
+                        titleText: '#212121',
                     },
                 },
                 dark: {
                     dark: true,
                     colors: {
-                        primary: primaryColor,
+                        primary: primaryDarkColor,
                         background: '#121212',
                         appBar: '#1E1E1E',
                         navigationMenu: '#1E1E1E',
@@ -70,10 +76,13 @@ export function initializeVuetify(primaryColor: string) {
                         subtitleText: '#A5A5A5',
                         normalText: '#FFFFFF',
                         lamp: '#959595',
+                        tableHeader: '#313131',
                         tableOdd: '#272727',
                         tableEven: '#212121',
                         invertedButton: '#F0F0F0',
                         lightButton: '#AFAFAF',
+                        icon: '#BDBDBD',
+                        titleText: '#FFFFFF',
                     },
                 },
             },

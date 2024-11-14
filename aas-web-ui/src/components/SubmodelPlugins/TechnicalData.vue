@@ -54,14 +54,14 @@
                                 <td>
                                     <!-- Files -->
                                     <v-img
-                                        v-if="generalProperty.idShort === 'ManufacturerLogo'"
+                                        v-if="checkIdShort(generalProperty, 'ManufacturerLogo')"
                                         :src="ManufacturerLogoUrl"
                                         max-width="100%"
                                         max-height="100%"
                                         contain
                                         class="my-2"></v-img>
                                     <v-img
-                                        v-else-if="generalProperty.idShort === 'ProductImage'"
+                                        v-else-if="checkIdShort(generalProperty, 'ProductImage')"
                                         :src="ProductImageUrl"
                                         max-width="100%"
                                         max-height="100%"
@@ -139,17 +139,51 @@
             </v-expansion-panel>
             <!-- Technical Properties -->
             <v-expansion-panel>
-                <v-expansion-panel-title>
+                <v-expansion-panel-title v-slot="{ expanded }">
                     <v-list-item class="pa-0">
                         <template #prepend>
                             <v-icon size="small">mdi-cog-outline</v-icon>
                         </template>
                         <v-list-item-title>{{ 'Technical Properties' }}</v-list-item-title>
+                        <template #append>
+                            <v-switch
+                                v-if="expanded"
+                                v-model="tableView"
+                                color="primary"
+                                label="Table view"
+                                hide-details
+                                density="compact"
+                                class="ml-5"
+                                @click.stop></v-switch>
+                        </template>
                     </v-list-item>
                 </v-expansion-panel-title>
                 <v-divider v-if="panel.includes(2)"></v-divider>
                 <v-expansion-panel-text>
-                    <GenericDataVisu class="mt-3" :submodel-element-data="technicalProperties"></GenericDataVisu>
+                    <GenericDataVisu
+                        v-if="!tableView"
+                        class="mt-3"
+                        :submodel-element-data="technicalProperties"></GenericDataVisu>
+                    <template v-else>
+                        <v-card border class="mt-3">
+                            <v-table density="comfortable" hover>
+                                <thead class="bg-tableHeader">
+                                    <tr>
+                                        <th class="text-titleText">SubmodelElement</th>
+                                        <th class="text-titleText">Description</th>
+                                        <th class="text-titleText">Definition</th>
+                                        <th class="text-titleText">Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <GenericDataTableView
+                                        class="mt-3"
+                                        :submodel-element-data="technicalProperties"
+                                        :level="0"></GenericDataTableView>
+                                </tbody>
+                            </v-table>
+                        </v-card>
+                    </template>
                 </v-expansion-panel-text>
             </v-expansion-panel>
             <!-- Further Information -->
@@ -214,6 +248,7 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
+    import GenericDataTableView from '@/components/UIComponents/GenericDataTableView.vue';
     import GenericDataVisu from '@/components/UIComponents/GenericDataVisu.vue';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
@@ -223,6 +258,7 @@
         name: 'TechnicalData',
         components: {
             GenericDataVisu,
+            GenericDataTableView,
         },
         mixins: [RequestHandling, SubmodelElementHandling],
         props: ['submodelElementData'],
@@ -248,6 +284,7 @@
                 ManufacturerLogoUrl: '',
                 ProductImageUrl: '',
                 loading: false,
+                tableView: true,
             };
         },
 
@@ -289,7 +326,7 @@
                 });
                 if (!generalInformation) return;
                 generalInformation.value.forEach((generalProperty: any) => {
-                    if (generalProperty.idShort === 'ManufacturerLogo') {
+                    if (this.checkIdShort(generalProperty.idShort, 'ManufacturerLogo')) {
                         this.getImageUrl(generalProperty, 'ManufacturerLogoUrl');
                     }
                     if (generalProperty.idShort.includes('ProductImage')) {

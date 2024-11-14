@@ -70,11 +70,7 @@
                 <v-list-item>
                     <template #prepend>
                         <v-avatar>
-                            <v-img :src="contributor.image">
-                                <template #sources>
-                                    <source :srcset="'src/assets/Contributors/' + contributor.image" />
-                                </template>
-                            </v-img>
+                            <v-img :src="getImageUrl(contributor.image)"></v-img>
                         </v-avatar>
                     </template>
                     <template #append>
@@ -184,6 +180,12 @@
                     },
                 ] as Array<any>,
             };
+        },
+
+        methods: {
+            getImageUrl(imageName: string) {
+                return new URL(`../assets/Contributors/${imageName}`, import.meta.url).href;
+            },
         },
     });
 </script>

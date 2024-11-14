@@ -1,18 +1,17 @@
 <template>
     <v-container fluid class="pa-0">
         <v-card color="card" elevation="0">
-            <v-card-title v-if="!isMobile" style="padding: 15px 16px 16px"> Submodel List </v-card-title>
-            <v-card-title v-else style="padding: 15px 16px 16px">
+            <v-card-title style="padding: 15px 16px 16px">
                 <v-row align="center">
-                    <v-col cols="auto" class="pa-0">
+                    <v-col v-if="isMobile" cols="auto" class="pa-0">
                         <v-btn class="ml-2" variant="plain" icon="mdi-chevron-left" @click="backToAASList()"></v-btn>
                     </v-col>
                     <v-col cols="auto">
                         <span>Submodel List</span>
                     </v-col>
-                    <v-col v-if="SelectedAAS?.idShort" cols="auto" class="pl-1">
+                    <v-col v-if="nameToDisplay(SelectedAAS)" cols="auto" class="pl-1 pt-2">
                         <v-chip size="x-small" color="primary" label border>{{
-                            'AAS: ' + SelectedAAS?.idShort
+                            'AAS: ' + nameToDisplay(SelectedAAS)
                         }}</v-chip>
                     </v-col>
                 </v-row>
@@ -98,6 +97,11 @@
         },
 
         computed: {
+            // Check if the current Theme is dark
+            isDark() {
+                return this.theme.global.current.value.dark;
+            },
+
             // get selected AAS from Store
             SelectedAAS() {
                 return this.aasStore.getSelectedAAS;
@@ -125,12 +129,11 @@
 
             // returns the primary color of the current theme
             primaryColor() {
-                return this.$vuetify.theme.themes.light.colors.primary;
-            },
-
-            // Check if the current Theme is dark
-            isDark() {
-                return this.theme.global.current.value.dark;
+                if (this.isDark) {
+                    return this.$vuetify.theme.themes.dark.colors.primary;
+                } else {
+                    return this.$vuetify.theme.themes.light.colors.primary;
+                }
             },
         },
 
@@ -176,16 +179,19 @@
                 this.submodelData = []; // reset Submdoel List Data
                 // retrieve AAS from endpoint
                 const shellHref = this.extractEndpointHref(this.SelectedAAS, 'AAS-3.0');
-                let path = shellHref + '/submodel-refs';
-                let context = 'retrieving Submodel References';
+                let path = shellHref;
+                let context = 'retrieving AAS Data';
                 let disableMessage = false;
                 this.getRequest(path, context, disableMessage)
                     .then(async (response: any) => {
                         if (response.success) {
                             // execute if the Request was successful
                             try {
+                                let AAS = response.data;
+                                AAS.endpoints = this.SelectedAAS.endpoints;
+                                this.aasStore.dispatchSelectedAAS(AAS); // dispatch the selected AAS to the Store
                                 // request submodels from the retrieved AAS
-                                let submodelData = await this.requestSubmodels(response.data.result);
+                                let submodelData = await this.requestSubmodels(AAS.submodels);
                                 if (this.initialUpdate && this.initialNode) {
                                     // set the isActive Property of the initial Node to true and dispatch it to the store
                                     submodelData.forEach((submodel: any) => {

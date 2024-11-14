@@ -14,9 +14,9 @@
                     <v-col cols="auto">
                         <span>Visualization</span>
                     </v-col>
-                    <v-col v-if="SelectedAAS?.idShort" cols="auto" class="pl-1">
+                    <v-col v-if="nameToDisplay(SelectedAAS)" cols="auto" class="pl-1">
                         <v-chip size="x-small" color="primary" label border>{{
-                            'AAS: ' + SelectedAAS?.idShort
+                            'AAS: ' + nameToDisplay(SelectedAAS)
                         }}</v-chip>
                     </v-col>
                 </v-row>

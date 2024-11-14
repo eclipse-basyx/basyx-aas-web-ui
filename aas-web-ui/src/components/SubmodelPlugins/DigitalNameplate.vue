@@ -44,7 +44,7 @@
                             <td>
                                 <!-- URIOfTheProduct -->
                                 <a
-                                    v-if="productProperty.idShort == 'URIOfTheProduct'"
+                                    v-if="checkIdShort(productProperty.idShort, 'URIOfTheProduct')"
                                     :href="productProperty.value"
                                     target="_blank"
                                     class="text-caption"
@@ -119,7 +119,7 @@
                             <td>
                                 <!-- Company Logo -->
                                 <v-img
-                                    v-if="manufacturerProperty.idShort == 'CompanyLogo'"
+                                    v-if="checkIdShort(manufacturerProperty, 'CompanyLogo')"
                                     :src="companyLogoUrl"
                                     max-width="100%"
                                     max-height="100%"
@@ -290,63 +290,63 @@
                 // console.log('Extract Product Properties:', digitalNameplateData);
                 // find property with the idShort "URIOfTheProduct" and add that element to the productProperties array
                 let uriOfTheProduct = digitalNameplateData.submodelElements.find(
-                    (element: any) => element.idShort === 'URIOfTheProduct'
+                    (element: any) => this.checkIdShort(element, 'URIOfTheProduct')
                 );
                 if (uriOfTheProduct) {
                     productProperties.push(uriOfTheProduct);
                 }
                 // find property with the idShort "ManufacturerProductDesignation" and add that element to the productProperties array
                 let manufacturerProductDesignation = digitalNameplateData.submodelElements.find(
-                    (element: any) => element.idShort === 'ManufacturerProductDesignation'
+                    (element: any) => this.checkIdShort(element, 'ManufacturerProductDesignation')
                 );
                 if (manufacturerProductDesignation) {
                     productProperties.push(manufacturerProductDesignation);
                 }
                 // find property with the idShort "ManufacturerProductRoot" and add that element to the productProperties array
                 let manufacturerProductRoot = digitalNameplateData.submodelElements.find(
-                    (element: any) => element.idShort === 'ManufacturerProductRoot'
+                    (element: any) => this.checkIdShort(element, 'ManufacturerProductRoot')
                 );
                 if (manufacturerProductRoot) {
                     productProperties.push(manufacturerProductRoot);
                 }
                 // find property with the idShort "ManufacturerProductFamily" and add that element to the productProperties array
                 let manufacturerProductFamily = digitalNameplateData.submodelElements.find(
-                    (element: any) => element.idShort === 'ManufacturerProductFamily'
+                    (element: any) => this.checkIdShort(element, 'ManufacturerProductFamily')
                 );
                 if (manufacturerProductFamily) {
                     productProperties.push(manufacturerProductFamily);
                 }
                 // find property with the idShort "ManufacturerProductType" and add that element to the productProperties array
                 let manufacturerProductType = digitalNameplateData.submodelElements.find(
-                    (element: any) => element.idShort === 'ManufacturerProductType'
+                    (element: any) => this.checkIdShort(element, 'ManufacturerProductType')
                 );
                 if (manufacturerProductType) {
                     productProperties.push(manufacturerProductType);
                 }
                 // find property with the idShort "ProductArticleNumberOfManufacturer" and add that element to the productProperties array
                 let productArticleNumberOfManufacturer = digitalNameplateData.submodelElements.find(
-                    (element: any) => element.idShort === 'ProductArticleNumberOfManufacturer'
+                    (element: any) => this.checkIdShort(element, 'ProductArticleNumberOfManufacturer')
                 );
                 if (productArticleNumberOfManufacturer) {
                     productProperties.push(productArticleNumberOfManufacturer);
                 }
                 // find property with the idShort "SerialNumber" and add that element to the productProperties array
                 let serialNumber = digitalNameplateData.submodelElements.find(
-                    (element: any) => element.idShort === 'SerialNumber'
+                    (element: any) => this.checkIdShort(element, 'SerialNumber')
                 );
                 if (serialNumber) {
                     productProperties.push(serialNumber);
                 }
                 // find property with the idShort "YearOfConstruction" and add that element to the productProperties array
                 let yearOfConstruction = digitalNameplateData.submodelElements.find(
-                    (element: any) => element.idShort === 'YearOfConstruction'
+                    (element: any) => this.checkIdShort(element, 'YearOfConstruction')
                 );
                 if (yearOfConstruction) {
                     productProperties.push(yearOfConstruction);
                 }
                 // find property with the idShort "DateOfManufacture" and add that element to the productProperties array
                 let dateOfManufacture = digitalNameplateData.submodelElements.find(
-                    (element: any) => element.idShort === 'DateOfManufacture'
+                    (element: any) => this.checkIdShort(element, 'DateOfManufacture')
                 );
                 if (dateOfManufacture) {
                     productProperties.push(dateOfManufacture);
@@ -354,21 +354,21 @@
                 let versions = [];
                 // find property with the idShort "HardwareVersion" and add that element to the productProperties array
                 let hardwareVersion = digitalNameplateData.submodelElements.find(
-                    (element: any) => element.idShort === 'HardwareVersion'
+                    (element: any) => this.checkIdShort(element, 'HardwareVersion')
                 );
                 if (hardwareVersion) {
                     versions.push(hardwareVersion);
                 }
                 // find property with the idShort "FirmwareVersion" and add that element to the productProperties array
                 let firmwareVersion = digitalNameplateData.submodelElements.find(
-                    (element: any) => element.idShort === 'FirmwareVersion'
+                    (element: any) => this.checkIdShort(element, 'FirmwareVersion')
                 );
                 if (firmwareVersion) {
                     versions.push(firmwareVersion);
                 }
                 // find property with the idShort "SoftwareVersion" and add that element to the productProperties array
                 let softwareVersion = digitalNameplateData.submodelElements.find(
-                    (element: any) => element.idShort === 'SoftwareVersion'
+                    (element: any) => this.checkIdShort(element, 'SoftwareVersion')
                 );
                 if (softwareVersion) {
                     versions.push(softwareVersion);
@@ -386,7 +386,7 @@
                 // console.log('Extract Manufacturer Properties:', digitalNameplateData);
                 // find property with the idShort "CompanyLogo" and add that element to the manufacturerProperties array
                 let companyLogo = digitalNameplateData.submodelElements.find(
-                    (element: any) => element.idShort === 'CompanyLogo'
+                    (element: any) => this.checkIdShort(element, 'CompanyLogo')
                 );
                 if (companyLogo) {
                     this.getImageUrl(companyLogo, 'companyLogoUrl');
@@ -394,37 +394,37 @@
                 }
                 // find property with the idShort "ManufacturerName" and add that element to the manufacturerProperties array
                 let manufacturerName = digitalNameplateData.submodelElements.find(
-                    (element: any) => element.idShort === 'ManufacturerName'
+                    (element: any) => this.checkIdShort(element, 'ManufacturerName')
                 );
                 if (manufacturerName) {
                     manufacturerProperties.push(manufacturerName);
                 }
                 // get the Contact Information
                 let contactInformation = digitalNameplateData.submodelElements.find(
-                    (element: any) => element.idShort === 'ContactInformation'
+                    (element: any) => this.checkIdShort(element, 'ContactInformation')
                 );
                 if (contactInformation) {
                     // console.log('Contact Information:', contactInformation)
                     // find property with the idShort "Street" and add that element to the manufacturerProperties array
-                    let street = contactInformation.value.find((element: any) => element.idShort === 'Street');
+                    let street = contactInformation.value.find((element: any) => this.checkIdShort(element, 'Street'));
                     if (street) {
                         manufacturerProperties.push(street);
                     }
                     let address = '';
                     // find property with the idShort "NationalCode" and add that element to the manufacturerProperties array
                     let nationalCode = contactInformation.value.find(
-                        (element: any) => element.idShort === 'NationalCode'
+                        (element: any) => this.checkIdShort(element, 'NationalCode')
                     );
                     if (nationalCode) {
                         address += nationalCode.value[0].text + ' ';
                     }
                     // find property with the idShort "Zipcode" and add that element to the manufacturerProperties array
-                    let zipcode = contactInformation.value.find((element: any) => element.idShort === 'Zipcode');
+                    let zipcode = contactInformation.value.find((element: any) => this.checkIdShort(element, 'Zipcode'));
                     if (zipcode) {
                         address += zipcode.value[0].text + ' ';
                     }
                     // find property with the idShort "City" and add that element to the manufacturerProperties array
-                    let cityTown = contactInformation.value.find((element: any) => element.idShort === 'CityTown');
+                    let cityTown = contactInformation.value.find((element: any) => this.checkIdShort(element, 'CityTown'));
                     if (cityTown) {
                         address += cityTown.value[0].text;
                     }
@@ -433,28 +433,28 @@
                         manufacturerProperties.push({ idShort: 'Address', value: address, modelType: 'String' });
                     }
                     // get the Phone Information
-                    let phone = contactInformation.value.find((element: any) => element.idShort === 'Phone');
+                    let phone = contactInformation.value.find((element: any) => this.checkIdShort(element, 'Phone'));
                     if (phone) {
                         // find property with the idShort "TelephoneNumber" and add that element to the manufacturerProperties array
-                        let telephoneNumber = phone.value.find((element: any) => element.idShort === 'TelephoneNumber');
+                        let telephoneNumber = phone.value.find((element: any) => this.checkIdShort(element, 'TelephoneNumber'));
                         if (telephoneNumber) {
                             manufacturerProperties.push(telephoneNumber);
                         }
                     }
                     // get the Fax Information
-                    let fax = contactInformation.value.find((element: any) => element.idShort === 'Fax');
+                    let fax = contactInformation.value.find((element: any) => this.checkIdShort(element, 'Fax'));
                     if (fax) {
                         // find property with the idShort "FaxNumber" and add that element to the manufacturerProperties array
-                        let faxNumber = fax.value.find((element: any) => element.idShort === 'FaxNumber');
+                        let faxNumber = fax.value.find((element: any) => this.checkIdShort(element, 'FaxNumber'));
                         if (faxNumber) {
                             manufacturerProperties.push(faxNumber);
                         }
                     }
                     // get the Email Information
-                    let email = contactInformation.value.find((element: any) => element.idShort === 'Email');
+                    let email = contactInformation.value.find((element: any) => this.checkIdShort(element, 'Email'));
                     if (email) {
                         // find property with the idShort "EmailAddress" and add that element to the manufacturerProperties array
-                        let emailAddress = email.value.find((element: any) => element.idShort === 'EmailAddress');
+                        let emailAddress = email.value.find((element: any) => this.checkIdShort(element, 'EmailAddress'));
                         if (emailAddress) {
                             manufacturerProperties.push(emailAddress);
                         }
@@ -462,7 +462,7 @@
                 }
                 // find property with the idShort "OrderCodeOfManufacturer" and add that element to the manufacturerProperties array
                 let orderCodeOfManufacturer = digitalNameplateData.submodelElements.find(
-                    (element: any) => element.idShort === 'OrderCodeOfManufacturer'
+                    (element: any) => this.checkIdShort(element, 'OrderCodeOfManufacturer')
                 );
                 if (orderCodeOfManufacturer) {
                     manufacturerProperties.push(orderCodeOfManufacturer);
@@ -474,15 +474,15 @@
             // Function to extract the Markings
             extractMarkings(digitalNameplateData: any) {
                 let markings = digitalNameplateData.submodelElements.find(
-                    (element: any) => element.idShort === 'Markings'
+                    (element: any) => this.checkIdShort(element, 'Markings')
                 );
                 let formattedMarkings = [] as Array<any>;
                 if (markings?.value) {
                     markings.value.forEach((marking: any) => {
                         // find property with the idShort "MarkingFile"
-                        let markingFile = marking.value.find((element: any) => element.idShort === 'MarkingFile');
+                        let markingFile = marking.value.find((element: any) => this.checkIdShort(element, 'MarkingFile'));
                         // find property with the idShort "MarkingName"
-                        let markingName = marking.value.find((element: any) => element.idShort === 'MarkingName');
+                        let markingName = marking.value.find((element: any) => this.checkIdShort(element, 'MarkingName'));
                         // create the formatted Marking Object
                         let formattedMarking = {
                             idShort: marking.idShort,
@@ -501,7 +501,7 @@
             // Function to extract the Asset Specific Properties
             extractAssetSpecificProperties(digitalNameplateData: any) {
                 let assetSpecificProperties = digitalNameplateData.submodelElements.find(
-                    (element: any) => element.idShort === 'AssetSpecificProperties'
+                    (element: any) => this.checkIdShort(element, 'AssetSpecificProperties')
                 );
                 if (assetSpecificProperties) {
                     // console.log('Asset Specific Properties:', assetSpecificProperties);
@@ -513,35 +513,35 @@
                 let vCard = 'BEGIN:VCARD\nVERSION:3.0\n';
 
                 let manufacturerName = manufacturerProperties.find(
-                    (element: any) => element.idShort === 'ManufacturerName'
+                    (element: any) => this.checkIdShort(element, 'ManufacturerName')
                 );
                 if (manufacturerName) {
                     vCard += 'FN:' + manufacturerName.value[0].text + '\n';
                 }
 
-                let companyLogo = manufacturerProperties.find((element: any) => element.idShort === 'CompanyLogo');
+                let companyLogo = manufacturerProperties.find((element: any) => this.checkIdShort(element, 'CompanyLogo'));
                 if (companyLogo) {
                     vCard += 'PHOTO;MEDIATYPE=image/jpeg:' + companyLogo.value[0].text + '\n';
                 }
 
-                let address = manufacturerProperties.find((element: any) => element.idShort === 'Address');
+                let address = manufacturerProperties.find((element: any) => this.checkIdShort(element, 'Address'));
                 if (address) {
                     vCard += 'ADR;TYPE=WORK:;;' + address.value + ';;;\n';
                 }
 
                 let telephoneNumber = manufacturerProperties.find(
-                    (element: any) => element.idShort === 'TelephoneNumber'
+                    (element: any) => this.checkIdShort(element, 'TelephoneNumber')
                 );
                 if (telephoneNumber) {
                     vCard += 'TEL;TYPE=WORK,VOICE:' + telephoneNumber.value[0].text + '\n';
                 }
 
-                let faxNumber = manufacturerProperties.find((element: any) => element.idShort === 'FaxNumber');
+                let faxNumber = manufacturerProperties.find((element: any) => this.checkIdShort(element, 'FaxNumber'));
                 if (faxNumber) {
                     vCard += 'TEL;TYPE=WORK,FAX:' + faxNumber.value[0].text + '\n';
                 }
 
-                let emailAddress = manufacturerProperties.find((element: any) => element.idShort === 'EmailAddress');
+                let emailAddress = manufacturerProperties.find((element: any) => this.checkIdShort(element, 'EmailAddress'));
                 if (emailAddress) {
                     vCard += 'EMAIL;TYPE=WORK:' + emailAddress.value + '\n';
                 }

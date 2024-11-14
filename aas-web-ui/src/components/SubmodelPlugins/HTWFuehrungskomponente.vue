@@ -1158,7 +1158,11 @@
 
             // returns the primary color of the current theme
             primaryColor() {
-                return this.$vuetify.theme.themes.light.colors.primary;
+                if (this.isDark) {
+                    return this.$vuetify.theme.themes.dark.colors.primary;
+                } else {
+                    return this.$vuetify.theme.themes.light.colors.primary;
+                }
             },
 
             // returns the primary lighten 2 color of the current theme
@@ -1325,7 +1329,7 @@
                 let propName = 'Prop_Mode';
                 // console.log('setState: ', state, this.selectedNode)
                 this.submodelElementData.value.forEach((element: any) => {
-                    if (element.idShort == 'Prop_UnitMode') propName = 'Prop_UnitMode';
+                    if (this.checkIdShort(element, 'Prop_UnitMode')) propName = 'Prop_UnitMode';
                 });
                 let path = this.selectedNode.pathFull + '/' + propName + '/value';
                 let content = "'" + mode + "'";
@@ -1353,7 +1357,7 @@
                 let propName = 'Prop_ControlCommand';
                 // console.log('setState: ', state, this.selectedNode)
                 this.submodelElementData.value.forEach((element: any) => {
-                    if (element.idShort == 'Prop_eCommand') propName = 'Prop_eCommand';
+                    if (this.checkIdShort(element, 'Prop_eCommand')) propName = 'Prop_eCommand';
                 });
                 let path = this.selectedNode.pathFull + '/' + propName + '/value';
                 let content = "'" + state + "'";

@@ -166,9 +166,13 @@ docker run -p 3000:3000 eclipsebasyx/aas-ui
 
 `-e CD_REPO_PATH: <concept_description_repo_path>`
 
-`-e PRIMARY_COLOR=<primary_color>`
+`-e PRIMARY_LIGHT_COLOR=<primary_light_color>`
 
-`-e LOGO_PATH=<logo_path>`
+`-e PRIMARY_DARK_COLOR=<primary_dark_color>`
+
+`-e LOGO_LIGHT_PATH=<logo_light_path>`
+
+`-e LOGO_DARK_PATH=<logo_dark_path>`
 
 `-e BASE_PATH=<base_path>`
 
@@ -202,7 +206,11 @@ aas-web-gui:
         SUBMODEL_REPO_PATH: "submodel_repo_path"
         CD_REPO_PATH: "concept_description_repo_path"
         PRIMARY_COLOR: "<primary_color>"
+        PRIMARY_LIGHT_COLOR: "<primary_light_color>"
+        PRIMARY_DARK_COLOR: "<primary_dark_color>"
         LOGO_PATH: "<logo_path>"
+        LOGO_LIGHT_PATH: "<logo_light_path>"
+        LOGO_DARK_PATH: "<logo_dark_path>"
         BASE_PATH: "<base_path>"
         ENDPOINT_CONFIG_AVAILABLE: "<true/false>"
     volumes:

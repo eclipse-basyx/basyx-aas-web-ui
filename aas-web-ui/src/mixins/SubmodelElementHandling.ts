@@ -105,6 +105,28 @@ export default defineComponent({
             return string.charAt(0).toUpperCase() + string.slice(1);
         },
 
+        // Function to check if the idShort of a SubmodelElement matches the given idShort
+        checkIdShort(referable: any, idShort: string, startsWith: boolean = false, strict: boolean = false): boolean {
+            if (idShort.trim() === '') return false;
+
+            if (!referable || !referable.idShort || referable.idShort.length === 0) return false;
+
+            if (startsWith) {
+                // For matching e.g. ProductImage{00} with idShort ProductImage
+                if (strict) {
+                    return referable.idShort.startsWith(idShort);
+                } else {
+                    return referable.idShort.toLowerCase().startsWith(idShort.toLowerCase());
+                }
+            } else {
+                if (strict) {
+                    return referable.idShort === idShort;
+                } else {
+                    return referable.idShort.toLowerCase() === idShort.toLowerCase();
+                }
+            }
+        },
+
         // Function to check if the SemanticID of a SubmodelElement matches the given SemanticID
         checkSemanticId(submodelElement: any, semanticId: string): boolean {
             if (semanticId.trim() == '') return false;
@@ -330,7 +352,7 @@ export default defineComponent({
                                             // execute if the Request was successful
                                             const list = response.data;
                                             list.value.forEach((element: any, i: number) => {
-                                                if (element.idShort == SubmodelElement.value) {
+                                                if (this.checkIdShort(element, SubmodelElement.value, false, true)) {
                                                     path += encodeURIComponent('[') + i + encodeURIComponent(']');
                                                 }
                                             });
@@ -371,6 +393,7 @@ export default defineComponent({
                     // dispatch the AAS set by the ReferenceElement to the store
                     this.aasStore.dispatchSelectedAAS(referencedAAS);
                     this.navigationStore.dispatchTriggerAASSelected();
+                    this.navigationStore.dispatchTriggerAASListScroll();
                     // Request the referenced SubmodelElement
                     const elementPath = path;
                     const context = 'retrieving SubmodelElement';
@@ -419,6 +442,7 @@ export default defineComponent({
             // console.log('AAS:', aas, 'Endpoint:', endpoint);
             this.aasStore.dispatchSelectedAAS(aas);
             this.navigationStore.dispatchTriggerAASSelected();
+            this.navigationStore.dispatchTriggerAASListScroll();
             this.aasStore.dispatchNode({});
         },
 
@@ -604,6 +628,41 @@ export default defineComponent({
             return '';
         },
 
+        // Get the Definition from the EmbeddedDataSpecification of the ConceptDescription of the Property (if available)
+        cdDefinition(prop: any) {
+            if (!prop.conceptDescriptions) {
+                this.getConceptDescriptions(prop).then((conceptDescriptions) => {
+                    prop.conceptDescriptions = conceptDescriptions;
+                });
+            }
+            if (!prop.conceptDescriptions || prop.conceptDescriptions.length == 0) {
+                return '';
+            }
+            for (const conceptDescription of prop.conceptDescriptions) {
+                if (!conceptDescription.embeddedDataSpecifications) {
+                    continue;
+                }
+                for (const embeddedDataSpecification of conceptDescription.embeddedDataSpecifications) {
+                    if (
+                        embeddedDataSpecification.dataSpecificationContent &&
+                        embeddedDataSpecification.dataSpecificationContent.definition
+                    ) {
+                        const definitionEn = embeddedDataSpecification.dataSpecificationContent.definition.find(
+                            (definition: any) => {
+                                return definition.language === 'en' && definition.text !== '';
+                            }
+                        );
+                        if (definitionEn && definitionEn.text) {
+                            return definitionEn.text;
+                        }
+                    } else {
+                        return '';
+                    }
+                }
+            }
+            return '';
+        },
+
         // Name to be displayed
         nameToDisplay(sme: any) {
             if (sme.displayName) {
@@ -613,6 +672,54 @@ export default defineComponent({
                 if (displayNameEn && displayNameEn.text) return displayNameEn.text;
             }
             return sme.idShort ? sme.idShort : '';
+        },
+
+        descriptionToDisplay(referable: any) {
+            if (referable && referable?.description) {
+                const descriptionEn = referable.description.find(
+                    (description: any) => description && description.language === 'en' && description.text !== ''
+                );
+                if (descriptionEn && descriptionEn.text) return descriptionEn.text;
+            }
+            return '';
+        },
+
+        valueToDisplay(submodelElement: any) {
+            if (submodelElement && submodelElement.modelType) {
+                switch (submodelElement.modelType) {
+                    case 'Property':
+                        if (!submodelElement.value) return '';
+                        return (
+                            submodelElement.value +
+                            (this.unitSuffix(submodelElement) ? ' ' + this.unitSuffix(submodelElement) : '')
+                        );
+                    case 'MultiLanguageProperty': {
+                        const valueEn = submodelElement.value.find((value: any) => {
+                            return value && value.language === 'en' && value.text !== '';
+                        });
+                        const valueDe = submodelElement.value.find((value: any) => {
+                            return value && value.language === 'de' && value.text !== '';
+                        });
+                        if (valueEn && valueEn.text) return valueEn.text;
+                        if (valueDe && valueDe.text) return valueDe.text;
+                        return '';
+                    }
+                    case 'File':
+                    case 'Blob':
+                        if (submodelElement.value.startsWith('http')) return submodelElement.value;
+                        return submodelElement.path + '/attachment';
+                    case 'Operation': // TODO
+                    case 'ReferenceElement': // TODO
+                    case 'Range': // TODO
+                    case 'Entity': // TODO
+                    case 'RelationshipElement': // TODO
+                    case 'AnnotatedRelationshipElement': // TODO
+                        return '';
+                    default:
+                        return '';
+                }
+            }
+            return '';
         },
 
         // Extract the right endpoints href from a descriptor
