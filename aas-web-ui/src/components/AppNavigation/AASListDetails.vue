@@ -28,10 +28,10 @@
             <v-divider></v-divider>
             <v-card-text class="pa-0">
                 <!-- Asset Information -->
-                <AssetInformation
-                    v-if="assetInformation && Object.keys(assetInformation).length > 0"
-                    :asset-object="assetInformation"></AssetInformation>
-                <v-divider v-if="assetInformation" style="border-width: 2px"></v-divider>
+                <!-- <AssetInformation
+                v-if="assetInformation && Object.keys(assetInformation).length > 0"
+                :asset-object="assetInformation"></AssetInformation> -->
+                <!-- <v-divider v-if="assetInformation" style="border-width: 2px"></v-divider> -->
                 <!-- AAS Details -->
                 <v-list v-if="detailsObject" lines="one" nav class="bg-detailsCard">
                     <!-- AAS Identification -->
@@ -185,16 +185,21 @@
 
                 if (this.screenHeight < 600) {
                     // xs display
+
                     this.detailsCardHeight = 1 * availableHeight;
                 } else if (this.screenHeight >= 600 && this.screenHeight < 1280) {
                     // sm & md display
-                    this.detailsCardHeight = 0.75 * availableHeight;
+                    this.detailsCardHeight = 0.5 * availableHeight;
                 } else if (this.screenHeight >= 1280) {
                     // lg & xl & xxl display
-                    this.detailsCardHeight = 0.5 * availableHeight;
+                    this.detailsCardHeight = 0.4 * availableHeight;
                 }
 
                 this.detailsCardTextHeight = this.detailsCardHeight - cardTitleHeight;
+
+                console.log('screenHeight', this.screenHeight);
+                console.log('detailsCardHeight', this.detailsCardHeight);
+                console.log('detailsCardTextHeight', this.detailsCardTextHeight);
             },
         },
     });
@@ -202,22 +207,22 @@
 
 <style lang="css" scoped>
     .v-card--reveal-mobile {
-        position: absolute;
         bottom: 0px;
+        /* opacity: 0.96; */
+        position: absolute;
         width: 100%;
         z-index: 9000;
+        /* overflow-y: auto; */
     }
     .v-card--reveal-desktop {
-        position: absolute;
         bottom: 48px;
+        /* opacity: 0.96; */
+        position: absolute;
         width: 100%;
         z-index: 9000;
+        /* overflow-y: auto; */
     }
     .v-card-text {
-        position: absolute;
-        top: 34px;
-        bottom: 0px;
-        width: 100%;
-        overflow-y: auto;
+        max-height: 100%;
     }
 </style>
