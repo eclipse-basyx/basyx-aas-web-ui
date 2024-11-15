@@ -146,14 +146,90 @@ export default defineComponent({
                     } else {
                         if (key.value.startsWith(semanticId)) return true;
                     }
-                } else if (key.value.startsWith('0173-1')) {
-                    // ECLASS IRDI like 0173-1#01-AHF578#001 resp. 0173-1-01-AHF578-001
-                    if (new RegExp(/[#-]{1}d{3}$/).test(semanticId)) {
-                        // ECLASS IRDI with version (like 0173-1#01-AHF578#001 resp. 0173-1-01-AHF578-001)
-                        if (key.value === semanticId) return true;
+                } else if (key.value.startsWith('0173-1#')) {
+                    // Eclass IRDI like 0173-1#01-AHF578#001
+                    if (new RegExp(/[#]{1}d{3}$/).test(semanticId)) {
+                        // Eclass IRDI with version; like 0173-1#01-AHF578#001
+                        if (
+                            key.value === semanticId || // match 0173-1#01-AHF578#001
+                            key.value === semanticId.replace(/-1#(\d{2})-/, '/1///$1#') || // match 0173/1///01#AHF578#001
+                            key.value === 'https://api.eclass-cdp.com/' + semanticId.replaceAll('#', '-') // match https://api.eclass-cdp.com/0173-1-01-AHF578-001
+                        )
+                            return true;
                     } else {
-                        // ECLASS IRDI without version (like 0173-1#01-AHF578 resp. 0173-1-01-AHF578)
-                        if (key.value.startsWith(semanticId)) return true;
+                        // Eclass IRDI without version; like 0173-1#01-AHF578
+                        if (
+                            key.value.startsWith(semanticId) || // match 0173-1#01-AHF578 and match 0173-1#01-AHF578#001
+                            key.value.startsWith(semanticId.replace(/-1#(\d{2})-/, '/1///$1#')) || // match 0173/1///01#AHF578 and 0173/1///01#AHF578#001
+                            key.value.startsWith('https://api.eclass-cdp.com/' + semanticId.replaceAll('#', '-')) // match https://api.eclass-cdp.com/0173-1-01-AHF578 and https://api.eclass-cdp.com/0173-1-01-AHF578-001
+                        ) {
+                            return true;
+                        }
+                    }
+                } else if (key.value.startsWith('0173/1')) {
+                    // Eclass IRDI like 0173/1///01#AHF578#001
+                    if (new RegExp(/[#]{1}d{3}$/).test(semanticId)) {
+                        // Eclass IRDI with version; like 0173/1///01#AHF578#001
+                        if (
+                            key.value === semanticId.replace(/\/1\/\/\/(\d{2})#/, '-1#$1-') || // match 0173-1#01-AHF578#001
+                            key.value === semanticId || // match 0173/1///01#AHF578#001
+                            key.value ===
+                                'https://api.eclass-cdp.com/' +
+                                    semanticId.replace(/\/1\/\/\/(\d{2})#/, '-1-$1-').replaceAll('#', '-') // match https://api.eclass-cdp.com/0173-1-01-AHF578-001
+                        ) {
+                            return true;
+                        }
+                    } else {
+                        // Eclass IRDI without version; like 0173/1///01#AHF578
+                        if (
+                            key.value.startsWith(semanticId.replace(/\/1\/\/\/(\d{2})#/, '-1#$1-')) || // match 0173-1#01-AHF578 and match 0173-1#01-AHF578#001
+                            key.value.startsWith(semanticId) || // match 0173/1///01#AHF578 and 0173/1///01#AHF578#001
+                            key.value.startsWith(
+                                'https://api.eclass-cdp.com/' +
+                                    semanticId.replace(/\/1\/\/\/(\d{2})#/, '-1-$1-').replaceAll('#', '-')
+                            ) // match https://api.eclass-cdp.com/0173-1-01-AHF578 and https://api.eclass-cdp.com/0173-1-01-AHF578-001
+                        ) {
+                            return true;
+                        }
+                    }
+                } else if (key.value.startsWith('https://api.eclass-cdp.com/0173-1')) {
+                    // Eclass URL like https://api.eclass-cdp.com/0173-1-01-AHF578-001
+                    if (new RegExp(/[#]{1}d{3}$/).test(semanticId)) {
+                        // Eclass URL with version (like https://api.eclass-cdp.com/0173-1-01-AHF578-001)
+                        if (
+                            key.value ===
+                                semanticId
+                                    .replaceAll('https://api.eclass-cdp.com/', '')
+                                    .replaceAll('-', '#')
+                                    .replace(/#1#(\d{2})#/, '-1#$1-') || // match 0173-1#01-AHF578#001
+                            key.value ===
+                                semanticId
+                                    .replaceAll('https://api.eclass-cdp.com/', '')
+                                    .replaceAll('-', '#')
+                                    .replace(/#1#(\d{2})#/, '/1///01#') || // match 0173/1///01#AHF578#001
+                            key.value === semanticId // match https://api.eclass-cdp.com/0173-1-01-AHF578-001
+                        ) {
+                            return true;
+                        }
+                    } else {
+                        // Eclass URL without version (like https://api.eclass-cdp.com/0173-1-01-AHF578)
+                        if (
+                            key.value.startsWith(
+                                semanticId
+                                    .replaceAll('https://api.eclass-cdp.com/', '')
+                                    .replaceAll('-', '#')
+                                    .replace(/#1#(\d{2})#/, '-1#$1-')
+                            ) || // match 0173-1#01-AHF578 and match 0173-1#01-AHF578#001
+                            key.value.startsWith(
+                                semanticId
+                                    .replaceAll('https://api.eclass-cdp.com/', '')
+                                    .replaceAll('-', '#')
+                                    .replace(/#1#(\d{2})#/, '/1///01#')
+                            ) || // match 0173/1///01#AHF578 and 0173/1///01#AHF578#001
+                            key.value.startsWith(semanticId) // match https://api.eclass-cdp.com/0173-1-01-AHF578 and https://api.eclass-cdp.com/0173-1-01-AHF578-001
+                        ) {
+                            return true;
+                        }
                     }
                 } else {
                     if (key.value === semanticId) return true;
@@ -508,8 +584,38 @@ export default defineComponent({
                 return Promise.resolve([]);
             }
 
-            const cdPromises = SelectedNode.semanticId.keys.map((key: any) => {
-                const path = conceptDescriptionRepoURL + '/' + this.URLEncode(key.value);
+            const semanticIdsToFetch = SelectedNode.semanticId.keys.map((key: any) => {
+                return key.value;
+            });
+
+            semanticIdsToFetch.forEach((semanticId: string) => {
+                if (semanticId.startsWith('0173-1#')) {
+                    semanticIdsToFetch.push(semanticId.replace(/-1#(\d{2})-/, '/1///$1#'));
+                    semanticIdsToFetch.push('https://api.eclass-cdp.com/' + semanticId.replaceAll('#', '-'));
+                } else if (semanticId.startsWith('0173/1')) {
+                    semanticIdsToFetch.push(semanticId.replace(/\/1\/\/\/(\d{2})#/, '-1#$1-'));
+                    semanticIdsToFetch.push(
+                        'https://api.eclass-cdp.com/' +
+                            semanticId.replace(/\/1\/\/\/(\d{2})#/, '-1-$1-').replaceAll('#', '-')
+                    );
+                } else if (semanticId.startsWith('https://api.eclass-cdp.com/0173-1')) {
+                    semanticIdsToFetch.push(
+                        semanticId
+                            .replaceAll('https://api.eclass-cdp.com/', '')
+                            .replaceAll('-', '#')
+                            .replace(/#1#(\d{2})#/, '-1#$1-')
+                    );
+                    semanticIdsToFetch.push(
+                        semanticId
+                            .replaceAll('https://api.eclass-cdp.com/', '')
+                            .replaceAll('-', '#')
+                            .replace(/#1#(\d{2})#/, '/1///01#')
+                    );
+                }
+            });
+
+            const cdPromises = semanticIdsToFetch.map((semanticId: string) => {
+                const path = conceptDescriptionRepoURL + '/' + this.URLEncode(semanticId);
                 const context = 'retrieving ConceptDescriptions';
                 const disableMessage = true;
 
