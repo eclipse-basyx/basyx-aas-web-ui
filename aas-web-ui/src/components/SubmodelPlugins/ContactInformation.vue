@@ -3,8 +3,18 @@
         <!-- Header -->
         <v-card class="mb-4">
             <v-card-title>
-                <div class="text-subtitle-1">{{ 'Contact Information:' }}</div>
+                <div class="text-subtitle-1">
+                    {{
+                        nameToDisplay(submodelElementData) &&
+                        nameToDisplay(submodelElementData) != submodelElementData.idShort
+                            ? nameToDisplay(submodelElementData)
+                            : 'Contact Information:'
+                    }}
+                </div>
             </v-card-title>
+            <v-card-text v-if="descriptionToDisplay(submodelElementData)" class="pt-0">
+                {{ descriptionToDisplay(submodelElementData) }}
+            </v-card-text>
         </v-card>
         <!-- Documents -->
         <v-card v-if="loading">
