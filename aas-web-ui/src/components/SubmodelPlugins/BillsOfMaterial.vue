@@ -8,7 +8,7 @@
                         nameToDisplay(submodelElementData) &&
                         nameToDisplay(submodelElementData) != submodelElementData.idShort
                             ? nameToDisplay(submodelElementData)
-                            : 'Bills of Material:'
+                            : 'Bills of Material'
                     }}
                 </div>
             </v-card-title>

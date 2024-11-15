@@ -8,7 +8,7 @@
                         nameToDisplay(submodelElementData) &&
                         nameToDisplay(submodelElementData) != submodelElementData.idShort
                             ? nameToDisplay(submodelElementData)
-                            : 'Handover Documentation:'
+                            : 'Handover Documentation'
                     }}
                 </div>
             </v-card-title>
