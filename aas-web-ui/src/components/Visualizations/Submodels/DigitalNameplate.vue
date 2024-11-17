@@ -211,6 +211,7 @@
 
     export default defineComponent({
         name: 'DigitalNameplate',
+        semanticId: 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate',
         components: {
             GenericDataVisu,
 

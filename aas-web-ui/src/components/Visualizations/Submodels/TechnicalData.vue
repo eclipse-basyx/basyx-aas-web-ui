@@ -256,6 +256,7 @@
 
     export default defineComponent({
         name: 'TechnicalData',
+        semanticId: 'https://admin-shell.io/ZVEI/TechnicalData/Submodel/1/2',
         components: {
             GenericDataVisu,
             GenericDataTableView,

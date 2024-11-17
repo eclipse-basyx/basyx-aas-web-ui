@@ -29,7 +29,7 @@ export interface PlatformType {
     win: boolean;
 }
 
-export interface PluginType {
+export interface VisualizationType {
     name: string;
     semanticId: string;
 }
@@ -53,7 +53,7 @@ export const useNavigationStore = defineStore({
         StatusCheck: false as boolean,
         isMobile: false as boolean,
         platform: {} as PlatformType,
-        plugins: [] as PluginType[],
+        visualizations: [] as VisualizationType[],
         triggerAASListReload: false as boolean,
         triggerAASListScroll: false as boolean,
         triggerAASSelected: false as boolean,
@@ -72,7 +72,7 @@ export const useNavigationStore = defineStore({
         getStatusCheck: (state) => state.StatusCheck,
         getIsMobile: (state) => state.isMobile,
         getPlatform: (state) => state.platform,
-        getPlugins: (state) => state.plugins,
+        getVisualizations: (state) => state.visualizations,
         getTriggerAASListReload: (state) => state.triggerAASListReload,
         getTriggerAASListScroll: (state) => state.triggerAASListScroll,
         getTriggerAASSelected: (state) => state.triggerAASSelected,
@@ -121,8 +121,8 @@ export const useNavigationStore = defineStore({
         dispatchPlatform(platform: PlatformType) {
             this.platform = platform;
         },
-        dispatchPlugins(plugins: Array<PluginType>) {
-            this.plugins = plugins;
+        dispatchVisualizations(visualizations: Array<VisualizationType>) {
+            this.visualizations = visualizations;
         },
         dispatchTriggerAASListReload(triggerAASListReload: boolean) {
             this.triggerAASListReload = triggerAASListReload;

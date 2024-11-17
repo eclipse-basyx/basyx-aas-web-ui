@@ -275,6 +275,7 @@
 
     export default defineComponent({
         name: 'HandoverDocumentation',
+        semanticId: '0173-1#01-AHF578#001',
         components: {
             ImagePreview,
             PDFPreview,

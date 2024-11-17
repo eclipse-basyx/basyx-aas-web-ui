@@ -208,6 +208,7 @@
 
     export default defineComponent({
         name: 'TimeSeriesData',
+        semanticId: 'https://admin-shell.io/idta/TimeSeries/1/1',
         components: {
             LineChart,
             AreaChart,

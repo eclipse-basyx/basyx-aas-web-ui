@@ -50,19 +50,19 @@ As of now, not all new SubmodelElements of the AAS V3 are supported. Additional 
 See examples in the [basyx-java-server-sdk](https://github.com/eclipse-basyx/basyx-java-server-sdk/tree/main/examples
 ) Repository.
 
-### Plugin Development
+### Visualizations Development
 
-The BaSyx-UI includes a Feature to develop your own Plugins. They can be used to display and interact with a Submodel (and/or SubmodelElements).
+The BaSyx-UI includes a Feature to develop your own Visualizations. They can be used to display and interact with a Submodel (and/or SubmodelElements).
 
-Plugins will be displayed in the `Visualization`-Part of the UI. In order for Plugins to be shown, a Submodel(Element) has to have a SemanticID which matches with the configured SemanticID of the desired Plugin.
+Visualizations will be displayed in the `Visualization`-Part of the UI. In order for Visualizations to be loaded, a Submodel(Element) has to have a SemanticID which matches with the configured `semanticId` of the desired Visualizations. The configuration of a Visualizations `semanticId`can be done via a string (e.g. `'http://hello.world.de/plugin_submodel'`) or via an array for multiple SemanticIds (e.g. `['http://hello.world.de/plugin_submodel', 'http://hello.world.de/plugin_property']`)
 
-To include your own Plugin, you have to create a Vue.js Component and add it to the `UserPlugins`-Folder in the `aas-web-ui/src`-Directory. The Plugin will then be automatically loaded and displayed in the UI. 
+To include your own Visualizations, you have to create a Vue.js Component and add it to the `UserVisualizations`-Folder in the `aas-web-ui/src`-Directory. The Visualization will then be automatically loaded and displayed in the UI. 
 
 > If you plan on including your own plugins, keep in mind that you have to build the Docker Image yourself!
 
-A Demo-Plugin can be found here:
+A Demo-Visualizations can be found here:
 
-[HelloWorldPlugin.vue](./aas-web-ui/src/UserPlugins/HelloWorldPlugin.vue)
+[HelloWorldVisualizations.vue](./aas-web-ui/src/UserVisualizations/HelloWorldVisualizations.vue)
 
 ### Prerequisites for developing on you own machine
 

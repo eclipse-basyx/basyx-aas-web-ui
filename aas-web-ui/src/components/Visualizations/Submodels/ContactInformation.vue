@@ -90,6 +90,7 @@
 
     export default defineComponent({
         name: 'ContactInformation',
+        semanticId: 'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations',
         mixins: [RequestHandling, SubmodelElementHandling],
         props: ['submodelElementData'],
 

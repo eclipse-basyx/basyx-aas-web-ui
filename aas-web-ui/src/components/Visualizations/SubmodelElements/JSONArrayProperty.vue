@@ -13,6 +13,7 @@
 
     export default defineComponent({
         name: 'JSONArrayProperty',
+        semanticId: 'http://iese.fraunhofer.de/prop_jsonarray',
         props: ['submodelElementData'],
 
         setup() {

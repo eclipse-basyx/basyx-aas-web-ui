@@ -41,6 +41,10 @@
 
     export default defineComponent({
         name: 'BillsOfMaterial',
+        semanticId: [
+            'https://admin-shell.io/idta/HierarchicalStructures/1/0/Submodel',
+            'https://admin-shell.io/idta/HierarchicalStructures/1/1/Submodel',
+        ],
         mixins: [RequestHandling, SubmodelElementHandling],
         props: ['submodelElementData'],
 
