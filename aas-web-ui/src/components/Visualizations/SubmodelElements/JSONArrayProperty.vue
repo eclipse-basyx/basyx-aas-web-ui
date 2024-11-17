@@ -113,10 +113,10 @@
 
         methods: {
             initChart() {
-                // Check if a Node is selected
                 if (Object.keys(this.submodelElementData).length == 0) {
                     return;
                 }
+
                 let chartData = JSON.parse(this.submodelElementData.value); // parse the value of the SubmodelElement
                 let seriesName = this.submodelElementData.idShort; // get the idShort of the SubmodelElement
                 // check if the value is an array or an object

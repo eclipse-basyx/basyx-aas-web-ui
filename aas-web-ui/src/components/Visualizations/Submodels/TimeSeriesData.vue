@@ -325,11 +325,11 @@
         methods: {
             // Function to initialize the TimeSeriesData Plugin
             initializeTimeSeriesData() {
-                // Check if a Node is selected
                 if (Object.keys(this.submodelElementData).length == 0) {
                     this.timeSeriesData = {}; // Reset the TimeSeriesData when no Node is selected
                     return;
                 }
+
                 let timeSeriesData = { ...this.submodelElementData }; // create local copy of the TimeSeriesData
                 this.timeSeriesData = timeSeriesData; // set the local copy to the data object
                 // get the collection for segments

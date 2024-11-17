@@ -317,7 +317,7 @@
         methods: {
             async initHandoverDocumentation() {
                 this.loading = true;
-                // Check if a Node is selected
+
                 if (Object.keys(this.submodelElementData).length == 0) {
                     this.handoverDocuData = {}; // Reset the DigitalNameplate Data when no Node is selected
                     this.loading = false;
@@ -328,6 +328,7 @@
                     submodelElementData,
                     this.SelectedNode.path
                 );
+
                 // create array of documents
                 let documents = this.handoverDocuData.submodelElements.filter((element: any) => {
                     return this.checkSemanticId(element, '0173-1#02-ABI500#001/0173-1#01-AHF579#001');

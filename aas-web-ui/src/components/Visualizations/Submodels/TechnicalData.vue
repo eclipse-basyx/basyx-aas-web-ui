@@ -303,12 +303,13 @@
         methods: {
             async initTechnicalData() {
                 this.loading = true;
-                // Check if a Node is selected
+
                 if (Object.keys(this.submodelElementData).length == 0) {
                     this.technicalData = {}; // Reset the DigitalNameplate Data when no Node is selected
                     this.loading = false;
                     return;
                 }
+
                 let technicalData = { ...this.submodelElementData }; // create local copy of the Nameplate Object
                 this.technicalData = await this.calculateSubmodelElementPathes(technicalData, this.SelectedNode.path); // Set the DigitalNameplate Data
                 this.extractGeneralProperties(technicalData);

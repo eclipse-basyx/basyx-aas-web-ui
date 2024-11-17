@@ -127,7 +127,7 @@
         methods: {
             async initContactInformation() {
                 this.loading = true;
-                // Check if a Node is selected
+
                 if (Object.keys(this.submodelElementData).length == 0) {
                     this.contactInformationData = {}; // Reset the DigitalNameplate Data when no Node is selected
                     this.loading = false;

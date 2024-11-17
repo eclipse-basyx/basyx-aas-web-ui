@@ -266,17 +266,19 @@
             // Function to initialize the Digital Nameplate
             async initializeDigitalNameplate() {
                 this.loading = true;
-                // Check if a Node is selected
+
                 if (Object.keys(this.submodelElementData).length == 0) {
                     this.digitalNameplateData = {}; // Reset the DigitalNameplate Data when no Node is selected
                     this.loading = false;
                     return;
                 }
+
                 let digitalNameplateData = { ...this.submodelElementData }; // create local copy of the Nameplate Object
                 this.digitalNameplateData = await this.calculateSubmodelElementPathes(
                     digitalNameplateData,
                     this.SelectedNode.path
-                ); // Set the DigitalNameplate Data
+                );
+
                 // console.log('Digital Nameplate Data:', this.digitalNameplateData);
                 this.extractProductProperties(digitalNameplateData); // Extract the Product Properties
                 this.extractManufacturerProperties(digitalNameplateData); // Extract the Manufacturer Properties
