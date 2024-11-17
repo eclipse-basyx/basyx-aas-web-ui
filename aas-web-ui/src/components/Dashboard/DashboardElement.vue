@@ -62,7 +62,7 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import TimeSeriesData from '@/components/SubmodelPlugins/TimeSeriesData.vue';
+    import TimeSeriesData from '@/components/Visualizations/Submodels/TimeSeriesData.vue';
     import DashboardHandling from '@/mixins/DashboardHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useEnvStore } from '@/store/EnvironmentStore';

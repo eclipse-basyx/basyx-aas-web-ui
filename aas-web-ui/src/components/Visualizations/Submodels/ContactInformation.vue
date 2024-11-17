@@ -126,13 +126,19 @@
         methods: {
             async initContactInformation() {
                 this.loading = true;
-                // console.log('Initialize Contact Information Plugin: ', this.submodelElementData);
+                // Check if a Node is selected
+                if (Object.keys(this.submodelElementData).length == 0) {
+                    this.contactInformationData = {}; // Reset the DigitalNameplate Data when no Node is selected
+                    this.loading = false;
+                    return;
+                }
+
                 let submodelElementData = { ...this.submodelElementData };
-                submodelElementData = await this.calculateSubmodelElementPathes(
+                this.contactInformationData = await this.calculateSubmodelElementPathes(
                     submodelElementData,
                     this.SelectedNode.path
                 );
-                this.contactInformationData = submodelElementData;
+
                 // create array of contacts
                 let contacts = this.contactInformationData.submodelElements.filter((element: any) => {
                     return (

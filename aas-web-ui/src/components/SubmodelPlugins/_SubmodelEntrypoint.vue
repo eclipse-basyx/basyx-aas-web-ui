@@ -103,20 +103,20 @@
     import { defineComponent } from 'vue';
     import { useRoute } from 'vue-router';
     import GenericDataVisu from '@/components/UIComponents/GenericDataVisu.vue';
+    import CADPreview from '@/components/Visualizations/CADPreview.vue';
+    import ImagePreview from '@/components/Visualizations/ImagePreview.vue';
+    import PDFPreview from '@/components/Visualizations/PDFPreview.vue';
+    import HTWFuehrungskomponente from '@/components/Visualizations/SubmodelElements/HTWFuehrungskomponente.vue';
+    import JSONArrayProperty from '@/components/Visualizations/SubmodelElements/JSONArrayProperty.vue';
+    import BillsOfMaterial from '@/components/Visualizations/Submodels/BillsOfMaterial.vue';
+    import ContactInformation from '@/components/Visualizations/Submodels/ContactInformation.vue';
+    import DigitalNameplate from '@/components/Visualizations/Submodels/DigitalNameplate.vue';
+    import HandoverDocumentation from '@/components/Visualizations/Submodels/HandoverDocumentation.vue';
+    import TechnicalData from '@/components/Visualizations/Submodels/TechnicalData.vue';
+    import TimeSeriesData from '@/components/Visualizations/Submodels/TimeSeriesData.vue';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import BillsOfMaterial from './BillsOfMaterial.vue';
-    import CADPreview from './CADPreview.vue';
-    import ContactInformation from './ContactInformation.vue';
-    import DigitalNameplate from './DigitalNameplate.vue';
-    import HandoverDocumentation from './HandoverDocumentation.vue';
-    import HTWFuehrungskomponente from './HTWFuehrungskomponente.vue';
-    import ImagePreview from './ImagePreview.vue';
-    import JSONArrayProperty from './JSONArrayProperty.vue';
-    import PDFPreview from './PDFPreview.vue';
-    import TechnicalData from './TechnicalData.vue';
-    import TimeSeriesData from './TimeSeriesData.vue';
 
     export default defineComponent({
         name: 'SubmodelEntrypoint',
