@@ -21,15 +21,15 @@
                         </v-tooltip>
                         <!-- Reference Title -->
                         <template #title>
-                            <div
-                                class="text-subtitle-2 mt-2"
-                                v-html="IsOperationVariable ? 'Reference:' : 'Description:'"></div>
+                            <div class="text-subtitle-2 mt-2">
+                                {{ IsOperationVariable ? 'Reference:' : 'Description:' }}
+                            </div>
                         </template>
                         <!-- Reference Representation -->
                         <template #subtitle>
                             <div v-if="!IsOperationVariable || IsOutputVariable" class="pt-2">
                                 <v-chip label size="x-small" border class="mr-2">{{ value.type }}</v-chip>
-                                <span v-html="value.value"></span>
+                                <span> {{ value.value }}</span>
                             </div>
                             <!-- Input Field containing the Variable Value -->
                             <v-text-field
