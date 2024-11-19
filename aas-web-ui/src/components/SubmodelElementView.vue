@@ -47,6 +47,20 @@
                             "
                             :semantic-id-object="submodelElementData.semanticId"
                             :semantic-title="'SemanticID'"></SemanticID>
+                        <v-divider
+                            v-if="
+                                submodelElementData.supplementalSemanticIds &&
+                                submodelElementData.supplementalSemanticIds.length > 0
+                            "
+                            class="mt-2"></v-divider>
+                        <!-- SubmodelELement SupplementalSemanticID -->
+                        <SupplementalSemanticID
+                            v-if="
+                                submodelElementData.supplementalSemanticIds &&
+                                submodelElementData.supplementalSemanticIds.length > 0
+                            "
+                            :supplemental-semantic-ids-array="submodelElementData.supplementalSemanticIds"
+                            :supplemental-semantic-ids-title="'Supplemental Semantic ID'"></SupplementalSemanticID>
                     </v-list>
                     <v-divider></v-divider>
                     <v-list nav class="px-4 pt-0 pb-0">
@@ -160,6 +174,7 @@
     import DisplayNameElement from '@/components/UIComponents/DisplayNameElement.vue';
     import IdentificationElement from '@/components/UIComponents/IdentificationElement.vue';
     import SemanticID from '@/components/UIComponents/SemanticID.vue';
+    import SupplementalSemanticID from '@/components/UIComponents/SupplementalSemanticID.vue';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -173,6 +188,7 @@
             DisplayNameElement,
             DescriptionElement,
             SemanticID,
+            SupplementalSemanticID,
             ConceptDescription,
 
             Submodel,
