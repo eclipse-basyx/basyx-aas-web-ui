@@ -46,7 +46,8 @@
                                 submodelElementData.semanticId.keys.length > 0
                             "
                             :semantic-id-object="submodelElementData.semanticId"
-                            :semantic-title="'SemanticID'"></SemanticID>
+                            :semantic-title="'SemanticID'"
+                            :small="false"></SemanticID>
                     </v-list>
                     <v-divider></v-divider>
                     <v-list nav class="px-4 pt-0 pb-0">
