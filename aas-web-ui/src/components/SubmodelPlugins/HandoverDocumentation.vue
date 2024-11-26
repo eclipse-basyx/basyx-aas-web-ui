@@ -17,7 +17,7 @@
                         <template #prepend>
                             <v-icon size="small">mdi-file-outline</v-icon>
                         </template>
-                        <v-list-item-title>{{ document.idShort }}</v-list-item-title>
+                        <v-list-item-title>{{ nameToDisplay(document) }}</v-list-item-title>
                     </v-list-item>
                 </v-expansion-panel-title>
                 <v-divider v-if="panel === index"></v-divider>
@@ -228,7 +228,7 @@
                                     <th v-for="idProperty in document.documentIds[0].value" :key="idProperty.idShort">
                                         <v-list-item class="pl-0">
                                             <v-list-item-title class="text-caption">{{
-                                                idProperty.idShort
+                                                nameToDisplay(idProperty)
                                             }}</v-list-item-title>
                                         </v-list-item>
                                     </th>
