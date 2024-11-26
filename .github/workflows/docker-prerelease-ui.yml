@@ -42,7 +42,7 @@ jobs:
           tags: |
             eclipsebasyx/aas-gui:pr-latest
 
-      # Optional Step 5: Verify the Push
+      # Step 5: Verify the Push
       - name: Verify Docker Image
         run: |
           docker pull eclipsebasyx/aas-gui:pr-latest
