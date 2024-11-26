@@ -40,9 +40,9 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           tags: |
-            eclipsebasyx/aas-gui:pr-latest
+            eclipsebasyx/aas-gui:SNAPSHOT
 
       # Step 5: Verify the Push
       - name: Verify Docker Image
         run: |
-          docker pull eclipsebasyx/aas-gui:pr-latest
+          docker pull eclipsebasyx/aas-gui:SNAPSHOT
