@@ -25,7 +25,7 @@
     "roboto-fontface": "*",
     "three": "^0.169.0",
     "uuid": "^10.0.0",
-    "vue": "^3.5.12",
+    "vue": "^3.5.13",
     "vue-router": "^4.4.5",
     "vue3-apexcharts": "^1.7.0",
     "vuetify": "^3.7.4",
