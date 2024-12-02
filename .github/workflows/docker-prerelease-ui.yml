@@ -34,7 +34,7 @@ jobs:
 
       # Step 4: Build and Push Docker Image with Fixed Pre-release Tag
       - name: Build and Push Docker Image (Pre-release)
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           context: ./aas-web-ui
           file: ./aas-web-ui/Dockerfile
