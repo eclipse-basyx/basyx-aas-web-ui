@@ -3,8 +3,13 @@
         <!-- Header -->
         <v-card v-if="!hideSettings" class="mb-4">
             <v-card-title>
-                <div class="text-subtitle-1">{{ 'Time Series Data:' }}</div>
+                <div class="text-subtitle-1">
+                    {{ nameToDisplay(submodelElementData, 'Time Series Data') }}
+                </div>
             </v-card-title>
+            <v-card-text v-if="descriptionToDisplay(submodelElementData)" class="pt-0">
+                {{ descriptionToDisplay(submodelElementData) }}
+            </v-card-text>
         </v-card>
         <!-- Data Preview Config -->
         <v-card v-if="!hideSettings || editDialog" class="mb-4">
