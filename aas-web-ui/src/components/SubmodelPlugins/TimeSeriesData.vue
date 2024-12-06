@@ -4,7 +4,7 @@
         <v-card v-if="!hideSettings" class="mb-4">
             <v-card-title>
                 <div class="text-subtitle-1">
-                    {{ visualizationTitle }}
+                    {{ nameToDisplay(submodelElementData, 'Time Series Data') }}
                 </div>
             </v-card-title>
             <v-card-text v-if="descriptionToDisplay(submodelElementData)" class="pt-0">
@@ -301,12 +301,6 @@
                 }
                 // return null if no Segment Type was found
                 return null;
-            },
-
-            visualizationTitle() {
-                const visualizationTitle = this.nameToDisplay(this.submodelElementData);
-                if ([this.submodelElementData.idShort, ''].includes(visualizationTitle)) return 'Time Series Data';
-                return visualizationTitle;
             },
         },
 
