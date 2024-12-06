@@ -4,12 +4,7 @@
         <v-card class="mb-4">
             <v-card-title>
                 <div class="text-subtitle-1">
-                    {{
-                        nameToDisplay(submodelElementData) &&
-                        nameToDisplay(submodelElementData) != submodelElementData.idShort
-                            ? nameToDisplay(submodelElementData)
-                            : 'Bills of Material'
-                    }}
+                    {{ visualizationTitle }}
                 </div>
             </v-card-title>
             <v-card-text v-if="descriptionToDisplay(submodelElementData)" class="pt-0">
@@ -95,6 +90,12 @@
                 } else {
                     return this.$vuetify.theme.themes.light.colors.primary;
                 }
+            },
+
+            visualizationTitle() {
+                const visualizationTitle = this.nameToDisplay(this.submodelElementData);
+                if ([this.submodelElementData.idShort, ''].includes(visualizationTitle)) return 'Bills of Material';
+                return visualizationTitle;
             },
         },
 

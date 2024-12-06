@@ -4,12 +4,7 @@
         <v-card class="mb-4">
             <v-card-title>
                 <div class="text-subtitle-1">
-                    {{
-                        nameToDisplay(submodelElementData) &&
-                        nameToDisplay(submodelElementData) != submodelElementData.idShort
-                            ? nameToDisplay(submodelElementData)
-                            : 'Digital Nameplate'
-                    }}
+                    {{ visualizationTitle }}
                 </div>
             </v-card-title>
             <v-card-text v-if="descriptionToDisplay(submodelElementData)" class="pt-0">
@@ -264,6 +259,12 @@
             // Get the selected Treeview Node (SubmodelElement) from the store
             SelectedNode() {
                 return this.aasStore.getSelectedNode;
+            },
+
+            visualizationTitle() {
+                const visualizationTitle = this.nameToDisplay(this.submodelElementData);
+                if ([this.submodelElementData.idShort, ''].includes(visualizationTitle)) return 'Digital Nameplate';
+                return visualizationTitle;
             },
         },
 
