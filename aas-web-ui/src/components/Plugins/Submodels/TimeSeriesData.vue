@@ -331,7 +331,7 @@
             // Function to initialize the TimeSeriesData Plugin
             initializeTimeSeriesData() {
                 if (Object.keys(this.submodelElementData).length == 0) {
-                    this.timeSeriesData = {}; // Reset the TimeSeriesData when no Node is selected
+                    this.timeSeriesData = {};
                     return;
                 }
 

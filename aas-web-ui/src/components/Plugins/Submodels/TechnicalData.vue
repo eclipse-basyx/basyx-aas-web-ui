@@ -310,7 +310,7 @@
                 this.loading = true;
 
                 if (Object.keys(this.submodelElementData).length == 0) {
-                    this.technicalData = {}; // Reset the DigitalNameplate Data when no Node is selected
+                    this.technicalData = {};
                     this.loading = false;
                     return;
                 }

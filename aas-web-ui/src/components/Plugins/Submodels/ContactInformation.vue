@@ -134,7 +134,7 @@
                 this.loading = true;
 
                 if (Object.keys(this.submodelElementData).length == 0) {
-                    this.contactInformationData = {}; // Reset the DigitalNameplate Data when no Node is selected
+                    this.contactInformationData = {};
                     this.loading = false;
                     return;
                 }
