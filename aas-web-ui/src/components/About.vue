@@ -5,35 +5,90 @@
         <br /><br />
 
         <h2>Involved Organizations and Companies</h2>
-        <v-sheet class="mt-5" theme="light" rounded>
+        <v-sheet class="mt-5" rounded>
             <v-row align="center" justify="center">
                 <v-col cols="3" class="pa-6">
-                    <v-img src="Basyx_Logo.svg">
-                        <template #sources>
-                            <source srcset="@/assets/BaSyx_Logo.svg" />
-                        </template>
-                    </v-img>
+                    <a href="https://basyx.org/" target="_blank">
+                        <v-img src="Basyx_Logo.svg">
+                            <template #sources>
+                                <source srcset="@/assets/BaSyx_Logo.svg" />
+                            </template>
+                        </v-img>
+                    </a>
                 </v-col>
                 <v-col cols="3" class="pa-6">
-                    <v-img src="HTW_Logo.png">
-                        <template #sources>
-                            <source srcset="@/assets/HTW_Logo.png" />
-                        </template>
-                    </v-img>
+                    <a href="https://www.htw-berlin.de/" target="_blank">
+                        <v-img src="HTW_Logo.png">
+                            <template #sources>
+                                <source srcset="@/assets/HTW_Logo.png" />
+                            </template>
+                        </v-img>
+                    </a>
                 </v-col>
                 <v-col cols="3" class="pa-6">
-                    <v-img src="IESE_Logo.svg">
-                        <template #sources>
-                            <source srcset="@/assets/IESE_Logo.svg" />
-                        </template>
-                    </v-img>
+                    <a href="https://www.iese.fraunhofer.de/" target="_blank">
+                        <v-img src="IESE_Logo.svg">
+                            <template #sources>
+                                <source srcset="@/assets/IESE_Logo.svg" />
+                            </template>
+                        </v-img>
+                    </a>
                 </v-col>
                 <v-col cols="3" class="pa-6">
-                    <v-img src="HARTING_Logo.png">
-                        <template #sources>
-                            <source srcset="@/assets/HARTING_Logo.png" />
+                    <a href="https://industrialdigitaltwin.org/" target="_blank">
+                        <v-img src="IDTA_Logo.png">
+                            <template #sources>
+                                <source srcset="@/assets/IDTA_Logo.png" />
+                            </template>
+                        </v-img>
+                    </a>
+                </v-col>
+            </v-row>
+            <v-row align="center" justify="center">
+                <v-col cols="3" class="pa-6">
+                    <a href="https://www.harting.com/" target="_blank">
+                        <v-img src="HARTING_Logo.png">
+                            <template #sources>
+                                <source srcset="@/assets/HARTING_Logo.png" />
+                            </template>
+                        </v-img>
+                    </a>
+                </v-col>
+                <v-col cols="3" class="pa-6">
+                    <a href="https://www.dfki.de/" target="_blank">
+                        <template v-if="isDark">
+                            <v-img src="DFKI_Logo_dark.png">
+                                <template #sources>
+                                    <source srcset="@/assets/DFKI_Logo_dark.png" />
+                                </template>
+                            </v-img>
                         </template>
-                    </v-img>
+                        <template v-else>
+                            <v-img src="DFKI_Logo_light.png">
+                                <template #sources>
+                                    <source srcset="@/assets/DFKI_Logo_light.png" />
+                                </template>
+                            </v-img>
+                        </template>
+                    </a>
+                </v-col>
+                <v-col cols="3" class="pa-6">
+                    <a href="https://arena2036.de/" target="_blank">
+                        <template v-if="isDark">
+                            <v-img src="ARENA2036_Logo_dark.png">
+                                <template #sources>
+                                    <source srcset="@/assets/ARENA2036_Logo_dark.png" />
+                                </template>
+                            </v-img>
+                        </template>
+                        <template v-else>
+                            <v-img src="ARENA2036_Logo_light.png">
+                                <template #sources>
+                                    <source srcset="@/assets/ARENA2036_Logo_light.png" />
+                                </template>
+                            </v-img>
+                        </template>
+                    </a>
                 </v-col>
             </v-row>
         </v-sheet>
@@ -138,9 +193,18 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
+    import { useTheme } from 'vuetify';
 
     export default defineComponent({
         name: 'About',
+
+        setup() {
+            const theme = useTheme();
+
+            return {
+                theme, // Theme Object
+            };
+        },
 
         data() {
             return {
@@ -187,6 +251,13 @@
                     },
                 ] as Array<any>,
             };
+        },
+
+        computed: {
+            // Check if the current Theme is dark
+            isDark() {
+                return this.theme.global.current.value.dark;
+            },
         },
 
         methods: {
