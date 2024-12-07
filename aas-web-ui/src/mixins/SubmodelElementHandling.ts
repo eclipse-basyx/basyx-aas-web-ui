@@ -645,26 +645,29 @@ export default defineComponent({
 
             semanticIdsToFetch.forEach((semanticId: string) => {
                 if (semanticId.startsWith('0173-1#')) {
-                    semanticIdsToFetch.push(semanticId.replace(/-1#(\d{2})-/, '/1///$1#'));
-                    semanticIdsToFetch.push('https://api.eclass-cdp.com/' + semanticId.replaceAll('#', '-'));
-                } else if (semanticId.startsWith('0173/1')) {
-                    semanticIdsToFetch.push(semanticId.replace(/\/1\/\/\/(\d{2})#/, '-1#$1-'));
+                    // e.g. 0173-1#01-AHF578#001
+                    semanticIdsToFetch.push(semanticId.replace(/-1#(\d{2})-/, '/1///$1#')); // 0173-1#01-AHF578#001 --> 0173/1///01#AHF578#001
+                    semanticIdsToFetch.push('https://api.eclass-cdp.com/' + semanticId.replaceAll('#', '-')); // 0173-1#01-AHF578#001 --> https://api.eclass-cdp.com/0173-1-01-AHF578-001
+                } else if (semanticId.startsWith('0173/1///')) {
+                    // e.g. 0173/1///01#AHF578#001
+                    semanticIdsToFetch.push(semanticId.replace(/\/1\/\/\/(\d{2})#/, '-1#$1-')); // 0173/1///01#AHF578#001 --> 0173-1#01-AHF578#001
                     semanticIdsToFetch.push(
                         'https://api.eclass-cdp.com/' +
-                            semanticId.replace(/\/1\/\/\/(\d{2})#/, '-1-$1-').replaceAll('#', '-')
+                            semanticId.replace(/\/1\/\/\/(\d{2})#/, '-1-$1-').replaceAll('#', '-') // 0173/1///01#AHF578#001 --> https://api.eclass-cdp.com/0173-1-01-AHF578-001
                     );
                 } else if (semanticId.startsWith('https://api.eclass-cdp.com/0173-1')) {
+                    // e.g. https://api.eclass-cdp.com/0173-1-01-AHF578-001
                     semanticIdsToFetch.push(
                         semanticId
                             .replaceAll('https://api.eclass-cdp.com/', '')
-                            .replaceAll('-', '#')
-                            .replace(/#1#(\d{2})#/, '-1#$1-')
+                            .replace(/-1-(\d{2})-/, '-1#$1-')
+                            .replace(/-(\d{3})$/, '#$1') // https://api.eclass-cdp.com/0173-1-01-AHF578-001 --> 0173-1#01-AHF578#001
                     );
                     semanticIdsToFetch.push(
                         semanticId
                             .replaceAll('https://api.eclass-cdp.com/', '')
-                            .replaceAll('-', '#')
-                            .replace(/#1#(\d{2})#/, '/1///$1#')
+                            .replace(/-1-(\d{2})-/, '/1///$1#')
+                            .replace(/-(\d{3})$/, '#$1') // https://api.eclass-cdp.com/0173-1-01-AHF578-001 --> 0173/1///01#AHF578#001
                     );
                 }
             });
