@@ -266,9 +266,9 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import CADPreview from '@/components/Visualizations/CADPreview.vue';
-    import ImagePreview from '@/components/Visualizations/ImagePreview.vue';
-    import PDFPreview from '@/components/Visualizations/PDFPreview.vue';
+    import CADPreview from '@/components/Plugins/CADPreview.vue';
+    import ImagePreview from '@/components/Plugins/ImagePreview.vue';
+    import PDFPreview from '@/components/Plugins/PDFPreview.vue';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';

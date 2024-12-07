@@ -52,14 +52,14 @@
                 </template>
                 <template v-else>
                     <component
-                        :is="visualization.name"
-                        v-for="(visualization, index) in filteredVisualizations"
+                        :is="plugin.name"
+                        v-for="(plugin, index) in filteredPlugins"
                         :key="index"
                         :submodel-element-data="submodelElementData"
-                        >{{ visualization.name }}</component
+                        >{{ plugin.name }}</component
                     >
                     <GenericDataVisu
-                        v-if="viewerMode && filteredVisualizations.length === 0"
+                        v-if="viewerMode && filteredPlugins.length === 0"
                         :submodel-element-data="submodelElementData.submodelElements"></GenericDataVisu>
                 </template>
             </v-card-text>
@@ -70,10 +70,10 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
+    import CADPreview from '@/components/Plugins/CADPreview.vue';
+    import ImagePreview from '@/components/Plugins/ImagePreview.vue';
+    import PDFPreview from '@/components/Plugins/PDFPreview.vue';
     import GenericDataVisu from '@/components/UIComponents/GenericDataVisu.vue';
-    import CADPreview from '@/components/Visualizations/CADPreview.vue';
-    import ImagePreview from '@/components/Visualizations/ImagePreview.vue';
-    import PDFPreview from '@/components/Visualizations/PDFPreview.vue';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -153,13 +153,13 @@
                 return this.navigationStore.getIsMobile;
             },
 
-            importedVisualizations() {
-                return this.navigationStore.getVisualizations;
+            importedPlugins() {
+                return this.navigationStore.getPlugins;
             },
 
             // Filtered Plugins
-            filteredVisualizations() {
-                return this.importedVisualizations.filter((plugin: any) => {
+            filteredPlugins() {
+                return this.importedPlugins.filter((plugin: any) => {
                     if (!plugin.semanticId) return false;
 
                     if (typeof plugin.semanticId === 'string') {

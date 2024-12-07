@@ -25,7 +25,7 @@
     import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
-        name: 'HelloWorldVisualization',
+        name: 'HelloWorldPlugin',
         // semanticId: 'http://hello.world.de/plugin_submodel', // semanticId of the HelloWorld-Plugin as string
         semanticId: ['http://hello.world.de/plugin_submodel', 'http://hello.world.de/plugin_property'], // semanticId of the HelloWorld-Plugin as array to use multiple semanticIds
         components: {

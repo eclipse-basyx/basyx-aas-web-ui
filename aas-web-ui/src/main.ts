@@ -18,13 +18,13 @@ import App from './App.vue';
 import { createAppRouter } from './router';
 import { useAuthStore } from './store/AuthStore';
 import { useEnvStore } from './store/EnvironmentStore';
-import { useNavigationStore, VisualizationType } from './store/NavigationStore';
+import { PluginType, useNavigationStore } from './store/NavigationStore';
 
 const app = createApp(App);
 
 const pinia = createPinia();
 
-async function loadVisualizations() {
+async function loadPlugins() {
     const router = await createAppRouter();
 
     app.use(router);
@@ -46,33 +46,33 @@ async function loadVisualizations() {
 
     await registerPlugins(app);
 
-    const visualizationFileRecords = {
-        ...import.meta.glob('./components/Visualizations/Submodels/*.vue'),
-        ...import.meta.glob('./components/Visualizations/SubmodelElements/*.vue'),
-        ...import.meta.glob('./UserVisualizations/*.vue'),
+    const pluginFileRecords = {
+        ...import.meta.glob('./components/Plugins/Submodels/*.vue'),
+        ...import.meta.glob('./components/Plugins/SubmodelElements/*.vue'),
+        ...import.meta.glob('./UserPlugins/*.vue'),
     };
 
-    const visualizationFiles = Object.keys(visualizationFileRecords);
+    const pluginFiles = Object.keys(pluginFileRecords);
 
-    const visualizations = [] as Array<VisualizationType>;
+    const plugins = [] as Array<PluginType>;
 
     await Promise.all(
-        visualizationFiles.map(async (path) => {
+        pluginFiles.map(async (path) => {
             const componentName = path
-                .replace('./components/Visualizations/Submodels/', '')
-                .replace('./components/Visualizations/SubmodelElements/', '')
-                .replace('./UserVisualizations/', '')
+                .replace('./components/Plugins/Submodels/', '')
+                .replace('./components/Plugins/SubmodelElements/', '')
+                .replace('./UserPlugins/', '')
                 .replace('.vue', '');
-            const component: any = await visualizationFileRecords[path]();
+            const component: any = await pluginFileRecords[path]();
             if (component.default.semanticId) {
                 app.component(componentName, (component.default || component) as ReturnType<typeof defineComponent>);
-                visualizations.push({ name: componentName, semanticId: component.default.semanticId });
+                plugins.push({ name: componentName, semanticId: component.default.semanticId });
             }
         })
     );
 
     const navigationStore = useNavigationStore();
-    navigationStore.dispatchVisualizations(visualizations);
+    navigationStore.dispatchPlugins(plugins);
     app.mount('#app');
 }
 
@@ -139,4 +139,4 @@ async function initKeycloak(keycloakUrl: string, keycloakRealm: string, keycloak
     });
 }
 
-loadVisualizations();
+loadPlugins();
