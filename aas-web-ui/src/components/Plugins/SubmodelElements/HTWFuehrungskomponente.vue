@@ -1118,6 +1118,7 @@
 
     export default defineComponent({
         name: 'HTWFuehrungskomponente',
+        semanticId: 'http://htw-berlin.de/smc_statemachine',
         mixins: [RequestHandling, SubmodelElementHandling],
         props: ['submodelElementData', 'selectedNode'],
 

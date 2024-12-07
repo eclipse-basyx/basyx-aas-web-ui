@@ -152,6 +152,9 @@ export default defineComponent({
                     //         .replace(/-1-(\d{2})-/, '-1#$1-')
                     //         .replace(/-(\d{3})$/, '#$1')
                     // );
+                    if (new RegExp(/\*\d{2}$/).test(key.value)) {
+                        key.value = key.value.slice(0, -3);
+                    }
                     if (new RegExp(/[#-]{1}\d{3}$/).test(semanticId)) {
                         // Eclass IRDI with version; like 0173-1#01-AHF578#001
                         // console.log('semanticId --> with version', semanticId);

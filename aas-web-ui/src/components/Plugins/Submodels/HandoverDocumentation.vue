@@ -271,15 +271,16 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
+    import CADPreview from '@/components/Plugins/CADPreview.vue';
+    import ImagePreview from '@/components/Plugins/ImagePreview.vue';
+    import PDFPreview from '@/components/Plugins/PDFPreview.vue';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
-    import CADPreview from './CADPreview.vue';
-    import ImagePreview from './ImagePreview.vue';
-    import PDFPreview from './PDFPreview.vue';
 
     export default defineComponent({
         name: 'HandoverDocumentation',
+        semanticId: '0173-1#01-AHF578#001',
         components: {
             ImagePreview,
             PDFPreview,
@@ -321,13 +322,18 @@
         methods: {
             async initHandoverDocumentation() {
                 this.loading = true;
-                // console.log('Initialize Handover Documentation Plugin: ', this.submodelElementData);
+
+                if (Object.keys(this.submodelElementData).length == 0) {
+                    this.handoverDocuData = {};
+                    this.loading = false;
+                    return;
+                }
                 let submodelElementData = { ...this.submodelElementData };
-                submodelElementData = await this.calculateSubmodelElementPathes(
+                this.handoverDocuData = await this.calculateSubmodelElementPathes(
                     submodelElementData,
                     this.SelectedNode.path
                 );
-                this.handoverDocuData = submodelElementData;
+
                 // create array of documents
                 let documents = this.handoverDocuData.submodelElements.filter((element: any) => {
                     return this.checkSemanticId(element, '0173-1#02-ABI500#001/0173-1#01-AHF579#001');

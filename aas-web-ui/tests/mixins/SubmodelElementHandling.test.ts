@@ -19,6 +19,8 @@ describe('SubmodelElementHandling', () => {
     const iri = 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate';
     const eclassIrdiWithVersion = '0173-1#01-AHF578#001';
     const eclassIrdiWithoutVersion = '0173-1#01-AHF578';
+    const eclassIrdiWithVersionAndCardinality = '0173-1#02-ABI502#001/0173-1#01-AHF581#001*02';
+    const eclassIrdiWithVersionAndNoCardinality = '0173-1#02-ABI502#001/0173-1#01-AHF581#001';
     const eclassIrdiSlashesWithVersion = '0173/1///01#AHF578#001';
     const eclassIrdiSlashesWithoutVersion = '0173/1///01#AHF578';
     const eclassIriWithVersion = 'https://api.eclass-cdp.com/0173-1-01-AHF578-001';
@@ -40,6 +42,13 @@ describe('SubmodelElementHandling', () => {
             testId: '24d16939-05f4-423b-b71b-f6f4f49ef30f',
             semanticId: eclassIrdiWithVersion,
             submodelElementSemanticId: eclassIrdiWithVersion,
+            strategy: 'exact',
+            match: true,
+        },
+        {
+            testId: '24d16939-05f4-423b-b71b-f6f4f49ef30f',
+            semanticId: eclassIrdiWithVersionAndNoCardinality,
+            submodelElementSemanticId: eclassIrdiWithVersionAndCardinality,
             strategy: 'exact',
             match: true,
         },
