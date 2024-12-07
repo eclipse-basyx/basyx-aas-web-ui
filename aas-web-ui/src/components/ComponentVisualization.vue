@@ -24,12 +24,7 @@
             <v-divider></v-divider>
             <v-card-text
                 v-if="
-                    SelectedNode &&
-                    Object.keys(SelectedNode).length > 0 &&
-                    Object.keys(submodelElementData).length > 0 &&
-                    submodelElementData.semanticId &&
-                    submodelElementData.semanticId.keys &&
-                    submodelElementData.semanticId.keys.length > 0
+                    SelectedNode && Object.keys(SelectedNode).length > 0 && Object.keys(submodelElementData).length > 0
                 "
                 style="overflow-y: auto; height: calc(100svh - 170px)">
                 <template v-if="submodelElementData.modelType == 'File' || submodelElementData.modelType == 'Blob'">
@@ -51,13 +46,20 @@
                         :submodel-element-data="submodelElementData"></CADPreview>
                 </template>
                 <template v-else>
-                    <component
-                        :is="plugin.name"
-                        v-for="(plugin, index) in filteredPlugins"
-                        :key="index"
-                        :submodel-element-data="submodelElementData"
-                        >{{ plugin.name }}</component
-                    >
+                    <template
+                        v-if="
+                            submodelElementData.semanticId &&
+                            submodelElementData.semanticId.keys &&
+                            submodelElementData.semanticId.keys.length > 0
+                        ">
+                        <component
+                            :is="plugin.name"
+                            v-for="(plugin, index) in filteredPlugins"
+                            :key="index"
+                            :submodel-element-data="submodelElementData"
+                            >{{ plugin.name }}</component
+                        >
+                    </template>
                     <GenericDataVisu
                         v-if="viewerMode && filteredPlugins.length === 0"
                         :submodel-element-data="submodelElementData.submodelElements"></GenericDataVisu>
