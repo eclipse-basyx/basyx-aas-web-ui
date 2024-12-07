@@ -5,7 +5,7 @@
         <br /><br />
 
         <h2>Involved Organizations and Companies</h2>
-        <v-sheet class="mt-5" rounded>
+        <v-sheet class="mt-5 pa-5" theme="dark" rounded>
             <v-row align="center" justify="center">
                 <v-col cols="3" class="pa-6">
                     <a href="https://basyx.org/" target="_blank">
