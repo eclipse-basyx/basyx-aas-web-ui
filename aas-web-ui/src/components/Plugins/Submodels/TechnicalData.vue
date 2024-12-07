@@ -3,8 +3,13 @@
         <!-- Header -->
         <v-card class="mb-4">
             <v-card-title>
-                <div class="text-subtitle-1">{{ 'Technical Data:' }}</div>
+                <div class="text-subtitle-1">
+                    {{ nameToDisplay(submodelElementData, 'Technical Data') }}
+                </div>
             </v-card-title>
+            <v-card-text v-if="descriptionToDisplay(submodelElementData)" class="pt-0">
+                {{ descriptionToDisplay(submodelElementData) }}
+            </v-card-text>
         </v-card>
         <!-- Technical Data Collections -->
         <v-card v-if="loading">

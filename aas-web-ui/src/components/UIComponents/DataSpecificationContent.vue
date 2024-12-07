@@ -3,7 +3,7 @@
         <v-list-item>
             <!-- Title -->
             <template #title>
-                <div class="text-subtitle-2 mt-2" v-html="'Data Specification Content:'"></div>
+                <div class="text-subtitle-2 mt-2">{{ 'Data Specification Content:' }}</div>
             </template>
             <!-- Content List -->
             <!-- dataType -->

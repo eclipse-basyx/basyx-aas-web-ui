@@ -49,7 +49,7 @@
                             :semantic-title="'SemanticID'"></SemanticID>
                     </v-list>
                     <v-divider></v-divider>
-                    <v-list nav class="px-4 pt-0 pb-0">
+                    <v-list nav class="px-4 pt-0 pb-5">
                         <!-- SubmodelELement Representation for different modelTypes -->
                         <Submodel
                             v-if="submodelElementData.modelType === 'Submodel'"
@@ -100,8 +100,7 @@
                         v-if="
                             submodelElementData.conceptDescriptions &&
                             submodelElementData.conceptDescriptions.length > 0
-                        "
-                        class="mt-5"></v-divider>
+                        "></v-divider>
                     <v-list
                         v-if="
                             submodelElementData.conceptDescriptions &&
@@ -118,7 +117,7 @@
                         </v-list-item>
                     </v-list>
                     <!-- Last Sync -->
-                    <v-divider class="mt-5"></v-divider>
+                    <v-divider></v-divider>
                     <v-list class="py-0">
                         <v-list-item>
                             <v-list-item-subtitle>

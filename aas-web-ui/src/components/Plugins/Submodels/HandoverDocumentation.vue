@@ -3,8 +3,13 @@
         <!-- Header -->
         <v-card class="mb-4">
             <v-card-title>
-                <div class="text-subtitle-1">{{ 'Handover Documentation:' }}</div>
+                <div class="text-subtitle-1">
+                    {{ nameToDisplay(submodelElementData, 'Handover Documentation') }}
+                </div>
             </v-card-title>
+            <v-card-text v-if="descriptionToDisplay(submodelElementData)" class="pt-0">
+                {{ descriptionToDisplay(submodelElementData) }}
+            </v-card-text>
         </v-card>
         <!-- Documents -->
         <v-card v-if="loading">
@@ -17,7 +22,7 @@
                         <template #prepend>
                             <v-icon size="small">mdi-file-outline</v-icon>
                         </template>
-                        <v-list-item-title>{{ document.idShort }}</v-list-item-title>
+                        <v-list-item-title>{{ nameToDisplay(document) }}</v-list-item-title>
                     </v-list-item>
                 </v-expansion-panel-title>
                 <v-divider v-if="panel === index"></v-divider>
@@ -228,7 +233,7 @@
                                     <th v-for="idProperty in document.documentIds[0].value" :key="idProperty.idShort">
                                         <v-list-item class="pl-0">
                                             <v-list-item-title class="text-caption">{{
-                                                idProperty.idShort
+                                                nameToDisplay(idProperty)
                                             }}</v-list-item-title>
                                         </v-list-item>
                                     </th>

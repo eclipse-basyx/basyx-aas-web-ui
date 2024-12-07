@@ -33,13 +33,10 @@
                     <v-card-title>{{ 'Are you sure?' }}</v-card-title>
                     <v-divider></v-divider>
                     <v-card-text>
-                        <div
-                            class="text-subtitleText"
-                            v-html="
-                                'Careful! You are about to delete the whole <strong class=\'text-normalText\'>' +
-                                selectedGroup.groupName +
-                                '</strong> Dashboard.'
-                            "></div>
+                        <div class="text-subtitleText">
+                            Careful! You are about to delete the whole
+                            <strong class="text-normalText"> {{ selectedGroup.groupName }} '</strong> Dashboard.
+                        </div>
                         <div class="mt-3 mb-2">Type the Dashboard Name to proceed.</div>
                         <v-text-field
                             v-model="selectedGroupInput"
