@@ -770,14 +770,14 @@ export default defineComponent({
         },
 
         // Name to be displayed
-        nameToDisplay(sme: any) {
+        nameToDisplay(sme: any, defaultNameToDisplay = '') {
             if (sme.displayName) {
                 const displayNameEn = sme.displayName.find((displayName: any) => {
                     return displayName.language === 'en' && displayName.text !== '';
                 });
                 if (displayNameEn && displayNameEn.text) return displayNameEn.text;
             }
-            return sme.idShort ? sme.idShort : '';
+            return !defaultNameToDisplay && sme.idShort ? sme.idShort : defaultNameToDisplay;
         },
 
         descriptionToDisplay(referable: any) {

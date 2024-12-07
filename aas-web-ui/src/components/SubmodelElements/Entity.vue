@@ -13,7 +13,7 @@
         <!-- globalAssetId -->
         <v-list-item v-if="entityObject.globalAssetId" class="px-1 pb-1 py-2 mb-3">
             <template #title>
-                <div class="text-subtitle-2 mt-2" v-html="'Global Asset ID: '"></div>
+                <div class="text-subtitle-2 mt-2">{{ 'Global Asset ID: ' }}</div>
             </template>
             <template #subtitle>
                 <div class="pt-2">
@@ -26,7 +26,7 @@
                         @click="jump(entityObject.globalAssetId)"
                         >Jump</v-btn
                     >
-                    <span v-html="entityObject.globalAssetId"></span>
+                    <span>{{ entityObject.globalAssetId }}</span>
                 </div>
             </template>
         </v-list-item>
@@ -36,7 +36,7 @@
             v-if="entityObject.specificAssetIds && entityObject.specificAssetIds.length > 0"
             class="px-1 pb-1 py-2 mb-3">
             <template #title>
-                <div class="text-subtitle-2 mt-2" v-html="'Specific Asset IDs: '"></div>
+                <div class="text-subtitle-2 mt-2">{{ 'Specific Asset IDs: ' }}</div>
             </template>
             <template #subtitle>
                 <div v-for="specificAssetId in entityObject.specificAssetIds" :key="specificAssetId.name" class="pt-2">
@@ -52,7 +52,7 @@
                     <v-chip label size="x-small" border color="primary" class="mr-2" style="margin-top: -3px">{{
                         specificAssetId.name
                     }}</v-chip>
-                    <span v-html="specificAssetId.value"></span>
+                    <span>{{ specificAssetId.value }}</span>
                 </div>
             </template>
         </v-list-item>

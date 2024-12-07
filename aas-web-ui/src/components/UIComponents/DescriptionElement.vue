@@ -10,10 +10,9 @@
             </v-tooltip>
             <!-- Description Title -->
             <template #title>
-                <div
-                    class="mt-2"
-                    :class="small ? 'text-caption' : 'text-subtitle-2 '"
-                    v-html="descriptionTitle + ':'"></div>
+                <div class="mt-2" :class="small ? 'text-caption' : 'text-subtitle-2 '">
+                    {{ descriptionTitle + ':' }}
+                </div>
             </template>
             <!-- Descriptions List (different Languages) -->
             <v-list-item-subtitle v-for="(description, i) in descriptionObject" :key="i">
@@ -21,7 +20,7 @@
                     <v-chip label size="x-small" border class="mr-2">{{
                         description.language ? description.language : 'no-lang'
                     }}</v-chip>
-                    <span v-html="description.text"></span>
+                    <span>{{ description.text }}</span>
                 </div>
             </v-list-item-subtitle>
         </v-list-item>

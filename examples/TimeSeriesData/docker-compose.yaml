@@ -86,7 +86,7 @@ services:
       - ./basyx/sm-registry.yml:/workspace/config/application.yml
     restart: always
   aas-web-ui:
-    image: eclipsebasyx/aas-gui:v2-241006
+    image: eclipsebasyx/aas-gui:v2-241114
     container_name: aas-ui
     ports:
       - '3000:3000'
