@@ -7,24 +7,31 @@
         <h2>Involved Organizations and Companies</h2>
         <v-sheet class="mt-5" theme="light" rounded>
             <v-row align="center" justify="center">
-                <v-col cols="4" class="pa-6">
+                <v-col cols="3" class="pa-6">
                     <v-img src="Basyx_Logo.svg">
                         <template #sources>
                             <source srcset="@/assets/BaSyx_Logo.svg" />
                         </template>
                     </v-img>
                 </v-col>
-                <v-col cols="4" class="pa-6">
+                <v-col cols="3" class="pa-6">
                     <v-img src="HTW_Logo.png">
                         <template #sources>
                             <source srcset="@/assets/HTW_Logo.png" />
                         </template>
                     </v-img>
                 </v-col>
-                <v-col cols="4" class="pa-6">
+                <v-col cols="3" class="pa-6">
                     <v-img src="IESE_Logo.svg">
                         <template #sources>
                             <source srcset="@/assets/IESE_Logo.svg" />
+                        </template>
+                    </v-img>
+                </v-col>
+                <v-col cols="3" class="pa-6">
+                    <v-img src="HARTING_Logo.png">
+                        <template #sources>
+                            <source srcset="@/assets/HARTING_Logo.png" />
                         </template>
                     </v-img>
                 </v-col>
