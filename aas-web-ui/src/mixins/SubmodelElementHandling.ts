@@ -142,9 +142,9 @@ export default defineComponent({
                 if (key.value.startsWith('0173-1#')) {
                     // Eclass IRDI like 0173-1#01-AHF578#001
                     // console.log('key.value', '0173-1#...');
-                    // console.log('key.value', key.value);
-                    // console.log('(1) ', semanticId);
-                    // console.log('(2) ', semanticId.replace(/\/1\/\/\/(\d{2})#/, '-1#$1-'));
+                    console.log('key.value', key.value);
+                    console.log('(1) ', semanticId);
+                    console.log('(2) ', semanticId.replace(/\/1\/\/\/(\d{2})#/, '-1#$1-'));
                     // console.log(
                     //     '(3) ',
                     //     semanticId
@@ -152,9 +152,12 @@ export default defineComponent({
                     //         .replace(/-1-(\d{2})-/, '-1#$1-')
                     //         .replace(/-(\d{3})$/, '#$1')
                     // );
+                    if (new RegExp(/\*\d{2}$/).test(key.value)) {
+                        key.value = key.value.slice(0, -3);
+                    }
                     if (new RegExp(/[#-]{1}\d{3}$/).test(semanticId)) {
                         // Eclass IRDI with version; like 0173-1#01-AHF578#001
-                        // console.log('semanticId --> with version', semanticId);
+                        console.log('semanticId --> with version', semanticId);
                         if (
                             key.value === semanticId || // e.g.0173-1#01-AHF578#001
                             key.value === semanticId.replace(/\/1\/\/\/(\d{2})#/, '-1#$1-') || // e.g. semanticId 0173/1///01#AHF578#001 --> 0173-1#01-AHF578#001
@@ -164,12 +167,12 @@ export default defineComponent({
                                     .replace(/-1-(\d{2})-/, '-1#$1-')
                                     .replace(/-(\d{3})$/, '#$1') // e.g. semanticId https://api.eclass-cdp.com/0173-1-01-AHF578-001 --> 0173-1#01-AHF578#001
                         ) {
-                            // console.log('--> with version: true');
+                            console.log('--> with version: true');
                             return true;
                         }
                     } else {
                         // Eclass IRDI without version; like 0173-1#01-AHF578
-                        // console.log('semanticId --> without version', semanticId);
+                        console.log('semanticId --> without version', semanticId);
                         if (
                             key.value.startsWith(semanticId) || // e.g. semanticId 0173-1#01-AHF578#001
                             key.value.startsWith(semanticId.replace(/\/1\/\/\/(\d{2})#/, '-1#$1-')) || // e.g. semanticId0173/1///01#AHF578#001 --> 0173-1#01-AHF578#001
