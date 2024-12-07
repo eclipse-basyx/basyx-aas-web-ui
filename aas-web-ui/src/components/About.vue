@@ -30,10 +30,10 @@
                             v-bind="hoverProps"
                             :style="{ filter: isHovering ? 'grayscale(0%)' : 'grayscale(100%)' }">
                             <template v-if="isDark" #sources>
-                                <source srcset="@/assets/HTW_Logo_Dark.svg" />
+                                <source srcset="@/assets/HTW_Logo_dark.svg" />
                             </template>
                             <template v-else #sources>
-                                <source srcset="@/assets/HTW_Logo_Light.svg" />
+                                <source srcset="@/assets/HTW_Logo_light.svg" />
                             </template>
                         </v-img>
                     </a>
