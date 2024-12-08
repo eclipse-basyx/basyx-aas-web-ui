@@ -25,6 +25,8 @@ describe('SubmodelElementHandling', () => {
     const eclassIrdiSlashesWithoutVersion = '0173/1///01#AHF578';
     const eclassIriWithVersion = 'https://api.eclass-cdp.com/0173-1-01-AHF578-001';
     const eclassIriWithoutVersion = 'https://api.eclass-cdp.com/0173-1-01-AHF578';
+    const ieccddIrdiWithVersion = '0112/2///61987#ABN590#002';
+    const ieccddIrdiWithOutVersion = '0112/2///61987#ABN590';
 
     // Define test data for semanticIdCheck()
     const semanticIdTestCombinations = [
@@ -33,6 +35,36 @@ describe('SubmodelElementHandling', () => {
             testId: '82f1c855-0a14-4b0c-97af-d4fbfba09887',
             semanticId: iri,
             submodelElementSemanticId: iri,
+            strategy: 'exact',
+            match: true,
+        },
+
+        // IEC CDD (test cases)
+        {
+            testId: 'd6f94546-1819-472f-bcff-ade7944da5d6',
+            semanticId: ieccddIrdiWithVersion,
+            submodelElementSemanticId: ieccddIrdiWithVersion,
+            strategy: 'exact',
+            match: true,
+        },
+        {
+            testId: '1daf6f2c-5a10-48de-9b31-b5539061b4c2',
+            semanticId: ieccddIrdiWithOutVersion,
+            submodelElementSemanticId: ieccddIrdiWithOutVersion,
+            strategy: 'exact',
+            match: true,
+        },
+        {
+            testId: '2c8d1ce5-4cbf-4a78-a02d-70e35970cd07',
+            semanticId: ieccddIrdiWithVersion,
+            submodelElementSemanticId: ieccddIrdiWithOutVersion,
+            strategy: 'exact',
+            match: false,
+        },
+        {
+            testId: '9662075d-a90d-4857-96e0-f695a2dc40ed',
+            semanticId: ieccddIrdiWithOutVersion,
+            submodelElementSemanticId: ieccddIrdiWithVersion,
             strategy: 'exact',
             match: true,
         },
@@ -46,7 +78,7 @@ describe('SubmodelElementHandling', () => {
             match: true,
         },
         {
-            testId: '24d16939-05f4-423b-b71b-f6f4f49ef30f',
+            testId: 'ec1566eb-3270-4f8a-96af-6397ffb7ec97',
             semanticId: eclassIrdiWithVersionAndNoCardinality,
             submodelElementSemanticId: eclassIrdiWithVersionAndCardinality,
             strategy: 'exact',

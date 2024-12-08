@@ -139,7 +139,20 @@ export default defineComponent({
                 return false;
 
             for (const key of submodelElement.semanticId.keys) {
-                if (key.value.startsWith('0173-1#')) {
+                if (key.value.startsWith('0112/')) {
+                    // IEC CDD like 0112/2///61987#ABN590#002
+                    if (new RegExp(/[#-]{1}\d{3}$/).test(semanticId)) {
+                        // IEC CDD with version; like 0112/2///61987#ABN590#002
+                        if (key.value === semanticId) {
+                            return true;
+                        }
+                    } else {
+                        // IEC CDD without version; like 0112/2///61987#ABN590
+                        if (key.value.startsWith(semanticId)) {
+                            return true;
+                        }
+                    }
+                } else if (key.value.startsWith('0173-1#')) {
                     // Eclass IRDI like 0173-1#01-AHF578#001
                     // console.log('key.value', '0173-1#...');
                     // console.log('key.value', key.value);
