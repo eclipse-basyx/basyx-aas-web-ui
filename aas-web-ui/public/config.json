@@ -16,5 +16,5 @@
   "keycloakRealm": "",
   "keycloakClientId": "",
   "endpointConfigAvailable": true,
-  "singleAasRedirect": "https://basyx.org/"
+  "singleAasRedirect": ""
 }
