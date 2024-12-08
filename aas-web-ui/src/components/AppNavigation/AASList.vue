@@ -2,8 +2,10 @@
     <v-container fluid class="pa-0">
         <v-card color="card" elevation="0">
             <!-- Title Bar in the AAS List -->
-            <v-card-title v-if="singleAasRedirect" style="padding: 16px 16px 16px"> Asset & AAS </v-card-title>
-            <v-card-title v-else>
+            <v-card-title v-if="singleAasRedirect && !isMobile" style="padding: 16px 16px 16px">
+                Asset & AAS
+            </v-card-title>
+            <v-card-title v-else-if="!isMobile">
                 <v-row align="center">
                     <v-col cols="auto" class="px-0">
                         <v-tooltip open-delay="600" location="bottom" :disabled="isMobile">
@@ -13,7 +15,7 @@
                                     variant="plain"
                                     :loading="listLoading"
                                     v-bind="props"
-                                    @click="reloadList()">
+                                    @click="loadAASListData()">
                                     <template #loader>
                                         <span class="custom-loader"><v-icon light>mdi-cached</v-icon></span>
                                     </template>
@@ -290,7 +292,7 @@
             // Watch the AAS Registry URL for changes and reload the AAS List if the URL changes
             aasRegistryURL() {
                 if (this.aasRegistryURL !== '') {
-                    this.reloadList();
+                    this.loadAASListData();
                     if (this.statusCheck) {
                         this.addConnectionInterval();
                     }
@@ -309,7 +311,7 @@
             // watch for changes in the trigger for AAS List reload
             triggerAASListReload(triggerVal) {
                 if (triggerVal === true) {
-                    this.reloadList();
+                    this.loadAASListData();
                     this.navigationStore.dispatchTriggerAASListReload(false);
                 }
             },
@@ -322,21 +324,8 @@
 
         mounted() {
             // Load the AAS List on Startup if the AAS Registry URL is set
-            if (this.aasRegistryURL !== '') {
-                this.getAASData();
-            }
-
-            // check if the aas Query is set in the URL and if so load the AAS
-            const searchParams = new URL(window.location.href).searchParams;
-            const aasEndpoint = searchParams.get('aas');
-            if (aasEndpoint) {
-                // console.log('AAS Query is set: ', aasEndpoint);
-                let aas = {} as any;
-                let endpoints = [];
-                endpoints.push({ protocolInformation: { href: aasEndpoint }, interface: 'AAS-3.0' });
-                aas.endpoints = endpoints;
-                // dispatch the AAS set by the URL to the store
-                this.aasStore.dispatchSelectedAAS(aas);
+            if (this.aasRegistryURL !== '' && !this.singleAasRedirect) {
+                this.loadAASListData();
             }
 
             // check if the status-check is set in the local storage and if so set the status-check state in the store
@@ -367,30 +356,20 @@
                 this.navigationStore.dispatchDrawerState(false);
             },
             // Function to get the AAS Data from the Registry Server
-            getAASData() {
+            loadAASListData() {
                 this.listLoading = true;
                 // check if aasRegistryURL includes "/shell-descriptors" and add id if not (backward compatibility)
                 if (!this.aasRegistryURL.includes('/shell-descriptors')) {
                     this.aasRegistryURL += '/shell-descriptors';
                 }
                 let path = this.aasRegistryURL;
-                if (this.singleAasRedirect) {
-                    const aasEndpoint = new URL(window.location.href).searchParams.get('aas') as string;
-                    const aasId = aasEndpoint.substring(aasEndpoint.lastIndexOf('/') + 1);
-                    path += '/' + aasId;
-                }
                 let context = 'retrieving AAS Data';
                 let disableMessage = false;
                 this.getRequest(path, context, disableMessage).then((response: any) => {
                     if (response.success) {
                         // execute if the AAS Registry is found
                         // sort data by identification id (ascending) and store it in the AASData variable
-                        let registeredAAS;
-                        if (this.singleAasRedirect) {
-                            registeredAAS = [response.data];
-                        } else {
-                            registeredAAS = response.data.result;
-                        }
+                        let registeredAAS = response.data.result;
                         let sortedData = registeredAAS.sort((a: { [x: string]: number }, b: { [x: string]: number }) =>
                             a['id'] > b['id'] ? 1 : -1
                         );
@@ -446,11 +425,6 @@
                 });
             },
 
-            // Function to reload the AAS List
-            reloadList() {
-                this.getAASData();
-            },
-
             // Function to filter the AAS List
             filterAASList(value: string) {
                 // console.log('Filter AAS List: ', value);
@@ -467,7 +441,7 @@
             },
 
             // Function to select an AAS
-            selectAAS(AAS: any) {
+            async selectAAS(AAS: any) {
                 // console.log('Select AAS: ', AAS);
                 // return if loading state is true -> prevents multiple requests
                 if (this.loading) {
@@ -484,20 +458,17 @@
                     // Deselect AAS
                     this.router.push({ query: {} });
                     this.aasStore.dispatchSelectedAAS({});
-                    this.navigationStore.dispatchTriggerAASSelected();
                 } else {
                     let scrollToAasAfterDispatch = false;
                     if (!this.selectAAS || Object.keys(this.selectAAS).length === 0) {
                         scrollToAasAfterDispatch = true;
                     }
                     // Select AAS
-                    const shellHref = this.extractEndpointHref(AAS, 'AAS-3.0');
+                    const aasEndpoint = this.extractEndpointHref(AAS, 'AAS-3.0');
                     // Add AAS Endpoint as Query to the Router
-                    this.router.push({ query: { aas: shellHref } });
+                    this.router.push({ query: { aas: aasEndpoint } });
                     // dispatch the selected AAS to the Store
-                    this.aasStore.dispatchSelectedAAS(AAS);
-                    // trigger the AAS Selected Event
-                    this.navigationStore.dispatchTriggerAASSelected();
+                    await this.loadAndDispatchAas(aasEndpoint);
                     if (scrollToAasAfterDispatch) this.scrollToSelectedAAS();
                 }
             },
@@ -587,7 +558,7 @@
                     this.deleteRequest(path, context, disableMessage).then((response: any) => {
                         if (response.success) {
                             // execute if deletion was successful
-                            this.reloadList(); // reload the AAS List
+                            this.loadAASListData(); // reload the AAS List
                         }
                     });
                 }
@@ -662,9 +633,7 @@
                         //remove query from URL
                         this.router.push({ path: this.route.path, query: {} });
                         this.aasStore.dispatchSelectedAAS({});
-                        this.aasStore.dispatchSelectedNode({});
-                        this.reloadList(); // reload the AAS List
-                        this.navigationStore.dispatchTriggerAASSelected();
+                        this.loadAASListData(); // reload the AAS List
                     }
                     this.deleteLoading = false;
                 }

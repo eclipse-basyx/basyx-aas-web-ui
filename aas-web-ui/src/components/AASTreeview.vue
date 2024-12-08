@@ -7,9 +7,9 @@
                     <v-col cols="auto">
                         <span>AAS Treeview</span>
                     </v-col>
-                    <v-col v-if="nameToDisplay(SelectedAAS)" cols="auto" class="pl-1 pt-2">
+                    <v-col v-if="nameToDisplay(selectedAAS)" cols="auto" class="pl-1 pt-2">
                         <v-chip size="x-small" color="primary" label border>{{
-                            'AAS: ' + nameToDisplay(SelectedAAS)
+                            'AAS: ' + nameToDisplay(selectedAAS)
                         }}</v-chip>
                     </v-col>
                 </v-row>
@@ -81,13 +81,8 @@
 
         computed: {
             // get selected AAS from Store
-            SelectedAAS() {
+            selectedAAS() {
                 return this.aasStore.getSelectedAAS;
-            },
-
-            // get the trigger for AAS selection from Store
-            triggerAAS() {
-                return this.navigationStore.getTriggerAASSelected;
             },
 
             // gets loading State from Store
@@ -116,8 +111,7 @@
         },
 
         watch: {
-            // initialize Treeview when AAS gets selected
-            triggerAAS() {
+            selectedAAS() {
                 this.initializeTree();
             },
 
@@ -155,10 +149,10 @@
 
         methods: {
             // Function to get the Submodels from the selected AAS (retrieved from the AAS with the provided endpoint)
-            initializeTree() {
+            async initializeTree() {
                 // console.log('Initialize Treeview', this.initialUpdate, this.initialNode);
                 // return if no endpoints are available
-                if (!this.SelectedAAS || !this.SelectedAAS.endpoints || this.SelectedAAS.endpoints.length === 0) {
+                if (!this.selectedAAS || !this.selectedAAS.endpoints || this.selectedAAS.endpoints.length === 0) {
                     // TODO: this seems to get executed on reload with a selected AAS
                     // this.navigationStore.dispatchSnackbar({ status: true, timeout: 4000, color: 'error', btnColor: 'buttonText', text: 'AAS with no (valid) Endpoint selected!' });
                     this.submodelData = [];
@@ -167,58 +161,19 @@
                 if (this.loading && !this.initialUpdate) return; // return if loading state is true -> prevents multiple requests
                 this.aasStore.dispatchLoadingState(true); // set loading state to true
                 this.submodelData = []; // reset Treeview Data
-                // retrieve AAS from endpoint
-                const shellHref = this.extractEndpointHref(this.selectedAAS, 'AAS-3.0');
-                let path = shellHref;
-                let context = 'retrieving AAS Data';
-                let disableMessage = false;
-                this.getRequest(path, context, disableMessage)
-                    .then(async (response: any) => {
-                        if (response.success) {
-                            // execute if the Request was successful
-                            try {
-                                let AAS = response.data;
-                                AAS.endpoints = this.SelectedAAS.endpoints;
-                                this.aasStore.dispatchSelectedAAS(AAS); // dispatch the selected AAS to the Store
-                                // request submodels from the retrieved AAS (top layer of the Treeview)
-                                let submodelData = await this.requestSubmodels(AAS.submodels);
-                                // set the isActive prop of the initialNode if it exists and the initialUpdate flag is set
-                                if (this.initialUpdate && this.initialNode) {
-                                    let expandedSubmodelData = this.expandTree(submodelData, this.initialNode); // Update the Treeview to expand until the initially set node is reached
-                                    // this.updateNode(this.initialNode); // set the isActive prop of the initialNode to true
-                                    this.initialUpdate = false;
-                                    this.initialNode = {};
-                                    // console.log('Expanded Treeview Data: ', expandedSubmodelData)
-                                    this.submodelData = expandedSubmodelData; // set the Treeview Data
-                                } else {
-                                    this.submodelData = submodelData; // set the Treeview Data
-                                    // console.log('Treeview Data: ', this.submodelData)
-                                }
-                            } catch (error: any) {
-                                // console.error('Error while parsing the Submodel References: ', error);
-                                const errorMessage = error.message;
-                                const errorStack = error.stack;
-                                const errorLocation = errorStack ? errorStack.split('\n')[1] : '';
-                                this.navigationStore.dispatchSnackbar({
-                                    status: true,
-                                    timeout: 60000,
-                                    color: 'error',
-                                    btnColor: 'buttonText',
-                                    baseError: 'Error while parsing the Submodel References!',
-                                    extendedError: `Error: ${errorMessage}\nLocation: ${errorLocation.trim()}`,
-                                });
-                            } finally {
-                                this.aasStore.dispatchLoadingState(false);
-                            }
-                        } else {
-                            // execute if the Request failed
-                            this.submodelData = [];
-                            this.aasStore.dispatchLoadingState(false);
-                        }
-                    })
-                    .catch(() => {
-                        this.aasStore.dispatchLoadingState(false);
-                    });
+                let submodelData = await this.requestSubmodels(this.selectedAAS.submodels);
+                // set the isActive prop of the initialNode if it exists and the initialUpdate flag is set
+                if (this.initialUpdate && this.initialNode) {
+                    let expandedSubmodelData = this.expandTree(submodelData, this.initialNode); // Update the Treeview to expand until the initially set node is reached
+                    // this.updateNode(this.initialNode); // set the isActive prop of the initialNode to true
+                    this.initialUpdate = false;
+                    this.initialNode = {};
+                    // console.log('Expanded Treeview Data: ', expandedSubmodelData)
+                    this.submodelData = expandedSubmodelData; // set the Treeview Data
+                } else {
+                    this.submodelData = submodelData; // set the Treeview Data
+                    // console.log('Treeview Data: ', this.submodelData)
+                }
             },
 
             // Function to request all Submodels for the selected AAS
@@ -434,9 +389,9 @@
 
             // Function to initialize the treeview with route params
             initTreeWithRouteParams() {
-                // check if the SelectedAAS is already set in the Store and initialize the Treeview if so
-                if (this.SelectedAAS && this.SelectedAAS.endpoints && this.SelectedAAS.endpoints.length > 0) {
-                    // console.log('init Tree from Route Params: ', this.SelectedAAS);
+                // check if the selectedAAS is already set in the Store and initialize the Treeview if so
+                if (this.selectedAAS && this.selectedAAS.endpoints && this.selectedAAS.endpoints.length > 0) {
+                    // console.log('init Tree from Route Params: ', this.selectedAAS);
                     this.initializeTree();
                 }
 

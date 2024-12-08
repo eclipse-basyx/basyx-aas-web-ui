@@ -21,7 +21,7 @@ export const useAASStore = defineStore({
     actions: {
         dispatchSelectedAAS(aasData: object) {
             this.aasObject = aasData;
-            this.selectedNode = {};
+            this.selectedNode = {}; // Clear node
         },
         dispatchLoadingState(loadingState: boolean) {
             this.loadingState = loadingState;

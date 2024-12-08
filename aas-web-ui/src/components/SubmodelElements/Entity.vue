@@ -128,7 +128,7 @@
             checkAndSetDisabledState(assetId: string) {
                 this.loadingStates[assetId] = true;
                 this.checkAssetId(assetId)
-                    .then(({ success, aas }) => {
+                    .then(({ success, aas }: { success: boolean; aas?: any }) => {
                         this.loadingStates[assetId] = false;
                         if (success) {
                             this.disabledStates[assetId] = false;
