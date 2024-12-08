@@ -174,6 +174,7 @@
                     this.submodelData = submodelData; // set the Treeview Data
                     // console.log('Treeview Data: ', this.submodelData)
                 }
+                this.aasStore.dispatchLoadingState(false);
             },
 
             // Function to request all Submodels for the selected AAS

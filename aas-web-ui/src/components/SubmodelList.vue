@@ -193,6 +193,7 @@
                 } else {
                     this.submodelData = submodelData; // set the Submodel Data
                 }
+                this.aasStore.dispatchLoadingState(false);
             },
 
             // Function to request all Submodels for the selected AAS
