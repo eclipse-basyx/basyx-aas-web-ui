@@ -72,10 +72,8 @@ export const useEnvStore = defineStore({
                     const regex = new RegExp(expression);
                     if (config.singleAasRedirect.match(regex)) {
                         // If valid URL
-                        console.log('VALID URL');
                         this.singleAasRedirect = config.singleAasRedirect;
                     } else {
-                        console.log('NONVALID URL');
                         this.singleAasRedirect = '';
                     }
                 }
