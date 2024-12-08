@@ -20,6 +20,7 @@ export const useEnvStore = defineStore({
         keycloakRealm: '',
         keycloakClientId: '',
         endpointConfigAvailable: true,
+        singleAasRedirect: '',
     }),
     getters: {
         getEnvLogoLightPath: (state) => state.logoLightPath,
@@ -39,6 +40,7 @@ export const useEnvStore = defineStore({
         getKeycloakRealm: (state) => state.keycloakRealm,
         getKeycloakClientId: (state) => state.keycloakClientId,
         getEndpointConfigAvailable: (state) => state.endpointConfigAvailable,
+        getSingleAasRedirect: (state) => state.singleAasRedirect,
     },
     actions: {
         async fetchConfig() {
@@ -63,6 +65,7 @@ export const useEnvStore = defineStore({
                 this.keycloakClientId = config.keycloakClientId;
                 this.endpointConfigAvailable =
                     config.endpointConfigAvailable === true || config.endpointConfigAvailable === 'true' ? true : false;
+                this.singleAasRedirect = config.singleAasRedirect;
             } catch (error) {
                 console.error('Error fetching config.json: ', error);
             }
