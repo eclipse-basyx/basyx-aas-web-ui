@@ -1,6 +1,5 @@
 <template>
     <v-container fluid class="pa-0">
-        {{ console.log(administrativeInformationObject) }}
         <v-list-item>
             <!-- AdministrativeInformation Title -->
             <template #title>
@@ -11,7 +10,7 @@
             <template #subtitle>
                 <v-list nav class="pa-0">
                     <!-- Creator -->
-                    <v-list-item v-if="administrativeInformationObject?.creator.keys.length > 0" class="ma-0">
+                    <v-list-item v-if="administrativeInformationObject?.creator?.keys?.length > 0" class="ma-0">
                         <v-tooltip activator="parent" open-delay="600" transition="slide-x-transition">
                             <div
                                 v-for="(creator, i) in administrativeInformationObject.creator.keys"
@@ -75,7 +74,7 @@
                 </v-list>
                 <v-divider
                     v-if="
-                        (administrativeInformationObject?.creator.keys.length > 0 ||
+                        (administrativeInformationObject?.creator?.keys?.length > 0 ||
                             (administrativeInformationObject.version &&
                                 administrativeInformationObject.version !== '') ||
                             (administrativeInformationObject.revision &&
@@ -111,7 +110,7 @@
                 </v-hover>
                 <v-divider
                     v-if="
-                        (administrativeInformationObject?.creator.keys.length > 0 ||
+                        (administrativeInformationObject?.creator?.keys?.length > 0 ||
                             (administrativeInformationObject.version &&
                                 administrativeInformationObject.version !== '') ||
                             (administrativeInformationObject.revision &&
