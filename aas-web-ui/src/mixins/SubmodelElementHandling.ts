@@ -141,6 +141,8 @@ export default defineComponent({
             for (const key of submodelElement.semanticId.keys) {
                 if (key.value.startsWith('0112/')) {
                     // IEC CDD like 0112/2///61987#ABN590#002
+                    // console.log('key.value', '0112/...');
+                    // console.log('key.value', key.value);
                     if (new RegExp(/[#-]{1}\d{3}$/).test(semanticId)) {
                         // IEC CDD with version; like 0112/2///61987#ABN590#002
                         if (key.value === semanticId) {
@@ -167,6 +169,7 @@ export default defineComponent({
                     // );
                     if (new RegExp(/\*\d{2}$/).test(key.value)) {
                         key.value = key.value.slice(0, -3);
+                        semanticId = semanticId.slice(0, -3);
                     }
                     if (new RegExp(/[#-]{1}\d{3}$/).test(semanticId)) {
                         // Eclass IRDI with version; like 0173-1#01-AHF578#001
@@ -295,11 +298,19 @@ export default defineComponent({
                         }
                     }
                 } else if (key.value.startsWith('http://') || key.value.startsWith('https://')) {
-                    // e.g. IDTA IRI like
-                    if (new RegExp(/\/\d\/\d\/{1}/).test(semanticId)) {
+                    // IRI like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/0/9/
+                    console.log('key.value', 'http...');
+                    console.log('key.value', key.value);
+                    if (key.value.endsWith('/')) key.value = key.value.substring(0, key.value.length - 1);
+                    if (semanticId.endsWith('/')) semanticId = semanticId.substring(0, semanticId.length - 1);
+                    if (new RegExp(/\/\d{1,}\/\d{1,}$/).test(semanticId)) {
+                        // IRI with version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/0/9/
+                        // console.log('semanticId --> with version', semanticId);
                         if (key.value === semanticId) return true;
                     } else {
-                        if (semanticId.startsWith(key.value)) return true;
+                        // IRI without version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/
+                        // console.log('semanticId --> without version', semanticId);
+                        if (key.value.startsWith(semanticId)) return true;
                     }
                 } else {
                     if (key.value === semanticId) return true;
@@ -685,6 +696,13 @@ export default defineComponent({
                             .replace(/-1-(\d{2})-/, '/1///$1#')
                             .replace(/-(\d{3})$/, '#$1') // https://api.eclass-cdp.com/0173-1-01-AHF578-001 --> 0173/1///01#AHF578#001
                     );
+                } else if (semanticId.startsWith('http://') || semanticId.startsWith('https://')) {
+                    // e.g. IRI
+                    if (semanticId.endsWith('/')) {
+                        semanticIdsToFetch.push(semanticId.substring(0, semanticId.length - 1));
+                    } else {
+                        semanticIdsToFetch.push(semanticId + '/');
+                    }
                 }
             });
 
