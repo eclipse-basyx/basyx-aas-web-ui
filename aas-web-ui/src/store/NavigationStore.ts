@@ -56,7 +56,6 @@ export const useNavigationStore = defineStore({
         plugins: [] as PluginType[],
         triggerAASListReload: false as boolean,
         triggerAASListScroll: false as boolean,
-        triggerAASSelected: false as boolean,
     }),
 
     getters: {
@@ -75,7 +74,6 @@ export const useNavigationStore = defineStore({
         getPlugins: (state) => state.plugins,
         getTriggerAASListReload: (state) => state.triggerAASListReload,
         getTriggerAASListScroll: (state) => state.triggerAASListScroll,
-        getTriggerAASSelected: (state) => state.triggerAASSelected,
     },
 
     actions: {
@@ -129,9 +127,6 @@ export const useNavigationStore = defineStore({
         },
         dispatchTriggerAASListScroll() {
             this.triggerAASListScroll = !this.triggerAASListScroll;
-        },
-        dispatchTriggerAASSelected() {
-            this.triggerAASSelected = !this.triggerAASSelected;
         },
     },
 });
