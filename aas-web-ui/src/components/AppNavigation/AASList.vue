@@ -41,13 +41,21 @@
             </v-card-title>
             <v-divider></v-divider>
             <!-- AAS List -->
-            <v-list nav class="bg-card card pa-0">
-                <v-virtual-scroll
-                    ref="virtualScroll"
-                    :items="AASData"
-                    :item-height="56"
-                    :height="isMobile ? 'calc(100svh - 170px)' : 'calc(100vh - 218px)'"
-                    class="pb-2 bg-card">
+            <v-list
+                nav
+                class="bg-card card pa-0"
+                :style="{
+                    display: 'flex',
+                    'flex-direction': 'column',
+                    height: isMobile
+                        ? selectedAAS && Object.keys(selectedAAS).length > 0
+                            ? '176px'
+                            : 'calc(100vh - 170px)'
+                        : selectedAAS && Object.keys(selectedAAS).length > 0
+                          ? 'calc(50vh - 111px)'
+                          : 'calc(100vh - 218px)',
+                }">
+                <v-virtual-scroll ref="virtualScroll" :items="AASData" :item-height="56" class="pb-2 bg-card">
                     <template #default="{ item }">
                         <!-- Single AAS -->
                         <v-list-item
@@ -93,13 +101,6 @@
                                     color="error"
                                     text-color="buttonText"
                                     inline></v-badge>
-                                <!-- Information Button -->
-                                <v-btn
-                                    icon="mdi-information-outline"
-                                    size="x-small"
-                                    variant="plain"
-                                    style="z-index: 9000"
-                                    @click.stop="showAASDetails(item)"></v-btn>
                                 <!-- Download AAS -->
                                 <v-btn
                                     v-if="aasRepoURL"
@@ -127,10 +128,7 @@
                 </v-virtual-scroll>
             </v-list>
             <!-- AAS Details (only visible if the Information Button is pressed on an AAS) -->
-            <AASListDetails
-                :details-object="detailsObject"
-                :show-details-card="showDetailsCard"
-                @close-details="showDetailsCard = false" />
+            <AASListDetails />
             <!-- Collapse/extend Sidebar Button -->
             <v-list v-if="!isMobile" nav style="width: 100%; z-index: 9000" class="bg-detailsCard pa-0">
                 <v-divider style="margin-left: -8px; margin-right: -8px"></v-divider>
@@ -205,8 +203,6 @@
             return {
                 AASData: [], // Variable to store the AAS Data
                 unfilteredAASData: [], // Variable to store the AAS Data before filtering
-                detailsObject: {} as any, // Variable to store the AAS Data of the currently selected AAS
-                showDetailsCard: false, // Variable to store if the Details Card should be shown
                 listLoading: false, // Variable to store if the AAS List is loading
                 deleteDialogShowing: false, // Variable to store if the Delete Dialog should be shown
                 deleteSubmodels: false, // Variable to store if the Submodels should be deleted
@@ -307,13 +303,6 @@
                 if (triggerVal === true) {
                     this.reloadList();
                     this.navigationStore.dispatchTriggerAASListReload(false);
-                }
-            },
-
-            // watch for changes in the selected AAS
-            selectedAAS() {
-                if (this.selectedAAS && Object.keys(this.selectedAAS).length > 0) {
-                    this.showDetailsCard = false;
                 }
             },
 
@@ -473,21 +462,21 @@
                     });
                     return;
                 }
-                const shellHref = this.extractEndpointHref(AAS, 'AAS-3.0');
-                if (this.isMobile) {
-                    // Change to Treeview add AAS Endpoint as Query to the Router
-                    this.router.push({
-                        path: '/submodellist',
-                        query: { aas: shellHref },
-                    });
+                if (this.selectedAAS && Object.keys(this.selectedAAS).length > 0 && this.selectedAAS.id === AAS.id) {
+                    // Deselect AAS
+                    this.router.push({ query: {} });
+                    this.aasStore.dispatchSelectedAAS({});
+                    this.navigationStore.dispatchTriggerAASSelected();
                 } else {
+                    // Select AAS
+                    const shellHref = this.extractEndpointHref(AAS, 'AAS-3.0');
                     // Add AAS Endpoint as Query to the Router
                     this.router.push({ query: { aas: shellHref } });
+                    // dispatch the selected AAS to the Store
+                    this.aasStore.dispatchSelectedAAS(AAS);
+                    // trigger the AAS Selected Event
+                    this.navigationStore.dispatchTriggerAASSelected();
                 }
-                // dispatch the selected AAS to the Store
-                this.aasStore.dispatchSelectedAAS(AAS);
-                // trigger the AAS Selected Event
-                this.navigationStore.dispatchTriggerAASSelected();
             },
 
             // Function to download the AAS
@@ -546,20 +535,6 @@
                 const shellHrefSelectedAAS = this.extractEndpointHref(this.selectedAAS, 'AAS-3.0');
                 let isSelected = shellHrefAASfromList === shellHrefSelectedAAS;
                 return isSelected;
-            },
-
-            // Function to display the AAS Details
-            showAASDetails(AAS: any) {
-                // console.log('Show Details: ', AAS);
-                this.detailsObject = AAS;
-                if (this.showDetailsCard) {
-                    this.showDetailsCard = false;
-                    this.$nextTick(() => {
-                        this.showDetailsCard = true;
-                    });
-                } else {
-                    if (AAS) this.showDetailsCard = true;
-                }
             },
 
             // Function to remove the AAS from the AAS Registry
