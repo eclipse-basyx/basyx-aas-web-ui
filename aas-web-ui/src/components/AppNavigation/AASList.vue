@@ -2,7 +2,7 @@
     <v-container fluid class="pa-0">
         <v-card color="card" elevation="0">
             <!-- Title Bar in the AAS List -->
-            <v-card-title v-if="singleAasRedirect" style="padding: 15px 16px 16px"> Asset & AAS </v-card-title>
+            <v-card-title v-if="singleAasRedirect" style="padding: 16px 16px 16px"> Asset & AAS </v-card-title>
             <v-card-title v-else>
                 <v-row align="center">
                     <v-col cols="auto" class="px-0">
@@ -53,7 +53,7 @@
                             ? '176px'
                             : 'calc(100vh - 170px)'
                         : selectedAAS && Object.keys(selectedAAS).length > 0
-                          ? 'calc(50vh - 111px)'
+                          ? 'calc(33vh - 110px)'
                           : 'calc(100vh - 218px)',
                 }">
                 <v-virtual-scroll ref="virtualScroll" :items="AASData" :item-height="56" class="pb-2 bg-card">
@@ -486,6 +486,10 @@
                     this.aasStore.dispatchSelectedAAS({});
                     this.navigationStore.dispatchTriggerAASSelected();
                 } else {
+                    let scrollToAasAfterDispatch = false;
+                    if (!this.selectAAS || Object.keys(this.selectAAS).length === 0) {
+                        scrollToAasAfterDispatch = true;
+                    }
                     // Select AAS
                     const shellHref = this.extractEndpointHref(AAS, 'AAS-3.0');
                     // Add AAS Endpoint as Query to the Router
@@ -494,6 +498,7 @@
                     this.aasStore.dispatchSelectedAAS(AAS);
                     // trigger the AAS Selected Event
                     this.navigationStore.dispatchTriggerAASSelected();
+                    if (scrollToAasAfterDispatch) this.scrollToSelectedAAS();
                 }
             },
 
