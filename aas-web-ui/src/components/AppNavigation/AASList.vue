@@ -1,11 +1,11 @@
 <template>
-    <v-container class="pa-0" fluid>
+    <v-container fluid class="pa-0">
         <v-card color="card" elevation="0">
             <!-- Title Bar in the AAS List -->
-            <v-card-title class="pl-1 pr-3">
+            <v-card-title v-if="singleAasRedirect" style="padding: 15px 16px 16px"> Asset & AAS </v-card-title>
+            <v-card-title v-else>
                 <v-row align="center">
-                    <!-- Reload Button -->
-                    <v-col cols="auto" class="pr-0">
+                    <v-col cols="auto" class="px-0">
                         <v-tooltip open-delay="600" location="bottom" :disabled="isMobile">
                             <template #activator="{ props }">
                                 <v-btn
@@ -23,7 +23,7 @@
                         </v-tooltip>
                     </v-col>
                     <!-- AAS Search Field -->
-                    <v-col class="pl-1 pr-0">
+                    <v-col class="px-0">
                         <v-text-field
                             variant="outlined"
                             density="compact"
@@ -42,6 +42,7 @@
             <v-divider></v-divider>
             <!-- AAS List -->
             <v-list
+                v-if="!singleAasRedirect"
                 nav
                 class="bg-card card pa-0"
                 :style="{
@@ -128,7 +129,7 @@
                 </v-virtual-scroll>
             </v-list>
             <!-- AAS Details (only visible if the Information Button is pressed on an AAS) -->
-            <AASListDetails />
+            <AASListDetails v-if="selectedAAS && Object.keys(selectedAAS).length > 0" />
             <!-- Collapse/extend Sidebar Button -->
             <v-list v-if="!isMobile" nav style="width: 100%; z-index: 9000" class="bg-detailsCard pa-0">
                 <v-divider style="margin-left: -8px; margin-right: -8px"></v-divider>
@@ -169,6 +170,7 @@
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import AASListDetails from './AASListDetails.vue';
     // import RegisterAAS from './RegisterAAS.vue';
@@ -187,6 +189,7 @@
             const theme = useTheme();
             const navigationStore = useNavigationStore();
             const aasStore = useAASStore();
+            const envStore = useEnvStore();
             const route = useRoute();
             const router = useRouter();
 
@@ -194,6 +197,7 @@
                 theme, // Theme Object
                 navigationStore, // NavigationStore Object
                 aasStore, // AASStore Object
+                envStore, // EnvironmentStore Object
                 route, // Route Object
                 router, // Router Object
             };
@@ -275,6 +279,10 @@
             // Get the AAS Repository URL from the Store
             aasRepoURL() {
                 return this.navigationStore.getAASRepoURL;
+            },
+
+            singleAasRedirect() {
+                return this.envStore.getSingleAasRedirect;
             },
         },
 
@@ -366,13 +374,23 @@
                     this.aasRegistryURL += '/shell-descriptors';
                 }
                 let path = this.aasRegistryURL;
+                if (this.singleAasRedirect) {
+                    const aasEndpoint = new URL(window.location.href).searchParams.get('aas') as string;
+                    const aasId = aasEndpoint.substring(aasEndpoint.lastIndexOf('/') + 1);
+                    path += '/' + aasId;
+                }
                 let context = 'retrieving AAS Data';
                 let disableMessage = false;
                 this.getRequest(path, context, disableMessage).then((response: any) => {
                     if (response.success) {
                         // execute if the AAS Registry is found
                         // sort data by identification id (ascending) and store it in the AASData variable
-                        let registeredAAS = response.data.result;
+                        let registeredAAS;
+                        if (this.singleAasRedirect) {
+                            registeredAAS = [response.data];
+                        } else {
+                            registeredAAS = response.data.result;
+                        }
                         let sortedData = registeredAAS.sort((a: { [x: string]: number }, b: { [x: string]: number }) =>
                             a['id'] > b['id'] ? 1 : -1
                         );

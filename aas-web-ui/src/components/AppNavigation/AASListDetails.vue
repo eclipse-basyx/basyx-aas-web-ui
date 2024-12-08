@@ -1,73 +1,73 @@
 <template>
     <v-container class="pa-0" fluid>
-        <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
-            <v-divider style="border-width: 2px"></v-divider>
-            <!-- AAS Details Card (only visible if the Information Button is pressed on an AAS) -->
-            <v-expand-transition>
-                <v-card
-                    flat
-                    tile
-                    color="detailsCard"
-                    :style="{
-                        display: 'flex',
-                        'flex-direction': 'column',
-                        height: isMobile ? 'calc(75vh - 182px)' : 'calc(50vh - 111px)',
-                    }"
-                    :class="isMobile ? 'v-card--reveal-mobile' : 'v-card--reveal-desktop'">
-                    <v-divider></v-divider>
-                    <v-card-text class="pa-0" style="overflow-y: auto">
-                        <!-- Asset Information -->
-                        <AssetInformation
-                            v-if="assetInformation && Object.keys(assetInformation).length > 0"
-                            :asset-object="assetInformation"></AssetInformation>
-                        <v-divider v-if="assetInformation"></v-divider>
-                        <!-- AAS Details -->
-                        <v-list v-if="selectedAAS" lines="one" nav class="bg-detailsCard">
-                            <!-- AAS Identification -->
-                            <IdentificationElement
-                                class="mb-2"
-                                :identification-object="selectedAAS"
-                                :model-type="'AAS'"
-                                :id-type="'Identification (ID)'"
-                                :name-type="'idShort'"></IdentificationElement>
-                            <v-divider
-                                v-if="selectedAAS.displayName && selectedAAS.displayName.length > 0"
-                                class="mt-2"></v-divider>
-                            <!-- SubmodelELement DisplayName -->
-                            <DisplayNameElement
-                                v-if="selectedAAS.displayName && selectedAAS.displayName.length > 0"
-                                :display-name-object="selectedAAS.displayName"
-                                :display-name-title="'DisplayName'"
-                                :small="false"></DisplayNameElement>
-                            <v-divider
-                                v-if="selectedAAS.description && selectedAAS.description.length > 0"
-                                class="mt-2"></v-divider>
-                            <!-- AAS Description -->
-                            <DescriptionElement
-                                v-if="selectedAAS.description && selectedAAS.description.length > 0"
-                                :description-object="selectedAAS.description"
-                                :description-title="'Description'"
-                                :small="false"></DescriptionElement>
-                            <template v-if="isMobile">
-                                <v-divider class="mt-2"></v-divider>
-                                <v-list-item>
-                                    <template #title>
-                                        <div class="mt-2 text-subtitle-2">
-                                            {{ 'Submodel List' }}
-                                            <v-btn
-                                                class="ml-2"
-                                                variant="plain"
-                                                icon="mdi-chevron-right"
-                                                @click="gotoSubmodelList()"></v-btn>
-                                        </div>
-                                    </template>
-                                </v-list-item>
+        <v-divider v-if="!singleAasRedirect" style="border-width: 2px"></v-divider>
+        <!-- AAS Details Card (only visible if the Information Button is pressed on an AAS) -->
+        <v-card
+            color="detailsCard"
+            :style="{
+                display: 'flex',
+                'flex-direction': 'column',
+                border: 'none',
+                height: isMobile
+                    ? singleAasRedirect
+                        ? ''
+                        : 'calc(75vh - 182px)'
+                    : singleAasRedirect
+                      ? 'calc(100vh - 217px)'
+                      : 'calc(50vh - 111px)',
+            }"
+            :class="isMobile ? 'v-card--reveal-mobile' : 'v-card--reveal-desktop'">
+            <v-card-text class="pa-0" style="overflow-y: auto">
+                <!-- Asset Information -->
+                <AssetInformation
+                    v-if="assetInformation && Object.keys(assetInformation).length > 0"
+                    :asset-object="assetInformation"></AssetInformation>
+                <v-divider v-if="assetInformation"></v-divider>
+                <!-- AAS Details -->
+                <v-list v-if="selectedAAS" lines="one" nav class="bg-detailsCard">
+                    <!-- AAS Identification -->
+                    <IdentificationElement
+                        class="mb-2"
+                        :identification-object="selectedAAS"
+                        :model-type="'AAS'"
+                        :id-type="'Identification (ID)'"
+                        :name-type="'idShort'"></IdentificationElement>
+                    <v-divider
+                        v-if="selectedAAS.displayName && selectedAAS.displayName.length > 0"
+                        class="mt-2"></v-divider>
+                    <!-- SubmodelELement DisplayName -->
+                    <DisplayNameElement
+                        v-if="selectedAAS.displayName && selectedAAS.displayName.length > 0"
+                        :display-name-object="selectedAAS.displayName"
+                        :display-name-title="'DisplayName'"
+                        :small="false"></DisplayNameElement>
+                    <v-divider
+                        v-if="selectedAAS.description && selectedAAS.description.length > 0"
+                        class="mt-2"></v-divider>
+                    <!-- AAS Description -->
+                    <DescriptionElement
+                        v-if="selectedAAS.description && selectedAAS.description.length > 0"
+                        :description-object="selectedAAS.description"
+                        :description-title="'Description'"
+                        :small="false"></DescriptionElement>
+                    <template v-if="isMobile">
+                        <v-divider class="mt-2"></v-divider>
+                        <v-list-item>
+                            <template #title>
+                                <div class="mt-2 text-subtitle-2">
+                                    {{ 'Submodel List' }}
+                                    <v-btn
+                                        class="ml-2"
+                                        variant="plain"
+                                        icon="mdi-chevron-right"
+                                        @click="gotoSubmodelList()"></v-btn>
+                                </div>
                             </template>
-                        </v-list>
-                    </v-card-text>
-                </v-card>
-            </v-expand-transition>
-        </template>
+                        </v-list-item>
+                    </template>
+                </v-list>
+            </v-card-text>
+        </v-card>
     </v-container>
 </template>
 
@@ -81,6 +81,7 @@
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
@@ -96,12 +97,14 @@
         setup() {
             const navigationStore = useNavigationStore();
             const aasStore = useAASStore();
+            const envStore = useEnvStore();
             const route = useRoute();
             const router = useRouter();
 
             return {
                 navigationStore, // NavigationStore Object
                 aasStore, // AASStore Object
+                envStore, // EnvironmentStore Object
                 route, // Route Object
                 router, // Router Object
             };
@@ -122,6 +125,10 @@
             // get the selected AAS from Store
             selectedAAS() {
                 return this.aasStore.getSelectedAAS;
+            },
+
+            singleAasRedirect() {
+                return this.envStore.getSingleAasRedirect;
             },
         },
 
