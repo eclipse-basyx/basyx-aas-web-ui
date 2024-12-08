@@ -57,7 +57,7 @@
                         <DisplayNameElement
                             v-if="detailsObject.displayName && detailsObject.displayName.length > 0"
                             :display-name-object="detailsObject.displayName"
-                            :display-name-title="'DisplayName'"
+                            :display-name-title="'Display Name'"
                             :small="false"></DisplayNameElement>
                         <v-divider
                             v-if="detailsObject.description && detailsObject.description.length > 0"

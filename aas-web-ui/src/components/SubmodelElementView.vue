@@ -20,7 +20,7 @@
                         <DisplayNameElement
                             v-if="submodelElementData.displayName && submodelElementData.displayName.length > 0"
                             :display-name-object="submodelElementData.displayName"
-                            :display-name-title="'DisplayName'"
+                            :display-name-title="'Display Name'"
                             :small="false"></DisplayNameElement>
                         <v-divider
                             v-if="submodelElementData.description && submodelElementData.description.length > 0"
@@ -46,7 +46,7 @@
                                 submodelElementData.semanticId.keys.length > 0
                             "
                             :semantic-id-object="submodelElementData.semanticId"
-                            :semantic-title="'SemanticID'"></SemanticID>
+                            :semantic-title="'Semantic ID'"></SemanticID>
                     </v-list>
                     <v-divider></v-divider>
                     <v-list nav class="px-4 pt-0 pb-5">
