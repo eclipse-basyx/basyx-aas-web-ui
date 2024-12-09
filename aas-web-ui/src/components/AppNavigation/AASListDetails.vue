@@ -58,7 +58,6 @@
                                     detailsObject.administration.version != '')
                             "
                             class="mt-2"></v-divider>
-                        {{ console.log(detailsObject.administration) }}
                         <AdministrativeInformationElement
                             v-if="detailsObject.administration"
                             :administrative-information-object="detailsObject.administration"

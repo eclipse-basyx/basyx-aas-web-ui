@@ -13,6 +13,7 @@
                             Array.isArray(administrativeInformationObject?.creator?.keys) &&
                             administrativeInformationObject?.creator?.keys.length > 0
                         "
+                        class="mb-1"
                         opacity="0.05"></v-divider>
                     <v-list nav class="pa-0">
                         <!-- Creator -->
@@ -238,7 +239,7 @@
 </script>
 
 <style lang="css" scoped>
-    .v-expansion-panel-text >>> .v-expansion-panel-text__wrapper {
+    .v-expansion-panel-text :deep(.v-expansion-panel-text__wrapper) {
         padding-left: 8px !important;
         padding-right: 8px !important;
         padding-top: 0px !important;
