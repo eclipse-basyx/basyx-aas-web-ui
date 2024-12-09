@@ -80,7 +80,7 @@
                     "></v-divider>
                 <v-list nav class="pa-0">
                     <v-hover v-slot="{ isHovering, props }">
-                        <v-list-item v-if="administrativeInformationObject?.templateId" class="ma-0 py-0">
+                        <v-list-item v-if="administrativeInformationObject?.templateId" class="ma-0">
                             <template #title>
                                 <span class="text-subtitle-2">
                                     {{ 'Template ID:' }}
