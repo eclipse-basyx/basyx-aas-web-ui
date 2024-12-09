@@ -13,9 +13,23 @@
                             :model-type="submodelElementData.modelType"
                             :id-type="'Identification (ID)'"
                             :name-type="'idShort'"></IdentificationElement>
+                        <!-- Submodel Administrative Information-->
                         <v-divider
-                            v-if="submodelElementData.displayName && submodelElementData.displayName.length > 0"
+                            v-if="
+                                submodelElementData.administration &&
+                                (submodelElementData.administration.revision != '' ||
+                                    submodelElementData.administration.version != '')
+                            "
                             class="mt-2"></v-divider>
+                        <AdministrativeInformationElement
+                            v-if="submodelElementData.administration"
+                            :administrative-information-object="submodelElementData.administration"
+                            :administrative-information-title="'Administrative Information'"
+                            :small="false"></AdministrativeInformationElement>
+                        <v-divider
+                            v-if="
+                                submodelElementData.displayName && submodelElementData.displayName.length > 0
+                            "></v-divider>
                         <!-- SubmodelELement DisplayName -->
                         <DisplayNameElement
                             v-if="submodelElementData.displayName && submodelElementData.displayName.length > 0"
@@ -154,6 +168,7 @@
     import Submodel from '@/components/SubmodelElements/Submodel.vue';
     import SubmodelElementCollection from '@/components/SubmodelElements/SubmodelElementCollection.vue';
     import SubmodelElementList from '@/components/SubmodelElements/SubmodelElementList.vue';
+    import AdministrativeInformationElement from '@/components/UIComponents/AdministrativeInformationElement.vue';
     import ConceptDescription from '@/components/UIComponents/ConceptDescription.vue';
     import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
     import DisplayNameElement from '@/components/UIComponents/DisplayNameElement.vue';
@@ -169,6 +184,7 @@
         name: 'SubmodelElementView',
         components: {
             IdentificationElement,
+            AdministrativeInformationElement,
             DisplayNameElement,
             DescriptionElement,
             SemanticID,
