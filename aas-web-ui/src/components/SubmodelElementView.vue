@@ -27,8 +27,9 @@
                             :administrative-information-title="'Administrative Information'"
                             :small="false"></AdministrativeInformationElement>
                         <v-divider
-                            v-if="submodelElementData.displayName && submodelElementData.displayName.length > 0"
-                            class="mt-2"></v-divider>
+                            v-if="
+                                submodelElementData.displayName && submodelElementData.displayName.length > 0
+                            "></v-divider>
                         <!-- SubmodelELement DisplayName -->
                         <DisplayNameElement
                             v-if="submodelElementData.displayName && submodelElementData.displayName.length > 0"
