@@ -22,11 +22,7 @@
                             "
                             class="mt-2"></v-divider>
                         <AdministrativeInformationElement
-                            v-if="
-                                submodelElementData.administration &&
-                                (submodelElementData.administration.revision != '' ||
-                                    submodelElementData.administration.version != '')
-                            "
+                            v-if="submodelElementData.administration"
                             :administrative-information-object="submodelElementData.administration"
                             :administrative-information-title="'Administrative Information'"
                             :small="false"></AdministrativeInformationElement>
