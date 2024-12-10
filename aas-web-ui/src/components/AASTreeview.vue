@@ -180,6 +180,9 @@
                                 let AAS = response.data;
                                 AAS.endpoints = this.SelectedAAS.endpoints;
                                 this.aasStore.dispatchSelectedAAS(AAS); // dispatch the selected AAS to the Store
+                                if (!AAS.submodels) {
+                                    throw new Error('No Submodels found in AAS!');
+                                }
                                 // request submodels from the retrieved AAS (top layer of the Treeview)
                                 let submodelData = await this.requestSubmodels(AAS.submodels);
                                 // set the isActive prop of the initialNode if it exists and the initialUpdate flag is set

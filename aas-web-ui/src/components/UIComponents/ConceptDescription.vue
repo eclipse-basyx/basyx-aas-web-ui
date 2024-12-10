@@ -60,6 +60,7 @@
                         "
                         :semantic-id-object="embeddedDataSpecification.dataSpecification"
                         :semantic-title="'Data Specification'"
+                        :small="false"
                         class="mb-2"></SemanticID>
                     <v-divider v-if="embeddedDataSpecification.dataSpecificationContent"></v-divider>
                     <!-- dataSpecificationContent -->
