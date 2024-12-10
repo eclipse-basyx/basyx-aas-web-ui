@@ -4,12 +4,6 @@
  * Bootstraps Vuetify and other plugins then mounts the App`
  */
 
-// Types
-interface PluginType {
-    name: string;
-    semanticId: string;
-}
-
 // Components
 import Keycloak from 'keycloak-js';
 import { KeycloakOnLoad } from 'keycloak-js';
@@ -24,13 +18,13 @@ import App from './App.vue';
 import { createAppRouter } from './router';
 import { useAuthStore } from './store/AuthStore';
 import { useEnvStore } from './store/EnvironmentStore';
-import { useNavigationStore } from './store/NavigationStore';
+import { PluginType, useNavigationStore } from './store/NavigationStore';
 
 const app = createApp(App);
 
 const pinia = createPinia();
 
-async function loadUserPlugins() {
+async function loadPlugins() {
     const router = await createAppRouter();
 
     app.use(router);
@@ -52,23 +46,33 @@ async function loadUserPlugins() {
 
     await registerPlugins(app);
 
-    // Load all components in the components folder
-    const pluginFiles = import.meta.glob('./UserPlugins/*.vue');
-    const files = Object.keys(pluginFiles);
+    const pluginFileRecords = {
+        ...import.meta.glob('./components/Plugins/Submodels/*.vue'),
+        ...import.meta.glob('./components/Plugins/SubmodelElements/*.vue'),
+        ...import.meta.glob('./UserPlugins/*.vue'),
+    };
+
+    const pluginFiles = Object.keys(pluginFileRecords);
 
     const plugins = [] as Array<PluginType>;
 
     await Promise.all(
-        files.map(async (path) => {
-            const componentName = path.replace('./UserPlugins/', '').replace('.vue', '');
-            const component: any = await pluginFiles[path]();
-            app.component(componentName, (component.default || component) as ReturnType<typeof defineComponent>);
-            plugins.push({ name: componentName, semanticId: component.default.semanticId });
+        pluginFiles.map(async (path) => {
+            const componentName = path
+                .replace('./components/Plugins/Submodels/', '')
+                .replace('./components/Plugins/SubmodelElements/', '')
+                .replace('./UserPlugins/', '')
+                .replace('.vue', '');
+            const component: any = await pluginFileRecords[path]();
+            if (component.default.semanticId) {
+                app.component(componentName, (component.default || component) as ReturnType<typeof defineComponent>);
+                plugins.push({ name: componentName, semanticId: component.default.semanticId });
+            }
         })
     );
 
-    const navigationStore = useNavigationStore(); // Get the store instance
-    navigationStore.dispatchPlugins(plugins); // Update the plugins state
+    const navigationStore = useNavigationStore();
+    navigationStore.dispatchPlugins(plugins);
     app.mount('#app');
 }
 
@@ -135,4 +139,4 @@ async function initKeycloak(keycloakUrl: string, keycloakRealm: string, keycloak
     });
 }
 
-loadUserPlugins();
+loadPlugins();

@@ -15,7 +15,7 @@
             <DisplayNameElement
                 v-if="conceptDescriptionObject.displayName && conceptDescriptionObject.displayName.length > 0"
                 :display-name-object="conceptDescriptionObject.displayName"
-                :display-name-title="'DisplayName'"
+                :display-name-title="'Display Name'"
                 :small="false"></DisplayNameElement>
             <v-divider
                 v-if="conceptDescriptionObject.description && conceptDescriptionObject.description.length > 0"

@@ -13,14 +13,28 @@
                             :model-type="submodelElementData.modelType"
                             :id-type="'Identification (ID)'"
                             :name-type="'idShort'"></IdentificationElement>
+                        <!-- Submodel Administrative Information-->
                         <v-divider
-                            v-if="submodelElementData.displayName && submodelElementData.displayName.length > 0"
+                            v-if="
+                                submodelElementData.administration &&
+                                (submodelElementData.administration.revision != '' ||
+                                    submodelElementData.administration.version != '')
+                            "
                             class="mt-2"></v-divider>
+                        <AdministrativeInformationElement
+                            v-if="submodelElementData.administration"
+                            :administrative-information-object="submodelElementData.administration"
+                            :administrative-information-title="'Administrative Information'"
+                            :small="false"></AdministrativeInformationElement>
+                        <v-divider
+                            v-if="
+                                submodelElementData.displayName && submodelElementData.displayName.length > 0
+                            "></v-divider>
                         <!-- SubmodelELement DisplayName -->
                         <DisplayNameElement
                             v-if="submodelElementData.displayName && submodelElementData.displayName.length > 0"
                             :display-name-object="submodelElementData.displayName"
-                            :display-name-title="'DisplayName'"
+                            :display-name-title="'Display Name'"
                             :small="false"></DisplayNameElement>
                         <v-divider
                             v-if="submodelElementData.description && submodelElementData.description.length > 0"
@@ -46,11 +60,11 @@
                                 submodelElementData.semanticId.keys.length > 0
                             "
                             :semantic-id-object="submodelElementData.semanticId"
-                            :semantic-title="'SemanticID'"
+                            :semantic-title="'Semantic ID'"
                             :small="false"></SemanticID>
                     </v-list>
                     <v-divider></v-divider>
-                    <v-list nav class="px-4 pt-0 pb-0">
+                    <v-list nav class="px-4 pt-0 pb-5">
                         <!-- SubmodelELement Representation for different modelTypes -->
                         <Submodel
                             v-if="submodelElementData.modelType === 'Submodel'"
@@ -101,8 +115,7 @@
                         v-if="
                             submodelElementData.conceptDescriptions &&
                             submodelElementData.conceptDescriptions.length > 0
-                        "
-                        class="mt-5"></v-divider>
+                        "></v-divider>
                     <v-list
                         v-if="
                             submodelElementData.conceptDescriptions &&
@@ -119,7 +132,7 @@
                         </v-list-item>
                     </v-list>
                     <!-- Last Sync -->
-                    <v-divider class="mt-5"></v-divider>
+                    <v-divider></v-divider>
                     <v-list class="py-0">
                         <v-list-item>
                             <v-list-item-subtitle>
@@ -156,6 +169,7 @@
     import Submodel from '@/components/SubmodelElements/Submodel.vue';
     import SubmodelElementCollection from '@/components/SubmodelElements/SubmodelElementCollection.vue';
     import SubmodelElementList from '@/components/SubmodelElements/SubmodelElementList.vue';
+    import AdministrativeInformationElement from '@/components/UIComponents/AdministrativeInformationElement.vue';
     import ConceptDescription from '@/components/UIComponents/ConceptDescription.vue';
     import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
     import DisplayNameElement from '@/components/UIComponents/DisplayNameElement.vue';
@@ -171,6 +185,7 @@
         name: 'SubmodelElementView',
         components: {
             IdentificationElement,
+            AdministrativeInformationElement,
             DisplayNameElement,
             DescriptionElement,
             SemanticID,

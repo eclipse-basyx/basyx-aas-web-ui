@@ -3,8 +3,13 @@
         <!-- Header -->
         <v-card class="mb-4">
             <v-card-title>
-                <div class="text-subtitle-1">{{ 'Bills of Material:' }}</div>
+                <div class="text-subtitle-1">
+                    {{ nameToDisplay(submodelElementData, 'Bills of Material') }}
+                </div>
             </v-card-title>
+            <v-card-text v-if="descriptionToDisplay(submodelElementData)" class="pt-0">
+                {{ descriptionToDisplay(submodelElementData) }}
+            </v-card-text>
         </v-card>
         <!-- BoM Graph -->
         <v-card>
@@ -41,6 +46,10 @@
 
     export default defineComponent({
         name: 'BillsOfMaterial',
+        semanticId: [
+            'https://admin-shell.io/idta/HierarchicalStructures/1/0/Submodel',
+            'https://admin-shell.io/idta/HierarchicalStructures/1/1/Submodel',
+        ],
         mixins: [RequestHandling, SubmodelElementHandling],
         props: ['submodelElementData'],
 

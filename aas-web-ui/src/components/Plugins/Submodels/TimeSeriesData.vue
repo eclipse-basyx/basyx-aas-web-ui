@@ -3,8 +3,13 @@
         <!-- Header -->
         <v-card v-if="!hideSettings" class="mb-4">
             <v-card-title>
-                <div class="text-subtitle-1">{{ 'Time Series Data:' }}</div>
+                <div class="text-subtitle-1">
+                    {{ nameToDisplay(submodelElementData, 'Time Series Data') }}
+                </div>
             </v-card-title>
+            <v-card-text v-if="descriptionToDisplay(submodelElementData)" class="pt-0">
+                {{ descriptionToDisplay(submodelElementData) }}
+            </v-card-text>
         </v-card>
         <!-- Data Preview Config -->
         <v-card v-if="!hideSettings || editDialog" class="mb-4">
@@ -208,6 +213,7 @@
 
     export default defineComponent({
         name: 'TimeSeriesData',
+        semanticId: 'https://admin-shell.io/idta/TimeSeries/1/1',
         components: {
             LineChart,
             AreaChart,
@@ -324,11 +330,11 @@
         methods: {
             // Function to initialize the TimeSeriesData Plugin
             initializeTimeSeriesData() {
-                // Check if a Node is selected
                 if (Object.keys(this.submodelElementData).length == 0) {
-                    this.timeSeriesData = {}; // Reset the TimeSeriesData when no Node is selected
+                    this.timeSeriesData = {};
                     return;
                 }
+
                 let timeSeriesData = { ...this.submodelElementData }; // create local copy of the TimeSeriesData
                 this.timeSeriesData = timeSeriesData; // set the local copy to the data object
                 // get the collection for segments

@@ -54,9 +54,9 @@ See examples in the [basyx-java-server-sdk](https://github.com/eclipse-basyx/bas
 
 The BaSyx-UI includes a Feature to develop your own Plugins. They can be used to display and interact with a Submodel (and/or SubmodelElements).
 
-Plugins will be displayed in the `Visualization`-Part of the UI. In order for Plugins to be shown, a Submodel(Element) has to have a SemanticID which matches with the configured SemanticID of the desired Plugin.
+Plugins will be displayed in the `Visualization`-Part of the UI. In order for Plugins to be loaded, a Submodel(Element) has to have a SemanticID which matches with the configured `semanticId` of the desired Plugin. The configuration of a Plugin `semanticId` can be done via a string (e.g. `'http://hello.world.de/plugin_submodel'`) or via an array for multiple SemanticIds (e.g. `['http://hello.world.de/plugin_submodel', 'http://hello.world.de/plugin_property']`)
 
-To include your own Plugin, you have to create a Vue.js Component and add it to the `UserPlugins`-Folder in the `aas-web-ui/src`-Directory. The Plugin will then be automatically loaded and displayed in the UI. 
+To include your own Plugins, you have to create a Vue.js Component and add it to the `UserPlugins`-Folder in the `aas-web-ui/src`-Directory. The Plugin will then be automatically loaded and displayed in the UI. 
 
 > If you plan on including your own plugins, keep in mind that you have to build the Docker Image yourself!
 

@@ -65,11 +65,11 @@
         methods: {
             // Function to initialize the HelloWorld-Plugin
             initializePlugin() {
-                // Check if a Node is selected
                 if (Object.keys(this.submodelElementData).length == 0) {
                     this.pluginData = {}; // Reset the Plugin Data when no Node is selected
                     return;
                 }
+
                 let pluginData = { ...this.submodelElementData }; // Get the SubmodelElement from the AAS
                 let pluginSubmodelElements = pluginData.submodelElements;
                 // add pathes and id's to the SubmodelElements

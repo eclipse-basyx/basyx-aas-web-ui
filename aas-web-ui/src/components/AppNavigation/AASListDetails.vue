@@ -50,14 +50,26 @@
                             :model-type="'AAS'"
                             :id-type="'Identification (ID)'"
                             :name-type="'idShort'"></IdentificationElement>
+                        <!-- AAS Administrative Information-->
                         <v-divider
-                            v-if="detailsObject.displayName && detailsObject.displayName.length > 0"
+                            v-if="
+                                detailsObject.administration &&
+                                (detailsObject.administration.revision != '' ||
+                                    detailsObject.administration.version != '')
+                            "
                             class="mt-2"></v-divider>
-                        <!-- SubmodelELement DisplayName -->
+                        <AdministrativeInformationElement
+                            v-if="detailsObject.administration"
+                            :administrative-information-object="detailsObject.administration"
+                            :administrative-information-title="'Administrative Information'"
+                            :small="false"
+                            :background-color="'detailsCard'"></AdministrativeInformationElement>
+                        <v-divider v-if="detailsObject.displayName && detailsObject.displayName.length > 0"></v-divider>
+                        <!-- AAS DisplayName -->
                         <DisplayNameElement
                             v-if="detailsObject.displayName && detailsObject.displayName.length > 0"
                             :display-name-object="detailsObject.displayName"
-                            :display-name-title="'DisplayName'"
+                            :display-name-title="'Display Name'"
                             :small="false"></DisplayNameElement>
                         <v-divider
                             v-if="detailsObject.description && detailsObject.description.length > 0"
@@ -77,6 +89,7 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
+    import AdministrativeInformationElement from '@/components/UIComponents/AdministrativeInformationElement.vue';
     import AssetInformation from '@/components/UIComponents/AssetInformation.vue';
     import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
     import DisplayNameElement from '@/components/UIComponents/DisplayNameElement.vue';
@@ -89,6 +102,7 @@
         name: 'AASListDetails',
         components: {
             IdentificationElement,
+            AdministrativeInformationElement,
             DisplayNameElement,
             DescriptionElement,
             AssetInformation,
