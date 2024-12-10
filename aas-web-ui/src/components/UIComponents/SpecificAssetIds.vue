@@ -6,7 +6,7 @@
                     {{ 'Specific Asset IDs:' }}
                 </div>
             </template>
-            <v-list-item-subtitle v-for="(specificAssetId, index) in assetObject.specificAssetIds" :key="index">
+            <div v-for="(specificAssetId, index) in assetObject.specificAssetIds" :key="index">
                 <div class="px-2">
                     <v-list-item-title>
                         <v-hover v-slot="{ isHovering, props }">
@@ -23,22 +23,17 @@
                             </div>
                         </v-hover>
                     </v-list-item-title>
-                    <v-list-item-subtitle>
-                        <SemanticID
-                            v-if="
-                                Array.isArray(specificAssetId?.semanticId?.keys) &&
-                                specificAssetId.semanticId.keys.length > 0
-                            "
-                            :semantic-id-object="specificAssetId.semanticId"
-                            :semantic-title="
-                                specificAssetId.semanticId.keys.length > 0 ? 'Semantic IDs' : 'Semantic ID:'
-                            "
-                            :small="true"
-                            class="mt-n3"></SemanticID>
-                    </v-list-item-subtitle>
+                    <SemanticID
+                        v-if="
+                            Array.isArray(specificAssetId?.semanticId?.keys) &&
+                            specificAssetId.semanticId.keys.length > 0
+                        "
+                        :semantic-id-object="specificAssetId.semanticId"
+                        :semantic-title="specificAssetId.semanticId.keys.length > 0 ? 'Semantic IDs' : 'Semantic ID:'"
+                        :small="true"></SemanticID>
                 </div>
                 <v-divider v-if="index < assetObject.specificAssetIds.length - 1" class="my-2"></v-divider>
-            </v-list-item-subtitle>
+            </div>
         </v-list-item>
     </v-container>
 </template>
