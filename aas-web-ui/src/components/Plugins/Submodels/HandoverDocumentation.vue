@@ -3,8 +3,13 @@
         <!-- Header -->
         <v-card class="mb-4">
             <v-card-title>
-                <div class="text-subtitle-1">{{ 'Handover Documentation:' }}</div>
+                <div class="text-subtitle-1">
+                    {{ nameToDisplay(submodelElementData, 'Handover Documentation') }}
+                </div>
             </v-card-title>
+            <v-card-text v-if="descriptionToDisplay(submodelElementData)" class="pt-0">
+                {{ descriptionToDisplay(submodelElementData) }}
+            </v-card-text>
         </v-card>
         <!-- Documents -->
         <v-card v-if="loading">
@@ -17,7 +22,7 @@
                         <template #prepend>
                             <v-icon size="small">mdi-file-outline</v-icon>
                         </template>
-                        <v-list-item-title>{{ document.idShort }}</v-list-item-title>
+                        <v-list-item-title>{{ nameToDisplay(document) }}</v-list-item-title>
                     </v-list-item>
                 </v-expansion-panel-title>
                 <v-divider v-if="panel === index"></v-divider>
@@ -228,7 +233,7 @@
                                     <th v-for="idProperty in document.documentIds[0].value" :key="idProperty.idShort">
                                         <v-list-item class="pl-0">
                                             <v-list-item-title class="text-caption">{{
-                                                idProperty.idShort
+                                                nameToDisplay(idProperty)
                                             }}</v-list-item-title>
                                         </v-list-item>
                                     </th>
@@ -266,15 +271,16 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
+    import CADPreview from '@/components/Plugins/CADPreview.vue';
+    import ImagePreview from '@/components/Plugins/ImagePreview.vue';
+    import PDFPreview from '@/components/Plugins/PDFPreview.vue';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
-    import CADPreview from './CADPreview.vue';
-    import ImagePreview from './ImagePreview.vue';
-    import PDFPreview from './PDFPreview.vue';
 
     export default defineComponent({
         name: 'HandoverDocumentation',
+        semanticId: '0173-1#01-AHF578#001',
         components: {
             ImagePreview,
             PDFPreview,
@@ -316,13 +322,18 @@
         methods: {
             async initHandoverDocumentation() {
                 this.loading = true;
-                // console.log('Initialize Handover Documentation Plugin: ', this.submodelElementData);
+
+                if (Object.keys(this.submodelElementData).length == 0) {
+                    this.handoverDocuData = {};
+                    this.loading = false;
+                    return;
+                }
                 let submodelElementData = { ...this.submodelElementData };
-                submodelElementData = await this.calculateSubmodelElementPathes(
+                this.handoverDocuData = await this.calculateSubmodelElementPathes(
                     submodelElementData,
                     this.SelectedNode.path
                 );
-                this.handoverDocuData = submodelElementData;
+
                 // create array of documents
                 let documents = this.handoverDocuData.submodelElements.filter((element: any) => {
                     return this.checkSemanticId(element, '0173-1#02-ABI500#001/0173-1#01-AHF579#001');

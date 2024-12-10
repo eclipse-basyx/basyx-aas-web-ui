@@ -3,7 +3,7 @@
         <v-list-item>
             <!-- Title -->
             <template #title>
-                <div class="text-subtitle-2 mt-2" v-html="'Data Specification Content:'"></div>
+                <div class="text-subtitle-2 mt-2">{{ 'Data Specification Content:' }}</div>
             </template>
             <!-- Content List -->
             <!-- dataType -->
@@ -40,7 +40,7 @@
             <DescriptionElement
                 v-if="dataSpecificationObject.preferredName && dataSpecificationObject.preferredName.length > 0"
                 :description-object="dataSpecificationObject.preferredName"
-                :description-title="'PreferredName'"
+                :description-title="'Preferred Name'"
                 :small="true"></DescriptionElement>
             <v-divider
                 v-if="dataSpecificationObject.shortName && dataSpecificationObject.shortName.length > 0"
@@ -49,7 +49,7 @@
             <DescriptionElement
                 v-if="dataSpecificationObject.shortName && dataSpecificationObject.shortName.length > 0"
                 :description-object="dataSpecificationObject.shortName"
-                :description-title="'ShortName'"
+                :description-title="'Short Name'"
                 :small="true"></DescriptionElement>
             <v-divider v-if="dataSpecificationObject.unit" class="mt-2"></v-divider>
             <!-- unit -->
@@ -65,7 +65,7 @@
                     </div>
                 </v-tooltip>
                 <template #title>
-                    <span class="text-caption">{{ 'UnitId: ' }}</span>
+                    <span class="text-caption">{{ 'Unit Id: ' }}</span>
                 </template>
                 <template #subtitle>
                     <v-list-item-subtitle v-for="(unitId, i) in dataSpecificationObject.unitId.keys" :key="i">

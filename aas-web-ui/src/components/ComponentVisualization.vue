@@ -23,12 +23,47 @@
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text
-                v-if="submodelElementData && Object.keys(submodelElementData).length > 0"
+                v-if="
+                    SelectedNode && Object.keys(SelectedNode).length > 0 && Object.keys(submodelElementData).length > 0
+                "
                 style="overflow-y: auto; height: calc(100svh - 170px)">
-                <!-- Add Plugins matched on SemanticId's inside the SubmodelEntrypoint -->
-                <SubmodelEntrypoint
-                    :submodel-element-data="submodelElementData"
-                    :selected-node="SelectedNodeToTransfer"></SubmodelEntrypoint>
+                <template v-if="submodelElementData.modelType == 'File' || submodelElementData.modelType == 'Blob'">
+                    <ImagePreview
+                        v-if="submodelElementData.contentType && submodelElementData.contentType.includes('image')"
+                        :submodel-element-data="submodelElementData"></ImagePreview>
+                    <PDFPreview
+                        v-if="submodelElementData.contentType && submodelElementData.contentType.includes('pdf')"
+                        :submodel-element-data="submodelElementData"></PDFPreview>
+                    <CADPreview
+                        v-if="
+                            submodelElementData.contentType &&
+                            (submodelElementData.contentType.includes('sla') ||
+                                submodelElementData.contentType.includes('stl') ||
+                                submodelElementData.contentType.includes('model') ||
+                                submodelElementData.contentType.includes('obj') ||
+                                submodelElementData.contentType.includes('gltf'))
+                        "
+                        :submodel-element-data="submodelElementData"></CADPreview>
+                </template>
+                <template v-else>
+                    <template
+                        v-if="
+                            submodelElementData.semanticId &&
+                            submodelElementData.semanticId.keys &&
+                            submodelElementData.semanticId.keys.length > 0
+                        ">
+                        <component
+                            :is="plugin.name"
+                            v-for="(plugin, index) in filteredPlugins"
+                            :key="index"
+                            :submodel-element-data="submodelElementData"
+                            >{{ plugin.name }}</component
+                        >
+                    </template>
+                    <GenericDataVisu
+                        v-if="viewerMode && filteredPlugins.length === 0"
+                        :submodel-element-data="submodelElementData.submodelElements"></GenericDataVisu>
+                </template>
             </v-card-text>
         </v-card>
     </v-container>
@@ -37,7 +72,10 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
-    import SubmodelEntrypoint from '@/components/SubmodelPlugins/_SubmodelEntrypoint.vue';
+    import CADPreview from '@/components/Plugins/CADPreview.vue';
+    import ImagePreview from '@/components/Plugins/ImagePreview.vue';
+    import PDFPreview from '@/components/Plugins/PDFPreview.vue';
+    import GenericDataVisu from '@/components/UIComponents/GenericDataVisu.vue';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -46,7 +84,10 @@
     export default defineComponent({
         name: 'ComponentVisualization',
         components: {
-            SubmodelEntrypoint, // Submodel Plugin Entrypoint Component
+            GenericDataVisu,
+            ImagePreview,
+            PDFPreview,
+            CADPreview,
         },
         mixins: [RequestHandling, SubmodelElementHandling],
 
@@ -112,6 +153,33 @@
             // Check if the current Device is a Mobile Device
             isMobile() {
                 return this.navigationStore.getIsMobile;
+            },
+
+            importedPlugins() {
+                return this.navigationStore.getPlugins;
+            },
+
+            // Filtered Plugins
+            filteredPlugins() {
+                return this.importedPlugins.filter((plugin: any) => {
+                    if (!plugin.semanticId) return false;
+
+                    if (typeof plugin.semanticId === 'string') {
+                        return this.checkSemanticId(this.submodelElementData, plugin.semanticId);
+                    } else if (plugin.semanticId.constructor === Array) {
+                        for (const pluginSemanticId of plugin.semanticId) {
+                            if (this.checkSemanticId(this.submodelElementData, pluginSemanticId)) return true;
+                        }
+                        return false;
+                    }
+                    return false;
+                });
+            },
+
+            // return if in viewer mode
+            viewerMode() {
+                // check if the route name is aasviewer
+                return this.route.name === 'AASViewer' || this.route.name === 'ComponentVisualization';
             },
         },
 

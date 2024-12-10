@@ -5,31 +5,125 @@
         <br /><br />
 
         <h2>Involved Organizations and Companies</h2>
-        <v-sheet class="mt-5" theme="light" rounded>
-            <v-row align="center" justify="center">
-                <v-col cols="4" class="pa-6">
-                    <v-img src="Basyx_Logo.svg">
-                        <template #sources>
-                            <source srcset="@/assets/BaSyx_Logo.svg" />
-                        </template>
-                    </v-img>
-                </v-col>
-                <v-col cols="4" class="pa-6">
-                    <v-img src="HTW_Logo.png">
-                        <template #sources>
-                            <source srcset="@/assets/HTW_Logo.png" />
-                        </template>
-                    </v-img>
-                </v-col>
-                <v-col cols="4" class="pa-6">
-                    <v-img src="IESE_Logo.svg">
-                        <template #sources>
-                            <source srcset="@/assets/IESE_Logo.svg" />
-                        </template>
-                    </v-img>
-                </v-col>
-            </v-row>
-        </v-sheet>
+        <v-row align="center" justify="center" class="mt-5">
+            <v-col cols="3" class="pa-6">
+                <v-hover>
+                    <template #default="{ props: hoverProps, isHovering }">
+                        <a href="https://basyx.org/" target="_blank">
+                            <v-img
+                                src="Basyx_Logo.svg"
+                                v-bind="hoverProps"
+                                :style="{ filter: isHovering ? 'grayscale(0%)' : 'grayscale(100%)' }">
+                                <template #sources>
+                                    <source srcset="@/assets/BaSyx_Logo.svg" />
+                                </template>
+                            </v-img>
+                        </a>
+                    </template>
+                </v-hover>
+            </v-col>
+            <v-col cols="3" class="pa-6">
+                <v-hover v-slot="{ props: hoverProps, isHovering }">
+                    <a href="https://www.htw-berlin.de/" target="_blank">
+                        <v-img
+                            :src="isDark ? 'HTW_Logo_dark.svg' : 'HTW_Logo_light.svg'"
+                            v-bind="hoverProps"
+                            :style="{ filter: isHovering ? 'grayscale(0%)' : 'grayscale(100%)' }">
+                            <template v-if="isDark" #sources>
+                                <source srcset="@/assets/HTW_Logo_dark.svg" />
+                            </template>
+                            <template v-else #sources>
+                                <source srcset="@/assets/HTW_Logo_light.svg" />
+                            </template>
+                        </v-img>
+                    </a>
+                </v-hover>
+            </v-col>
+            <v-col cols="3" class="pa-6">
+                <v-hover v-slot="{ props: hoverProps, isHovering }">
+                    <a href="https://www.iese.fraunhofer.de/" target="_blank">
+                        <v-img
+                            :src="isDark ? 'IESE_Logo_dark.svg' : 'IESE_Logo_light.svg'"
+                            v-bind="hoverProps"
+                            :style="{ filter: isHovering ? 'grayscale(0%)' : 'grayscale(100%)' }">
+                            <template v-if="isDark" #sources>
+                                <source srcset="@/assets/IESE_Logo_dark.svg" />
+                            </template>
+                            <template v-else #sources>
+                                <source srcset="@/assets/IESE_Logo_light.svg" />
+                            </template>
+                        </v-img>
+                    </a>
+                </v-hover>
+            </v-col>
+            <v-col cols="3" class="pa-6">
+                <v-hover v-slot="{ props: hoverProps, isHovering }">
+                    <a href="https://industrialdigitaltwin.org/" target="_blank">
+                        <v-img
+                            src="IDTA_Logo.png"
+                            v-bind="hoverProps"
+                            :style="{ filter: isHovering ? 'grayscale(0%)' : 'grayscale(100%)' }">
+                            <template #sources>
+                                <source srcset="@/assets/IDTA_Logo.png" />
+                            </template>
+                        </v-img>
+                    </a>
+                </v-hover>
+            </v-col>
+        </v-row>
+        <v-row align="center" justify="center">
+            <v-col cols="3" class="pa-6">
+                <v-hover v-slot="{ props: hoverProps, isHovering }">
+                    <a href="https://www.harting.com/" target="_blank">
+                        <v-img
+                            :src="isDark ? 'HARTING_Logo_dark.png' : 'HARTING_Logo_light.png'"
+                            v-bind="hoverProps"
+                            :style="{ filter: isHovering ? 'grayscale(0%)' : 'grayscale(100%)' }">
+                            <template v-if="isDark" #sources>
+                                <source srcset="@/assets/HARTING_Logo_dark.png" />
+                            </template>
+                            <template v-else #sources>
+                                <source srcset="@/assets/HARTING_Logo_light.png" />
+                            </template>
+                        </v-img>
+                    </a>
+                </v-hover>
+            </v-col>
+            <v-col cols="3" class="pa-6">
+                <v-hover v-slot="{ props: hoverProps, isHovering }">
+                    <a href="https://www.dfki.de/" target="_blank">
+                        <v-img
+                            :src="isDark ? 'DFKI_Logo_dark.png' : 'DFKI_Logo_light.png'"
+                            v-bind="hoverProps"
+                            :style="{ filter: isHovering ? 'grayscale(0%)' : 'grayscale(100%)' }">
+                            <template v-if="isDark" #sources>
+                                <source srcset="@/assets/DFKI_Logo_dark.png" />
+                            </template>
+                            <template v-else #sources>
+                                <source srcset="@/assets/DFKI_Logo_light.png" />
+                            </template>
+                        </v-img>
+                    </a>
+                </v-hover>
+            </v-col>
+            <v-col cols="3" class="pa-6">
+                <v-hover v-slot="{ props: hoverProps, isHovering }">
+                    <a href="https://arena2036.de/" target="_blank">
+                        <v-img
+                            :src="isDark ? 'ARENA2036_Logo_dark.png' : 'ARENA2036_Logo_light.png'"
+                            v-bind="hoverProps"
+                            :style="{ filter: isHovering ? 'grayscale(0%)' : 'grayscale(100%)' }">
+                            <template v-if="isDark" #sources>
+                                <source srcset="@/assets/ARENA2036_Logo_dark.png" />
+                            </template>
+                            <template v-else #sources>
+                                <source srcset="@/assets/ARENA2036_Logo_light.png" />
+                            </template>
+                        </v-img>
+                    </a>
+                </v-hover>
+            </v-col>
+        </v-row>
 
         <br /><br />
 
@@ -131,9 +225,18 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
+    import { useTheme } from 'vuetify';
 
     export default defineComponent({
         name: 'About',
+
+        setup() {
+            const theme = useTheme();
+
+            return {
+                theme, // Theme Object
+            };
+        },
 
         data() {
             return {
@@ -180,6 +283,13 @@
                     },
                 ] as Array<any>,
             };
+        },
+
+        computed: {
+            // Check if the current Theme is dark
+            isDark() {
+                return this.theme.global.current.value.dark;
+            },
         },
 
         methods: {

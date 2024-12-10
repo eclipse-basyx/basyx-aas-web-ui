@@ -3,8 +3,13 @@
         <!-- Header -->
         <v-card class="mb-4">
             <v-card-title>
-                <div class="text-subtitle-1">{{ 'Contact Information:' }}</div>
+                <div class="text-subtitle-1">
+                    {{ nameToDisplay(submodelElementData, 'Contact Information') }}
+                </div>
             </v-card-title>
+            <v-card-text v-if="descriptionToDisplay(submodelElementData)" class="pt-0">
+                {{ descriptionToDisplay(submodelElementData) }}
+            </v-card-text>
         </v-card>
         <!-- Documents -->
         <v-card v-if="loading">
@@ -90,6 +95,7 @@
 
     export default defineComponent({
         name: 'ContactInformation',
+        semanticId: 'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations',
         mixins: [RequestHandling, SubmodelElementHandling],
         props: ['submodelElementData'],
 
@@ -126,13 +132,19 @@
         methods: {
             async initContactInformation() {
                 this.loading = true;
-                // console.log('Initialize Contact Information Plugin: ', this.submodelElementData);
+
+                if (Object.keys(this.submodelElementData).length == 0) {
+                    this.contactInformationData = {};
+                    this.loading = false;
+                    return;
+                }
+
                 let submodelElementData = { ...this.submodelElementData };
-                submodelElementData = await this.calculateSubmodelElementPathes(
+                this.contactInformationData = await this.calculateSubmodelElementPathes(
                     submodelElementData,
                     this.SelectedNode.path
                 );
-                this.contactInformationData = submodelElementData;
+
                 // create array of contacts
                 let contacts = this.contactInformationData.submodelElements.filter((element: any) => {
                     return (
