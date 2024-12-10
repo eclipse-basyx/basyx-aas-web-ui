@@ -60,7 +60,8 @@
                                 submodelElementData.semanticId.keys.length > 0
                             "
                             :semantic-id-object="submodelElementData.semanticId"
-                            :semantic-title="'Semantic ID'"></SemanticID>
+                            :semantic-title="'Semantic ID'"
+                            :small="false"></SemanticID>
                         <v-divider
                             v-if="
                                 submodelElementData.supplementalSemanticIds &&

@@ -3,11 +3,16 @@
         <v-list lines="one" nav class="bg-detailsCard">
             <IdentificationElement
                 id="assetInformationIdentification"
-                class="mb-2"
                 :identification-object="assetInfo"
                 :model-type="assetObject.assetKind"
                 :id-type="'Global Asset ID'"
                 :name-type="'assetType'"></IdentificationElement>
+            <v-divider
+                v-if="Array.isArray(assetObject?.specificAssetIds) && assetObject?.specificAssetIds.length > 0"
+                class="mt-2"></v-divider>
+            <!-- Specific Asset IDs -->
+            <SpecificAssetIds :asset-object="assetObject"></SpecificAssetIds>
+            <v-divider v-if="assetObject.defaultThumbnail" class="mt-2"></v-divider>
             <v-img
                 v-if="assetObject.defaultThumbnail"
                 :src="assetObject.defaultThumbnail.path"
@@ -22,11 +27,13 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import IdentificationElement from '@/components/UIComponents/IdentificationElement.vue';
+    import SpecificAssetIds from '@/components/UIComponents/SpecificAssetIds.vue';
 
     export default defineComponent({
         name: 'AssetInformation',
         components: {
             IdentificationElement,
+            SpecificAssetIds,
         },
         props: ['assetObject'],
 
