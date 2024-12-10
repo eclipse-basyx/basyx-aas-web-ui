@@ -226,7 +226,7 @@
 
             // Function to request all Submodels for the selected AAS
             async requestSubmodels(submodelRefs: any) {
-                console.log('SubmodelRefs: ', submodelRefs);
+                // console.log('SubmodelRefs: ', submodelRefs);
                 let submodelPromises = submodelRefs.map((submodelRef: any) => {
                     // retrieve endpoint for submodel from submodel registry
                     // console.log('SubmodelRef: ', submodelRef, ' Submodel Registry: ', this.submodelRegistryServerURL);
