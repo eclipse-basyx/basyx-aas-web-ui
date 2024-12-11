@@ -21,36 +21,41 @@
                 <div v-if="loading">
                     <v-skeleton-loader type="list-item@6"></v-skeleton-loader>
                 </div>
-                <!-- List of Submodels -->
-                <v-list-item
-                    v-for="submodel in submodelData"
-                    v-else
-                    :key="submodel.id"
-                    color="primary"
-                    nav
-                    class="bg-listItem mb-2"
-                    style="border-width: 1px"
-                    :style="{
-                        'border-color': submodel.isActive
-                            ? primaryColor + ' !important'
-                            : isDark
-                              ? '#686868 !important'
-                              : '#ABABAB !important',
-                    }"
-                    @click="toggleNode(submodel)">
-                    <template #prepend>
-                        <v-chip label border color="primary" size="x-small" class="mr-3">SM</v-chip>
-                    </template>
-                    <v-list-item-title :class="submodel.isActive ? 'text-primary' : ''">{{
-                        submodel.idShort
-                    }}</v-list-item-title>
-                    <v-overlay
-                        :model-value="submodel.isActive"
-                        scrim="primary"
-                        style="opacity: 0.2"
-                        contained
-                        persistent></v-overlay>
-                </v-list-item>
+                <template v-else>
+                    <v-empty-state
+                        v-if="Object.keys(SelectedAAS).length > 0 && submodelData.length === 0"
+                        title="No existing Submodels"
+                        text="The selected AAS does not contain any Submodels"></v-empty-state>
+                    <!-- List of Submodels -->
+                    <v-list-item
+                        v-for="submodel in submodelData"
+                        :key="submodel.id"
+                        color="primary"
+                        nav
+                        class="bg-listItem mb-2"
+                        style="border-width: 1px"
+                        :style="{
+                            'border-color': submodel.isActive
+                                ? primaryColor + ' !important'
+                                : isDark
+                                  ? '#686868 !important'
+                                  : '#ABABAB !important',
+                        }"
+                        @click="toggleNode(submodel)">
+                        <template #prepend>
+                            <v-chip label border color="primary" size="x-small" class="mr-3">SM</v-chip>
+                        </template>
+                        <v-list-item-title :class="submodel.isActive ? 'text-primary' : ''">{{
+                            submodel.idShort
+                        }}</v-list-item-title>
+                        <v-overlay
+                            :model-value="submodel.isActive"
+                            scrim="primary"
+                            style="opacity: 0.2"
+                            contained
+                            persistent></v-overlay>
+                    </v-list-item>
+                </template>
             </v-card-text>
         </v-card>
     </v-container>
@@ -139,11 +144,8 @@
 
         watch: {
             // initialize Submodel List when AAS gets selected or changes
-            SelectedAAS: {
-                deep: true,
-                handler() {
-                    this.initSubmodelList();
-                },
+            SelectedAAS() {
+                this.initSubmodelList();
             },
 
             // Resets the Submodel List when the AAS Registry changes
@@ -167,14 +169,14 @@
 
         methods: {
             initSubmodelList() {
-                // console.log("initialize Submodel List: ", this.SelectedAAS);
+                // console.log('Initialize SubmodelList', this.SelectedAAS, this.initialUpdate, this.initialNode);
                 // return if no endpoints are available
                 if (!this.SelectedAAS || !this.SelectedAAS.endpoints || this.SelectedAAS.endpoints.length === 0) {
                     // this.navigationStore.dispatchSnackbar({ status: true, timeout: 4000, color: 'error', btnColor: 'buttonText', text: 'AAS with no (valid) Endpoint selected!' });
                     this.submodelData = [];
                     return;
                 }
-                if (this.loading) return; // return if loading state is true -> prevents multiple requests
+                if (this.loading && !this.initialUpdate) return; // return if loading state is true -> prevents multiple requests
                 this.aasStore.dispatchLoadingState(true); // set loading state to true
                 this.submodelData = []; // reset Submdoel List Data
                 // retrieve AAS from endpoint
@@ -189,23 +191,26 @@
                             try {
                                 let AAS = response.data;
                                 AAS.endpoints = this.SelectedAAS.endpoints;
-                                this.aasStore.dispatchSelectedAAS(AAS); // dispatch the selected AAS to the Store
                                 // request submodels from the retrieved AAS
-                                let submodelData = await this.requestSubmodels(AAS.submodels);
-                                if (this.initialUpdate && this.initialNode) {
-                                    // set the isActive Property of the initial Node to true and dispatch it to the store
-                                    submodelData.forEach((submodel: any) => {
-                                        if (submodel.path === this.initialNode.path) {
-                                            submodel.isActive = true;
-                                            this.aasStore.dispatchNode(submodel);
-                                            this.aasStore.dispatchRealTimeObject(submodel);
-                                        }
-                                    });
-                                    this.initialUpdate = false;
-                                    this.initialNode = {};
-                                    this.submodelData = submodelData; // set the Submodel Data
+                                if (AAS.submodels) {
+                                    let submodelData = await this.requestSubmodels(AAS.submodels);
+                                    if (this.initialUpdate && this.initialNode) {
+                                        // set the isActive Property of the initial Node to true and dispatch it to the store
+                                        submodelData.forEach((submodel: any) => {
+                                            if (submodel.path === this.initialNode.path) {
+                                                submodel.isActive = true;
+                                                this.aasStore.dispatchNode(submodel);
+                                                this.aasStore.dispatchRealTimeObject(submodel);
+                                            }
+                                        });
+                                        this.initialUpdate = false;
+                                        this.initialNode = {};
+                                        this.submodelData = submodelData; // set the Submodel Data
+                                    } else {
+                                        this.submodelData = submodelData;
+                                    }
                                 } else {
-                                    this.submodelData = submodelData; // set the Submodel Data
+                                    this.submodelData = []; // set the Submodel Data
                                 }
                             } catch (error: any) {
                                 // console.error('Error while parsing the Submodel References: ', error);
