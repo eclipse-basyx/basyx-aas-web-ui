@@ -931,7 +931,31 @@ export default defineComponent({
             return endpoint?.protocolInformation?.href ? endpoint.protocolInformation.href : '';
         },
 
-        smNotFound(submodelId: string, path: string, text: string): any {
+        smNotFound(response: any, submodelId: string, path: string, text: string): any {
+
+            // Check if response contains a "messages" array with a "403" or "401" code
+            const messages = response.data?.messages || [];
+            const authorizationError = messages.some((message: any) => message.code === "403" || message.code === "401");
+
+            if (authorizationError) {
+
+                const submodel = {
+                    id: submodelId,
+                    idShort: 'Submodel Not Authorized!',
+                    modelType: 'Submodel',
+                    semanticId: null,
+                    description: [],
+                    displayName: [],
+                    submodelElements: [],
+                    isActive: false,
+                    path: path,
+                    authorizationError: true,
+                };
+
+                return submodel;
+            }
+
+
             if (text.trim().length > 0) {
                 this.navigationStore.dispatchSnackbar({
                     status: true,
@@ -951,6 +975,7 @@ export default defineComponent({
                 submodelElements: [],
                 isActive: false,
                 path: path,
+                authorizationError: false,
             };
             return submodel;
         },

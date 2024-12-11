@@ -234,6 +234,7 @@
                                         return submodel;
                                     } else {
                                         return this.smNotFound(
+                                            response,
                                             submodelId,
                                             path,
                                             "Submodel '" + submodelId + "' not found in SubmodelRepository"
@@ -242,6 +243,7 @@
                                 });
                             } else {
                                 return this.smNotFound(
+                                    response,
                                     submodelId,
                                     path,
                                     "Submodel '" + submodelId + "' not found in SubmodelRegistry"
