@@ -2,7 +2,7 @@
     <v-app>
         <!-- App Navigation and it's sub-Components (AASList, etc.) -->
         <AppNavigation />
-        <v-main style="padding-top: 33px">
+        <v-main class="bg-detailsCard" style="padding-top: 33px">
             <!-- App Content (eg. MainWindow, etc.) -->
             <router-view v-slot="{ Component }">
                 <keep-alive :include="['AASList', 'SubmodelList']">
@@ -21,15 +21,6 @@
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-
-    interface AASType {
-        endpoints: Array<{
-            protocolInformation: {
-                href: string;
-            };
-            interface: string;
-        }>;
-    }
 
     export default defineComponent({
         name: 'App',
@@ -117,12 +108,7 @@
 
             if (aasEndpoint) {
                 // console.log('AAS Query is set: ', aasEndpoint);
-                let aas = {} as AASType;
-                let endpoints = [];
-                endpoints.push({ protocolInformation: { href: aasEndpoint }, interface: 'AAS-3.0' });
-                aas.endpoints = endpoints;
-                // dispatch the AAS set by the URL to the store
-                this.aasStore.dispatchSelectedAAS(aas);
+                this.loadAndDispatchAas(aasEndpoint);
             }
 
             if (aasEndpoint && submodelElementPath) {

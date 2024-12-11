@@ -258,19 +258,13 @@
             },
 
             // Function to initialize with route params
-            initializeViewWithRouteParams() {
+            async initializeViewWithRouteParams() {
                 const searchParams = new URL(window.location.href).searchParams;
                 const aasEndpoint = searchParams.get('aas');
                 const path = searchParams.get('path');
 
                 if (aasEndpoint && path) {
-                    // console.log('AAS and Path Queries are set: ', aasEndpoint, ' | ', path);
-                    let aas = {} as any;
-                    let endpoints = [];
-                    endpoints.push({ protocolInformation: { href: aasEndpoint }, interface: 'AAS-3.0' });
-                    aas.endpoints = endpoints;
-                    // dispatch the AAS set by the URL to the store
-                    this.aasStore.dispatchSelectedAAS(aas);
+                    await this.loadAndDispatchAas(aasEndpoint);
 
                     // Request the selected SubmodelElement
                     let context = 'retrieving SubmodelElement';
