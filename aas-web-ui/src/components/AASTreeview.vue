@@ -33,7 +33,8 @@
                     <v-empty-state
                         v-if="Object.keys(SelectedAAS).length > 0 && submodelData.length === 0"
                         title="No existing Submodels"
-                        text="The selected AAS does not contain any Submodels"></v-empty-state>
+                        text="The selected AAS does not contain any Submodels"
+                        class="text-divider"></v-empty-state>
                     <!-- TODO: Replace with Vuetify Treeview Component when it get's released in Q1 2023 -->
                     <VTreeview
                         v-for="item in submodelData"

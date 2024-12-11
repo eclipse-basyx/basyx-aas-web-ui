@@ -25,7 +25,8 @@
                     <v-empty-state
                         v-if="Object.keys(SelectedAAS).length > 0 && submodelData.length === 0"
                         title="No existing Submodels"
-                        text="The selected AAS does not contain any Submodels"></v-empty-state>
+                        text="The selected AAS does not contain any Submodels"
+                        class="text-divider"></v-empty-state>
                     <!-- List of Submodels -->
                     <v-list-item
                         v-for="submodel in submodelData"
