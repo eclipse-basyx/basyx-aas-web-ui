@@ -299,8 +299,8 @@ export default defineComponent({
                     }
                 } else if (key.value.startsWith('http://') || key.value.startsWith('https://')) {
                     // IRI like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/0/9/
-                    console.log('key.value', 'http...');
-                    console.log('key.value', key.value);
+                    // console.log('key.value', 'http...');
+                    // console.log('key.value', key.value);
                     if (key.value.endsWith('/')) key.value = key.value.substring(0, key.value.length - 1);
                     if (semanticId.endsWith('/')) semanticId = semanticId.substring(0, semanticId.length - 1);
                     if (new RegExp(/\/\d{1,}\/\d{1,}$/).test(semanticId)) {
