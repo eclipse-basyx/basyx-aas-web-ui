@@ -1,6 +1,6 @@
 <template>
     <v-container class="pa-0" fluid>
-        <v-divider v-if="!singleAasRedirect" style="border-width: 2px"></v-divider>
+        <v-divider v-if="!singleAasRedirect"></v-divider>
         <!-- AAS Details Card (only visible if the Information Button is pressed on an AAS) -->
         <v-expand-transition>
             <v-card-text
@@ -11,10 +11,10 @@
                     height: isMobile
                         ? singleAasRedirect
                             ? ''
-                            : 'calc(75vh - 182px)'
+                            : 'calc(100vh - 176px - 40px - 64px)' // Full height - 3x AAS items - footer - header
                         : singleAasRedirect
-                          ? 'calc(100vh - 218px)'
-                          : 'calc(67vh - 112px)',
+                          ? 'calc(100vh - 64px - 64px - 48px - 40px - 2px)' // Full height - header - title - collapse button - footer - 2x divider
+                          : 'calc(50vh - 64px - 48px)', // Half height - header - collapse button
                 }">
                 <!-- Asset Information -->
                 <AssetInformation

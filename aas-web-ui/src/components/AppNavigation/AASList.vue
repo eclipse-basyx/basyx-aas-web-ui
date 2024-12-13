@@ -52,11 +52,11 @@
                     'flex-direction': 'column',
                     height: isMobile
                         ? selectedAAS && Object.keys(selectedAAS).length > 0
-                            ? '176px'
-                            : 'calc(100vh - 170px)'
+                            ? '176px' // 3x AAS items
+                            : 'calc(100vh - 64px - 64px - 40px - 2px)' // Full height - header - title - footer - 2x divider
                         : selectedAAS && Object.keys(selectedAAS).length > 0
-                          ? 'calc(33vh - 110px)'
-                          : 'calc(100vh - 218px)',
+                          ? 'calc(50vh - 64px - 40px - 2px - 1px)' // Half height - header - footer - 2x divider - border
+                          : 'calc(100vh - 64px - 64px - 48px - 40px - 2px)', // Full height - header - title - collapse button - footer - 2x divider
                 }">
                 <v-virtual-scroll ref="virtualScroll" :items="AASData" :item-height="56" class="pb-2 bg-card">
                     <template #default="{ item }">

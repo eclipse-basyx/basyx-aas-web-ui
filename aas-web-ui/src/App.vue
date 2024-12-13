@@ -2,7 +2,7 @@
     <v-app>
         <!-- App Navigation and it's sub-Components (AASList, etc.) -->
         <AppNavigation />
-        <v-main class="bg-detailsCard" style="padding-top: 33px">
+        <v-main style="padding-top: 33px">
             <!-- App Content (eg. MainWindow, etc.) -->
             <router-view v-slot="{ Component }">
                 <keep-alive :include="['AASList', 'SubmodelList']">
