@@ -6,6 +6,7 @@ Please note that this list is not exhaustive and may be subject to re-prioritisa
 ## Planned Features and Extensions
 
 - AAS editor as part of the AAS Web UI (Q1/2025)
+- AAS viewer (for experts) to only visualize AAS Data (Q1/2025)
 - Graphical plugins for Asset Interface Description and Asset Interface Mapping Configuration Submodels (Q2/2025)
 - UI components as dedicated graphical clients for all BaSyx components (Repositories, Registries, AAS Discovery) (Q2/2024)
 
