@@ -16,7 +16,7 @@ describe('SubmodelElementHandling', () => {
     });
 
     // Define semanticId
-    const iriWithSlashEnding = 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate';
+    const iriWithSlashEnding = 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate/';
     const iriWithoutSlashEnding = 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate';
     const iriWithVersionWithSlashEnding = 'https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/0/9/';
     const iriWithVersionWithoutSlashEnding = 'https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/0/9';
@@ -30,6 +30,8 @@ describe('SubmodelElementHandling', () => {
     const eclassIrdiSlashesWithoutVersion = '0173/1///01#AHF578';
     const eclassIriWithVersion = 'https://api.eclass-cdp.com/0173-1-01-AHF578-001';
     const eclassIriWithoutVersion = 'https://api.eclass-cdp.com/0173-1-01-AHF578';
+    const eclassIriWithVersionAndCardinality = 'https://api.eclass-cdp.com/0173-1-01-AHF578-001~1';
+    const eclassIriWithVersionAndNoCardinality = 'https://api.eclass-cdp.com/0173-1-01-AHF578';
     const ieccddIrdiWithVersion = '0112/2///61987#ABN590#002';
     const ieccddIrdiWithOutVersion = '0112/2///61987#ABN590';
 
@@ -494,6 +496,34 @@ describe('SubmodelElementHandling', () => {
             strategy: 'matching',
             match: true,
         },
+        {
+            testId: 'ec1566eb-3270-4f8a-96af-6397ffb7ec97',
+            semanticId: eclassIriWithVersionAndCardinality,
+            submodelElementSemanticId: eclassIriWithVersionAndCardinality,
+            strategy: 'exact matching',
+            match: true,
+        },
+        {
+            testId: 'e3ee74ed-aa21-49f3-b806-78e9fbd05939',
+            semanticId: eclassIriWithVersionAndNoCardinality,
+            submodelElementSemanticId: eclassIriWithVersionAndNoCardinality,
+            strategy: 'exact matching',
+            match: true,
+        },
+        {
+            testId: '8418f0c3-018b-435c-bba0-1c3068d62df0',
+            semanticId: eclassIriWithVersionAndCardinality,
+            submodelElementSemanticId: eclassIriWithVersionAndNoCardinality,
+            strategy: 'matching',
+            match: false,
+        },
+        {
+            testId: '7db389a3-a467-4ad5-84b2-add2bdaeccd9',
+            semanticId: eclassIriWithVersionAndNoCardinality,
+            submodelElementSemanticId: eclassIriWithVersionAndCardinality,
+            strategy: 'matching',
+            match: true,
+        },
 
         {
             testId: 'a24cda5d-f281-4a82-85bb-8e44c3643272',
@@ -526,5 +556,87 @@ describe('SubmodelElementHandling', () => {
             // Perform the assertion
             expect(wrapper.vm.checkSemanticId(submodelElement, semanticId)).toBe(semanticIdTestCombination.match);
         });
+    });
+
+    // Define test data for getEquivalentEclassSemanticId()
+    const equivalentElcassSemanticIds = [
+        {
+            testId: 'f53aef0c-dfc8-4408-b803-f501cba3122a',
+            semanticId: '0173-1#01-AHF578#001',
+            semanitcIds: [
+                '0173-1#01-AHF578#001',
+                '0173/1///01#AHF578#001',
+                'https://api.eclass-cdp.com/0173-1-01-AHF578-001',
+            ],
+        },
+        {
+            testId: '7106149a-b8fa-4059-9776-d2e37ad35fd2',
+            semanticId: '0173-1#01-AHF578',
+            semanitcIds: ['0173-1#01-AHF578', '0173/1///01#AHF578', 'https://api.eclass-cdp.com/0173-1-01-AHF578'],
+        },
+    ];
+
+    // Tests for getEquivalentEclassSemanticId()
+    equivalentElcassSemanticIds.forEach(function (equivalentElcassSemanticId) {
+        it(
+            `${equivalentElcassSemanticId.testId}: getEquivalentEclassSemanticIds(${equivalentElcassSemanticId.semanticId}, ` +
+                "['" +
+                equivalentElcassSemanticId.semanitcIds.toString().replaceAll(',', "', '") +
+                "']" +
+                ')',
+            () => {
+                // Mount the component
+                const wrapper: VueWrapper<any> = shallowMount(DummyComponent);
+
+                // Define test data
+                const semanticId = equivalentElcassSemanticId.semanticId; //e.g. the ID of a ConceptDescription
+                const semanticIds = equivalentElcassSemanticId.semanitcIds;
+
+                // Perform the assertion
+                expect(wrapper.vm.getEquivalentEclassSemanticIds(semanticId).sort()).toStrictEqual(semanticIds.sort());
+            }
+        );
+    });
+
+    // Define test data for getEquivalentEclassSemanticId()
+    const equivalentIriSemanticIds = [
+        {
+            testId: '71eeb554-da62-4f91-85b2-bd2be844ada0',
+            semanticId: 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate/',
+            semanitcIds: [
+                'https://admin-shell.io/zvei/nameplate/2/0/Nameplate/',
+                'https://admin-shell.io/zvei/nameplate/2/0/Nameplate',
+            ],
+        },
+        {
+            testId: 'e518544c-f874-4b45-a9b0-442d0c740af9',
+            semanticId: 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate',
+            semanitcIds: [
+                'https://admin-shell.io/zvei/nameplate/2/0/Nameplate/',
+                'https://admin-shell.io/zvei/nameplate/2/0/Nameplate',
+            ],
+        },
+    ];
+
+    // Tests for getEquivalentEclassSemanticId()
+    equivalentIriSemanticIds.forEach(function (equivalentIriSemanticId) {
+        it(
+            `${equivalentIriSemanticId.testId}: getEquivalentIriSemanticIds(${equivalentIriSemanticId.semanticId}, ` +
+                "['" +
+                equivalentIriSemanticId.semanitcIds.toString().replaceAll(',', "', '") +
+                "']" +
+                ')',
+            () => {
+                // Mount the component
+                const wrapper: VueWrapper<any> = shallowMount(DummyComponent);
+
+                // Define test data
+                const semanticId = equivalentIriSemanticId.semanticId; //e.g. the ID of a ConceptDescription
+                const semanticIds = equivalentIriSemanticId.semanitcIds;
+
+                // Perform the assertion
+                expect(wrapper.vm.getEquivalentIriSemanticIds(semanticId).sort()).toStrictEqual(semanticIds.sort());
+            }
+        );
     });
 });
