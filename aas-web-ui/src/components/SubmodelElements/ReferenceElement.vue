@@ -6,7 +6,7 @@
         <v-card v-if="referenceElementObject" color="elevatedCard">
             <!-- Value of the Reference -->
             <v-list nav class="pt-0" :class="IsOperationVariable ? '' : 'bg-elevatedCard'">
-                <template v-for="(value, i) in referenceValue" :key="i">
+                <template v-for="(value, i) in referenceValueKeys" :key="i">
                     <v-list-item>
                         <!-- Tooltip with Reference ID -->
                         <v-tooltip
@@ -22,7 +22,7 @@
                         <!-- Reference Title -->
                         <template #title>
                             <div class="text-subtitle-2 mt-2">
-                                {{ IsOperationVariable ? 'Reference:' : 'Description:' }}
+                                {{ IsOperationVariable ? 'Reference:' : referenceValueType ? referenceValueType : '' }}
                             </div>
                         </template>
                         <!-- Reference Representation -->
@@ -80,7 +80,7 @@
                             </v-text-field>
                         </template>
                     </v-list-item>
-                    <v-divider v-if="i < referenceValue.length - 1" class="mt-3"></v-divider>
+                    <v-divider v-if="i < referenceValueKeys.length - 1" class="mt-3"></v-divider>
                 </template>
             </v-list>
             <v-divider></v-divider>
@@ -96,7 +96,7 @@
                             color="primary"
                             :loading="loading"
                             :disabled="disabled"
-                            @click="jumpToReferencedElement(referencedAAS, referenceValue, referencedSubmodel)"
+                            @click="jumpToReferencedElement(referencedAAS, referenceValueKeys, referencedSubmodel)"
                             >Jump</v-btn
                         >
                         <!-- Add new Reference Entry -->
@@ -158,7 +158,8 @@
 
         data() {
             return {
-                referenceValue: [] as Array<any>, // Value of the Reference (Array of Reference Keys)
+                referenceValueKeys: [] as Array<any>, // Value keys of the Reference (Array of Reference Keys)
+                referenceValueType: String, // Value type of the Reference
                 loading: false, // Loading State of the Jump-Button (loading when checking if referenced element exists in one of the registered AAS)
                 disabled: true, // Disabled State of the Jump-Button (disabled when referenced element does not exist in one of the registered AAS)
                 referencedAAS: Object as any, // AAS in which the referenced Element is included (if it exists)
@@ -225,7 +226,8 @@
             SelectedNode: {
                 deep: true,
                 handler() {
-                    this.referenceValue = [];
+                    this.referenceValueKeys = [];
+                    this.referenceValueType = '';
                 },
             },
 
@@ -233,7 +235,8 @@
             referenceElementObject: {
                 deep: true,
                 handler() {
-                    this.referenceValue = this.referenceElementObject?.value?.keys;
+                    this.referenceValueKeys = this.referenceElementObject?.value?.keys;
+                    this.referenceValueType = this.referenceElementObject?.value?.type;
                     this.validateReference();
                 },
             },
@@ -241,7 +244,8 @@
 
         mounted() {
             // console.log('ReferenceElement Mounted:', this.referenceElementObject);
-            this.referenceValue = this.referenceElementObject?.value?.keys;
+            this.referenceValueKeys = this.referenceElementObject?.value?.keys;
+            this.referenceValueType = this.referenceElementObject?.type;
             this.validateReference();
         },
 
@@ -249,7 +253,7 @@
             // Function to check if the referenced Element exists
             validateReference() {
                 this.loading = true;
-                this.checkReference(this.referenceValue)
+                this.checkReference(this.referenceValueKeys)
                     .then(({ success, aas, submodel }) => {
                         // console.log('checkReference: ', success, aas, submodel);
                         if (success) {
@@ -268,21 +272,21 @@
 
             updateReferenceObject() {
                 let referenceElementObject = { ...this.referenceElementObject };
-                referenceElementObject.value.keys = this.referenceValue;
+                referenceElementObject.value.keys = this.referenceValueKeys;
                 this.$emit('updateValue', referenceElementObject.value);
             },
 
             // Function to add a new Reference Entry
             addReferenceEntry() {
                 // console.log('addReferenceEntry');
-                this.referenceValue.push({ type: '', value: '' });
+                this.referenceValueKeys.push({ type: '', value: '' });
                 this.updateReferenceObject();
             },
 
             // Function to remove a Reference Entry
             removeReferenceEntry(index: number) {
                 // console.log('removeReferenceEntry');
-                this.referenceValue.splice(index, 1);
+                this.referenceValueKeys.splice(index, 1);
                 this.updateReferenceObject();
             },
 
