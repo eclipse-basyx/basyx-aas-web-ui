@@ -20,6 +20,7 @@
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
@@ -37,12 +38,14 @@
             const aasStore = useAASStore();
             const route = useRoute();
             const router = useRouter();
+            const envStore = useEnvStore();
 
             return {
                 navigationStore, // NavigationStore Object
                 aasStore, // AASStore Object
                 route, // Route Object
                 router, // Router Object
+                envStore, // EnvironmentStore Object
             };
         },
 
@@ -66,6 +69,21 @@
             const searchParams = new URL(window.location.href).searchParams;
             const aasEndpoint = searchParams.get('aas');
             const submodelElementPath = searchParams.get('path');
+
+            // Ensure available aasEndpoint query parameter
+            if (
+                this.envStore.singleAas &&
+                (aasEndpoint === null || aasEndpoint === undefined || aasEndpoint.trim() === '')
+            ) {
+                console.log('foobar', this.envStore.getSingleAasRedirect);
+                if (this.envStore.getSingleAasRedirect) {
+                    window.location.replace(this.envStore.getSingleAasRedirect);
+                    return;
+                } else if (this.route.name !== '404NotFound404') {
+                    this.router.push({ name: 'NotFound404' });
+                    return;
+                }
+            }
 
             // check which platform is used and change the fitting view
             if (mobile) {

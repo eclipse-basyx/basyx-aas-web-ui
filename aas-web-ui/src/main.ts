@@ -34,16 +34,6 @@ async function loadPlugins() {
     const envStore = useEnvStore(); // Get the store instance
     await envStore.fetchConfig(); // make sure to await fetchConfig
 
-    // Ensure available aasEndpoint query parameter
-    const aasEndpoint = new URL(window.location.href).searchParams.get('aas') as string;
-    if (
-        envStore.getSingleAasRedirect &&
-        (aasEndpoint === null || aasEndpoint === undefined || aasEndpoint.trim() === '')
-    ) {
-        window.location.replace(envStore.getSingleAasRedirect);
-        return;
-    }
-
     // create keycloak instance
     if (envStore.getKeycloakUrl !== '' && envStore.getKeycloakRealm !== '' && envStore.getKeycloakClientId !== '') {
         try {

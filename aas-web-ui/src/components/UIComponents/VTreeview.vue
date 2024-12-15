@@ -23,35 +23,35 @@
                         @click.stop="toggleChildren()"></v-btn>
                     <div v-else style="width: 40px; height: 40px"></div>
                     <!-- Lock Icon for Authorization Errors -->
-                    <v-icon v-if="item.authorizationError" color="error">mdi-folder-lock</v-icon>
-
+                    <v-icon v-if="item.authorizationError" color="error"> mdi-folder-lock </v-icon>
                     <!-- Empty Submodel Icon -->
-                    <v-icon v-else-if="item.modelType === 'Submodel' && !item.children" color="primary"
-                      >mdi-folder-alert</v-icon
-                    >
-
+                    <v-icon v-else-if="item.modelType === 'Submodel' && !item.children" color="primary">
+                        mdi-folder-alert
+                    </v-icon>
                     <!-- Icon for Submodel with children (open/closed) -->
-                    <v-icon v-else-if="item.modelType === 'Submodel' && item.children" color="primary"
-                      >{{ showChildren ? "mdi-folder-open" : "mdi-folder" }}</v-icon
-                    >
+                    <v-icon v-else-if="item.modelType === 'Submodel' && item.children" color="primary">
+                        {{ showChildren ? 'mdi-folder-open' : 'mdi-folder' }}
+                    </v-icon>
                     <!-- Icon for empty SubmodelelementCollection -->
-                    <v-icon v-else-if="item.modelType === 'SubmodelElementCollection' && !item.children" color="primary"
-                        >mdi-file-alert</v-icon
-                    >
+                    <v-icon
+                        v-else-if="item.modelType === 'SubmodelElementCollection' && !item.children"
+                        color="primary">
+                        mdi-file-alert
+                    </v-icon>
                     <!-- Icon for SubmodelelementCollection -->
-                    <v-icon v-else-if="item.modelType === 'SubmodelElementCollection'" color="primary"
-                        >mdi-file-multiple</v-icon
-                    >
+                    <v-icon v-else-if="item.modelType === 'SubmodelElementCollection'" color="primary">
+                        mdi-file-multiple
+                    </v-icon>
                     <!-- Icon for empty SubmodelelementList -->
-                    <v-icon v-else-if="item.modelType === 'SubmodelElementList' && !item.children" color="primary"
-                        >mdi-file-alert</v-icon
-                    >
+                    <v-icon v-else-if="item.modelType === 'SubmodelElementList' && !item.children" color="primary">
+                        mdi-file-alert
+                    </v-icon>
                     <!-- Icon for SubmodelelementList -->
                     <v-icon v-else-if="item.modelType === 'SubmodelElementList'" color="primary">mdi-list-box</v-icon>
                     <!-- Icon for empty Entities -->
-                    <v-icon v-else-if="item.modelType === 'Entity' && !item.children" color="primary"
-                        >mdi-file-alert</v-icon
-                    >
+                    <v-icon v-else-if="item.modelType === 'Entity' && !item.children" color="primary">
+                        mdi-file-alert
+                    </v-icon>
                     <!-- Icon for Entities -->
                     <v-icon v-else-if="item.modelType === 'Entity'" color="primary">mdi-format-list-group</v-icon>
                     <!-- Icon for every other SubmodelElement (like Property) -->

@@ -2,9 +2,7 @@
     <v-container fluid class="pa-0">
         <v-card color="card" elevation="0">
             <!-- Title Bar in the AAS List -->
-            <v-card-title v-if="singleAasRedirect && !isMobile" style="padding: 16px 16px 16px">
-                Asset & AAS
-            </v-card-title>
+            <v-card-title v-if="singleAas && !isMobile" style="padding: 16px 16px 16px"> Asset & AAS </v-card-title>
             <v-card-title v-else-if="!isMobile">
                 <v-row align="center">
                     <v-col cols="auto" class="px-0">
@@ -44,7 +42,7 @@
             <v-divider></v-divider>
             <!-- AAS List -->
             <v-list
-                v-if="!singleAasRedirect"
+                v-if="!singleAas"
                 nav
                 class="bg-card card pa-0"
                 :style="{
@@ -89,7 +87,7 @@
                             </v-tooltip>
                             <!-- idShort of the AAS -->
                             <template v-if="drawerState" #title>
-                                <div class="text-primary" style="z-index: 9999">{{ aasNameToDisplay(item) }}</div>
+                                <div class="text-primary" style="z-index: 9999">{{ nameToDisplay(item) }}</div>
                             </template>
                             <!-- id of the AAS -->
                             <template v-if="drawerState" #subtitle>
@@ -283,8 +281,8 @@
                 return this.navigationStore.getAASRepoURL;
             },
 
-            singleAasRedirect() {
-                return this.envStore.getSingleAasRedirect;
+            singleAas() {
+                return this.envStore.getSingleAas;
             },
         },
 
@@ -324,7 +322,7 @@
 
         mounted() {
             // Load the AAS List on Startup if the AAS Registry URL is set
-            if (this.aasRegistryURL !== '' && !this.singleAasRedirect) {
+            if (this.aasRegistryURL !== '' && !this.singleAas) {
                 this.loadAASListData();
             }
 
@@ -341,16 +339,6 @@
         },
 
         methods: {
-            // Function to determine the name of the aas to be displayed
-            aasNameToDisplay(AAS: any) {
-                if (AAS.displayName) {
-                    let displayNameEn = AAS.displayName.find((displayName: any) => {
-                        return displayName.language === 'en' && displayName.text !== '';
-                    });
-                    if (displayNameEn && displayNameEn.text) return displayNameEn.text;
-                }
-                return AAS.idShort ? AAS.idShort : '';
-            },
             // Function to collapse the Sidebar
             collapseSidebar() {
                 this.navigationStore.dispatchDrawerState(false);

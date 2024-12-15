@@ -1,6 +1,6 @@
 <template>
     <v-container class="pa-0" fluid>
-        <v-divider v-if="!singleAasRedirect"></v-divider>
+        <v-divider v-if="!singleAas"></v-divider>
         <!-- AAS Details Card (only visible if the Information Button is pressed on an AAS) -->
         <v-expand-transition>
             <v-card-text
@@ -9,10 +9,10 @@
                 style="overflow-y: auto"
                 :style="{
                     height: isMobile
-                        ? singleAasRedirect
+                        ? singleAas
                             ? ''
                             : 'calc(100vh - 176px - 40px - 64px)' // Full height - 3x AAS items - footer - header
-                        : singleAasRedirect
+                        : singleAas
                           ? 'calc(100vh - 64px - 64px - 48px - 40px - 2px)' // Full height - header - title - collapse button - footer - 2x divider
                           : 'calc(50vh - 64px - 48px)', // Half height - header - collapse button
                 }">
@@ -133,8 +133,8 @@
                 return this.aasStore.getSelectedAAS;
             },
 
-            singleAasRedirect() {
-                return this.envStore.getSingleAasRedirect;
+            singleAas() {
+                return this.envStore.getSingleAas;
             },
         },
 
