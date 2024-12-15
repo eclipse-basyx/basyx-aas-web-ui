@@ -146,7 +146,7 @@
                         this.aasStore.dispatchNode(response.data); // set the updatedNode in the AASStore
                     } else {
                         // execute if the Request failed
-                        if (Object.keys(response.data).length == 0) {
+                        if (response?.data && Object.keys(response?.data).length == 0) {
                             // don't copy the static SubmodelElement Data if no Node is selected or Node is invalid
                             this.navigationStore.dispatchSnackbar({
                                 status: true,
