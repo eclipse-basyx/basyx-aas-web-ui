@@ -24,22 +24,22 @@ export default defineComponent({
 
     computed: {
         // get AAS Discovery URL from Store
-        aasDiscoveryURL() {
+        aasDiscoveryUrl() {
             return this.navigationStore.getAASDiscoveryURL;
         },
 
         // get AAS Registry URL from Store
-        aasRegistryURL() {
+        aasRegistryUrl() {
             return this.navigationStore.getAASRegistryURL;
         },
 
         // Get the Submodel Repository URL from the Store
-        submodelRepoURL() {
+        submodelRepoUrl() {
             return this.navigationStore.getSubmodelRepoURL;
         },
 
         // Get the Concept Description Repository URL from the Store
-        conceptDescriptionRepoURL() {
+        conceptDescriptionRepoUrl() {
             return this.navigationStore.getConceptDescriptionRepoURL;
         },
 
@@ -356,120 +356,330 @@ export default defineComponent({
 
         // Function to check if the referenced Element exists
         async checkReference(
-            referenceValue: Array<any>
-        ): Promise<{ success: boolean; aas?: object; submodel?: object }> {
-            // console.log('Reference Value: ', referenceValue);
-            // check if aasRegistryURL includes "/shell-descriptors" and add id if not (backward compatibility)
-            if (!this.aasRegistryURL.includes('/shell-descriptors')) {
-                this.aasRegistryURL += '/shell-descriptors';
+            reference: any,
+            currentAasDescriptor?: any
+        ): Promise<{ success: boolean; aasDescriptor?: object; submodelRef?: object }> {
+            // console.log(
+            //     'checkReference (' + reference.type + '): ',
+            //     'reference',
+            //     reference,
+            //     'currentAasDescriptor',
+            //     currentAasDescriptor
+            // );
+            const failResponse = { success: false, aasDescriptor: {}, submodelRef: {} }; // Define once for reuse
+            let aasRegistryUrl = this.aasRegistryUrl;
+            if (!aasRegistryUrl.includes('/shell-descriptors')) {
+                aasRegistryUrl += '/shell-descriptors';
             }
-            const path = this.aasRegistryURL;
-            const context = 'retrieving AAS Data';
+            const path = aasRegistryUrl;
             const disableMessage = false;
-            try {
-                const response = await this.getRequest(path, context, disableMessage);
-                // console.log('Response: ', response);
-                if (response.success && response.data.result && response.data.result.length > 0) {
-                    const aasList = response.data.result;
-                    if (referenceValue[0].type == 'AssetAdministrationShell') {
-                        return await this.checkReferenceAAS(aasList, referenceValue);
+
+            if (reference.type === 'ExternalReference') {
+                // Check ExternalReference
+                const context = 'retrieving AAS Descriptors';
+                try {
+                    const response = await this.getRequest(path, context, disableMessage);
+                    if (response.success && response.data.result && response.data.result.length > 0) {
+                        const aasDescriptorList = response.data.result;
+
+                        if (reference?.keys[0]?.type === 'AssetAdministrationShell') {
+                            if (reference?.keys[1]?.type === 'Submodel') {
+                                return await this.checkSmReference(reference, aasDescriptorList);
+                            }
+                            return await this.checkAasReference(reference, aasDescriptorList);
+                        } else if (reference?.keys[0]?.type === 'Submodel') {
+                            // ExternalReference can not start with a Submodel Reference Key
+                            return failResponse;
+                        } else {
+                            return failResponse;
+                        }
                     }
-                    if (referenceValue[0].type == 'Submodel') {
-                        return await this.checkReferenceSubmodel(aasList, referenceValue);
+                    return failResponse;
+                } catch {
+                    // handle error
+                    return failResponse;
+                }
+            } else if (reference.type === 'ModelReference') {
+                // Check ModelReference
+                let aasDescriptor = {};
+                if (reference?.keys[0]?.type === 'AssetAdministrationShell') {
+                    aasDescriptor = await this.checkAasReference(reference).then(({ aasDescriptor }) => {
+                        return aasDescriptor;
+                    });
+                } else if (Object.keys(currentAasDescriptor).length > 0) {
+                    aasDescriptor = currentAasDescriptor;
+                }
+
+                if (Object.keys(aasDescriptor).length > 0) {
+                    const aasDescriptorList = [aasDescriptor];
+
+                    if (reference?.keys[0]?.type === 'AssetAdministrationShell') {
+                        if (reference?.keys[1]?.type === 'Submodel') {
+                            return await this.checkSmReference(reference, aasDescriptorList, aasDescriptor);
+                        }
+                        return await this.checkAasReference(reference, aasDescriptorList);
+                    } else if (reference?.keys[0]?.type === 'Submodel') {
+                        return await this.checkSmReference(reference, aasDescriptorList, aasDescriptor);
                     }
                 }
-                return { success: false, aas: {}, submodel: {} };
-            } catch {
-                // handle error
-                return { success: false, aas: {}, submodel: {} };
+                return failResponse;
+            } else {
+                return failResponse;
             }
         },
 
         // Function to check if the referenced AAS exists
-        async checkReferenceAAS(
-            aasList: Array<any>,
-            referenceValue: Array<any>
-        ): Promise<{ success: boolean; aas?: object; submodel?: object }> {
-            try {
-                aasList.forEach((aas: any) => {
-                    if (aas.id == referenceValue[0].value) {
-                        // console.log('AAS found. AAS: ', { success: true, aas: aas, submodel: {} });
-                        throw { success: true, aas: aas, submodel: {} };
+        async checkAasReference(
+            aasReference: any,
+            aasDescriptorList?: Array<any>
+        ): Promise<{ success: boolean; aasDescriptor: object; submodelDescriptor: object }> {
+            // console.log('checkAasReference', 'aasReference', aasReference, 'aasDescriptorList', aasDescriptorList);
+            const failResponse = { success: false, aasDescriptor: {}, submodelDescriptor: {} }; // Define once for reuse
+            if (aasReference?.keys[0]?.type !== 'AssetAdministrationShell')
+                return { success: false, aasDescriptor: {}, submodelDescriptor: {} };
+
+            if (!Array.isArray(aasDescriptorList) || aasDescriptorList.length === 0) {
+                // Fetch AAS Descriptors
+                if (!this.aasRegistryUrl.includes('/shell-descriptors')) {
+                    this.aasRegistryUrl += '/shell-descriptors';
+                }
+                const path = this.aasRegistryUrl;
+                const context = 'retrieving AAS Descriptors';
+                const disableMessage = false;
+                try {
+                    const response = await this.getRequest(path, context, disableMessage);
+                    if (response.success && response.data.result && response.data.result.length > 0) {
+                        aasDescriptorList = response.data.result;
                     }
-                });
-            } catch (result: any) {
-                if (result.success) {
-                    return result;
-                } else {
-                    throw result; // re-throw if it's an actual error
+                } catch {
+                    // handle error
+                    return failResponse;
                 }
             }
-            return { success: false, aas: {}, submodel: {} };
+
+            if (Array.isArray(aasDescriptorList) && aasDescriptorList.length > 0) {
+                const aasDescriptor = aasDescriptorList.find((aasDescriptor: any) => {
+                    return aasDescriptor.id == aasReference?.keys[0]?.value;
+                });
+
+                return {
+                    success: aasDescriptor ? true : false,
+                    aasDescriptor: aasDescriptor ? aasDescriptor : {},
+                    submodelDescriptor: {},
+                };
+            }
+
+            return failResponse;
         },
 
-        // Function to check if the referenced Submodel (+ SubmodelElement) exists
-        async checkReferenceSubmodel(
-            aasList: Array<any>,
-            referenceValue: Array<any>
-        ): Promise<{ success: boolean; aas?: object; submodel?: object }> {
-            const promises = aasList.map(async (aas: any) => {
-                const shellHref = this.extractEndpointHref(aas, 'AAS-3.0');
-                const path = shellHref + '/submodel-refs';
-                const context = 'retrieving Submodel References';
-                const disableMessage = false;
+        // Function to check if the referenced Submodel (+ SubmodelElement) exists (in aasDescriptor)
+        async checkSmReference(
+            smReference: any,
+            aasDescriptorList: Array<any>,
+            currentAasDescriptor?: any
+        ): Promise<{ success: boolean; aasDescriptor?: object; submodelRef?: object }> {
+            console.log(
+                'checkSmReference (' + smReference.type + '): ',
+                'smReference',
+                smReference,
+                'aasDescriptorList',
+                aasDescriptorList,
+                'currentAasDescriptor',
+                currentAasDescriptor
+            );
+            const failResponse = { success: false, aasDescriptor: {}, submodelRef: {} }; // Define once for reuse
+            if (smReference.type === 'ExternalReference') {
+                // Check ExternalReference
+                const promises = aasDescriptorList.map(async (aasDescriptor: any) => {
+                    const shellHref = this.extractEndpointHref(aasDescriptor, 'AAS-3.0');
+                    const path = shellHref + '/submodel-refs';
+                    const context = 'retrieving Submodel References';
+                    const disableMessage = false;
 
-                const response = await this.getRequest(path, context, disableMessage);
-                if (response.success) {
-                    const submodelList = response.data.result;
-                    const foundSubmodel = submodelList.find(
-                        (submodel: any) => submodel.keys[0].value == referenceValue[0].value
-                    );
-                    if (foundSubmodel) {
-                        return { success: true, aas: aas, submodel: foundSubmodel };
+                    const response = await this.getRequest(path, context, disableMessage);
+                    if (response.success) {
+                        const submodelRefList = response.data.result;
+                        let foundSubmodelRef = {};
+                        if (smReference?.keys[0]?.type === 'Submodel') {
+                            foundSubmodelRef = submodelRefList.find(
+                                (submodelRef: any) => submodelRef.keys[0].value == smReference.keys[0].value
+                            );
+                        } else if (
+                            smReference?.keys[0]?.type === 'AssetAdministrationShell' &&
+                            smReference?.keys[0].value === aasDescriptor?.id &&
+                            smReference?.keys[1]?.type === 'Submodel'
+                        ) {
+                            foundSubmodelRef = submodelRefList.find(
+                                (submodelRef: any) => submodelRef.keys[0].value == smReference.keys[1].value
+                            );
+                        }
+                        if (Object.keys(foundSubmodelRef).length > 0) {
+                            return { success: true, aasDescriptor: aasDescriptor, submodelRef: foundSubmodelRef };
+                        }
                     }
+                    return null; // null signifies that this particular iteration didn't find what it was looking for
+                });
+
+                const results = await Promise.all(promises);
+                const result = results.find((result) => result !== null);
+
+                if (result) return result; // One of the ieterations was successful
+                return { success: false, aasDescriptor: {}, submodelRef: {} }; // None of the iterations were successful
+            } else if (smReference.type === 'ModelReference') {
+                // Check ModelReference
+                let aasDescriptor = {};
+
+                if (smReference?.keys[0]?.type === 'AssetAdministrationShell') {
+                    aasDescriptor = await this.checkAasReference(smReference).then(({ aasDescriptor }) => {
+                        return aasDescriptor;
+                    });
+                } else if (Object.keys(currentAasDescriptor).length > 0) {
+                    aasDescriptor = currentAasDescriptor;
                 }
-                return null; // null signifies that this particular iteration didn't find what it was looking for
-            });
 
-            const results = await Promise.all(promises);
-            const foundResult = results.find((result) => result !== null);
+                if (
+                    smReference?.keys[0]?.type === 'AssetAdministrationShell' &&
+                    smReference?.keys[1]?.type === 'Submodel'
+                ) {
+                    // TODO
+                    const promises = aasDescriptorList.map(async (aasDescriptor: any) => {
+                        const shellHref = this.extractEndpointHref(aasDescriptor, 'AAS-3.0');
+                        const path = shellHref + '/submodel-refs';
+                        const context = 'retrieving Submodel References';
+                        const disableMessage = false;
 
-            if (foundResult) {
-                return foundResult; // One of the iterations was successful
+                        const response = await this.getRequest(path, context, disableMessage);
+                        if (response.success) {
+                            const submodelRefList = response.data.result;
+                            let foundSubmodelRef = {};
+                            if (
+                                smReference?.keys[0]?.type === 'AssetAdministrationShell' &&
+                                smReference?.keys[0].value === aasDescriptor?.id &&
+                                smReference?.keys[1]?.type === 'Submodel'
+                            ) {
+                                foundSubmodelRef = submodelRefList.find(
+                                    (submodelRef: any) => submodelRef.keys[0].value == smReference.keys[1].value
+                                );
+                            }
+                            if (foundSubmodelRef && Object.keys(foundSubmodelRef).length > 0) {
+                                return {
+                                    success: true,
+                                    aasDescriptor: aasDescriptor,
+                                    submodelRef: foundSubmodelRef,
+                                };
+                            }
+                        }
+                        return null; // null signifies that this particular iteration didn't find what it was looking for
+                    });
+
+                    const results = await Promise.all(promises);
+                    const result = results.find((result) => result !== null);
+
+                    if (result) return result; // One of the ieterations was successful
+                    return { success: false, aasDescriptor: {}, submodelRef: {} }; // None of the iterations were successful
+                } else if (Object.keys(aasDescriptor).length > 0 && smReference?.keys[0]?.type === 'Submodel') {
+                    const shellHref = this.extractEndpointHref(aasDescriptor, 'AAS-3.0');
+                    const path = shellHref + '/submodel-refs';
+                    const context = 'retrieving Submodel References';
+                    const disableMessage = false;
+
+                    const response = await this.getRequest(path, context, disableMessage);
+                    if (response.success) {
+                        const submodelRefList = response.data.result;
+                        const foundSubmodelRef = submodelRefList.find(
+                            (submodelRef: any) => submodelRef.keys[0].value == smReference.keys[0].value
+                        );
+                        if (foundSubmodelRef && Object.keys(foundSubmodelRef).length > 0) {
+                            return {
+                                success: true,
+                                aasDescriptor: aasDescriptor,
+                                submodelRef: foundSubmodelRef,
+                            };
+                        }
+                    }
+                    // return await this.checkSmReference(reference, aasDescriptorList, aasDescriptor);
+                }
+
+                // if (Object.keys(aasDescriptor).length > 0) {
+                //     const shellHref = this.extractEndpointHref(aasDescriptor, 'AAS-3.0');
+                //     const path = shellHref + '/submodel-refs';
+                //     const context = 'retrieving Submodel References';
+                //     const disableMessage = false;
+
+                //     const response = await this.getRequest(path, context, disableMessage);
+                //     if (response.success) {
+                //         const submodelRefList = response.data.result;
+                //         const foundSubmodelRef = submodelRefList.find(
+                //             (submodel: any) => submodel.keys[0].value == smReference.keys[0].value
+                //         );
+                //         if (foundSubmodelRef) {
+                //             return {
+                //                 success: true,
+                //                 aasDescriptor: aasDescriptor,
+                //                 submodelRef: foundSubmodelRef,
+                //             };
+                //         }
+                //     }
+                // } else {
+                //     return { success: false, aasDescriptor: aasDescriptor, submodelRef: {} };
+                // }
+                return { success: false, aasDescriptor: aasDescriptor, submodelRef: {} };
             } else {
-                return { success: false, aas: {}, submodel: {} }; // None of the iterations were successful
+                return failResponse;
             }
         },
 
         // Function to jump to a referenced Element
-        jumpToReferencedElement(referencedAAS: any, referenceValue: Array<any>, referencedSubmodel?: any) {
-            // console.log('jumpToReferencedElement. AAS: ', referencedAAS, 'Submodel: ', referencedSubmodel);
-            if (referencedSubmodel && Object.keys(referencedSubmodel).length > 0) {
+        jumpToReference(reference: any, aasDescriptor?: any, smRef?: any) {
+            console.log('jumpToReference', 'reference', reference, 'aasDescriptor', aasDescriptor, 'smRef', smRef);
+            if (smRef && Object.keys(smRef).length > 0) {
                 // if the referenced Element is a Submodel or SubmodelElement
-                this.jumpToSubmodelElement(referencedSubmodel, referenceValue, referencedAAS);
+                console.log(
+                    'jumpToReference --> jumpToSubmodelElement',
+                    'reference',
+                    reference,
+                    'aasDescriptor',
+                    aasDescriptor,
+                    'smRef',
+                    smRef
+                );
+                return;
+                this.jumpToSubmodelElement(reference, aasDescriptor, smRef);
             } else {
                 // if the referenced Element is an AAS
-                this.jumpToAAS(referencedAAS);
+                console.log('jumpToReference --> jumpToAas', 'aasDescriptor', aasDescriptor);
+                this.jumpToAas(aasDescriptor);
             }
         },
 
-        jumpToSubmodelElement(referencedSubmodel: any, referenceValue: Array<any>, referencedAAS: any) {
-            const aasEndpoint = this.extractEndpointHref(referencedAAS, 'AAS-3.0');
-            let path =
-                this.submodelRepoURL + '/' + this.URLEncode(referencedSubmodel.keys[0].value).replace(/%3D/g, '');
-            if (referenceValue.length > 1) {
+        jumpToSubmodelElement(reference: any, aasDescriptor: any, smRef: any) {
+            console.log(
+                'jumpToSubmodelElement: ',
+                'reference',
+                reference,
+                'aasDescriptor',
+                aasDescriptor,
+                'smRef',
+                smRef
+            );
+            return;
+
+            const aasEndpoint = this.extractEndpointHref(aasDescriptor, 'AAS-3.0');
+
+            let path = this.submodelRepoUrl + '/' + this.URLEncode(smRef.keys[0].value).replace(/%3D/g, '');
+
+            if (reference.value.keys.length > 1) {
                 // this is the layer directly under the Submodel
-                path += '/submodel-elements/' + referenceValue[1].value;
+                path += '/submodel-elements/' + reference.value.keys[1].value;
             }
             let promise; // Promise to wait for the SubmodelElementList to be requested (if it exists)
-            if (referenceValue.length > 2) {
+            if (reference.value.keys.length > 2) {
                 // this is the layer under either a SubmodelElementCollection or SubmodelElementList
                 promise = new Promise<void>((resolve, reject) => {
-                    referenceValue.forEach((SubmodelElement: any, index: number) => {
+                    reference.value.keys.forEach((SubmodelElement: any, index: number) => {
                         if (index > 1) {
                             // check if the type of the SubmodelElement with index - 1 is a SubmodelElementList
-                            if (referenceValue[index - 1].type == 'SubmodelElementList') {
-                                // console.log('SubmodelElementList: ', this.referenceValue[index - 1])
+                            if (reference.value.keys[index - 1].type == 'SubmodelElementList') {
                                 // check in which position of the list the element is (list needs to be requested to get the position)
                                 const listPath = path;
                                 const context = 'retrieving SubmodelElementList';
@@ -497,9 +707,9 @@ export default defineComponent({
                         }
                     });
                     if (
-                        referenceValue.every(
+                        reference.value.keys.every(
                             (SubmodelElement: any, index: number) =>
-                                index <= 1 || referenceValue[index - 1].type != 'SubmodelElementList'
+                                index <= 1 || reference.value.keys[index - 1].type != 'SubmodelElementList'
                         )
                     ) {
                         resolve(); // Resolve immediately if none of the elements are SubmodelElementList
@@ -509,52 +719,51 @@ export default defineComponent({
                 promise = Promise.resolve();
             }
 
-            promise
-                .then(() => {
-                    // check if mobile device
-                    if (this.navigationStore.getIsMobile) {
-                        this.router.push({ name: 'SubmodelList', query: { aas: aasEndpoint, path: path } });
+            promise.then(() => {
+                // check if mobile device
+                if (this.navigationStore.getIsMobile) {
+                    this.router.push({ name: 'SubmodelList', query: { aas: aasEndpoint, path: path } });
+                } else {
+                    // set the AAS Endpoint and SubmodelElement path in the aas and path query parameters using the router
+                    this.router.push({ query: { aas: aasEndpoint, path: path } });
+                }
+                // dispatch the AAS set by the ReferenceElement to the store
+                this.loadAndDispatchAas(aasEndpoint);
+                this.navigationStore.dispatchTriggerAASListScroll();
+                // Request the referenced SubmodelElement
+                const elementPath = path;
+                const context = 'retrieving SubmodelElement';
+                const disableMessage = true;
+                this.getRequest(elementPath, context, disableMessage).then((response: any) => {
+                    if (response.success) {
+                        // execute if the Request was successful
+                        response.data.timestamp = this.formatDate(new Date()); // add timestamp to the SubmodelElement Data
+                        response.data.path = path; // add the path to the SubmodelElement Data
+                        response.data.isActive = true; // add the isActive Property to the SubmodelElement Data
+                        // console.log('SubmodelElement Data: ', response.data)
+                        // dispatch the SubmodelElementPath set by the URL to the store
+                        this.aasStore.dispatchNode(response.data); // set the updatedNode in the AASStore
+                        this.aasStore.dispatchInitTreeByReferenceElement(true); // set the initTreeByReferenceElement in the AASStore to true to init + expand the Treeview on the referenced Element
                     } else {
-                        // set the AAS Endpoint and SubmodelElement path in the aas and path query parameters using the router
-                        this.router.push({ query: { aas: aasEndpoint, path: path } });
-                    }
-                    // dispatch the AAS set by the ReferenceElement to the store
-                    this.loadAndDispatchAas(aasEndpoint);
-                    this.navigationStore.dispatchTriggerAASListScroll();
-                    // Request the referenced SubmodelElement
-                    const elementPath = path;
-                    const context = 'retrieving SubmodelElement';
-                    const disableMessage = true;
-                    this.getRequest(elementPath, context, disableMessage).then((response: any) => {
-                        if (response.success) {
-                            // execute if the Request was successful
-                            response.data.timestamp = this.formatDate(new Date()); // add timestamp to the SubmodelElement Data
-                            response.data.path = path; // add the path to the SubmodelElement Data
-                            response.data.isActive = true; // add the isActive Property to the SubmodelElement Data
-                            // console.log('SubmodelElement Data: ', response.data)
-                            // dispatch the SubmodelElementPath set by the URL to the store
-                            this.aasStore.dispatchNode(response.data); // set the updatedNode in the AASStore
-                            this.aasStore.dispatchInitTreeByReferenceElement(true); // set the initTreeByReferenceElement in the AASStore to true to init + expand the Treeview on the referenced Element
-                        } else {
-                            // execute if the Request failed
-                            if (Object.keys(response.data).length == 0) {
-                                // don't copy the static SubmodelElement Data if no Node is selected or Node is invalid
-                                this.navigationStore.dispatchSnackbar({
-                                    status: true,
-                                    timeout: 60000,
-                                    color: 'error',
-                                    btnColor: 'buttonText',
-                                    text: 'No valid SubmodelElement under the given Path',
-                                }); // Show Error Snackbar
-                                return;
-                            }
-                            this.aasStore.dispatchNode({});
+                        // execute if the Request failed
+                        if (Object.keys(response.data).length == 0) {
+                            // don't copy the static SubmodelElement Data if no Node is selected or Node is invalid
+                            this.navigationStore.dispatchSnackbar({
+                                status: true,
+                                timeout: 60000,
+                                color: 'error',
+                                btnColor: 'buttonText',
+                                text: 'No valid SubmodelElement under the given Path',
+                            }); // Show Error Snackbar
+                            return;
                         }
-                    });
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
+                        this.aasStore.dispatchNode({});
+                    }
                 });
+            });
+            // .catch((error) => {
+            //     console.error('Error:', error);
+            // });
         },
 
         async loadAndDispatchAas(aasEndpoint: string) {
@@ -574,8 +783,9 @@ export default defineComponent({
             });
         },
 
-        async jumpToAAS(referencedAAS: any) {
-            const aasEndpoint = this.extractEndpointHref(referencedAAS, 'AAS-3.0');
+        async jumpToAas(aasDescriptor: any) {
+            console.log('jumpToAas', aasDescriptor);
+            const aasEndpoint = this.extractEndpointHref(aasDescriptor, 'AAS-3.0');
             // check if mobile device
             if (this.navigationStore.getIsMobile) {
                 this.router.push({ name: 'SubmodelList', query: { aas: aasEndpoint } });
@@ -590,47 +800,43 @@ export default defineComponent({
         },
 
         // Function to check if the assetId can be found in the AAS Discovery Service (and if it exists in the AAS Registry)
-        async checkAssetId(assetId: string): Promise<{ success: boolean; aas?: object; submodel?: object }> {
-            const failResponse = { success: false, aas: {} }; // Define once for reuse
-            // check if aasDiscoveryURL includes "/lookup/shells" and add id if not (backward compatibility)
-            if (!this.aasDiscoveryURL.includes('/lookup/shells')) {
-                this.aasDiscoveryURL += '/lookup/shells';
+        async checkAssetId(globalAssetId: string): Promise<{ success: boolean; aasDescriptor?: object }> {
+            // console.log('checkAssetId', 'globalAssetId', globalAssetId);
+            const failResponse = { success: false, aasDescriptor: {} }; // Define once for reuse
+            // check if aasDiscoveryUrl includes "/lookup/shells" and add id if not (backward compatibility)
+            let aasDiscoveryUrl = this.aasDiscoveryUrl;
+            if (!aasDiscoveryUrl.includes('/lookup/shells')) {
+                aasDiscoveryUrl += '/lookup/shells';
             }
             // construct the assetId Object
-            const assetIdObject = JSON.stringify({ name: 'globalAssetId', value: assetId });
-            const path = `${this.aasDiscoveryURL}?assetIds=${this.URLEncode(assetIdObject)}`; // Use template literal and encodeURIComponent
-            const context = 'retrieving AASID by AssetID';
+            const assetIdObject = JSON.stringify({ name: 'globalAssetId', value: globalAssetId });
+            const discoveryPath = `${aasDiscoveryUrl}?assetIds=${this.URLEncode(assetIdObject)}`; // Use template literal and encodeURIComponent
+            const discoveryContext = 'retrieving AAS ID by AssetID';
             const disableMessage = true;
             try {
-                const discoveryResponse = await this.getRequest(path, context, disableMessage);
-                // console.log('Discovery Response:', discoveryResponse);
-                if (discoveryResponse.success && discoveryResponse.data.result?.length > 0) {
+                const discoveryResponse = await this.getRequest(discoveryPath, discoveryContext, disableMessage);
+                // console.log('discoveryContext', discoveryPath, 'discoveryResponse', discoveryResponse);
+                if (discoveryResponse?.success && discoveryResponse?.data?.result?.length > 0) {
                     const aasIds = discoveryResponse.data.result;
-                    // take the first aasId from the list and check if it exists in the AAS Registry
+
+                    // Take the first aasId from the list and check if it exists in the AAS Registry
                     const aasId = aasIds[0];
-                    // console.log('AAS ID:', aasId);
-                    // check if aasRegistryURL includes "/shell-descriptors" and add id if not (backward compatibility)
-                    if (!this.aasRegistryURL.includes('/shell-descriptors')) {
-                        this.aasRegistryURL += '/shell-descriptors';
+                    console.log('aasId', aasId);
+                    let aasRegistryUrl = this.aasRegistryUrl;
+                    if (!aasRegistryUrl.includes('/shell-descriptors')) {
+                        aasRegistryUrl += '/shell-descriptors';
                     }
-                    const registryPath = `${this.aasRegistryURL}/${this.URLEncode(aasId)}`;
-                    const registryContext = 'retrieving AAS Data';
-                    try {
-                        const aasRegistryResponse = await this.getRequest(
-                            registryPath,
-                            registryContext,
-                            disableMessage
-                        );
-                        if (aasRegistryResponse.success) {
-                            const aas = aasRegistryResponse.data;
-                            // console.log('AAS:', aas);
-                            return { success: true, aas: aas };
-                        }
-                        return failResponse;
-                    } catch {
-                        return failResponse;
+                    const registryPath = `${aasRegistryUrl}/${this.URLEncode(aasId).replace(/%3D/g, '')}`;
+                    const registryContext = 'retrieving AAS Descriptor';
+
+                    const registryResponse = await this.getRequest(registryPath, registryContext, disableMessage);
+                    if (registryResponse?.success && Object.keys(registryResponse?.data).length > 0) {
+                        console.log('registryContext', registryPath, 'registryResponse', registryResponse);
+                        const aasDescriptor = registryResponse.data;
+                        return { success: true, aasDescriptor: aasDescriptor };
                     }
                 }
+
                 return failResponse;
             } catch {
                 return failResponse;
@@ -639,9 +845,9 @@ export default defineComponent({
 
         // Get all ConceptDescriptions for the SubmodelElement from the ConceptDescription Repository
         async getConceptDescriptions(SelectedNode: any) {
-            let conceptDescriptionRepoURL = '';
-            if (this.conceptDescriptionRepoURL && this.conceptDescriptionRepoURL != '') {
-                conceptDescriptionRepoURL = this.conceptDescriptionRepoURL;
+            let conceptDescriptionRepoUrl = '';
+            if (this.conceptDescriptionRepoUrl && this.conceptDescriptionRepoUrl != '') {
+                conceptDescriptionRepoUrl = this.conceptDescriptionRepoUrl;
             } else {
                 return Promise.resolve([]); // Return an empty object wrapped in a resolved promise
             }
@@ -685,7 +891,7 @@ export default defineComponent({
             });
 
             const cdPromises = semanticIdsToFetch.map((semanticId: string) => {
-                const path = conceptDescriptionRepoURL + '/' + this.URLEncode(semanticId);
+                const path = conceptDescriptionRepoUrl + '/' + this.URLEncode(semanticId).replace(/%3D/g, '');
                 const context = 'retrieving ConceptDescriptions';
                 const disableMessage = true;
 
@@ -932,13 +1138,13 @@ export default defineComponent({
         },
 
         smNotFound(response: any, submodelId: string, path: string, text: string): any {
-
             // Check if response contains a "messages" array with a "403" or "401" code
             const messages = response.data?.messages || [];
-            const authorizationError = messages.some((message: any) => message.code === "403" || message.code === "401");
+            const authorizationError = messages.some(
+                (message: any) => message.code === '403' || message.code === '401'
+            );
 
             if (authorizationError) {
-
                 const submodel = {
                     id: submodelId,
                     idShort: 'Submodel Not Authorized!',
@@ -954,7 +1160,6 @@ export default defineComponent({
 
                 return submodel;
             }
-
 
             if (text.trim().length > 0) {
                 this.navigationStore.dispatchSnackbar({

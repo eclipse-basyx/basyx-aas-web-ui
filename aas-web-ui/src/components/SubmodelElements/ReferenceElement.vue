@@ -1,12 +1,13 @@
 <template>
     <v-container fluid class="pa-0">
+        {{ console.log(referenceElementObject) }}
         <v-list-item v-if="!IsOperationVariable" class="px-1 pb-1 pt-0">
             <v-list-item-title class="text-subtitle-2 mt-2">{{ 'Reference: ' }}</v-list-item-title>
         </v-list-item>
         <v-card v-if="referenceElementObject" color="elevatedCard">
             <!-- Value of the Reference -->
             <v-list nav class="pt-0" :class="IsOperationVariable ? '' : 'bg-elevatedCard'">
-                <template v-for="(value, i) in referenceValueKeys" :key="i">
+                <template v-for="(reference, i) in referenceElementObject.value" :key="i">
                     <v-list-item>
                         <!-- Tooltip with Reference ID -->
                         <v-tooltip
@@ -15,26 +16,32 @@
                             open-delay="600"
                             transition="slide-x-transition">
                             <div class="text-caption">
-                                <span class="font-weight-bold">{{ '(' + value.type + ') ' }}</span
-                                >{{ value.value }}
+                                <span class="font-weight-bold">{{ '(' + reference.type + ') ' }}</span
+                                >{{ reference.value }}
                             </div>
                         </v-tooltip>
                         <!-- Reference Title -->
                         <template #title>
                             <div class="text-subtitle-2 mt-2">
-                                {{ IsOperationVariable ? 'Reference:' : referenceValueType ? referenceValueType : '' }}
+                                {{
+                                    IsOperationVariable
+                                        ? 'Reference:'
+                                        : referenceElementObject.type
+                                          ? referenceElementObject.type
+                                          : 'Description:'
+                                }}
                             </div>
                         </template>
                         <!-- Reference Representation -->
                         <template #subtitle>
                             <div v-if="!IsOperationVariable || IsOutputVariable" class="pt-2">
-                                <v-chip label size="x-small" border class="mr-2">{{ value.type }}</v-chip>
-                                <span> {{ value.value }}</span>
+                                <v-chip label size="x-small" border class="mr-2">{{ reference.type }}</v-chip>
+                                <span> {{ reference.value }}</span>
                             </div>
                             <!-- Input Field containing the Variable Value -->
-                            <v-text-field
+                            <!-- <v-text-field
                                 v-else
-                                v-model="value.value"
+                                v-model="reference.value"
                                 variant="outlined"
                                 density="compact"
                                 hide-details
@@ -43,31 +50,31 @@
                                 append-icon="mdi-delete"
                                 @click:append="removeReferenceEntry(i)"
                                 @update:focused="setFocus($event)"
-                                @keydown.enter="updateReferenceObject()">
-                                <template #prepend-inner>
-                                    <!-- Reference Entry -->
-                                    <v-chip label size="x-small" border>
-                                        <span>{{ value.type ? value.type : 'no-selection' }}</span>
-                                        <v-icon site="x-small" style="margin-right: -3px">mdi-chevron-down</v-icon>
-                                        <!-- Menu to select the Type of Element -->
-                                        <v-menu v-if="isEditable" activator="parent">
+                                @keydown.enter="updateReferenceObject()"> -->
+                            <!-- <template #prepend-inner> -->
+                            <!-- Reference Entry -->
+                            <!-- <v-chip label size="x-small" border>
+                                        <span>{{ reference.type ? reference.type : 'no-selection' }}</span>
+                                        <v-icon site="x-small" style="margin-right: -3px">mdi-chevron-down</v-icon> -->
+                            <!-- Menu to select the Type of Element -->
+                            <!-- <v-menu v-if="isEditable" activator="parent">
                                             <v-list density="compact" class="pa-0">
                                                 <v-list-item
                                                     v-for="elementType in elementTypes"
                                                     :key="elementType.id"
-                                                    @click="selectElementType(elementType, value)">
+                                                    @click="selectElementType(elementType, reference)">
                                                     <v-list-item-title class="py-0">{{
                                                         elementType.text
                                                     }}</v-list-item-title>
                                                 </v-list-item>
                                             </v-list>
-                                        </v-menu>
-                                    </v-chip>
-                                </template>
-                                <!-- Update Value Button -->
-                                <template #append-inner>
+                                        </v-menu> -->
+                            <!-- </v-chip> -->
+                            <!-- </template> -->
+                            <!-- Update Value Button -->
+                            <!-- <template #append-inner>
                                     <v-btn
-                                        v-if="value.isFocused && isEditable"
+                                        v-if="reference.isFocused && isEditable"
                                         size="small"
                                         variant="elevated"
                                         color="primary"
@@ -76,11 +83,11 @@
                                         @click.stop="updateReferenceObject()">
                                         <v-icon>mdi-upload</v-icon>
                                     </v-btn>
-                                </template>
-                            </v-text-field>
+                                </template> -->
+                            <!-- </v-text-field> -->
                         </template>
                     </v-list-item>
-                    <v-divider v-if="i < referenceValueKeys.length - 1" class="mt-3"></v-divider>
+                    <v-divider v-if="i < reference.keys.length - 1" class="mt-3"></v-divider>
                 </template>
             </v-list>
             <v-divider></v-divider>
@@ -96,11 +103,11 @@
                             color="primary"
                             :loading="loading"
                             :disabled="disabled"
-                            @click="jumpToReferencedElement(referencedAAS, referenceValueKeys, referencedSubmodel)"
+                            @click="jumpToReference(referenceElementObject.value, aasDescriptor, smRef)"
                             >Jump</v-btn
                         >
                         <!-- Add new Reference Entry -->
-                        <v-btn
+                        <!-- <v-btn
                             v-if="isEditable && IsOperationVariable && !IsOutputVariable"
                             size="small"
                             class="text-buttonText"
@@ -110,7 +117,7 @@
                             @click="addReferenceEntry()">
                             <div>Add Entry</div>
                             <v-icon class="ml-2">mdi-plus</v-icon>
-                        </v-btn>
+                        </v-btn> -->
                     </template>
                 </v-list-item>
             </v-list>
@@ -158,12 +165,13 @@
 
         data() {
             return {
-                referenceValueKeys: [] as Array<any>, // Value keys of the Reference (Array of Reference Keys)
-                referenceValueType: String, // Value type of the Reference
+                // reference: {},
+                // referenceValueKeys: [] as Array<any>, // Value keys of the Reference (Array of Reference Keys)
+                // referenceValueType: '' as string, // Value type of the Reference
                 loading: false, // Loading State of the Jump-Button (loading when checking if referenced element exists in one of the registered AAS)
                 disabled: true, // Disabled State of the Jump-Button (disabled when referenced element does not exist in one of the registered AAS)
-                referencedAAS: Object as any, // AAS in which the referenced Element is included (if it exists)
-                referencedSubmodel: Object as any, // Submodel in which the referenced Element is included (if it exists)
+                aasDescriptor: Object as any, // AAS Descriptor in which the referenced Element is included (if it exists)
+                smRef: Object as any, // SubmodelRef in which the referenced Element is included (if it exists)
                 elementTypes: [
                     { id: 1, text: 'AssetAdministrationShell' },
                     { id: 2, text: 'Submodel' },
@@ -222,21 +230,22 @@
         },
 
         watch: {
-            // Watch for changes in the selected Node and reset input
-            SelectedNode: {
-                deep: true,
-                handler() {
-                    this.referenceValueKeys = [];
-                    this.referenceValueType = '';
-                },
-            },
+            // // Watch for changes in the selected Node and reset input
+            // SelectedNode: {
+            //     deep: true,
+            //     handler() {
+            //         // this.referenceValueKeys = [];
+            //         // this.referenceValueType = '';
+            //     },
+            // },
 
             // Watch for changes in the referenceElementObject
             referenceElementObject: {
                 deep: true,
                 handler() {
-                    this.referenceValueKeys = this.referenceElementObject?.value?.keys;
-                    this.referenceValueType = this.referenceElementObject?.value?.type;
+                    // this.referenceValueKeys = this.referenceElementObject?.value?.keys;
+                    // this.referenceValueType = this.referenceElementObject?.value?.type;
+                    // this.reference = { ...this.referenceElementObject };
                     this.validateReference();
                 },
             },
@@ -244,8 +253,9 @@
 
         mounted() {
             // console.log('ReferenceElement Mounted:', this.referenceElementObject);
-            this.referenceValueKeys = this.referenceElementObject?.value?.keys;
-            this.referenceValueType = this.referenceElementObject?.type;
+            // this.referenceValueKeys = this.referenceElementObject?.value?.keys;
+            // this.referenceValueType = this.referenceElementObject?.type;
+            // this.reference = { ...this.referenceElementObject };
             this.validateReference();
         },
 
@@ -253,12 +263,12 @@
             // Function to check if the referenced Element exists
             validateReference() {
                 this.loading = true;
-                this.checkReference(this.referenceValueKeys)
-                    .then(({ success, aas, submodel }) => {
-                        // console.log('checkReference: ', success, aas, submodel);
+                this.checkReference(this.referenceElementObject, this.selectedAAS)
+                    .then(({ success, aasDescriptor, submodelRef }) => {
+                        // console.log('validateReference --> checkReference: ', success, aasDescriptor, submodelRef);
                         if (success) {
-                            this.referencedAAS = aas;
-                            this.referencedSubmodel = submodel;
+                            this.aasDescriptor = aasDescriptor;
+                            this.smRef = submodelRef;
                             this.disabled = false;
                         }
                         this.loading = false;
@@ -272,36 +282,38 @@
 
             updateReferenceObject() {
                 let referenceElementObject = { ...this.referenceElementObject };
-                referenceElementObject.value.keys = this.referenceValueKeys;
+                // referenceElementObject.value.keys = this.referenceValueKeys;
                 this.$emit('updateValue', referenceElementObject.value);
             },
 
-            // Function to add a new Reference Entry
-            addReferenceEntry() {
-                // console.log('addReferenceEntry');
-                this.referenceValueKeys.push({ type: '', value: '' });
-                this.updateReferenceObject();
-            },
+            // // Function to add a new Reference Entry
+            // addReferenceEntry() {
+            //     // console.log('addReferenceEntry');
+            //     // TODO seicke
+            //     // this.referenceValueKeys.push({ type: '', value: '' });
+            //     // this.updateReferenceObject();
+            // },
 
-            // Function to remove a Reference Entry
-            removeReferenceEntry(index: number) {
-                // console.log('removeReferenceEntry');
-                this.referenceValueKeys.splice(index, 1);
-                this.updateReferenceObject();
-            },
+            // // Function to remove a Reference Entry
+            // removeReferenceEntry(index: number) {
+            //     console.log('removeReferenceEntry', index);
+            //     // TODO seicke
+            //     // this.referenceValueKeys.splice(index, 1);
+            //     // this.updateReferenceObject();
+            // },
 
-            // Function to select the ElementType of the Entry
-            selectElementType(elementType: any, value: any) {
-                // console.log('selectedElementType: ', elementType);
-                value.type = elementType.text;
-            },
+            // // Function to select the ElementType of the Entry
+            // selectElementType(elementType: any, value: any) {
+            //     // console.log('selectedElementType: ', elementType);
+            //     value.type = elementType.text;
+            // },
 
-            // Function to set the focus on the input field
-            setFocus(e: boolean) {
-                if (!e) {
-                    this.updateReferenceObject();
-                }
-            },
+            // // Function to set the focus on the input field
+            // setFocus(e: boolean) {
+            //     if (!e) {
+            //         this.updateReferenceObject();
+            //     }
+            // },
         },
     });
 </script>

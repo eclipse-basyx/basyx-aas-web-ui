@@ -174,10 +174,10 @@
             callback(assetId: string) {
                 // console.log('AssetId:', assetId);
                 this.checkAssetId(assetId)
-                    .then(({ success, aas }: { success: boolean; aas?: any }) => {
+                    .then(({ success, aasDescriptor }: { success: boolean; aasDescriptor?: any }) => {
                         if (success) {
                             // console.log('AAS:', aas);
-                            this.jumpToReferencedElement(aas, []);
+                            this.jumpToAas(aasDescriptor);
                         } else {
                             this.navigationStore.dispatchSnackbar({
                                 status: true,

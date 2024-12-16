@@ -9,15 +9,16 @@
                 }}</v-chip>
             </v-list-item-title>
         </v-list-item>
-        <v-divider v-if="entityObject.globalAssetId"></v-divider>
+        <v-divider v-if="entityObject?.globalAssetId"></v-divider>
         <!-- globalAssetId -->
-        <v-list-item v-if="entityObject.globalAssetId" class="px-1 pb-1 py-2 mb-3">
+        <v-list-item v-if="entityObject?.globalAssetId" class="px-1 pb-1 py-2 mb-3">
             <template #title>
                 <div class="text-subtitle-2 mt-2">{{ 'Global Asset ID: ' }}</div>
             </template>
             <template #subtitle>
                 <div class="pt-2">
                     <v-btn
+                        v-if="entityObject.entityType === 'SelfManagedEntity'"
                         size="small"
                         class="mr-2 text-buttonText"
                         color="primary"
@@ -98,7 +99,7 @@
             return {
                 disabledStates: {} as any,
                 loadingStates: {} as any,
-                shellDescriptors: {} as any,
+                aasDescriptors: {} as any,
             };
         },
 
@@ -126,13 +127,14 @@
             },
 
             checkAndSetDisabledState(assetId: string) {
+                if (this.entityObject.entityType === 'CoManagedEntity') return;
                 this.loadingStates[assetId] = true;
                 this.checkAssetId(assetId)
-                    .then(({ success, aas }: { success: boolean; aas?: any }) => {
+                    .then(({ success, aasDescriptor }: { success: boolean; aasDescriptor?: any }) => {
                         this.loadingStates[assetId] = false;
                         if (success) {
                             this.disabledStates[assetId] = false;
-                            this.shellDescriptors[assetId] = aas;
+                            this.aasDescriptors[assetId] = aasDescriptor;
                         } else {
                             this.disabledStates[assetId] = true;
                         }
@@ -145,8 +147,8 @@
 
             jump(assetId: string) {
                 // console.log('Jump to AAS with assetId: ', assetId);
-                let aas = this.shellDescriptors[assetId];
-                this.jumpToReferencedElement(aas, []);
+                let aasDescriptor = this.aasDescriptors[assetId];
+                this.jumpToAas(aasDescriptor);
             },
         },
     });
