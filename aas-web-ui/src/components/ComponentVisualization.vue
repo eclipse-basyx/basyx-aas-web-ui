@@ -161,7 +161,7 @@
 
             // Filtered Plugins
             filteredPlugins() {
-                return this.importedPlugins.filter((plugin: any) => {
+                let plugins = this.importedPlugins.filter((plugin: any) => {
                     if (!plugin.semanticId) return false;
 
                     if (typeof plugin.semanticId === 'string') {
@@ -174,6 +174,46 @@
                     }
                     return false;
                 });
+
+                // In case of multiple plugins matching for the semanticId of
+                // submodelElementData, the plugins are sorted in descending
+                // alphabetical order with respect to their semanticIds.
+                // This will display the latest (in terms of version) plugin on
+                // top. Plugins without version in the semanticId will be
+                // displayed at the bottom.
+
+                // Sort filtered plugins with respect to semanticId
+                plugins
+                    .sort((pluginA, pluginB) => {
+                        let pluginASemanticId = '';
+                        let pluginBSemanticId = '';
+
+                        if (typeof pluginA.semanticId === 'string') pluginASemanticId = pluginsA.semanticId;
+                        if (typeof pluginB.semanticId === 'string') pluginBSemanticId = pluginsB.semanticId;
+
+                        if (Array.isArray(pluginA.semanticId)) {
+                            if (pluginA.semanticId.length > 0) {
+                                pluginA.semanticId
+                                    .sort((semanticIdA, semanticIdB) => semanticIdA.localeCompare(semanticIdB))
+                                    .reverse();
+                                pluginASemanticId = pluginA.semanticId[0];
+                            }
+                        }
+
+                        if (Array.isArray(pluginB.semanticId)) {
+                            if (pluginB.semanticId.length > 0) {
+                                pluginB.semanticId
+                                    .sort((semanticIdA, semanticIdB) => semanticIdA.localeCompare(semanticIdB))
+                                    .reverse();
+                                pluginBSemanticId = pluginB.semanticId[0];
+                            }
+                        }
+
+                        return pluginASemanticId.localeCompare(pluginBSemanticId);
+                    })
+                    .reverse();
+
+                return plugins;
             },
 
             // return if in viewer mode
