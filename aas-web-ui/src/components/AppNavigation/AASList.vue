@@ -397,8 +397,8 @@
                 // console.log('Check AAS Status: ', AAS);
                 // iterate over all AAS in the AAS List
                 this.AASData.forEach((AAS: any) => {
-                    const shellHref = this.extractEndpointHref(AAS, 'AAS-3.0');
-                    let path = shellHref;
+                    const aasEndpopint = this.extractEndpointHref(AAS, 'AAS-3.0');
+                    let path = aasEndpopint;
                     let context = 'evaluating AAS Status';
                     let disableMessage = true;
                     this.getRequest(path, context, disableMessage).then((response: any) => {
@@ -465,8 +465,8 @@
             downloadAAS(AAS: any) {
                 // console.log('Download AAS: ', AAS);
                 // request the Submodel references for the AAS
-                const shellHref = this.extractEndpointHref(AAS, 'AAS-3.0');
-                let path = shellHref + '/submodel-refs';
+                const aasEndpopint = this.extractEndpointHref(AAS, 'AAS-3.0');
+                let path = aasEndpopint + '/submodel-refs';
                 let context = 'retrieving Submodel References';
                 let disableMessage = false;
                 this.getRequest(path, context, disableMessage).then(async (response: any) => {
@@ -513,9 +513,9 @@
                 ) {
                     return false;
                 }
-                const shellHrefAASfromList = this.extractEndpointHref(AAS, 'AAS-3.0');
-                const shellHrefSelectedAAS = this.extractEndpointHref(this.selectedAAS, 'AAS-3.0');
-                let isSelected = shellHrefAASfromList === shellHrefSelectedAAS;
+                const aasEndpointFromList = this.extractEndpointHref(AAS, 'AAS-3.0');
+                const aasEndpointSelected = this.extractEndpointHref(this.selectedAAS, 'AAS-3.0');
+                let isSelected = aasEndpointFromList === aasEndpointSelected;
                 return isSelected;
             },
 
@@ -566,8 +566,8 @@
                     return;
                 }
                 // console.log('Remove AAS: ', AAS);
-                const shellHref = this.extractEndpointHref(AAS, 'AAS-3.0');
-                let path = shellHref;
+                const aasEndpopint = this.extractEndpointHref(AAS, 'AAS-3.0');
+                let path = aasEndpopint;
                 let context = 'removing AAS';
                 let disableMessage = false;
                 this.deleteRequest(path, context, disableMessage);
@@ -578,27 +578,27 @@
                 let error = false;
                 try {
                     if (this.deleteSubmodels) {
-                        const shellHref = this.extractEndpointHref(this.aasToDelete, 'AAS-3.0');
-                        const path = shellHref + '/submodel-refs';
-                        const context = 'retrieving Submodel References';
+                        const aasEndpopint = this.extractEndpointHref(this.aasToDelete, 'AAS-3.0');
+                        const aasRepoPath = aasEndpopint + '/submodel-refs';
+                        const aasRepoContext = 'retrieving Submodel References';
                         const disableMessage = false;
-                        const response = await this.getRequest(path, context, disableMessage);
-                        if (response.success) {
-                            const submodelRefs = response.data.result;
+                        const aasRepoResponse = await this.getRequest(aasRepoPath, aasRepoContext, disableMessage);
+                        if (aasRepoResponse.success) {
+                            const submodelRefs = aasRepoResponse.data.result;
                             // Extract all references in an array called submodelIds from each keys[0].value
                             const submodelIds = submodelRefs.map((ref: any) => ref.keys[0].value);
                             this.removeAAS(this.aasToDelete);
                             // Remove each submodel
                             for (const submodelId of submodelIds) {
-                                const submodelPath = `${this.submodelRegistryURL}/${this.URLEncode(submodelId)}`;
-                                const submodelResponse = await this.getRequest(
-                                    submodelPath,
+                                const submodelRegistryPath = `${this.submodelRegistryURL}/${this.URLEncode(submodelId)}`;
+                                const submodelRegistryResponse = await this.getRequest(
+                                    submodelRegistryPath,
                                     'Removing Submodels',
                                     disableMessage
                                 );
-                                if (submodelResponse.success) {
+                                if (submodelRegistryResponse.success) {
                                     const submodelHref = this.extractEndpointHref(
-                                        submodelResponse.data,
+                                        submodelRegistryResponse.data,
                                         'SUBMODEL-3.0'
                                     );
                                     const deletePath = submodelHref;

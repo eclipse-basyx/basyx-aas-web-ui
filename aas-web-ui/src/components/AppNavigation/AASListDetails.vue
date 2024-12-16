@@ -156,8 +156,8 @@
             // Function to fetch the Asset Details from the AAS Repository
             fetchAssetDetails() {
                 // console.log('fetch asset details: ', this.selectedAAS);
-                const shellHref = this.extractEndpointHref(this.selectedAAS, 'AAS-3.0');
-                const assetInformationEndpoint = shellHref + '/asset-information';
+                const aasEndpopint = this.extractEndpointHref(this.selectedAAS, 'AAS-3.0');
+                const assetInformationEndpoint = aasEndpopint + '/asset-information';
                 // console.log('aasRepoEndpoint: ', assetInformationEndpoint);
                 let path = assetInformationEndpoint;
                 let context = 'retrieving asset information';
@@ -183,7 +183,6 @@
             gotoSubmodelList() {
                 this.router.push({
                     path: '/submodellist',
-                    //         query: { aas: shellHref },
                 });
             },
         },

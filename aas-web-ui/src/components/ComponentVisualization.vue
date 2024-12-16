@@ -138,8 +138,8 @@
                 let aas = { ...this.aasStore.getSelectedAAS };
                 let node = { ...this.aasStore.getSelectedNode };
                 if (Array.isArray(aas?.endpoints) && aas?.endpoints.length > 0) {
-                    const shellHref = this.extractEndpointHref(aas, 'AAS-3.0');
-                    node.pathFull = shellHref + '/' + node.path;
+                    const aasEndpopint = this.extractEndpointHref(aas, 'AAS-3.0');
+                    node.pathFull = aasEndpopint + '/' + node.path;
                 }
                 // console.log('SelectedNodeToTransfer: ', node);
                 return node;

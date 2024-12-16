@@ -160,13 +160,13 @@
                 localItem.isActive = !localItem.isActive;
                 // Add path of the selected Node to the URL as Router Query
                 if (localItem.isActive) {
-                    const shellHref = this.extractEndpointHref(this.SelectedAAS, 'AAS-3.0');
+                    const aasEndpopint = this.extractEndpointHref(this.SelectedAAS, 'AAS-3.0');
                     if (this.isMobile) {
                         // Change to SubmodelElementView on Mobile and add the path to the URL
                         this.router.push({
                             path: '/submodelelementview',
                             query: {
-                                aas: shellHref,
+                                aas: aasEndpopint,
                                 path: localItem.path,
                             },
                         });
@@ -174,7 +174,7 @@
                         // just add the path to the URL
                         this.router.push({
                             query: {
-                                aas: shellHref,
+                                aas: aasEndpopint,
                                 path: localItem.path,
                             },
                         });

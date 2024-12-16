@@ -280,13 +280,13 @@
                 });
                 // Add path of the selected Node to the URL as Router Query
                 if (localSubmodel.isActive) {
-                    const shellHref = this.extractEndpointHref(this.selectedAAS, 'AAS-3.0');
+                    const aasEndpopint = this.extractEndpointHref(this.selectedAAS, 'AAS-3.0');
                     if (this.isMobile) {
                         // Change to SubmodelElementView on Mobile and add the path to the URL
                         this.router.push({
                             path: '/componentvisualization',
                             query: {
-                                aas: shellHref,
+                                aas: aasEndpopint,
                                 path: localSubmodel.path,
                             },
                         });
@@ -294,7 +294,7 @@
                         // just add the path to the URL
                         this.router.push({
                             query: {
-                                aas: shellHref,
+                                aas: aasEndpopint,
                                 path: localSubmodel.path,
                             },
                         });
