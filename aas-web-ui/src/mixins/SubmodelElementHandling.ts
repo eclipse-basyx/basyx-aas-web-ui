@@ -494,15 +494,15 @@ export default defineComponent({
             aasDescriptorList: Array<any>,
             currentAasDescriptor?: any
         ): Promise<{ success: boolean; aasDescriptor?: object; submodelRef?: object }> {
-            console.log(
-                'checkSmReference (' + smReference.type + '): ',
-                'smReference',
-                smReference,
-                'aasDescriptorList (#' + (Array.isArray(aasDescriptorList) ? aasDescriptorList.length : 0) + ')',
-                aasDescriptorList,
-                'currentAasDescriptor',
-                currentAasDescriptor
-            );
+            // console.log(
+            //     'checkSmReference (' + smReference.type + '): ',
+            //     'smReference',
+            //     smReference,
+            //     'aasDescriptorList (#' + (Array.isArray(aasDescriptorList) ? aasDescriptorList.length : 0) + ')',
+            //     aasDescriptorList,
+            //     'currentAasDescriptor',
+            //     currentAasDescriptor
+            // );
             const failResponse = { success: false, aasDescriptor: {}, submodelRef: {} }; // Define once for reuse
             if (smReference.type === 'ExternalReference') {
                 // Check ExternalReference
@@ -577,7 +577,6 @@ export default defineComponent({
                             );
                             // }
                             if (foundSubmodelRef && Object.keys(foundSubmodelRef).length > 0) {
-                                console.log('foobar', true);
                                 return {
                                     success: true,
                                     aasDescriptor: aasDescriptor,
@@ -623,22 +622,22 @@ export default defineComponent({
 
         // Function to jump to a referenced Element
         jumpToReference(reference: any, aasDescriptor?: any, smRef?: any) {
-            console.log('jumpToReference', 'reference', reference, 'aasDescriptor', aasDescriptor, 'smRef', smRef);
+            // console.log('jumpToReference', 'reference', reference, 'aasDescriptor', aasDescriptor, 'smRef', smRef);
             if (smRef && Object.keys(smRef).length > 0) {
                 // if the referenced Element is a Submodel or SubmodelElement
-                console.log(
-                    'jumpToReference --> jumpToSubmodelElement',
-                    'reference',
-                    reference,
-                    'aasDescriptor',
-                    aasDescriptor,
-                    'smRef',
-                    smRef
-                );
+                // console.log(
+                //     'jumpToReference --> jumpToSubmodelElement',
+                //     'reference',
+                //     reference,
+                //     'aasDescriptor',
+                //     aasDescriptor,
+                //     'smRef',
+                //     smRef
+                // );
                 this.jumpToSubmodelElement(reference, aasDescriptor, smRef);
-            } else {
+            } else if (aasDescriptor && Object.keys(aasDescriptor).length > 0) {
                 // if the referenced Element is an AAS
-                console.log('jumpToReference --> jumpToAas', 'aasDescriptor', aasDescriptor);
+                // console.log('jumpToReference --> jumpToAas', 'aasDescriptor', aasDescriptor);
                 this.jumpToAas(aasDescriptor);
             }
         },
@@ -653,6 +652,7 @@ export default defineComponent({
                 'smRef',
                 smRef
             );
+            // TODO seicke!!!
             return;
 
             const aasEndpoint = this.extractEndpointHref(aasDescriptor, 'AAS-3.0');
@@ -775,7 +775,7 @@ export default defineComponent({
         },
 
         async jumpToAas(aasDescriptor: any) {
-            console.log('jumpToAas', aasDescriptor);
+            // console.log('jumpToAas', aasDescriptor);
             const aasEndpoint = this.extractEndpointHref(aasDescriptor, 'AAS-3.0');
             // check if mobile device
             if (this.navigationStore.getIsMobile) {
