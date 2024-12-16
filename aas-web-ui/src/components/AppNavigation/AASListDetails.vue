@@ -17,10 +17,14 @@
                           : 'calc(50vh - 64px - 48px)', // Half height - header - collapse button
                 }">
                 <!-- Asset Information -->
+                <!-- 1) AssetInformation is mandatory for an AssetAdministrationShell -->
+                <!-- 2) Minimal (empty) AssetInformation (generated with aas4j) will be { assetKind: null } -->
                 <AssetInformation
-                    v-if="assetInformation && Object.keys(assetInformation).length > 0"
+                    v-if="assetInformation?.assetKind && Object.keys(assetInformation).length > 1"
                     :asset-object="assetInformation"></AssetInformation>
-                <v-divider v-if="assetInformation" thickness="2"></v-divider>
+                <v-divider
+                    v-if="assetInformation?.assetKind && Object.keys(assetInformation).length > 1"
+                    thickness="2"></v-divider>
                 <!-- AAS Details -->
                 <v-list v-if="selectedAAS" lines="one" nav class="bg-detailsCard">
                     <!-- AAS Identification -->
