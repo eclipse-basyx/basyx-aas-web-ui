@@ -68,4 +68,3 @@ jobs:
       - name: Verify Docker Image
         run: |
           docker pull ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-
