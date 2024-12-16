@@ -822,7 +822,6 @@ export default defineComponent({
 
                     // Take the first aasId from the list and check if it exists in the AAS Registry
                     const aasId = aasIds[0];
-                    console.log('aasId', aasId);
                     let aasRegistryUrl = this.aasRegistryUrl;
                     if (!aasRegistryUrl.includes('/shell-descriptors')) {
                         aasRegistryUrl += '/shell-descriptors';
@@ -832,7 +831,7 @@ export default defineComponent({
 
                     const registryResponse = await this.getRequest(registryPath, registryContext, disableMessage);
                     if (registryResponse?.success && Object.keys(registryResponse?.data).length > 0) {
-                        console.log('registryContext', registryPath, 'registryResponse', registryResponse);
+                        // console.log('registryContext', registryPath, 'registryResponse', registryResponse);
                         const aasDescriptor = registryResponse.data;
                         return { success: true, aasDescriptor: aasDescriptor };
                     }
