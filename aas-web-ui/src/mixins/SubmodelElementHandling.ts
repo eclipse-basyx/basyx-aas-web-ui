@@ -129,16 +129,14 @@ export default defineComponent({
 
         // Function to check if the SemanticID of a SubmodelElement matches the given SemanticID
         checkSemanticId(submodelElement: any, semanticId: string): boolean {
+            // console.log('checkSemanticId', 'submodelElement', submodelElement, 'semanticId', semanticId);
             if (semanticId.trim() == '') return false;
 
-            if (
-                !submodelElement.semanticId ||
-                !submodelElement.semanticId.keys ||
-                submodelElement.semanticId.keys.length == 0
-            )
+            if (!Array.isArray(submodelElement?.semanticId?.keys) || submodelElement.semanticId.keys.length == 0)
                 return false;
 
             for (const key of submodelElement.semanticId.keys) {
+                // console.log('checkSemanticId: ', 'key of submodelElement', key.value, 'semanticId', semanticId);
                 if (key.value.startsWith('0112/')) {
                     return this.checkSemanticIdIecCdd(key.value, semanticId);
                 } else if (key.value.startsWith('0173-1#') || key.value.startsWith('0173/1///')) {
@@ -158,10 +156,10 @@ export default defineComponent({
         checkSemanticIdEclassIrdi(keyValue: string, semanticId: string): boolean {
             if (semanticId.trim() == '') return false;
 
+            if (!keyValue.startsWith('0173-1#') && !keyValue.startsWith('0173/1///')) return false;
+
             if (keyValue.startsWith('0173-1#')) {
                 // Eclass IRDI like 0173-1#01-AHF578#001
-                console.log('keyValue', keyValue);
-                console.log('semanticId', semanticId);
                 if (new RegExp(/\*\d{2}$/).test(keyValue)) {
                     keyValue = keyValue.slice(0, -3);
                     semanticId = semanticId.slice(0, -3);
@@ -170,30 +168,30 @@ export default defineComponent({
                     new RegExp(/[#-]{1}\d{3}$/).test(semanticId) ||
                     new RegExp(/[#-]{1}\d{3}\*\d{1,}$/).test(semanticId)
                 ) {
-                    return this.getEquivalentEclassSemanticIds(semanticId).includes(keyValue);
-                } else {
-                    // Eclass IRDI without version; like 0173-1#01-AHF578
-                    return (
-                        this.getEquivalentEclassSemanticIds(semanticId).findIndex((equivalentSemanticId) => {
-                            return equivalentSemanticId.startsWith(semanticId);
-                        }, semanticId) != -1
-                    );
+                    return this.getEquivalentEclassSemanticIds(keyValue).includes(semanticId);
                 }
+
+                // Eclass IRDI without version; like 0173-1#01-AHF578
+                return (
+                    this.getEquivalentEclassSemanticIds(keyValue).findIndex((equivalentSemanticId) => {
+                        return equivalentSemanticId.startsWith(semanticId);
+                    }, semanticId) != -1
+                );
             } else if (keyValue.startsWith('0173/1///')) {
                 if (
                     new RegExp(/[#-]{1}\d{3}$/).test(semanticId) ||
                     new RegExp(/[#-]{1}\d{3}\*\d{1,}$/).test(semanticId)
                 ) {
                     // Eclass IRDI with version; like 0173/1///01#AHF578#001
-                    return this.getEquivalentEclassSemanticIds(semanticId).includes(keyValue);
-                } else {
-                    // Eclass IRDI without version; like 0173/1///01#AHF578
-                    return (
-                        this.getEquivalentEclassSemanticIds(semanticId).findIndex((equivalentSemanticId) => {
-                            return equivalentSemanticId.startsWith(semanticId);
-                        }, semanticId) != -1
-                    );
+                    return this.getEquivalentEclassSemanticIds(keyValue).includes(semanticId);
                 }
+
+                // Eclass IRDI without version; like 0173/1///01#AHF578
+                return (
+                    this.getEquivalentEclassSemanticIds(keyValue).findIndex((equivalentSemanticId) => {
+                        return equivalentSemanticId.startsWith(semanticId);
+                    }, semanticId) != -1
+                );
             }
 
             return false;
@@ -202,74 +200,64 @@ export default defineComponent({
         checkSemanticIdEclassIrdiUrl(keyValue: string, semanticId: string): boolean {
             if (semanticId.trim() == '') return false;
 
-            if (keyValue.startsWith('https://api.eclass-cdp.com/0173-1')) {
-                // Eclass URL like https://api.eclass-cdp.com/0173-1-01-AHF578-001
-                if (
-                    new RegExp(/[#-]{1}\d{3}$/).test(semanticId) ||
-                    new RegExp(/[#-]{1}\d{3}~\d{1,}$/).test(semanticId)
-                ) {
-                    // Eclass URL with version (like https://api.eclass-cdp.com/0173-1-01-AHF578-001)
-                    return this.getEquivalentEclassSemanticIds(semanticId).includes(keyValue);
-                } else {
-                    // Eclass URL without version (like https://api.eclass-cdp.com/0173-1-01-AHF578)
-                    return (
-                        this.getEquivalentEclassSemanticIds(semanticId).findIndex((equivalentSemanticId) => {
-                            return equivalentSemanticId.startsWith(semanticId);
-                        }, semanticId) != -1
-                    );
-                }
+            if (!keyValue.startsWith('https://api.eclass-cdp.com/0173-1')) return false;
+
+            // Eclass URL like https://api.eclass-cdp.com/0173-1-01-AHF578-001
+            if (new RegExp(/[#-]{1}\d{3}$/).test(semanticId) || new RegExp(/[#-]{1}\d{3}~\d{1,}$/).test(semanticId)) {
+                // Eclass URL with version (like https://api.eclass-cdp.com/0173-1-01-AHF578-001)
+                return this.getEquivalentEclassSemanticIds(semanticId).includes(keyValue);
             }
 
-            return false;
+            // Eclass URL without version (like https://api.eclass-cdp.com/0173-1-01-AHF578)
+            return (
+                this.getEquivalentEclassSemanticIds(keyValue).findIndex((equivalentSemanticId) => {
+                    return equivalentSemanticId.startsWith(semanticId);
+                }, semanticId) != -1
+            );
         },
 
         checkSemanticIdIecCdd(keyValue: string, semanticId: string): boolean {
             if (semanticId.trim() == '') return false;
 
-            if (keyValue.startsWith('0112/') && semanticId.startsWith('0112/')) {
-                // IEC CDD like 0112/2///61987#ABN590#002
-                if (new RegExp(/[#-]{1}\d{3}$/).test(semanticId)) {
-                    // IEC CDD with version; like 0112/2///61987#ABN590#002
-                    if (keyValue === semanticId) {
-                        return true;
-                    }
-                } else {
-                    // IEC CDD without version; like 0112/2///61987#ABN590
-                    if (keyValue.startsWith(semanticId)) {
-                        return true;
-                    }
+            if (!semanticId.startsWith('0112/')) return false;
+            if (!keyValue.startsWith('0112/')) return false;
+
+            // IEC CDD like 0112/2///61987#ABN590#002
+            if (new RegExp(/[#-]{1}\d{3}$/).test(semanticId)) {
+                // IEC CDD with version; like 0112/2///61987#ABN590#002
+                if (keyValue === semanticId) {
+                    return true;
                 }
             }
 
-            return false;
+            // IEC CDD without version; like 0112/2///61987#ABN590
+            return keyValue.startsWith(semanticId);
         },
 
         checkSemanticIdIri(keyValue: string, semanticId: string): boolean {
+            // console.log('checkSemanticIdIri: ', 'keyValue', keyValue, 'semanticId', semanticId);
             if (semanticId.trim() == '') return false;
 
-            if (
-                (keyValue.startsWith('http://') || keyValue.startsWith('https://')) &&
-                (semanticId.startsWith('http://') || semanticId.startsWith('https://'))
-            ) {
-                if (keyValue.endsWith('/')) keyValue = keyValue.substring(0, keyValue.length - 1);
-                if (semanticId.endsWith('/')) semanticId = semanticId.substring(0, semanticId.length - 1);
-                if (new RegExp(/\/\d{1,}\/\d{1,}$/).test(semanticId)) {
-                    // IRI with version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/0/9/
-                    return this.getEquivalentIriSemanticIds(semanticId).includes(keyValue);
-                } else {
-                    // IRI without version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/
-                    return (
-                        this.getEquivalentIriSemanticIds(semanticId).findIndex((equivalentSemanticId) => {
-                            return equivalentSemanticId.startsWith(semanticId);
-                        }, semanticId) != -1
-                    );
-                }
+            if (!semanticId.startsWith('http://') && !semanticId.startsWith('https://')) return false;
+            if (!keyValue.startsWith('http://') && !keyValue.startsWith('https://')) return false;
+
+            if (keyValue.endsWith('/')) keyValue = keyValue.substring(0, keyValue.length - 1);
+            if (semanticId.endsWith('/')) semanticId = semanticId.substring(0, semanticId.length - 1);
+
+            if (new RegExp(/\/\d{1,}\/\d{1,}$/).test(semanticId)) {
+                // IRI with version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/0/9/
+                return this.getEquivalentIriSemanticIds(semanticId).includes(keyValue);
             }
 
-            return false;
+            // IRI without version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/
+            return (
+                this.getEquivalentIriSemanticIds(keyValue).findIndex((equivalentSemanticId) => {
+                    return equivalentSemanticId.startsWith(semanticId);
+                }, semanticId) != -1
+            );
         },
 
-        getEquivalentEclassSemanticIds(semanticId: string) {
+        getEquivalentEclassSemanticIds(semanticId: string): any[] {
             if (
                 semanticId.trim() === '' ||
                 (!semanticId.startsWith('0173-1#') &&
@@ -307,11 +295,12 @@ export default defineComponent({
                 );
             }
 
+            // console.log('getEquivalentEclassSemanticIds', 'semanticId', semanticId, 'semanticIds', semanticIds);
             return semanticIds;
         },
 
-        getEquivalentIriSemanticIds(semanticId: string) {
-            if (semanticId.trim() === '' || (!semanticId.startsWith('http://') && !semanticId.startsWith('https://')))
+        getEquivalentIriSemanticIds(semanticId: string): any[] {
+            if (semanticId.trim() === '' || !(semanticId.startsWith('http://') || semanticId.startsWith('https://')))
                 return [];
 
             const semanticIds: any[] = [semanticId];
@@ -323,6 +312,7 @@ export default defineComponent({
                 semanticIds.push(semanticId + '/');
             }
 
+            // console.log('getEquivalentIriSemanticIds', 'semanticId', semanticId, 'semanticIds', semanticIds);
             return semanticIds;
         },
 
@@ -688,7 +678,11 @@ export default defineComponent({
                 }
             });
 
-            const cdPromises = semanticIdsToFetch.map((semanticId: string) => {
+            const semanticIdsUniqueToFetch = semanticIdsToFetch.filter(
+                (value: string, index: number, self: string) => self.indexOf(value) === index
+            );
+
+            const cdPromises = semanticIdsUniqueToFetch.map((semanticId: string) => {
                 const path = conceptDescriptionRepoURL + '/' + this.URLEncode(semanticId);
                 const context = 'retrieving ConceptDescriptions';
                 const disableMessage = true;
