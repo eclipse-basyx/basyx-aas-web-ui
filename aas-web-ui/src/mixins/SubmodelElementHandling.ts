@@ -366,6 +366,7 @@ export default defineComponent({
             //     'currentAasDescriptor',
             //     currentAasDescriptor
             // );
+            // TODO This check just works down to SM level. It is not working for checking the availability of a specific SME!
             const failResponse = { success: false, aasDescriptor: {}, submodelRef: {} }; // Define once for reuse
             let aasRegistryUrl = this.aasRegistryUrl;
             if (!aasRegistryUrl.includes('/shell-descriptors')) {
