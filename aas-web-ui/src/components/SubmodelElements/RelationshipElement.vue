@@ -21,12 +21,6 @@
                                     >{{ keys.value }}
                                 </div>
                             </v-tooltip>
-                            <!-- Reference Title -->
-                            <template #title>
-                                <div class="text-subtitle-2 mt-2">
-                                    {{ keys.type ? keys.type : 'Description:' }}
-                                </div>
-                            </template>
                             <!-- Reference Representation -->
                             <template #subtitle>
                                 <div class="pt-2">
