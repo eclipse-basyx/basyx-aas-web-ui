@@ -188,8 +188,8 @@
                         let pluginASemanticId = '';
                         let pluginBSemanticId = '';
 
-                        if (typeof pluginA.semanticId === 'string') pluginASemanticId = pluginsA.semanticId;
-                        if (typeof pluginB.semanticId === 'string') pluginBSemanticId = pluginsB.semanticId;
+                        if (typeof pluginA.semanticId === 'string') pluginASemanticId = pluginA.semanticId;
+                        if (typeof pluginB.semanticId === 'string') pluginBSemanticId = pluginB.semanticId;
 
                         if (Array.isArray(pluginA.semanticId)) {
                             if (pluginA.semanticId.length > 0) {
