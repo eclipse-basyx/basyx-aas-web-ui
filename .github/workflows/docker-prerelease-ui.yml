@@ -11,6 +11,11 @@ jobs:
   build-and-push-prerelease:
     runs-on: ubuntu-latest
 
+    env:
+      IMAGE_NAME: eclipsebasyx/aas-gui
+      IMAGE_TAG: SNAPSHOT
+      SBOM_FILE: sbom.json
+
     steps:
       # Step 1: Checkout the repository
       - name: Checkout Code
@@ -41,9 +46,26 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           tags: |
-            eclipsebasyx/aas-gui:SNAPSHOT
+            ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
-      # Step 5: Verify the Push
+      # Step 5: Generate SBOM with Syft
+      - name: Install Syft
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Generate SBOM
+        run: |
+          syft ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -o json > ${{ env.SBOM_FILE }}
+
+      # Step 6: Upload SBOM as an Artifact
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v3
+        with:
+          name: sbom
+          path: ${{ env.SBOM_FILE }}
+
+      # Step 7: Verify the Push
       - name: Verify Docker Image
         run: |
-          docker pull eclipsebasyx/aas-gui:SNAPSHOT
+          docker pull ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
