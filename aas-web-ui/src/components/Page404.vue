@@ -1,5 +1,5 @@
 <template>
-    <v-container fluid class="pa-0">
+    <v-container class="pa-md-12">
         <v-empty-state
             headline="Whoops, 404"
             title="Page not found"
@@ -13,49 +13,44 @@
                     </v-img>
                 </a>
             </template>
-            <template #actions>
-                <v-btn
-                    class="text-none"
-                    variant="outlined"
-                    text="Community"
-                    href="https://github.com/eclipse-basyx"
-                    target="_blank">
-                    <template #prepend>
-                        <v-icon>mdi-account-group-outline</v-icon>
-                    </template>
-                </v-btn>
-
-                <v-btn
-                    class="text-none"
-                    color="primary"
-                    elevation="1"
-                    text="https://basyx.org"
-                    href="https://basyx.org/"
-                    target="_blank">
-                    <template #prepend>
-                        <v-icon>mdi-web</v-icon>
-                    </template>
-                </v-btn>
-
-                <v-btn
-                    class="text-none"
-                    variant="outlined"
-                    text="Documentation"
-                    href="https://wiki.basyx.org/en/latest/content/user_documentation/basyx_components/web_ui/index.html"
-                    target="_blank">
-                    <template #prepend>
-                        <v-icon>mdi-text-box-outline</v-icon>
-                    </template>
-                </v-btn>
-            </template>
+            <v-row class="mt-3">
+                <v-col class="d-flex justify-center" cols="12" md="auto">
+                    <v-btn
+                        class="text-none"
+                        prepend-icon="mdi-account-group-outline"
+                        variant="outlined"
+                        text="Community"
+                        href="https://github.com/eclipse-basyx"
+                        target="_blank" />
+                </v-col>
+                <v-spacer v-if="mdAndDown"></v-spacer>
+                <v-col class="d-flex justify-center" cols="12" md="auto">
+                    <v-btn
+                        class="text-none"
+                        prepend-icon="mdi-web"
+                        color="primary"
+                        elevation="1"
+                        text="https://basyx.org"
+                        href="https://basyx.org/"
+                        target="_blank" />
+                </v-col>
+                <v-spacer v-if="mdAndDown"></v-spacer>
+                <v-col class="d-flex justify-center" cols="12" md="auto">
+                    <v-btn
+                        class="text-none"
+                        prepend-icon="mdi-text-box-outline"
+                        variant="outlined"
+                        text="Documentation"
+                        href="https://wiki.basyx.org/en/latest/content/user_documentation/basyx_components/web_ui/index.html"
+                        target="_blank" />
+                </v-col>
+            </v-row>
         </v-empty-state>
     </v-container>
 </template>
 
-<script lang="ts">
-    import { defineComponent } from 'vue';
+<script lang="ts" setup>
+    import { useDisplay } from 'vuetify';
 
-    export default defineComponent({
-        name: 'Page404',
-    });
+    const { mdAndDown } = useDisplay();
 </script>
