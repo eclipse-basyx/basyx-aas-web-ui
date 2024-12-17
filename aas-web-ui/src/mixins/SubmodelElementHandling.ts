@@ -682,7 +682,7 @@ export default defineComponent({
                             if (reference.keys[index - 1].type == 'SubmodelElementList') {
                                 // check in which position of the list the element is (list needs to be requested to get the position)
                                 const smRepoPath = smRepoUrl;
-                                const smRepoContext = 'retrieving SubmodelElementList';
+                                const smRepoContext = 'retrieving SML';
                                 const disableMessage = false;
                                 try {
                                     const smRepoResponse = await this.getRequest(
@@ -701,6 +701,34 @@ export default defineComponent({
                                         );
                                         if (index !== -1) {
                                             smRepoUrl += encodeURIComponent('[') + index + encodeURIComponent(']');
+                                        }
+                                    }
+                                    resolve();
+                                } catch {
+                                    resolve();
+                                }
+                            } else if (reference.keys[index - 1].type == 'SubmodelElementCollection') {
+                                // check in which position of the list the element is (list needs to be requested to get the position)
+                                const smRepoPath = smRepoUrl;
+                                const smRepoContext = 'retrieving SMC';
+                                const disableMessage = false;
+                                try {
+                                    const smRepoResponse = await this.getRequest(
+                                        smRepoPath,
+                                        smRepoContext,
+                                        disableMessage
+                                    );
+                                    if (
+                                        smRepoResponse?.success &&
+                                        smRepoResponse?.data &&
+                                        Object.keys(smRepoResponse?.data).length > 0
+                                    ) {
+                                        const smc = smRepoResponse.data;
+                                        const sme = smc.value.find((sme: any) =>
+                                            this.checkIdShort(sme, smeKey.value, false, true)
+                                        );
+                                        if (sme && Object.keys(sme).length > 0) {
+                                            smRepoUrl += '.' + smeKey.value;
                                         }
                                     }
                                     resolve();
