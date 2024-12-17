@@ -228,7 +228,7 @@
             if (Object.keys(this.SelectedNode).length > 0 && this.isMobile) {
                 // initialize if component got mounted on mobile devices (needed there because it is rendered in a separate view)
                 this.initializeView();
-            } else if (Object.keys(this.SelectedNode).length == 0 && this.route.path == '/componentvisualization') {
+            } else if (Object.keys(this.SelectedNode).length === 0 && this.route.path == '/componentvisualization') {
                 const searchParams = new URL(window.location.href).searchParams;
                 const aasEndpoint = searchParams.get('aas');
                 const path = searchParams.get('path');
@@ -249,7 +249,7 @@
             initializeView() {
                 // console.log('Selected Node: ', this.RealTimeObject);
                 // Check if a Node is selected
-                if (Object.keys(this.RealTimeObject).length == 0) {
+                if (Object.keys(this.RealTimeObject).length === 0) {
                     this.submodelElementData = {}; // Reset the SubmodelElement Data when no Node is selected
                     return;
                 }
@@ -264,7 +264,7 @@
                 const path = searchParams.get('path');
 
                 if (aasEndpoint && path) {
-                    await this.loadAndDispatchAas(aasEndpoint);
+                    await this.fetchAndDispatchAas(aasEndpoint);
 
                     // Request the selected SubmodelElement
                     let context = 'retrieving SubmodelElement';
@@ -281,7 +281,7 @@
                             this.aasStore.dispatchRealTimeObject(this.submodelElementData);
                         } else {
                             // execute if the Request failed
-                            if (Object.keys(response.data).length == 0) {
+                            if (Object.keys(response.data).length === 0) {
                                 // don't copy the static SubmodelElement Data if no Node is selected or Node is invalid
                                 this.navigationStore.dispatchSnackbar({
                                     status: true,

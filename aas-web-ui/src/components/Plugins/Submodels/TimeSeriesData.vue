@@ -330,7 +330,7 @@
         methods: {
             // Function to initialize the TimeSeriesData Plugin
             initializeTimeSeriesData() {
-                if (Object.keys(this.submodelElementData).length == 0) {
+                if (Object.keys(this.submodelElementData).length === 0) {
                     this.timeSeriesData = {};
                     return;
                 }
@@ -465,7 +465,7 @@
             // Function to fetch the data from the API of the Time Series Database
             fetchLinkedData() {
                 // check if a segment is selected
-                if (!this.selectedSegment || Object.keys(this.selectedSegment).length == 0) {
+                if (!this.selectedSegment || Object.keys(this.selectedSegment).length === 0) {
                     console.warn('No Segment selected');
                     return;
                 }

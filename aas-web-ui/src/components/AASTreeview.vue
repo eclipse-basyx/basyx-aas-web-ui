@@ -31,7 +31,7 @@
                 </div>
                 <template v-else>
                     <v-empty-state
-                        v-if="Object.keys(selectedAAS).length > 0 && submodelData.length === 0"
+                        v-if="selectedAAS && Object.keys(selectedAAS).length > 0 && submodelData.length === 0"
                         title="No existing Submodels"
                         text="The selected AAS does not contain any Submodels"
                         class="text-divider"></v-empty-state>

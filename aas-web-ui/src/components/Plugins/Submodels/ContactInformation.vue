@@ -133,7 +133,7 @@
             async initContactInformation() {
                 this.loading = true;
 
-                if (Object.keys(this.submodelElementData).length == 0) {
+                if (Object.keys(this.submodelElementData).length === 0) {
                     this.contactInformationData = {};
                     this.loading = false;
                     return;

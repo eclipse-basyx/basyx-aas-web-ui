@@ -55,7 +55,7 @@
                 if (
                     !this.widgetSettings ||
                     !this.submodelElementData ||
-                    Object.keys(this.submodelElementData).length == 0
+                    Object.keys(this.submodelElementData).length === 0
                 )
                     return;
                 let localSubmodelElementData = { ...this.submodelElementData };
