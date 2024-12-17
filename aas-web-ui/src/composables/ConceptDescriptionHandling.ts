@@ -106,8 +106,44 @@ export function useConceptDescriptionHandling() {
         return conceptDescriptions;
     }
 
+    // Get the Definition from the EmbeddedDataSpecification of the ConceptDescription of the Property (if available)
+    function cdDefinition(prop: any) {
+        if (!prop.conceptDescriptions) {
+            getConceptDescriptions(prop).then((conceptDescriptions) => {
+                prop.conceptDescriptions = conceptDescriptions;
+            });
+        }
+        if (!prop.conceptDescriptions || prop.conceptDescriptions.length == 0) {
+            return '';
+        }
+        for (const conceptDescription of prop.conceptDescriptions) {
+            if (!conceptDescription.embeddedDataSpecifications) {
+                continue;
+            }
+            for (const embeddedDataSpecification of conceptDescription.embeddedDataSpecifications) {
+                if (
+                    embeddedDataSpecification.dataSpecificationContent &&
+                    embeddedDataSpecification.dataSpecificationContent.definition
+                ) {
+                    const definitionEn = embeddedDataSpecification.dataSpecificationContent.definition.find(
+                        (definition: any) => {
+                            return definition.language === 'en' && definition.text !== '';
+                        }
+                    );
+                    if (definitionEn && definitionEn.text) {
+                        return definitionEn.text;
+                    }
+                } else {
+                    return '';
+                }
+            }
+        }
+        return '';
+    }
+
     return {
         unitSuffix,
         getConceptDescriptions,
+        cdDefinition,
     };
 }
