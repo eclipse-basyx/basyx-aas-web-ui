@@ -633,7 +633,7 @@ export default defineComponent({
 
         jumpToSubmodelElement(reference: any, aasDescriptor: any, smRef: any) {
             // console.log(
-            //     'jumpToSubmodelElement: ',
+            //     'jumpToSubmodelElement()',
             //     'reference',
             //     reference,
             //     'aasDescriptor',
@@ -671,8 +671,8 @@ export default defineComponent({
                     (reference?.keys.length > 3 && reference?.keys[1]?.type === 'Submodel'))
             ) {
                 // this is the layer under either a SubmodelElementCollection or SubmodelElementList
-                promise = new Promise<void>((resolve, reject) => {
-                    reference.keys.forEach((SubmodelElement: any, index: number) => {
+                promise = new Promise<void>((resolve) => {
+                    reference.keys.forEach(async (smeKey: any, index: number) => {
                         if (
                             Array.isArray(reference?.keys) &&
                             ((reference?.keys.length > 2 && reference?.keys[0]?.type === 'Submodel' && index > 1) ||
@@ -681,27 +681,34 @@ export default defineComponent({
                             // check if the type of the SubmodelElement with index - 1 is a SubmodelElementList
                             if (reference.keys[index - 1].type == 'SubmodelElementList') {
                                 // check in which position of the list the element is (list needs to be requested to get the position)
+                                const smRepoPath = smRepoUrl;
                                 const smRepoContext = 'retrieving SubmodelElementList';
                                 const disableMessage = false;
-                                this.getRequest(smRepoUrl, smRepoContext, disableMessage)
-                                    .then((response: any) => {
-                                        if (response.success) {
-                                            // execute if the Request was successful
-                                            const list = response.data;
-                                            list.value.forEach((element: any, i: number) => {
-                                                if (this.checkIdShort(element, SubmodelElement.value, false, true)) {
-                                                    smRepoUrl += encodeURIComponent('[') + i + encodeURIComponent(']');
-                                                }
-                                            });
-                                            resolve();
+                                try {
+                                    const smRepoResponse = await this.getRequest(
+                                        smRepoPath,
+                                        smRepoContext,
+                                        disableMessage
+                                    );
+                                    if (
+                                        smRepoResponse?.success &&
+                                        smRepoResponse?.data &&
+                                        Object.keys(smRepoResponse?.data).length > 0
+                                    ) {
+                                        const sml = smRepoResponse.data;
+                                        const index = sml.value.findIndex((sme: any) =>
+                                            this.checkIdShort(sme, smeKey.value, false, true)
+                                        );
+                                        if (index !== -1) {
+                                            smRepoUrl += encodeURIComponent('[') + index + encodeURIComponent(']');
                                         }
-                                    })
-                                    .catch((error: any) => {
-                                        // console.error('Error with getRequest:', error);
-                                        reject(error);
-                                    });
+                                    }
+                                    resolve();
+                                } catch {
+                                    resolve();
+                                }
                             } else {
-                                smRepoUrl += '.' + SubmodelElement.value;
+                                smRepoUrl += '.' + smeKey.value;
                             }
                         }
                     });
@@ -720,6 +727,7 @@ export default defineComponent({
 
             promise
                 .then(() => {
+                    // console.log('jumpToSubmodelElement()', 'aasEndPoint', aasEndpoint, 'smRepoUrl', smRepoUrl);
                     // check if mobile device
                     if (this.navigationStore.getIsMobile) {
                         this.router.push({ name: 'SubmodelList', query: { aas: aasEndpoint, path: smRepoUrl } });
