@@ -309,7 +309,7 @@
             async initTechnicalData() {
                 this.loading = true;
 
-                if (Object.keys(this.submodelElementData).length == 0) {
+                if (Object.keys(this.submodelElementData).length === 0) {
                     this.technicalData = {};
                     this.loading = false;
                     return;

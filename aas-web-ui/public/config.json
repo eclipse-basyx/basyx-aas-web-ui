@@ -15,5 +15,7 @@
   "keycloakUrl": "",
   "keycloakRealm": "",
   "keycloakClientId": "",
-  "endpointConfigAvailable": true
+  "endpointConfigAvailable": true,
+  "singleAas": false,
+  "singleAasRedirect": ""
 }

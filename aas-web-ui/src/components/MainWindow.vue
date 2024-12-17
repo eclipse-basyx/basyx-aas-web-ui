@@ -91,9 +91,8 @@
                 document.removeEventListener('mousemove', function () {});
                 document.removeEventListener('mouseup', function () {});
             }
-            // clear the current AAS and Node
+            // clear the current AAS
             this.aasStore.dispatchSelectedAAS({});
-            this.aasStore.dispatchNode({});
         },
 
         methods: {

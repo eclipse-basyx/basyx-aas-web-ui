@@ -138,8 +138,8 @@
                 let aas = { ...this.aasStore.getSelectedAAS };
                 let node = { ...this.aasStore.getSelectedNode };
                 if (Array.isArray(aas?.endpoints) && aas?.endpoints.length > 0) {
-                    const shellHref = this.extractEndpointHref(aas, 'AAS-3.0');
-                    node.pathFull = shellHref + '/' + node.path;
+                    const aasEndpopint = this.extractEndpointHref(aas, 'AAS-3.0');
+                    node.pathFull = aasEndpopint + '/' + node.path;
                 }
                 // console.log('SelectedNodeToTransfer: ', node);
                 return node;
@@ -268,7 +268,7 @@
             if (Object.keys(this.SelectedNode).length > 0 && this.isMobile) {
                 // initialize if component got mounted on mobile devices (needed there because it is rendered in a separate view)
                 this.initializeView();
-            } else if (Object.keys(this.SelectedNode).length == 0 && this.route.path == '/componentvisualization') {
+            } else if (Object.keys(this.SelectedNode).length === 0 && this.route.path == '/componentvisualization') {
                 const searchParams = new URL(window.location.href).searchParams;
                 const aasEndpoint = searchParams.get('aas');
                 const path = searchParams.get('path');
@@ -289,7 +289,7 @@
             initializeView() {
                 // console.log('Selected Node: ', this.RealTimeObject);
                 // Check if a Node is selected
-                if (Object.keys(this.RealTimeObject).length == 0) {
+                if (Object.keys(this.RealTimeObject).length === 0) {
                     this.submodelElementData = {}; // Reset the SubmodelElement Data when no Node is selected
                     return;
                 }
@@ -298,19 +298,13 @@
             },
 
             // Function to initialize with route params
-            initializeViewWithRouteParams() {
+            async initializeViewWithRouteParams() {
                 const searchParams = new URL(window.location.href).searchParams;
                 const aasEndpoint = searchParams.get('aas');
                 const path = searchParams.get('path');
 
                 if (aasEndpoint && path) {
-                    // console.log('AAS and Path Queries are set: ', aasEndpoint, ' | ', path);
-                    let aas = {} as any;
-                    let endpoints = [];
-                    endpoints.push({ protocolInformation: { href: aasEndpoint }, interface: 'AAS-3.0' });
-                    aas.endpoints = endpoints;
-                    // dispatch the AAS set by the URL to the store
-                    this.aasStore.dispatchSelectedAAS(aas);
+                    await this.fetchAndDispatchAas(aasEndpoint);
 
                     // Request the selected SubmodelElement
                     let context = 'retrieving SubmodelElement';
@@ -327,7 +321,7 @@
                             this.aasStore.dispatchRealTimeObject(this.submodelElementData);
                         } else {
                             // execute if the Request failed
-                            if (Object.keys(response.data).length == 0) {
+                            if (Object.keys(response.data).length === 0) {
                                 // don't copy the static SubmodelElement Data if no Node is selected or Node is invalid
                                 this.navigationStore.dispatchSnackbar({
                                     status: true,

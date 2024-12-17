@@ -185,8 +185,8 @@
             // Function to update the Blob of the File Element
             updateBlob() {
                 // console.log("Update Blob: " + this.newBlobValue);
-                const shellHref = this.extractEndpointHref(this.SelectedAAS, 'AAS-3.0');
-                let path = shellHref + '/' + this.SelectedNode.path + '/value';
+                const aasEndpopint = this.extractEndpointHref(this.SelectedAAS, 'AAS-3.0');
+                let path = aasEndpopint + '/' + this.SelectedNode.path + '/value';
                 let content = "'" + this.newBlobValue + "'";
                 let headers = new Headers();
                 headers.append('Content-Type', 'application/json');
