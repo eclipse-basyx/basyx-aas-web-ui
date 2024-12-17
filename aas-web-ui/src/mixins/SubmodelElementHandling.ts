@@ -400,43 +400,14 @@ export default defineComponent({
             const failResponse = { success: false, aasDescriptor: {}, submodelRef: {} }; // Define once for reuse
 
             if (reference.type === 'ExternalReference') {
-                // Check ExternalReference
-                let aasRegistryUrl = this.aasRegistryUrl;
-                if (!aasRegistryUrl.includes('/shell-descriptors')) {
-                    aasRegistryUrl += '/shell-descriptors';
-                }
-                const aasRegistryPath = aasRegistryUrl;
-                const aasRegistryContext = 'retrieving AAS Descriptors';
-                const disableMessage = false;
-                try {
-                    const aasRegistryResponse = await this.getRequest(
-                        aasRegistryPath,
-                        aasRegistryContext,
-                        disableMessage
-                    );
-                    if (
-                        aasRegistryResponse.success &&
-                        aasRegistryResponse.data.result &&
-                        aasRegistryResponse.data.result.length > 0
-                    ) {
-                        const aasDescriptorList = aasRegistryResponse.data.result;
-
-                        if (reference?.keys[0]?.type === 'AssetAdministrationShell') {
-                            if (reference?.keys[1]?.type === 'Submodel') {
-                                return await this.checkSmReference(reference, aasDescriptorList);
-                            }
-                            return await this.checkAasReference(reference, aasDescriptorList);
-                        } else if (reference?.keys[0]?.type === 'Submodel') {
-                            return await this.checkSmReference(reference, aasDescriptorList, currentAasDescriptor);
-                        } else {
-                            return failResponse;
-                        }
-                    }
-                    return failResponse;
-                } catch {
-                    // handle error
-                    return failResponse;
-                }
+                this.navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 10000,
+                    color: 'warning',
+                    btnColor: 'buttonText',
+                    text: 'Reference check for ExternalReference not implemented',
+                }); // Show Error Snackbar
+                return failResponse;
             } else if (reference.type === 'ModelReference') {
                 // Check ModelReference
                 let aasDescriptor = {};
@@ -457,9 +428,85 @@ export default defineComponent({
                         }
                         return await this.checkAasReference(reference, aasDescriptorList);
                     } else if (reference?.keys[0]?.type === 'Submodel') {
-                        return await this.checkSmReference(reference, aasDescriptorList, aasDescriptor);
+                        const checkResponse = await this.checkSmReference(reference, aasDescriptorList, aasDescriptor);
+                        if (checkResponse?.success === false) {
+                            // Check Reference to exist in other AAS
+                            let aasRegistryUrl = this.aasRegistryUrl;
+                            if (!aasRegistryUrl.includes('/shell-descriptors')) {
+                                aasRegistryUrl += '/shell-descriptors';
+                            }
+                            const aasRegistryPath = aasRegistryUrl;
+                            const aasRegistryContext = 'retrieving AAS Descriptors';
+                            const disableMessage = false;
+                            try {
+                                const aasRegistryResponse = await this.getRequest(
+                                    aasRegistryPath,
+                                    aasRegistryContext,
+                                    disableMessage
+                                );
+                                if (
+                                    aasRegistryResponse.success &&
+                                    aasRegistryResponse.data.result &&
+                                    aasRegistryResponse.data.result.length > 0
+                                ) {
+                                    const aasDescriptorList = aasRegistryResponse.data.result;
+
+                                    const aasEndpoints = aasDescriptorList.map((aasDescriptor: any) => {
+                                        return this.extractEndpointHref(aasDescriptor, 'AAS-3.0');
+                                    });
+
+                                    const aasList = await Promise.all(
+                                        aasEndpoints.map((aasEndpoint: string) => {
+                                            return this.fetchAas(aasEndpoint);
+                                        })
+                                    );
+
+                                    const submodelId = reference?.keys[0]?.value;
+
+                                    const aas = aasList.find((aas: any) => {
+                                        const smRefs = aas.submodels;
+
+                                        if (smRefs) {
+                                            const smIds = smRefs.map((smRef: any) => {
+                                                return smRef?.keys[0]?.value;
+                                            });
+
+                                            if (smIds) {
+                                                const smId = smIds.find((smId: string) => {
+                                                    return smId === submodelId;
+                                                });
+
+                                                if (smId) {
+                                                    return true;
+                                                }
+                                            }
+                                        }
+                                    });
+
+                                    if (aas) {
+                                        return await this.checkSmReference(reference, aasDescriptorList, aas);
+                                    }
+
+                                    return failResponse;
+
+                                    // return await this.checkSmReference(
+                                    //     reference,
+                                    //     aasDescriptorList,
+                                    //     currentAasDescriptor
+                                    // );
+                                }
+                                return failResponse;
+                            } catch {
+                                // handle error
+                                return failResponse;
+                            }
+                        }
+                        return checkResponse;
+                    } else {
+                        return failResponse;
                     }
                 }
+
                 return failResponse;
             } else {
                 return failResponse;
@@ -513,43 +560,16 @@ export default defineComponent({
 
             const failResponse = { success: false, aasDescriptor: {}, submodelRef: {} }; // Define once for reuse
 
+            // Todo checkSmReference for ExternalReference
             if (smReference.type === 'ExternalReference') {
-                // Check ExternalReference
-                const promises = aasDescriptorList.map(async (aasDescriptor: any) => {
-                    const aasEndpoint = this.extractEndpointHref(aasDescriptor, 'AAS-3.0');
-                    const aasRepoPath = aasEndpoint + '/submodel-refs';
-                    const aasRepoContext = 'retrieving Submodel References';
-                    const disableMessage = false;
-
-                    const aasRepoResponse = await this.getRequest(aasRepoPath, aasRepoContext, disableMessage);
-                    if (aasRepoResponse.success) {
-                        const submodelRefList = aasRepoResponse.data.result;
-                        let foundSubmodelRef = {};
-                        if (smReference?.keys[0]?.type === 'Submodel') {
-                            foundSubmodelRef = submodelRefList.find(
-                                (submodelRef: any) => submodelRef.keys[0].value == smReference.keys[0].value
-                            );
-                        } else if (
-                            smReference?.keys[0]?.type === 'AssetAdministrationShell' &&
-                            smReference?.keys[0].value === aasDescriptor?.id &&
-                            smReference?.keys[1]?.type === 'Submodel'
-                        ) {
-                            foundSubmodelRef = submodelRefList.find(
-                                (submodelRef: any) => submodelRef.keys[0].value == smReference.keys[1].value
-                            );
-                        }
-                        if (Object.keys(foundSubmodelRef).length > 0) {
-                            return { success: true, aasDescriptor: aasDescriptor, submodelRef: foundSubmodelRef };
-                        }
-                    }
-                    return null; // null signifies that this particular iteration didn't find what it was looking for
-                });
-
-                const results = await Promise.all(promises);
-                const result = results.find((result) => result !== null);
-
-                if (result) return result; // One of the ieterations was successful
-                return { success: false, aasDescriptor: {}, submodelRef: {} }; // None of the iterations were successful
+                this.navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 10000,
+                    color: 'warning',
+                    btnColor: 'buttonText',
+                    text: 'Reference check for ExternalReference not implemented',
+                }); // Show Error Snackbar
+                return failResponse;
             } else if (smReference.type === 'ModelReference') {
                 // Check ModelReference
                 let aasDescriptor = {};
@@ -576,11 +596,6 @@ export default defineComponent({
                         if (aasRepoResponse.success) {
                             const submodelRefList = aasRepoResponse.data.result;
                             let foundSubmodelRef = {};
-                            // if (
-                            //     smReference?.keys[0]?.type === 'AssetAdministrationShell' &&
-                            //     smReference?.keys[0].value === aasDescriptor?.id &&
-                            //     smReference?.keys[1]?.type === 'Submodel'
-                            // ) {
                             foundSubmodelRef = submodelRefList.find(
                                 (submodelRef: any) => submodelRef.keys[0].value == smReference.keys[1].value
                             );
@@ -774,7 +789,7 @@ export default defineComponent({
             }
 
             promise
-                .then(() => {
+                .then(async () => {
                     // console.log('jumpToSubmodelElement()', 'aasEndPoint', aasEndpoint, 'smRepoUrl', smRepoUrl);
                     // check if mobile device
                     if (this.navigationStore.getIsMobile) {
@@ -784,7 +799,7 @@ export default defineComponent({
                         this.router.push({ query: { aas: aasEndpoint, path: smRepoUrl } });
                     }
                     // dispatch the AAS set by the ReferenceElement to the store
-                    this.fetchAndDispatchAas(aasEndpoint);
+                    await this.fetchAndDispatchAas(aasEndpoint);
                     this.navigationStore.dispatchTriggerAASListScroll();
                     // Request the referenced SubmodelElement
                     const elementPath = smRepoUrl;
@@ -792,13 +807,11 @@ export default defineComponent({
                     const disableMessage = true;
                     this.getRequest(elementPath, context, disableMessage).then((response: any) => {
                         if (response.success) {
-                            // execute if the Request was successful
-                            response.data.timestamp = this.formatDate(new Date()); // add timestamp to the SubmodelElement Data
-                            response.data.path = smRepoUrl; // add the path to the SubmodelElement Data
-                            response.data.isActive = true; // add the isActive Property to the SubmodelElement Data
-                            // console.log('SubmodelElement Data: ', response.data)
-                            // dispatch the SubmodelElementPath set by the URL to the store
-                            this.aasStore.dispatchNode(response.data); // set the updatedNode in the AASStore
+                            const node = response.data;
+                            node.timestamp = this.formatDate(new Date()); // add timestamp to the SubmodelElement Data
+                            node.path = smRepoUrl; // add the path to the SubmodelElement Data
+                            node.isActive = true; // add the isActive Property to the SubmodelElement Data
+                            this.aasStore.dispatchNode(node); // set the updatedNode in the AASStore
                             this.aasStore.dispatchInitTreeByReferenceElement(true); // set the initTreeByReferenceElement in the AASStore to true to init + expand the Treeview on the referenced Element
                         } else {
                             // execute if the Request failed
