@@ -161,8 +161,8 @@ export default defineComponent({
                 // console.log(this.SelectedAAS)
                 return this.SelectedAAS;
             } else {
-                const shellHref = this.extractEndpointHref(this.SelectedAAS, 'AAS-3.0');
-                const path = shellHref;
+                const aasEndpopint = this.extractEndpointHref(this.SelectedAAS, 'AAS-3.0');
+                const path = aasEndpopint;
                 const context = 'getting aas from endpoint';
                 const disableMessage = false;
                 const response = await this.getRequest(path, context, disableMessage);

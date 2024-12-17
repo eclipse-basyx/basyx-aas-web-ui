@@ -20,16 +20,8 @@
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-
-    interface AASType {
-        endpoints: Array<{
-            protocolInformation: {
-                href: string;
-            };
-            interface: string;
-        }>;
-    }
 
     export default defineComponent({
         name: 'App',
@@ -46,16 +38,18 @@
             const aasStore = useAASStore();
             const route = useRoute();
             const router = useRouter();
+            const envStore = useEnvStore();
 
             return {
                 navigationStore, // NavigationStore Object
                 aasStore, // AASStore Object
                 route, // Route Object
                 router, // Router Object
+                envStore, // EnvironmentStore Object
             };
         },
 
-        mounted() {
+        async mounted() {
             let mobile = this.$vuetify.display.mobile;
             // include IPad as mobile device
             if (this.$vuetify.display.platform.mac && this.$vuetify.display.platform.touch) {
@@ -75,6 +69,20 @@
             const searchParams = new URL(window.location.href).searchParams;
             const aasEndpoint = searchParams.get('aas');
             const submodelElementPath = searchParams.get('path');
+
+            // Ensure available aasEndpoint query parameter
+            if (
+                this.envStore.singleAas &&
+                (aasEndpoint === null || aasEndpoint === undefined || aasEndpoint.trim() === '')
+            ) {
+                if (this.envStore.getSingleAasRedirect) {
+                    window.location.replace(this.envStore.getSingleAasRedirect);
+                    return;
+                } else if (this.route.name !== '404NotFound404') {
+                    this.router.push({ name: 'NotFound404' });
+                    return;
+                }
+            }
 
             // check which platform is used and change the fitting view
             if (mobile) {
@@ -117,12 +125,7 @@
 
             if (aasEndpoint) {
                 // console.log('AAS Query is set: ', aasEndpoint);
-                let aas = {} as AASType;
-                let endpoints = [];
-                endpoints.push({ protocolInformation: { href: aasEndpoint }, interface: 'AAS-3.0' });
-                aas.endpoints = endpoints;
-                // dispatch the AAS set by the URL to the store
-                this.aasStore.dispatchSelectedAAS(aas);
+                await this.fetchAndDispatchAas(aasEndpoint);
             }
 
             if (aasEndpoint && submodelElementPath) {
@@ -142,7 +145,7 @@
                         this.aasStore.dispatchNode(response.data); // set the updatedNode in the AASStore
                     } else {
                         // execute if the Request failed
-                        if (Object.keys(response.data).length == 0) {
+                        if (response?.data && Object.keys(response?.data).length === 0) {
                             // don't copy the static SubmodelElement Data if no Node is selected or Node is invalid
                             this.navigationStore.dispatchSnackbar({
                                 status: true,

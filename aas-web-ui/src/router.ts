@@ -6,6 +6,7 @@ import ComponentVisualization from '@/components/ComponentVisualization.vue';
 import Dashboard from '@/components/Dashboard/Dashboard.vue';
 import DashboardGroup from '@/components/Dashboard/DashboardGroup.vue';
 import MainWindow from '@/components/MainWindow.vue';
+import Page404 from '@/components/Page404.vue';
 import SubmodelList from '@/components/SubmodelList.vue';
 
 const routes = [
@@ -15,6 +16,7 @@ const routes = [
     { path: '/componentvisualization', name: 'ComponentVisualization', component: ComponentVisualization },
     { path: '/aasviewer', name: 'AASViewer', component: AASViewer },
     { path: '/about', name: 'About', component: About },
+    { path: '/404', name: 'NotFound404', component: Page404 },
     { path: '/dashboard', name: 'Dashboard', component: Dashboard },
     { path: '/dashboard-group', name: 'DashboardGroup', component: DashboardGroup },
     { path: '/:pathMatch(.*)*', name: 'NotFound', component: MainWindow },

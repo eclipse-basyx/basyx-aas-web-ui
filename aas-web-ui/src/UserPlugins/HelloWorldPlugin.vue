@@ -65,7 +65,7 @@
         methods: {
             // Function to initialize the HelloWorld-Plugin
             initializePlugin() {
-                if (Object.keys(this.submodelElementData).length == 0) {
+                if (Object.keys(this.submodelElementData).length === 0) {
                     this.pluginData = {}; // Reset the Plugin Data when no Node is selected
                     return;
                 }

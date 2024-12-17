@@ -78,6 +78,14 @@ if [ -n "$ENDPOINT_CONFIG_AVAILABLE" ]; then
     jq '.endpointConfigAvailable = env.ENDPOINT_CONFIG_AVAILABLE' /usr/src/app/dist/config.json > /tmp/config.json && mv /tmp/config.json /usr/src/app/dist/config.json
 fi
 
+if [ -n "$SINGLE_AAS" ]; then
+    jq '.singleAas = env.SINGLE_AAS' /usr/src/app/dist/config.json > /tmp/config.json && mv /tmp/config.json /usr/src/app/dist/config.json
+fi
+
+if [ -n "$SINGLE_AAS_REDIRECT" ]; then
+    jq '.singleAasRedirect = env.SINGLE_AAS_REDIRECT' /usr/src/app/dist/config.json > /tmp/config.json && mv /tmp/config.json /usr/src/app/dist/config.json
+fi
+
 if [ -n "$BASE_PATH" ]; then
     echo "====================="
     echo "BASE_PATH: $BASE_PATH"

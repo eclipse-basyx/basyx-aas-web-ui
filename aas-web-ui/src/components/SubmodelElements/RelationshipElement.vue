@@ -3,35 +3,34 @@
         <div v-for="(referenceKey, j) in referenceKeys" :key="j">
             <v-list-item class="px-1 pb-1 pt-0">
                 <v-list-item-title class="text-subtitle-2 mt-2">{{
-                    capitalizeFirstLetter(referenceKey) + ': '
+                    capitalizeFirstLetter(referenceKey) +
+                    ' (' +
+                    getReferences[referenceKey as 'first' | 'second'].type +
+                    '): '
                 }}</v-list-item-title>
             </v-list-item>
             <v-card v-if="relationshipElementObject" color="elevatedCard">
                 <!-- Value of the Property -->
                 <v-list nav class="bg-elevatedCard pt-0">
-                    <template v-for="(value, i) in getReference[referenceKey as 'first' | 'second']" :key="i">
+                    <template v-for="(keys, i) in getReferences[referenceKey as 'first' | 'second'].keys" :key="i">
                         <v-list-item>
                             <!-- Tooltip with Reference ID -->
                             <v-tooltip activator="parent" open-delay="600" transition="slide-x-transition">
                                 <div class="text-caption">
-                                    <span class="font-weight-bold">{{ '(' + value.type + ') ' }}</span
-                                    >{{ value.value }}
+                                    <span class="font-weight-bold">{{ '(' + keys.type + ') ' }}</span
+                                    >{{ keys.value }}
                                 </div>
                             </v-tooltip>
-                            <!-- Reference Title -->
-                            <template #title>
-                                <div class="text-subtitle-2 mt-2">Description:</div>
-                            </template>
                             <!-- Reference Representation -->
                             <template #subtitle>
                                 <div class="pt-2">
-                                    <v-chip label size="x-small" border class="mr-2">{{ value.type }}</v-chip>
-                                    <span>{{ value.value }}</span>
+                                    <v-chip label size="x-small" border class="mr-2">{{ keys.type }}</v-chip>
+                                    <span>{{ keys.value }}</span>
                                 </div>
                             </template>
                         </v-list-item>
                         <v-divider
-                            v-if="i < getReference[referenceKey as 'first' | 'second'].length - 1"
+                            v-if="i < getReferences[referenceKey as 'first' | 'second'].keys.length - 1"
                             class="mt-3"></v-divider>
                     </template>
                 </v-list>
@@ -48,10 +47,10 @@
                                 :loading="getLoadingState[referenceKey as 'first' | 'second']"
                                 :disabled="getDisabledState[referenceKey as 'first' | 'second']"
                                 @click="
-                                    jumpToReferencedElement(
-                                        getReferencedAAS[referenceKey as 'first' | 'second'],
-                                        getReference[referenceKey as 'first' | 'second'],
-                                        getReferencedSubmodel[referenceKey as 'first' | 'second']
+                                    jumpToReference(
+                                        getReferences[referenceKey as 'first' | 'second'],
+                                        getAasDescriptor[referenceKey as 'first' | 'second'],
+                                        getSmRef[referenceKey as 'first' | 'second']
                                     )
                                 "
                                 >Jump</v-btn
@@ -93,27 +92,26 @@
         data() {
             return {
                 referenceKeys: ['first', 'second'], // Keys of the References
-                firstReference: [] as Array<any>, // Value of the first Reference (Array of Reference Keys)
-                secondReference: [] as Array<any>, // Value of the second Reference (Array of Reference Keys)
+                firstReference: {} as any,
+                secondReference: {} as any,
+                // firstReferenceKeys: [] as Array<any>, // Value of the first Reference (Array of Reference Keys)
+                // secondReferenceKeys: [] as Array<any>, // Value of the second Reference (Array of Reference Keys)
+                // firstReferenceType: '' as string,
+                // secondReferenceType: '' as string,
                 firstLoading: false, // Loading State of the first Jump-Button (loading when checking if referenced element exists in one of the registered AAS)
                 secondLoading: false, // Loading State of the second Jump-Button (loading when checking if referenced element exists in one of the registered AAS)
                 firstDisabled: true, // Disabled State of the first Jump-Button (disabled when referenced element does not exist in one of the registered AAS)
                 secondDisabled: true, // Disabled State of the second Jump-Button (disabled when referenced element does not exist in one of the registered AAS)
-                firstReferencedAAS: Object as any, // first AAS in which the referenced Element is included (if it exists)
-                secondReferencedAAS: Object as any, // second AAS in which the referenced Element is included (if it exists)
-                firstReferencedSubmodel: Object as any, // first Submodel in which the referenced Element is included (if it exists)
-                secondReferencedSubmodel: Object as any, // second Submodel in which the referenced Element is included (if it exists)
+                firstAasDescriptor: Object as any, // first AAS in which the referenced Element is included (if it exists)
+                secondAasDescriptor: Object as any, // second AAS in which the referenced Element is included (if it exists)
+                firstSmRef: Object as any, // first Submodel in which the referenced Element is included (if it exists)
+                secondSmRef: Object as any, // second Submodel in which the referenced Element is included (if it exists)
             };
         },
 
         computed: {
-            // Get the selected Treeview Node (SubmodelElement) from the store
-            SelectedNode() {
-                return this.aasStore.getSelectedNode;
-            },
-
             // Get the referenceObject based on the referenceKey
-            getReference() {
+            getReferences() {
                 return {
                     first: this.firstReference,
                     second: this.secondReference,
@@ -121,18 +119,18 @@
             },
 
             // Get the referencedAAS based on the referenceKey
-            getReferencedAAS() {
+            getAasDescriptor() {
                 return {
-                    first: this.firstReferencedAAS,
-                    second: this.secondReferencedAAS,
+                    first: this.firstAasDescriptor,
+                    second: this.secondAasDescriptor,
                 };
             },
 
             // Get the referencedSubmodel based on the referenceKey
-            getReferencedSubmodel() {
+            getSmRef() {
                 return {
-                    first: this.firstReferencedSubmodel,
-                    second: this.secondReferencedSubmodel,
+                    first: this.firstSmRef,
+                    second: this.secondSmRef,
                 };
             },
 
@@ -154,21 +152,12 @@
         },
 
         watch: {
-            // Watch for changes in the selected Node and reset input
-            SelectedNode: {
+            // Watch for changes in the relationshipElementObject
+            relationshipElementObject: {
                 deep: true,
                 handler() {
-                    this.firstReference = [];
-                    this.secondReference = [];
-                },
-            },
-
-            // Watch for changes in the referenceElementObject
-            referenceElementObject: {
-                deep: true,
-                handler() {
-                    this.firstReference = this.relationshipElementObject.first.keys;
-                    this.secondReference = this.relationshipElementObject.second.keys;
+                    this.firstReference = this.relationshipElementObject.first;
+                    this.secondReference = this.relationshipElementObject.second;
                     this.validateReference('first');
                     this.validateReference('second');
                 },
@@ -176,31 +165,36 @@
         },
 
         mounted() {
-            // console.log('RelationshipElement Mounted:', this.relationshipElementObject);
-            this.firstReference = this.relationshipElementObject.first.keys;
-            this.secondReference = this.relationshipElementObject.second.keys;
+            this.firstReference = this.relationshipElementObject.first;
+            this.secondReference = this.relationshipElementObject.second;
             this.validateReference('first');
             this.validateReference('second');
         },
 
         methods: {
             // Function to check if the referenced Element exists
-            validateReference(reference: string) {
-                (this as any)[reference + 'Loading'] = true;
-                this.checkReference((this as any)[reference + 'Reference'])
-                    .then(({ success, aas, submodel }) => {
-                        // console.log('checkReference: ', success, aas, submodel);
+            validateReference(referenceKey: string) {
+                (this as any)[referenceKey + 'Loading'] = true;
+
+                this.checkReference((this as any)[referenceKey + 'Reference'], this.selectedAAS)
+                    .then(({ success, aasDescriptor, submodelRef }) => {
+                        // console.log(
+                        //     'validateReference (' + referenceKey + ') --> checkReference: ',
+                        //     success,
+                        //     aasDescriptor,
+                        //     submodelRef
+                        // );
                         if (success) {
-                            (this as any)[reference + 'ReferencedAAS'] = aas;
-                            (this as any)[reference + 'ReferencedSubmodel'] = submodel;
-                            (this as any)[reference + 'Disabled'] = false;
+                            (this as any)[referenceKey + 'AasDescriptor'] = aasDescriptor;
+                            (this as any)[referenceKey + 'SmRef'] = submodelRef;
+                            (this as any)[referenceKey + 'Disabled'] = false;
                         }
-                        (this as any)[reference + 'Loading'] = false;
+                        (this as any)[referenceKey + 'Loading'] = false;
                     })
                     .catch((error) => {
                         // Handle any errors
                         console.error('Error:', error);
-                        (this as any)[reference + 'Loading'] = false;
+                        (this as any)[referenceKey + 'Loading'] = false;
                     });
             },
         },

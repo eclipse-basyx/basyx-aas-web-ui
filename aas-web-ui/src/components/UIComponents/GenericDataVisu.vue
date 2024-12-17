@@ -133,7 +133,7 @@
                 if (!this.submodelElementData) return;
 
                 // console.log('SubmodelElementData: ', this.submodelElementData)
-                if (Object.keys(this.submodelElementData).length == 0) {
+                if (Object.keys(this.submodelElementData).length === 0) {
                     this.localSubmodelElementData = []; // Reset the SubmodelElement Data when no Node is selected
                     return;
                 }

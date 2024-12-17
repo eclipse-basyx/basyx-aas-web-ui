@@ -353,7 +353,7 @@
             initializeView(withConceptDescriptions = false) {
                 // console.log('Selected Node: ', this.SelectedNode);
                 // Check if a Node is selected
-                if (Object.keys(this.SelectedNode).length == 0) {
+                if (Object.keys(this.SelectedNode).length === 0) {
                     this.submodelElementData = {}; // Reset the SubmodelElement Data when no Node is selected
                     return;
                 }
@@ -374,7 +374,7 @@
                         // execute if the Request failed
                         // show the static SubmodelElement Data from the store if the Request failed (the timestamp should show that the data is outdated)
                         this.submodelElementData = {}; // Reset the SubmodelElement Data when Node couldn't be retrieved
-                        if (Object.keys(this.SelectedNode).length == 0) {
+                        if (Object.keys(this.SelectedNode).length === 0) {
                             // don't copy the static SubmodelElement Data if no Node is selected or Node is invalid
                             this.navigationStore.dispatchSnackbar({
                                 status: true,
@@ -404,10 +404,10 @@
             getCD() {
                 // Check if a Node is selected
                 if (
-                    Object.keys(this.SelectedNode).length == 0 ||
+                    Object.keys(this.SelectedNode).length === 0 ||
                     !this.SelectedNode.semanticId ||
                     !this.SelectedNode.semanticId.keys ||
-                    this.SelectedNode.semanticId.keys.length == 0
+                    this.SelectedNode.semanticId.keys.length === 0
                 ) {
                     this.conceptDescriptions = {}; // Reset the SubmodelElement Data when no Node is selected
                     return;

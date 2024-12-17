@@ -9,14 +9,14 @@
                 }}</v-chip>
             </v-list-item-title>
         </v-list-item>
-        <v-divider v-if="entityObject.globalAssetId"></v-divider>
+        <v-divider v-if="entityObject?.globalAssetId"></v-divider>
         <!-- globalAssetId -->
-        <v-list-item v-if="entityObject.globalAssetId" class="px-1 pb-1 py-2 mb-3">
-            <template #title>
-                <div class="text-subtitle-2 mt-2">{{ 'Global Asset ID: ' }}</div>
-            </template>
-            <template #subtitle>
-                <div class="pt-2">
+        <v-hover v-slot="{ isHovering, props }">
+            <v-list-item v-if="entityObject?.globalAssetId" class="px-1 pb-1 py-2 mb-3">
+                <template #title>
+                    <div class="text-subtitle-2 mt-2">{{ 'Global Asset ID: ' }}</div>
+                </template>
+                <template #append>
                     <v-btn
                         size="small"
                         class="mr-2 text-buttonText"
@@ -26,10 +26,21 @@
                         @click="jump(entityObject.globalAssetId)"
                         >Jump</v-btn
                     >
-                    <span>{{ entityObject.globalAssetId }}</span>
-                </div>
-            </template>
-        </v-list-item>
+                </template>
+                <template #subtitle>
+                    <div
+                        v-if="entityObject.globalAssetId"
+                        v-bind="props"
+                        :class="isHovering ? 'cursor-pointer' : ''"
+                        @click="copyToClipboard()">
+                        <v-icon v-if="isHovering" color="subtitleText" size="x-small" class="mr-1">{{
+                            copyIcon
+                        }}</v-icon>
+                        <span>{{ entityObject.globalAssetId ? entityObject.globalAssetId : '' }}</span>
+                    </div>
+                </template>
+            </v-list-item>
+        </v-hover>
         <v-divider v-if="entityObject.specificAssetIds && entityObject.specificAssetIds.length > 0"></v-divider>
         <!-- specificAssetIds -->
         <v-list-item
@@ -98,7 +109,8 @@
             return {
                 disabledStates: {} as any,
                 loadingStates: {} as any,
-                shellDescriptors: {} as any,
+                aasDescriptors: {} as any,
+                copyIcon: 'mdi-clipboard-file-outline',
             };
         },
 
@@ -118,6 +130,7 @@
 
         methods: {
             isDisabled(assetId: string): boolean {
+                if (this.entityObject?.entityType && this.entityObject?.entityType === 'CoManagedEntity') return true;
                 return this.disabledStates[assetId] || false;
             },
 
@@ -126,13 +139,14 @@
             },
 
             checkAndSetDisabledState(assetId: string) {
+                if (this.entityObject.entityType === 'CoManagedEntity') return;
                 this.loadingStates[assetId] = true;
                 this.checkAssetId(assetId)
-                    .then(({ success, aas }) => {
+                    .then(({ success, aasDescriptor }: { success: boolean; aasDescriptor?: any }) => {
                         this.loadingStates[assetId] = false;
                         if (success) {
                             this.disabledStates[assetId] = false;
-                            this.shellDescriptors[assetId] = aas;
+                            this.aasDescriptors[assetId] = aasDescriptor;
                         } else {
                             this.disabledStates[assetId] = true;
                         }
@@ -145,8 +159,30 @@
 
             jump(assetId: string) {
                 // console.log('Jump to AAS with assetId: ', assetId);
-                let aas = this.shellDescriptors[assetId];
-                this.jumpToReferencedElement(aas, []);
+                let aasDescriptor = this.aasDescriptors[assetId];
+                this.jumpToAasByAasDescriptor(aasDescriptor);
+            },
+
+            // Function to copy the id to the clipboard
+            copyToClipboard() {
+                if (!this.entityObject || !this.entityObject.globalAssetId) return;
+                // console.log('Copy ID to Clipboard: ', this.identificationObject.id);
+                // set the icon to checkmark
+                this.copyIcon = 'mdi-check';
+                // copy the path to the clipboard
+                navigator.clipboard.writeText(this.entityObject.globalAssetId);
+                // set the clipboard tooltip to false after 1.5 seconds
+                setTimeout(() => {
+                    this.copyIcon = 'mdi-clipboard-file-outline';
+                }, 2000);
+                // open Snackbar to inform the user that the path was copied to the clipboard
+                this.navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 2000,
+                    color: 'success',
+                    btnColor: 'buttonText',
+                    text: 'ID copied to Clipboard.',
+                });
             },
         },
     });
