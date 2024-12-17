@@ -177,7 +177,7 @@
                     .then(({ success, aasDescriptor }: { success: boolean; aasDescriptor?: any }) => {
                         if (success) {
                             // console.log('AAS:', aas);
-                            this.jumpToAas(aasDescriptor);
+                            this.jumpToAasByAasDescriptor(aasDescriptor);
                         } else {
                             this.navigationStore.dispatchSnackbar({
                                 status: true,

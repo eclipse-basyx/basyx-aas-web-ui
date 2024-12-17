@@ -49,7 +49,7 @@
             };
         },
 
-        mounted() {
+        async mounted() {
             let mobile = this.$vuetify.display.mobile;
             // include IPad as mobile device
             if (this.$vuetify.display.platform.mac && this.$vuetify.display.platform.touch) {
@@ -75,7 +75,6 @@
                 this.envStore.singleAas &&
                 (aasEndpoint === null || aasEndpoint === undefined || aasEndpoint.trim() === '')
             ) {
-                console.log('foobar', this.envStore.getSingleAasRedirect);
                 if (this.envStore.getSingleAasRedirect) {
                     window.location.replace(this.envStore.getSingleAasRedirect);
                     return;
@@ -126,7 +125,7 @@
 
             if (aasEndpoint) {
                 // console.log('AAS Query is set: ', aasEndpoint);
-                this.loadAndDispatchAas(aasEndpoint);
+                await this.fetchAndDispatchAas(aasEndpoint);
             }
 
             if (aasEndpoint && submodelElementPath) {
@@ -146,7 +145,7 @@
                         this.aasStore.dispatchNode(response.data); // set the updatedNode in the AASStore
                     } else {
                         // execute if the Request failed
-                        if (response?.data && Object.keys(response?.data).length == 0) {
+                        if (response?.data && Object.keys(response?.data).length === 0) {
                             // don't copy the static SubmodelElement Data if no Node is selected or Node is invalid
                             this.navigationStore.dispatchSnackbar({
                                 status: true,

@@ -456,7 +456,7 @@
                     // Add AAS Endpoint as Query to the Router
                     this.router.push({ query: { aas: aasEndpoint } });
                     // dispatch the selected AAS to the Store
-                    await this.loadAndDispatchAas(aasEndpoint);
+                    await this.fetchAndDispatchAas(aasEndpoint);
                     if (scrollToAasAfterDispatch) this.scrollToSelectedAAS();
                 }
             },

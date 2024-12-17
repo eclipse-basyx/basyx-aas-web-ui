@@ -160,7 +160,7 @@
             jump(assetId: string) {
                 // console.log('Jump to AAS with assetId: ', assetId);
                 let aasDescriptor = this.aasDescriptors[assetId];
-                this.jumpToAas(aasDescriptor);
+                this.jumpToAasByAasDescriptor(aasDescriptor);
             },
 
             // Function to copy the id to the clipboard
