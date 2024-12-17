@@ -1376,10 +1376,7 @@ export default defineComponent({
 
         // Get all ConceptDescriptions for the SubmodelElement from the ConceptDescription Repository
         async getConceptDescriptions(SelectedNode: any) {
-            let conceptDescriptionRepoUrl = '';
-            if (this.conceptDescriptionRepoUrl && this.conceptDescriptionRepoUrl != '') {
-                conceptDescriptionRepoUrl = this.conceptDescriptionRepoUrl;
-            } else {
+            if (!this.conceptDescriptionRepoUrl || this.conceptDescriptionRepoUrl === '') {
                 return Promise.resolve([]); // Return an empty object wrapped in a resolved promise
             }
 
@@ -1409,7 +1406,7 @@ export default defineComponent({
             );
 
             const cdPromises = semanticIdsUniqueToFetch.map((semanticId: string) => {
-                const path = conceptDescriptionRepoURL + '/' + this.URLEncode(semanticId);
+                const path = this.conceptDescriptionRepoUrl + '/' + this.URLEncode(semanticId);
                 const context = 'retrieving ConceptDescriptions';
                 const disableMessage = true;
 
