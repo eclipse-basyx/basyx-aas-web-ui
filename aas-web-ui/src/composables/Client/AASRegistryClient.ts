@@ -12,8 +12,6 @@ export function useAASRegistryClient() {
 
     // Fetch List of all available AAS Descriptors
     async function fetchAasDescriptorList(): Promise<Array<any>> {
-        // console.log('fetchAasDescriptorList()');
-
         const failResponse = [] as Array<any>;
 
         let aasRegUrl = aasRegistryUrl.value;
@@ -44,8 +42,6 @@ export function useAASRegistryClient() {
 
     // Fetch AAS Descriptor by AAS ID with AAS Registry
     async function fetchAasDescriptorById(aasId: string): Promise<any> {
-        // console.log('fetchAasDescriptorById()', aasId);
-
         const failResponse = {} as any;
 
         let aasRegUrl = aasRegistryUrl.value;

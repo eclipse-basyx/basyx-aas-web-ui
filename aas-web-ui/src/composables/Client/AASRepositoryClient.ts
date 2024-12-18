@@ -16,8 +16,6 @@ export function useAASRepositoryClient() {
 
     // Fetch List of all available AAS
     async function fetchAasList(): Promise<Array<any>> {
-        // console.log('fetchAasList()');
-
         const failResponse = [] as Array<any>;
 
         let aasRepoUrl = aasRepositoryUrl.value;
@@ -43,7 +41,6 @@ export function useAASRepositoryClient() {
 
     // Fetch AAS from AAS Repo (with the help of the AAS Registry)
     async function fetchAasById(aasId: string): Promise<any> {
-        // console.log('fetchAasById()', aasId);
         const failResponse = {} as any;
 
         if (aasId.trim() === '') return failResponse;
@@ -88,7 +85,6 @@ export function useAASRepositoryClient() {
 
     // Fetch and Dispatch AAS from (AAS Repo) Endpoint
     async function fetchAndDispatchAas(aasEndpoint: string) {
-        // console.log('fetchAndDispatchAas()', aasEndpoint);
         if (aasEndpoint.trim() === '') return;
 
         const aas = await fetchAas(aasEndpoint);
