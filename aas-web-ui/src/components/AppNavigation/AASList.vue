@@ -55,7 +55,7 @@
                           ? 'calc(50vh - 64px - 40px - 2px - 1px)' // Half height - header - footer - 2x divider - border
                           : 'calc(100vh - 64px - 64px - 48px - 40px - 2px)', // Full height - header - title - collapse button - footer - 2x divider
                 }">
-                <v-virtual-scroll ref="virtualScroll" :items="AASData" :item-height="56" class="pb-2 bg-card">
+                <v-virtual-scroll ref="virtualScrollRef" :items="AASData" :item-height="56" class="pb-2 bg-card">
                     <template #default="{ item }">
                         <!-- Single AAS -->
                         <v-list-item
@@ -162,490 +162,407 @@
     </v-dialog>
 </template>
 
-<script lang="ts">
-    import { defineComponent } from 'vue';
+<script lang="ts" setup>
+    import type { ComponentPublicInstance } from 'vue';
+    import { computed, onActivated, onMounted, Ref, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
-    import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import AASListDetails from '@/components/AppNavigation/AASListDetails.vue';
+    import UploadAAS from '@/components/AppNavigation/UploadAAS.vue';
+    import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
+    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import AASListDetails from './AASListDetails.vue';
-    import UploadAAS from './UploadAAS.vue';
+    import { extractEndpointHref } from '@/utils/DescriptorUtils';
+    import { URLEncode } from '@/utils/EncodeDecodeUtils';
+    import { downloadFile, nameToDisplay } from '@/utils/generalUtils';
 
-    export default defineComponent({
-        name: 'AASList',
-        components: {
-            AASListDetails, // AAS Details Component
-            UploadAAS, // Upload AAS Component
-        },
-        mixins: [RequestHandling, SubmodelElementHandling],
+    // Extend the ComponentPublicInstance type to include scrollToIndex
+    interface VirtualScrollInstance extends ComponentPublicInstance {
+        scrollToIndex: (index: number) => void;
+    }
 
-        setup() {
-            const theme = useTheme();
-            const navigationStore = useNavigationStore();
-            const aasStore = useAASStore();
-            const envStore = useEnvStore();
-            const route = useRoute();
-            const router = useRouter();
+    // Vue Router
+    const route = useRoute();
+    const router = useRouter();
 
-            return {
-                theme, // Theme Object
-                navigationStore, // NavigationStore Object
-                aasStore, // AASStore Object
-                envStore, // EnvironmentStore Object
-                route, // Route Object
-                router, // Router Object
-            };
-        },
+    // composables
+    const { getRequest, deleteRequest } = useRequestHandling();
+    const { fetchAndDispatchAas } = useAASRepositoryClient();
 
-        data() {
-            return {
-                AASData: [], // Variable to store the AAS Data
-                unfilteredAASData: [], // Variable to store the AAS Data before filtering
-                listLoading: false, // Variable to store if the AAS List is loading
-                deleteDialogShowing: false, // Variable to store if the Delete Dialog should be shown
-                deleteSubmodels: false, // Variable to store if the Submodels should be deleted
-                aasToDelete: {} as any, // Variable to store the AAS to be deleted
-                deleteLoading: false, // Variable to store if the AAS is being deleted
-            };
-        },
+    // Stores
+    const navigationStore = useNavigationStore();
+    const aasStore = useAASStore();
+    const envStore = useEnvStore();
 
-        computed: {
-            // Check if the current Device is a Mobile Device
-            isMobile() {
-                return this.navigationStore.getIsMobile;
-            },
+    // Vuetify
+    const theme = useTheme();
 
-            // Check if the current Theme is dark
-            isDark() {
-                return this.theme.global.current.value.dark;
-            },
+    // Data
+    const AASData = ref([]); // Variable to store the AAS Data
+    const unfilteredAASData = ref([]); // Variable to store the AAS Data before filtering
+    const listLoading = ref(false); // Variable to store if the AAS List is loading
+    const deleteDialogShowing = ref(false); // Variable to store if the Delete Dialog should be shown
+    const deleteSubmodels = ref(false); // Variable to store if the Submodels should be deleted
+    const aasToDelete = ref({}); // Variable to store the AAS to be deleted
+    const deleteLoading = ref(false); // Variable to store if the AAS is being deleted
+    const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null); // Reference to the Virtual Scroll Component
 
-            // get Drawer State from store
-            drawerState() {
-                // Computed Property to control the state of the Navigation Drawer (true -> collapsed, false -> extended)
-                return this.navigationStore.getDrawerState;
-            },
+    // Computed Properties
+    const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
+    const isDark = computed(() => theme.global.current.value.dark); // Check if the current Theme is dark
+    const drawerState = computed(() => navigationStore.getDrawerState); // Get Drawer State from store (true -> collapsed, false -> extended)
+    const aasRepoURL = computed(() => navigationStore.getAASRepoURL); // Get the AAS Repository URL from the Store
+    const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL); // Get AAS Registry URL from Store
+    const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL); // Get Submodel Registry URL from Store
+    const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
+    const loading = computed(() => aasStore.getLoadingState); // Get the loading State from Store
+    const primaryColor = computed(() => theme.current.value.colors.primary); // returns the primary color of the current theme
+    const statusCheck = computed(() => navigationStore.getStatusCheck); // Get the status-check state from the store
+    const triggerAASListReload = computed(() => navigationStore.getTriggerAASListReload); // Get the trigger signal for AAS List reload from store
+    const triggerAASListScroll = computed(() => navigationStore.getTriggerAASListScroll); // Get the trigger signal for AAS List scroll from store
+    const singleAas = computed(() => envStore.getSingleAas); // Get the single AAS state from the Store
 
-            // get AAS Registry URL from Store
-            aasRegistryURL() {
-                return this.navigationStore.getAASRegistryURL;
-            },
-
-            // get Submodel Registry URL from Store
-            submodelRegistryURL() {
-                return this.navigationStore.getSubmodelRegistryURL;
-            },
-
-            // get the selected AAS from Store
-            selectedAAS() {
-                return this.aasStore.getSelectedAAS;
-            },
-
-            // gets loading State from Store
-            loading() {
-                return this.aasStore.getLoadingState;
-            },
-
-            // returns the primary color of the current theme
-            primaryColor() {
-                if (this.isDark) {
-                    return this.$vuetify.theme.themes.dark.colors.primary;
-                } else {
-                    return this.$vuetify.theme.themes.light.colors.primary;
+    // Watchers
+    // Watch the AAS Registry URL for changes and reload the AAS List if the URL changes
+    watch(
+        () => aasRegistryURL.value,
+        (newValue) => {
+            if (newValue !== '') {
+                loadAASListData();
+                if (statusCheck.value) {
+                    addConnectionInterval();
                 }
-            },
-
-            // get the status-check state from the store
-            statusCheck() {
-                return this.navigationStore.getStatusCheck;
-            },
-
-            // get trigger signal for AAS List reload from store
-            triggerAASListReload() {
-                return this.navigationStore.getTriggerAASListReload;
-            },
-
-            // get trigger signal for AAS List scroll from store
-            triggerAASListScroll() {
-                return this.navigationStore.getTriggerAASListScroll;
-            },
-
-            // Get the AAS Repository URL from the Store
-            aasRepoURL() {
-                return this.navigationStore.getAASRepoURL;
-            },
-
-            singleAas() {
-                return this.envStore.getSingleAas;
-            },
-        },
-
-        watch: {
-            // Watch the AAS Registry URL for changes and reload the AAS List if the URL changes
-            aasRegistryURL() {
-                if (this.aasRegistryURL !== '') {
-                    this.loadAASListData();
-                    if (this.statusCheck) {
-                        this.addConnectionInterval();
-                    }
-                } else {
-                    this.AASData = [];
-                }
-            },
-
-            // watch for changes in the status-check state and add/remove the connection interval
-            statusCheck() {
-                if (this.statusCheck) {
-                    this.addConnectionInterval();
-                }
-            },
-
-            // watch for changes in the trigger for AAS List reload
-            triggerAASListReload(triggerVal) {
-                if (triggerVal === true) {
-                    this.loadAASListData();
-                    this.navigationStore.dispatchTriggerAASListReload(false);
-                }
-            },
-
-            // watch for changes in the trigger for AAS List scroll
-            triggerAASListScroll() {
-                this.scrollToSelectedAAS();
-            },
-        },
-
-        mounted() {
-            // Load the AAS List on Startup if the AAS Registry URL is set
-            if (this.aasRegistryURL !== '' && !this.singleAas) {
-                this.loadAASListData();
+            } else {
+                AASData.value = [];
             }
+        }
+    );
 
-            // check if the status-check is set in the local storage and if so set the status-check state in the store
-            const statusCheck = localStorage.getItem('statusCheck');
-            if (statusCheck) {
-                // console.log('Status Check is set: ', statusCheck);
-                this.navigationStore.dispatchUpdateStatusCheck(statusCheck === 'true');
+    // watch for changes in the status-check state and add/remove the connection interval
+    watch(
+        () => statusCheck.value,
+        (newValue) => {
+            if (newValue) {
+                addConnectionInterval();
             }
-        },
+        }
+    );
 
-        activated() {
-            this.scrollToSelectedAAS();
-        },
+    // watch for changes in the trigger for AAS List reload
+    watch(
+        () => triggerAASListReload.value,
+        (triggerVal) => {
+            if (triggerVal === true) {
+                loadAASListData();
+                navigationStore.dispatchTriggerAASListReload(false);
+            }
+        }
+    );
 
-        methods: {
-            // Function to collapse the Sidebar
-            collapseSidebar() {
-                this.navigationStore.dispatchDrawerState(false);
-            },
-            // Function to get the AAS Data from the Registry Server
-            loadAASListData() {
-                this.listLoading = true;
-                // check if aasRegistryURL includes "/shell-descriptors" and add id if not (backward compatibility)
-                if (!this.aasRegistryURL.includes('/shell-descriptors')) {
-                    this.aasRegistryURL += '/shell-descriptors';
-                }
-                let path = this.aasRegistryURL;
-                let context = 'retrieving AAS Data';
-                let disableMessage = false;
-                this.getRequest(path, context, disableMessage).then((response: any) => {
-                    if (response.success) {
-                        // execute if the AAS Registry is found
-                        // sort data by identification id (ascending) and store it in the AASData variable
-                        let registeredAAS = response.data.result;
-                        let sortedData = registeredAAS.sort((a: { [x: string]: number }, b: { [x: string]: number }) =>
-                            a['id'] > b['id'] ? 1 : -1
-                        );
+    // watch for changes in the trigger for AAS List scroll
+    watch(
+        () => triggerAASListScroll.value,
+        () => {
+            scrollToSelectedAAS();
+        }
+    );
 
-                        // add status online to the AAS Data
-                        sortedData.forEach((AAS: any) => {
-                            AAS['status'] = 'check disabled';
-                        });
-                        this.AASData = Object.freeze(sortedData); // store the sorted data in the AASData variable
-                        this.unfilteredAASData = sortedData; // make a copy of the sorted data and store it in the unfilteredAASData variable
-                        this.scrollToSelectedAAS(); // scroll to the selected AAS
-                        if (this.statusCheck) {
-                            this.checkAASStatus(); // check the AAS Status
-                        }
-                    } else {
-                        // execute if the AAS Registry Server is not found
-                        this.navigationStore.dispatchAASRegistryURL(''); // clear the URL in the NavigationStore
-                    }
-                    this.listLoading = false;
+    onMounted(() => {
+        // Load the AAS List on Startup if the AAS Registry URL is set
+        if (aasRegistryURL.value !== '' && !singleAas.value) {
+            loadAASListData();
+        }
+
+        // check if the status-check is set in the local storage and if so set the status-check state in the store
+        const statusCheck = localStorage.getItem('statusCheck');
+        if (statusCheck) {
+            navigationStore.dispatchUpdateStatusCheck(statusCheck === 'true');
+        }
+    });
+
+    onActivated(() => {
+        scrollToSelectedAAS();
+    });
+
+    function collapseSidebar() {
+        navigationStore.dispatchDrawerState(false);
+    }
+
+    // Function to get the AAS Data from the Registry Server
+    function loadAASListData() {
+        listLoading.value = true;
+
+        // check if aasRegistryURL includes "/shell-descriptors" and add id if not (backward compatibility)
+        let aasRegURL = aasRegistryURL.value;
+        if (!aasRegistryURL.value.includes('/shell-descriptors')) {
+            aasRegURL += '/shell-descriptors';
+        }
+
+        const path = aasRegURL;
+        const context = 'retrieving AAS Data';
+        const disableMessage = false;
+
+        getRequest(path, context, disableMessage).then((response: any) => {
+            if (response.success) {
+                // execute if the AAS Registry is found
+                // sort data by identification id (ascending) and store it in the AASData variable
+                let registeredAAS = response.data.result;
+                let sortedData = registeredAAS.sort((a: { [x: string]: number }, b: { [x: string]: number }) =>
+                    a['id'] > b['id'] ? 1 : -1
+                );
+
+                // add status online to the AAS Data
+                sortedData.forEach((AAS: any) => {
+                    AAS['status'] = 'check disabled';
                 });
-            },
+                AASData.value = Object.freeze(sortedData); // store the sorted data in the AASData variable
+                unfilteredAASData.value = sortedData; // make a copy of the sorted data and store it in the unfilteredAASData variable
+                scrollToSelectedAAS(); // scroll to the selected AAS
+                if (statusCheck.value) checkAASStatus(); // check the AAS Status
+            } else {
+                // execute if the AAS Registry Server is not found
+                navigationStore.dispatchAASRegistryURL(''); // clear the URL in the NavigationStore
+            }
+            listLoading.value = false;
+        });
+    }
 
-            // Function which adds an Interval to check if the Shells in the AAS Registry are still available
-            addConnectionInterval() {
-                // check if the AAS Registry URL is set
-                if (this.aasRegistryURL !== '') {
-                    // add an Interval to check if the Shells in the AAS Registry are still available
-                    setInterval(() => {
-                        // Check if the AAS is online
-                        this.checkAASStatus();
-                    }, 30000); // check every 60 seconds
+    // Function which adds an Interval to check if the Shells in the AAS Registry are still available
+    function addConnectionInterval() {
+        // check if the AAS Registry URL is set
+        if (aasRegistryURL.value !== '') {
+            // add an Interval to check if the Shells in the AAS Registry are still available
+            setInterval(() => {
+                // Check if the AAS is online
+                checkAASStatus();
+            }, 30000); // check every 60 seconds
+        }
+    }
+
+    // Function to check the AAS Status
+    function checkAASStatus() {
+        // console.log('Check AAS Status: ', AAS);
+        // iterate over all AAS in the AAS List
+        AASData.value.forEach((AAS: any) => {
+            const aasEndpopint = extractEndpointHref(AAS, 'AAS-3.0');
+            let path = aasEndpopint;
+            let context = 'evaluating AAS Status';
+            let disableMessage = true;
+            getRequest(path, context, disableMessage).then((response: any) => {
+                if (response.success) {
+                    // execute if the AAS Registry is found
+                    AAS.status = 'online';
+                } else {
+                    // execute if the AAS Registry is not found
+                    AAS.status = 'offline';
                 }
-            },
+            });
+        });
+    }
 
-            // Function to check the AAS Status
-            checkAASStatus() {
-                // console.log('Check AAS Status: ', AAS);
-                // iterate over all AAS in the AAS List
-                this.AASData.forEach((AAS: any) => {
-                    const aasEndpopint = this.extractEndpointHref(AAS, 'AAS-3.0');
-                    let path = aasEndpopint;
-                    let context = 'evaluating AAS Status';
-                    let disableMessage = true;
-                    this.getRequest(path, context, disableMessage).then((response: any) => {
-                        if (response.success) {
-                            // execute if the AAS Registry is found
-                            AAS.status = 'online';
-                        } else {
-                            // execute if the AAS Registry is not found
-                            AAS.status = 'offline';
-                        }
-                    });
+    // Function to filter the AAS List
+    function filterAASList(value: string) {
+        // console.log('Filter AAS List: ', value);
+        // if the Search Field is empty, show all AAS
+        if (value === '' || value === null) {
+            AASData.value = unfilteredAASData.value;
+        } else {
+            // filter the AAS List by the Search Field Value
+            let filteredAASData = unfilteredAASData.value.filter((AAS: { [x: string]: string }) =>
+                AAS['idShort'].toLowerCase().includes(value.toLowerCase())
+            );
+            AASData.value = filteredAASData;
+        }
+    }
+
+    // Function to select an AAS
+    async function selectAAS(AAS: any) {
+        // console.log('Select AAS: ', AAS);
+        // return if loading state is true -> prevents multiple requests
+        if (loading.value) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Please wait for the current Request to finish.',
+            });
+            return;
+        }
+        if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0 && selectedAAS.value.id === AAS.id) {
+            // Deselect AAS
+            router.push({ query: {} });
+            aasStore.dispatchSelectedAAS({});
+        } else {
+            let scrollToAasAfterDispatch = false;
+            if (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0) {
+                scrollToAasAfterDispatch = true;
+            }
+            // Select AAS
+            const aasEndpoint = extractEndpointHref(AAS, 'AAS-3.0');
+            // Add AAS Endpoint as Query to the Router
+            router.push({ query: { aas: aasEndpoint } });
+            // dispatch the selected AAS to the Store
+            await fetchAndDispatchAas(aasEndpoint);
+            if (scrollToAasAfterDispatch) scrollToSelectedAAS();
+        }
+    }
+
+    // checks if the AAS is selected
+    function isSelected(AAS: any) {
+        if (
+            selectedAAS.value === undefined ||
+            selectedAAS.value === null ||
+            Object.keys(selectedAAS.value).length === 0
+        ) {
+            return false;
+        }
+        const aasEndpointFromList = extractEndpointHref(AAS, 'AAS-3.0');
+        const aasEndpointSelected = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
+        let isSelected = aasEndpointFromList === aasEndpointSelected;
+        return isSelected;
+    }
+
+    // Function to scroll to the selected AAS
+    async function scrollToSelectedAAS() {
+        // Find the index of the selected item
+        const index = AASData.value.findIndex((item: any) => isSelected(item));
+
+        if (index !== -1) {
+            const intervalId = setInterval(() => {
+                if (
+                    virtualScrollRef.value &&
+                    virtualScrollRef.value?.$el.querySelector('.v-virtual-scroll__container').children.length > 0
+                ) {
+                    // Access the scrollable container
+                    virtualScrollRef.value.scrollToIndex(index);
+                    clearInterval(intervalId);
+                }
+            }, 50);
+        }
+    }
+
+    // Function to download the AAS
+    function downloadAAS(AAS: any) {
+        // console.log('Download AAS: ', AAS);
+        // request the Submodel references for the AAS
+        const aasEndpopint = extractEndpointHref(AAS, 'AAS-3.0');
+        let path = aasEndpopint + '/submodel-refs';
+        let context = 'retrieving Submodel References';
+        let disableMessage = false;
+        getRequest(path, context, disableMessage).then(async (response: any) => {
+            if (response.success) {
+                // execute if the Request was successful
+                const submodelRefs = response.data.result;
+                const aasIds = URLEncode(AAS.id);
+                // extract all references in an Array calles submodelIds from each keys[0].value
+                let submodelIds = [] as any;
+                submodelRefs.forEach((submodelRef: any) => {
+                    submodelIds.push(URLEncode(submodelRef.keys[0].value));
                 });
-            },
-
-            // Function to filter the AAS List
-            filterAASList(value: string) {
-                // console.log('Filter AAS List: ', value);
-                // if the Search Field is empty, show all AAS
-                if (value === '' || value === null) {
-                    this.AASData = this.unfilteredAASData;
-                } else {
-                    // filter the AAS List by the Search Field Value
-                    let filteredAASData = this.unfilteredAASData.filter((AAS: { [x: string]: string }) =>
-                        AAS['idShort'].toLowerCase().includes(value.toLowerCase())
-                    );
-                    this.AASData = filteredAASData;
-                }
-            },
-
-            // Function to select an AAS
-            async selectAAS(AAS: any) {
-                // console.log('Select AAS: ', AAS);
-                // return if loading state is true -> prevents multiple requests
-                if (this.loading) {
-                    this.navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 4000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'Please wait for the current Request to finish.',
-                    });
-                    return;
-                }
-                if (this.selectedAAS && Object.keys(this.selectedAAS).length > 0 && this.selectedAAS.id === AAS.id) {
-                    // Deselect AAS
-                    this.router.push({ query: {} });
-                    this.aasStore.dispatchSelectedAAS({});
-                } else {
-                    let scrollToAasAfterDispatch = false;
-                    if (!this.selectAAS || Object.keys(this.selectAAS).length === 0) {
-                        scrollToAasAfterDispatch = true;
-                    }
-                    // Select AAS
-                    const aasEndpoint = this.extractEndpointHref(AAS, 'AAS-3.0');
-                    // Add AAS Endpoint as Query to the Router
-                    this.router.push({ query: { aas: aasEndpoint } });
-                    // dispatch the selected AAS to the Store
-                    await this.fetchAndDispatchAas(aasEndpoint);
-                    if (scrollToAasAfterDispatch) this.scrollToSelectedAAS();
-                }
-            },
-
-            // Function to download the AAS
-            downloadAAS(AAS: any) {
-                // console.log('Download AAS: ', AAS);
-                // request the Submodel references for the AAS
-                const aasEndpopint = this.extractEndpointHref(AAS, 'AAS-3.0');
-                let path = aasEndpopint + '/submodel-refs';
-                let context = 'retrieving Submodel References';
+                // console.log('aasIds: ', aasIds, ' submodelIds: ', submodelIds);
+                // strip the everything after the last slash from the getAASRepoURL (http://localhost:1500/shells -> http://localhost:1500)
+                let path = aasRepoURL.value.substring(0, aasRepoURL.value.lastIndexOf('/'));
+                // add the aasIds and submodelIds to the path (example: http://localhost:1500/serialization?aasIds=abc&submodelIds=def&submodelIds=ghi&includeConceptDescriptions=true)
+                path +=
+                    '/serialization?aasIds=' +
+                    aasIds +
+                    '&submodelIds=' +
+                    submodelIds.join('&submodelIds=') +
+                    '&includeConceptDescriptions=true';
+                let context = 'retrieving AAS serialization';
                 let disableMessage = false;
-                this.getRequest(path, context, disableMessage).then(async (response: any) => {
+                let headers = new Headers();
+                headers.append('Accept', 'application/asset-administration-shell-package+xml');
+                getRequest(path, context, disableMessage, headers).then(async (response: any) => {
                     if (response.success) {
                         // execute if the Request was successful
-                        const submodelRefs = response.data.result;
-                        const aasIds = this.URLEncode(AAS.id);
-                        // extract all references in an Array calles submodelIds from each keys[0].value
-                        let submodelIds = [] as any;
-                        submodelRefs.forEach((submodelRef: any) => {
-                            submodelIds.push(this.URLEncode(submodelRef.keys[0].value));
-                        });
-                        // console.log('aasIds: ', aasIds, ' submodelIds: ', submodelIds);
-                        // strip the everything after the last slash from the getAASRepoURL (http://localhost:1500/shells -> http://localhost:1500)
-                        let path = this.aasRepoURL.substring(0, this.aasRepoURL.lastIndexOf('/'));
-                        // add the aasIds and submodelIds to the path (example: http://localhost:1500/serialization?aasIds=abc&submodelIds=def&submodelIds=ghi&includeConceptDescriptions=true)
-                        path +=
-                            '/serialization?aasIds=' +
-                            aasIds +
-                            '&submodelIds=' +
-                            submodelIds.join('&submodelIds=') +
-                            '&includeConceptDescriptions=true';
-                        let context = 'retrieving AAS serialization';
-                        let disableMessage = false;
-                        let headers = new Headers();
-                        headers.append('Accept', 'application/asset-administration-shell-package+xml');
-                        this.getRequest(path, context, disableMessage, headers).then(async (response: any) => {
-                            if (response.success) {
-                                // execute if the Request was successful
-                                let aasSerialization = response.data;
-                                this.downloadFile(AAS.idShort + '.aasx', aasSerialization);
-                            }
-                        });
+                        let aasSerialization = response.data;
+                        downloadFile(AAS.idShort + '.aasx', aasSerialization);
                     }
                 });
-            },
+            }
+        });
+    }
 
-            // checks if the AAS is selected
-            isSelected(AAS: any) {
-                if (
-                    this.selectedAAS === undefined ||
-                    this.selectedAAS === null ||
-                    Object.keys(this.selectedAAS).length === 0
-                ) {
-                    return false;
-                }
-                const aasEndpointFromList = this.extractEndpointHref(AAS, 'AAS-3.0');
-                const aasEndpointSelected = this.extractEndpointHref(this.selectedAAS, 'AAS-3.0');
-                let isSelected = aasEndpointFromList === aasEndpointSelected;
-                return isSelected;
-            },
+    function showDeleteDialog(AAS: any) {
+        deleteDialogShowing.value = true;
+        aasToDelete.value = AAS;
+    }
 
-            // Function to remove the AAS from the AAS Registry
-            removeFromAASRegistry(AAS: any) {
-                // console.log('Remove AAS: ', AAS);
-                // return if loading state is true -> prevents multiple requests
-                if (this.loading) {
-                    this.navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 4000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'Please wait for the current Request to finish.',
-                    });
-                    return;
-                }
-                // show a confirmation Dialog to delete the AAS
-                if (confirm('Are you sure you want to delete the AAS from the AAS Registry?')) {
-                    // execute if the user confirms the removal
-                    // check if aasRegistryURL includes "/shell-descriptors" and add id if not (backward compatibility)
-                    if (!this.aasRegistryURL.includes('/shell-descriptors')) {
-                        this.aasRegistryURL += '/shell-descriptors';
-                    }
-                    let path = this.aasRegistryURL + '/' + this.URLEncode(AAS.id);
-                    let context = 'removing AAS from AAS Registry';
-                    let disableMessage = false;
-                    this.deleteRequest(path, context, disableMessage).then((response: any) => {
-                        if (response.success) {
-                            // execute if deletion was successful
-                            this.loadAASListData(); // reload the AAS List
-                        }
-                    });
-                }
-            },
-
-            removeAAS(AAS: any) {
-                // console.log('Remove AAS: ', AAS);
-                // return if loading state is true -> prevents multiple requests
-                if (this.loading) {
-                    this.navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 4000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'Please wait for the current Request to finish.',
-                    });
-                    return;
-                }
-                // console.log('Remove AAS: ', AAS);
-                const aasEndpopint = this.extractEndpointHref(AAS, 'AAS-3.0');
-                let path = aasEndpopint;
-                let context = 'removing AAS';
-                let disableMessage = false;
-                this.deleteRequest(path, context, disableMessage);
-            },
-
-            async confirmDelete() {
-                this.deleteLoading = true;
-                let error = false;
-                try {
-                    if (this.deleteSubmodels) {
-                        const aasEndpopint = this.extractEndpointHref(this.aasToDelete, 'AAS-3.0');
-                        const aasRepoPath = aasEndpopint + '/submodel-refs';
-                        const aasRepoContext = 'retrieving Submodel References';
-                        const disableMessage = false;
-                        const aasRepoResponse = await this.getRequest(aasRepoPath, aasRepoContext, disableMessage);
-                        if (aasRepoResponse.success) {
-                            const submodelRefs = aasRepoResponse.data.result;
-                            // Extract all references in an array called submodelIds from each keys[0].value
-                            const submodelIds = submodelRefs.map((ref: any) => ref.keys[0].value);
-                            this.removeAAS(this.aasToDelete);
-                            // Remove each submodel
-                            for (const submodelId of submodelIds) {
-                                const submodelRegistryPath = `${this.submodelRegistryURL}/${this.URLEncode(submodelId)}`;
-                                const submodelRegistryResponse = await this.getRequest(
-                                    submodelRegistryPath,
-                                    'Removing Submodels',
-                                    disableMessage
-                                );
-                                if (submodelRegistryResponse.success) {
-                                    const submodelHref = this.extractEndpointHref(
-                                        submodelRegistryResponse.data,
-                                        'SUBMODEL-3.0'
-                                    );
-                                    const deletePath = submodelHref;
-                                    await this.deleteRequest(deletePath, 'removing Submodel', disableMessage);
-                                } else {
-                                    error = true;
-                                }
-                            }
+    async function confirmDelete() {
+        deleteLoading.value = true;
+        let error = false;
+        try {
+            if (deleteSubmodels.value) {
+                const aasEndpopint = extractEndpointHref(aasToDelete.value, 'AAS-3.0');
+                const aasRepoPath = aasEndpopint + '/submodel-refs';
+                const aasRepoContext = 'retrieving Submodel References';
+                const disableMessage = false;
+                const aasRepoResponse = await getRequest(aasRepoPath, aasRepoContext, disableMessage);
+                if (aasRepoResponse.success) {
+                    const submodelRefs = aasRepoResponse.data.result;
+                    // Extract all references in an array called submodelIds from each keys[0].value
+                    const submodelIds = submodelRefs.map((ref: any) => ref.keys[0].value);
+                    removeAAS(aasToDelete.value);
+                    // Remove each submodel
+                    for (const submodelId of submodelIds) {
+                        const submodelRegistryPath = `${submodelRegistryURL.value}/${URLEncode(submodelId)}`;
+                        const submodelRegistryResponse = await getRequest(
+                            submodelRegistryPath,
+                            'Removing Submodels',
+                            disableMessage
+                        );
+                        if (submodelRegistryResponse.success) {
+                            const submodelHref = extractEndpointHref(submodelRegistryResponse.data, 'SUBMODEL-3.0');
+                            const deletePath = submodelHref;
+                            await deleteRequest(deletePath, 'removing Submodel', disableMessage);
                         } else {
                             error = true;
                         }
-                    } else {
-                        this.removeAAS(this.aasToDelete);
                     }
-                } finally {
-                    this.deleteDialogShowing = false;
-                    this.aasToDelete = {};
-                    this.deleteSubmodels = false;
-                    if (!error) {
-                        //remove query from URL
-                        this.router.push({ path: this.route.path, query: {} });
-                        this.aasStore.dispatchSelectedAAS({});
-                        this.loadAASListData(); // reload the AAS List
-                    }
-                    this.deleteLoading = false;
+                } else {
+                    error = true;
                 }
-            },
+            } else {
+                removeAAS(aasToDelete.value);
+            }
+        } finally {
+            deleteDialogShowing.value = false;
+            aasToDelete.value = {};
+            deleteSubmodels.value = false;
+            if (!error) {
+                //remove query from URL
+                router.push({ path: route.path, query: {} });
+                aasStore.dispatchSelectedAAS({});
+                loadAASListData(); // reload the AAS List
+            }
+            deleteLoading.value = false;
+        }
+    }
 
-            showDeleteDialog(AAS: any) {
-                this.deleteDialogShowing = true;
-                this.aasToDelete = AAS;
-            },
-
-            async scrollToSelectedAAS() {
-                // Find the index of the selected item
-                const index = this.AASData.findIndex((item: any) => this.isSelected(item));
-                const virtualScrollRef = this.$refs.virtualScroll as any;
-
-                if (index !== -1 && virtualScrollRef) {
-                    const intervalId = setInterval(() => {
-                        if (virtualScrollRef.$el.querySelector('.v-virtual-scroll__container').children.length > 0) {
-                            // Access the scrollable container
-                            virtualScrollRef.scrollToIndex(index);
-                            clearInterval(intervalId);
-                        }
-                    }, 50);
-                }
-            },
-        },
-    });
+    function removeAAS(AAS: any) {
+        // console.log('Remove AAS: ', AAS);
+        // return if loading state is true -> prevents multiple requests
+        if (loading.value) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Please wait for the current Request to finish.',
+            });
+            return;
+        }
+        // console.log('Remove AAS: ', AAS);
+        const aasEndpopint = extractEndpointHref(AAS, 'AAS-3.0');
+        let path = aasEndpopint;
+        let context = 'removing AAS';
+        let disableMessage = false;
+        deleteRequest(path, context, disableMessage);
+    }
 </script>
 
 <style>
