@@ -21,59 +21,37 @@
     </v-list-item>
 </template>
 
-<script lang="ts">
-    import { defineComponent } from 'vue';
+<script lang="ts" setup>
+    import { computed, onMounted, ref } from 'vue';
     import { useTheme } from 'vuetify';
 
-    export default defineComponent({
-        name: 'ThemeSwitch',
+    const theme = useTheme();
 
-        setup() {
-            const theme = useTheme();
+    const themeOption = ref('system'); // Variable to store the current Theme option: 'system', 'light' or 'dark
+    const dark = ref(false); // Variable reflecting the current Theme
 
-            return {
-                theme, // Theme Object
-            };
-        },
+    const isDark = computed(() => theme.global.current.value.dark);
 
-        data() {
-            return {
-                themeOption: 'system', // Variable to store the current Theme option: 'system', 'light' or 'dark
-                dark: false, // Variable reflecting the current Theme
-            };
-        },
-
-        computed: {
-            // Check if the current Theme is dark
-            isDark() {
-                return this.theme.global.current.value.dark;
-            },
-        },
-
-        mounted() {
-            this.dark = this.isDark;
-            // get the theme preference from local storage
-            this.themeOption = localStorage.getItem('theme') || 'system';
-        },
-
-        methods: {
-            // Function to toggle between dark and light Theme
-            toggleTheme() {
-                if (this.themeOption == 'dark') {
-                    this.theme.global.name.value = 'dark';
-                } else if (this.themeOption == 'system') {
-                    // sets the Theme according to the Users preferred Theme
-                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                        this.theme.global.name.value = 'dark';
-                    } else {
-                        this.theme.global.name.value = 'light';
-                    }
-                } else {
-                    this.theme.global.name.value = 'light';
-                }
-                // save theme preference in local storage
-                localStorage.setItem('theme', this.themeOption);
-            },
-        },
+    onMounted(() => {
+        dark.value = isDark.value;
+        // get the theme preference from local storage
+        themeOption.value = localStorage.getItem('theme') || 'system';
     });
+
+    function toggleTheme() {
+        if (themeOption.value === 'dark') {
+            theme.global.name.value = 'dark';
+        } else if (themeOption.value === 'system') {
+            // sets the Theme according to the Users preferred Theme
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                theme.global.name.value = 'dark';
+            } else {
+                theme.global.name.value = 'light';
+            }
+        } else {
+            theme.global.name.value = 'light';
+        }
+        // save theme preference in local storage
+        localStorage.setItem('theme', themeOption.value);
+    }
 </script>
