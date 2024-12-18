@@ -15,30 +15,12 @@
     </v-menu>
 </template>
 
-<script lang="ts">
-    import { defineComponent } from 'vue';
+<script lang="ts" setup>
+    import { computed } from 'vue';
     import { useNavigationStore } from '@/store/NavigationStore';
     import ThemeSwitch from './Settings/ThemeSwitch.vue';
 
-    export default defineComponent({
-        name: 'Settings',
-        components: {
-            ThemeSwitch,
-        },
+    const navigationStore = useNavigationStore();
 
-        setup() {
-            const navigationStore = useNavigationStore();
-
-            return {
-                navigationStore, // NavigationStore Object
-            };
-        },
-
-        computed: {
-            // Check if the current Device is a Mobile Device
-            isMobile() {
-                return this.navigationStore.getIsMobile;
-            },
-        },
-    });
+    const isMobile = computed(() => navigationStore.getIsMobile);
 </script>
