@@ -34,7 +34,6 @@
                     </v-col>
                     <!-- Add existing AAS -->
                     <v-col cols="auto" class="px-0">
-                        <!-- <RegisterAAS></RegisterAAS> -->
                         <UploadAAS></UploadAAS>
                     </v-col>
                 </v-row>
@@ -173,14 +172,12 @@
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import AASListDetails from './AASListDetails.vue';
-    // import RegisterAAS from './RegisterAAS.vue';
     import UploadAAS from './UploadAAS.vue';
 
     export default defineComponent({
         name: 'AASList',
         components: {
             AASListDetails, // AAS Details Component
-            // RegisterAAS,    // Register AAS Component
             UploadAAS, // Upload AAS Component
         },
         mixins: [RequestHandling, SubmodelElementHandling],
