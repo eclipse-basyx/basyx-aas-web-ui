@@ -13,161 +13,150 @@
     </v-app>
 </template>
 
-<script lang="ts">
-    import { defineComponent } from 'vue';
-    import { useRoute, useRouter } from 'vue-router';
+<script lang="ts" setup>
+    import { onMounted } from 'vue';
+    import { RouteRecordNameGeneric, useRoute, useRouter } from 'vue-router';
+    import { useDisplay } from 'vuetify';
     import AppNavigation from '@/components/AppNavigation/AppNavigation.vue';
-    import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
+    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { formatDate } from '@/utils/DateUtils';
 
-    export default defineComponent({
-        name: 'App',
-        components: {
-            RequestHandling, // Mixin to handle the requests to the AAS
-            SubmodelElementHandling, // Mixin to handle the SubmodelElements
+    // Stores
+    const navigationStore = useNavigationStore();
+    const aasStore = useAASStore();
+    const envStore = useEnvStore();
 
-            AppNavigation,
-        },
-        mixins: [RequestHandling, SubmodelElementHandling],
+    // Vue Router
+    const route = useRoute();
+    const router = useRouter();
 
-        setup() {
-            const navigationStore = useNavigationStore();
-            const aasStore = useAASStore();
-            const route = useRoute();
-            const router = useRouter();
-            const envStore = useEnvStore();
+    // composables
+    const { fetchAndDispatchAas } = useAASRepositoryClient();
+    const { getRequest } = useRequestHandling();
 
-            return {
-                navigationStore, // NavigationStore Object
-                aasStore, // AASStore Object
-                route, // Route Object
-                router, // Router Object
-                envStore, // EnvironmentStore Object
-            };
-        },
+    // Vuetify
+    const { mobile } = useDisplay();
+    const { platform } = useDisplay();
 
-        async mounted() {
-            let mobile = this.$vuetify.display.mobile;
+    onMounted(async () => {
+        // Check if the platform is a mobile device
+        let showMobileVersion = false;
+        if (
+            mobile.value ||
             // include IPad as mobile device
-            if (this.$vuetify.display.platform.mac && this.$vuetify.display.platform.touch) {
-                mobile = true;
-            }
-            if (this.$vuetify.display.platform.ios) {
-                mobile = true;
-            }
-            if (this.$vuetify.display.platform.android) {
-                mobile = true;
-            }
-            // console.log('Mobile: ', mobile);
-            this.navigationStore.dispatchIsMobile(mobile);
-            this.navigationStore.dispatchPlatform(this.$vuetify.display.platform);
+            (platform.value.mac && platform.value.touch) ||
+            // IOS and Android are mobile platforms
+            platform.value.ios ||
+            platform.value.android
+        ) {
+            showMobileVersion = true;
+        }
 
-            // check if the aas and path Queries are set in the URL and include them in the URL when switching to the mobile view
-            const searchParams = new URL(window.location.href).searchParams;
-            const aasEndpoint = searchParams.get('aas');
-            const submodelElementPath = searchParams.get('path');
+        // Dispatch the mobile status to the store
+        navigationStore.dispatchIsMobile(showMobileVersion);
+        navigationStore.dispatchPlatform(platform.value);
 
-            // Ensure available aasEndpoint query parameter
-            if (
-                this.envStore.singleAas &&
-                (aasEndpoint === null || aasEndpoint === undefined || aasEndpoint.trim() === '')
-            ) {
-                if (this.envStore.getSingleAasRedirect) {
-                    window.location.replace(this.envStore.getSingleAasRedirect);
-                    return;
-                } else if (this.route.name !== '404NotFound404') {
-                    this.router.push({ name: 'NotFound404' });
-                    return;
-                }
-            }
+        // Extract the aas and path Queries from the URL
+        const searchParams = new URL(window.location.href).searchParams;
+        const aasEndpoint = searchParams.get('aas');
+        const submodelElementPath = searchParams.get('path');
 
-            // check which platform is used and change the fitting view
-            if (mobile) {
-                if (this.route.name === 'MainWindow') {
-                    if (aasEndpoint && submodelElementPath) {
-                        this.router.push({ name: 'AASList', query: { aas: aasEndpoint, path: submodelElementPath } });
-                    } else if (aasEndpoint && !submodelElementPath) {
-                        this.router.push({ name: 'AASList', query: { aas: aasEndpoint } });
-                    } else {
-                        this.router.push({ name: 'AASList' });
-                    }
-                } else if (this.route.name === 'ComponentVisualization') {
-                    if (!aasEndpoint && !submodelElementPath) {
-                        this.router.push({ name: 'AASList' });
-                    } else if (aasEndpoint && !submodelElementPath) {
-                        this.router.push({ name: 'SubmodelList', query: { aas: aasEndpoint } });
-                    }
-                }
-            } else {
-                // change to MainWindow when the platform is not android or ios
-                if (this.route.name === 'AASList' || this.route.name === 'SubmodelList') {
-                    if (aasEndpoint && submodelElementPath)
-                        this.router.push({
-                            name: 'MainWindow',
-                            query: { aas: aasEndpoint, path: submodelElementPath },
-                        });
-                    else if (aasEndpoint && !submodelElementPath)
-                        this.router.push({ name: 'MainWindow', query: { aas: aasEndpoint } });
-                    else this.router.push({ name: 'MainWindow' });
-                } else if (this.route.name === 'ComponentVisualization') {
-                    if (aasEndpoint && !submodelElementPath)
-                        this.router.push({ name: 'MainWindow', query: { aas: aasEndpoint } });
-                    else if (!aasEndpoint && !submodelElementPath) this.router.push({ name: 'MainWindow' });
-                } else {
-                    if (aasEndpoint && submodelElementPath)
-                        this.router.push({ query: { aas: aasEndpoint, path: submodelElementPath } });
-                    else if (aasEndpoint && !submodelElementPath) this.router.push({ query: { aas: aasEndpoint } });
-                }
+        // Check if single AAS mode is on and no aas query is set to either redirect or show 404
+        if (envStore.singleAas && (aasEndpoint === null || aasEndpoint === undefined || aasEndpoint.trim() === '')) {
+            if (envStore.getSingleAasRedirect) {
+                window.location.replace(envStore.getSingleAasRedirect);
+                return;
+            } else if (route.name !== '404NotFound404') {
+                router.push({ name: 'NotFound404' });
+                return;
             }
+        }
 
-            if (aasEndpoint) {
-                // console.log('AAS Query is set: ', aasEndpoint);
-                await this.fetchAndDispatchAas(aasEndpoint);
-            }
+        // Check which platform is used and change the fitting view
+        if (showMobileVersion) {
+            handleMobileView(aasEndpoint, submodelElementPath);
+        } else {
+            handleDesktopView(aasEndpoint, submodelElementPath);
+        }
 
-            if (aasEndpoint && submodelElementPath) {
-                // console.log('AAS and Path Queries are set: ', submodelElementPath);
-                // Request the selected SubmodelElement
-                let path = submodelElementPath;
-                let context = 'retrieving SubmodelElement';
-                let disableMessage = true;
-                this.getRequest(path, context, disableMessage).then((response: any) => {
-                    if (response.success) {
-                        // execute if the Request was successful
-                        response.data.timestamp = this.formatDate(new Date()); // add timestamp to the SubmodelElement Data
-                        response.data.path = submodelElementPath; // add the path to the SubmodelElement Data
-                        response.data.isActive = true; // add the isActive Property to the SubmodelElement Data
-                        // console.log('SubmodelElement Data: ', response.data)
-                        // dispatch the SubmodelElementPath set by the URL to the store
-                        this.aasStore.dispatchNode(response.data); // set the updatedNode in the AASStore
-                    } else {
-                        // execute if the Request failed
-                        if (response?.data && Object.keys(response?.data).length === 0) {
-                            // don't copy the static SubmodelElement Data if no Node is selected or Node is invalid
-                            this.navigationStore.dispatchSnackbar({
-                                status: true,
-                                timeout: 60000,
-                                color: 'error',
-                                btnColor: 'buttonText',
-                                text: 'No valid SubmodelElement under the given Path',
-                            }); // Show Error Snackbar
-                            return;
-                        }
-                        this.aasStore.dispatchNode({});
-                    }
-                });
-            }
-        },
+        if (aasEndpoint) {
+            await fetchAndDispatchAas(aasEndpoint);
+        }
+
+        if (aasEndpoint && submodelElementPath) {
+            handleSubmodelElement(submodelElementPath);
+        }
     });
-</script>
 
-<style>
-    @import '../node_modules/@fontsource/roboto/index.css';
-
-    html {
-        overflow-y: auto;
+    // Handle mobile view routing logic
+    function handleMobileView(aasEndpoint: string | null, submodelElementPath: string | null) {
+        const currentRouteName = route.name;
+        const routesToAASList: Array<RouteRecordNameGeneric> = ['MainWindow', 'AASViewer', 'AASList'];
+        if (currentRouteName && routesToAASList.includes(currentRouteName)) {
+            // Redirect to 'AASList' with existing query parameters
+            router.push({ name: 'AASList', query: route.query });
+        } else if (currentRouteName === 'SubmodelList' && aasEndpoint) {
+            // Redirect to 'SubmodelList' with 'aas' parameter
+            router.push({ name: 'SubmodelList', query: { aas: aasEndpoint } });
+        } else if (currentRouteName === 'ComponentVisualization' && aasEndpoint && submodelElementPath) {
+            // Redirect to 'ComponentVisualization' with 'aas' and 'path' parameters
+            router.push({ name: 'ComponentVisualization', query: { aas: aasEndpoint, path: submodelElementPath } });
+        } else {
+            // Redirect to 'AASList' without query parameters
+            router.push({ name: 'AASList' });
+        }
     }
-</style>
+
+    // Handle desktop view routing logic
+    function handleDesktopView(aasEndpoint: string | null, submodelElementPath: string | null) {
+        const currentRouteName = route.name;
+        const routesToMainWindow: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList', 'ComponentVisualization'];
+        const query: any = {};
+        if (aasEndpoint) query.aas = aasEndpoint;
+        if (submodelElementPath) query.path = submodelElementPath;
+        if (currentRouteName && routesToMainWindow.includes(currentRouteName)) {
+            // Redirect to 'MainWindow' with appropriate query parameters
+            router.push({ name: 'MainWindow', query });
+        } else if (currentRouteName === 'AASViewer') {
+            // Stay on 'AASViewer' but update query parameters
+            router.push({ name: 'AASViewer', query });
+        } else {
+            // Default to 'MainWindow' with query parameters
+            router.push({ name: 'MainWindow', query });
+        }
+    }
+
+    // Handle the selected submodel element
+    async function handleSubmodelElement(submodelElementPath: string) {
+        const path = submodelElementPath;
+        const context = 'retrieving SubmodelElement';
+        const disableMessage = true;
+        const response = await getRequest(path, context, disableMessage);
+        if (response.success) {
+            const data = response.data;
+            data.timestamp = formatDate(new Date());
+            data.path = submodelElementPath;
+            data.isActive = true;
+            aasStore.dispatchNode(data);
+        } else {
+            handleRequestFailure(response);
+        }
+    }
+    // Handle request failure and show appropriate message
+    function handleRequestFailure(response: any) {
+        if (Object.keys(response.data).length === 0) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 60000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'No valid SubmodelElement under the given Path',
+            });
+            aasStore.dispatchNode({});
+        }
+    }
+</script>

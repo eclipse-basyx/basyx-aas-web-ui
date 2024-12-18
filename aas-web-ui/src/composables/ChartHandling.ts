@@ -1,4 +1,4 @@
-import { useConceptDescriptionHandling } from './ConceptDescriptionHandling';
+import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
 
 export function useChartHandling() {
     const { unitSuffix } = useConceptDescriptionHandling();

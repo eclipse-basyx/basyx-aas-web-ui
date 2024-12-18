@@ -1,10 +1,10 @@
 import { computed } from 'vue';
+import { useRequestHandling } from '@/composables/RequestHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useEnvStore } from '@/store/EnvironmentStore';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
 import { URLEncode } from '@/utils/EncodeDecodeUtils';
 import { UUID } from '@/utils/IDUtils';
-import { useRequestHandling } from './RequestHandling';
 
 export function useDashboardHandling() {
     const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();

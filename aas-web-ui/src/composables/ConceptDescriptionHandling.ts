@@ -1,8 +1,8 @@
 import { computed } from 'vue';
+import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { URLEncode } from '@/utils/EncodeDecodeUtils';
 import { getEquivalentEclassSemanticIds, getEquivalentIriSemanticIds } from '@/utils/SemanticIdUtils';
-import { useRequestHandling } from './RequestHandling';
 
 export function useConceptDescriptionHandling() {
     const { getRequest } = useRequestHandling();
