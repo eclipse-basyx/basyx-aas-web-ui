@@ -6,13 +6,20 @@ import { useNavigationStore } from '@/store/NavigationStore';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
 
 export function useAASRepositoryClient() {
-    const { getRequest } = useRequestHandling();
+    const { getRequest, postRequest } = useRequestHandling();
     const { fetchAasDescriptorById } = useAASRegistryClient();
 
     const aasStore = useAASStore();
     const navigationStore = useNavigationStore();
 
     const aasRepositoryUrl = computed(() => navigationStore.getAASRepoURL);
+
+    const uploadURL = computed(() => {
+        const aasRepoURL = navigationStore.getAASRepoURL;
+        // remove '/shells' AAS Repository URL and add '/upload' to construct the upload URL
+        // TODO: This is a workaround, as the AAS Repository does not provide an upload endpoint but rather the AAS Environment. This should be changed in the future.
+        return aasRepoURL.replace('/shells', '') + '/upload';
+    });
 
     // Fetch List of all available AAS
     async function fetchAasList(): Promise<Array<any>> {
@@ -93,10 +100,35 @@ export function useAASRepositoryClient() {
         aasStore.dispatchSelectedAAS(aas);
     }
 
+    // Upload an AAS to the AAS Repository
+    async function uploadAas(aasFile: File) {
+        const context = 'uploading AAS';
+        const disableMessage = false;
+        const path = uploadURL.value;
+        const headers = new Headers();
+        const formData = new FormData();
+        formData.append('file', aasFile);
+
+        // Send Request to upload the file
+        postRequest(path, formData, headers, context, disableMessage).then((response: any) => {
+            if (response.success) {
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 4000,
+                    color: 'success',
+                    btnColor: 'buttonText',
+                    text: 'AASX-File uploaded.',
+                }); // Show Success Snackbar
+                navigationStore.dispatchTriggerAASListReload(true); // Reload AAS List
+            }
+        });
+    }
+
     return {
         fetchAasList,
         fetchAasById,
         fetchAas,
         fetchAndDispatchAas,
+        uploadAas,
     };
 }

@@ -1,21 +1,30 @@
 <template>
     <v-container class="pa-0" fluid>
-        <v-divider v-if="!singleAas"></v-divider>
-        <!-- AAS Details Card (only visible if the Information Button is pressed on an AAS) -->
-        <v-expand-transition>
-            <v-card-text
-                class="bg-detailsCard pa-0"
-                :class="isMobile ? 'v-card--reveal-mobile' : 'v-card--reveal-desktop'"
-                style="overflow-y: auto"
-                :style="{
-                    height: isMobile
-                        ? singleAas
-                            ? ''
-                            : 'calc(100vh - 176px - 40px - 64px)' // Full height - 3x AAS items - footer - header
-                        : singleAas
-                          ? 'calc(100vh - 64px - 64px - 48px - 40px - 2px)' // Full height - header - title - collapse button - footer - 2x divider
-                          : 'calc(50vh - 64px - 48px)', // Half height - header - collapse button
-                }">
+        <v-sheet>
+            <v-divider v-if="!singleAas || !isMobile"></v-divider>
+            <v-card-title class="bg-detailsHeader pl-3">
+                <v-row align="center" class="pl-4" style="height: 40px">
+                    <!-- AAS Status -->
+                    <div class="text-caption">{{ 'Status: ' }}</div>
+                    <div class="text-caption ml-1" :class="statusColor">
+                        {{ status }}
+                    </div>
+                    <!-- Jump to Submodel List on mobile -->
+                    <v-spacer v-if="isMobile"></v-spacer>
+                    <v-btn
+                        v-if="isMobile"
+                        color="primary"
+                        density="compact"
+                        variant="tonal"
+                        border
+                        append-icon="mdi-chevron-right"
+                        class="text-none"
+                        text="Submodels"
+                        @click="gotoSubmodelList()" />
+                </v-row>
+            </v-card-title>
+            <v-divider></v-divider>
+            <v-card-text class="bg-detailsCard pa-0" style="overflow-y: auto" :style="{ height: detailsListHeight }">
                 <!-- Asset Information -->
                 <!-- 1) AssetInformation is mandatory for an AssetAdministrationShell -->
                 <!-- 2) Minimal (empty) AssetInformation (generated with aas4j) will be { assetKind: null } -->
@@ -58,133 +67,109 @@
                         :description-object="selectedAAS.description"
                         :description-title="'Description'"
                         :small="false"></DescriptionElement>
-                    <template v-if="isMobile">
-                        <v-divider class="mt-2"></v-divider>
-                        <v-list-item>
-                            <template #title>
-                                <div class="mt-2 text-subtitle-2">
-                                    {{ 'Submodel List' }}
-                                    <v-btn
-                                        class="ml-2"
-                                        variant="plain"
-                                        icon="mdi-chevron-right"
-                                        @click="gotoSubmodelList()"></v-btn>
-                                </div>
-                            </template>
-                        </v-list-item>
-                    </template>
                 </v-list>
             </v-card-text>
-        </v-expand-transition>
+        </v-sheet>
     </v-container>
 </template>
 
-<script lang="ts">
-    import { defineComponent } from 'vue';
+<script lang="ts" setup>
+    import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import AdministrativeInformationElement from '@/components/UIComponents/AdministrativeInformationElement.vue';
     import AssetInformation from '@/components/UIComponents/AssetInformation.vue';
     import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
     import DisplayNameElement from '@/components/UIComponents/DisplayNameElement.vue';
     import IdentificationElement from '@/components/UIComponents/IdentificationElement.vue';
-    import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { extractEndpointHref } from '@/utils/DescriptorUtils';
 
-    export default defineComponent({
-        name: 'AASListDetails',
-        components: {
-            IdentificationElement,
-            AdministrativeInformationElement,
-            DisplayNameElement,
-            DescriptionElement,
-            AssetInformation,
-        },
-        mixins: [RequestHandling, SubmodelElementHandling],
+    // Vue Router
+    const route = useRoute();
+    const router = useRouter();
 
-        setup() {
-            const navigationStore = useNavigationStore();
-            const aasStore = useAASStore();
-            const envStore = useEnvStore();
-            const route = useRoute();
-            const router = useRouter();
+    // Composables
+    const { getRequest } = useRequestHandling();
 
-            return {
-                navigationStore, // NavigationStore Object
-                aasStore, // AASStore Object
-                envStore, // EnvironmentStore Object
-                route, // Route Object
-                router, // Router Object
-            };
-        },
+    // Stores
+    const navigationStore = useNavigationStore();
+    const aasStore = useAASStore();
+    const envStore = useEnvStore();
 
-        data() {
-            return {
-                assetInformation: null as any, // Asset Information Object
-            };
-        },
-
-        computed: {
-            // Check if the current Device is a Mobile Device
-            isMobile() {
-                return this.navigationStore.getIsMobile;
-            },
-
-            // get the selected AAS from Store
-            selectedAAS() {
-                return this.aasStore.getSelectedAAS;
-            },
-
-            singleAas() {
-                return this.envStore.getSingleAas;
-            },
-        },
-
-        watch: {
-            selectedAAS() {
-                this.fetchAssetDetails();
-            },
-        },
-
-        mounted() {
-            this.fetchAssetDetails();
-        },
-
-        methods: {
-            // Function to fetch the Asset Details from the AAS Repository
-            fetchAssetDetails() {
-                // console.log('fetch asset details: ', this.selectedAAS);
-                const aasEndpopint = this.extractEndpointHref(this.selectedAAS, 'AAS-3.0');
-                const assetInformationEndpoint = aasEndpopint + '/asset-information';
-                // console.log('aasRepoEndpoint: ', assetInformationEndpoint);
-                let path = assetInformationEndpoint;
-                let context = 'retrieving asset information';
-                let disableMessage = false;
-                this.getRequest(path, context, disableMessage).then((response: any) => {
-                    if (response.success) {
-                        // console.log('asset information: ', response.data);
-                        let assetInformation = response.data;
-                        if (
-                            assetInformation.defaultThumbnail &&
-                            assetInformation.defaultThumbnail.path &&
-                            !assetInformation.defaultThumbnail.path.startsWith('http')
-                        ) {
-                            let assetInformationThumbnailEndpoint = assetInformationEndpoint + '/thumbnail';
-                            assetInformation.defaultThumbnail.path = assetInformationThumbnailEndpoint;
-                        }
-                        // console.log('asset information thumbnail: ', assetInformation.defaultThumbnail);
-                        this.assetInformation = assetInformation;
-                    }
-                });
-            },
-
-            gotoSubmodelList() {
-                this.router.push({
-                    path: '/submodellist',
-                });
-            },
+    const props = defineProps({
+        status: {
+            type: String,
+            default: 'check disabled',
         },
     });
+
+    const assetInformation = ref(null as any | null);
+
+    const isMobile = computed(() => navigationStore.getIsMobile);
+    const selectedAAS = computed(() => aasStore.getSelectedAAS);
+    const singleAas = computed(() => envStore.getSingleAas);
+    const detailsListHeight = computed(() => {
+        if (isMobile.value) {
+            if (singleAas.value) {
+                return 'calc(100vh - 40px - 64px - 34px)'; // Full height - footer - header - details header (divider)
+            } else {
+                return 'calc(100vh - 231px - 40px - 64px - 36px - 64px)'; // Full height - 4x AAS items - footer - header - details header (divider) - Searchbar
+            }
+        } else {
+            if (singleAas.value) {
+                return 'calc(100vh - 64px - 64px - 48px - 40px - 35px)'; // Full height - header - title - collapse button - footer - details header (divider)
+            } else {
+                return 'calc(50vh - 40px - 48px - 33px)'; // Half height - footer - collapse button - details header (divider)
+            }
+        }
+    });
+    const statusColor = computed(() => {
+        if (props.status === 'online') {
+            return 'text-success';
+        } else if (props.status === 'check disabled') {
+            return 'text-warning';
+        } else {
+            return 'text-error';
+        }
+    });
+
+    watch(selectedAAS, () => {
+        fetchAssetDetails();
+    });
+
+    onMounted(() => {
+        fetchAssetDetails();
+    });
+
+    function fetchAssetDetails() {
+        const aasEndpopint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
+        const assetInformationEndpoint = aasEndpopint + '/asset-information';
+        const path = assetInformationEndpoint;
+        const context = 'retrieving asset information';
+        const disableMessage = false;
+        getRequest(path, context, disableMessage).then((response: any) => {
+            if (response.success) {
+                let fetchedAssetInformation = response.data;
+                if (
+                    fetchedAssetInformation.defaultThumbnail &&
+                    fetchedAssetInformation.defaultThumbnail.path &&
+                    !fetchedAssetInformation.defaultThumbnail.path.startsWith('http')
+                ) {
+                    let assetInformationThumbnailEndpoint = assetInformationEndpoint + '/thumbnail';
+                    fetchedAssetInformation.defaultThumbnail.path = assetInformationThumbnailEndpoint;
+                }
+                assetInformation.value = fetchedAssetInformation;
+            }
+        });
+    }
+
+    function gotoSubmodelList() {
+        router.push({
+            path: '/submodellist',
+            query: { aas: route.query.aas },
+        });
+    }
 </script>

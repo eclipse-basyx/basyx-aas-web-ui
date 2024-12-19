@@ -66,69 +66,35 @@
     </v-btn>
 </template>
 
-<script lang="ts">
-    import { defineComponent } from 'vue';
+<script lang="ts" setup>
+    import { computed, ref } from 'vue';
+    import StatusSwitch from '@/components/AppNavigation/Settings/StatusSwitch.vue';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import StatusSwitch from './Settings/StatusSwitch.vue';
 
-    export default defineComponent({
-        name: 'AutoSync',
-        components: {
-            StatusSwitch,
-        },
-        props: ['submodelObject'],
+    const navigationStore = useNavigationStore();
 
-        setup() {
-            const navigationStore = useNavigationStore();
+    const autoSyncStatus = ref(navigationStore.getAutoSync ? navigationStore.getAutoSync.state : false);
+    const intervalTime = ref(1000);
 
-            return {
-                navigationStore, // NavigationStore Object
-            };
-        },
+    const isMobile = computed(() => navigationStore.getIsMobile);
 
-        data() {
-            return {
-                autoSyncStatus: false, // Status of the auto-sync (true = active, false = inactive)
-                intervalTime: 1000, // Interval time for the auto-sync
-            };
-        },
+    // Checks if the input is smaller than 100ms and sets it to 100ms if it is
+    function checkMin(e: boolean) {
+        if (intervalTime.value < 100 && !e) intervalTime.value = 100;
+        if (!e) updateAutoSync();
+    }
 
-        computed: {
-            // Get the auto-sync state from the store
-            autoSync() {
-                return this.navigationStore.getAutoSync ? this.navigationStore.getAutoSync.state : false;
-            },
+    // Updates the auto-sync (+ interval) in the store
+    function updateAutoSync() {
+        navigationStore.dispatchUpdateAutoSync({
+            state: autoSyncStatus.value,
+            interval: intervalTime.value,
+        });
+    }
 
-            // Check if the current Device is a Mobile Device
-            isMobile() {
-                return this.navigationStore.getIsMobile;
-            },
-        },
-
-        mounted() {
-            this.autoSyncStatus = this.autoSync;
-        },
-
-        methods: {
-            // Checks if the input is smaller than 100ms and sets it to 100ms if it is
-            checkMin(e: boolean) {
-                if (this.intervalTime < 100 && !e) this.intervalTime = 100;
-                if (!e) this.updateAutoSync();
-            },
-
-            // Updates the auto-sync (+ interval) in the store
-            updateAutoSync() {
-                this.navigationStore.dispatchUpdateAutoSync({
-                    state: this.autoSyncStatus,
-                    interval: this.intervalTime,
-                });
-            },
-
-            // Toggles the auto-sync
-            toggleAutoSync() {
-                this.autoSyncStatus = !this.autoSyncStatus;
-                this.updateAutoSync();
-            },
-        },
-    });
+    // Toggles the auto-sync
+    function toggleAutoSync() {
+        autoSyncStatus.value = !autoSyncStatus.value;
+        updateAutoSync();
+    }
 </script>

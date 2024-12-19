@@ -8,45 +8,16 @@
         @change="updateStatusCheck()"></v-switch>
 </template>
 
-<script lang="ts">
-    import { defineComponent } from 'vue';
+<script lang="ts" setup>
+    import { ref } from 'vue';
     import { useNavigationStore } from '@/store/NavigationStore';
 
-    export default defineComponent({
-        name: 'StatusSwitch',
+    const navigationStore = useNavigationStore();
 
-        setup() {
-            const navigationStore = useNavigationStore();
+    const statusCheckStatus = ref(navigationStore.getStatusCheck);
 
-            return {
-                navigationStore, // NavigationStore Object
-            };
-        },
-
-        data() {
-            return {
-                statusCheckStatus: false, // Status of the status-check (true = active, false = inactive)
-            };
-        },
-
-        computed: {
-            // get the status-check state from the store
-            statusCheck() {
-                return this.navigationStore.getStatusCheck;
-            },
-        },
-
-        mounted() {
-            this.statusCheckStatus = this.statusCheck;
-        },
-
-        methods: {
-            // Function to toggle the status-check
-            updateStatusCheck() {
-                this.navigationStore.dispatchUpdateStatusCheck(this.statusCheckStatus);
-                // save status-check preference in local storage
-                localStorage.setItem('statusCheck', this.statusCheckStatus.toString());
-            },
-        },
-    });
+    function updateStatusCheck() {
+        navigationStore.dispatchUpdateStatusCheck(statusCheckStatus.value);
+        localStorage.setItem('statusCheck', statusCheckStatus.value.toString()); // save status-check preference in local storage
+    }
 </script>
