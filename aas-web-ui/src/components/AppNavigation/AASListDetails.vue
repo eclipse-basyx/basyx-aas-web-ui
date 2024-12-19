@@ -1,21 +1,30 @@
 <template>
     <v-container class="pa-0" fluid>
-        <v-divider v-if="!singleAas"></v-divider>
-        <!-- AAS Details Card (only visible if the Information Button is pressed on an AAS) -->
-        <v-expand-transition>
-            <v-card-text
-                class="bg-detailsCard pa-0"
-                :class="isMobile ? 'v-card--reveal-mobile' : 'v-card--reveal-desktop'"
-                style="overflow-y: auto"
-                :style="{
-                    height: isMobile
-                        ? singleAas
-                            ? ''
-                            : 'calc(100vh - 176px - 40px - 64px)' // Full height - 3x AAS items - footer - header
-                        : singleAas
-                          ? 'calc(100vh - 64px - 64px - 48px - 40px - 2px)' // Full height - header - title - collapse button - footer - 2x divider
-                          : 'calc(50vh - 64px - 48px)', // Half height - header - collapse button
-                }">
+        <v-sheet>
+            <v-divider v-if="!singleAas || !isMobile"></v-divider>
+            <v-card-title class="bg-detailsHeader pl-3">
+                <v-row align="center" class="pl-4" style="height: 40px">
+                    <!-- AAS Status -->
+                    <div class="text-caption">{{ 'Status: ' }}</div>
+                    <div class="text-caption ml-1" :class="statusColor">
+                        {{ status }}
+                    </div>
+                    <!-- Jump to Submodel List on mobile -->
+                    <v-spacer v-if="isMobile"></v-spacer>
+                    <v-btn
+                        v-if="isMobile"
+                        color="primary"
+                        density="compact"
+                        variant="tonal"
+                        border
+                        append-icon="mdi-chevron-right"
+                        class="text-none"
+                        text="Submodels"
+                        @click="gotoSubmodelList()" />
+                </v-row>
+            </v-card-title>
+            <v-divider></v-divider>
+            <v-card-text class="bg-detailsCard pa-0" style="overflow-y: auto" :style="{ height: detailsListHeight }">
                 <!-- Asset Information -->
                 <!-- 1) AssetInformation is mandatory for an AssetAdministrationShell -->
                 <!-- 2) Minimal (empty) AssetInformation (generated with aas4j) will be { assetKind: null } -->
@@ -58,24 +67,9 @@
                         :description-object="selectedAAS.description"
                         :description-title="'Description'"
                         :small="false"></DescriptionElement>
-                    <template v-if="isMobile">
-                        <v-divider class="mt-2"></v-divider>
-                        <v-list-item>
-                            <template #title>
-                                <div class="mt-2 text-subtitle-2">
-                                    {{ 'Submodel List' }}
-                                    <v-btn
-                                        class="ml-2"
-                                        variant="plain"
-                                        icon="mdi-chevron-right"
-                                        @click="gotoSubmodelList()"></v-btn>
-                                </div>
-                            </template>
-                        </v-list-item>
-                    </template>
                 </v-list>
             </v-card-text>
-        </v-expand-transition>
+        </v-sheet>
     </v-container>
 </template>
 
@@ -103,6 +97,13 @@
             AssetInformation,
         },
         mixins: [RequestHandling, SubmodelElementHandling],
+
+        props: {
+            status: {
+                type: String,
+                default: 'online',
+            },
+        },
 
         setup() {
             const navigationStore = useNavigationStore();
@@ -139,6 +140,33 @@
 
             singleAas() {
                 return this.envStore.getSingleAas;
+            },
+
+            detailsListHeight() {
+                if (this.isMobile) {
+                    if (this.singleAas) {
+                        return 'calc(100vh - 40px - 64px - 34px)'; // Full height - footer - header - details header (divider)
+                    } else {
+                        return 'calc(100vh - 231px - 40px - 64px - 36px - 64px)'; // Full height - 4x AAS items - footer - header - details header (divider) - Searchbar
+                    }
+                } else {
+                    if (this.singleAas) {
+                        return 'calc(100vh - 64px - 64px - 48px - 40px - 35px)'; // Full height - header - title - collapse button - footer - details header (divider)
+                    } else {
+                        return 'calc(50vh - 40px - 48px - 33px)'; // Half height - footer - collapse button - details header (divider)
+                    }
+                }
+            },
+
+            statusColor() {
+                // console.log('status: ', this.status);
+                if (this.status === 'online') {
+                    return 'text-success';
+                } else if (this.status === 'check disabled') {
+                    return 'text-warning';
+                } else {
+                    return 'text-error';
+                }
             },
         },
 
@@ -183,6 +211,7 @@
             gotoSubmodelList() {
                 this.router.push({
                     path: '/submodellist',
+                    query: { aas: this.route.query.aas },
                 });
             },
         },

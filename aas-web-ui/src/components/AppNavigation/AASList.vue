@@ -3,7 +3,7 @@
         <v-card color="card" elevation="0">
             <!-- Title Bar in the AAS List -->
             <v-card-title v-if="singleAas && !isMobile" style="padding: 16px 16px 16px"> Asset & AAS </v-card-title>
-            <v-card-title v-else-if="!isMobile">
+            <v-card-title v-if="!singleAas">
                 <v-row align="center">
                     <v-col cols="auto" class="px-0">
                         <v-tooltip open-delay="600" location="bottom" :disabled="isMobile">
@@ -38,7 +38,7 @@
                     </v-col>
                 </v-row>
             </v-card-title>
-            <v-divider></v-divider>
+            <v-divider v-if="!singleAas"></v-divider>
             <!-- AAS List -->
             <v-list
                 v-if="!singleAas"
@@ -47,13 +47,7 @@
                 :style="{
                     display: 'flex',
                     'flex-direction': 'column',
-                    height: isMobile
-                        ? selectedAAS && Object.keys(selectedAAS).length > 0
-                            ? '176px' // 3x AAS items
-                            : 'calc(100vh - 64px - 64px - 40px - 2px)' // Full height - header - title - footer - 2x divider
-                        : selectedAAS && Object.keys(selectedAAS).length > 0
-                          ? 'calc(50vh - 64px - 40px - 2px - 1px)' // Half height - header - footer - 2x divider - border
-                          : 'calc(100vh - 64px - 64px - 48px - 40px - 2px)', // Full height - header - title - collapse button - footer - 2x divider
+                    height: listHeight,
                 }">
                 <v-virtual-scroll ref="virtualScrollRef" :items="AASData" :item-height="56" class="pb-2 bg-card">
                     <template #default="{ item }">
@@ -128,7 +122,7 @@
                 </v-virtual-scroll>
             </v-list>
             <!-- AAS Details (only visible if the Information Button is pressed on an AAS) -->
-            <AASListDetails v-if="selectedAAS && Object.keys(selectedAAS).length > 0" />
+            <AASListDetails v-if="selectedAAS && Object.keys(selectedAAS).length > 0" :status="AASStatus" />
             <!-- Collapse/extend Sidebar Button -->
             <v-list v-if="!isMobile" nav style="width: 100%; z-index: 9000" class="bg-detailsCard pa-0">
                 <v-divider style="margin-left: -8px; margin-right: -8px"></v-divider>
@@ -208,6 +202,7 @@
     const aasToDelete = ref({}); // Variable to store the AAS to be deleted
     const deleteLoading = ref(false); // Variable to store if the AAS is being deleted
     const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null); // Reference to the Virtual Scroll Component
+    const AASStatus = ref(''); // Variable to store the AAS Status
 
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
@@ -223,6 +218,21 @@
     const triggerAASListReload = computed(() => navigationStore.getTriggerAASListReload); // Get the trigger signal for AAS List reload from store
     const triggerAASListScroll = computed(() => navigationStore.getTriggerAASListScroll); // Get the trigger signal for AAS List scroll from store
     const singleAas = computed(() => envStore.getSingleAas); // Get the single AAS state from the Store
+    const listHeight = computed(() => {
+        if (isMobile.value) {
+            if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
+                return '231px'; // 4x AAS items
+            } else {
+                return 'calc(100vh - 64px - 40px - 64px - 2px)'; // Full height - header - footer - Searchbar - 2x divider
+            }
+        } else {
+            if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
+                return 'calc(50vh - 64px - 64px - 2px - 1px)'; // Half height - header - title - 2x divider - border
+            } else {
+                return 'calc(100vh - 64px - 64px - 48px - 40px - 2px)'; // Full height - header - title - collapse button - footer - 2x divider
+            }
+        }
+    });
 
     // Watchers
     // Watch the AAS Registry URL for changes and reload the AAS List if the URL changes
@@ -343,7 +353,7 @@
 
     // Function to check the AAS Status
     function checkAASStatus() {
-        // console.log('Check AAS Status: ', AAS);
+        // console.log('Check AAS Status');
         // iterate over all AAS in the AAS List
         AASData.value.forEach((AAS: any) => {
             const aasEndpopint = extractEndpointHref(AAS, 'AAS-3.0');
@@ -393,6 +403,7 @@
         }
         if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0 && selectedAAS.value.id === AAS.id) {
             // Deselect AAS
+            AASStatus.value = '';
             router.push({ query: {} });
             aasStore.dispatchSelectedAAS({});
         } else {
@@ -401,6 +412,7 @@
                 scrollToAasAfterDispatch = true;
             }
             // Select AAS
+            AASStatus.value = AAS.status;
             const aasEndpoint = extractEndpointHref(AAS, 'AAS-3.0');
             // Add AAS Endpoint as Query to the Router
             router.push({ query: { aas: aasEndpoint } });
@@ -422,6 +434,9 @@
         const aasEndpointFromList = extractEndpointHref(AAS, 'AAS-3.0');
         const aasEndpointSelected = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
         let isSelected = aasEndpointFromList === aasEndpointSelected;
+        if (isSelected) {
+            AASStatus.value = AAS.status;
+        }
         return isSelected;
     }
 
