@@ -77,32 +77,33 @@ export const useNavigationStore = defineStore({
     },
 
     actions: {
-        dispatchDrawerState(drawerState: boolean) {
-            this.drawerState = drawerState;
-        },
-        dispatchAASDiscoveryURL(url: string) {
-            this.AASDiscoveryURL = url;
-        },
-        dispatchAASRegistryURL(url: string, clearSelectedNode: boolean = true) {
-            this.AASRegistryURL = url;
-            if (clearSelectedNode) useAASStore().dispatchSelectedNode({});
-        },
-        dispatchSubmodelRegistryURL(url: string, clearSelectedNode: boolean = true) {
-            this.SubmodelRegistryURL = url;
-            if (clearSelectedNode) useAASStore().dispatchSelectedNode({});
-        },
-        dispatchRepoURL(type: string, url: string) {
-            switch (type) {
-                case 'AAS':
+        dispatchComponentURL(componentKey: string, url: string, clearSelectedNode: boolean = true) {
+            // console.log('dispatchComponentURL', componentKey, url, clearSelectedNode);
+            switch (componentKey) {
+                case 'AASDiscovery':
+                    this.AASDiscoveryURL = url;
+                    break;
+                case 'AASRegistry':
+                    this.AASRegistryURL = url;
+                    if (clearSelectedNode) useAASStore().dispatchSelectedNode({});
+                    break;
+                case 'SubmodelRegistry':
+                    this.SubmodelRegistryURL = url;
+                    if (clearSelectedNode) useAASStore().dispatchSelectedNode({});
+                    break;
+                case 'AASRepo':
                     this.AASRepoURL = url;
                     break;
-                case 'Submodel':
+                case 'SubmodelRepo':
                     this.SubmodelRepoURL = url;
                     break;
-                case 'ConceptDescription':
+                case 'ConceptDescriptionRepo':
                     this.ConceptDescriptionRepoURL = url;
                     break;
             }
+        },
+        dispatchDrawerState(drawerState: boolean) {
+            this.drawerState = drawerState;
         },
         dispatchSnackbar(snackbarObj: SnackbarType) {
             this.Snackbar = snackbarObj;

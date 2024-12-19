@@ -23,6 +23,22 @@ export function useDashboardHandling() {
         return useEnvStore().getEnvDashboardServicePath;
     });
 
+    async function checkDashboardAvailability(): Promise<boolean> {
+        if (!dashboardServicePath.value || dashboardServicePath.value === '') return false;
+
+        const path = dashboardServicePath.value.replace('/api/elements', '/test');
+        const context = 'checking if dashboard is available';
+        const disableMessage = true;
+
+        try {
+            const response = await getRequest(path, context, disableMessage);
+            if (response.success) return true;
+            return false;
+        } catch {
+            return false;
+        }
+    }
+
     async function dashboardAdd(item: any) {
         // console.log(item)
         const group = await getAAS();
@@ -149,6 +165,7 @@ export function useDashboardHandling() {
     }
 
     return {
+        checkDashboardAvailability,
         dashboardAdd,
         getGroups,
         getElements,

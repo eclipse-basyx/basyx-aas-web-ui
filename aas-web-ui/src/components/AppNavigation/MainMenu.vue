@@ -103,6 +103,7 @@
     import { computed, onMounted, reactive, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
+    import { useDashboardHandling } from '@/composables/DashboardHandling';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
@@ -112,6 +113,7 @@
     const route = useRoute();
 
     // Composables
+    const { checkDashboardAvailability } = useDashboardHandling();
     const { getRequest } = useRequestHandling();
 
     // Stores
@@ -127,12 +129,12 @@
         (e: 'closeMenu'): void;
     }>();
 
-    // Reactive Repository Configurations
+    // Reactive BaSyx Components Configurations
     const basyxComponents = reactive<Record<RepositoryKey, BaSyxComponent>>({
         AASDiscovery: {
             url: ref(navigationStore.getAASDiscoveryURL), // Ensure the getter is invoked
             loading: ref(false),
-            connect: () => connectRepository('AASDiscovery'),
+            connect: () => connectComponent('AASDiscovery'),
             label: 'AAS Discovery URL',
             pathCheck: '/lookup/shells',
             additionalParams: () => `?limit=1`,
@@ -140,7 +142,7 @@
         AASRegistry: {
             url: ref(navigationStore.getAASRegistryURL),
             loading: ref(false),
-            connect: () => connectRepository('AASRegistry'),
+            connect: () => connectComponent('AASRegistry'),
             label: 'AAS Registry URL',
             pathCheck: '/shell-descriptors',
             additionalParams: () => `?limit=1`,
@@ -148,7 +150,7 @@
         SubmodelRegistry: {
             url: ref(navigationStore.getSubmodelRegistryURL),
             loading: ref(false),
-            connect: () => connectRepository('SubmodelRegistry'),
+            connect: () => connectComponent('SubmodelRegistry'),
             label: 'Submodel Registry URL',
             pathCheck: '/submodel-descriptors',
             additionalParams: () => `?limit=1`,
@@ -156,21 +158,21 @@
         AASRepo: {
             url: ref(navigationStore.getAASRepoURL),
             loading: ref(false),
-            connect: () => connectRepository('AASRepo'),
+            connect: () => connectComponent('AASRepo'),
             label: 'AAS Repository URL',
             additionalParams: () => `?limit=1`,
         },
         SubmodelRepo: {
             url: ref(navigationStore.getSubmodelRepoURL),
             loading: ref(false),
-            connect: () => connectRepository('SubmodelRepo'),
+            connect: () => connectComponent('SubmodelRepo'),
             label: 'Submodel Repository URL',
             additionalParams: () => `?limit=1&level=core`,
         },
         ConceptDescriptionRepo: {
             url: ref(navigationStore.getConceptDescriptionRepoURL),
             loading: ref(false),
-            connect: () => connectRepository('ConceptDescriptionRepo'),
+            connect: () => connectComponent('ConceptDescriptionRepo'),
             label: 'Concept Description Repository URL',
             additionalParams: () => `?limit=1`,
         },
@@ -178,7 +180,6 @@
 
     // Additional States
     const dashboardAvailable = ref(false);
-    const dashboardServicePath = ref(envStore.getEnvDashboardServicePath);
     const endpointConfigAvailable = ref(envStore.getEndpointConfigAvailable);
 
     // Computed Properties
@@ -190,12 +191,12 @@
         aasStore.dispatchSelectedAAS({}); // reset selected AAS
     });
 
-    onMounted(() => {
-        checkDashboardAvailability();
+    onMounted(async () => {
+        dashboardAvailable.value = await checkDashboardAvailability();
     });
 
     // Functions
-    async function connectRepository(repoKey: keyof typeof basyxComponents) {
+    async function connectComponent(repoKey: keyof typeof basyxComponents) {
         const repo = basyxComponents[repoKey];
         if (repo.url && repo.url.trim() !== '') {
             repo.loading = true;
@@ -220,18 +221,20 @@
 
                 if (response.success) {
                     // Dispatch to the navigation store
-                    navigationStore.dispatchRepoURL(repoKey, repo.url);
+                    navigationStore.dispatchComponentURL(repoKey, repo.url);
 
                     // Save to localStorage if endpoint config is available
                     if (endpointConfigAvailable.value) {
+                        // console.log(`Saving ${repoKey} URL to localStorage:`, repo.url);
                         window.localStorage.setItem(repoKey, repo.url);
                     }
                 } else {
                     // Clear the URL in the navigation store
-                    navigationStore.dispatchRepoURL(repoKey, '');
+                    navigationStore.dispatchComponentURL(repoKey, '');
 
                     // Remove from localStorage if endpoint config is available
                     if (endpointConfigAvailable.value) {
+                        // console.log(`Removing ${repoKey} URL from localStorage:`, repo.url);
                         window.localStorage.removeItem(repoKey);
                     }
                 }
@@ -242,22 +245,6 @@
             }
         } else {
             console.warn(`Repository URL for ${repoKey} is not defined or empty.`);
-        }
-    }
-
-    async function checkDashboardAvailability() {
-        if (!dashboardServicePath.value || dashboardServicePath.value === '') return;
-
-        let path = dashboardServicePath.value.replace('/api/elements', '/test');
-        const context = 'checking if dashboard is available';
-        const disableMessage = true;
-
-        try {
-            const response = await getRequest(path, context, disableMessage);
-            dashboardAvailable.value = response.success;
-        } catch (error) {
-            dashboardAvailable.value = false;
-            console.error('Error checking dashboard availability:', error);
         }
     }
 

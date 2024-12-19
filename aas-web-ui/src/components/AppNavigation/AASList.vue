@@ -331,9 +331,6 @@
                 unfilteredAASData.value = sortedData; // make a copy of the sorted data and store it in the unfilteredAASData variable
                 scrollToSelectedAAS(); // scroll to the selected AAS
                 if (statusCheck.value) checkAASStatus(); // check the AAS Status
-            } else {
-                // execute if the AAS Registry Server is not found
-                navigationStore.dispatchAASRegistryURL(''); // clear the URL in the NavigationStore
             }
             listLoading.value = false;
         });
