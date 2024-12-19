@@ -18,29 +18,7 @@
     </v-container>
 </template>
 
-<script lang="ts">
-    import { defineComponent } from 'vue';
-    import { useAASStore } from '@/store/AASDataStore';
+<script lang="ts" setup>
     import ComponentVisualization from './ComponentVisualization.vue';
     import SubmodelList from './SubmodelList.vue';
-
-    export default defineComponent({
-        name: 'AASViewer',
-        components: {
-            SubmodelList,
-            ComponentVisualization,
-        },
-
-        setup() {
-            const aasStore = useAASStore();
-
-            return {
-                aasStore, // AASStore Object
-            };
-        },
-
-        computed: {},
-
-        methods: {},
-    });
 </script>
