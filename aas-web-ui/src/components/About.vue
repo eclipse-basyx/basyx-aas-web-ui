@@ -6,122 +6,39 @@
 
         <h2>Involved Organizations and Companies</h2>
         <v-row align="center" justify="center" class="mt-5">
-            <v-col cols="3" class="pa-6">
-                <v-hover>
-                    <template #default="{ props: hoverProps, isHovering }">
-                        <a href="https://basyx.org/" target="_blank">
+            <v-col v-for="(company, index) in companies" :key="index" cols="6" md="3" sm="4" xs="6" class="pa-6">
+                <!-- Desktop Mode: With Hover Effects -->
+                <template v-if="!isMobile">
+                    <v-hover v-slot="{ props: hoverProps, isHovering }">
+                        <a :href="company.href" target="_blank" rel="noopener noreferrer">
                             <v-img
-                                src="Basyx_Logo.svg"
+                                :src="getImageSrc(company)"
                                 v-bind="hoverProps"
-                                :style="{ filter: isHovering ? 'grayscale(0%)' : 'grayscale(100%)' }">
-                                <template #sources>
-                                    <source srcset="@/assets/BaSyx_Logo.svg" />
+                                :style="{ filter: isHovering ? 'grayscale(0%)' : 'grayscale(100%)' }"
+                                contain
+                                :alt="company.altText">
+                                <template #placeholder>
+                                    <v-row class="fill-height ma-0" align="center" justify="center">
+                                        <v-progress-circular indeterminate color="grey lighten-5"></v-progress-circular>
+                                    </v-row>
                                 </template>
                             </v-img>
                         </a>
-                    </template>
-                </v-hover>
-            </v-col>
-            <v-col cols="3" class="pa-6">
-                <v-hover v-slot="{ props: hoverProps, isHovering }">
-                    <a href="https://www.htw-berlin.de/" target="_blank">
-                        <v-img
-                            :src="isDark ? 'HTW_Logo_dark.svg' : 'HTW_Logo_light.svg'"
-                            v-bind="hoverProps"
-                            :style="{ filter: isHovering ? 'grayscale(0%)' : 'grayscale(100%)' }">
-                            <template v-if="isDark" #sources>
-                                <source srcset="@/assets/HTW_Logo_dark.svg" />
-                            </template>
-                            <template v-else #sources>
-                                <source srcset="@/assets/HTW_Logo_light.svg" />
+                    </v-hover>
+                </template>
+
+                <!-- Mobile Mode: Static Image Without Hover -->
+                <template v-else>
+                    <a :href="company.href" target="_blank" rel="noopener noreferrer">
+                        <v-img :src="getImageSrc(company)" contain :alt="company.altText">
+                            <template #placeholder>
+                                <v-row class="fill-height ma-0" align="center" justify="center">
+                                    <v-progress-circular indeterminate color="grey lighten-5"></v-progress-circular>
+                                </v-row>
                             </template>
                         </v-img>
                     </a>
-                </v-hover>
-            </v-col>
-            <v-col cols="3" class="pa-6">
-                <v-hover v-slot="{ props: hoverProps, isHovering }">
-                    <a href="https://www.iese.fraunhofer.de/" target="_blank">
-                        <v-img
-                            :src="isDark ? 'IESE_Logo_dark.svg' : 'IESE_Logo_light.svg'"
-                            v-bind="hoverProps"
-                            :style="{ filter: isHovering ? 'grayscale(0%)' : 'grayscale(100%)' }">
-                            <template v-if="isDark" #sources>
-                                <source srcset="@/assets/IESE_Logo_dark.svg" />
-                            </template>
-                            <template v-else #sources>
-                                <source srcset="@/assets/IESE_Logo_light.svg" />
-                            </template>
-                        </v-img>
-                    </a>
-                </v-hover>
-            </v-col>
-            <v-col cols="3" class="pa-6">
-                <v-hover v-slot="{ props: hoverProps, isHovering }">
-                    <a href="https://industrialdigitaltwin.org/" target="_blank">
-                        <v-img
-                            src="IDTA_Logo.png"
-                            v-bind="hoverProps"
-                            :style="{ filter: isHovering ? 'grayscale(0%)' : 'grayscale(100%)' }">
-                            <template #sources>
-                                <source srcset="@/assets/IDTA_Logo.png" />
-                            </template>
-                        </v-img>
-                    </a>
-                </v-hover>
-            </v-col>
-        </v-row>
-        <v-row align="center" justify="center">
-            <v-col cols="3" class="pa-6">
-                <v-hover v-slot="{ props: hoverProps, isHovering }">
-                    <a href="https://www.harting.com/" target="_blank">
-                        <v-img
-                            :src="isDark ? 'HARTING_Logo_dark.png' : 'HARTING_Logo_light.png'"
-                            v-bind="hoverProps"
-                            :style="{ filter: isHovering ? 'grayscale(0%)' : 'grayscale(100%)' }">
-                            <template v-if="isDark" #sources>
-                                <source srcset="@/assets/HARTING_Logo_dark.png" />
-                            </template>
-                            <template v-else #sources>
-                                <source srcset="@/assets/HARTING_Logo_light.png" />
-                            </template>
-                        </v-img>
-                    </a>
-                </v-hover>
-            </v-col>
-            <v-col cols="3" class="pa-6">
-                <v-hover v-slot="{ props: hoverProps, isHovering }">
-                    <a href="https://www.dfki.de/" target="_blank">
-                        <v-img
-                            :src="isDark ? 'DFKI_Logo_dark.png' : 'DFKI_Logo_light.png'"
-                            v-bind="hoverProps"
-                            :style="{ filter: isHovering ? 'grayscale(0%)' : 'grayscale(100%)' }">
-                            <template v-if="isDark" #sources>
-                                <source srcset="@/assets/DFKI_Logo_dark.png" />
-                            </template>
-                            <template v-else #sources>
-                                <source srcset="@/assets/DFKI_Logo_light.png" />
-                            </template>
-                        </v-img>
-                    </a>
-                </v-hover>
-            </v-col>
-            <v-col cols="3" class="pa-6">
-                <v-hover v-slot="{ props: hoverProps, isHovering }">
-                    <a href="https://arena2036.de/" target="_blank">
-                        <v-img
-                            :src="isDark ? 'ARENA2036_Logo_dark.png' : 'ARENA2036_Logo_light.png'"
-                            v-bind="hoverProps"
-                            :style="{ filter: isHovering ? 'grayscale(0%)' : 'grayscale(100%)' }">
-                            <template v-if="isDark" #sources>
-                                <source srcset="@/assets/ARENA2036_Logo_dark.png" />
-                            </template>
-                            <template v-else #sources>
-                                <source srcset="@/assets/ARENA2036_Logo_light.png" />
-                            </template>
-                        </v-img>
-                    </a>
-                </v-hover>
+                </template>
             </v-col>
         </v-row>
 
@@ -137,11 +54,11 @@
                     </v-avatar>
                 </template>
                 <v-list-item-title>The BaSyx Developers - Website ↗</v-list-item-title>
-                <v-list-item-subtitle
-                    ><a href="https://www.eclipse.org/basyx/" target="_blank"
-                        >https://www.eclipse.org/basyx/</a
-                    ></v-list-item-subtitle
-                >
+                <v-list-item-subtitle>
+                    <a href="https://www.eclipse.org/basyx/" target="_blank" rel="noopener noreferrer">
+                        https://www.eclipse.org/basyx/
+                    </a>
+                </v-list-item-subtitle>
             </v-list-item>
             <v-list-item>
                 <template #prepend>
@@ -150,9 +67,9 @@
                     </v-avatar>
                 </template>
                 <v-list-item-title>Send email to The BaSyx Developers</v-list-item-title>
-                <v-list-item-subtitle
-                    ><a href="mailto:basyx-dev@eclipse.org">basyx-dev@eclipse.org</a></v-list-item-subtitle
-                >
+                <v-list-item-subtitle>
+                    <a href="mailto:basyx-dev@eclipse.org">basyx-dev@eclipse.org</a>
+                </v-list-item-subtitle>
             </v-list-item>
         </v-list>
 
@@ -164,16 +81,24 @@
                 <v-list-item>
                     <template #prepend>
                         <v-avatar>
-                            <v-img :src="getImageUrl(contributor.image)"></v-img>
+                            <v-img :src="contributor.image" :alt="contributor.name"></v-img>
                         </v-avatar>
                     </template>
                     <template #append>
-                        <a v-if="contributor?.github_link" :href="contributor.github_link" target="_blank">
+                        <a
+                            v-if="contributor.github_link"
+                            :href="contributor.github_link"
+                            target="_blank"
+                            rel="noopener noreferrer">
                             <v-icon>mdi-github</v-icon>
                         </a>
                         <v-icon v-else>mdi-blank</v-icon>
                         &nbsp;
-                        <a v-if="contributor?.linkedin_link" :href="contributor.linkedin_link" target="_blank">
+                        <a
+                            v-if="contributor.linkedin_link"
+                            :href="contributor.linkedin_link"
+                            target="_blank"
+                            rel="noopener noreferrer">
                             <v-icon>mdi-linkedin</v-icon>
                         </a>
                         <v-icon v-else>mdi-blank</v-icon>
@@ -223,79 +148,136 @@
     </v-container>
 </template>
 
-<script lang="ts">
-    import { defineComponent } from 'vue';
+<script lang="ts" setup>
+    import { computed, reactive } from 'vue';
     import { useTheme } from 'vuetify';
+    // Import company logos
+    import ARENA2036LogoDark from '@/assets/Companies/ARENA2036_Logo_dark.svg';
+    import ARENA2036LogoLight from '@/assets/Companies/ARENA2036_Logo_light.svg';
+    import BaSyxLogo from '@/assets/Companies/BaSyx_Logo.svg';
+    import DFKILogoDark from '@/assets/Companies/DFKI_Logo_dark.png';
+    import DFKILogoLight from '@/assets/Companies/DFKI_Logo_light.png';
+    import HARTINGLogoDark from '@/assets/Companies/HARTING_Logo_dark.png';
+    import HARTINGLogoLight from '@/assets/Companies/HARTING_Logo_light.png';
+    import HTWLogoDark from '@/assets/Companies/HTW_Logo_dark.svg';
+    import HTWLogoLight from '@/assets/Companies/HTW_Logo_light.svg';
+    import IDTALogo from '@/assets/Companies/IDTA_Logo.png';
+    import IESELogoDark from '@/assets/Companies/IESE_Logo_dark.svg';
+    import IESELogoLight from '@/assets/Companies/IESE_Logo_light.svg';
+    // Import contributor images
+    import Buettner from '@/assets/Contributors/Buettner.jpg';
+    import Eicke from '@/assets/Contributors/Eicke.jpg';
+    import Fischer from '@/assets/Contributors/Fischer.jpg';
+    import Schnicke from '@/assets/Contributors/Schnicke.jpg';
+    import Zielstorff from '@/assets/Contributors/Zielstorff.jpg';
+    import { useNavigationStore } from '@/store/NavigationStore';
 
-    export default defineComponent({
-        name: 'About',
+    const navigationStore = useNavigationStore();
+    const theme = useTheme();
 
-        setup() {
-            const theme = useTheme();
+    const isDark = computed(() => theme.global.current.value.dark);
+    const isMobile = computed(() => navigationStore.getIsMobile);
 
-            return {
-                theme, // Theme Object
-            };
+    // Helper function to determine the correct image source based on theme
+    function getImageSrc(company: any): string {
+        if (company.isDynamic) {
+            return isDark.value ? company.srcDark : company.srcLight;
+        }
+        return company.srcStatic;
+    }
+
+    // Array of company objects with imported images
+    const companies = reactive([
+        {
+            href: 'https://basyx.org/',
+            isDynamic: false,
+            srcStatic: BaSyxLogo,
+            altText: 'BaSyx Logo',
         },
-
-        data() {
-            return {
-                contributors: [
-                    {
-                        name: 'Aaron Zielstorff',
-                        company: 'Fraunhofer IESE',
-                        email: 'aaron.zielstorff@iese.fraunhofer.de',
-                        image: 'Zielstorff.jpg',
-                        github_link: 'https://github.com/aaronzi',
-                        linkedin_link: 'https://www.linkedin.com/in/aaron-zielstorff',
-                    },
-                    {
-                        name: 'Frank Schnicke',
-                        company: 'Fraunhofer IESE',
-                        email: 'Frank.Schnicke@iese.fraunhofer.de',
-                        image: 'Schnicke.jpg',
-                        github_link: 'https://github.com/FrankSchnicke',
-                        linkedin_link: 'https://www.linkedin.com/in/frank-schnicke',
-                    },
-                    {
-                        name: 'Fiona Helena Büttner',
-                        company: 'Hochschule für Technik und Wirtschaft Berlin',
-                        email: 'Fiona.Buettner@student.htw-berlin.de',
-                        image: 'Buettner.jpg',
-                        github_link: 'https://github.com/fyo21103',
-                        linkedin_link: 'https://www.linkedin.com/in/fiona-helena-buettner',
-                    },
-                    {
-                        name: 'Rene Pascal Fischer',
-                        company: 'Fraunhofer IESE',
-                        email: 'Rene-Pascal.Fischer@iese.fraunhofer.de',
-                        image: 'Fischer.jpg',
-                        github_link: 'https://github.com/FischerRene',
-                        linkedin_link: 'https://www.linkedin.com/in/fischer-rene',
-                    },
-                    {
-                        name: 'Sebastian Eicke',
-                        company: 'HARTING Technology Group',
-                        email: 'Sebastian.Eicke@HARTING.com',
-                        image: 'Eicke.jpg',
-                        github_link: 'https://github.com/seicke',
-                        linkedin_link: 'https://www.linkedin.com/in/seicke',
-                    },
-                ] as Array<any>,
-            };
+        {
+            href: 'https://www.htw-berlin.de/',
+            isDynamic: true,
+            srcDark: HTWLogoDark,
+            srcLight: HTWLogoLight,
+            altText: 'HTW Berlin Logo',
         },
-
-        computed: {
-            // Check if the current Theme is dark
-            isDark() {
-                return this.theme.global.current.value.dark;
-            },
+        {
+            href: 'https://www.iese.fraunhofer.de/',
+            isDynamic: true,
+            srcDark: IESELogoDark,
+            srcLight: IESELogoLight,
+            altText: 'Fraunhofer IESE Logo',
         },
-
-        methods: {
-            getImageUrl(imageName: string) {
-                return new URL(`../assets/Contributors/${imageName}`, import.meta.url).href;
-            },
+        {
+            href: 'https://industrialdigitaltwin.org/',
+            isDynamic: false,
+            srcStatic: IDTALogo,
+            altText: 'IDTA Logo',
         },
-    });
+        {
+            href: 'https://www.harting.com/',
+            isDynamic: true,
+            srcDark: HARTINGLogoDark,
+            srcLight: HARTINGLogoLight,
+            altText: 'HARTING Technology Group Logo',
+        },
+        {
+            href: 'https://www.dfki.de/',
+            isDynamic: true,
+            srcDark: DFKILogoDark,
+            srcLight: DFKILogoLight,
+            altText: 'DFKI Logo',
+        },
+        {
+            href: 'https://arena2036.de/',
+            isDynamic: true,
+            srcDark: ARENA2036LogoDark,
+            srcLight: ARENA2036LogoLight,
+            altText: 'ARENA2036 Logo',
+        },
+    ]);
+
+    // Array of contributor objects with imported images
+    const contributors = reactive([
+        {
+            name: 'Aaron Zielstorff',
+            company: 'Fraunhofer IESE',
+            email: 'aaron.zielstorff@iese.fraunhofer.de',
+            image: Zielstorff,
+            github_link: 'https://github.com/aaronzi',
+            linkedin_link: 'https://www.linkedin.com/in/aaron-zielstorff',
+        },
+        {
+            name: 'Frank Schnicke',
+            company: 'Fraunhofer IESE',
+            email: 'Frank.Schnicke@iese.fraunhofer.de',
+            image: Schnicke,
+            github_link: 'https://github.com/FrankSchnicke',
+            linkedin_link: 'https://www.linkedin.com/in/frank-schnicke',
+        },
+        {
+            name: 'Fiona Helena Büttner',
+            company: 'Hochschule für Technik und Wirtschaft Berlin',
+            email: 'Fiona.Buettner@student.htw-berlin.de',
+            image: Buettner,
+            github_link: 'https://github.com/fyo21103',
+            linkedin_link: 'https://www.linkedin.com/in/fiona-helena-buettner',
+        },
+        {
+            name: 'Rene Pascal Fischer',
+            company: 'Fraunhofer IESE',
+            email: 'Rene-Pascal.Fischer@iese.fraunhofer.de',
+            image: Fischer,
+            github_link: 'https://github.com/FischerRene',
+            linkedin_link: 'https://www.linkedin.com/in/fischer-rene',
+        },
+        {
+            name: 'Sebastian Eicke',
+            company: 'HARTING Technology Group',
+            email: 'Sebastian.Eicke@HARTING.com',
+            image: Eicke,
+            github_link: 'https://github.com/seicke',
+            linkedin_link: 'https://www.linkedin.com/in/seicke',
+        },
+    ]);
 </script>

@@ -105,6 +105,9 @@
         } else if (currentRouteName === 'ComponentVisualization' && aasEndpoint && submodelElementPath) {
             // Redirect to 'ComponentVisualization' with 'aas' and 'path' parameters
             router.push({ name: 'ComponentVisualization', query: { aas: aasEndpoint, path: submodelElementPath } });
+        } else if (currentRouteName === 'About') {
+            // Stay on 'About'
+            router.push({ name: 'About' });
         } else {
             // Redirect to 'AASList' without query parameters
             router.push({ name: 'AASList' });
@@ -124,6 +127,9 @@
         } else if (currentRouteName === 'AASViewer') {
             // Stay on 'AASViewer' but update query parameters
             router.push({ name: 'AASViewer', query });
+        } else if (currentRouteName === 'About') {
+            // Stay on 'About'
+            router.push({ name: 'About' });
         } else {
             // Default to 'MainWindow' with query parameters
             router.push({ name: 'MainWindow', query });
