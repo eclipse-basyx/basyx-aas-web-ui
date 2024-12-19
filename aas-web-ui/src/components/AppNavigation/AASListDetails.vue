@@ -147,9 +147,9 @@
     function fetchAssetDetails() {
         const aasEndpopint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
         const assetInformationEndpoint = aasEndpopint + '/asset-information';
-        let path = assetInformationEndpoint;
-        let context = 'retrieving asset information';
-        let disableMessage = false;
+        const path = assetInformationEndpoint;
+        const context = 'retrieving asset information';
+        const disableMessage = false;
         getRequest(path, context, disableMessage).then((response: any) => {
             if (response.success) {
                 let fetchedAssetInformation = response.data;
