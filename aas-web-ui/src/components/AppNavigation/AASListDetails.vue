@@ -73,147 +73,103 @@
     </v-container>
 </template>
 
-<script lang="ts">
-    import { defineComponent } from 'vue';
+<script lang="ts" setup>
+    import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import AdministrativeInformationElement from '@/components/UIComponents/AdministrativeInformationElement.vue';
     import AssetInformation from '@/components/UIComponents/AssetInformation.vue';
     import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
     import DisplayNameElement from '@/components/UIComponents/DisplayNameElement.vue';
     import IdentificationElement from '@/components/UIComponents/IdentificationElement.vue';
-    import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { extractEndpointHref } from '@/utils/DescriptorUtils';
 
-    export default defineComponent({
-        name: 'AASListDetails',
-        components: {
-            IdentificationElement,
-            AdministrativeInformationElement,
-            DisplayNameElement,
-            DescriptionElement,
-            AssetInformation,
-        },
-        mixins: [RequestHandling, SubmodelElementHandling],
+    // Vue Router
+    const route = useRoute();
+    const router = useRouter();
 
-        props: {
-            status: {
-                type: String,
-                default: 'online',
-            },
-        },
+    // Composables
+    const { getRequest } = useRequestHandling();
 
-        setup() {
-            const navigationStore = useNavigationStore();
-            const aasStore = useAASStore();
-            const envStore = useEnvStore();
-            const route = useRoute();
-            const router = useRouter();
+    // Stores
+    const navigationStore = useNavigationStore();
+    const aasStore = useAASStore();
+    const envStore = useEnvStore();
 
-            return {
-                navigationStore, // NavigationStore Object
-                aasStore, // AASStore Object
-                envStore, // EnvironmentStore Object
-                route, // Route Object
-                router, // Router Object
-            };
-        },
-
-        data() {
-            return {
-                assetInformation: null as any, // Asset Information Object
-            };
-        },
-
-        computed: {
-            // Check if the current Device is a Mobile Device
-            isMobile() {
-                return this.navigationStore.getIsMobile;
-            },
-
-            // get the selected AAS from Store
-            selectedAAS() {
-                return this.aasStore.getSelectedAAS;
-            },
-
-            singleAas() {
-                return this.envStore.getSingleAas;
-            },
-
-            detailsListHeight() {
-                if (this.isMobile) {
-                    if (this.singleAas) {
-                        return 'calc(100vh - 40px - 64px - 34px)'; // Full height - footer - header - details header (divider)
-                    } else {
-                        return 'calc(100vh - 231px - 40px - 64px - 36px - 64px)'; // Full height - 4x AAS items - footer - header - details header (divider) - Searchbar
-                    }
-                } else {
-                    if (this.singleAas) {
-                        return 'calc(100vh - 64px - 64px - 48px - 40px - 35px)'; // Full height - header - title - collapse button - footer - details header (divider)
-                    } else {
-                        return 'calc(50vh - 40px - 48px - 33px)'; // Half height - footer - collapse button - details header (divider)
-                    }
-                }
-            },
-
-            statusColor() {
-                // console.log('status: ', this.status);
-                if (this.status === 'online') {
-                    return 'text-success';
-                } else if (this.status === 'check disabled') {
-                    return 'text-warning';
-                } else {
-                    return 'text-error';
-                }
-            },
-        },
-
-        watch: {
-            selectedAAS() {
-                this.fetchAssetDetails();
-            },
-        },
-
-        mounted() {
-            this.fetchAssetDetails();
-        },
-
-        methods: {
-            // Function to fetch the Asset Details from the AAS Repository
-            fetchAssetDetails() {
-                // console.log('fetch asset details: ', this.selectedAAS);
-                const aasEndpopint = this.extractEndpointHref(this.selectedAAS, 'AAS-3.0');
-                const assetInformationEndpoint = aasEndpopint + '/asset-information';
-                // console.log('aasRepoEndpoint: ', assetInformationEndpoint);
-                let path = assetInformationEndpoint;
-                let context = 'retrieving asset information';
-                let disableMessage = false;
-                this.getRequest(path, context, disableMessage).then((response: any) => {
-                    if (response.success) {
-                        // console.log('asset information: ', response.data);
-                        let assetInformation = response.data;
-                        if (
-                            assetInformation.defaultThumbnail &&
-                            assetInformation.defaultThumbnail.path &&
-                            !assetInformation.defaultThumbnail.path.startsWith('http')
-                        ) {
-                            let assetInformationThumbnailEndpoint = assetInformationEndpoint + '/thumbnail';
-                            assetInformation.defaultThumbnail.path = assetInformationThumbnailEndpoint;
-                        }
-                        // console.log('asset information thumbnail: ', assetInformation.defaultThumbnail);
-                        this.assetInformation = assetInformation;
-                    }
-                });
-            },
-
-            gotoSubmodelList() {
-                this.router.push({
-                    path: '/submodellist',
-                    query: { aas: this.route.query.aas },
-                });
-            },
+    const props = defineProps({
+        status: {
+            type: String,
+            default: 'check disabled',
         },
     });
+
+    const assetInformation = ref(null as any | null);
+
+    const isMobile = computed(() => navigationStore.getIsMobile);
+    const selectedAAS = computed(() => aasStore.getSelectedAAS);
+    const singleAas = computed(() => envStore.getSingleAas);
+    const detailsListHeight = computed(() => {
+        if (isMobile.value) {
+            if (singleAas.value) {
+                return 'calc(100vh - 40px - 64px - 34px)'; // Full height - footer - header - details header (divider)
+            } else {
+                return 'calc(100vh - 231px - 40px - 64px - 36px - 64px)'; // Full height - 4x AAS items - footer - header - details header (divider) - Searchbar
+            }
+        } else {
+            if (singleAas.value) {
+                return 'calc(100vh - 64px - 64px - 48px - 40px - 35px)'; // Full height - header - title - collapse button - footer - details header (divider)
+            } else {
+                return 'calc(50vh - 40px - 48px - 33px)'; // Half height - footer - collapse button - details header (divider)
+            }
+        }
+    });
+    const statusColor = computed(() => {
+        if (props.status === 'online') {
+            return 'text-success';
+        } else if (props.status === 'check disabled') {
+            return 'text-warning';
+        } else {
+            return 'text-error';
+        }
+    });
+
+    watch(selectedAAS, () => {
+        fetchAssetDetails();
+    });
+
+    onMounted(() => {
+        fetchAssetDetails();
+    });
+
+    function fetchAssetDetails() {
+        const aasEndpopint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
+        const assetInformationEndpoint = aasEndpopint + '/asset-information';
+        let path = assetInformationEndpoint;
+        let context = 'retrieving asset information';
+        let disableMessage = false;
+        getRequest(path, context, disableMessage).then((response: any) => {
+            if (response.success) {
+                let fetchedAssetInformation = response.data;
+                if (
+                    fetchedAssetInformation.defaultThumbnail &&
+                    fetchedAssetInformation.defaultThumbnail.path &&
+                    !fetchedAssetInformation.defaultThumbnail.path.startsWith('http')
+                ) {
+                    let assetInformationThumbnailEndpoint = assetInformationEndpoint + '/thumbnail';
+                    fetchedAssetInformation.defaultThumbnail.path = assetInformationThumbnailEndpoint;
+                }
+                assetInformation.value = fetchedAssetInformation;
+            }
+        });
+    }
+
+    function gotoSubmodelList() {
+        router.push({
+            path: '/submodellist',
+            query: { aas: route.query.aas },
+        });
+    }
 </script>
