@@ -27,7 +27,7 @@
                                         color="primary"
                                         class="text-buttonText"
                                         style="right: -4px"
-                                        @click.stop="uploadAASXFile()"
+                                        @click.stop="uploadAASFile()"
                                         >Upload</v-btn
                                     >
                                 </template>
@@ -41,77 +41,29 @@
     </v-tooltip>
 </template>
 
-<script lang="ts">
-    import { defineComponent } from 'vue';
-    import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+<script lang="ts" setup>
+    import { computed, ref } from 'vue';
+    import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useNavigationStore } from '@/store/NavigationStore';
 
-    export default defineComponent({
-        name: 'UploadAAS',
-        mixins: [RequestHandling, SubmodelElementHandling],
+    const navigationStore = useNavigationStore();
 
-        setup() {
-            const navigationStore = useNavigationStore();
+    const { uploadAas } = useAASRepositoryClient();
 
-            return {
-                navigationStore, // NavigationStore Object
-            };
-        },
+    const uploadAASDialog = ref(false);
+    const aasFile = ref(null as File | null);
+    const loadingUpload = ref(false);
 
-        data() {
-            return {
-                uploadAASDialog: false, // Dialog State Handler
-                aasFile: [] as any, // AASX File to upload
-                loadingUpload: false, // Loading State
-            };
-        },
+    const isMobile = computed(() => navigationStore.getIsMobile);
 
-        computed: {
-            // Get the upload URL
-            uploadURL() {
-                let aasRepoURL = this.navigationStore.getAASRepoURL;
-                // remove '/shells' from the URL
-                return aasRepoURL.replace('/shells', '') + '/upload';
-            },
+    async function uploadAASFile() {
+        if (!aasFile.value) return;
+        loadingUpload.value = true;
 
-            // Check if the current Device is a Mobile Device
-            isMobile() {
-                return this.navigationStore.getIsMobile;
-            },
-        },
+        await uploadAas(aasFile.value);
 
-        methods: {
-            // Function to upload the AASX File to the AAS-Server (TODO: Update AASX Upload to AAS V3 API when available)
-            uploadAASXFile() {
-                // console.log('upload aasx file: ' + this.aasxFile);
-                // check if a file is selected
-                if (this.aasFile.length == 0) return;
-                this.loadingUpload = true;
-                let context = 'uploading AASX File';
-                let disableMessage = false;
-                let path = this.uploadURL;
-                var headers = new Headers();
-                var formData = new FormData();
-                formData.append('file', this.aasFile);
-                // Send Request to upload the file
-                this.postRequest(path, formData, headers, context, disableMessage).then((response: any) => {
-                    if (response.success) {
-                        this.navigationStore.dispatchSnackbar({
-                            status: true,
-                            timeout: 4000,
-                            color: 'success',
-                            btnColor: 'buttonText',
-                            text: 'AASX-File uploaded.',
-                        }); // Show Success Snackbar
-                    }
-                    this.aasFile = []; // clear the AASX File
-                    // reload the AAS list
-                    this.navigationStore.dispatchTriggerAASListReload(true);
-                    this.uploadAASDialog = false;
-                    this.loadingUpload = false;
-                });
-            },
-        },
-    });
+        aasFile.value = null;
+        uploadAASDialog.value = false;
+        loadingUpload.value = false;
+    }
 </script>
