@@ -62,282 +62,236 @@
     </v-container>
 </template>
 
-<script lang="ts">
-    import { defineComponent } from 'vue';
+<script lang="ts" setup>
+    import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
-    import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
-    import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { extractEndpointHref } from '@/utils/DescriptorUtils';
+    import { URLEncode } from '@/utils/EncodeDecodeUtils';
+    import { nameToDisplay } from '@/utils/ReferableUtils';
 
-    export default defineComponent({
-        name: 'SubmodelList',
-        mixins: [RequestHandling, SubmodelElementHandling],
+    // Vue Router
+    const route = useRoute();
+    const router = useRouter();
 
-        setup() {
-            const theme = useTheme();
-            const navigationStore = useNavigationStore();
-            const aasStore = useAASStore();
-            const envStore = useEnvStore();
-            const route = useRoute();
-            const router = useRouter();
+    // Composables
+    const { getRequest } = useRequestHandling();
+    const { smNotFound } = useSMRepositoryClient();
 
-            return {
-                theme, // Theme Object
-                navigationStore, // NavigationStore Object
-                aasStore, // AASStore Object
-                envStore, // EnvironmentStore Object
-                route, // Route Object
-                router, // Router Object
-            };
-        },
+    // Stores
+    const navigationStore = useNavigationStore();
+    const aasStore = useAASStore();
 
-        data() {
-            return {
-                submodelData: [] as Array<any>, // Submodel Data
-                initialUpdate: false, // Flag to check if the initial update of the Submodel List is needed and/or done
-                initialNode: {} as any, // Object to store the initial Node to be selected
-            };
-        },
+    // Vuetify
+    const theme = useTheme();
 
-        computed: {
-            // Check if the current Theme is dark
-            isDark() {
-                return this.theme.global.current.value.dark;
-            },
+    // Data
+    const submodelData = ref([] as Array<any>);
+    const initialUpdate = ref(false);
+    const initialNode = ref({} as any);
 
-            // get selected AAS from Store
-            selectedAAS() {
-                return this.aasStore.getSelectedAAS;
-            },
+    // Computed Properties
+    const isDark = computed(() => theme.global.current.value.dark);
+    const selectedAAS = computed(() => aasStore.getSelectedAAS);
+    const loading = computed(() => aasStore.getLoadingState);
+    const aasRegistryServerURL = computed(() => navigationStore.getAASRegistryURL);
+    const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL);
+    const isMobile = computed(() => navigationStore.getIsMobile);
+    const primaryColor = computed(() => theme.current.value.colors.primary);
 
-            // gets loading State from Store
-            loading() {
-                return this.aasStore.getLoadingState;
-            },
+    // Watchers
+    // initialize Submodel List when AAS gets selected or changes
+    watch(selectedAAS, () => {
+        initSubmodelList();
+    });
 
-            // get AAS Registry URL from Store
-            aasRegistryServerURL() {
-                return this.navigationStore.getAASRegistryURL;
-            },
+    // Resets the Submodel List when the AAS Registry changes
+    watch(aasRegistryServerURL, () => {
+        if (!aasRegistryServerURL.value) {
+            submodelData.value = [];
+        }
+    });
 
-            // get Submodel Registry URL from Store
-            submodelRegistryURL() {
-                return this.navigationStore.getSubmodelRegistryURL;
-            },
+    // Resets the Submodel List when the Submodel Registry changes
+    watch(submodelRegistryURL, () => {
+        if (!submodelRegistryURL.value) {
+            submodelData.value = [];
+        }
+    });
 
-            // Check if the current Device is a Mobile Device
-            isMobile() {
-                return this.navigationStore.getIsMobile;
-            },
+    onMounted(() => {
+        initSubmodelListWithRouteParameters();
+    });
 
-            // returns the primary color of the current theme
-            primaryColor() {
-                if (this.isDark) {
-                    return this.$vuetify.theme.themes.dark.colors.primary;
-                } else {
-                    return this.$vuetify.theme.themes.light.colors.primary;
-                }
-            },
-        },
-
-        watch: {
-            // initialize Submodel List when AAS gets selected or changes
-            selectedAAS() {
-                this.initSubmodelList();
-            },
-
-            // Resets the Submodel List when the AAS Registry changes
-            aasRegistryServerURL() {
-                if (!this.aasRegistryServerURL) {
-                    this.submodelData = [];
-                }
-            },
-
-            // Resets the Submodel List when the Submodel Registry changes
-            submodelRegistryServerURL() {
-                if (!this.submodelRegistryURL) {
-                    this.submodelData = [];
-                }
-            },
-        },
-
-        mounted() {
-            this.initSubmodelListWithRouteParameters();
-        },
-
-        methods: {
-            async initSubmodelList() {
-                // console.log('Initialize SubmodelList', this.SelectedAAS, this.initialUpdate, this.initialNode);
-                // return if no endpoints are available
-                if (!this.selectedAAS || !this.selectedAAS.endpoints || this.selectedAAS.endpoints.length === 0) {
-                    // this.navigationStore.dispatchSnackbar({ status: true, timeout: 4000, color: 'error', btnColor: 'buttonText', text: 'AAS with no (valid) Endpoint selected!' });
-                    this.submodelData = [];
-                    return;
-                }
-                if (this.loading && !this.initialUpdate) return; // return if loading state is true -> prevents multiple requests
-                this.aasStore.dispatchLoadingState(true); // set loading state to true
-                if (this.selectedAAS.submodels) {
-                    let submodelData = await this.requestSubmodels(this.selectedAAS.submodels);
-                    // set the isActive prop of the initialNode if it exists and the initialUpdate flag is set
-                    if (this.initialUpdate && this.initialNode) {
-                        submodelData.forEach((submodel: any) => {
-                            if (submodel.path === this.initialNode.path) {
-                                submodel.isActive = true;
-                                this.aasStore.dispatchNode(submodel);
-                                this.aasStore.dispatchRealTimeObject(submodel);
-                            }
-                        });
-                        this.initialUpdate = false;
-                        this.initialNode = {};
-                        this.submodelData = submodelData;
-                    } else {
-                        this.submodelData = submodelData;
+    async function initSubmodelList() {
+        // console.log('Initialize SubmodelList', this.SelectedAAS, this.initialUpdate, this.initialNode);
+        // return if no endpoints are available
+        if (!selectedAAS.value || !selectedAAS.value.endpoints || selectedAAS.value.endpoints.length === 0) {
+            // this.navigationStore.dispatchSnackbar({ status: true, timeout: 4000, color: 'error', btnColor: 'buttonText', text: 'AAS with no (valid) Endpoint selected!' });
+            submodelData.value = [];
+            return;
+        }
+        if (loading.value && !initialUpdate.value) return; // return if loading state is true -> prevents multiple requests
+        aasStore.dispatchLoadingState(true); // set loading state to true
+        if (selectedAAS.value.submodels) {
+            let fetchedSubmodelData = await requestSubmodels(selectedAAS.value.submodels);
+            // set the isActive prop of the initialNode if it exists and the initialUpdate flag is set
+            if (initialUpdate.value && initialNode.value) {
+                fetchedSubmodelData.forEach((submodel: any) => {
+                    if (submodel.path === initialNode.value.path) {
+                        submodel.isActive = true;
+                        aasStore.dispatchNode(submodel);
+                        aasStore.dispatchRealTimeObject(submodel);
                     }
-                } else {
-                    this.submodelData = [];
-                }
-                this.aasStore.dispatchLoadingState(false);
-            },
+                });
+                initialUpdate.value = false;
+                initialNode.value = {};
+                submodelData.value = fetchedSubmodelData;
+            } else {
+                submodelData.value = fetchedSubmodelData;
+            }
+        } else {
+            submodelData.value = [];
+        }
+        aasStore.dispatchLoadingState(false);
+    }
 
-            // Function to request all Submodels for the selected AAS
-            async requestSubmodels(submodelRefs: any) {
-                // console.log('SubmodelRefs: ', submodelRefs);
-                let submodelPromises = submodelRefs.map((submodelRef: any) => {
-                    // retrieve endpoint for submodel from submodel registry
-                    // console.log('SubmodelRef: ', submodelRef, ' Submodel Registry: ', this.submodelRegistryURL);
-                    // check if submodelRegistryURL includes "/submodel-descriptors" and add id if not (backward compatibility)
-                    let submodelRegistryURL = this.submodelRegistryURL;
-                    if (!submodelRegistryURL.includes('/submodel-descriptors')) {
-                        submodelRegistryURL += '/submodel-descriptors';
-                    }
-                    const submodelId = submodelRef.keys[0].value;
-                    let path = submodelRegistryURL + '/' + this.URLEncode(submodelId);
-                    let context = 'retrieving Submodel Endpoint';
-                    let disableMessage = false;
-                    return this.getRequest(path, context, disableMessage).then((response: any) => {
-                        if (response.success) {
-                            if (response.data?.id) {
+    // Function to request all Submodels for the selected AAS
+    async function requestSubmodels(submodelRefs: any) {
+        // console.log('SubmodelRefs: ', submodelRefs);
+        let submodelPromises = submodelRefs.map((submodelRef: any) => {
+            // retrieve endpoint for submodel from submodel registry
+            // console.log('SubmodelRef: ', submodelRef, ' Submodel Registry: ', this.submodelRegistryURL);
+            // check if submodelRegistryURL includes "/submodel-descriptors" and add id if not (backward compatibility)
+            let smRegistryURL = submodelRegistryURL.value;
+            if (!smRegistryURL.includes('/submodel-descriptors')) {
+                smRegistryURL += '/submodel-descriptors';
+            }
+            const submodelId = submodelRef.keys[0].value;
+            let path = smRegistryURL + '/' + URLEncode(submodelId);
+            let context = 'retrieving Submodel Endpoint';
+            let disableMessage = false;
+            return getRequest(path, context, disableMessage).then((response: any) => {
+                if (response.success) {
+                    if (response.data?.id) {
+                        // execute if the Request was successful
+                        const fetchedSubmodel = response.data;
+                        // console.log('SubmodelEndpoint: ', submodelEndpoint);
+                        const submodelHref = extractEndpointHref(fetchedSubmodel, 'SUBMODEL-3.0');
+                        let path = submodelHref;
+                        let context = 'retrieving Submodel Data';
+                        let disableMessage = true;
+                        return getRequest(path, context, disableMessage).then((response: any) => {
+                            if (response.success && response?.data?.id) {
                                 // execute if the Request was successful
-                                const fetchedSubmodel = response.data;
-                                // console.log('SubmodelEndpoint: ', submodelEndpoint);
-                                const submodelHref = this.extractEndpointHref(fetchedSubmodel, 'SUBMODEL-3.0');
-                                let path = submodelHref;
-                                let context = 'retrieving Submodel Data';
-                                let disableMessage = true;
-                                return this.getRequest(path, context, disableMessage).then((response: any) => {
-                                    if (response.success && response?.data?.id) {
-                                        // execute if the Request was successful
-                                        let submodel = response.data;
-                                        // give the Submodel a unique ID
-                                        submodel.id = this.UUID();
-                                        // set the active State of the Submodel
-                                        submodel.isActive = false;
-                                        // set the Path of the Submodel
-                                        submodel.path = path;
-                                        return submodel;
-                                    } else {
-                                        return this.smNotFound(
-                                            response,
-                                            submodelId,
-                                            path,
-                                            "Submodel '" + submodelId + "' not found in SubmodelRepository"
-                                        );
-                                    }
-                                });
+                                let submodel = response.data;
+                                // set the active State of the Submodel
+                                submodel.isActive = false;
+                                // set the Path of the Submodel
+                                submodel.path = path;
+                                return submodel;
                             } else {
-                                return this.smNotFound(
+                                return smNotFound(
                                     response,
                                     submodelId,
                                     path,
-                                    "Submodel '" + submodelId + "' not found in SubmodelRegistry"
+                                    "Submodel '" + submodelId + "' not found in SubmodelRepository"
                                 );
                             }
-                        }
-                    });
-                });
-                try {
-                    const submodels = await Promise.all(submodelPromises);
-                    return submodels;
-                } finally {
-                    this.aasStore.dispatchLoadingState(false);
-                }
-            },
-
-            // Function to toggle a Node
-            toggleNode(submodel: any) {
-                // console.log('Selected Submodel: ', submodel);
-                // dublicate the selected Node Object
-                let localSubmodel = submodel;
-                localSubmodel.isActive = true;
-                // set the isActive Property of all other Submodels to false
-                this.submodelData.forEach((submodel: any) => {
-                    if (submodel.id !== localSubmodel.id) {
-                        submodel.isActive = false;
-                    }
-                });
-                // Add path of the selected Node to the URL as Router Query
-                if (localSubmodel.isActive) {
-                    const aasEndpopint = this.extractEndpointHref(this.selectedAAS, 'AAS-3.0');
-                    if (this.isMobile) {
-                        // Change to SubmodelElementView on Mobile and add the path to the URL
-                        this.router.push({
-                            path: '/componentvisualization',
-                            query: {
-                                aas: aasEndpopint,
-                                path: localSubmodel.path,
-                            },
                         });
                     } else {
-                        // just add the path to the URL
-                        this.router.push({
-                            query: {
-                                aas: aasEndpopint,
-                                path: localSubmodel.path,
-                            },
-                        });
+                        return smNotFound(
+                            response,
+                            submodelId,
+                            path,
+                            "Submodel '" + submodelId + "' not found in SubmodelRegistry"
+                        );
                     }
-                } else {
-                    // remove the path query from the Route entirely
-                    let query = { ...this.route.query };
-                    delete query.path;
-                    this.router.push({ query: query });
                 }
-                // dispatch the selected Node to the store
-                this.aasStore.dispatchNode(localSubmodel);
-                // add Submodel to the store (as RealTimeDataObject)
-                this.aasStore.dispatchRealTimeObject(localSubmodel);
-            },
+            });
+        });
+        try {
+            const submodels = await Promise.all(submodelPromises);
+            return submodels;
+        } finally {
+            aasStore.dispatchLoadingState(false);
+        }
+    }
 
-            // Function to initialize the Submodel List with the Route Parameters
-            initSubmodelListWithRouteParameters() {
-                // check if the selectedAAS is already set in the Store and initialize the Submodel List if so
-                if (this.selectedAAS && this.selectedAAS.endpoints && this.selectedAAS.endpoints.length > 0) {
-                    // console.log('init Tree from Route Params: ', this.selectedAAS);
-                    this.initSubmodelList();
-                }
+    // Function to toggle a Node
+    function toggleNode(submodel: any) {
+        // console.log('Selected Submodel: ', submodel);
+        // dublicate the selected Node Object
+        let localSubmodel = submodel;
+        localSubmodel.isActive = true;
+        // set the isActive Property of all other Submodels to false
+        submodelData.value.forEach((submodel: any) => {
+            if (submodel.id !== localSubmodel.id) {
+                submodel.isActive = false;
+            }
+        });
+        // Add path of the selected Node to the URL as Router Query
+        if (localSubmodel.isActive) {
+            const aasEndpopint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
+            if (isMobile.value) {
+                // Change to SubmodelElementView on Mobile and add the path to the URL
+                router.push({
+                    path: '/componentvisualization',
+                    query: {
+                        aas: aasEndpopint,
+                        path: localSubmodel.path,
+                    },
+                });
+            } else {
+                // just add the path to the URL
+                router.push({
+                    query: {
+                        aas: aasEndpopint,
+                        path: localSubmodel.path,
+                    },
+                });
+            }
+        } else {
+            // remove the path query from the Route entirely
+            let query = { ...route.query };
+            delete query.path;
+            router.push({ query: query });
+        }
+        // dispatch the selected Node to the store
+        aasStore.dispatchNode(localSubmodel);
+        // add Submodel to the store (as RealTimeDataObject)
+        aasStore.dispatchRealTimeObject(localSubmodel);
+    }
 
-                // check if the aas Query and the path Query are set in the URL and if so load the Submodel/Submodelelement
-                const searchParams = new URL(window.location.href).searchParams;
-                const aasEndpoint = searchParams.get('aas');
-                const path = searchParams.get('path');
+    // Function to initialize the Submodel List with the Route Parameters
+    function initSubmodelListWithRouteParameters() {
+        // check if the selectedAAS is already set in the Store and initialize the Submodel List if so
+        if (selectedAAS.value && selectedAAS.value.endpoints && selectedAAS.value.endpoints.length > 0) {
+            // console.log('init Tree from Route Params: ', this.selectedAAS);
+            initSubmodelList();
+        }
 
-                if (aasEndpoint && path) {
-                    // console.log('AAS and Path Queris are set: ', aasEndpoint, path);
-                    let node = {} as any;
-                    node.path = path;
-                    node.isActive = true;
-                    // set the isActive prop of the node in submodelData to true
-                    this.initialUpdate = true;
-                    this.initialNode = node;
-                }
-            },
+        // check if the aas Query and the path Query are set in the URL and if so load the Submodel/Submodelelement
+        const searchParams = new URL(window.location.href).searchParams;
+        const aasEndpoint = searchParams.get('aas');
+        const path = searchParams.get('path');
 
-            backToAASList() {
-                this.router.push({ name: 'AASList', query: this.route.query });
-            },
-        },
-    });
+        if (aasEndpoint && path) {
+            // console.log('AAS and Path Queris are set: ', aasEndpoint, path);
+            let node = {} as any;
+            node.path = path;
+            node.isActive = true;
+            // set the isActive prop of the node in submodelData to true
+            initialUpdate.value = true;
+            initialNode.value = node;
+        }
+    }
+
+    function backToAASList() {
+        router.push({ name: 'AASList', query: route.query });
+    }
 </script>

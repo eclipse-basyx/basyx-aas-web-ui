@@ -128,7 +128,7 @@
         if (loading.value && !initialUpdate.value) return; // return if loading state is true -> prevents multiple requests
         aasStore.dispatchLoadingState(true); // set loading state to true
         if (selectedAAS.value.submodels) {
-            const fetchedSubmodelData = await requestSubmodels(selectedAAS.value.submodels);
+            let fetchedSubmodelData = await requestSubmodels(selectedAAS.value.submodels);
             // set the isActive prop of the initialNode if it exists and the initialUpdate flag is set
             if (initialUpdate.value && initialNode.value) {
                 let expandedSubmodelData = expandTree(fetchedSubmodelData, initialNode.value); // Update the Treeview to expand until the initially set node is reached
