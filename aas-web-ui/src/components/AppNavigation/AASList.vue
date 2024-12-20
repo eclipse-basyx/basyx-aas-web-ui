@@ -170,7 +170,8 @@
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
     import { URLEncode } from '@/utils/EncodeDecodeUtils';
-    import { downloadFile, nameToDisplay } from '@/utils/generalUtils';
+    import { downloadFile } from '@/utils/generalUtils';
+    import { nameToDisplay } from '@/utils/ReferableUtils';
 
     // Extend the ComponentPublicInstance type to include scrollToIndex
     interface VirtualScrollInstance extends ComponentPublicInstance {
