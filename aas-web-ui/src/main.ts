@@ -102,7 +102,7 @@ async function initKeycloak(keycloakUrl: string, keycloakRealm: string, keycloak
 
         keycloak
             ?.init({ onLoad: initOptions.onLoad })
-            .then(async (auth) => {
+            .then(async (auth: boolean) => {
                 if (!auth) {
                     window.location.reload();
                 } else {
@@ -115,7 +115,7 @@ async function initKeycloak(keycloakUrl: string, keycloakRealm: string, keycloak
                     setInterval(() => {
                         keycloak
                             .updateToken(70)
-                            .then((refreshed) => {
+                            .then((refreshed: boolean) => {
                                 if (refreshed) {
                                     // console.log('Token refreshed');
                                     authStore.setToken(keycloak.token);
@@ -130,7 +130,7 @@ async function initKeycloak(keycloakUrl: string, keycloakRealm: string, keycloak
                     }, 60000);
                 }
             })
-            .catch((error) => {
+            .catch((error: any) => {
                 console.error('Failed to authenticate with Keycloak', error);
                 const authStore = useAuthStore();
                 authStore.setAuthStatus(false);
