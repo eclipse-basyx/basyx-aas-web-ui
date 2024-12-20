@@ -167,8 +167,8 @@
     </v-container>
 </template>
 
-<script lang="ts">
-    import { defineComponent } from 'vue';
+<script lang="ts" setup>
+    import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
     import AnnotatedRelationshipElement from '@/components/SubmodelElements/AnnotatedRelationshipElement.vue';
     import Blob from '@/components/SubmodelElements/Blob.vue';
     import Entity from '@/components/SubmodelElements/Entity.vue';
@@ -190,238 +190,168 @@
     import IdentificationElement from '@/components/UIComponents/IdentificationElement.vue';
     import SemanticID from '@/components/UIComponents/SemanticID.vue';
     import SupplementalSemanticID from '@/components/UIComponents/SupplementalSemanticID.vue';
-    import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
+    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
-    import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { formatDate } from '@/utils/DateUtils';
 
-    export default defineComponent({
-        name: 'SubmodelElementView',
-        components: {
-            IdentificationElement,
-            AdministrativeInformationElement,
-            DisplayNameElement,
-            DescriptionElement,
-            SemanticID,
-            SupplementalSemanticID,
-            ConceptDescription,
+    // Stores
+    const navigationStore = useNavigationStore();
+    const aasStore = useAASStore();
 
-            Submodel,
-            SubmodelElementCollection,
-            SubmodelElementList,
-            Property,
-            MultiLanguageProperty,
-            Operation,
-            File,
-            Blob,
-            ReferenceElement,
-            Range,
-            Entity,
-            RelationshipElement,
-            AnnotatedRelationshipElement,
-            InvalidElement,
+    // Composables
+    const { getConceptDescriptions } = useConceptDescriptionHandling();
+    const { getRequest } = useRequestHandling();
+
+    // Data
+    const submodelElementData = ref({} as any);
+    const requestInterval = ref<number | undefined>(undefined); // interval to send requests to the AAS
+
+    // Computed Properties
+    const aasRegistryServerURL = computed(() => navigationStore.getAASRegistryURL);
+    const submodelRegistryServerURL = computed(() => navigationStore.getSubmodelRegistryURL);
+    const SelectedAAS = computed(() => aasStore.getSelectedAAS);
+    const SelectedNode = computed(() => aasStore.getSelectedNode);
+    const autoSync = computed(() => navigationStore.getAutoSync);
+
+    // Watchers
+    // Resets the SubmodelElementView when the AAS Registry changes
+    watch(
+        () => aasRegistryServerURL.value,
+        () => {
+            if (!aasRegistryServerURL.value) {
+                submodelElementData.value = {};
+                aasStore.dispatchRealTimeObject(submodelElementData);
+            }
+        }
+    );
+
+    // Resets the SubmodelElementView when the Submodel Registry changes
+    watch(
+        () => submodelRegistryServerURL.value,
+        () => {
+            if (!submodelRegistryServerURL.value) {
+                submodelElementData.value = {};
+                aasStore.dispatchRealTimeObject(submodelElementData);
+            }
+        }
+    );
+
+    // Resets the SubmodelElementView when the AAS changes
+    watch(
+        () => SelectedAAS.value,
+        () => {
+            submodelElementData.value = {};
+            aasStore.dispatchRealTimeObject(submodelElementData);
+        }
+    );
+
+    // Watch for changes in the selected Node and (re-)initialize the Component
+    watch(
+        () => SelectedNode.value,
+        () => {
+            // clear old submodelElementData
+            submodelElementData.value = {};
+            initializeView(true);
         },
-        mixins: [RequestHandling, SubmodelElementHandling],
+        { deep: true }
+    );
 
-        setup() {
-            const navigationStore = useNavigationStore();
-            const aasStore = useAASStore();
-            const envStore = useEnvStore();
-
-            return {
-                navigationStore, // NavigationStore Object
-                aasStore, // AASStore Object
-                envStore, // EnvironmentStore Object
-            };
-        },
-
-        data() {
-            return {
-                submodelElementData: {} as any, // SubmodelElement Data
-                conceptDescriptions: {} as any, // Data of Concept Descriptions
-                requestInterval: null as any, // interval to send requests to the AAS
-            };
-        },
-
-        computed: {
-            // get AAS Registry URL from Store
-            aasRegistryServerURL() {
-                return this.navigationStore.getAASRegistryURL;
-            },
-
-            // get the Submodel Registry URL from Store
-            submodelRegistryServerURL() {
-                return this.navigationStore.getSubmodelRegistryURL;
-            },
-
-            // get selected AAS from Store
-            SelectedAAS() {
-                return this.aasStore.getSelectedAAS;
-            },
-
-            // Get the selected Treeview Node (SubmodelElement) from the store
-            SelectedNode() {
-                return this.aasStore.getSelectedNode;
-            },
-
-            // Get the auto-sync state from the store
-            autoSync() {
-                return this.navigationStore.getAutoSync;
-            },
-
-            // Get the Concept Description Repository URL from the Store
-            conceptDescriptionRepoURL() {
-                return this.navigationStore.getConceptDescriptionRepoURL;
-            },
-        },
-
-        watch: {
-            // Resets the SubmodelElementView when the AAS Registry changes
-            registryServerURL() {
-                if (!this.aasRegistryServerURL) {
-                    this.submodelElementData = {};
-                    // also reset the realTimeObject in the store
-                    this.aasStore.dispatchRealTimeObject(this.submodelElementData);
-                }
-            },
-
-            // Resets the SubmodelElementView when the Submodel Registry changes
-            submodelRegistryServerURL() {
-                if (!this.submodelRegistryServerURL) {
-                    this.submodelElementData = {};
-                    // also reset the realTimeObject in the store
-                    this.aasStore.dispatchRealTimeObject(this.submodelElementData);
-                }
-            },
-
-            // Resets the SubmodelElementView when the AAS changes
-            SelectedAAS() {
-                this.submodelElementData = {};
-                // also reset the realTimeObject in the store
-                this.aasStore.dispatchRealTimeObject(this.submodelElementData);
-            },
-
-            // Watch for changes in the selected Node and (re-)initialize the Component
-            SelectedNode: {
-                deep: true,
-                handler() {
-                    // clear old submodelElementData
-                    this.submodelElementData = {};
-                    this.initializeView(true); // initialize list
-                },
-            },
-
-            // watch for changes in the autoSync state and create or clear the requestInterval
-            autoSync: {
-                deep: true,
-                handler() {
-                    if (this.autoSync.state) {
-                        clearInterval(this.requestInterval); // clear old interval
-                        // create new interval
-                        this.requestInterval = setInterval(() => {
-                            if (Object.keys(this.SelectedNode).length > 0) {
-                                this.initializeView();
-                            }
-                        }, this.autoSync.interval);
-                    } else {
-                        clearInterval(this.requestInterval);
-                    }
-                },
-            },
-        },
-
-        mounted() {
-            if (this.autoSync.state) {
+    // watch for changes in the autoSync state and create or clear the requestInterval
+    watch(
+        () => autoSync.value,
+        () => {
+            if (autoSync.value.state) {
+                window.clearInterval(requestInterval.value); // clear old interval
                 // create new interval
-                this.requestInterval = setInterval(() => {
-                    if (Object.keys(this.SelectedNode).length > 0) {
-                        this.initializeView();
+                requestInterval.value = window.setInterval(() => {
+                    if (Object.keys(SelectedNode.value).length > 0) {
+                        initializeView();
                     }
-                }, this.autoSync.interval);
+                }, autoSync.value.interval);
             } else {
-                this.initializeView(true);
+                window.clearInterval(requestInterval.value);
             }
         },
+        { deep: true }
+    );
 
-        beforeUnmount() {
-            clearInterval(this.requestInterval); // clear old interval
-        },
-
-        methods: {
-            // Initialize the Component
-            initializeView(withConceptDescriptions = false) {
-                // console.log('Selected Node: ', this.SelectedNode);
-                // Check if a Node is selected
-                if (Object.keys(this.SelectedNode).length === 0) {
-                    this.submodelElementData = {}; // Reset the SubmodelElement Data when no Node is selected
-                    return;
+    onMounted(() => {
+        if (autoSync.value.state) {
+            // create new interval
+            requestInterval.value = window.setInterval(() => {
+                if (Object.keys(SelectedNode.value).length > 0) {
+                    initializeView();
                 }
-                // Request the selected SubmodelElement
-                let path = this.SelectedNode.path;
-                let context = 'retrieving SubmodelElement';
-                let disableMessage = true;
-                this.getRequest(path, context, disableMessage).then((response: any) => {
-                    // save Concept Descriptions before overwriting the SubmodelElement Data
-                    let conceptDescriptions = this.submodelElementData.conceptDescriptions;
-                    if (response.success && (response.data?.id || response.data?.idShort)) {
-                        // execute if the Request was successful
-                        response.data.timestamp = this.formatDate(new Date()); // add timestamp to the SubmodelElement Data
-                        response.data.path = this.SelectedNode.path; // add the path to the SubmodelElement Data
-                        // console.log('SubmodelElement Data: ', response.data)
-                        this.submodelElementData = response.data;
-                    } else {
-                        // execute if the Request failed
-                        // show the static SubmodelElement Data from the store if the Request failed (the timestamp should show that the data is outdated)
-                        this.submodelElementData = {}; // Reset the SubmodelElement Data when Node couldn't be retrieved
-                        if (Object.keys(this.SelectedNode).length === 0) {
-                            // don't copy the static SubmodelElement Data if no Node is selected or Node is invalid
-                            this.navigationStore.dispatchSnackbar({
-                                status: true,
-                                timeout: 60000,
-                                color: 'error',
-                                btnColor: 'buttonText',
-                                text: 'No valid SubmodelElement under the given Path',
-                            }); // Show Error Snackbar
-                            return;
-                        }
-                        this.submodelElementData = { ...this.SelectedNode }; // copy the static SubmodelElement Data from the store
-                        this.submodelElementData.timestamp = 'no sync';
-                        this.submodelElementData.path = this.SelectedNode.path; // add the path to the SubmodelElement Data
-                    }
-                    if (withConceptDescriptions) {
-                        this.getCD(); // fetch Concept Descriptions for the SubmodelElement
-                    } else {
-                        this.submodelElementData.conceptDescriptions = conceptDescriptions; // add Concept Descriptions to the SubmodelElement Data
-                    }
-                    // console.log('SubmodelElement Data (SubmodelElementView): ', this.submodelElementData)
-                    // add SubmodelElement Data to the store (as RealTimeDataObject)
-                    this.aasStore.dispatchRealTimeObject(this.submodelElementData);
-                });
-            },
-
-            // Get Concept Descriptions for the SubmodelElement from the ConceptDescription Repository
-            getCD() {
-                // Check if a Node is selected
-                if (
-                    Object.keys(this.SelectedNode).length === 0 ||
-                    !this.SelectedNode.semanticId ||
-                    !this.SelectedNode.semanticId.keys ||
-                    this.SelectedNode.semanticId.keys.length === 0
-                ) {
-                    this.conceptDescriptions = {}; // Reset the SubmodelElement Data when no Node is selected
-                    return;
-                }
-                // call mixin to request concept description from the CD Repo
-                this.getConceptDescriptions(this.SelectedNode).then((response: any) => {
-                    // console.log('ConceptDescription: ', response)
-                    this.conceptDescriptions = response;
-                    // add ConceptDescription to the SubmodelElement Data
-                    if (response) {
-                        this.submodelElementData.conceptDescriptions = response;
-                    }
-                });
-            },
-        },
+            }, autoSync.value.interval);
+        } else {
+            initializeView(true);
+        }
     });
+
+    onBeforeUnmount(() => {
+        window.clearInterval(requestInterval.value); // clear old interval
+    });
+
+    function initializeView(withConceptDescriptions = false) {
+        // console.log('Selected Node: ', SelectedNode.value);
+        // Check if a Node is selected
+        if (Object.keys(SelectedNode.value).length === 0) {
+            submodelElementData.value = {}; // Reset the SubmodelElement Data when no Node is selected
+            return;
+        }
+        // Request the selected SubmodelElement
+        const path = SelectedNode.value.path;
+        const context = 'retrieving SubmodelElement';
+        const disableMessage = true;
+        getRequest(path, context, disableMessage).then((response: any) => {
+            // save Concept Descriptions before overwriting the SubmodelElement Data
+            let conceptDescriptions = submodelElementData.value.conceptDescriptions;
+            if (response.success && (response.data?.id || response.data?.idShort)) {
+                // execute if the Request was successful
+                response.data.timestamp = formatDate(new Date()); // add timestamp to the SubmodelElement Data
+                response.data.path = SelectedNode.value.path; // add the path to the SubmodelElement Data
+                // console.log('SubmodelElement Data: ', response.data);
+                submodelElementData.value = response.data;
+            } else {
+                // execute if the Request failed
+                // show the static SubmodelElement Data from the store if the Request failed (the timestamp should show that the data is outdated)
+                submodelElementData.value = {}; // Reset the SubmodelElement Data when Node couldn't be retrieved
+                if (Object.keys(SelectedNode.value).length === 0) {
+                    // don't copy the static SubmodelElement Data if no Node is selected or Node is invalid
+                    navigationStore.dispatchSnackbar({
+                        status: true,
+                        timeout: 60000,
+                        color: 'error',
+                        btnColor: 'buttonText',
+                        text: 'No valid SubmodelElement under the given Path',
+                    }); // Show Error Snackbar
+                    return;
+                }
+                submodelElementData.value = { ...SelectedNode.value }; // copy the static SubmodelElement Data from the store
+                submodelElementData.value.timestamp = 'no sync';
+                submodelElementData.value.path = SelectedNode.value.path; // add the path to the SubmodelElement Data
+            }
+            if (withConceptDescriptions) {
+                getCD(); // fetch Concept Descriptions for the SubmodelElement
+            } else {
+                submodelElementData.value.conceptDescriptions = conceptDescriptions; // add Concept Descriptions to the SubmodelElement Data
+            }
+            // console.log('SubmodelElement Data (SubmodelElementView): ', this.submodelElementData)
+            // add SubmodelElement Data to the store (as RealTimeDataObject)
+            aasStore.dispatchRealTimeObject(submodelElementData);
+        });
+    }
+
+    // Get Concept Descriptions for the SubmodelElement from the ConceptDescription Repository
+    function getCD() {
+        getConceptDescriptions(SelectedNode.value).then((response: any) => {
+            // console.log('ConceptDescription: ', response)
+            // add ConceptDescription to the SubmodelElement Data
+            if (response) {
+                submodelElementData.value.conceptDescriptions = response;
+            }
+        });
+    }
 </script>
