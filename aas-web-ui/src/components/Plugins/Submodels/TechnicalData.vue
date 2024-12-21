@@ -253,8 +253,6 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import GenericDataTableView from '@/components/UIComponents/GenericDataTableView.vue';
-    import GenericDataVisu from '@/components/UIComponents/GenericDataVisu.vue';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -262,10 +260,6 @@
     export default defineComponent({
         name: 'TechnicalData',
         semanticId: 'https://admin-shell.io/ZVEI/TechnicalData/Submodel/1/2',
-        components: {
-            GenericDataVisu,
-            GenericDataTableView,
-        },
         mixins: [RequestHandling, SubmodelElementHandling],
         props: ['submodelElementData'],
 

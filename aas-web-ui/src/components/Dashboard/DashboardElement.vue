@@ -62,18 +62,12 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import TimeSeriesData from '@/components/Plugins/Submodels/TimeSeriesData.vue';
     import DashboardHandling from '@/mixins/DashboardHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useEnvStore } from '@/store/EnvironmentStore';
-    import DashboardEditElement from './DashboardEditElement.vue';
 
     export default defineComponent({
         name: 'DashboardElement',
-        components: {
-            TimeSeriesData,
-            DashboardEditElement,
-        },
         mixins: [SubmodelElementHandling, DashboardHandling],
         props: ['dashboardData', 'globalSyncStatus'],
         emits: ['deleteElement', 'updateElement'],

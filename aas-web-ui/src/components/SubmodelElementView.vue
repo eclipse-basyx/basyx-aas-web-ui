@@ -169,27 +169,6 @@
 
 <script lang="ts" setup>
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-    import AnnotatedRelationshipElement from '@/components/SubmodelElements/AnnotatedRelationshipElement.vue';
-    import Blob from '@/components/SubmodelElements/Blob.vue';
-    import Entity from '@/components/SubmodelElements/Entity.vue';
-    import File from '@/components/SubmodelElements/File.vue';
-    import InvalidElement from '@/components/SubmodelElements/InvalidElement.vue';
-    import MultiLanguageProperty from '@/components/SubmodelElements/MultiLanguageProperty.vue';
-    import Operation from '@/components/SubmodelElements/Operation.vue';
-    import Property from '@/components/SubmodelElements/Property.vue';
-    import Range from '@/components/SubmodelElements/Range.vue';
-    import ReferenceElement from '@/components/SubmodelElements/ReferenceElement.vue';
-    import RelationshipElement from '@/components/SubmodelElements/RelationshipElement.vue';
-    import Submodel from '@/components/SubmodelElements/Submodel.vue';
-    import SubmodelElementCollection from '@/components/SubmodelElements/SubmodelElementCollection.vue';
-    import SubmodelElementList from '@/components/SubmodelElements/SubmodelElementList.vue';
-    import AdministrativeInformationElement from '@/components/UIComponents/AdministrativeInformationElement.vue';
-    import ConceptDescription from '@/components/UIComponents/ConceptDescription.vue';
-    import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
-    import DisplayNameElement from '@/components/UIComponents/DisplayNameElement.vue';
-    import IdentificationElement from '@/components/UIComponents/IdentificationElement.vue';
-    import SemanticID from '@/components/UIComponents/SemanticID.vue';
-    import SupplementalSemanticID from '@/components/UIComponents/SupplementalSemanticID.vue';
     import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';

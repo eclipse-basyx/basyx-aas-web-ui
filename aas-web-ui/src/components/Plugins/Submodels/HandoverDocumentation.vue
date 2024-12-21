@@ -271,9 +271,6 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import CADPreview from '@/components/Plugins/CADPreview.vue';
-    import ImagePreview from '@/components/Plugins/ImagePreview.vue';
-    import PDFPreview from '@/components/Plugins/PDFPreview.vue';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -281,11 +278,6 @@
     export default defineComponent({
         name: 'HandoverDocumentation',
         semanticId: '0173-1#01-AHF578#001',
-        components: {
-            ImagePreview,
-            PDFPreview,
-            CADPreview,
-        },
         mixins: [RequestHandling, SubmodelElementHandling],
         props: ['submodelElementData'],
 

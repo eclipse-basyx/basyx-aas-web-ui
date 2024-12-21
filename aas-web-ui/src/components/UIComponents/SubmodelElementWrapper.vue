@@ -39,32 +39,11 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import AnnotatedRelationshipElement from '@/components/SubmodelElements/AnnotatedRelationshipElement.vue';
-    import Blob from '@/components/SubmodelElements/Blob.vue';
-    import File from '@/components/SubmodelElements/File.vue';
-    import MultiLanguageProperty from '@/components/SubmodelElements/MultiLanguageProperty.vue';
-    import Operation from '@/components/SubmodelElements/Operation.vue';
-    import Property from '@/components/SubmodelElements/Property.vue';
-    import Range from '@/components/SubmodelElements/Range.vue';
-    import ReferenceElement from '@/components/SubmodelElements/ReferenceElement.vue';
-    import RelationshipElement from '@/components/SubmodelElements/RelationshipElement.vue';
 
     type Variant = 'elevated' | 'outlined' | 'flat' | 'text' | 'tonal' | 'plain' | undefined;
 
     export default defineComponent({
         name: 'SubmodelELementWrapper',
-        components: {
-            // SubmodelElements
-            Property,
-            MultiLanguageProperty,
-            File,
-            Blob,
-            Operation,
-            ReferenceElement,
-            Range,
-            RelationshipElement,
-            AnnotatedRelationshipElement,
-        },
         props: {
             submodelElementObject: {
                 type: Object,

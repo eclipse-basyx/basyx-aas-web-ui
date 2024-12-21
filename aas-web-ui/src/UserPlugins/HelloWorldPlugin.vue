@@ -19,7 +19,6 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import SubmodelElementWrapper from '@/components/UIComponents/SubmodelElementWrapper.vue';
     import RequestHandling from '@/mixins/RequestHandling'; // Mixin to handle the requests to the AAS
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling'; // Mixin to handle typical SubmodelElement-Actions
     import { useAASStore } from '@/store/AASDataStore';
@@ -28,9 +27,6 @@
         name: 'HelloWorldPlugin',
         // semanticId: 'http://hello.world.de/plugin_submodel', // semanticId of the HelloWorld-Plugin as string
         semanticId: ['http://hello.world.de/plugin_submodel', 'http://hello.world.de/plugin_property'], // semanticId of the HelloWorld-Plugin as array to use multiple semanticIds
-        components: {
-            SubmodelElementWrapper,
-        },
         mixins: [RequestHandling, SubmodelElementHandling],
         props: ['submodelElementData'],
 

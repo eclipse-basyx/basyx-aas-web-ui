@@ -27,12 +27,9 @@
                 <!-- Platform I 4.0 Logo -->
                 <v-img
                     v-if="!isMobile"
-                    src="I40.png"
+                    src="@/assets/I40.png"
                     max-width="260px"
                     :style="{ filter: isDark ? 'invert(1)' : 'invert(0)' }">
-                    <template #sources>
-                        <source srcset="@/assets/I40.png" />
-                    </template>
                 </v-img>
                 <!-- Menu Toggle (Mobile) -->
                 <v-dialog v-if="isMobile" v-model="mainMenu" fullscreen :z-index="9993" :transition="false">
@@ -200,11 +197,6 @@
     import { computed, mergeProps, onMounted, reactive, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
-    import AASList from '@/components/AppNavigation/AASList.vue';
-    import AutoSync from '@/components/AppNavigation/AutoSync.vue';
-    import MainMenu from '@/components/AppNavigation/MainMenu.vue';
-    import Settings from '@/components/AppNavigation/Settings.vue';
-    import ThemeSwitch from '@/components/AppNavigation/Settings/ThemeSwitch.vue';
     import { useDashboardHandling } from '@/composables/DashboardHandling';
     import { useAuthStore } from '@/store/AuthStore';
     import { useEnvStore } from '@/store/EnvironmentStore';

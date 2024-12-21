@@ -26,15 +26,9 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import IdentificationElement from '@/components/UIComponents/IdentificationElement.vue';
-    import SpecificAssetIds from '@/components/UIComponents/SpecificAssetIds.vue';
 
     export default defineComponent({
         name: 'AssetInformation',
-        components: {
-            IdentificationElement,
-            SpecificAssetIds,
-        },
         props: ['assetObject'],
 
         data() {

@@ -198,13 +198,6 @@
     import { defineComponent } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
-    import AreaChart from '@/components/Widgets/AreaChart.vue';
-    import DisplayField from '@/components/Widgets/DisplayField.vue';
-    import Gauge from '@/components/Widgets/Gauge.vue';
-    import Histogram from '@/components/Widgets/Histogram.vue';
-    // Widget imports
-    import LineChart from '@/components/Widgets/LineChart.vue';
-    import ScatterChart from '@/components/Widgets/ScatterChart.vue';
     import DashboardHandling from '@/mixins/DashboardHandling';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
@@ -214,14 +207,6 @@
     export default defineComponent({
         name: 'TimeSeriesData',
         semanticId: 'https://admin-shell.io/idta/TimeSeries/1/1',
-        components: {
-            LineChart,
-            AreaChart,
-            ScatterChart,
-            Histogram,
-            Gauge,
-            DisplayField,
-        },
         mixins: [RequestHandling, SubmodelElementHandling, DashboardHandling],
         props: ['submodelElementData', 'configData', 'editDialog', 'loadTrigger'],
         emits: ['timeVal', 'YVal', 'newOptions'],

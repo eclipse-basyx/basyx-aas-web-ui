@@ -25,13 +25,9 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import SemanticID from '@/components/UIComponents/SemanticID.vue';
 
     export default defineComponent({
         name: 'SupplementalSemanticID',
-        components: {
-            SemanticID,
-        },
         props: ['supplementalSemanticIdsArray', 'supplementalSemanticIdsTitle'],
     });
 </script>

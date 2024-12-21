@@ -6,11 +6,7 @@
             text="The page you were looking for does not exist">
             <template #media>
                 <a href="https://basyx.org/" target="_blank">
-                    <v-img src="Basyx_Logo.svg" class="my-15">
-                        <template #sources>
-                            <source srcset="@/assets/BaSyx_Logo.svg" />
-                        </template>
-                    </v-img>
+                    <v-img src="@/assets/BaSyx_Logo.svg" class="my-15"></v-img>
                 </a>
             </template>
             <v-row class="mt-3">

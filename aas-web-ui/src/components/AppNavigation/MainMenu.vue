@@ -87,11 +87,10 @@
             <!-- Platform I 4.0 Logo -->
             <v-row v-if="isMobile">
                 <v-col align="center" class="bg-card">
-                    <v-img src="I40.png" max-width="260px" :style="{ filter: isDark ? 'invert(1)' : 'invert(0)' }">
-                        <template #sources>
-                            <source srcset="@/assets/I40.png" />
-                        </template>
-                    </v-img>
+                    <v-img
+                        src="@/assets/I40.png"
+                        max-width="260px"
+                        :style="{ filter: isDark ? 'invert(1)' : 'invert(0)' }"></v-img>
                 </v-col>
             </v-row>
         </v-card>

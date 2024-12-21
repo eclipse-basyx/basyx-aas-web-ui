@@ -76,11 +76,6 @@
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
-    import AdministrativeInformationElement from '@/components/UIComponents/AdministrativeInformationElement.vue';
-    import AssetInformation from '@/components/UIComponents/AssetInformation.vue';
-    import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
-    import DisplayNameElement from '@/components/UIComponents/DisplayNameElement.vue';
-    import IdentificationElement from '@/components/UIComponents/IdentificationElement.vue';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';

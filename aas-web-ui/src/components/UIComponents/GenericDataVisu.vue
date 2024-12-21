@@ -20,10 +20,10 @@
                             v-if="submodelElement.modelType === 'Property'"
                             :property-object="submodelElement"
                             :is-editable="false"></Property>
-                        <MultyLanguageProperty
+                        <MultiLanguageProperty
                             v-else-if="submodelElement.modelType === 'MultiLanguageProperty'"
                             :multi-language-property-object="submodelElement"
-                            :is-editable="false"></MultyLanguageProperty>
+                            :is-editable="false"></MultiLanguageProperty>
                         <Operation
                             v-else-if="submodelElement.modelType === 'Operation'"
                             :operation-object="submodelElement"
@@ -64,36 +64,12 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import AnnotatedRelationshipElement from '@/components/SubmodelElements/AnnotatedRelationshipElement.vue';
-    import Blob from '@/components/SubmodelElements/Blob.vue';
-    import Entity from '@/components/SubmodelElements/Entity.vue';
-    import File from '@/components/SubmodelElements/File.vue';
-    import InvalidElement from '@/components/SubmodelElements/InvalidElement.vue';
-    import MultyLanguageProperty from '@/components/SubmodelElements/MultiLanguageProperty.vue';
-    import Operation from '@/components/SubmodelElements/Operation.vue';
-    import Property from '@/components/SubmodelElements/Property.vue';
-    import Range from '@/components/SubmodelElements/Range.vue';
-    import ReferenceElement from '@/components/SubmodelElements/ReferenceElement.vue';
-    import RelationshipElement from '@/components/SubmodelElements/RelationshipElement.vue';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'GenericDataVisu',
-        components: {
-            Property,
-            MultyLanguageProperty,
-            Operation,
-            File,
-            Blob,
-            ReferenceElement,
-            Range,
-            Entity,
-            RelationshipElement,
-            AnnotatedRelationshipElement,
-            InvalidElement,
-        },
         mixins: [RequestHandling, SubmodelElementHandling],
         props: ['submodelElementData'],
 
