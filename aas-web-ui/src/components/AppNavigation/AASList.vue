@@ -161,8 +161,6 @@
     import { computed, onActivated, onMounted, Ref, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
-    import AASListDetails from '@/components/AppNavigation/AASListDetails.vue';
-    import UploadAAS from '@/components/AppNavigation/UploadAAS.vue';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';

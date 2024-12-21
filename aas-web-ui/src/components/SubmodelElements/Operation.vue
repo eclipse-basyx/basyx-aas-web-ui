@@ -109,24 +109,13 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import InvalidElement from './InvalidElement.vue';
-    import Property from './Property.vue';
-    import ReferenceElement from './ReferenceElement.vue';
 
     export default defineComponent({
         name: 'Operation',
-        components: {
-            DescriptionElement,
-
-            Property,
-            ReferenceElement,
-            InvalidElement,
-        },
         mixins: [RequestHandling, SubmodelElementHandling],
         props: {
             operationObject: {

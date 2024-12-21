@@ -52,7 +52,7 @@
     import { useRoute, useRouter } from 'vue-router';
     import DashboardHandling from '@/mixins/DashboardHandling';
     import { useEnvStore } from '@/store/EnvironmentStore';
-    import DashboardElement from './DashboardElement.vue';
+    import DashboardElement from '../components/Dashboard/DashboardElement.vue';
 
     export default defineComponent({
         name: 'Dashboard',

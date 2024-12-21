@@ -209,7 +209,6 @@
     import { latLng } from 'leaflet';
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import GenericDataVisu from '@/components/UIComponents/GenericDataVisu.vue';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -218,8 +217,6 @@
         name: 'DigitalNameplate',
         semanticId: 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate',
         components: {
-            GenericDataVisu,
-
             // Leaflet Map
             LMap,
             LTileLayer,

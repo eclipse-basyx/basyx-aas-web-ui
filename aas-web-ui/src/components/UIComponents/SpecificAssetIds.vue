@@ -40,14 +40,10 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import SemanticID from '@/components/UIComponents/SemanticID.vue';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'SpecificAssetIds',
-        components: {
-            SemanticID,
-        },
         props: ['assetObject'],
 
         setup() {

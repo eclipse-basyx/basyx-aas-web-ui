@@ -68,7 +68,6 @@
 
 <script lang="ts" setup>
     import { computed, ref } from 'vue';
-    import StatusSwitch from '@/components/AppNavigation/Settings/StatusSwitch.vue';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     const navigationStore = useNavigationStore();

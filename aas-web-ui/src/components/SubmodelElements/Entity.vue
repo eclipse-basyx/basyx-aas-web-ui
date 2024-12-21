@@ -78,15 +78,11 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useRouter } from 'vue-router';
-    import SubmodelElementGroup from '@/components/UIComponents/SubmodelElementGroup.vue';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'Entity',
-        components: {
-            SubmodelElementGroup,
-        },
         mixins: [SubmodelElementHandling],
         props: {
             entityObject: {

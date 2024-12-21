@@ -33,9 +33,6 @@
 <script lang="ts" setup>
     import { computed, onBeforeUnmount, onMounted } from 'vue';
     import { useTheme } from 'vuetify';
-    import AASTreeview from '@/components/AASTreeview.vue';
-    import ComponentVisualization from '@/components/ComponentVisualization.vue';
-    import SubmodelElementView from '@/components/SubmodelElementView.vue';
     import { useAASStore } from '@/store/AASDataStore';
 
     const theme = useTheme();

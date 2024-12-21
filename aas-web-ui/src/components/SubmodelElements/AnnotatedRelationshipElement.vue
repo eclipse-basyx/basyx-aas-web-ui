@@ -24,15 +24,9 @@
 
 <script lang="ts">
     import { defineComponent, shallowRef } from 'vue';
-    import RelationshipElement from './RelationshipElement.vue';
-    // import SubmodelElementWrapper from '@/components/UIComponents/SubmodelElementWrapper.vue';
 
     export default defineComponent({
         name: 'AnnotatedRelationshipElement',
-        components: {
-            RelationshipElement,
-            // SubmodelElementWrapper,
-        },
         props: {
             annotatedRelationshipElementObject: {
                 type: Object,

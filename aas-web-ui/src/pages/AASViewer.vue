@@ -19,6 +19,6 @@
 </template>
 
 <script lang="ts" setup>
-    import ComponentVisualization from './ComponentVisualization.vue';
-    import SubmodelList from './SubmodelList.vue';
+    import ComponentVisualization from '../components/ComponentVisualization.vue';
+    import SubmodelList from '../components/SubmodelList.vue';
 </script>

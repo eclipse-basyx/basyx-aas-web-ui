@@ -72,10 +72,6 @@
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
-    import CADPreview from '@/components/Plugins/CADPreview.vue';
-    import ImagePreview from '@/components/Plugins/ImagePreview.vue';
-    import PDFPreview from '@/components/Plugins/PDFPreview.vue';
-    import GenericDataVisu from '@/components/UIComponents/GenericDataVisu.vue';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
