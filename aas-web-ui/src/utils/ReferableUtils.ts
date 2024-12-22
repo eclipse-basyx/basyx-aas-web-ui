@@ -19,3 +19,30 @@ export function descriptionToDisplay(referable: any) {
     }
     return '';
 }
+
+// Function to check if the idShort of a SubmodelElement matches the given idShort
+export function checkIdShort(
+    referable: any,
+    idShort: string,
+    startsWith: boolean = false,
+    strict: boolean = false
+): boolean {
+    if (idShort.trim() === '') return false;
+
+    if (!referable || !referable.idShort || referable.idShort.length === 0) return false;
+
+    if (startsWith) {
+        // For matching e.g. ProductImage{00} with idShort ProductImage
+        if (strict) {
+            return referable.idShort.startsWith(idShort);
+        } else {
+            return referable.idShort.toLowerCase().startsWith(idShort.toLowerCase());
+        }
+    } else {
+        if (strict) {
+            return referable.idShort === idShort;
+        } else {
+            return referable.idShort.toLowerCase() === idShort.toLowerCase();
+        }
+    }
+}
