@@ -65,12 +65,6 @@
         const submodelElementPath = searchParams.get('path');
 
         // Check if single AAS mode is on and no aas query is set to either redirect or show 404
-        console.log(
-            'App.vue -> getSingleAas:',
-            envStore.getSingleAas,
-            'getSingleAasRedirect:',
-            envStore.getSingleAasRedirect
-        );
         if (envStore.getSingleAas && (aasEndpoint === null || aasEndpoint === undefined || aasEndpoint.trim() === '')) {
             if (envStore.getSingleAasRedirect) {
                 window.location.replace(envStore.getSingleAasRedirect);

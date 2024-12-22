@@ -277,10 +277,8 @@
     const EnvConceptDescriptionRepoPath = computed(() => envStore.getEnvConceptDescriptionRepoPath);
     const LogoPath = computed(() => {
         if (isDark.value && envStore.getEnvLogoDarkPath.trim().length > 0) {
-            console.log('AppNavigation.vue -> LogoPath: ', envStore.getEnvLogoDarkPath);
             return 'Logo/' + envStore.getEnvLogoDarkPath;
         } else {
-            console.log('AppNavigation.vue -> LogoPath: ', envStore.getEnvLogoLightPath);
             return 'Logo/' + envStore.getEnvLogoLightPath;
         }
     });

@@ -33,9 +33,6 @@ async function loadPlugins() {
 
     const envStore = useEnvStore(); // Get the store instance
 
-    console.log('main.ts -> Keycloak enabled:', envStore.getKeycloakActive);
-    console.log('main.ts -> InfluxDB Token:', envStore.getEnvInfluxdbToken ? 'Available' : 'Not set');
-    console.log('main.ts -> Endpoint config available:', envStore.getEndpointConfigAvailable);
     // create keycloak instance
     if (envStore.getKeycloakActive) {
         try {

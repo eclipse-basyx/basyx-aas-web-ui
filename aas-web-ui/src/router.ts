@@ -23,7 +23,6 @@ const routes = [
 ];
 
 export async function createAppRouter() {
-    console.log('router.ts -> Base Path: ', import.meta.env.BASE_URL);
     const base = import.meta.env.BASE_URL;
 
     const router = createRouter({
