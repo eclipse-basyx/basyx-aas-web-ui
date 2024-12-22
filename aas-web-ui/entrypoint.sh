@@ -4,25 +4,26 @@
 : "${BASE_PATH:=/}"
 
 # Define other environment variables, with defaults if not provided
-: "${LOGO_LIGHT_PATH:='Logo_light.svg'}"
-: "${LOGO_DARK_PATH:='Logo_dark.svg'}"
-: "${AAS_DISCOVERY_PATH:=''}"
-: "${AAS_REGISTRY_PATH:=''}"
-: "${SUBMODEL_REGISTRY_PATH:=''}"
-: "${AAS_REPO_PATH:=''}"
-: "${SUBMODEL_REPO_PATH:=''}"
-: "${CD_REPO_PATH:=''}"
-: "${DASHBOARD_SERVICE_PATH:=''}"
-: "${PRIMARY_LIGHT_COLOR:='#0cb2f0'}"
-: "${PRIMARY_DARK_COLOR:='#f69222'}"
-: "${KEYCLOAK_ACTIVE:='false'}"
-: "${INFLUXDB_TOKEN:=''}"
-: "${KEYCLOAK_URL:=''}"
-: "${KEYCLOAK_REALM:=''}"
-: "${KEYCLOAK_CLIENT_ID:=''}"
-: "${ENDPOINT_CONFIG_AVAILABLE:='true'}"
-: "${SINGLE_AAS:='false'}"
-: "${SINGLE_AAS_REDIRECT:=''}"
+: "${LOGO_PATH:=}"
+: "${LOGO_LIGHT_PATH:=Logo_light.svg}"
+: "${LOGO_DARK_PATH:=Logo_dark.svg}"
+: "${AAS_DISCOVERY_PATH:=}"
+: "${AAS_REGISTRY_PATH:=}"
+: "${SUBMODEL_REGISTRY_PATH:=}"
+: "${AAS_REPO_PATH:=}"
+: "${SUBMODEL_REPO_PATH:=}"
+: "${CD_REPO_PATH:=}"
+: "${DASHBOARD_SERVICE_PATH:=}"
+: "${PRIMARY_COLOR:=}"
+: "${PRIMARY_LIGHT_COLOR:=#0cb2f0}"
+: "${PRIMARY_DARK_COLOR:=#f69222}"
+: "${INFLUXDB_TOKEN:=}"
+: "${KEYCLOAK_URL:=}"
+: "${KEYCLOAK_REALM:=}"
+: "${KEYCLOAK_CLIENT_ID:=}"
+: "${ENDPOINT_CONFIG_AVAILABLE:=true}"
+: "${SINGLE_AAS:=false}"
+: "${SINGLE_AAS_REDIRECT:=}"
 
 # Replace ${BASE_PATH} in the NGINX config template (without trailing slash)
 envsubst '${BASE_PATH}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
@@ -30,38 +31,60 @@ envsubst '${BASE_PATH}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 # Add a trailing slash to BASE_PATH for the replacement in files
 BASE_PATH_WITH_SLASH=$(echo "$BASE_PATH" | sed 's|/*$|/|')
 
+# Set LOGO_LIGHT_PATH and LOGO_DARK_PATH based on LOGO_PATH
+if [ -n "$LOGO_PATH" ]; then
+    LOGO_LIGHT_PATH="$LOGO_PATH"
+    LOGO_DARK_PATH="$LOGO_PATH"
+fi
+
+# Set PRIMARY_LIGHT_COLOR and PRIMARY_DARK_COLOR based on PRIMARY_COLOR
+if [ -n "$PRIMARY_COLOR" ]; then
+    PRIMARY_LIGHT_COLOR="$PRIMARY_COLOR"
+    PRIMARY_DARK_COLOR="$PRIMARY_COLOR"
+fi
+
+# Automatically set KEYCLOAK_ACTIVE if URL, REALM, and CLIENT_ID are set
+if [ -n "$KEYCLOAK_URL" ] && [ -n "$KEYCLOAK_REALM" ] && [ -n "$KEYCLOAK_CLIENT_ID" ]; then
+    KEYCLOAK_ACTIVE=true
+else
+    KEYCLOAK_ACTIVE=false
+fi
+
 # Informational message
 echo "========================================="
 echo "Starting NGINX with base path: $BASE_PATH"
 echo "========================================="
+echo
 
 echo "nginx configuration:"
-echo "-----------------------------------------"
+echo "----------------------------------------------------------------"
 cat /etc/nginx/nginx.conf
 echo
-echo "-----------------------------------------"
+echo "----------------------------------------------------------------"
+echo
 
 echo "Environment variables:"
-echo "-----------------------------------------"
-echo "Logo light path: $LOGO_LIGHT_PATH"
-echo "Logo dark path: $LOGO_DARK_PATH"
-echo "AAS Discovery path: $AAS_DISCOVERY_PATH"
-echo "AAS Registry path: $AAS_REGISTRY_PATH"
-echo "Submodel Registry path: $SUBMODEL_REGISTRY_PATH"
-echo "AAS Repository path: $AAS_REPO_PATH"
-echo "Submodel Repository path: $SUBMODEL_REPO_PATH"
-echo "Concept Description Repository path: $CD_REPO_PATH"
-echo "Dashboard Service path: $DASHBOARD_SERVICE_PATH"
-echo "Primary light color: $PRIMARY_LIGHT_COLOR"
-echo "Primary dark color: $PRIMARY_DARK_COLOR"
-echo "Keycloak active: $KEYCLOAK_ACTIVE"
-echo "Keycloak URL: $KEYCLOAK_URL"
-echo "Keycloak realm: $KEYCLOAK_REALM"
-echo "Keycloak client ID: $KEYCLOAK_CLIENT_ID"
-echo "InfluxDB token: $INFLUXDB_TOKEN"
-echo "Endpoint config available: $ENDPOINT_CONFIG_AVAILABLE"
-echo "Single AAS: $SINGLE_AAS"
-echo "Single AAS redirect: $SINGLE_AAS_REDIRECT"
+echo "-------------------------------------------------------------------------------------------------------------------------"
+printf "%-38s %s\n" "Logo light path:" "$LOGO_LIGHT_PATH"
+printf "%-38s %s\n" "Logo dark path:" "$LOGO_DARK_PATH"
+printf "%-38s %s\n" "AAS Discovery path:" "$AAS_DISCOVERY_PATH"
+printf "%-38s %s\n" "AAS Registry path:" "$AAS_REGISTRY_PATH"
+printf "%-38s %s\n" "Submodel Registry path:" "$SUBMODEL_REGISTRY_PATH"
+printf "%-38s %s\n" "AAS Repository path:" "$AAS_REPO_PATH"
+printf "%-38s %s\n" "Submodel Repository path:" "$SUBMODEL_REPO_PATH"
+printf "%-38s %s\n" "Concept Description Repository path:" "$CD_REPO_PATH"
+printf "%-38s %s\n" "Dashboard Service path:" "$DASHBOARD_SERVICE_PATH"
+printf "%-38s %s\n" "Primary light color:" "$PRIMARY_LIGHT_COLOR"
+printf "%-38s %s\n" "Primary dark color:" "$PRIMARY_DARK_COLOR"
+printf "%-38s %s\n" "Keycloak active:" "$KEYCLOAK_ACTIVE"
+printf "%-38s %s\n" "Keycloak URL:" "$KEYCLOAK_URL"
+printf "%-38s %s\n" "Keycloak realm:" "$KEYCLOAK_REALM"
+printf "%-38s %s\n" "Keycloak client ID:" "$KEYCLOAK_CLIENT_ID"
+printf "%-38s %s\n" "InfluxDB token:" "$INFLUXDB_TOKEN"
+printf "%-38s %s\n" "Endpoint config available:" "$ENDPOINT_CONFIG_AVAILABLE"
+printf "%-38s %s\n" "Single AAS:" "$SINGLE_AAS"
+printf "%-38s %s\n" "Single AAS redirect:" "$SINGLE_AAS_REDIRECT"
+echo "-------------------------------------------------------------------------------------------------------------------------"
 
 # Replace the placeholders in all relevant files (.js, .html, .css)
 find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css' \) -exec sed -i \
