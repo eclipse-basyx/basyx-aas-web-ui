@@ -56,9 +56,9 @@
                             :is="plugin.name"
                             v-for="(plugin, index) in filteredPlugins"
                             :key="index"
-                            :submodel-element-data="submodelElementData"
-                            >{{ plugin.name }}</component
-                        >
+                            :submodel-element-data="submodelElementData">
+                            {{ plugin.name }}
+                        </component>
                     </template>
                     <GenericDataVisu
                         v-if="viewerMode && filteredPlugins.length === 0"
