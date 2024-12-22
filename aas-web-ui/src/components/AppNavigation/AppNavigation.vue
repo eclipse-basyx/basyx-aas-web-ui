@@ -277,9 +277,11 @@
     const EnvConceptDescriptionRepoPath = computed(() => envStore.getEnvConceptDescriptionRepoPath);
     const LogoPath = computed(() => {
         if (isDark.value && envStore.getEnvLogoDarkPath.trim().length > 0) {
-            return envStore.getEnvLogoDarkPath;
+            console.log('AppNavigation.vue -> LogoPath: ', envStore.getEnvLogoDarkPath);
+            return 'Logo/' + envStore.getEnvLogoDarkPath;
         } else {
-            return envStore.getEnvLogoLightPath;
+            console.log('AppNavigation.vue -> LogoPath: ', envStore.getEnvLogoLightPath);
+            return 'Logo/' + envStore.getEnvLogoLightPath;
         }
     });
     const showMobileMenu = computed(() => isMobile.value && !mainMenu.value);

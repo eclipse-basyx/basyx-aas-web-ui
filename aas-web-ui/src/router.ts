@@ -23,12 +23,11 @@ const routes = [
 ];
 
 export async function createAppRouter() {
-    const configResponse = await fetch('config.json');
-    const config = await configResponse.json();
-    const base = config.basePath + '/';
+    console.log('router.ts -> Base Path: ', import.meta.env.BASE_URL);
+    const base = import.meta.env.BASE_URL;
 
     const router = createRouter({
-        history: createWebHistory(base || '/'),
+        history: createWebHistory(base),
         routes,
     });
 
