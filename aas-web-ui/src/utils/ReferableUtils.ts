@@ -1,6 +1,19 @@
 // Function to extract the english display name from a referable
 export function nameToDisplay(referable: any, defaultNameToDisplay = '') {
-    if (referable && referable?.displayName) {
+    // console.log(
+    //     'nameToDisplay()',
+    //     'referable:',
+    //     referable,
+    //     'defaultNameToDisplay:',
+    //     defaultNameToDisplay,
+    // );
+
+    if (
+        referable &&
+        Object.keys(referable).length > 0 &&
+        Array.isArray(referable?.displayName) &&
+        referable?.displayName.length > 0
+    ) {
         const displayNameEn = referable.displayName.find((displayName: any) => {
             return displayName.language === 'en' && displayName.text !== '';
         });
@@ -11,7 +24,18 @@ export function nameToDisplay(referable: any, defaultNameToDisplay = '') {
 
 // Function to extract the english description from a referable
 export function descriptionToDisplay(referable: any) {
-    if (referable && referable?.description) {
+    // console.log(
+    //     'descriptionToDisplay()',
+    //     'referable:',
+    //     referable,
+    // );
+
+    if (
+        referable &&
+        Object.keys(referable).length > 0 &&
+        Array.isArray(referable?.description) &&
+        referable?.description.length > 0
+    ) {
         const descriptionEn = referable.description.find(
             (description: any) => description && description.language === 'en' && description.text !== ''
         );
@@ -20,23 +44,44 @@ export function descriptionToDisplay(referable: any) {
     return '';
 }
 
-// Function to check if the idShort of a SubmodelElement matches the given idShort
+// Function to check if the idShort of a referable matches the given idShort
+// startsWith: idShort of referable starts with given idShort
+// strict: consider lower and upper case
 export function checkIdShort(
     referable: any,
     idShort: string,
     startsWith: boolean = false,
     strict: boolean = false
 ): boolean {
+    // console.log(
+    //     'checkIdShort()',
+    //     'referable:',
+    //     referable,
+    //     'idShort:',
+    //     idShort,
+    //     startsWith ? 'startsWith' : '',
+    //     strict ? 'strict' : ''
+    // );
     if (idShort.trim() === '') return false;
 
-    if (!referable || !referable.idShort || referable.idShort.length === 0) return false;
+    if (!referable || Object.keys(referable).length === 0 || !referable?.idShort || referable?.idShort.trim() === '')
+        return false;
 
     if (startsWith) {
         // For matching e.g. ProductImage{00} with idShort ProductImage
+        // For matching e.g. Markings__00__
         if (strict) {
-            return referable.idShort.startsWith(idShort);
+            return (
+                referable.idShort === idShort ||
+                referable.idShort.startsWith(idShort + '{') ||
+                referable.idShort.startsWith(idShort + '__')
+            );
         } else {
-            return referable.idShort.toLowerCase().startsWith(idShort.toLowerCase());
+            return (
+                referable.idShort.toLowerCase() === idShort.toLowerCase() ||
+                referable.idShort.toLowerCase().startsWith(idShort.toLowerCase() + '{') ||
+                referable.idShort.toLowerCase().startsWith(idShort.toLowerCase() + '__')
+            );
         }
     } else {
         if (strict) {
