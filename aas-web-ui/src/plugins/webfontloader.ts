@@ -10,7 +10,7 @@ export async function loadFonts() {
     webFontLoader.load({
         custom: {
             families: ['Roboto'],
-            urls: ['/fonts/stylesheet.css'],
+            urls: ['./fonts/stylesheet.css'],
         },
     });
 }

@@ -1,9 +1,11 @@
-import { defineConfig, mergeConfig } from 'vitest/config';
+import { defineConfig } from 'vitest/config';
 import viteConfig from './vite.config.mts';
 
-export default mergeConfig(
-    viteConfig,
-    defineConfig({
+export default defineConfig(({ mode }) => {
+    const viteConfigResult = viteConfig({ mode });
+
+    return {
+        ...viteConfigResult,
         test: {
             globals: true,
             environment: 'jsdom',
@@ -13,5 +15,5 @@ export default mergeConfig(
                 reportsDirectory: './coverage',
             },
         },
-    })
-);
+    };
+});

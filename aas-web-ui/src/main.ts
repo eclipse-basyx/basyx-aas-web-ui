@@ -32,10 +32,9 @@ async function loadPlugins() {
     app.use(VueApexCharts);
 
     const envStore = useEnvStore(); // Get the store instance
-    await envStore.fetchConfig(); // make sure to await fetchConfig
 
     // create keycloak instance
-    if (envStore.getKeycloakUrl !== '' && envStore.getKeycloakRealm !== '' && envStore.getKeycloakClientId !== '') {
+    if (envStore.getKeycloakActive) {
         try {
             await initKeycloak(envStore.getKeycloakUrl, envStore.getKeycloakRealm, envStore.getKeycloakClientId);
         } catch {
