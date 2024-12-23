@@ -1574,24 +1574,26 @@ export default defineComponent({
         },
 
         // Name to be displayed
-        nameToDisplay(referable: any, defaultNameToDisplay = '') {
+        // NOTE copied to ReferableUtils
+        nameToDisplay(referable: any, language = 'en', defaultNameToDisplay = '') {
             if (referable && referable?.displayName) {
                 const displayNameEn = referable.displayName.find((displayName: any) => {
-                    return displayName.language === 'en' && displayName.text !== '';
+                    return displayName.language === language && displayName.text !== '';
                 });
                 if (displayNameEn && displayNameEn.text) return displayNameEn.text;
             }
             return !defaultNameToDisplay && referable?.idShort ? referable.idShort : defaultNameToDisplay;
         },
 
-        descriptionToDisplay(referable: any) {
+        // NOTE copied to ReferableUtils
+        descriptionToDisplay(referable: any, language = 'en', defaultNameToDisplay = '') {
             if (referable && referable?.description) {
                 const descriptionEn = referable.description.find(
-                    (description: any) => description && description.language === 'en' && description.text !== ''
+                    (description: any) => description && description.language === language && description.text !== ''
                 );
                 if (descriptionEn && descriptionEn.text) return descriptionEn.text;
             }
-            return '';
+            return defaultNameToDisplay;
         },
 
         valueToDisplay(submodelElement: any) {
