@@ -324,7 +324,7 @@
     });
 
     async function initializeDigitalNameplate() {
-        console.log('initializeDigitalNameplate()', 'props', props);
+        // console.log('initializeDigitalNameplate()', 'props', props);
         loadingState.value = true;
 
         if (!props.submodelElementData || Object.keys(props.submodelElementData).length === 0) {
