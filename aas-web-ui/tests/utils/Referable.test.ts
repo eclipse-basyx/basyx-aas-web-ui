@@ -226,8 +226,8 @@ describe('IdentifiableUtils Test', () => {
         });
     });
 
-    // Define test data for checkSemanticId()
-    const checkSemanticIdTestData = [
+    // Define test data for checkIdShort()
+    const checkIdShortTestData = [
         {
             testId: '42a62525-377b-4173-9003-271eba423039',
             referable: null,
@@ -940,16 +940,16 @@ describe('IdentifiableUtils Test', () => {
         },
     ];
 
-    // Tests for checkSemanticId()
-    checkSemanticIdTestData.forEach(function (checkSemanticIdTestDataset) {
+    // Tests for checkIdShort()
+    checkIdShortTestData.forEach(function (checkIdShortTestDataset) {
         // Define test data
-        const referable = checkSemanticIdTestDataset.referable; //e.g. the ID of a ConceptDescription
-        const idShort = checkSemanticIdTestDataset.idShort;
-        const startsWith = checkSemanticIdTestDataset.startsWith;
-        const strict = checkSemanticIdTestDataset.strict;
-        const result = checkSemanticIdTestDataset.result;
+        const referable = checkIdShortTestDataset.referable; // e.g. the ID of a ConceptDescription
+        const idShort = checkIdShortTestDataset.idShort;
+        const startsWith = checkIdShortTestDataset.startsWith;
+        const strict = checkIdShortTestDataset.strict;
+        const result = checkIdShortTestDataset.result;
 
-        it(`${checkSemanticIdTestDataset.testId}: descriptionToDisplay(${referable})`, () => {
+        it(`${checkIdShortTestDataset.testId}: descriptionToDisplay(${referable})`, () => {
             // Perform the assertion
             expect(checkIdShort(referable, idShort, startsWith, strict)).toStrictEqual(result);
         });
