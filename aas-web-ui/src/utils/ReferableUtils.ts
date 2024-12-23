@@ -1,5 +1,5 @@
 // Function to extract the english display name from a referable
-export function nameToDisplay(referable: any, defaultNameToDisplay = '') {
+export function nameToDisplay(referable: any, language = 'en', defaultNameToDisplay = '') {
     // console.log(
     //     'nameToDisplay()',
     //     'referable:',
@@ -15,7 +15,7 @@ export function nameToDisplay(referable: any, defaultNameToDisplay = '') {
         referable?.displayName.length > 0
     ) {
         const displayNameEn = referable.displayName.find((displayName: any) => {
-            return displayName.language === 'en' && displayName.text !== '';
+            return displayName.language === language && displayName.text !== '';
         });
         if (displayNameEn && displayNameEn.text) return displayNameEn.text;
     }
@@ -23,7 +23,7 @@ export function nameToDisplay(referable: any, defaultNameToDisplay = '') {
 }
 
 // Function to extract the english description from a referable
-export function descriptionToDisplay(referable: any) {
+export function descriptionToDisplay(referable: any, language = 'en', defaultDescriptionToDisplay = '') {
     // console.log(
     //     'descriptionToDisplay()',
     //     'referable:',
@@ -37,11 +37,11 @@ export function descriptionToDisplay(referable: any) {
         referable?.description.length > 0
     ) {
         const descriptionEn = referable.description.find(
-            (description: any) => description && description.language === 'en' && description.text !== ''
+            (description: any) => description && description.language === language && description.text !== ''
         );
         if (descriptionEn && descriptionEn.text) return descriptionEn.text;
     }
-    return '';
+    return defaultDescriptionToDisplay;
 }
 
 // Function to check if the idShort of a referable matches the given idShort

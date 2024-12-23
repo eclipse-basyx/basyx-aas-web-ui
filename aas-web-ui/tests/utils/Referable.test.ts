@@ -171,7 +171,7 @@ describe('IdentifiableUtils Test', () => {
 
         it(`${nameToDisplayTestDataset.testId}: nameToDisplay(${referable}, '${defaultNameToDisplay}')`, () => {
             // Perform the assertion
-            expect(nameToDisplay(referable, defaultNameToDisplay)).toStrictEqual(result);
+            expect(nameToDisplay(referable, 'en', defaultNameToDisplay)).toStrictEqual(result);
         });
     });
 
@@ -949,7 +949,7 @@ describe('IdentifiableUtils Test', () => {
         const strict = checkIdShortTestDataset.strict;
         const result = checkIdShortTestDataset.result;
 
-        it(`${checkIdShortTestDataset.testId}: descriptionToDisplay(${referable})`, () => {
+        it(`${checkIdShortTestDataset.testId}: checkIdShort(${referable})`, () => {
             // Perform the assertion
             expect(checkIdShort(referable, idShort, startsWith, strict)).toStrictEqual(result);
         });

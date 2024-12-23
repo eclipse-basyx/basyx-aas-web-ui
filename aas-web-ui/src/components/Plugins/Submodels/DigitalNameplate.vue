@@ -4,7 +4,7 @@
         <v-card class="mb-4">
             <v-card-title>
                 <div class="text-subtitle-1">
-                    {{ nameToDisplay(submodelElementData, 'Digital Nameplate') }}
+                    {{ nameToDisplay(submodelElementData, 'en', 'Digital Nameplate') }}
                 </div>
             </v-card-title>
             <v-card-text v-if="descriptionToDisplay(submodelElementData)" class="pt-0">
