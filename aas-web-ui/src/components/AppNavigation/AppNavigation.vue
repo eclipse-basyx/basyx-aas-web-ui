@@ -267,7 +267,7 @@
     const isMobile = computed(() => navigationStore.getIsMobile);
     const isDark = computed(() => theme.global.current.value.dark);
     const Snackbar = computed(() => navigationStore.getSnackbar);
-    const showAASList = computed(() => ['MainWindow', 'AASViewer'].includes(route.name as string));
+    const showAASList = computed(() => ['AASViewer', 'AASEditor', 'SubmodelViewer'].includes(route.name as string));
     const drawerState = computed(() => navigationStore.getDrawerState);
     const EnvAASDiscoveryPath = computed(() => envStore.getEnvAASDiscoveryPath);
     const EnvAASRegistryPath = computed(() => envStore.getEnvAASRegistryPath);
@@ -285,11 +285,12 @@
     const showMobileMenu = computed(() => isMobile.value && !mainMenu.value);
     const showAutoSync = computed(() => {
         return (
-            route.name === 'MainWindow' ||
+            route.name === 'AASViewer' ||
             route.name === 'AASList' ||
             route.name === 'SubmodelList' ||
             route.name === 'ComponentVisualization' ||
-            route.name === 'AASViewer'
+            route.name === 'AASEditor' ||
+            route.name === 'SubmodelViewer'
         );
     });
     const authStatus = computed(() => (authStore.getAuthStatus ? 'Authenticated' : 'Not Authenticated'));

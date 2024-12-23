@@ -42,7 +42,7 @@
     const primaryColor = computed(() => theme.current.value.colors.primary);
 
     onMounted(() => {
-        // get the HTML Elements of all Columns (Windows) in the MainWindow
+        // get the HTML Elements of all Columns (Windows)
         let windows = document.getElementsByClassName('window');
         // Add Resize Bars to all Dividers between Windows
         for (let i = 0; i < windows.length; i++) {
