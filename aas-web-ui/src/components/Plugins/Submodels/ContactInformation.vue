@@ -48,8 +48,10 @@
                                                 v-for="(description, i) in generalProperty.description"
                                                 :key="i"
                                                 class="text-caption">
-                                                <span class="font-weight-bold">{{ description.language + ': ' }}</span
-                                                >{{ description.text }}
+                                                <span class="font-weight-bold">
+                                                    {{ description.language + ': ' }}
+                                                </span>
+                                                {{ description.text }}
                                             </div>
                                         </v-tooltip>
                                     </div>
@@ -76,9 +78,9 @@
                             color="primary"
                             variant="elevated"
                             class="text-buttonText"
-                            @click="downloadVCard(contact.vCard, 'ContactPerson.vcf')"
-                            >{{ 'Download Contact' }}</v-btn
-                        >
+                            @click="downloadVCard(contact.vCard, 'ContactPerson.vcf')">
+                            {{ 'Download Contact' }}
+                        </v-btn>
                     </v-card-actions>
                 </v-expansion-panel-text>
             </v-expansion-panel>
@@ -133,7 +135,7 @@
             async initContactInformation() {
                 this.loading = true;
 
-                if (Object.keys(this.submodelElementData).length === 0) {
+                if (this.submodelElementData && Object.keys(this.submodelElementData).length === 0) {
                     this.contactInformationData = {};
                     this.loading = false;
                     return;

@@ -84,25 +84,25 @@
                             size="small"
                             class="text-buttonText"
                             color="primary"
-                            @click="fetchLinkedData()"
-                            >Fetch Data</v-btn
-                        >
+                            @click="fetchLinkedData()">
+                            Fetch Data
+                        </v-btn>
                         <v-btn
                             v-if="segmentType == 'InternalSegment'"
                             size="small"
                             class="text-buttonText"
                             color="primary"
-                            @click="fetchInternalData()"
-                            >Fetch Data</v-btn
-                        >
+                            @click="fetchInternalData()">
+                            Fetch Data
+                        </v-btn>
                         <v-btn
                             v-if="segmentType == 'ExternalSegment'"
                             size="small"
                             class="text-buttonText"
                             color="primary"
-                            @click="fetchExternalData()"
-                            >Fetch Data</v-btn
-                        >
+                            @click="fetchExternalData()">
+                            Fetch Data
+                        </v-btn>
                     </template>
                 </v-list-item>
             </v-list>
@@ -123,9 +123,9 @@
                             size="small"
                             variant="elevated"
                             append-icon="mdi-plus"
-                            @click="createObject()"
-                            >Dashboard</v-btn
-                        >
+                            @click="createObject()">
+                            Dashboard
+                        </v-btn>
                     </template>
                 </v-list-item>
             </v-list>
@@ -315,7 +315,7 @@
         methods: {
             // Function to initialize the TimeSeriesData Plugin
             initializeTimeSeriesData() {
-                if (Object.keys(this.submodelElementData).length === 0) {
+                if (this.submodelElementData && Object.keys(this.submodelElementData).length === 0) {
                     this.timeSeriesData = {};
                     return;
                 }

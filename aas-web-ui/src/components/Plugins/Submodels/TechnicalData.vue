@@ -50,8 +50,10 @@
                                                 v-for="(description, i) in generalProperty.description"
                                                 :key="i"
                                                 class="text-caption">
-                                                <span class="font-weight-bold">{{ description.language + ': ' }}</span
-                                                >{{ description.text }}
+                                                <span class="font-weight-bold">
+                                                    {{ description.language + ': ' }}
+                                                </span>
+                                                {{ description.text }}
                                             </div>
                                         </v-tooltip>
                                     </div>
@@ -223,8 +225,10 @@
                                                 v-for="(description, i) in furtherInfo.description"
                                                 :key="i"
                                                 class="text-caption">
-                                                <span class="font-weight-bold">{{ description.language + ': ' }}</span
-                                                >{{ description.text }}
+                                                <span class="font-weight-bold">
+                                                    {{ description.language + ': ' }}
+                                                </span>
+                                                {{ description.text }}
                                             </div>
                                         </v-tooltip>
                                     </div>
@@ -303,7 +307,7 @@
             async initTechnicalData() {
                 this.loading = true;
 
-                if (Object.keys(this.submodelElementData).length === 0) {
+                if (this.submodelElementData && Object.keys(this.submodelElementData).length === 0) {
                     this.technicalData = {};
                     this.loading = false;
                     return;
