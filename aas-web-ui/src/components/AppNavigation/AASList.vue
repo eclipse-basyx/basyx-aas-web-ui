@@ -42,7 +42,7 @@
                                 <v-list density="compact" class="py-0">
                                     <UploadAAS></UploadAAS>
                                     <v-divider></v-divider>
-                                    <AASForm></AASForm>
+                                    <AASForm :newAAS="true"></AASForm>
                                 </v-list>
                             </v-sheet>
                         </v-menu>
@@ -107,21 +107,49 @@
                                     color="error"
                                     text-color="buttonText"
                                     inline></v-badge>
-                                <!-- Download AAS -->
-                                <v-btn
-                                    v-if="aasRepoURL"
-                                    icon="mdi-download"
-                                    size="x-small"
-                                    variant="plain"
-                                    style="z-index: 9000; margin-left: -6px"
-                                    @click.stop="downloadAAS(item)"></v-btn>
-                                <!-- Remove from AAS Registry Button -->
-                                <v-btn
-                                    icon="mdi-close"
-                                    size="x-small"
-                                    variant="plain"
-                                    style="z-index: 9000; margin-left: -6px"
-                                    @click.stop="showDeleteDialog(item)"></v-btn>
+                                <v-menu v-if="editMode" :close-on-content-click="false">
+                                    <template #activator="{ props }">
+                                        <v-btn
+                                            icon="mdi-dots-vertical"
+                                            variant="plain"
+                                            size="x-small"
+                                            v-bind="props"></v-btn>
+                                    </template>
+                                    <v-sheet border>
+                                        <v-list dense slim density="compact" class="py-0">
+                                            <v-list-item @click="downloadAAS(item)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">mdi-download</v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>Download AAS</v-list-item-subtitle>
+                                            </v-list-item>
+                                            <AASForm :newAAS="false"></AASForm>
+                                            <v-list-item @click="showDeleteDialog(item)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">mdi-delete</v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>Delete AAS</v-list-item-subtitle>
+                                            </v-list-item>
+                                        </v-list>
+                                    </v-sheet>
+                                </v-menu>
+                                <template v-else>
+                                    <!-- Download AAS -->
+                                    <v-btn
+                                        v-if="aasRepoURL"
+                                        icon="mdi-download"
+                                        size="x-small"
+                                        variant="plain"
+                                        style="z-index: 9000; margin-left: -6px"
+                                        @click.stop="downloadAAS(item)"></v-btn>
+                                    <!-- Remove from AAS Registry Button -->
+                                    <v-btn
+                                        icon="mdi-close"
+                                        size="x-small"
+                                        variant="plain"
+                                        style="z-index: 9000; margin-left: -6px"
+                                        @click.stop="showDeleteDialog(item)"></v-btn>
+                                </template>
                             </template>
                             <v-overlay
                                 :model-value="isSelected(item)"

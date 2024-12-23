@@ -7,7 +7,12 @@
                 </template>
                 Create AAS
             </v-list-item>
-            <v-btn v-else icon="mdi-pencil" variant="plain" v-bind="props" @click="editAASDialog = true"></v-btn>
+            <v-list-item v-else @click="editAASDialog = true">
+                <template #prepend>
+                    <v-icon size="x-small">mdi-pencil</v-icon>
+                </template>
+                <v-list-item-subtitle>Edit AAS</v-list-item-subtitle>
+            </v-list-item>
         </template>
         <span>Creat a new AAS</span>
     </v-tooltip>
@@ -27,6 +32,9 @@
 <script lang="ts" setup>
     import { ref } from 'vue';
 
+    defineProps<{
+        newAAS: boolean;
+    }>();
+
     const editAASDialog = ref(false);
-    const newAAS = ref(true);
 </script>
