@@ -1,3 +1,6 @@
+import countries from 'i18n-iso-countries';
+import english from 'i18n-iso-countries/langs/en.json';
+
 // Function to capitalize the first letter of a string
 export function capitalizeFirstLetter(string: string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -59,4 +62,14 @@ export function downloadFile(filename: string, fileContent: Blob) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+// Function to get country name by country code (e.g. DE --> Germany)
+export function getCountryName(countryCode: string) {
+    // console.log('getCountryName()', 'countryCode:', countryCode);
+
+    if (countryCode.trim().length === 0) return '';
+
+    countries.registerLocale(english);
+    return countries.getName(countryCode, 'en');
 }

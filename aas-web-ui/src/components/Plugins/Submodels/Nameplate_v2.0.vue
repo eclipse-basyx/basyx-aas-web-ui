@@ -273,6 +273,7 @@
     // import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { getCountryName } from '@/utils/generalUtils';
     import { checkIdShort } from '@/utils/IDUtils';
     import { valueToDisplay } from '@/utils/MultiLanguagePropertyUtils';
     import { descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
@@ -395,43 +396,44 @@
             });
         });
 
-        let address = '';
-
+        // let address = '';
         let contactInformation = digitalNameplateData.submodelElements.find((sme: any) =>
             checkIdShort(sme, 'ContactInformation')
         );
         if (Object.keys(contactInformation).length > 0) {
             manufacturerContactInformations.value = contactInformation.value;
+
+            const addressTemplate = (street, zipcode, cityTown, country) =>
+                `${street}, ${zipcode} ${cityTown}, ${country}`;
+
+            let street = valueToDisplay(
+                contactInformation.value.find((element: any) => checkIdShort(element, 'Street'))
+            );
+            let zipcode = valueToDisplay(
+                contactInformation.value.find((element: any) => checkIdShort(element, 'Zipcode'))
+            );
+            let cityTown = valueToDisplay(
+                contactInformation.value.find((element: any) => checkIdShort(element, 'CityTown'))
+            );
+            let country = getCountryName(
+                valueToDisplay(contactInformation.value.find((element: any) => checkIdShort(element, 'NationalCode')))
+            );
+
+            let address = addressTemplate(street, zipcode, cityTown, country);
+            // console.log('extractManufacturerProperties()', ''Address:', address);
+            if (address.trim().length > 0) {
+                setMarker(address); // Set the Marker on the Map
+                manufacturerProperties.value.push({ idShort: 'Address', value: address, modelType: 'String' });
+            }
         }
 
         if (Array.isArray(manufacturerContactInformations.value) && manufacturerContactInformations.value.length > 0) {
-            const contactInformationIdShorts = [
-                'NationalCode',
-                'Street',
-                'Zipcode',
-                'CityTown',
-                'Phone',
-                'Fax',
-                'Email',
-            ];
+            const contactInformationIdShorts = ['Phone', 'Fax', 'Email'];
 
             manufacturerContactInformations.value.forEach((sme: any) => {
                 contactInformationIdShorts.forEach((idShort: any) => {
                     if (checkIdShort(sme, idShort)) {
-                        if (['NationalCode', 'Street', 'Zipcode', 'CityTown'].includes(idShort)) {
-                            if (valueToDisplay(sme)) {
-                                address += valueToDisplay(sme);
-                            } else {
-                                address += sme.value[0].text;
-                            }
-                            if (['Street', 'CityTown'].includes(idShort)) {
-                                address += ', ';
-                            }
-                            if (idShort === 'Zipcode') {
-                                address += ' ';
-                            }
-                            // manufacturerProperties.value.push(sme);
-                        } else if (idShort === 'Phone') {
+                        if (idShort === 'Phone') {
                             let telephoneNumber = sme.value.find((element: any) =>
                                 checkIdShort(element, 'TelephoneNumber')
                             );
@@ -457,12 +459,6 @@
 
             vCardString.value = generateVCard(manufacturerProperties.value, manufacturerContactInformations.value);
             // console.log('extractManufacturerProperties()', 'vCard:', vCardString.value);
-
-            // console.log('extractManufacturerProperties()', ''Address:', address);
-            setMarker(address); // Set the Marker on the Map
-            if (address.trim().length > 0) {
-                manufacturerProperties.value.push({ idShort: 'Address', value: address, modelType: 'String' });
-            }
         }
     }
 
@@ -497,27 +493,6 @@
                 markings.value = formattedMarkings;
             }
         }
-
-        //     let formattedMarkings = [] as Array<any>;
-        //     if (markingsLocal?.value) {
-        //         markingsLocal.value.forEach((marking: any) => {
-        //             // find property with the idShort "MarkingFile"
-        //             let markingFile = marking.value.find((element: any) => checkIdShort(element, 'MarkingFile'));
-        //             // find property with the idShort "MarkingName"
-        //             let markingName = marking.value.find((element: any) => checkIdShort(element, 'MarkingName'));
-        //             // create the formatted Marking Object
-        //             let formattedMarking = {
-        //                 idShort: marking.idShort,
-        //                 value: markingFile.value,
-        //                 name: markingName.value,
-        //                 path: markingFile.path,
-        //             };
-        //             // getImageUrl(formattedMarking, 'markingImageUrls', true);
-        //             formattedMarkings.push(formattedMarking);
-        //         });
-        //         // console.log('Formatted Markings:', formattedMarkings);
-        //         markings.value = formattedMarkings; // Set the Markings
-        //     }
     }
 
     function extractAssetSpecificProperties(digitalNameplateData: any) {
@@ -534,61 +509,66 @@
         // console.log('generateVCard()', 'manufacturerProperties:', manufacturerProperties);
         let vCard = 'BEGIN:VCARD\nVERSION:3.0\n';
 
-        let manufacturerName = manufacturerProperties.find((element: any) => checkIdShort(element, 'ManufacturerName'));
+        let manufacturerName = manufacturerProperties.find((sme: any) => checkIdShort(sme, 'ManufacturerName'));
         if (manufacturerName) {
             vCard +=
                 'FN:' +
-                (valueToDisplay(manufacturerName) ? valueToDisplay(manufacturerName) : manufacturerName.value[0].text) +
+                (valueToDisplay(manufacturerName).length > 0
+                    ? valueToDisplay(manufacturerName)
+                    : manufacturerName.value[0].text) +
                 '\n';
         }
 
-        let companyLogo = manufacturerProperties.find((element: any) => checkIdShort(element, 'CompanyLogo'));
+        let companyLogo = manufacturerProperties.find((sme: any) => checkIdShort(sme, 'CompanyLogo'));
         if (companyLogo) {
             vCard += 'PHOTO;MEDIATYPE=' + companyLogo.contentType + ':' + companyLogo.path + '/attachment' + '\n';
         }
 
         // vCard ADR
         vCard += 'ADR;TYPE=WORK:;;';
-        let street = manufacturerContactInformations.find((element: any) => checkIdShort(element, 'Street'));
+        let street = manufacturerContactInformations.find((sme: any) => checkIdShort(sme, 'Street'));
         if (street) {
             // vCard ADR; street
-            vCard += valueToDisplay(street) ? valueToDisplay(street) : (vCard += street.value[0].text);
+            vCard += valueToDisplay(street).length > 0 ? valueToDisplay(street) : (vCard += street.value[0].text);
         }
         vCard += ';';
 
-        let ciytTown = manufacturerContactInformations.find((element: any) => checkIdShort(element, 'CityTown'));
+        let ciytTown = manufacturerContactInformations.find((sme: any) => checkIdShort(sme, 'CityTown'));
         if (ciytTown) {
             // vCard ADR; city/town
-            vCard += valueToDisplay(ciytTown) ? valueToDisplay(ciytTown) : (vCard += ciytTown.value[0].text);
+            vCard += valueToDisplay(ciytTown).length > 0 ? valueToDisplay(ciytTown) : (vCard += ciytTown.value[0].text);
         }
         vCard += ';';
 
         // vCard ADR; federal state (not available in SMT Nameplate v2 specification)
         vCard += ';';
 
-        let zipcode = manufacturerContactInformations.find((element: any) => checkIdShort(element, 'Zipcode'));
+        let zipcode = manufacturerContactInformations.find((sme: any) => checkIdShort(sme, 'Zipcode'));
         if (zipcode) {
             // vCard ADR; zip code
-            vCard += valueToDisplay(zipcode) ? valueToDisplay(zipcode) : (vCard += zipcode.value[0].text);
+            vCard += valueToDisplay(zipcode).length > 0 ? valueToDisplay(zipcode) : (vCard += zipcode.value[0].text);
         }
         vCard += ';';
 
         // vCard ADR; country
-        // TODO add country to vCard on the basis of nationalCode if available (e.g. DE --> Germany)
-        // let nationalCode = manufacturerContactInformations.find((element: any) => checkIdShort(element, 'NationalCode'));
+        let nationalCode = manufacturerContactInformations.find((sme: any) => checkIdShort(sme, 'NationalCode'));
+        if (nationalCode) {
+            const country = getCountryName(valueToDisplay(nationalCode));
+            vCard += country.trim().length > 0 ? country : '';
+        }
         vCard += '\n';
 
-        let telephoneNumber = manufacturerProperties.find((element: any) => checkIdShort(element, 'TelephoneNumber'));
+        let telephoneNumber = manufacturerProperties.find((sme: any) => checkIdShort(sme, 'TelephoneNumber'));
         if (telephoneNumber) {
             vCard += 'TEL;TYPE=WORK,VOICE:' + telephoneNumber.value[0].text + '\n';
         }
 
-        let faxNumber = manufacturerProperties.find((element: any) => checkIdShort(element, 'FaxNumber'));
+        let faxNumber = manufacturerProperties.find((sme: any) => checkIdShort(sme, 'FaxNumber'));
         if (faxNumber) {
             vCard += 'TEL;TYPE=WORK,FAX:' + faxNumber.value[0].text + '\n';
         }
 
-        let emailAddress = manufacturerProperties.find((element: any) => checkIdShort(element, 'EmailAddress'));
+        let emailAddress = manufacturerProperties.find((sme: any) => checkIdShort(sme, 'EmailAddress'));
         if (emailAddress) {
             vCard += 'EMAIL;TYPE=WORK:' + emailAddress.value + '\n';
         }
