@@ -53,6 +53,7 @@ declare module 'vue' {
     LineChart: typeof import('./components/Widgets/LineChart.vue')['default']
     MainMenu: typeof import('./components/AppNavigation/MainMenu.vue')['default']
     MultiLanguageProperty: typeof import('./components/SubmodelElements/MultiLanguageProperty.vue')['default']
+    'Nameplate_v2.0': typeof import('./components/Plugins/Submodels/Nameplate_v2.0.vue')['default']
     NumberType: typeof import('./components/SubmodelElements/ValueTypes/NumberType.vue')['default']
     Operation: typeof import('./components/SubmodelElements/Operation.vue')['default']
     PDFPreview: typeof import('./components/Plugins/PDFPreview.vue')['default']

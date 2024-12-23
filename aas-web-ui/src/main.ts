@@ -58,15 +58,15 @@ async function loadPlugins() {
 
     await Promise.all(
         pluginFiles.map(async (path) => {
-            const componentName = path
+            const pluginFilename = path
                 .replace('./components/Plugins/Submodels/', '')
                 .replace('./components/Plugins/SubmodelElements/', '')
                 .replace('./UserPlugins/', '')
                 .replace('.vue', '');
-            const component: any = await pluginFileRecords[path]();
-            if (component.default.semanticId) {
-                app.component(componentName, (component.default || component) as ReturnType<typeof defineComponent>);
-                plugins.push({ name: componentName, semanticId: component.default.semanticId });
+            const plugin: any = await pluginFileRecords[path]();
+            if (plugin.default.semanticId) {
+                app.component(pluginFilename, (plugin.default || plugin) as ReturnType<typeof defineComponent>);
+                plugins.push({ name: pluginFilename, semanticId: plugin.default.semanticId });
             }
         })
     );
