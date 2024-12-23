@@ -403,7 +403,7 @@
         if (Object.keys(contactInformation).length > 0) {
             manufacturerContactInformations.value = contactInformation.value;
 
-            const addressTemplate = (street, zipcode, cityTown, country) =>
+            const addressTemplate = (street: string, zipcode: string, cityTown: string, country: string) =>
                 `${street}, ${zipcode} ${cityTown}, ${country}`;
 
             let street = valueToDisplay(

@@ -65,11 +65,14 @@ export function downloadFile(filename: string, fileContent: Blob) {
 }
 
 // Function to get country name by country code (e.g. DE --> Germany)
-export function getCountryName(countryCode: string) {
+export function getCountryName(countryCode: string): string {
     // console.log('getCountryName()', 'countryCode:', countryCode);
 
-    if (countryCode.trim().length === 0) return '';
+    const failReturn = '';
+
+    if (countryCode.trim().length === 0) return failReturn;
 
     countries.registerLocale(english);
-    return countries.getName(countryCode, 'en');
+
+    return countries.getName(countryCode, 'en') || failReturn;
 }
