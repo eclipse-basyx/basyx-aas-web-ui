@@ -1,7 +1,10 @@
 <template>
-    <v-tooltip open-delay="600" location="bottom" :disabled="isMobile">
+    <v-tooltip open-delay="600" :location="editMode ? 'end' : 'bottom'" :disabled="isMobile">
         <template #activator="{ props }">
             <v-list-item v-if="editMode" prepend-icon="mdi-upload" slim v-bind="props" @click="uploadAASDialog = true">
+                <template #prepend>
+                    <v-icon size="small">mdi-upload</v-icon>
+                </template>
                 Upload AAS
             </v-list-item>
             <v-btn v-else icon="mdi-upload" variant="plain" v-bind="props" @click="uploadAASDialog = true"></v-btn>

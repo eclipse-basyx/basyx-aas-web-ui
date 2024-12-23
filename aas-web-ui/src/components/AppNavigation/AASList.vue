@@ -34,14 +34,15 @@
                     </v-col>
                     <!-- Add existing AAS -->
                     <v-col cols="auto" class="px-0">
-                        <v-menu v-if="editMode">
+                        <v-menu v-if="editMode" :close-on-content-click="false">
                             <template #activator="{ props }">
                                 <v-btn icon="mdi-dots-vertical" variant="plain" v-bind="props"></v-btn>
                             </template>
                             <v-sheet border>
                                 <v-list density="compact" class="py-0">
                                     <UploadAAS></UploadAAS>
-                                    <!-- TODO: Add component to create a new AAS -->
+                                    <v-divider></v-divider>
+                                    <AASForm></AASForm>
                                 </v-list>
                             </v-sheet>
                         </v-menu>
