@@ -180,36 +180,85 @@ describe('IdentifiableUtils Test', () => {
         {
             testId: 'ea837130-188c-461b-91ce-b670b15557ad',
             referable: null,
+            defaultDescriptionToDisplay: '',
             result: '',
+        },
+        {
+            testId: '3991237d-ba5d-4e89-b1dd-d4c6b199aa74',
+            referable: null,
+            defaultDescriptionToDisplay: 'fooBarDefaultDescriptionToDisplay',
+            result: 'fooBarDefaultDescriptionToDisplay',
         },
         {
             testId: 'd3f5d840-423e-4db4-b468-7348720158bb',
             referable: {},
+            defaultDescriptionToDisplay: '',
             result: '',
+        },
+        {
+            testId: '9a70ee19-0a53-4e5c-849d-2073800caaba',
+            referable: {},
+            defaultDescriptionToDisplay: 'fooBarDefaultDescriptionToDisplay',
+            result: 'fooBarDefaultDescriptionToDisplay',
         },
         {
             testId: 'f23324d0-1760-4cd0-9c52-57f47cfe3d8f',
             referable: { description: null },
+            defaultDescriptionToDisplay: '',
             result: '',
+        },
+        {
+            testId: '9cd57996-eec9-4aff-84ce-1cc4eee75bde',
+            referable: { description: null },
+            defaultDescriptionToDisplay: 'fooBarDefaultDescriptionToDisplay',
+            result: 'fooBarDefaultDescriptionToDisplay',
         },
         {
             testId: 'e6551f2b-a7e0-4e16-8749-4677968483a8',
             referable: { description: [] },
+            defaultDescriptionToDisplay: '',
             result: '',
+        },
+        {
+            testId: 'f66012e2-dd63-4c0e-a32a-88da945453a7',
+            referable: { description: [] },
+            defaultDescriptionToDisplay: 'fooBarDefaultDescriptionToDisplay',
+            result: 'fooBarDefaultDescriptionToDisplay',
         },
         {
             testId: '6d7ffd3b-ea23-4dea-b065-03e4295ff86e',
             referable: { description: [{}] },
+            defaultDescriptionToDisplay: '',
             result: '',
+        },
+        {
+            testId: '20f9250f-356f-4f8c-84cd-b0267d63e6de',
+            referable: { description: [{}] },
+            defaultDescriptionToDisplay: 'fooBarDefaultDescriptionToDisplay',
+            result: 'fooBarDefaultDescriptionToDisplay',
         },
         {
             testId: 'f416ab9b-2374-427e-a985-04c1c44ef23e',
             referable: { description: [{ language: 'en' }] },
+            defaultDescriptionToDisplay: '',
             result: '',
+        },
+        {
+            testId: 'fa98c529-ee48-4a85-b61a-885ed53825b0',
+            referable: { description: [{ language: 'en' }] },
+            defaultDescriptionToDisplay: 'fooBarDefaultDescriptionToDisplay',
+            result: 'fooBarDefaultDescriptionToDisplay',
         },
         {
             testId: 'd80c226f-0cf9-4b50-8648-a720d29ec119',
             referable: { description: [{ language: 'en', text: 'fooBarDescription' }] },
+            defaultDescriptionToDisplay: '',
+            result: 'fooBarDescription',
+        },
+        {
+            testId: '3a8419d3-d369-4f3c-8020-44b250f74f96',
+            referable: { description: [{ language: 'en', text: 'fooBarDescription' }] },
+            defaultDescriptionToDisplay: 'fooBarDefaultDescriptionToDisplay',
             result: 'fooBarDescription',
         },
     ];
@@ -218,11 +267,12 @@ describe('IdentifiableUtils Test', () => {
     descriptionToDisplayTestData.forEach(function (descriptionToDisplayTestDataset) {
         // Define test data
         const referable = descriptionToDisplayTestDataset.referable; //e.g. the ID of a ConceptDescription
+        const defaultDescriptionToDisplay = descriptionToDisplayTestDataset.defaultDescriptionToDisplay;
         const result = descriptionToDisplayTestDataset.result;
 
         it(`${descriptionToDisplayTestDataset.testId}: descriptionToDisplay(${referable})`, () => {
             // Perform the assertion
-            expect(descriptionToDisplay(referable)).toStrictEqual(result);
+            expect(descriptionToDisplay(referable, 'en', defaultDescriptionToDisplay)).toStrictEqual(result);
         });
     });
 
