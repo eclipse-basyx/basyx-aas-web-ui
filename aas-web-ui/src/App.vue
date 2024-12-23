@@ -3,7 +3,7 @@
         <!-- App Navigation and it's sub-Components (AASList, etc.) -->
         <AppNavigation />
         <v-main style="padding-top: 33px">
-            <!-- App Content (eg. MainWindow, etc.) -->
+            <!-- App Content (eg. AASViewer, AASEditor, etc.) -->
             <router-view v-slot="{ Component }">
                 <keep-alive :include="['AASList', 'SubmodelList']">
                     <component :is="Component" />
@@ -14,7 +14,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { onMounted } from 'vue';
+    import { computed, onMounted } from 'vue';
     import { RouteRecordNameGeneric, useRoute, useRouter } from 'vue-router';
     import { useDisplay } from 'vuetify';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
@@ -40,6 +40,9 @@
     // Vuetify
     const { mobile } = useDisplay();
     const { platform } = useDisplay();
+
+    // Computed Properties
+    const allowEditing = computed(() => envStore.getAllowEditing); // Check if the current environment allows showing the AAS Editor
 
     onMounted(async () => {
         // Check if the platform is a mobile device
@@ -94,7 +97,7 @@
     // Handle mobile view routing logic
     function handleMobileView(aasEndpoint: string | null, submodelElementPath: string | null) {
         const currentRouteName = route.name;
-        const routesToAASList: Array<RouteRecordNameGeneric> = ['MainWindow', 'AASViewer', 'AASList'];
+        const routesToAASList: Array<RouteRecordNameGeneric> = ['AASViewer', 'AASEditor', 'SubmodelViewer', 'AASList'];
         if (currentRouteName && routesToAASList.includes(currentRouteName)) {
             // Redirect to 'AASList' with existing query parameters
             router.push({ name: 'AASList', query: route.query });
@@ -116,22 +119,25 @@
     // Handle desktop view routing logic
     function handleDesktopView(aasEndpoint: string | null, submodelElementPath: string | null) {
         const currentRouteName = route.name;
-        const routesToMainWindow: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList', 'ComponentVisualization'];
+        const routesToAASViewer: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList', 'ComponentVisualization'];
         const query: any = {};
         if (aasEndpoint) query.aas = aasEndpoint;
         if (submodelElementPath) query.path = submodelElementPath;
-        if (currentRouteName && routesToMainWindow.includes(currentRouteName)) {
-            // Redirect to 'MainWindow' with appropriate query parameters
-            router.push({ name: 'MainWindow', query });
-        } else if (currentRouteName === 'AASViewer') {
-            // Stay on 'AASViewer' but update query parameters
+        if (currentRouteName && routesToAASViewer.includes(currentRouteName)) {
+            // Redirect to 'AASViewer' with appropriate query parameters
             router.push({ name: 'AASViewer', query });
+        } else if (currentRouteName === 'AASEditor' && allowEditing.value) {
+            // Stay on 'AASEditor' but update query parameters
+            router.push({ name: 'AASEditor', query });
+        } else if (currentRouteName === 'SubmodelViewer') {
+            // Stay on 'SubmodelViewer' but update query parameters
+            router.push({ name: 'SubmodelViewer', query });
         } else if (currentRouteName === 'About') {
             // Stay on 'About'
             router.push({ name: 'About' });
         } else {
-            // Default to 'MainWindow' with query parameters
-            router.push({ name: 'MainWindow', query });
+            // Default to 'AASViewer' with query parameters
+            router.push({ name: 'AASViewer', query });
         }
     }
 

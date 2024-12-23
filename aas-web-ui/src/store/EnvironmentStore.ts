@@ -2,7 +2,6 @@ import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
 const isProduction = import.meta.env.MODE === 'production';
-console.log('EnvironmentStore.ts -> isProduction: ', isProduction);
 
 export const useEnvStore = defineStore('envStore', () => {
     // state
@@ -63,6 +62,9 @@ export const useEnvStore = defineStore('envStore', () => {
     const singleAasRedirect = ref(
         import.meta.env.VITE_SINGLE_AAS_REDIRECT || (isProduction ? '/__SINGLE_AAS_REDIRECT_PLACEHOLDER__/' : '')
     );
+    const allowEditing = ref(
+        import.meta.env.VITE_ALLOW_EDITING || (isProduction ? '/__ALLOW_EDITING_PLACEHOLDER__/' : '')
+    );
 
     // getters
     const getEnvBasePath = computed(() => basePath.value);
@@ -96,6 +98,7 @@ export const useEnvStore = defineStore('envStore', () => {
         }
         return undefined;
     });
+    const getAllowEditing = computed(() => allowEditing.value === 'true');
 
     return {
         singleAas,
@@ -119,5 +122,6 @@ export const useEnvStore = defineStore('envStore', () => {
         getEndpointConfigAvailable,
         getSingleAas,
         getSingleAasRedirect,
+        getAllowEditing,
     };
 });

@@ -37,10 +37,13 @@
                         <!-- Select the view you want to use -->
                         <v-list v-if="!isMobile" nav class="pa-0 ma-3 bg-navigationMenuSecondary">
                             <v-list-item to="/" @click="closeMenu()">
+                                <v-list-item-title>AAS Viewer</v-list-item-title>
+                            </v-list-item>
+                            <v-list-item v-if="allowEditing" to="/aaseditor" @click="closeMenu()">
                                 <v-list-item-title>AAS Editor</v-list-item-title>
                             </v-list-item>
-                            <v-list-item to="/aasviewer" @click="closeMenu()">
-                                <v-list-item-title>AAS Viewer</v-list-item-title>
+                            <v-list-item to="/submodelviewer" @click="closeMenu()">
+                                <v-list-item-title>Submodel Viewer</v-list-item-title>
                             </v-list-item>
                             <v-list-item v-if="dashboardAvailable" to="/dashboard" @click="closeMenu()">
                                 <v-list-item-title>Dashboard</v-list-item-title>
@@ -185,6 +188,7 @@
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
     const isDark = computed(() => theme.global.current.value.dark); // Check if the current Theme is dark
     const currentRoute = computed(() => route.name); // get the current route name
+    const allowEditing = computed(() => envStore.getAllowEditing); // Check if the current environment allows showing the AAS Editor
 
     watch(currentRoute, () => {
         aasStore.dispatchSelectedAAS({}); // reset selected AAS

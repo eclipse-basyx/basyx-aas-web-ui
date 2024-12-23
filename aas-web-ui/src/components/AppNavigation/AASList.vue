@@ -34,7 +34,19 @@
                     </v-col>
                     <!-- Add existing AAS -->
                     <v-col cols="auto" class="px-0">
-                        <UploadAAS></UploadAAS>
+                        <v-menu v-if="editMode" :close-on-content-click="false">
+                            <template #activator="{ props }">
+                                <v-btn icon="mdi-dots-vertical" variant="plain" v-bind="props"></v-btn>
+                            </template>
+                            <v-sheet border>
+                                <v-list density="compact" class="py-0">
+                                    <UploadAAS></UploadAAS>
+                                    <v-divider></v-divider>
+                                    <AASForm :newAAS="true"></AASForm>
+                                </v-list>
+                            </v-sheet>
+                        </v-menu>
+                        <UploadAAS v-else></UploadAAS>
                     </v-col>
                 </v-row>
             </v-card-title>
@@ -95,21 +107,49 @@
                                     color="error"
                                     text-color="buttonText"
                                     inline></v-badge>
-                                <!-- Download AAS -->
-                                <v-btn
-                                    v-if="aasRepoURL"
-                                    icon="mdi-download"
-                                    size="x-small"
-                                    variant="plain"
-                                    style="z-index: 9000; margin-left: -6px"
-                                    @click.stop="downloadAAS(item)"></v-btn>
-                                <!-- Remove from AAS Registry Button -->
-                                <v-btn
-                                    icon="mdi-close"
-                                    size="x-small"
-                                    variant="plain"
-                                    style="z-index: 9000; margin-left: -6px"
-                                    @click.stop="showDeleteDialog(item)"></v-btn>
+                                <v-menu v-if="editMode" :close-on-content-click="false">
+                                    <template #activator="{ props }">
+                                        <v-btn
+                                            icon="mdi-dots-vertical"
+                                            variant="plain"
+                                            size="x-small"
+                                            v-bind="props"></v-btn>
+                                    </template>
+                                    <v-sheet border>
+                                        <v-list dense slim density="compact" class="py-0">
+                                            <v-list-item @click="downloadAAS(item)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">mdi-download</v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>Download AAS</v-list-item-subtitle>
+                                            </v-list-item>
+                                            <AASForm :newAAS="false"></AASForm>
+                                            <v-list-item @click="showDeleteDialog(item)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">mdi-delete</v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>Delete AAS</v-list-item-subtitle>
+                                            </v-list-item>
+                                        </v-list>
+                                    </v-sheet>
+                                </v-menu>
+                                <template v-else>
+                                    <!-- Download AAS -->
+                                    <v-btn
+                                        v-if="aasRepoURL"
+                                        icon="mdi-download"
+                                        size="x-small"
+                                        variant="plain"
+                                        style="z-index: 9000; margin-left: -6px"
+                                        @click.stop="downloadAAS(item)"></v-btn>
+                                    <!-- Remove from AAS Registry Button -->
+                                    <v-btn
+                                        icon="mdi-close"
+                                        size="x-small"
+                                        variant="plain"
+                                        style="z-index: 9000; margin-left: -6px"
+                                        @click.stop="showDeleteDialog(item)"></v-btn>
+                                </template>
                             </template>
                             <v-overlay
                                 :model-value="isSelected(item)"
@@ -232,6 +272,7 @@
             }
         }
     });
+    const editMode = computed(() => route.name === 'AASEditor'); // Check if the current Route is the AAS Editor
 
     // Watchers
     // Watch the AAS Registry URL for changes and reload the AAS List if the URL changes
