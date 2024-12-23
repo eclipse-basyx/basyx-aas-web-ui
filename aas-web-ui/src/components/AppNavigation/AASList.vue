@@ -34,7 +34,18 @@
                     </v-col>
                     <!-- Add existing AAS -->
                     <v-col cols="auto" class="px-0">
-                        <UploadAAS></UploadAAS>
+                        <v-menu v-if="editMode">
+                            <template #activator="{ props }">
+                                <v-btn icon="mdi-dots-vertical" variant="plain" v-bind="props"></v-btn>
+                            </template>
+                            <v-sheet border>
+                                <v-list density="compact" class="py-0">
+                                    <UploadAAS></UploadAAS>
+                                    <!-- TODO: Add component to create a new AAS -->
+                                </v-list>
+                            </v-sheet>
+                        </v-menu>
+                        <UploadAAS v-else></UploadAAS>
                     </v-col>
                 </v-row>
             </v-card-title>
@@ -232,6 +243,7 @@
             }
         }
     });
+    const editMode = computed(() => route.name === 'AASEditor'); // Check if the current Route is the AAS Editor
 
     // Watchers
     // Watch the AAS Registry URL for changes and reload the AAS List if the URL changes
