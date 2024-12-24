@@ -268,9 +268,6 @@
     import { LMap, LMarker, LTileLayer } from '@vue-leaflet/vue-leaflet';
     import { latLng } from 'leaflet';
     import { computed, onMounted, ref } from 'vue';
-    // import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
-    // import GenericDataVisu from '@/components/UIComponents/GenericDataVisu.vue';
-    // import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { getCountryName } from '@/utils/generalUtils';
@@ -284,10 +281,6 @@
         name: 'DigitalNameplate',
         semanticId: 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate',
     });
-
-    // Composables
-    // const { getRequest } = useRequestHandling();
-    // const { getAttachment } = useSMRepositoryClient();
 
     // Stores
     const navigationStore = useNavigationStore();
