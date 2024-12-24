@@ -88,16 +88,14 @@
                                             {{ valueToDisplay(productProperty) }}
                                         </div>
                                         <!-- Otherwise show all available values -->
-                                        <div
-                                            v-for="(langStringSet, j) in productProperty.value"
-                                            v-else
-                                            :key="j"
-                                            class="text-caption">
-                                            <span class="font-weight-bold">
-                                                {{ langStringSet.language + ': ' }}
-                                            </span>
-                                            {{ langStringSet.text }}
-                                        </div>
+                                        <template v-for="(langStringSet, j) in productProperty.value" v-else :key="j">
+                                            <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                                                <span class="font-weight-bold">
+                                                    {{ langStringSet?.language + ': ' }}
+                                                </span>
+                                                {{ langStringSet?.text }}
+                                            </div>
+                                        </template>
                                     </template>
                                     <!-- Versions -->
                                     <template v-else-if="productProperty.modelType == 'Versions'">
@@ -195,16 +193,17 @@
                                             {{ valueToDisplay(manufacturerProperty) }}
                                         </div>
                                         <!-- Otherwise show all available values -->
-                                        <div
+                                        <template
                                             v-for="(langStringSet, j) in manufacturerProperty.value"
                                             v-else
-                                            :key="j"
-                                            class="text-caption">
-                                            <span class="font-weight-bold">
-                                                {{ langStringSet.language + ': ' }}
-                                            </span>
-                                            {{ langStringSet.text }}
-                                        </div>
+                                            :key="j">
+                                            <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                                                <span class="font-weight-bold">
+                                                    {{ langStringSet.language + ': ' }}
+                                                </span>
+                                                {{ langStringSet.text }}
+                                            </div>
+                                        </template>
                                     </template>
                                     <!-- Default -->
                                     <span v-else class="text-caption">{{ manufacturerProperty.value }}</span>
