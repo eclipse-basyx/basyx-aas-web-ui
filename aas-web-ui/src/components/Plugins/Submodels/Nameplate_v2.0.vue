@@ -225,7 +225,7 @@
                 </v-card-actions>
             </v-card>
             <!-- Leaflet Map -->
-            <v-card class="mb-4">
+            <v-card v-if="vCardString.length > 0" class="mb-4">
                 <l-map
                     :zoom="5"
                     :center="[center.lat, center.lng]"
@@ -297,7 +297,6 @@
     const digitalNameplateData = ref({} as any);
     const productProperties = ref([] as Array<any>);
     const manufacturerProperties = ref([] as Array<any>);
-    const manufacturerContactInformations = ref([] as Array<any>);
     const markings = ref([] as Array<any>);
     const assetSpecificProperties = ref([]);
     const vCardString = ref('');
@@ -389,26 +388,33 @@
         });
 
         // let address = '';
-        let contactInformation = digitalNameplateData.submodelElements.find((sme: any) =>
+        let manufacturerContactInformationSmc = digitalNameplateData.submodelElements.find((sme: any) =>
             checkIdShort(sme, 'ContactInformation')
         );
-        if (Object.keys(contactInformation).length > 0) {
-            manufacturerContactInformations.value = contactInformation.value;
-
+        if (
+            manufacturerContactInformationSmc &&
+            Object.keys(manufacturerContactInformationSmc).length > 0 &&
+            Array.isArray(manufacturerContactInformationSmc.value) &&
+            manufacturerContactInformationSmc.value.length > 0
+        ) {
             const addressTemplate = (street: string, zipcode: string, cityTown: string, country: string) =>
                 `${street}, ${zipcode} ${cityTown}, ${country}`;
 
             let street = valueToDisplay(
-                contactInformation.value.find((element: any) => checkIdShort(element, 'Street'))
+                manufacturerContactInformationSmc.value.find((element: any) => checkIdShort(element, 'Street'))
             );
             let zipcode = valueToDisplay(
-                contactInformation.value.find((element: any) => checkIdShort(element, 'Zipcode'))
+                manufacturerContactInformationSmc.value.find((element: any) => checkIdShort(element, 'Zipcode'))
             );
             let cityTown = valueToDisplay(
-                contactInformation.value.find((element: any) => checkIdShort(element, 'CityTown'))
+                manufacturerContactInformationSmc.value.find((element: any) => checkIdShort(element, 'CityTown'))
             );
             let country = getCountryName(
-                valueToDisplay(contactInformation.value.find((element: any) => checkIdShort(element, 'NationalCode')))
+                valueToDisplay(
+                    manufacturerContactInformationSmc.value.find((element: any) =>
+                        checkIdShort(element, 'NationalCode')
+                    )
+                )
             );
 
             let address = addressTemplate(street, zipcode, cityTown, country);
@@ -417,39 +423,42 @@
                 setMarker(address); // Set the Marker on the Map
                 manufacturerProperties.value.push({ idShort: 'Address', value: address, modelType: 'String' });
             }
-        }
 
-        if (Array.isArray(manufacturerContactInformations.value) && manufacturerContactInformations.value.length > 0) {
-            const contactInformationIdShorts = ['Phone', 'Fax', 'Email'];
+            let phoneSmc = manufacturerContactInformationSmc.value.find((sme: any) => checkIdShort(sme, 'Phone'));
+            if (
+                phoneSmc &&
+                Object.keys(phoneSmc).length > 0 &&
+                Array.isArray(phoneSmc.value) &&
+                phoneSmc.value.length > 0
+            ) {
+                let telephoneNumber = phoneSmc.value.find((element: any) => checkIdShort(element, 'TelephoneNumber'));
+                if (telephoneNumber && Object.keys(telephoneNumber).length > 0) {
+                    manufacturerProperties.value.push(telephoneNumber);
+                }
+            }
 
-            manufacturerContactInformations.value.forEach((sme: any) => {
-                contactInformationIdShorts.forEach((idShort: any) => {
-                    if (checkIdShort(sme, idShort)) {
-                        if (idShort === 'Phone') {
-                            let telephoneNumber = sme.value.find((element: any) =>
-                                checkIdShort(element, 'TelephoneNumber')
-                            );
-                            if (Object.keys(telephoneNumber).length > 0) {
-                                manufacturerProperties.value.push(telephoneNumber);
-                            }
-                        } else if (idShort === 'Fax') {
-                            let faxNumber = sme.value.find((element: any) => checkIdShort(element, 'FaxNumber'));
-                            if (Object.keys(faxNumber).length > 0) {
-                                manufacturerProperties.value.push(faxNumber);
-                            }
-                        } else if (idShort === 'Email') {
-                            let emailAddress = sme.value.find((element: any) => checkIdShort(element, 'EmailAddress'));
-                            if (Object.keys(emailAddress).length > 0) {
-                                manufacturerProperties.value.push(emailAddress);
-                            }
-                        } else {
-                            manufacturerProperties.value.push(sme);
-                        }
-                    }
-                });
-            });
+            let faxSmc = manufacturerContactInformationSmc.value.find((sme: any) => checkIdShort(sme, 'Fax'));
+            if (faxSmc && Object.keys(faxSmc).length > 0 && Array.isArray(faxSmc.value) && faxSmc.value.length > 0) {
+                let faxNumber = faxSmc.value.find((element: any) => checkIdShort(element, 'FaxNumber'));
+                if (faxNumber && Object.keys(faxNumber).length > 0) {
+                    manufacturerProperties.value.push(faxNumber);
+                }
+            }
 
-            vCardString.value = generateVCard(manufacturerProperties.value, manufacturerContactInformations.value);
+            let emailSmc = manufacturerContactInformationSmc.value.find((sme: any) => checkIdShort(sme, 'Email'));
+            if (
+                emailSmc &&
+                Object.keys(emailSmc).length > 0 &&
+                Array.isArray(emailSmc.value) &&
+                emailSmc.value.length > 0
+            ) {
+                let emailAddress = emailSmc.value.find((element: any) => checkIdShort(element, 'EmailAddress'));
+                if (emailAddress && Object.keys(emailAddress).length > 0) {
+                    manufacturerProperties.value.push(emailAddress);
+                }
+            }
+
+            vCardString.value = generateVCard(manufacturerProperties.value, manufacturerContactInformationSmc.value);
             // console.log('extractManufacturerProperties()', 'vCard:', vCardString.value);
         }
     }
@@ -461,7 +470,7 @@
             checkIdShort(element, 'Markings')
         );
 
-        if (Object.keys(markingsSMC).length > 0) {
+        if (markingsSMC && Object.keys(markingsSMC).length > 0) {
             let markingSMCs = markingsSMC.value;
 
             if (Array.isArray(markingSMCs) && markingSMCs.length > 0) {
@@ -471,7 +480,12 @@
                     let markingFile = markingSMC.value.find((element: any) => checkIdShort(element, 'MarkingFile'));
                     let markingName = markingSMC.value.find((element: any) => checkIdShort(element, 'MarkingName'));
 
-                    if (Object.keys(markingName).length > 0 && Object.keys(markingFile).length > 0) {
+                    if (
+                        markingName &&
+                        Object.keys(markingName).length > 0 &&
+                        markingFile &&
+                        Object.keys(markingFile).length > 0
+                    ) {
                         let formattedMarking = {
                             idShort: markingSMC.idShort,
                             value: markingFile.value,
