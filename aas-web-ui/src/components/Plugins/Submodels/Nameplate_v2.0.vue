@@ -270,8 +270,8 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { getCountryName } from '@/utils/generalUtils';
-    import { checkIdShort } from '@/utils/IDUtils';
     import { valueToDisplay } from '@/utils/MultiLanguagePropertyUtils';
+    import { checkIdShort } from '@/utils/ReferableUtils';
     import { descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
     import { calculateSubmodelElementPathes } from '@/utils/SubmodelElementUtils';
 
