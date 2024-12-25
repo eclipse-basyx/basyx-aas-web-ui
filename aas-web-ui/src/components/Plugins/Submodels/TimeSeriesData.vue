@@ -4,7 +4,7 @@
         <v-card v-if="!hideSettings" class="mb-4">
             <v-card-title>
                 <div class="text-subtitle-1">
-                    {{ nameToDisplay(submodelElementData, 'Time Series Data') }}
+                    {{ nameToDisplay(submodelElementData, 'en', 'Time Series Data') }}
                 </div>
             </v-card-title>
             <v-card-text v-if="descriptionToDisplay(submodelElementData)" class="pt-0">
