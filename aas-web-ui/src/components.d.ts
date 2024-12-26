@@ -82,6 +82,7 @@ declare module 'vue' {
     ThemeSwitch: typeof import('./components/AppNavigation/Settings/ThemeSwitch.vue')['default']
     TimeSeriesData: typeof import('./components/Plugins/Submodels/TimeSeriesData.vue')['default']
     UploadAAS: typeof import('./components/AppNavigation/UploadAAS.vue')['default']
+    VisualizationHeader: typeof import('./components/UIComponents/VisualizationHeader.vue')['default']
     VTreeview: typeof import('./components/UIComponents/VTreeview.vue')['default']
   }
 }

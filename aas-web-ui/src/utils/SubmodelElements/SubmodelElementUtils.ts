@@ -42,7 +42,7 @@ export function hasValue(sme: any): boolean {
 
 export function valueToDisplay(sme: any, language = 'en', defaultValueToDisplay = ''): string {
     // console.log(
-    //     'nameToDisplay()',
+    //     'valueToDisplay()',
     //     'multiLanguageProperty:',
     //     multiLanguageProperty,
     //     'language::',
@@ -51,7 +51,7 @@ export function valueToDisplay(sme: any, language = 'en', defaultValueToDisplay 
     //     defaultdefaultValueToDisplayNameToDisplay,
     // );
 
-    if (sme && Object.keys(sme).length > 0 && sme?.modelType.trim() !== '') {
+    if (sme && Object.keys(sme).length > 0 && sme?.modelType && sme.modelType.trim() !== '') {
         switch (sme.modelType) {
             // TODO case 'AnnotatedRelationshipElement':
             // TODO case 'BasicEventElement':

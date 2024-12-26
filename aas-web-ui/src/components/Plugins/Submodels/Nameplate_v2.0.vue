@@ -1,17 +1,9 @@
 <template>
     <v-container v-if="Object.keys(submodelElementData).length > 0" fluid class="pa-0">
-        <!-- Header -->
-        <v-card class="mb-4">
-            <v-card-title>
-                <div class="text-subtitle-1">
-                    {{ nameToDisplay(submodelElementData, 'Digital Nameplate for industrial equipment') }}
-                </div>
-            </v-card-title>
-            <v-card-text v-if="descriptionToDisplay(submodelElementData)" class="pt-0">
-                {{ descriptionToDisplay(submodelElementData) }}
-            </v-card-text>
-        </v-card>
-        <!-- Product -->
+        <VisualizationHeader
+            :submodel-element-data="submodelElementData"
+            default-title="Digital Nameplate for industrial equipment"></VisualizationHeader>
+        <!-- Loading -->
         <v-card v-if="loadingState" class="mb-4">
             <!-- Product properties -->
             <v-skeleton-loader type="heading, table-heading@7"></v-skeleton-loader>
@@ -281,9 +273,9 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { getCountryName } from '@/utils/generalUtils';
-    import { checkIdShort } from '@/utils/ReferableUtils';
-    import { descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
+    import { checkIdShort, descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
     import { valueUrl } from '@/utils/SubmodelElements/FileUtils';
+    import { firstLangStringSetText } from '@/utils/SubmodelElements/MultiLanguagePropertyUtils';
     import {
         calculateSubmodelElementPathes,
         hasValue,
@@ -326,11 +318,11 @@
     const isIOs = computed(() => navigationStore.getPlatform.ios);
 
     onMounted(() => {
-        initializeDigitalNameplate();
+        initializeVisualization();
     });
 
-    async function initializeDigitalNameplate() {
-        // console.log('initializeDigitalNameplate()', 'props', props);
+    async function initializeVisualization() {
+        // console.log('initializeVisualization()', 'props', props);
         loadingState.value = true;
 
         if (!props.submodelElementData || Object.keys(props.submodelElementData).length === 0) {
@@ -378,18 +370,6 @@
                 if (checkIdShort(sme, idShort)) {
                     if (['HardwareVersion', 'FirmwareVersion', 'SoftwareVersion'].includes(idShort)) {
                         if (hasValue(sme)) versions.push(sme);
-                        // } else if (idShort === 'CountryOfOrigin') {
-                        //     if (hasValue(sme)) {
-                        //         const countryOfOriginNationalCode = valueToDisplay(sme);
-                        //         if (countryOfOriginNationalCode.trim().length === 2) {
-                        //             const countryOfOrigin = getCountryName(countryOfOriginNationalCode);
-                        //             const countryOfOriginSme = { ...sme };
-                        //             countryOfOriginSme.value = countryOfOrigin + ' (' + countryOfOriginNationalCode + ')';
-                        //             productProperties.value.push(countryOfOriginSme);
-                        //         } else {
-                        //             productProperties.value.push(sme);
-                        //         }
-                        //     }
                     } else {
                         if (hasValue(sme)) productProperties.value.push(sme);
                     }
@@ -431,61 +411,64 @@
             const streetSme = manufacturerContactInformationSmc.value.find((element: any) =>
                 checkIdShort(element, 'Street')
             );
-            let street = valueToDisplay(streetSme, 'en');
-            if (street.trim() === '' && hasValue(streetSme)) {
-                for (let index = 0; index < streetSme.value.length; index++) {
-                    const streetSmeValue = streetSme.value[index].text;
-                    if (streetSmeValue.trim() !== '') {
-                        street = streetSmeValue;
-                        break;
-                    }
-                }
-            }
+            let street = valueToDisplay(streetSme, 'en', firstLangStringSetText(streetSme));
+            // if (street.trim() === '' && hasValue(streetSme)) {
+            //     street = firstLangStringSetText(streetSme);
+            //     for (let index = 0; index < streetSme.value.length; index++) {
+            //         const streetSmeValue = streetSme.value[index].text;
+            //         if (streetSmeValue.trim() !== '') {
+            //             street = streetSmeValue;
+            //             break;
+            //         }
+            //     }
+            // }
 
             // Zipcode
             const zipcodeSme = manufacturerContactInformationSmc.value.find((element: any) =>
                 checkIdShort(element, 'Zipcode')
             );
-            let zipcode = valueToDisplay(zipcodeSme, 'en');
-            if (zipcode.trim() === '' && hasValue(zipcodeSme)) {
-                for (let index = 0; index < zipcodeSme.value.length; index++) {
-                    const zipcodeSmeValue = zipcodeSme.value[index].text;
-                    if (zipcodeSmeValue.trim() !== '') {
-                        zipcode = zipcodeSmeValue;
-                        break;
-                    }
-                }
-            }
+            let zipcode = valueToDisplay(zipcodeSme, 'en', firstLangStringSetText(zipcodeSme));
+            // if (zipcode.trim() === '' && hasValue(zipcodeSme)) {
+            //     zipcode = firstLangStringSetText(zipcodeSme);
+            //     for (let index = 0; index < zipcodeSme.value.length; index++) {
+            //         const zipcodeSmeValue = zipcodeSme.value[index].text;
+            //         if (zipcodeSmeValue.trim() !== '') {
+            //             zipcode = zipcodeSmeValue;
+            //             break;
+            //         }
+            //     }
+            // }
 
             // CityTown
             const cityTownSme = manufacturerContactInformationSmc.value.find((element: any) =>
                 checkIdShort(element, 'CityTown')
             );
-            let cityTown = valueToDisplay(cityTownSme, 'en');
-            if (cityTown.trim() === '' && hasValue(cityTownSme)) {
-                for (let index = 0; index < cityTownSme.value.length; index++) {
-                    const cityTownSmeValue = cityTownSme.value[index].text;
-                    if (cityTownSmeValue.trim() !== '') {
-                        cityTown = cityTownSmeValue;
-                        break;
-                    }
-                }
-            }
+            let cityTown = valueToDisplay(cityTownSme, 'en', firstLangStringSetText(cityTownSme));
+            // if (cityTown.trim() === '' && hasValue(cityTownSme)) {
+            //     cityTown = firstLangStringSetText(cityTownSme);
+            //     for (let index = 0; index < cityTownSme.value.length; index++) {
+            //         const cityTownSmeValue = cityTownSme.value[index].text;
+            //         if (cityTownSmeValue.trim() !== '') {
+            //             cityTown = cityTownSmeValue;
+            //             break;
+            //         }
+            //     }
+            // }
 
             // Country
             const nationalCodeSme = manufacturerContactInformationSmc.value.find((element: any) =>
                 checkIdShort(element, 'NationalCode')
             );
-            let nationalCode = valueToDisplay(nationalCodeSme, 'en');
-            if (nationalCode.trim() === '' && hasValue(nationalCodeSme)) {
-                for (let index = 0; index < nationalCodeSme.value.length; index++) {
-                    const nationalCodeSmeValue = nationalCodeSme.value[index].text;
-                    if (nationalCodeSmeValue.trim() !== '') {
-                        nationalCode = nationalCodeSmeValue;
-                        break;
-                    }
-                }
-            }
+            let nationalCode = valueToDisplay(nationalCodeSme, 'en', firstLangStringSetText(nationalCodeSme));
+            // if (nationalCode.trim() === '' && hasValue(nationalCodeSme)) {
+            //     for (let index = 0; index < nationalCodeSme.value.length; index++) {
+            //         const nationalCodeSmeValue = nationalCodeSme.value[index].text;
+            //         if (nationalCodeSmeValue.trim() !== '') {
+            //             nationalCode = nationalCodeSmeValue;
+            //             break;
+            //         }
+            //     }
+            // }
             let country = getCountryName(nationalCode);
 
             let address = addressTemplate(street, zipcode, cityTown, country);
@@ -585,71 +568,76 @@
         // console.log('generateVCard()', 'manufacturerProperties:', manufacturerProperties);
         let vCard = 'BEGIN:VCARD\nVERSION:3.0\n';
 
-        let manufacturerName = manufacturerProperties.find((sme: any) => checkIdShort(sme, 'ManufacturerName'));
-        if (manufacturerName) {
-            vCard +=
-                'FN:' +
-                (valueToDisplay(manufacturerName).length > 0
-                    ? valueToDisplay(manufacturerName)
-                    : manufacturerName.value[0].text) +
-                '\n';
+        const manufacturerNameSme = manufacturerProperties.find((sme: any) => checkIdShort(sme, 'ManufacturerName'));
+        const manufacturerName = valueToDisplay(manufacturerNameSme, 'en', firstLangStringSetText(manufacturerNameSme));
+        if (manufacturerName !== '') {
+            vCard += 'FN:' + manufacturerName + '\n';
         }
 
-        let companyLogo = manufacturerProperties.find((sme: any) => checkIdShort(sme, 'CompanyLogo'));
-        if (companyLogo) {
-            vCard += 'PHOTO;MEDIATYPE=' + companyLogo.contentType + ':' + companyLogo.path + '/attachment' + '\n';
+        const companyLogoSme = manufacturerProperties.find((sme: any) => checkIdShort(sme, 'CompanyLogo'));
+        if (companyLogoSme) {
+            vCard += 'PHOTO;MEDIATYPE=' + companyLogoSme.contentType + ':' + valueUrl(companyLogoSme) + '\n';
         }
 
         // vCard ADR
         vCard += 'ADR;TYPE=WORK:;;';
-        let street = manufacturerContactInformations.find((sme: any) => checkIdShort(sme, 'Street'));
-        if (street) {
+        const streetSme = manufacturerContactInformations.find((sme: any) => checkIdShort(sme, 'Street'));
+        const street = valueToDisplay(streetSme, 'en', firstLangStringSetText(streetSme));
+        if (street !== '') {
             // vCard ADR; street
-            vCard += valueToDisplay(street).length > 0 ? valueToDisplay(street) : (vCard += street.value[0].text);
+            vCard += street;
         }
         vCard += ';';
 
-        let ciytTown = manufacturerContactInformations.find((sme: any) => checkIdShort(sme, 'CityTown'));
-        if (ciytTown) {
+        const ciytTownSme = manufacturerContactInformations.find((sme: any) => checkIdShort(sme, 'CityTown'));
+        const ciytTown = valueToDisplay(ciytTownSme, 'en', firstLangStringSetText(ciytTownSme));
+        if (ciytTown !== '') {
             // vCard ADR; city/town
-            vCard += valueToDisplay(ciytTown).length > 0 ? valueToDisplay(ciytTown) : (vCard += ciytTown.value[0].text);
+            vCard += ciytTown;
         }
         vCard += ';';
 
         // vCard ADR; federal state (not available in SMT Nameplate v2 specification)
         vCard += ';';
 
-        let zipcode = manufacturerContactInformations.find((sme: any) => checkIdShort(sme, 'Zipcode'));
-        if (zipcode) {
+        const zipcodeSme = manufacturerContactInformations.find((sme: any) => checkIdShort(sme, 'Zipcode'));
+        const zipcode = valueToDisplay(zipcodeSme, 'en', firstLangStringSetText(zipcodeSme));
+        if (zipcode !== '') {
             // vCard ADR; zip code
-            vCard += valueToDisplay(zipcode).length > 0 ? valueToDisplay(zipcode) : (vCard += zipcode.value[0].text);
+            vCard += zipcode;
         }
         vCard += ';';
 
         // vCard ADR; country
-        let nationalCode = manufacturerContactInformations.find((sme: any) => checkIdShort(sme, 'NationalCode'));
-        if (nationalCode) {
-            const country = getCountryName(valueToDisplay(nationalCode));
-            vCard += country.trim().length > 0 ? country : '';
+        const nationalCodeSme = manufacturerContactInformations.find((sme: any) => checkIdShort(sme, 'NationalCode'));
+        const nationalCode = valueToDisplay(nationalCodeSme, 'en', firstLangStringSetText(nationalCodeSme));
+        const country = getCountryName(valueToDisplay(nationalCode));
+        if (nationalCode !== '') {
+            vCard += country.trim() !== '' ? country : '';
         }
         vCard += '\n';
 
-        let telephoneNumber = manufacturerProperties.find((sme: any) => checkIdShort(sme, 'TelephoneNumber'));
-        if (telephoneNumber) {
-            vCard += 'TEL;TYPE=WORK,VOICE:' + telephoneNumber.value[0].text + '\n';
+        const telephoneNumberSme = manufacturerProperties.find((sme: any) => checkIdShort(sme, 'TelephoneNumber'));
+        const telephoneNumber = valueToDisplay(telephoneNumberSme, 'en', firstLangStringSetText(telephoneNumberSme));
+        if (telephoneNumber !== '') {
+            vCard += 'TEL;TYPE=WORK,VOICE:' + telephoneNumber + '\n';
         }
 
-        let faxNumber = manufacturerProperties.find((sme: any) => checkIdShort(sme, 'FaxNumber'));
-        if (faxNumber) {
-            vCard += 'TEL;TYPE=WORK,FAX:' + faxNumber.value[0].text + '\n';
+        const faxNumberSme = manufacturerProperties.find((sme: any) => checkIdShort(sme, 'FaxNumber'));
+        const faxNumber = valueToDisplay(faxNumberSme, 'en', firstLangStringSetText(faxNumberSme));
+        if (faxNumber !== '') {
+            vCard += 'TEL;TYPE=WORK,FAX:' + faxNumber + '\n';
         }
 
-        let emailAddress = manufacturerProperties.find((sme: any) => checkIdShort(sme, 'EmailAddress'));
-        if (emailAddress) {
-            vCard += 'EMAIL;TYPE=WORK:' + emailAddress.value + '\n';
+        const emailAddressSme = manufacturerProperties.find((sme: any) => checkIdShort(sme, 'EmailAddress'));
+        const emailAddress = valueToDisplay(emailAddressSme, 'en', firstLangStringSetText(emailAddressSme));
+        if (emailAddress !== '') {
+            vCard += 'EMAIL;TYPE=WORK:' + emailAddress + '\n';
         }
 
         vCard += 'END:VCARD';
+
+        // console.log('generateVCard()', 'vCard:', vCard);
 
         return vCard;
     }

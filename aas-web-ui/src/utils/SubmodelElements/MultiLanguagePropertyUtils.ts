@@ -39,7 +39,7 @@ export function hasValue(multiLanguageProperty: any): boolean {
 
 export function valueToDisplay(multiLanguageProperty: any, language = 'en', defaultValueToDisplay = ''): string {
     // console.log(
-    //     'nameToDisplay()',
+    //     'valueToDisplay()',
     //     'multiLanguageProperty:',
     //     multiLanguageProperty,
     //     'language::',
@@ -57,4 +57,22 @@ export function valueToDisplay(multiLanguageProperty: any, language = 'en', defa
         }
     }
     return defaultValueToDisplay;
+}
+
+export function firstLangStringSetText(multiLanguageProperty: any): string {
+    // console.log(
+    //     'firstLangStringSetText()',
+    //     'multiLanguageProperty:',
+    //     multiLanguageProperty,
+    // );
+
+    if (isMultiLanguageProperty(multiLanguageProperty) && hasValue(multiLanguageProperty)) {
+        for (let index = 0; index < multiLanguageProperty.value.length; index++) {
+            const text = multiLanguageProperty.value[index].text;
+            if (text.trim() !== '') {
+                return text;
+            }
+        }
+    }
+    return '';
 }
