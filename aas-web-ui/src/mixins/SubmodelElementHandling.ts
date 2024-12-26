@@ -254,15 +254,23 @@ export default defineComponent({
             if (keyValue.endsWith('/')) keyValue = keyValue.substring(0, keyValue.length - 1);
             if (semanticId.endsWith('/')) semanticId = semanticId.substring(0, semanticId.length - 1);
 
-            if (new RegExp(/\/\d{1,}\/\d{1,}$/).test(semanticId)) {
-                // IRI with version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/0/9/
-                return this.getEquivalentIriSemanticIds(semanticId).includes(keyValue);
+            if (
+                new RegExp(/\/\d{1,}\/\d{1,}\/{0,1}$/).test(semanticId) ||
+                new RegExp(/\/\d{1,}\/\d{1,}\//).test(semanticId)
+            ) {
+                // IRI with version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/0/9
+                // IRI with version like https://admin-shell.io/zvei/nameplate/1/0/ContactInformations
+                return (
+                    this.getEquivalentIriSemanticIds(keyValue).findIndex((equivalentSemanticId) => {
+                        return equivalentSemanticId.toLowerCase() === semanticId.toLowerCase();
+                    }, semanticId) != -1
+                );
             }
 
             // IRI without version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/
             return (
                 this.getEquivalentIriSemanticIds(keyValue).findIndex((equivalentSemanticId) => {
-                    return equivalentSemanticId.startsWith(semanticId);
+                    return equivalentSemanticId.toLowerCase().startsWith(semanticId.toLowerCase());
                 }, semanticId) != -1
             );
         },

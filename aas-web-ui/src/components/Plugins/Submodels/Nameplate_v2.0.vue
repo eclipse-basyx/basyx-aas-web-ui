@@ -4,7 +4,7 @@
         <v-card class="mb-4">
             <v-card-title>
                 <div class="text-subtitle-1">
-                    {{ nameToDisplay(submodelElementData, 'Digital Nameplate') }}
+                    {{ nameToDisplay(submodelElementData, 'Digital Nameplate for industrial equipment') }}
                 </div>
             </v-card-title>
             <v-card-text v-if="descriptionToDisplay(submodelElementData)" class="pt-0">
@@ -284,8 +284,11 @@
     import { checkIdShort } from '@/utils/ReferableUtils';
     import { descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
     import { valueUrl } from '@/utils/SubmodelElements/FileUtils';
-    import { hasValue, valueToDisplay } from '@/utils/SubmodelElements/SmeUtils';
-    import { calculateSubmodelElementPathes } from '@/utils/SubmodelElementUtils';
+    import {
+        calculateSubmodelElementPathes,
+        hasValue,
+        valueToDisplay,
+    } from '@/utils/SubmodelElements/SubmodelElementUtils';
 
     // Define component options such as custom static properties
     defineOptions({
