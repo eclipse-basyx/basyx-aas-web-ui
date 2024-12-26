@@ -26,7 +26,7 @@
                             <tr
                                 v-for="(productProperty, index) in productProperties"
                                 :key="productProperty.idShort"
-                                :class="index % 2 === 0 ? 'tableEven' : 'bg-tableOdd'">
+                                :class="index % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
                                 <td>
                                     <div class="text-subtitleText text-caption">
                                         <span>{{ nameToDisplay(productProperty) }}</span>
@@ -140,7 +140,7 @@
                             <tr
                                 v-for="(manufacturerProperty, index) in manufacturerProperties"
                                 :key="manufacturerProperty.idShort"
-                                :class="index % 2 === 0 ? 'tableEven' : 'bg-tableOdd'">
+                                :class="index % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
                                 <td>
                                     <div class="text-subtitleText text-caption">
                                         <span>{{ nameToDisplay(manufacturerProperty) }}</span>
@@ -270,6 +270,7 @@
     import { LMap, LMarker, LTileLayer } from '@vue-leaflet/vue-leaflet';
     import { latLng } from 'leaflet';
     import { computed, onMounted, ref } from 'vue';
+    import { downloadVCard } from '@/composables/VirtualContactFile';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { getCountryName } from '@/utils/generalUtils';
@@ -314,8 +315,6 @@
 
     // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode);
-    const isMac = computed(() => navigationStore.getPlatform.mac);
-    const isIOs = computed(() => navigationStore.getPlatform.ios);
 
     onMounted(() => {
         initializeVisualization();
@@ -404,78 +403,47 @@
             Array.isArray(manufacturerContactInformationSmc.value) &&
             manufacturerContactInformationSmc.value.length > 0
         ) {
-            const addressTemplate = (street: string, zipcode: string, cityTown: string, country: string) =>
-                `${street}, ${zipcode} ${cityTown}, ${country}`;
+            const addressTemplate = (street: string, zipcode: string, cityTown: string, country: string) => {
+                let address = '';
+                if (street.trim() !== '') address += street + ', ';
+                if (zipcode.trim() !== '') address += zipcode;
+                if (zipcode.trim() !== '' && cityTown.trim() !== '') address += ' ';
+                if (cityTown.trim() !== '') address += cityTown;
+                if (country.trim() !== '') address += ', ' + country;
+                return address;
+            };
 
             // Street
-            const streetSme = manufacturerContactInformationSmc.value.find((element: any) =>
-                checkIdShort(element, 'Street')
-            );
-            let street = valueToDisplay(streetSme, 'en', firstLangStringSetText(streetSme));
-            // if (street.trim() === '' && hasValue(streetSme)) {
-            //     street = firstLangStringSetText(streetSme);
-            //     for (let index = 0; index < streetSme.value.length; index++) {
-            //         const streetSmeValue = streetSme.value[index].text;
-            //         if (streetSmeValue.trim() !== '') {
-            //             street = streetSmeValue;
-            //             break;
-            //         }
-            //     }
-            // }
+            const streetSme = manufacturerContactInformationSmc.value.find((sme: any) => checkIdShort(sme, 'Street'));
+            const street = valueToDisplay(streetSme, 'en', firstLangStringSetText(streetSme));
 
             // Zipcode
-            const zipcodeSme = manufacturerContactInformationSmc.value.find((element: any) =>
-                checkIdShort(element, 'Zipcode')
-            );
-            let zipcode = valueToDisplay(zipcodeSme, 'en', firstLangStringSetText(zipcodeSme));
-            // if (zipcode.trim() === '' && hasValue(zipcodeSme)) {
-            //     zipcode = firstLangStringSetText(zipcodeSme);
-            //     for (let index = 0; index < zipcodeSme.value.length; index++) {
-            //         const zipcodeSmeValue = zipcodeSme.value[index].text;
-            //         if (zipcodeSmeValue.trim() !== '') {
-            //             zipcode = zipcodeSmeValue;
-            //             break;
-            //         }
-            //     }
-            // }
+            const zipcodeSme = manufacturerContactInformationSmc.value.find((sme: any) => checkIdShort(sme, 'Zipcode'));
+            const zipcode = valueToDisplay(zipcodeSme, 'en', firstLangStringSetText(zipcodeSme));
 
             // CityTown
-            const cityTownSme = manufacturerContactInformationSmc.value.find((element: any) =>
-                checkIdShort(element, 'CityTown')
+            const cityTownSme = manufacturerContactInformationSmc.value.find((sme: any) =>
+                checkIdShort(sme, 'CityTown')
             );
-            let cityTown = valueToDisplay(cityTownSme, 'en', firstLangStringSetText(cityTownSme));
-            // if (cityTown.trim() === '' && hasValue(cityTownSme)) {
-            //     cityTown = firstLangStringSetText(cityTownSme);
-            //     for (let index = 0; index < cityTownSme.value.length; index++) {
-            //         const cityTownSmeValue = cityTownSme.value[index].text;
-            //         if (cityTownSmeValue.trim() !== '') {
-            //             cityTown = cityTownSmeValue;
-            //             break;
-            //         }
-            //     }
-            // }
+            const cityTown = valueToDisplay(cityTownSme, 'en', firstLangStringSetText(cityTownSme));
 
             // Country
-            const nationalCodeSme = manufacturerContactInformationSmc.value.find((element: any) =>
-                checkIdShort(element, 'NationalCode')
+            const nationalCodeSme = manufacturerContactInformationSmc.value.find((sme: any) =>
+                checkIdShort(sme, 'NationalCode')
             );
-            let nationalCode = valueToDisplay(nationalCodeSme, 'en', firstLangStringSetText(nationalCodeSme));
-            // if (nationalCode.trim() === '' && hasValue(nationalCodeSme)) {
-            //     for (let index = 0; index < nationalCodeSme.value.length; index++) {
-            //         const nationalCodeSmeValue = nationalCodeSme.value[index].text;
-            //         if (nationalCodeSmeValue.trim() !== '') {
-            //             nationalCode = nationalCodeSmeValue;
-            //             break;
-            //         }
-            //     }
-            // }
-            let country = getCountryName(nationalCode);
+            const nationalCode = valueToDisplay(nationalCodeSme, 'en', firstLangStringSetText(nationalCodeSme));
+            const country = getCountryName(nationalCode);
 
-            let address = addressTemplate(street, zipcode, cityTown, country);
-            // console.log('extractManufacturerProperties()', ''Address:', address);
-            if (address.trim().length > 0) {
+            const address = addressTemplate(street, zipcode, cityTown, country);
+            // console.log('extractManufacturerProperties()', 'address:', address);
+            if (address.trim() !== '') {
                 setMarker(address); // Set the Marker on the Map
-                manufacturerProperties.value.push({ idShort: 'Address', value: address, modelType: 'String' });
+                manufacturerProperties.value.push({
+                    idShort: 'Address',
+                    modelType: 'Property',
+                    valueType: 'String',
+                    value: address,
+                });
             }
 
             let phoneSmc = manufacturerContactInformationSmc.value.find((sme: any) => checkIdShort(sme, 'Phone'));
@@ -485,7 +453,7 @@
                 Array.isArray(phoneSmc.value) &&
                 phoneSmc.value.length > 0
             ) {
-                let telephoneNumber = phoneSmc.value.find((element: any) => checkIdShort(element, 'TelephoneNumber'));
+                let telephoneNumber = phoneSmc.value.find((sme: any) => checkIdShort(sme, 'TelephoneNumber'));
                 if (telephoneNumber && Object.keys(telephoneNumber).length > 0 && valueToDisplay(telephoneNumber)) {
                     manufacturerProperties.value.push(telephoneNumber);
                 }
@@ -493,7 +461,7 @@
 
             let faxSmc = manufacturerContactInformationSmc.value.find((sme: any) => checkIdShort(sme, 'Fax'));
             if (faxSmc && Object.keys(faxSmc).length > 0 && Array.isArray(faxSmc.value) && faxSmc.value.length > 0) {
-                let faxNumber = faxSmc.value.find((element: any) => checkIdShort(element, 'FaxNumber'));
+                let faxNumber = faxSmc.value.find((sme: any) => checkIdShort(sme, 'FaxNumber'));
                 if (faxNumber && Object.keys(faxNumber).length > 0 && valueToDisplay(faxNumber)) {
                     manufacturerProperties.value.push(faxNumber);
                 }
@@ -506,7 +474,7 @@
                 Array.isArray(emailSmc.value) &&
                 emailSmc.value.length > 0
             ) {
-                let emailAddress = emailSmc.value.find((element: any) => checkIdShort(element, 'EmailAddress'));
+                let emailAddress = emailSmc.value.find((sme: any) => checkIdShort(sme, 'EmailAddress'));
                 if (emailAddress && Object.keys(emailAddress).length > 0 && valueToDisplay(emailAddress)) {
                     manufacturerProperties.value.push(emailAddress);
                 }
@@ -520,9 +488,7 @@
     function extractMarkings(digitalNameplateData: any) {
         // console.log('extractMarkings()', 'digitalNameplateData:', digitalNameplateData);
 
-        let markingsSMC = digitalNameplateData.submodelElements.find((element: any) =>
-            checkIdShort(element, 'Markings')
-        );
+        let markingsSMC = digitalNameplateData.submodelElements.find((sme: any) => checkIdShort(sme, 'Markings'));
 
         if (markingsSMC && Object.keys(markingsSMC).length > 0) {
             let markingSMCs = markingsSMC.value;
@@ -531,8 +497,8 @@
                 let formattedMarkings = [] as Array<any>;
 
                 markingSMCs.forEach((markingSMC: any) => {
-                    let markingFile = markingSMC.value.find((element: any) => checkIdShort(element, 'MarkingFile'));
-                    let markingName = markingSMC.value.find((element: any) => checkIdShort(element, 'MarkingName'));
+                    let markingFile = markingSMC.value.find((sme: any) => checkIdShort(sme, 'MarkingFile'));
+                    let markingName = markingSMC.value.find((sme: any) => checkIdShort(sme, 'MarkingName'));
 
                     if (
                         markingName &&
@@ -570,8 +536,8 @@
 
         const manufacturerNameSme = manufacturerProperties.find((sme: any) => checkIdShort(sme, 'ManufacturerName'));
         const manufacturerName = valueToDisplay(manufacturerNameSme, 'en', firstLangStringSetText(manufacturerNameSme));
-        if (manufacturerName !== '') {
-            vCard += 'FN:' + manufacturerName + '\n';
+        if (manufacturerName.trim() !== '') {
+            vCard += 'ORG:' + manufacturerName + '\n';
         }
 
         const companyLogoSme = manufacturerProperties.find((sme: any) => checkIdShort(sme, 'CompanyLogo'));
@@ -583,7 +549,7 @@
         vCard += 'ADR;TYPE=WORK:;;';
         const streetSme = manufacturerContactInformations.find((sme: any) => checkIdShort(sme, 'Street'));
         const street = valueToDisplay(streetSme, 'en', firstLangStringSetText(streetSme));
-        if (street !== '') {
+        if (street.trim() !== '') {
             // vCard ADR; street
             vCard += street;
         }
@@ -591,7 +557,7 @@
 
         const ciytTownSme = manufacturerContactInformations.find((sme: any) => checkIdShort(sme, 'CityTown'));
         const ciytTown = valueToDisplay(ciytTownSme, 'en', firstLangStringSetText(ciytTownSme));
-        if (ciytTown !== '') {
+        if (ciytTown.trim() !== '') {
             // vCard ADR; city/town
             vCard += ciytTown;
         }
@@ -602,7 +568,7 @@
 
         const zipcodeSme = manufacturerContactInformations.find((sme: any) => checkIdShort(sme, 'Zipcode'));
         const zipcode = valueToDisplay(zipcodeSme, 'en', firstLangStringSetText(zipcodeSme));
-        if (zipcode !== '') {
+        if (zipcode.trim() !== '') {
             // vCard ADR; zip code
             vCard += zipcode;
         }
@@ -612,26 +578,26 @@
         const nationalCodeSme = manufacturerContactInformations.find((sme: any) => checkIdShort(sme, 'NationalCode'));
         const nationalCode = valueToDisplay(nationalCodeSme, 'en', firstLangStringSetText(nationalCodeSme));
         const country = getCountryName(valueToDisplay(nationalCode));
-        if (nationalCode !== '') {
-            vCard += country.trim() !== '' ? country : '';
+        if (country.trim() !== '') {
+            vCard += country;
         }
         vCard += '\n';
 
         const telephoneNumberSme = manufacturerProperties.find((sme: any) => checkIdShort(sme, 'TelephoneNumber'));
         const telephoneNumber = valueToDisplay(telephoneNumberSme, 'en', firstLangStringSetText(telephoneNumberSme));
-        if (telephoneNumber !== '') {
+        if (telephoneNumber.trim() !== '') {
             vCard += 'TEL;TYPE=WORK,VOICE:' + telephoneNumber + '\n';
         }
 
         const faxNumberSme = manufacturerProperties.find((sme: any) => checkIdShort(sme, 'FaxNumber'));
         const faxNumber = valueToDisplay(faxNumberSme, 'en', firstLangStringSetText(faxNumberSme));
-        if (faxNumber !== '') {
+        if (faxNumber.trim() !== '') {
             vCard += 'TEL;TYPE=WORK,FAX:' + faxNumber + '\n';
         }
 
         const emailAddressSme = manufacturerProperties.find((sme: any) => checkIdShort(sme, 'EmailAddress'));
         const emailAddress = valueToDisplay(emailAddressSme, 'en', firstLangStringSetText(emailAddressSme));
-        if (emailAddress !== '') {
+        if (emailAddress.trim() !== '') {
             vCard += 'EMAIL;TYPE=WORK:' + emailAddress + '\n';
         }
 
@@ -640,27 +606,6 @@
         // console.log('generateVCard()', 'vCard:', vCard);
 
         return vCard;
-    }
-
-    function downloadVCard(vCard: string, filename: string) {
-        let blob = new Blob([vCard], { type: 'text/vcard;charset=utf-8;' });
-        const data = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = data;
-        link.download = filename;
-
-        // this part will prompt the user to view the VCard in a new tab on iOS
-        if (isIOs.value || isMac.value) {
-            window.open(data, '_blank');
-        } else {
-            // For desktop browsers, download the vCard
-            link.click();
-        }
-
-        setTimeout(function () {
-            // For Firefox it is necessary to delay revoking the ObjectURL
-            window.URL.revokeObjectURL(data);
-        }, 100);
     }
 
     // Function to set the marker on the map
