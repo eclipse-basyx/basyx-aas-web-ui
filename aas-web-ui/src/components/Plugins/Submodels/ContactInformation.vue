@@ -97,7 +97,10 @@
 
     export default defineComponent({
         name: 'ContactInformation',
-        semanticId: 'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations',
+        semanticId: [
+            'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations', // Visualization for the SMT ContactInformations
+            'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation', // Visualization for the SMC ContactInformation, e.g. in the SMT Nameplate v2
+        ],
         mixins: [RequestHandling, SubmodelElementHandling],
         props: ['submodelElementData'],
 
@@ -147,13 +150,20 @@
                     this.SelectedNode.path
                 );
 
+                let contacts = [];
+                if (this.contactInformationData?.submodelElements) {
+                    contacts = this.contactInformationData.submodelElements.filter((element: any) => {
+                        return (
+                            element.semanticId.keys[0].value ===
+                            'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation'
+                        );
+                    });
+                } else if (this.contactInformationData?.value) {
+                    contacts = [this.contactInformationData];
+                }
+
                 // create array of contacts
-                let contacts = this.contactInformationData.submodelElements.filter((element: any) => {
-                    return (
-                        element.semanticId.keys[0].value ===
-                        'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation'
-                    );
-                });
+
                 contacts.forEach((contact: any) => {
                     contact.generalProperties = [] as Array<any>;
                     // create Contact Person Property
