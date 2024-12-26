@@ -181,7 +181,7 @@
                                     <!-- Company Logo -->
                                     <v-img
                                         v-if="checkIdShort(manufacturerProperty, 'CompanyLogo')"
-                                        :src="manufacturerProperty.path + '/attachment'"
+                                        :src="valueUrl(manufacturerProperty)"
                                         max-width="100%"
                                         max-height="100%"
                                         contain
@@ -243,7 +243,7 @@
                 <v-card-text>
                     <v-row class="text-caption mb-2" justify="start">
                         <v-col v-for="marking in markings" :key="marking.idShort" cols="auto">
-                            <v-img :src="marking.path + '/attachment'" height="150px" width="150px" contain></v-img>
+                            <v-img :src="marking.url" height="150px" width="150px" contain></v-img>
                             <span class="text-subtitleText text-caption">{{ marking.name }}</span>
                         </v-col>
                     </v-row>
@@ -270,9 +270,10 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { getCountryName } from '@/utils/generalUtils';
-    import { valueToDisplay } from '@/utils/MultiLanguagePropertyUtils';
     import { checkIdShort } from '@/utils/ReferableUtils';
     import { descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
+    import { valueUrl } from '@/utils/SubmodelElements/FileUtils';
+    import { hasValue, valueToDisplay } from '@/utils/SubmodelElements/SmeUtils';
     import { calculateSubmodelElementPathes } from '@/utils/SubmodelElementUtils';
 
     // Define component options such as custom static properties
@@ -345,14 +346,15 @@
             'ManufacturerProductRoot',
             'ManufacturerProductFamily',
             'ManufacturerProductType',
-            'ProductArticleNumberOfManufacturer',
             'OrderCodeOfManufacturer',
+            'ProductArticleNumberOfManufacturer',
             'SerialNumber',
             'YearOfConstruction',
             'DateOfManufacture',
             'HardwareVersion',
             'FirmwareVersion',
             'SoftwareVersion',
+            'CountryOfOrigin',
         ];
 
         let versions = [] as Array<any>;
@@ -361,9 +363,21 @@
             productPropertyIdShorts.forEach((idShort: any) => {
                 if (checkIdShort(sme, idShort)) {
                     if (['HardwareVersion', 'FirmwareVersion', 'SoftwareVersion'].includes(idShort)) {
-                        versions.push(sme);
+                        if (hasValue(sme)) versions.push(sme);
+                    } else if (idShort === 'CountryOfOrigin') {
+                        if (hasValue(sme)) {
+                            const countryOfOriginNationalCode = valueToDisplay(sme);
+                            if (countryOfOriginNationalCode.trim().length === 2) {
+                                const countryOfOrigin = getCountryName(countryOfOriginNationalCode);
+                                const countryOfOriginSme = { ...sme };
+                                countryOfOriginSme.value = countryOfOrigin + ' (' + countryOfOriginNationalCode + ')';
+                                productProperties.value.push(countryOfOriginSme);
+                            } else {
+                                productProperties.value.push(sme);
+                            }
+                        }
                     } else {
-                        productProperties.value.push(sme);
+                        if (hasValue(sme)) productProperties.value.push(sme);
                     }
                 }
             });
@@ -377,17 +391,16 @@
     function extractManufacturerProperties(digitalNameplateData: any) {
         // console.log('extractManufacturerProperties()', 'digitalNameplateData:', digitalNameplateData);
 
-        const manufacturerPropertyIdShorts = ['CompanyLogo', 'ManufacturerName'];
+        const manufacturerPropertyIdShorts = ['ManufacturerName', 'CompanyLogo'];
 
         digitalNameplateData.submodelElements.forEach((sme: any) => {
             manufacturerPropertyIdShorts.forEach((idShort: any) => {
-                if (checkIdShort(sme, idShort)) {
+                if (checkIdShort(sme, idShort) && hasValue(sme)) {
                     manufacturerProperties.value.push(sme);
                 }
             });
         });
 
-        // let address = '';
         let manufacturerContactInformationSmc = digitalNameplateData.submodelElements.find((sme: any) =>
             checkIdShort(sme, 'ContactInformation')
         );
@@ -400,22 +413,66 @@
             const addressTemplate = (street: string, zipcode: string, cityTown: string, country: string) =>
                 `${street}, ${zipcode} ${cityTown}, ${country}`;
 
-            let street = valueToDisplay(
-                manufacturerContactInformationSmc.value.find((element: any) => checkIdShort(element, 'Street'))
+            // Street
+            const streetSme = manufacturerContactInformationSmc.value.find((element: any) =>
+                checkIdShort(element, 'Street')
             );
-            let zipcode = valueToDisplay(
-                manufacturerContactInformationSmc.value.find((element: any) => checkIdShort(element, 'Zipcode'))
+            let street = valueToDisplay(streetSme, 'en');
+            if (street.trim() === '' && hasValue(streetSme)) {
+                for (let index = 0; index < streetSme.value.length; index++) {
+                    const streetSmeValue = streetSme.value[index].text;
+                    if (streetSmeValue.trim() !== '') {
+                        street = streetSmeValue;
+                        break;
+                    }
+                }
+            }
+
+            // Zipcode
+            const zipcodeSme = manufacturerContactInformationSmc.value.find((element: any) =>
+                checkIdShort(element, 'Zipcode')
             );
-            let cityTown = valueToDisplay(
-                manufacturerContactInformationSmc.value.find((element: any) => checkIdShort(element, 'CityTown'))
+            let zipcode = valueToDisplay(zipcodeSme, 'en');
+            if (zipcode.trim() === '' && hasValue(zipcodeSme)) {
+                for (let index = 0; index < zipcodeSme.value.length; index++) {
+                    const zipcodeSmeValue = zipcodeSme.value[index].text;
+                    if (zipcodeSmeValue.trim() !== '') {
+                        zipcode = zipcodeSmeValue;
+                        break;
+                    }
+                }
+            }
+
+            // CityTown
+            const cityTownSme = manufacturerContactInformationSmc.value.find((element: any) =>
+                checkIdShort(element, 'CityTown')
             );
-            let country = getCountryName(
-                valueToDisplay(
-                    manufacturerContactInformationSmc.value.find((element: any) =>
-                        checkIdShort(element, 'NationalCode')
-                    )
-                )
+            let cityTown = valueToDisplay(cityTownSme, 'en');
+            if (cityTown.trim() === '' && hasValue(cityTownSme)) {
+                for (let index = 0; index < cityTownSme.value.length; index++) {
+                    const cityTownSmeValue = cityTownSme.value[index].text;
+                    if (cityTownSmeValue.trim() !== '') {
+                        cityTown = cityTownSmeValue;
+                        break;
+                    }
+                }
+            }
+
+            // Country
+            const nationalCodeSme = manufacturerContactInformationSmc.value.find((element: any) =>
+                checkIdShort(element, 'NationalCode')
             );
+            let nationalCode = valueToDisplay(nationalCodeSme, 'en');
+            if (nationalCode.trim() === '' && hasValue(nationalCodeSme)) {
+                for (let index = 0; index < nationalCodeSme.value.length; index++) {
+                    const nationalCodeSmeValue = nationalCodeSme.value[index].text;
+                    if (nationalCodeSmeValue.trim() !== '') {
+                        nationalCode = nationalCodeSmeValue;
+                        break;
+                    }
+                }
+            }
+            let country = getCountryName(nationalCode);
 
             let address = addressTemplate(street, zipcode, cityTown, country);
             // console.log('extractManufacturerProperties()', ''Address:', address);
@@ -432,7 +489,7 @@
                 phoneSmc.value.length > 0
             ) {
                 let telephoneNumber = phoneSmc.value.find((element: any) => checkIdShort(element, 'TelephoneNumber'));
-                if (telephoneNumber && Object.keys(telephoneNumber).length > 0) {
+                if (telephoneNumber && Object.keys(telephoneNumber).length > 0 && valueToDisplay(telephoneNumber)) {
                     manufacturerProperties.value.push(telephoneNumber);
                 }
             }
@@ -440,7 +497,7 @@
             let faxSmc = manufacturerContactInformationSmc.value.find((sme: any) => checkIdShort(sme, 'Fax'));
             if (faxSmc && Object.keys(faxSmc).length > 0 && Array.isArray(faxSmc.value) && faxSmc.value.length > 0) {
                 let faxNumber = faxSmc.value.find((element: any) => checkIdShort(element, 'FaxNumber'));
-                if (faxNumber && Object.keys(faxNumber).length > 0) {
+                if (faxNumber && Object.keys(faxNumber).length > 0 && valueToDisplay(faxNumber)) {
                     manufacturerProperties.value.push(faxNumber);
                 }
             }
@@ -453,7 +510,7 @@
                 emailSmc.value.length > 0
             ) {
                 let emailAddress = emailSmc.value.find((element: any) => checkIdShort(element, 'EmailAddress'));
-                if (emailAddress && Object.keys(emailAddress).length > 0) {
+                if (emailAddress && Object.keys(emailAddress).length > 0 && valueToDisplay(emailAddress)) {
                     manufacturerProperties.value.push(emailAddress);
                 }
             }
@@ -488,9 +545,8 @@
                     ) {
                         let formattedMarking = {
                             idShort: markingSMC.idShort,
-                            value: markingFile.value,
                             name: markingName.value,
-                            path: markingFile.path,
+                            url: valueUrl(markingFile),
                         };
                         formattedMarkings.push(formattedMarking);
                     }
