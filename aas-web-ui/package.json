@@ -20,6 +20,7 @@
     "@mdi/font": "^7.4.47",
     "@vue-leaflet/vue-leaflet": "^0.10.1",
     "apexcharts": "^4.1.0",
+    "flag-icons": "^7.2.3",
     "i18n-iso-countries": "^7.13.0",
     "keycloak-js": "^26.0.7",
     "leaflet": "^1.9.4",

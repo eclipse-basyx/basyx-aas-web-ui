@@ -81,24 +81,18 @@
                                         class="text-caption">
                                         {{ productProperty.value }}
                                     </a>
-                                    <!-- MultiLanguageProperties -->
-                                    <template v-else-if="productProperty.modelType == 'MultiLanguageProperty'">
-                                        <!-- Show english value, if available -->
-                                        <div v-if="valueToDisplay(productProperty)" class="text-caption">
-                                            {{ valueToDisplay(productProperty) }}
-                                        </div>
-                                        <!-- Otherwise show all available values -->
-                                        <template v-for="(langStringSet, j) in productProperty.value" v-else :key="j">
-                                            <div v-if="langStringSet?.text.length > 0" class="text-caption">
-                                                <span class="font-weight-bold">
-                                                    {{ langStringSet?.language + ': ' }}
-                                                </span>
-                                                {{ langStringSet?.text }}
-                                            </div>
+                                    <template v-else-if="checkIdShort(productProperty, 'CountryOfOrigin')">
+                                        <template v-if="getCountryName(valueToDisplay(productProperty))">
+                                            <span :class="'fi fi-' + valueToDisplay(productProperty).toLowerCase()">
+                                            </span>
+                                            {{ getCountryName(valueToDisplay(productProperty)) }} ({{
+                                                valueToDisplay(productProperty)
+                                            }})
                                         </template>
+                                        <template v-else>{{ valueToDisplay(productProperty) }}</template>
                                     </template>
                                     <!-- Versions -->
-                                    <template v-else-if="productProperty.modelType == 'Versions'">
+                                    <template v-else-if="checkIdShort(productProperty, 'Versions')">
                                         <span
                                             v-for="(version, i) in productProperty.value"
                                             :key="i"
@@ -119,8 +113,24 @@
                                             </v-chip>
                                         </span>
                                     </template>
+                                    <!-- MultiLanguageProperties -->
+                                    <template v-else-if="productProperty.modelType == 'MultiLanguageProperty'">
+                                        <!-- Show english value, if available -->
+                                        <div v-if="valueToDisplay(productProperty)" class="text-caption">
+                                            {{ valueToDisplay(productProperty) }}
+                                        </div>
+                                        <!-- Otherwise show all available values -->
+                                        <template v-for="(langStringSet, j) in productProperty.value" v-else :key="j">
+                                            <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                                                <span class="font-weight-bold">
+                                                    {{ langStringSet?.language + ': ' }}
+                                                </span>
+                                                {{ langStringSet?.text }}
+                                            </div>
+                                        </template>
+                                    </template>
                                     <!-- Default -->
-                                    <span v-else class="text-caption">{{ productProperty.value }}</span>
+                                    <span v-else class="text-caption">{{ valueToDisplay(productProperty) }}</span>
                                 </td>
                             </tr>
                         </tbody>
@@ -264,6 +274,7 @@
 
 <script lang="ts" setup>
     import 'leaflet/dist/leaflet.css';
+    import 'flag-icons/css/flag-icons.min.css'; // Import the flag-icons CSS
     import { LMap, LMarker, LTileLayer } from '@vue-leaflet/vue-leaflet';
     import { latLng } from 'leaflet';
     import { computed, onMounted, ref } from 'vue';
@@ -364,18 +375,18 @@
                 if (checkIdShort(sme, idShort)) {
                     if (['HardwareVersion', 'FirmwareVersion', 'SoftwareVersion'].includes(idShort)) {
                         if (hasValue(sme)) versions.push(sme);
-                    } else if (idShort === 'CountryOfOrigin') {
-                        if (hasValue(sme)) {
-                            const countryOfOriginNationalCode = valueToDisplay(sme);
-                            if (countryOfOriginNationalCode.trim().length === 2) {
-                                const countryOfOrigin = getCountryName(countryOfOriginNationalCode);
-                                const countryOfOriginSme = { ...sme };
-                                countryOfOriginSme.value = countryOfOrigin + ' (' + countryOfOriginNationalCode + ')';
-                                productProperties.value.push(countryOfOriginSme);
-                            } else {
-                                productProperties.value.push(sme);
-                            }
-                        }
+                        // } else if (idShort === 'CountryOfOrigin') {
+                        //     if (hasValue(sme)) {
+                        //         const countryOfOriginNationalCode = valueToDisplay(sme);
+                        //         if (countryOfOriginNationalCode.trim().length === 2) {
+                        //             const countryOfOrigin = getCountryName(countryOfOriginNationalCode);
+                        //             const countryOfOriginSme = { ...sme };
+                        //             countryOfOriginSme.value = countryOfOrigin + ' (' + countryOfOriginNationalCode + ')';
+                        //             productProperties.value.push(countryOfOriginSme);
+                        //         } else {
+                        //             productProperties.value.push(sme);
+                        //         }
+                        //     }
                     } else {
                         if (hasValue(sme)) productProperties.value.push(sme);
                     }
