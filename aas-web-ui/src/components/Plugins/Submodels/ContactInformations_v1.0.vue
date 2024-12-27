@@ -68,12 +68,13 @@
                                         </div>
                                     </td>
                                     <td>
+                                        <!-- Address of Additional Link -->
                                         <a
                                             v-if="checkIdShort(contactInformationProperty, 'AddressOfAdditionalLink')"
-                                            :href="contactInformationProperty.value"
+                                            :href="valueToDisplay(contactInformationProperty)"
                                             target="_blank"
                                             class="text-caption">
-                                            {{ contactInformationProperty.value }}
+                                            {{ valueToDisplay(contactInformationProperty) }}
                                         </a>
                                         <!-- NationalCode -->
                                         <template v-else-if="checkIdShort(contactInformationProperty, 'NationalCode')">
@@ -102,7 +103,7 @@
                                                 </div>
                                             </template>
                                         </template>
-                                        <!-- Phone -->
+                                        <!-- Telephone number / Fax number / Email -->
                                         <span
                                             v-else-if="
                                                 checkIdShort(contactInformationProperty, 'TelephoneNumber') ||
@@ -389,6 +390,7 @@
             }
 
             contactInformation.vCard = generateVCard(contactInformationSMC);
+            // console.log('vCard:', contactInformation.vCard);
 
             contactInformations.value.push(contactInformation);
         });

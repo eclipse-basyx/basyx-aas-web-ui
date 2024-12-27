@@ -250,7 +250,7 @@ export function determineAddress(contactInformationSMC: any): string {
     );
 }
 
-export function generateVCard(contactInformationSMC: any, logoFile?: any): string {
+export function generateVCard(contactInformationSMC: any, companyNameProperty?: any, logoFile?: any): string {
     // console.log('generateVCard()', 'contactInformationSMC:', contactInformationSMC);
 
     const vCardTemplate = (
@@ -432,7 +432,9 @@ export function generateVCard(contactInformationSMC: any, logoFile?: any): strin
 
     return vCardTemplate(
         vCardValues?.contactPerson,
-        vCardValues?.company,
+        vCardValues?.company
+            ? vCardValues?.company
+            : valueToDisplay(companyNameProperty, 'en', firstLangStringSetText(companyNameProperty)),
         vCardValues?.department,
         vCardValues?.roleOfContactPerson,
         vCardValues?.language,
