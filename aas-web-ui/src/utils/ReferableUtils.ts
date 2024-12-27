@@ -1,5 +1,5 @@
 // Function to extract the english display name from a referable
-export function nameToDisplay(referable: any, language = 'en', defaultNameToDisplay = '') {
+export function nameToDisplay(referable: any, language: string = 'en', defaultNameToDisplay: string = '') {
     // console.log(
     //     'nameToDisplay()',
     //     'referable:',
@@ -23,7 +23,11 @@ export function nameToDisplay(referable: any, language = 'en', defaultNameToDisp
 }
 
 // Function to extract the english description from a referable
-export function descriptionToDisplay(referable: any, language = 'en', defaultDescriptionToDisplay = '') {
+export function descriptionToDisplay(
+    referable: any,
+    language: string = 'en',
+    defaultDescriptionToDisplay: string = ''
+) {
     // console.log(
     //     'descriptionToDisplay()',
     //     'referable:',

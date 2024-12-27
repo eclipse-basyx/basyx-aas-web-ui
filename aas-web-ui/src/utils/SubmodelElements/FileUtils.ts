@@ -22,7 +22,7 @@ export function hasValue(file: any): boolean {
     return false;
 }
 
-export function valueToDisplay(file: any, defaultValueToDisplay = ''): string {
+export function valueToDisplay(file: any, defaultValueToDisplay: string = ''): string {
     // console.log(
     //     'valueToDisplay()',
     //     'file:',

@@ -41,7 +41,7 @@ export function hasValue(sme: any): boolean {
     return false;
 }
 
-export function valueToDisplay(sme: any, language = 'en', defaultValueToDisplay = ''): string {
+export function valueToDisplay(sme: any, language: string = 'en', defaultValueToDisplay: string = ''): string {
     // console.log(
     //     'valueToDisplay()',
     //     'multiLanguageProperty:',

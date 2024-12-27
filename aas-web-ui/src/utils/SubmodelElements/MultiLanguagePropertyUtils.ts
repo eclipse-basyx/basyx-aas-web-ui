@@ -37,7 +37,11 @@ export function hasValue(multiLanguageProperty: any): boolean {
     return false;
 }
 
-export function valueToDisplay(multiLanguageProperty: any, language = 'en', defaultValueToDisplay = ''): string {
+export function valueToDisplay(
+    multiLanguageProperty: any,
+    language: string = 'en',
+    defaultValueToDisplay: string = ''
+): string {
     // console.log(
     //     'valueToDisplay()',
     //     'multiLanguageProperty:',

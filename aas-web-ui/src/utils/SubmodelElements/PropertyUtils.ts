@@ -22,7 +22,7 @@ export function hasValue(property: any): boolean {
     return false;
 }
 
-export function valueToDisplay(property: any, defaultValueToDisplay = ''): string {
+export function valueToDisplay(property: any, defaultValueToDisplay: string = ''): string {
     // console.log(
     //     'nameToDisplay()',
     //     'property:',
