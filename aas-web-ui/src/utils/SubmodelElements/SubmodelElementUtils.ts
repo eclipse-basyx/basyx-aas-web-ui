@@ -32,8 +32,9 @@ export function hasValue(sme: any): boolean {
             // TODO case 'Range':
             // TODO case 'ReferenceElement':
             // TODO case 'RelationshipElement':
-            // TODO case 'SubmodelElementCollection':
-            // TODO case 'SubmodelElementList':
+            case 'SubmodelElementCollection':
+            case 'SubmodelElementList':
+                return sme.value && Array.isArray(sme.value) && sme.value.length > 0;
             // TODO case 'Submodel Element Entities':
         }
     }

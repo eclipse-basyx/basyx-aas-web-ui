@@ -70,7 +70,7 @@ export function getCountryName(countryCode: string): string {
 
     const failReturn = '';
 
-    if (countryCode.trim().length === 0) return failReturn;
+    if (!countryCode || countryCode.trim() === '') return failReturn;
 
     countries.registerLocale(english);
 
