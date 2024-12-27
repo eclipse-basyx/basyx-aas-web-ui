@@ -74,14 +74,16 @@
                                         {{ valueToDisplay(productProperty) }}
                                     </a>
                                     <template v-else-if="checkIdShort(productProperty, 'CountryOfOrigin')">
-                                        <template v-if="getCountryName(valueToDisplay(productProperty))">
+                                        <div
+                                            v-if="getCountryName(valueToDisplay(productProperty))"
+                                            class="text-caption">
                                             <span :class="'fi fi-' + valueToDisplay(productProperty).toLowerCase()">
                                             </span>
                                             {{ getCountryName(valueToDisplay(productProperty)) }} ({{
                                                 valueToDisplay(productProperty)
                                             }})
-                                        </template>
-                                        <template v-else>{{ valueToDisplay(productProperty) }}</template>
+                                        </div>
+                                        <div v-else class="text-caption">{{ valueToDisplay(productProperty) }}</div>
                                     </template>
                                     <!-- Versions -->
                                     <template v-else-if="checkIdShort(productProperty, 'Versions')">
@@ -299,7 +301,7 @@
     import { downloadVCard } from '@/composables/VirtualContactFile';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { getCountryName } from '@/utils/generalUtils';
+    import { getCountryName } from '@/utils/LocaleUtils';
     import { checkIdShort, descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
     import { valueUrl } from '@/utils/SubmodelElements/FileUtils';
     import { firstLangStringSetText } from '@/utils/SubmodelElements/MultiLanguagePropertyUtils';

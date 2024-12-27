@@ -76,6 +76,38 @@
                                             class="text-caption">
                                             {{ valueToDisplay(contactInformationProperty) }}
                                         </a>
+                                        <!-- Language -->
+                                        <template v-else-if="checkIdShort(contactInformationProperty, 'Language')">
+                                            <!-- Show english value, if available -->
+                                            <div v-if="valueToDisplay(contactInformationProperty)" class="text-caption">
+                                                <template
+                                                    v-if="getLanguageName(valueToDisplay(contactInformationProperty))">
+                                                    <span
+                                                        :class="
+                                                            'fi fi-' +
+                                                            valueToDisplay(contactInformationProperty).toLowerCase()
+                                                        ">
+                                                    </span>
+                                                    {{ getLanguageName(valueToDisplay(contactInformationProperty)) }}
+                                                    ({{ valueToDisplay(contactInformationProperty) }})
+                                                </template>
+                                                <template v-else>{{
+                                                    valueToDisplay(contactInformationProperty)
+                                                }}</template>
+                                            </div>
+                                            <!-- Otherwise show all available values -->
+                                            <template
+                                                v-for="(langStringSet, j) in contactInformationProperty.value"
+                                                v-else
+                                                :key="j">
+                                                <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                                                    <span class="font-weight-bold">
+                                                        {{ langStringSet?.language + ': ' }}
+                                                    </span>
+                                                    {{ langStringSet?.text }}
+                                                </div>
+                                            </template>
+                                        </template>
                                         <!-- NationalCode -->
                                         <template v-else-if="checkIdShort(contactInformationProperty, 'NationalCode')">
                                             <!-- Show english value, if available -->
@@ -174,7 +206,7 @@
     import { computed, onMounted, ref } from 'vue';
     import { downloadVCard } from '@/composables/VirtualContactFile';
     import { useAASStore } from '@/store/AASDataStore';
-    import { getCountryName } from '@/utils/generalUtils';
+    import { getCountryName, getLanguageName } from '@/utils/LocaleUtils';
     import { checkIdShort, descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
     import { firstLangStringSetText } from '@/utils/SubmodelElements/MultiLanguagePropertyUtils';
     import {

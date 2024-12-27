@@ -1,11 +1,3 @@
-import countries from 'i18n-iso-countries';
-import english from 'i18n-iso-countries/langs/en.json';
-
-// Function to capitalize the first letter of a string
-export function capitalizeFirstLetter(string: string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
 // Function to check if the valueType is a number
 export function isNumber(valueType: string) {
     if (!valueType) return false;
@@ -62,17 +54,4 @@ export function downloadFile(filename: string, fileContent: Blob) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-}
-
-// Function to get country name by country code (e.g. DE --> Germany)
-export function getCountryName(countryCode: string): string {
-    // console.log('getCountryName()', 'countryCode:', countryCode);
-
-    const failReturn = '';
-
-    if (!countryCode || countryCode.trim() === '') return failReturn;
-
-    countries.registerLocale(english);
-
-    return countries.getName(countryCode, 'en') || failReturn;
 }

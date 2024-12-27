@@ -1,6 +1,6 @@
-import { getCountryName } from '@/utils/generalUtils';
+import { getCountryName } from '@/utils/LocaleUtils';
 import { checkIdShort } from '@/utils/ReferableUtils';
-import { firstCharToLowerCase } from '@/utils/StringUtils';
+import { firstLetterToLowerCase } from '@/utils/StringUtils';
 import { valueUrl } from '@/utils/SubmodelElements/FileUtils';
 import { firstLangStringSetText } from '@/utils/SubmodelElements/MultiLanguagePropertyUtils';
 import { hasValue, valueToDisplay } from '@/utils/SubmodelElements/SubmodelElementUtils';
@@ -172,7 +172,7 @@ export function determineContactName(contactInformationSMC: any): string {
         nameIdShorts.forEach((idShort: any) => {
             if (checkIdShort(sme, idShort) && hasValue(sme)) {
                 const value = valueToDisplay(sme, 'en', firstLangStringSetText(sme));
-                nameValues[firstCharToLowerCase(idShort)] = value;
+                nameValues[firstLetterToLowerCase(idShort)] = value;
             }
         });
     });
@@ -234,7 +234,7 @@ export function determineAddress(contactInformationSMC: any): string {
         addressIdShorts.forEach((idShort: any) => {
             if (checkIdShort(sme, idShort) && hasValue(sme)) {
                 const value = valueToDisplay(sme, 'en', firstLangStringSetText(sme));
-                addressValues[firstCharToLowerCase(idShort)] = value;
+                addressValues[firstLetterToLowerCase(idShort)] = value;
             }
         });
     });
@@ -388,7 +388,7 @@ export function generateVCard(contactInformationSMC: any, companyNameProperty?: 
                 switch (idShort) {
                     case 'RoleOfContactPerson': {
                         const value = getRoleOfContactPerson(valueToDisplay(sme, 'en', firstLangStringSetText(sme)));
-                        vCardValues[firstCharToLowerCase(idShort)] = value;
+                        vCardValues[firstLetterToLowerCase(idShort)] = value;
                         break;
                     }
 
@@ -422,7 +422,7 @@ export function generateVCard(contactInformationSMC: any, companyNameProperty?: 
 
                     default: {
                         const value = valueToDisplay(sme, 'en', firstLangStringSetText(sme));
-                        vCardValues[firstCharToLowerCase(idShort)] = value;
+                        vCardValues[firstLetterToLowerCase(idShort)] = value;
                         break;
                     }
                 }
