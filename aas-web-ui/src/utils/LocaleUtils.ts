@@ -25,5 +25,5 @@ export function getLanguageName(languageCode: string): string {
 
     countries.registerLocale(english);
 
-    return ISO6391.getName(languageCode) || failReturn;
+    return ISO6391.getName(languageCode.toLowerCase()) || failReturn;
 }
