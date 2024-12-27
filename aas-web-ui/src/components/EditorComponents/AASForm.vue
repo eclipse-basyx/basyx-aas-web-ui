@@ -30,11 +30,19 @@
 </template>
 
 <script lang="ts" setup>
-    import { ref } from 'vue';
+    import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+    import { onMounted, ref } from 'vue';
 
-    defineProps<{
+    const props = defineProps<{
         newAAS: boolean;
     }>();
 
     const editAASDialog = ref(false);
+    const AASObject = ref<aasTypes.AssetAdministrationShell | undefined>(undefined);
+
+    onMounted(() => {
+        if (props.newAAS) {
+            AASObject.value = new aasTypes.AssetAdministrationShell();
+        }
+    });
 </script>
