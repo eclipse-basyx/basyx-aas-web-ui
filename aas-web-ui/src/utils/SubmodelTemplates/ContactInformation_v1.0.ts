@@ -255,6 +255,11 @@ export function generateVCard(contactInformationSMC: any, companyNameProperty?: 
 
     const vCardTemplate = (
         contactPerson: string,
+        surname: string,
+        firstName: string,
+        middleNames: string,
+        prefixName: string,
+        suffixName: string,
         company: string,
         department: string,
         roleOfContactPerson: string,
@@ -273,6 +278,51 @@ export function generateVCard(contactInformationSMC: any, companyNameProperty?: 
         emailAddress: string
     ) => {
         const vCardParts: string[] = ['BEGIN:VCARD', 'VERSION:3.0'];
+
+        const vCardNameTemplate = (
+            surname: string,
+            firstName: string,
+            middleNames: string,
+            prefix: string,
+            suffix: string
+        ) => {
+            // ADR;TYPE=home:;;123 Main St.;Springfield;IL;12345;USA
+            const vCardNameParts: string[] = [];
+
+            if (surname && surname.trim() !== '') {
+                vCardNameParts.push(surname);
+            } else {
+                vCardNameParts.push('');
+            }
+
+            if (firstName && firstName.trim() !== '') {
+                vCardNameParts.push(firstName);
+            } else {
+                vCardNameParts.push('');
+            }
+
+            if (middleNames && middleNames.trim() !== '') {
+                vCardNameParts.push(middleNames);
+            } else {
+                vCardNameParts.push('');
+            }
+
+            if (prefix && prefix.trim() !== '') {
+                vCardNameParts.push(prefix);
+            } else {
+                vCardNameParts.push('');
+            }
+
+            if (suffix && suffix.trim() !== '') {
+                vCardNameParts.push(suffix);
+            } else {
+                vCardNameParts.push('');
+            }
+
+            return vCardNameParts.join(';');
+        };
+        const name = vCardNameTemplate(surname, firstName, middleNames, prefixName, suffixName);
+        if (name && name.trim() !== '') vCardParts.push('N:' + name);
 
         if (contactPerson && contactPerson.trim() !== '') vCardParts.push('FN:' + contactPerson);
         if (company && company.trim() !== '') {
@@ -364,6 +414,11 @@ export function generateVCard(contactInformationSMC: any, companyNameProperty?: 
 
     const vCardIdShorts = [
         'ContactPerson',
+        'NameOfContact',
+        'FirstName',
+        'MiddleNames',
+        'Title',
+        'AcademicTitle',
         'Company',
         'Department',
         'RoleOfContactPerson',
@@ -432,6 +487,11 @@ export function generateVCard(contactInformationSMC: any, companyNameProperty?: 
 
     return vCardTemplate(
         vCardValues?.contactPerson,
+        vCardValues?.firstName,
+        vCardValues?.nameOfContact,
+        vCardValues?.middleNames,
+        vCardValues?.title,
+        vCardValues?.academicTitle,
         vCardValues?.company
             ? vCardValues?.company
             : valueToDisplay(companyNameProperty, 'en', firstLangStringSetText(companyNameProperty)),

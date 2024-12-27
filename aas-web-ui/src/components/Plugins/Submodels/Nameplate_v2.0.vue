@@ -211,10 +211,25 @@
                                                 manufacturerProperty?.typeOfValue &&
                                                 manufacturerProperty?.typeOfValue.trim() !== ''
                                             "
-                                            size="x-small">
+                                            size="x-small"
+                                            class="mr-1">
                                             {{ manufacturerProperty.typeOfValue }}
                                         </v-chip>
-                                        {{ valueToDisplay(manufacturerProperty) }}
+                                        <template
+                                            v-if="checkIdShort(manufacturerProperty, 'TelephoneNumber') && isMobile">
+                                            <a
+                                                :href="`tel:${valueToDisplay(manufacturerProperty).replaceAll(' ', '')}`">
+                                                {{ valueToDisplay(manufacturerProperty) }}
+                                            </a>
+                                        </template>
+                                        <template v-else-if="checkIdShort(manufacturerProperty, 'Email')">
+                                            <a :href="`mailto:${valueToDisplay(manufacturerProperty)}`">
+                                                {{ valueToDisplay(manufacturerProperty) }}
+                                            </a>
+                                        </template>
+                                        <template v-else>
+                                            {{ valueToDisplay(manufacturerProperty) }}
+                                        </template>
                                     </span>
                                     <!-- MultiLanguageProperties -->
                                     <template v-else-if="manufacturerProperty.modelType == 'MultiLanguageProperty'">
@@ -242,7 +257,7 @@
                         </tbody>
                     </v-table>
                 </v-card-text>
-                <v-card-actions class="pt-0 pr-4">
+                <v-card-actions v-if="vCardString && vCardString.trim() !== ''" class="pt-0 pr-4">
                     <v-spacer></v-spacer>
                     <v-btn
                         size="small"
@@ -350,6 +365,7 @@
 
     // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode);
+    const isMobile = computed(() => navigationStore.getIsMobile);
 
     onMounted(() => {
         initializeVisualization();
@@ -509,7 +525,7 @@
                 );
                 if (emailAddressMLP && Object.keys(emailAddressMLP).length > 0 && valueToDisplay(emailAddressMLP)) {
                     manufacturerProperties.value.push({
-                        idShort: 'FaxNumber',
+                        idShort: 'Email',
                         displayName: [{ language: 'en', text: 'Email Address' }],
                         modelType: 'Property',
                         valueType: 'String',

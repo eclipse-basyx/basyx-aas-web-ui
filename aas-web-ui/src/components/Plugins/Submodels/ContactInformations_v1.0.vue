@@ -15,7 +15,9 @@
                             <template #prepend>
                                 <v-icon size="small">mdi-card-account-phone</v-icon>
                             </template>
-                            <v-list-item-title>{{ nameToDisplay(contactInformation) }}</v-list-item-title>
+                            <v-list-item-title>{{
+                                nameToDisplay(contactInformation, 'en', 'Contact Information')
+                            }}</v-list-item-title>
                             <!-- <v-list-item-subtitle v-if="descriptionToDisplay(contactInformation)">
                                 {{ descriptionToDisplay(contactInformation) }}
                             </v-list-item-subtitle> -->
@@ -26,7 +28,7 @@
                         <v-table>
                             <tbody>
                                 <tr
-                                    v-for="contactInformationProperty in contactInformation.properties"
+                                    v-for="(contactInformationProperty, index) in contactInformation.properties"
                                     :key="contactInformationProperty.idShort"
                                     :class="index % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
                                     <td>
@@ -136,7 +138,7 @@
                                             </template>
                                         </template>
                                         <!-- Telephone number / Fax number / Email -->
-                                        <span
+                                        <div
                                             v-else-if="
                                                 checkIdShort(contactInformationProperty, 'TelephoneNumber') ||
                                                 checkIdShort(contactInformationProperty, 'FaxNumber') ||
@@ -148,11 +150,29 @@
                                                     contactInformationProperty?.typeOfValue &&
                                                     contactInformationProperty?.typeOfValue.trim() !== ''
                                                 "
-                                                size="x-small">
+                                                size="x-small"
+                                                class="mr-1">
                                                 {{ contactInformationProperty.typeOfValue }}
                                             </v-chip>
-                                            {{ valueToDisplay(contactInformationProperty) }}
-                                        </span>
+                                            <template
+                                                v-if="
+                                                    checkIdShort(contactInformationProperty, 'TelephoneNumber') &&
+                                                    isMobile
+                                                ">
+                                                <a
+                                                    :href="`tel:${valueToDisplay(contactInformationProperty).replaceAll(' ', '')}`">
+                                                    {{ valueToDisplay(contactInformationProperty) }}
+                                                </a>
+                                            </template>
+                                            <template v-else-if="checkIdShort(contactInformationProperty, 'Email')">
+                                                <a :href="`mailto:${valueToDisplay(contactInformationProperty)}`">
+                                                    {{ valueToDisplay(contactInformationProperty) }}
+                                                </a>
+                                            </template>
+                                            <template v-else>
+                                                {{ valueToDisplay(contactInformationProperty) }}
+                                            </template>
+                                        </div>
                                         <!-- MultiLanguageProperties -->
                                         <template
                                             v-else-if="contactInformationProperty.modelType == 'MultiLanguageProperty'">
@@ -181,7 +201,9 @@
                                 </tr>
                             </tbody>
                         </v-table>
-                        <v-card-actions class="pa-0">
+                        <v-card-actions
+                            v-if="contactInformation?.vCard && contactInformation.vCard.trim() !== ''"
+                            class="pa-0">
                             <v-spacer></v-spacer>
                             <v-btn
                                 size="small"
@@ -206,6 +228,7 @@
     import { computed, onMounted, ref } from 'vue';
     import { downloadVCard } from '@/composables/VirtualContactFile';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useNavigationStore } from '@/store/NavigationStore';
     import { getCountryName, getLanguageName } from '@/utils/LocaleUtils';
     import { checkIdShort, descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
     import { firstLangStringSetText } from '@/utils/SubmodelElements/MultiLanguagePropertyUtils';
@@ -234,6 +257,7 @@
     });
 
     // Stores
+    const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
 
     const props = defineProps({
@@ -251,6 +275,7 @@
 
     // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode);
+    const isMobile = computed(() => navigationStore.getIsMobile);
 
     onMounted(() => {
         initializeVisualization();
@@ -289,6 +314,7 @@
         contactInformationSMCs.forEach((contactInformationSMC: any) => {
             let contactInformation = {} as any;
 
+            contactInformation.idShort = contactInformationSMC.idShort;
             contactInformation.description = contactInformationSMC.description;
             contactInformation.displayName = contactInformationSMC.displayName;
 
@@ -411,7 +437,7 @@
                 );
                 if (emailAddressMLP && Object.keys(emailAddressMLP).length > 0 && valueToDisplay(emailAddressMLP)) {
                     contactInformation.properties.push({
-                        idShort: 'FaxNumber',
+                        idShort: 'Email',
                         displayName: [{ language: 'en', text: 'Email Address' }],
                         modelType: 'Property',
                         valueType: 'String',
