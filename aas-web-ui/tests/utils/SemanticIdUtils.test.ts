@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { checkSemanticId, getEquivalentEclassSemanticIds, getEquivalentIriSemanticIds } from '@/utils/SemanticIdUtils';
 
-describe('SemanticIdUtils Test', () => {
+describe('SemanticIdUtils.ts; Tests for checkSemanticId()', () => {
     // Define semanticId
     const iriWithSlashEnding = 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate/';
     const iriWithoutSlashEnding = 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate';
@@ -554,18 +554,19 @@ describe('SemanticIdUtils Test', () => {
         };
 
         it(`${semanticIdTestCombination.testId}: Should return ${semanticIdTestCombination.match.toString().padEnd(5, ' ')} for ${semanticIdTestCombination.strategy.padEnd(14, ' ')} ${semanticIdTestCombination.submodelElementSemanticId.padEnd(85, ' ')} and ${semanticIdTestCombination.semanticId}`, () => {
-            // Mount the component
             // Perform the assertion
             expect(checkSemanticId(submodelElement, semanticId)).toBe(semanticIdTestCombination.match);
         });
     });
+});
 
+describe('SemanticIdUtils.ts; Tests for getEquivalentEclassSemanticIds()', () => {
     // Define test data for getEquivalentEclassSemanticId()
     const equivalentElcassSemanticIds = [
         {
             testId: 'f53aef0c-dfc8-4408-b803-f501cba3122a',
             semanticId: '0173-1#01-AHF578#001',
-            semanitcIds: [
+            semanticIds: [
                 '0173-1#01-AHF578#001',
                 '0173/1///01#AHF578#001',
                 'https://api.eclass-cdp.com/0173-1-01-AHF578-001',
@@ -574,7 +575,7 @@ describe('SemanticIdUtils Test', () => {
         {
             testId: '7106149a-b8fa-4059-9776-d2e37ad35fd2',
             semanticId: '0173-1#01-AHF578',
-            semanitcIds: ['0173-1#01-AHF578', '0173/1///01#AHF578', 'https://api.eclass-cdp.com/0173-1-01-AHF578'],
+            semanticIds: ['0173-1#01-AHF578', '0173/1///01#AHF578', 'https://api.eclass-cdp.com/0173-1-01-AHF578'],
         },
     ];
 
@@ -582,27 +583,28 @@ describe('SemanticIdUtils Test', () => {
     equivalentElcassSemanticIds.forEach(function (equivalentElcassSemanticId) {
         // Define test data
         const semanticId = equivalentElcassSemanticId.semanticId; //e.g. the ID of a ConceptDescription
-        const semanticIds = equivalentElcassSemanticId.semanitcIds;
+        const semanticIds = equivalentElcassSemanticId.semanticIds;
 
         it(
-            `${equivalentElcassSemanticId.testId}: getEquivalentEclassSemanticIds(${equivalentElcassSemanticId.semanticId}, ` +
+            `${equivalentElcassSemanticId.testId}: getEquivalentEclassSemanticIds(${("'" + semanticId + "'").padEnd(25, ' ')}) === ` +
                 "['" +
-                equivalentElcassSemanticId.semanitcIds.toString().replaceAll(',', "', '") +
-                "']" +
-                ')',
+                semanticIds.toString().replaceAll(',', "', '") +
+                "']",
             () => {
                 // Perform the assertion
                 expect(getEquivalentEclassSemanticIds(semanticId).sort()).toStrictEqual(semanticIds.sort());
             }
         );
     });
+});
 
+describe('SemanticIdUtils.ts; Tests for getEquivalentIriSemanticIds()', () => {
     // Define test data for getEquivalentEclassSemanticId()
     const equivalentIriSemanticIds = [
         {
             testId: '71eeb554-da62-4f91-85b2-bd2be844ada0',
             semanticId: 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate/',
-            semanitcIds: [
+            semanticIds: [
                 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate/',
                 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate',
             ],
@@ -610,7 +612,7 @@ describe('SemanticIdUtils Test', () => {
         {
             testId: 'e518544c-f874-4b45-a9b0-442d0c740af9',
             semanticId: 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate',
-            semanitcIds: [
+            semanticIds: [
                 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate/',
                 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate',
             ],
@@ -621,14 +623,13 @@ describe('SemanticIdUtils Test', () => {
     equivalentIriSemanticIds.forEach(function (equivalentIriSemanticId) {
         // Define test data
         const semanticId = equivalentIriSemanticId.semanticId; //e.g. the ID of a ConceptDescription
-        const semanticIds = equivalentIriSemanticId.semanitcIds;
+        const semanticIds = equivalentIriSemanticId.semanticIds;
 
         it(
-            `${equivalentIriSemanticId.testId}: getEquivalentIriSemanticIds(${equivalentIriSemanticId.semanticId}, ` +
+            `${equivalentIriSemanticId.testId}: getEquivalentIriSemanticIds(${("'" + semanticId + "'").padEnd(55, ' ')}) === ` +
                 "['" +
-                equivalentIriSemanticId.semanitcIds.toString().replaceAll(',', "', '") +
-                "']" +
-                ')',
+                semanticIds.toString().replaceAll(',', "', '") +
+                "']",
             () => {
                 // Perform the assertion
                 expect(getEquivalentIriSemanticIds(semanticId).sort()).toStrictEqual(semanticIds.sort());
