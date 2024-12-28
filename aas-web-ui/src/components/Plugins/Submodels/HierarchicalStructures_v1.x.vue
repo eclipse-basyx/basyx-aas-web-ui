@@ -29,6 +29,7 @@
     import { useJumpHandling } from '@/composables/JumpHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
     import { getSubmodelElementBySemanticId } from '@/utils/SemanticIdUtils';
     import { calculateSubmodelElementPaths } from '@/utils/SubmodelElements/SubmodelElementUtils';
 
@@ -257,13 +258,13 @@
             graphDefinition +=
                 parentNode.idShort +
                 '(' +
-                parentNode.idShort +
+                descriptionToDisplay(parentNode, 'en', nameToDisplay(parentNode)) +
                 ') -->|' +
                 relationship +
                 '| ' +
                 child.idShort +
                 '(' +
-                child.idShort +
+                descriptionToDisplay(child, 'en', nameToDisplay(child)) +
                 ')\n'; // add the relationship to the graphDefinition
             callBacks += 'click ' + child.idShort + ' call callback(' + child.globalAssetId + ')\n'; // add the callback to the callBacks
             if (child.statements) {
