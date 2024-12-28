@@ -95,3 +95,71 @@ export function checkIdShort(
         }
     }
 }
+
+export function getSubmodelElementByIdShort(idShort: string, submodelElement: any): any {
+    // console.log('getSubmodelElementByIdShort()', 'idShort', idShort, 'submodelElement', submodelElement);
+
+    const failResponse = {} as any;
+
+    if (idShort.trim() == '') return failResponse;
+
+    if (!submodelElement?.modelType || submodelElement?.modelType.trim() === '') return failResponse;
+
+    switch (submodelElement.modelType) {
+        case 'Submodel':
+            if (
+                submodelElement?.submodelElements &&
+                Array.isArray(submodelElement.submodelElements) &&
+                submodelElement.submodelElements.length > 0
+            ) {
+                return submodelElement.submodelElements.find((sme: any) => {
+                    return checkIdShort(sme, idShort);
+                });
+            }
+            break;
+        case 'SubmodelElementCollection':
+        case 'SubmodelElementList':
+            if (submodelElement?.value && Array.isArray(submodelElement.value) && submodelElement.value.length > 0) {
+                return submodelElement.value.find((sme: any) => {
+                    return checkIdShort(sme, idShort);
+                });
+            }
+            break;
+    }
+
+    return failResponse;
+}
+
+export function getSubmodelElementsByIdShort(idShort: string, submodelElement: any): any[] {
+    // console.log('getSubmodelElementsByIdShort()', 'idShort', idShort, 'submodelElement', submodelElement);
+
+    const failResponse = [] as any[];
+
+    if (idShort.trim() == '') return failResponse;
+
+    if (!submodelElement?.modelType || submodelElement?.modelType.trim() === '') return failResponse;
+
+    switch (submodelElement.modelType) {
+        case 'Submodel':
+            if (
+                submodelElement?.submodelElements &&
+                Array.isArray(submodelElement.submodelElements) &&
+                submodelElement.submodelElements.length > 0
+            ) {
+                return submodelElement.submodelElements.filter((sme: any) => {
+                    return checkIdShort(sme, idShort);
+                });
+            }
+            break;
+        case 'SubmodelElementCollection':
+        case 'SubmodelElementList':
+            if (submodelElement?.value && Array.isArray(submodelElement.value) && submodelElement.value.length > 0) {
+                return submodelElement.value.filter((sme: any) => {
+                    return checkIdShort(sme, idShort);
+                });
+            }
+            break;
+    }
+
+    return failResponse;
+}
