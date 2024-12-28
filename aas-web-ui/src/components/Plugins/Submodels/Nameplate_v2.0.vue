@@ -73,6 +73,7 @@
                                         class="text-caption">
                                         {{ valueToDisplay(productProperty) }}
                                     </a>
+                                    <!-- CountryOfOrigin -->
                                     <template v-else-if="checkIdShort(productProperty, 'CountryOfOrigin')">
                                         <div
                                             v-if="getCountryName(valueToDisplay(productProperty))"
