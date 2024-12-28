@@ -30,18 +30,29 @@
                     </v-list-item>
                 </div>
                 <template v-else>
-                    <v-empty-state
-                        v-if="selectedAAS && Object.keys(selectedAAS).length > 0 && submodelData.length === 0"
-                        title="No existing Submodels"
-                        text="The selected AAS does not contain any Submodels"
-                        class="text-divider"></v-empty-state>
-                    <!-- TODO: Replace with Vuetify Treeview Component when it get's released in Q1 2023 -->
-                    <VTreeview
-                        v-for="item in submodelData"
-                        :key="item.id"
-                        class="root"
-                        :item="item"
-                        :depth="0"></VTreeview>
+                    <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
+                        <template v-if="submodelData.length > 0">
+                            <!-- Trees of Submodels -->
+                            <!-- TODO: Replace with Vuetify Treeview Component when it get's released in Q1 2023 -->
+                            <VTreeview
+                                v-for="item in submodelData"
+                                :key="item.id"
+                                class="root"
+                                :item="item"
+                                :depth="0"></VTreeview>
+                        </template>
+                        <v-empty-state
+                            v-else
+                            title="No existing Submodels"
+                            text="The selected AAS does not contain any Submodels"
+                            class="text-divider"></v-empty-state>
+                    </template>
+                    <template v-else>
+                        <v-empty-state
+                            title="No selected AAS"
+                            text="Select an AAS to view its Submodels and Submodel Elements"
+                            class="text-divider"></v-empty-state>
+                    </template>
                 </template>
             </v-card-text>
         </v-card>
