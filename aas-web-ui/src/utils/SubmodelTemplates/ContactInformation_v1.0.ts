@@ -1,3 +1,4 @@
+import { first } from 'lodash';
 import { getCountryName } from '@/utils/LocaleUtils';
 import { checkIdShort } from '@/utils/ReferableUtils';
 import { firstLetterToLowerCase } from '@/utils/StringUtils';
@@ -448,29 +449,49 @@ export function generateVCard(contactInformationSMC: any, companyNameProperty?: 
                     }
 
                     case 'Phone': {
-                        const telephoneNumber = sme.value.find((sme: any) => checkIdShort(sme, 'TelephoneNumber'));
+                        const telephoneNumberMLP = sme.value.find((sme: any) => checkIdShort(sme, 'TelephoneNumber'));
                         if (
-                            telephoneNumber &&
-                            Object.keys(telephoneNumber).length > 0 &&
-                            valueToDisplay(telephoneNumber)
+                            telephoneNumberMLP &&
+                            Object.keys(telephoneNumberMLP).length > 0 &&
+                            valueToDisplay(telephoneNumberMLP, 'en', firstLangStringSetText(telephoneNumberMLP))
                         ) {
-                            vCardValues['telephoneNumber'] = valueToDisplay(telephoneNumber);
+                            vCardValues['telephoneNumber'] = valueToDisplay(
+                                telephoneNumberMLP,
+                                'en',
+                                firstLangStringSetText(telephoneNumberMLP)
+                            );
                         }
                         break;
                     }
 
                     case 'Fax': {
-                        const faxNumber = sme.value.find((sme: any) => checkIdShort(sme, 'FaxNumber'));
-                        if (faxNumber && Object.keys(faxNumber).length > 0 && valueToDisplay(faxNumber)) {
-                            vCardValues['faxNumber'] = valueToDisplay(faxNumber);
+                        const faxNumberMLP = sme.value.find((sme: any) => checkIdShort(sme, 'FaxNumber'));
+                        if (
+                            faxNumberMLP &&
+                            Object.keys(faxNumberMLP).length > 0 &&
+                            valueToDisplay(faxNumberMLP, 'en', firstLangStringSetText(faxNumberMLP))
+                        ) {
+                            vCardValues['faxNumber'] = valueToDisplay(
+                                faxNumberMLP,
+                                'en',
+                                firstLangStringSetText(faxNumberMLP)
+                            );
                         }
                         break;
                     }
 
                     case 'Email': {
-                        const emailAddress = sme.value.find((sme: any) => checkIdShort(sme, 'EmailAddress'));
-                        if (emailAddress && Object.keys(emailAddress).length > 0 && valueToDisplay(emailAddress)) {
-                            vCardValues['emailAddress'] = valueToDisplay(emailAddress);
+                        const emailAddressMLP = sme.value.find((sme: any) => checkIdShort(sme, 'EmailAddress'));
+                        if (
+                            emailAddressMLP &&
+                            Object.keys(emailAddressMLP).length > 0 &&
+                            valueToDisplay(emailAddressMLP, 'en', firstLangStringSetText(emailAddressMLP))
+                        ) {
+                            vCardValues['emailAddress'] = valueToDisplay(
+                                emailAddressMLP,
+                                'en',
+                                firstLangStringSetText(emailAddressMLP)
+                            );
                         }
                         break;
                     }

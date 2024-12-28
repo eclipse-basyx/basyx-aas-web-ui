@@ -482,7 +482,7 @@
                 if (
                     telephoneNumberMLP &&
                     Object.keys(telephoneNumberMLP).length > 0 &&
-                    valueToDisplay(telephoneNumberMLP)
+                    valueToDisplay(telephoneNumberMLP, 'en', firstLangStringSetText(telephoneNumberMLP))
                 ) {
                     manufacturerProperties.value.push({
                         idShort: 'TelephoneNumber',
@@ -500,7 +500,11 @@
             if (faxSMC && Object.keys(faxSMC).length > 0 && Array.isArray(faxSMC.value) && faxSMC.value.length > 0) {
                 let faxNumberMLP = faxSMC.value.find((sme: any) => checkIdShort(sme, 'FaxNumber'));
                 let typeOfFaxNumberProperty = faxSMC.value.find((sme: any) => checkIdShort(sme, 'TypeOfFaxNumber'));
-                if (faxNumberMLP && Object.keys(faxNumberMLP).length > 0 && valueToDisplay(faxNumberMLP)) {
+                if (
+                    faxNumberMLP &&
+                    Object.keys(faxNumberMLP).length > 0 &&
+                    valueToDisplay(faxNumberMLP, 'en', firstLangStringSetText(faxNumberMLP))
+                ) {
                     manufacturerProperties.value.push({
                         idShort: 'FaxNumber',
                         displayName: [{ language: 'en', text: 'Fax number' }],
@@ -524,7 +528,11 @@
                 let typeOfEmailAddressProperty = emailSMC.value.find((sme: any) =>
                     checkIdShort(sme, 'TypeOfEmailAddress')
                 );
-                if (emailAddressMLP && Object.keys(emailAddressMLP).length > 0 && valueToDisplay(emailAddressMLP)) {
+                if (
+                    emailAddressMLP &&
+                    Object.keys(emailAddressMLP).length > 0 &&
+                    valueToDisplay(emailAddressMLP, 'en', firstLangStringSetText(emailAddressMLP))
+                ) {
                     manufacturerProperties.value.push({
                         idShort: 'Email',
                         displayName: [{ language: 'en', text: 'Email Address' }],

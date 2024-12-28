@@ -231,6 +231,7 @@
     import { useNavigationStore } from '@/store/NavigationStore';
     import { getCountryName, getLanguageName } from '@/utils/LocaleUtils';
     import { checkIdShort, descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
+    import { checkSemanticId } from '@/utils/SemanticIdUtils';
     import { firstLangStringSetText } from '@/utils/SubmodelElements/MultiLanguagePropertyUtils';
     import {
         calculateSubmodelElementPathes,
@@ -300,10 +301,13 @@
         let contactInformationSMCs = [];
         if (contactInformationsData.value?.submodelElements) {
             // For SMT ContactInformations
-            contactInformationSMCs = contactInformationsData.value.submodelElements.filter((element: any) => {
+            contactInformationSMCs = contactInformationsData.value.submodelElements.filter((sme: any) => {
                 return (
-                    element.semanticId.keys[0].value ===
-                    'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation'
+                    checkIdShort(sme, 'ContactInformation', true) ||
+                    checkSemanticId(
+                        sme,
+                        'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation'
+                    )
                 );
             });
         } else if (contactInformationsData.value?.value) {
@@ -393,7 +397,7 @@
                 if (
                     telephoneNumberMLP &&
                     Object.keys(telephoneNumberMLP).length > 0 &&
-                    valueToDisplay(telephoneNumberMLP)
+                    valueToDisplay(telephoneNumberMLP, 'en', firstLangStringSetText(telephoneNumberMLP))
                 ) {
                     contactInformation.properties.push({
                         idShort: 'TelephoneNumber',
@@ -411,7 +415,11 @@
             if (faxSMC && Object.keys(faxSMC).length > 0 && Array.isArray(faxSMC.value) && faxSMC.value.length > 0) {
                 let faxNumberMLP = faxSMC.value.find((sme: any) => checkIdShort(sme, 'FaxNumber'));
                 let typeOfFaxNumberProperty = faxSMC.value.find((sme: any) => checkIdShort(sme, 'TypeOfFaxNumber'));
-                if (faxNumberMLP && Object.keys(faxNumberMLP).length > 0 && valueToDisplay(faxNumberMLP)) {
+                if (
+                    faxNumberMLP &&
+                    Object.keys(faxNumberMLP).length > 0 &&
+                    valueToDisplay(faxNumberMLP, 'en', firstLangStringSetText(faxNumberMLP))
+                ) {
                     contactInformation.properties.push({
                         idShort: 'FaxNumber',
                         displayName: [{ language: 'en', text: 'Fax number' }],
@@ -435,7 +443,11 @@
                 let typeOfEmailAddressProperty = emailSMC.value.find((sme: any) =>
                     checkIdShort(sme, 'TypeOfEmailAddress')
                 );
-                if (emailAddressMLP && Object.keys(emailAddressMLP).length > 0 && valueToDisplay(emailAddressMLP)) {
+                if (
+                    emailAddressMLP &&
+                    Object.keys(emailAddressMLP).length > 0 &&
+                    valueToDisplay(emailAddressMLP, 'en', firstLangStringSetText(emailAddressMLP))
+                ) {
                     contactInformation.properties.push({
                         idShort: 'Email',
                         displayName: [{ language: 'en', text: 'Email Address' }],
