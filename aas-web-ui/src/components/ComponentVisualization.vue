@@ -14,66 +14,55 @@
                     <v-col cols="auto">
                         <span>Visualization</span>
                     </v-col>
-                    <v-col v-if="nameToDisplay(selectedAAS)" cols="auto" class="pl-1">
+                    <v-col v-if="nameToDisplay(SelectedAAS)" cols="auto" class="pl-1">
                         <v-chip size="x-small" color="primary" label border>{{
-                            'AAS: ' + nameToDisplay(selectedAAS)
+                            'AAS: ' + nameToDisplay(SelectedAAS)
                         }}</v-chip>
                     </v-col>
                 </v-row>
             </v-card-title>
             <v-divider></v-divider>
-            <v-card-text style="overflow-y: auto; height: calc(100svh - 170px)">
-                <template
-                    v-if="
-                        selectedNode &&
-                        Object.keys(selectedNode).length > 0 &&
-                        Object.keys(submodelElementData).length > 0
-                    ">
-                    <!-- File / Blob Visualizations -->
-                    <template v-if="['File', 'Blob'].includes(submodelElementData.modelType)">
-                        <ImagePreview
-                            v-if="submodelElementData?.contentType && submodelElementData.contentType.includes('image')"
-                            :submodel-element-data="submodelElementData"></ImagePreview>
-                        <PDFPreview
-                            v-if="submodelElementData?.contentType && submodelElementData.contentType.includes('pdf')"
-                            :submodel-element-data="submodelElementData"></PDFPreview>
-                        <CADPreview
-                            v-if="
-                                submodelElementData?.contentType &&
-                                (submodelElementData.contentType.includes('sla') ||
-                                    submodelElementData.contentType.includes('stl') ||
-                                    submodelElementData.contentType.includes('model') ||
-                                    submodelElementData.contentType.includes('obj') ||
-                                    submodelElementData.contentType.includes('gltf'))
-                            "
-                            :submodel-element-data="submodelElementData"></CADPreview>
-                    </template>
-                    <!-- Plugin Visualizations -->
-                    <template v-else>
-                        <template
-                            v-if="
-                                submodelElementData.semanticId &&
-                                submodelElementData.semanticId.keys &&
-                                submodelElementData.semanticId.keys.length > 0
-                            ">
-                            <component
-                                :is="plugin.name"
-                                v-for="(plugin, index) in filteredPlugins"
-                                :key="index"
-                                :submodel-element-data="submodelElementData">
-                                {{ plugin.name }}
-                            </component>
-                        </template>
-                        <GenericDataVisu
-                            v-if="viewerMode && filteredPlugins.length === 0"
-                            :submodel-element-data="submodelElementData.submodelElements"></GenericDataVisu>
-                    </template>
+            <v-card-text
+                v-if="
+                    SelectedNode && Object.keys(SelectedNode).length > 0 && Object.keys(submodelElementData).length > 0
+                "
+                style="overflow-y: auto; height: calc(100svh - 170px)">
+                <template v-if="submodelElementData.modelType == 'File' || submodelElementData.modelType == 'Blob'">
+                    <ImagePreview
+                        v-if="submodelElementData.contentType && submodelElementData.contentType.includes('image')"
+                        :submodel-element-data="submodelElementData"></ImagePreview>
+                    <PDFPreview
+                        v-if="submodelElementData.contentType && submodelElementData.contentType.includes('pdf')"
+                        :submodel-element-data="submodelElementData"></PDFPreview>
+                    <CADPreview
+                        v-if="
+                            submodelElementData.contentType &&
+                            (submodelElementData.contentType.includes('sla') ||
+                                submodelElementData.contentType.includes('stl') ||
+                                submodelElementData.contentType.includes('model') ||
+                                submodelElementData.contentType.includes('obj') ||
+                                submodelElementData.contentType.includes('gltf'))
+                        "
+                        :submodel-element-data="submodelElementData"></CADPreview>
                 </template>
-                <template v-else-if="!selectedNode || Object.keys(selectedNode).length === 0">
-                    <v-empty-state
-                        title="No selected Submodel / Submodel Element"
-                        text="To view a visualization select a Submodel / Submodel Element"
-                        class="text-divider"></v-empty-state>
+                <template v-else>
+                    <template
+                        v-if="
+                            submodelElementData.semanticId &&
+                            submodelElementData.semanticId.keys &&
+                            submodelElementData.semanticId.keys.length > 0
+                        ">
+                        <component
+                            :is="plugin.name"
+                            v-for="(plugin, index) in filteredPlugins"
+                            :key="index"
+                            :submodel-element-data="submodelElementData"
+                            >{{ plugin.name }}</component
+                        >
+                    </template>
+                    <GenericDataVisu
+                        v-if="viewerMode && filteredPlugins.length === 0"
+                        :submodel-element-data="submodelElementData.submodelElements"></GenericDataVisu>
                 </template>
             </v-card-text>
         </v-card>
@@ -109,9 +98,9 @@
     // Computed Properties
     const aasRegistryServerURL = computed(() => navigationStore.getAASRegistryURL);
     const submodelRegistryServerURL = computed(() => navigationStore.getSubmodelRegistryURL);
-    const selectedAAS = computed(() => aasStore.getSelectedAAS);
-    const selectedNode = computed(() => aasStore.getSelectedNode);
-    const realTimeObject = computed(() => aasStore.getRealTimeObject);
+    const SelectedAAS = computed(() => aasStore.getSelectedAAS);
+    const SelectedNode = computed(() => aasStore.getSelectedNode);
+    const RealTimeObject = computed(() => aasStore.getRealTimeObject);
     const isMobile = computed(() => navigationStore.getIsMobile);
     const importedPlugins = computed(() => navigationStore.getPlugins);
     const filteredPlugins = computed(() => {
@@ -187,29 +176,29 @@
     });
 
     // Resets the submodelElementData when the AAS changes
-    watch(selectedAAS, () => {
+    watch(SelectedAAS, () => {
         submodelElementData.value = {};
     });
 
-    // Watch for changes in the selectedNode and (re-)initialize the Component
-    watch(selectedNode, () => {
+    // Watch for changes in the SelectedNode and (re-)initialize the Component
+    watch(SelectedNode, () => {
         // clear old submodelElementData
         submodelElementData.value = {};
         initializeView(); // initialize list
     });
 
     // Watch for changes in the RealTimeDataObject and (re-)initialize the Component
-    watch(realTimeObject, () => {
+    watch(RealTimeObject, () => {
         // clear old submodelElementData
         submodelElementData.value = {};
         initializeView(); // initialize list
     });
 
     onMounted(() => {
-        if (Object.keys(selectedNode.value).length > 0 && isMobile.value) {
+        if (Object.keys(SelectedNode.value).length > 0 && isMobile.value) {
             // initialize if component got mounted on mobile devices (needed there because it is rendered in a separate view)
             initializeView();
-        } else if (Object.keys(selectedNode.value).length === 0 && route.path == '/componentvisualization') {
+        } else if (Object.keys(SelectedNode.value).length === 0 && route.path == '/componentvisualization') {
             const searchParams = new URL(window.location.href).searchParams;
             const aasEndpoint = searchParams.get('aas');
             const path = searchParams.get('path');
@@ -222,13 +211,13 @@
     });
 
     function initializeView() {
-        // console.log('Selected Node: ', this.realTimeObject);
+        // console.log('Selected Node: ', this.RealTimeObject);
         // Check if a Node is selected
-        if (Object.keys(realTimeObject.value).length === 0) {
+        if (Object.keys(RealTimeObject.value).length === 0) {
             submodelElementData.value = {}; // Reset the SubmodelElement Data when no Node is selected
             return;
         }
-        submodelElementData.value = { ...realTimeObject.value }; // create local copy of the SubmodelElement Object
+        submodelElementData.value = { ...RealTimeObject.value }; // create local copy of the SubmodelElement Object
         // console.log('SubmodelElement Data (ComponentVisualization): ', this.submodelElementData);
     }
 
@@ -252,7 +241,7 @@
                     // console.log('SubmodelElement Data: ', response.data)
                     // dispatch the SubmodelElementPath set by the URL to the store
                     submodelElementData.value = response.data;
-                    aasStore.dispatchrealTimeObject(submodelElementData.value);
+                    aasStore.dispatchRealTimeObject(submodelElementData.value);
                 } else {
                     // execute if the Request failed
                     if (Object.keys(response.data).length === 0) {
