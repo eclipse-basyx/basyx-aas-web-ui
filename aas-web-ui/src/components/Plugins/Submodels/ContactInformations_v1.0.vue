@@ -84,12 +84,6 @@
                                             <div v-if="valueToDisplay(contactInformationProperty)" class="text-caption">
                                                 <template
                                                     v-if="getLanguageName(valueToDisplay(contactInformationProperty))">
-                                                    <span
-                                                        :class="
-                                                            'fi fi-' +
-                                                            valueToDisplay(contactInformationProperty).toLowerCase()
-                                                        ">
-                                                    </span>
                                                     {{ getLanguageName(valueToDisplay(contactInformationProperty)) }}
                                                     ({{ valueToDisplay(contactInformationProperty) }})
                                                 </template>
