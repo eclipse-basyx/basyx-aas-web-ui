@@ -334,7 +334,12 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { getCountryName } from '@/utils/LocaleUtils';
-    import { checkIdShort, descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
+    import {
+        checkIdShort,
+        descriptionToDisplay,
+        getSubmodelElementByIdShort,
+        nameToDisplay,
+    } from '@/utils/ReferableUtils';
     import { valueUrl } from '@/utils/SubmodelElements/FileUtils';
     import { firstLangStringSetText } from '@/utils/SubmodelElements/MultiLanguagePropertyUtils';
     import {
@@ -463,17 +468,10 @@
             });
         });
 
-        let manufacturerContactInformationSmc = digitalNameplateData.submodelElements.find((sme: any) =>
-            checkIdShort(sme, 'ContactInformation')
-        );
-        if (
-            manufacturerContactInformationSmc &&
-            Object.keys(manufacturerContactInformationSmc).length > 0 &&
-            Array.isArray(manufacturerContactInformationSmc.value) &&
-            manufacturerContactInformationSmc.value.length > 0
-        ) {
+        let manufacturerContactInformationSMC = getSubmodelElementByIdShort('ContactInformation', digitalNameplateData);
+        if (hasValue(manufacturerContactInformationSMC)) {
             // (postal) address
-            let address = determineAddress(manufacturerContactInformationSmc);
+            let address = determineAddress(manufacturerContactInformationSMC);
             if (address.trim() !== '') {
                 setMarker(address);
                 manufacturerProperties.value.push({
@@ -486,20 +484,11 @@
             }
 
             // Telephone number
-            let phoneSMC = manufacturerContactInformationSmc.value.find((sme: any) => checkIdShort(sme, 'Phone'));
-            if (
-                phoneSMC &&
-                Object.keys(phoneSMC).length > 0 &&
-                Array.isArray(phoneSMC.value) &&
-                phoneSMC.value.length > 0
-            ) {
-                let telephoneNumberMLP = phoneSMC.value.find((sme: any) => checkIdShort(sme, 'TelephoneNumber'));
-                let typeOfTelephoneProperty = phoneSMC.value.find((sme: any) => checkIdShort(sme, 'TypeOfTelephone'));
-                if (
-                    telephoneNumberMLP &&
-                    Object.keys(telephoneNumberMLP).length > 0 &&
-                    valueToDisplay(telephoneNumberMLP, 'en', firstLangStringSetText(telephoneNumberMLP))
-                ) {
+            let phoneSMC = getSubmodelElementByIdShort('Phone', manufacturerContactInformationSMC);
+            if (hasValue(phoneSMC)) {
+                let telephoneNumberMLP = getSubmodelElementByIdShort('TelephoneNumber', phoneSMC);
+                let typeOfTelephoneProperty = getSubmodelElementByIdShort('TypeOfTelephone', phoneSMC);
+                if (hasValue(telephoneNumberMLP)) {
                     manufacturerProperties.value.push({
                         idShort: 'TelephoneNumber',
                         displayName: [{ language: 'en', text: 'Telephone number' }],
@@ -512,15 +501,11 @@
             }
 
             // Fax number
-            let faxSMC = manufacturerContactInformationSmc.value.find((sme: any) => checkIdShort(sme, 'Fax'));
-            if (faxSMC && Object.keys(faxSMC).length > 0 && Array.isArray(faxSMC.value) && faxSMC.value.length > 0) {
-                let faxNumberMLP = faxSMC.value.find((sme: any) => checkIdShort(sme, 'FaxNumber'));
-                let typeOfFaxNumberProperty = faxSMC.value.find((sme: any) => checkIdShort(sme, 'TypeOfFaxNumber'));
-                if (
-                    faxNumberMLP &&
-                    Object.keys(faxNumberMLP).length > 0 &&
-                    valueToDisplay(faxNumberMLP, 'en', firstLangStringSetText(faxNumberMLP))
-                ) {
+            let faxSMC = getSubmodelElementByIdShort('Fax', manufacturerContactInformationSMC);
+            if (hasValue(faxSMC)) {
+                let faxNumberMLP = getSubmodelElementByIdShort('FaxNumber', faxSMC);
+                let typeOfFaxNumberProperty = getSubmodelElementByIdShort('TypeOfFaxNumber', faxSMC);
+                if (hasValue(faxNumberMLP)) {
                     manufacturerProperties.value.push({
                         idShort: 'FaxNumber',
                         displayName: [{ language: 'en', text: 'Fax number' }],
@@ -533,22 +518,11 @@
             }
 
             // Email
-            let emailSMC = manufacturerContactInformationSmc.value.find((sme: any) => checkIdShort(sme, 'Email'));
-            if (
-                emailSMC &&
-                Object.keys(emailSMC).length > 0 &&
-                Array.isArray(emailSMC.value) &&
-                emailSMC.value.length > 0
-            ) {
-                let emailAddressMLP = emailSMC.value.find((sme: any) => checkIdShort(sme, 'EmailAddress'));
-                let typeOfEmailAddressProperty = emailSMC.value.find((sme: any) =>
-                    checkIdShort(sme, 'TypeOfEmailAddress')
-                );
-                if (
-                    emailAddressMLP &&
-                    Object.keys(emailAddressMLP).length > 0 &&
-                    valueToDisplay(emailAddressMLP, 'en', firstLangStringSetText(emailAddressMLP))
-                ) {
+            let emailSMC = getSubmodelElementByIdShort('Email', manufacturerContactInformationSMC);
+            if (hasValue(emailSMC)) {
+                let emailAddressMLP = getSubmodelElementByIdShort('EmailAddress', emailSMC);
+                let typeOfEmailAddressProperty = getSubmodelElementByIdShort('TypeOfEmailAddress', emailSMC);
+                if (hasValue(emailAddressMLP)) {
                     manufacturerProperties.value.push({
                         idShort: 'Email',
                         displayName: [{ language: 'en', text: 'Email Address' }],
@@ -562,9 +536,9 @@
 
             // vCardString.value = generateVCard(manufacturerProperties.value, manufacturerContactInformationSmc.value);
             vCardString.value = generateVCard(
-                manufacturerContactInformationSmc,
-                digitalNameplateData.submodelElements.find((sme: any) => checkIdShort(sme, 'ManufacturerName')),
-                digitalNameplateData.submodelElements.find((sme: any) => checkIdShort(sme, 'CompanyLogo'))
+                manufacturerContactInformationSMC,
+                getSubmodelElementByIdShort('ManufacturerName', digitalNameplateData),
+                getSubmodelElementByIdShort('CompanyLogo', digitalNameplateData)
             );
             // console.log('vCard:', vCardString.value);
         }
@@ -573,24 +547,19 @@
     function extractMarkings(digitalNameplateData: any) {
         // console.log('extractMarkings()', 'digitalNameplateData:', digitalNameplateData);
 
-        let markingsSMC = digitalNameplateData.submodelElements.find((sme: any) => checkIdShort(sme, 'Markings'));
+        let markingsSMC = getSubmodelElementByIdShort('Markings', digitalNameplateData);
 
-        if (markingsSMC && Object.keys(markingsSMC).length > 0) {
+        if (hasValue(markingsSMC)) {
             let markingSMCs = markingsSMC.value;
 
             if (Array.isArray(markingSMCs) && markingSMCs.length > 0) {
                 let formattedMarkings = [] as Array<any>;
 
                 markingSMCs.forEach((markingSMC: any) => {
-                    let markingFile = markingSMC.value.find((sme: any) => checkIdShort(sme, 'MarkingFile'));
-                    let markingName = markingSMC.value.find((sme: any) => checkIdShort(sme, 'MarkingName'));
+                    let markingFile = getSubmodelElementByIdShort('MarkingFile', markingSMC);
+                    let markingName = getSubmodelElementByIdShort('MarkingName', markingSMC);
 
-                    if (
-                        markingName &&
-                        Object.keys(markingName).length > 0 &&
-                        markingFile &&
-                        Object.keys(markingFile).length > 0
-                    ) {
+                    if (hasValue(markingName) && hasValue(markingFile)) {
                         let formattedMarking = {
                             idShort: markingSMC.idShort,
                             name: markingName.value,
@@ -606,12 +575,10 @@
     }
 
     function extractAssetSpecificProperties(digitalNameplateData: any) {
-        let assetSpecificPropertiesLocal = digitalNameplateData.submodelElements.find((element: any) =>
-            checkIdShort(element, 'AssetSpecificProperties')
-        );
+        let assetSpecificPropertiesSMC = getSubmodelElementByIdShort('AssetSpecificProperties', digitalNameplateData);
 
-        if (assetSpecificPropertiesLocal && Object.keys(assetSpecificPropertiesLocal).length > 0) {
-            assetSpecificProperties.value = assetSpecificPropertiesLocal.value;
+        if (hasValue(assetSpecificPropertiesSMC)) {
+            assetSpecificProperties.value = assetSpecificPropertiesSMC.value;
         }
     }
 

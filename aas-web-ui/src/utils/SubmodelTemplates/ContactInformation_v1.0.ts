@@ -1,6 +1,5 @@
-import { first } from 'lodash';
 import { getCountryName } from '@/utils/LocaleUtils';
-import { checkIdShort } from '@/utils/ReferableUtils';
+import { checkIdShort, getSubmodelElementByIdShort } from '@/utils/ReferableUtils';
 import { firstLetterToLowerCase } from '@/utils/StringUtils';
 import { valueUrl } from '@/utils/SubmodelElements/FileUtils';
 import { firstLangStringSetText } from '@/utils/SubmodelElements/MultiLanguagePropertyUtils';
@@ -449,12 +448,8 @@ export function generateVCard(contactInformationSMC: any, companyNameProperty?: 
                     }
 
                     case 'Phone': {
-                        const telephoneNumberMLP = sme.value.find((sme: any) => checkIdShort(sme, 'TelephoneNumber'));
-                        if (
-                            telephoneNumberMLP &&
-                            Object.keys(telephoneNumberMLP).length > 0 &&
-                            valueToDisplay(telephoneNumberMLP, 'en', firstLangStringSetText(telephoneNumberMLP))
-                        ) {
+                        const telephoneNumberMLP = getSubmodelElementByIdShort('TelephoneNumber', sme);
+                        if (hasValue(telephoneNumberMLP)) {
                             vCardValues['telephoneNumber'] = valueToDisplay(
                                 telephoneNumberMLP,
                                 'en',
@@ -465,12 +460,8 @@ export function generateVCard(contactInformationSMC: any, companyNameProperty?: 
                     }
 
                     case 'Fax': {
-                        const faxNumberMLP = sme.value.find((sme: any) => checkIdShort(sme, 'FaxNumber'));
-                        if (
-                            faxNumberMLP &&
-                            Object.keys(faxNumberMLP).length > 0 &&
-                            valueToDisplay(faxNumberMLP, 'en', firstLangStringSetText(faxNumberMLP))
-                        ) {
+                        const faxNumberMLP = getSubmodelElementByIdShort('FaxNumber', sme);
+                        if (hasValue(faxNumberMLP)) {
                             vCardValues['faxNumber'] = valueToDisplay(
                                 faxNumberMLP,
                                 'en',
@@ -481,12 +472,8 @@ export function generateVCard(contactInformationSMC: any, companyNameProperty?: 
                     }
 
                     case 'Email': {
-                        const emailAddressMLP = sme.value.find((sme: any) => checkIdShort(sme, 'EmailAddress'));
-                        if (
-                            emailAddressMLP &&
-                            Object.keys(emailAddressMLP).length > 0 &&
-                            valueToDisplay(emailAddressMLP, 'en', firstLangStringSetText(emailAddressMLP))
-                        ) {
+                        const emailAddressMLP = getSubmodelElementByIdShort('EmailAddress', sme);
+                        if (hasValue(emailAddressMLP)) {
                             vCardValues['emailAddress'] = valueToDisplay(
                                 emailAddressMLP,
                                 'en',

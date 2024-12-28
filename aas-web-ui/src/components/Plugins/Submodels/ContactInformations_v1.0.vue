@@ -244,7 +244,12 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { getCountryName, getLanguageName } from '@/utils/LocaleUtils';
-    import { checkIdShort, descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
+    import {
+        checkIdShort,
+        descriptionToDisplay,
+        getSubmodelElementByIdShort,
+        nameToDisplay,
+    } from '@/utils/ReferableUtils';
     import { checkSemanticId } from '@/utils/SemanticIdUtils';
     import { firstLangStringSetText } from '@/utils/SubmodelElements/MultiLanguagePropertyUtils';
     import {
@@ -351,9 +356,7 @@
             }
 
             // Role of Contact Person
-            let roleOfContactPersonMlp = contactInformationSMC.value.find((element: any) =>
-                checkIdShort(element, 'RoleOfContactPerson')
-            );
+            let roleOfContactPersonMlp = getSubmodelElementByIdShort('RoleOfContactPerson', contactInformationSMC);
             let roleOfContactPerson = valueToDisplay(
                 roleOfContactPersonMlp,
                 'en',
@@ -399,20 +402,11 @@
             }
 
             // Telephone number
-            let phoneSMC = contactInformationSMC.value.find((sme: any) => checkIdShort(sme, 'Phone'));
-            if (
-                phoneSMC &&
-                Object.keys(phoneSMC).length > 0 &&
-                Array.isArray(phoneSMC.value) &&
-                phoneSMC.value.length > 0
-            ) {
-                let telephoneNumberMLP = phoneSMC.value.find((sme: any) => checkIdShort(sme, 'TelephoneNumber'));
-                let typeOfTelephoneProperty = phoneSMC.value.find((sme: any) => checkIdShort(sme, 'TypeOfTelephone'));
-                if (
-                    telephoneNumberMLP &&
-                    Object.keys(telephoneNumberMLP).length > 0 &&
-                    valueToDisplay(telephoneNumberMLP, 'en', firstLangStringSetText(telephoneNumberMLP))
-                ) {
+            let phoneSMC = getSubmodelElementByIdShort('Phone', contactInformationSMC);
+            if (hasValue(phoneSMC)) {
+                let telephoneNumberMLP = getSubmodelElementByIdShort('TelephoneNumber', phoneSMC);
+                let typeOfTelephoneProperty = getSubmodelElementByIdShort('TypeOfTelephone', phoneSMC);
+                if (hasValue(telephoneNumberMLP)) {
                     contactInformation.properties.push({
                         idShort: 'TelephoneNumber',
                         displayName: [{ language: 'en', text: 'Telephone number' }],
@@ -425,15 +419,11 @@
             }
 
             // Fax number
-            let faxSMC = contactInformationSMC.value.find((sme: any) => checkIdShort(sme, 'Fax'));
+            let faxSMC = getSubmodelElementByIdShort('Fax', contactInformationSMC);
             if (faxSMC && Object.keys(faxSMC).length > 0 && Array.isArray(faxSMC.value) && faxSMC.value.length > 0) {
-                let faxNumberMLP = faxSMC.value.find((sme: any) => checkIdShort(sme, 'FaxNumber'));
-                let typeOfFaxNumberProperty = faxSMC.value.find((sme: any) => checkIdShort(sme, 'TypeOfFaxNumber'));
-                if (
-                    faxNumberMLP &&
-                    Object.keys(faxNumberMLP).length > 0 &&
-                    valueToDisplay(faxNumberMLP, 'en', firstLangStringSetText(faxNumberMLP))
-                ) {
+                let faxNumberMLP = getSubmodelElementByIdShort('FaxNumber', faxSMC);
+                let typeOfFaxNumberProperty = getSubmodelElementByIdShort('TypeOfFaxNumber', faxSMC);
+                if (hasValue(faxNumberMLP)) {
                     contactInformation.properties.push({
                         idShort: 'FaxNumber',
                         displayName: [{ language: 'en', text: 'Fax number' }],
@@ -446,22 +436,16 @@
             }
 
             // Email
-            let emailSMC = contactInformationSMC.value.find((sme: any) => checkIdShort(sme, 'Email'));
+            let emailSMC = getSubmodelElementByIdShort('Email', contactInformationSMC);
             if (
                 emailSMC &&
                 Object.keys(emailSMC).length > 0 &&
                 Array.isArray(emailSMC.value) &&
                 emailSMC.value.length > 0
             ) {
-                let emailAddressMLP = emailSMC.value.find((sme: any) => checkIdShort(sme, 'EmailAddress'));
-                let typeOfEmailAddressProperty = emailSMC.value.find((sme: any) =>
-                    checkIdShort(sme, 'TypeOfEmailAddress')
-                );
-                if (
-                    emailAddressMLP &&
-                    Object.keys(emailAddressMLP).length > 0 &&
-                    valueToDisplay(emailAddressMLP, 'en', firstLangStringSetText(emailAddressMLP))
-                ) {
+                let emailAddressMLP = getSubmodelElementByIdShort('EmailAddress', emailSMC);
+                let typeOfEmailAddressProperty = getSubmodelElementByIdShort('TypeOfEmailAddress', emailSMC);
+                if (hasValue(emailAddressMLP)) {
                     contactInformation.properties.push({
                         idShort: 'Email',
                         displayName: [{ language: 'en', text: 'Email Address' }],
