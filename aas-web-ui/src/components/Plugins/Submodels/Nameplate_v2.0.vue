@@ -16,7 +16,7 @@
         </v-card>
         <template v-else-if="Object.keys(digitalNameplateData).length > 0">
             <!-- Product properties-->
-            <v-card v-if="Object.keys(productProperties).length > 0" class="mb-4">
+            <v-card v-if="productProperties.length > 0" class="mb-4">
                 <v-card-title>
                     <div class="text-subtitle-1">{{ 'Product' }}</div>
                 </v-card-title>
@@ -83,9 +83,9 @@
                                                 class="text-caption">
                                                 <span :class="'fi fi-' + valueToDisplay(productProperty).toLowerCase()">
                                                 </span>
-                                                {{ getCountryName(valueToDisplay(productProperty)) }} ({{
-                                                    valueToDisplay(productProperty)
-                                                }})
+                                                {{ getCountryName(valueToDisplay(productProperty)) }} (
+                                                {{ valueToDisplay(productProperty) }}
+                                                )
                                             </div>
                                             <div v-else class="text-caption">{{ valueToDisplay(productProperty) }}</div>
                                         </template>
@@ -95,9 +95,9 @@
                                                 v-for="(version, i) in productProperty.value"
                                                 :key="i"
                                                 style="white-space: nowrap">
-                                                <span class="text-caption mr-2">{{
-                                                    nameToDisplay(version) + ':'
-                                                }}</span>
+                                                <span class="text-caption mr-2">
+                                                    {{ nameToDisplay(version) + ':' }}
+                                                </span>
                                                 <!-- Show english value, if available -->
                                                 <v-chip
                                                     v-if="valueToDisplay(version)"
@@ -133,7 +133,9 @@
                                             </template>
                                         </template>
                                         <!-- Default -->
-                                        <span v-else class="text-caption">{{ valueToDisplay(productProperty) }}</span>
+                                        <span v-else class="text-caption">
+                                            {{ valueToDisplay(productProperty) }}
+                                        </span>
                                     </td>
                                 </tr>
                             </template>
@@ -142,7 +144,7 @@
                 </v-card-text>
             </v-card>
             <!-- Manufacturer properties -->
-            <v-card v-if="Object.keys(manufacturerProperties).length > 0" class="mb-4">
+            <v-card v-if="manufacturerProperties.length > 0" class="mb-4">
                 <v-card-title>
                     <div class="text-subtitle-1">{{ 'Manufacturer' }}</div>
                 </v-card-title>
@@ -265,9 +267,9 @@
                                             </template>
                                         </template>
                                         <!-- Default -->
-                                        <span v-else class="text-caption">{{
-                                            valueToDisplay(manufacturerProperty)
-                                        }}</span>
+                                        <span v-else class="text-caption">
+                                            {{ valueToDisplay(manufacturerProperty) }}
+                                        </span>
                                     </td>
                                 </tr>
                             </template>
@@ -298,7 +300,7 @@
                 </l-map>
             </v-card>
             <!-- Markings -->
-            <v-card v-if="Object.keys(markings).length > 0" class="mb-4">
+            <v-card v-if="markings.length > 0" class="mb-4">
                 <v-card-title>
                     <div class="text-subtitle-1">{{ 'Markings' }}</div>
                 </v-card-title>

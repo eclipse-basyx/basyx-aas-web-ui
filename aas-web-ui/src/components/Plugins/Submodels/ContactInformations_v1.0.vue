@@ -7,17 +7,17 @@
         <v-card v-if="isLoading" class="mb-4">
             <v-skeleton-loader type="list-item-avatar, divider, table-heading@8, actions"></v-skeleton-loader>
         </v-card>
-        <template v-else-if="Object.keys(contactInformationsData).length > 0 && contactInformations.length > 0">
-            <v-expansion-panels v-model="panel">
+        <template v-else-if="Object.keys(contactInformationsData).length > 0">
+            <v-expansion-panels v-if="contactInformations.length > 0" v-model="panel">
                 <v-expansion-panel v-for="(contactInformation, index) in contactInformations" :key="index">
                     <v-expansion-panel-title>
                         <v-list-item class="pa-0">
                             <template #prepend>
                                 <v-icon size="small">mdi-card-account-phone</v-icon>
                             </template>
-                            <v-list-item-title>{{
-                                nameToDisplay(contactInformation, 'en', 'Contact Information')
-                            }}</v-list-item-title>
+                            <v-list-item-title>
+                                {{ nameToDisplay(contactInformation, 'en', 'Contact Information') }}
+                            </v-list-item-title>
                             <!-- <v-list-item-subtitle v-if="descriptionToDisplay(contactInformation)">
                                 {{ descriptionToDisplay(contactInformation) }}
                             </v-list-item-subtitle> -->
@@ -99,9 +99,9 @@
                                                         }}
                                                         ({{ valueToDisplay(contactInformationProperty) }})
                                                     </template>
-                                                    <template v-else>{{
-                                                        valueToDisplay(contactInformationProperty)
-                                                    }}</template>
+                                                    <template v-else>
+                                                        {{ valueToDisplay(contactInformationProperty) }}
+                                                    </template>
                                                 </div>
                                                 <!-- Otherwise show all available values -->
                                                 <template

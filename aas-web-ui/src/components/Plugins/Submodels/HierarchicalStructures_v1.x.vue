@@ -10,9 +10,9 @@
                 <v-list-item class="px-2 pb-3">
                     <v-list-item-title>
                         <span class="text-subtitle-2 mr-2">{{ 'Archetype: ' }}</span>
-                        <v-chip label size="x-small" border color="primary" style="margin-top: -3px">{{
-                            archetype
-                        }}</v-chip>
+                        <v-chip label size="x-small" border color="primary" style="margin-top: -3px">
+                            {{ archetype }}
+                        </v-chip>
                     </v-list-item-title>
                 </v-list-item>
                 <div id="BoMDiagram" style="position: relative; max-width: 100%"></div>

@@ -7,28 +7,24 @@
         <v-card v-if="isLoading">
             <v-skeleton-loader type="list-item-avatar, divider, list-item-avatar" :height="144"></v-skeleton-loader>
         </v-card>
-        <v-expansion-panels v-else v-model="panel">
+        <v-expansion-panels v-else-if="documents.length > 0" v-model="panel">
             <!-- Documents -->
-            <v-expansion-panel v-for="(documentSMC, i) in documentSMCs" :key="documentSMC.idShort">
+            <v-expansion-panel v-for="(document, i) in documents" :key="document.idShort">
                 <v-expansion-panel-title>
                     <v-list-item class="pa-0">
                         <template #prepend>
                             <v-icon size="small">mdi-file-outline</v-icon>
                         </template>
-                        <v-list-item-title>{{ nameToDisplay(documentSMC) }}</v-list-item-title>
+                        <v-list-item-title>{{ nameToDisplay(document) }}</v-list-item-title>
                     </v-list-item>
                 </v-expansion-panel-title>
                 <v-divider v-if="panel === i"></v-divider>
                 <v-expansion-panel-text>
-                    <template
-                        v-for="documentVersionSMC in documentSMC.documentVersions"
-                        :key="documentVersionSMC.idShort">
+                    <template v-for="documentVersion in document.documentVersions" :key="documentVersion.idShort">
                         <!-- General Document Information (DocumentVersion) -->
                         <v-table>
                             <tbody>
-                                <template
-                                    v-for="(metaProperty, j) in documentVersionSMC.meta"
-                                    :key="metaProperty.idShort">
+                                <template v-for="(metaProperty, j) in documentVersion.meta" :key="metaProperty.idShort">
                                     <tr
                                         v-if="hasValue(metaProperty)"
                                         :class="j % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
@@ -100,7 +96,9 @@
                                                 </template>
                                             </template>
                                             <!-- Default -->
-                                            <span v-else class="text-caption">{{ valueToDisplay(metaProperty) }}</span>
+                                            <span v-else class="text-caption">
+                                                {{ valueToDisplay(metaProperty) }}
+                                            </span>
                                         </td>
                                     </tr>
                                 </template>
@@ -110,7 +108,7 @@
                         <v-row justify="center" class="mt-3">
                             <v-col cols="auto">
                                 <v-btn-toggle
-                                    v-model="documentVersionSMC.fileToggle"
+                                    v-model="documentVersion.fileToggle"
                                     color="primary"
                                     variant="outlined"
                                     divided
@@ -125,39 +123,39 @@
                             </v-col>
                         </v-row>
                         <!-- File Preview (PreviewFile) -->
-                        <template v-if="documentVersionSMC.fileToggle === 'preview'">
-                            <div v-if="documentVersionSMC.previewFile" class="mt-3">
+                        <template v-if="documentVersion.fileToggle === 'preview'">
+                            <div v-if="documentVersion.previewFile" class="mt-3">
                                 <ImagePreview
                                     v-if="
-                                        documentVersionSMC.previewFile.contentType &&
-                                        documentVersionSMC.previewFile.contentType.includes('image')
+                                        documentVersion.previewFile.contentType &&
+                                        documentVersion.previewFile.contentType.includes('image')
                                     "
-                                    :submodel-element-data="documentVersionSMC.previewFile"></ImagePreview>
+                                    :submodel-element-data="documentVersion.previewFile"></ImagePreview>
                                 <PDFPreview
                                     v-if="
-                                        documentVersionSMC.previewFile.contentType &&
-                                        documentVersionSMC.previewFile.contentType.includes('pdf')
+                                        documentVersion.previewFile.contentType &&
+                                        documentVersion.previewFile.contentType.includes('pdf')
                                     "
-                                    :submodel-element-data="documentVersionSMC.previewFile"></PDFPreview>
+                                    :submodel-element-data="documentVersion.previewFile"></PDFPreview>
                                 <CADPreview
                                     v-if="
-                                        documentVersionSMC.previewFile.contentType &&
-                                        (documentVersionSMC.previewFile.contentType.includes('sla') ||
-                                            documentVersionSMC.previewFile.contentType.includes('stl') ||
-                                            documentVersionSMC.previewFile.contentType.includes('model') ||
-                                            documentVersionSMC.previewFile.contentType.includes('obj') ||
-                                            documentVersionSMC.previewFile.contentType.includes('gltf'))
+                                        documentVersion.previewFile.contentType &&
+                                        (documentVersion.previewFile.contentType.includes('sla') ||
+                                            documentVersion.previewFile.contentType.includes('stl') ||
+                                            documentVersion.previewFile.contentType.includes('model') ||
+                                            documentVersion.previewFile.contentType.includes('obj') ||
+                                            documentVersion.previewFile.contentType.includes('gltf'))
                                     "
-                                    :submodel-element-data="documentVersionSMC.previewFile"></CADPreview>
+                                    :submodel-element-data="documentVersion.previewFile"></CADPreview>
                             </div>
                             <!-- Download Button -->
                             <v-btn
-                                v-if="documentVersionSMC.previewFile"
+                                v-if="documentVersion.previewFile"
                                 class="mt-3"
                                 block
                                 color="primary"
                                 variant="tonal"
-                                @click="downloadFile(documentVersionSMC.previewFile)">
+                                @click="downloadFile(documentVersion.previewFile)">
                                 <v-icon left>mdi-download</v-icon>
                                 <span>Download Preview File</span>
                             </v-btn>
@@ -170,39 +168,39 @@
                                 variant="outlined"></v-alert>
                         </template>
                         <!-- File Preview (DigitalFile) -->
-                        <template v-else-if="documentVersionSMC.fileToggle === 'digital'">
-                            <div v-if="documentVersionSMC.digitalFile" class="mt-3">
+                        <template v-else-if="documentVersion.fileToggle === 'digital'">
+                            <div v-if="documentVersion.digitalFile" class="mt-3">
                                 <ImagePreview
                                     v-if="
-                                        documentVersionSMC.digitalFile.contentType &&
-                                        documentVersionSMC.digitalFile.contentType.includes('image')
+                                        documentVersion.digitalFile.contentType &&
+                                        documentVersion.digitalFile.contentType.includes('image')
                                     "
-                                    :submodel-element-data="documentVersionSMC.digitalFile"></ImagePreview>
+                                    :submodel-element-data="documentVersion.digitalFile"></ImagePreview>
                                 <PDFPreview
                                     v-if="
-                                        documentVersionSMC.digitalFile.contentType &&
-                                        documentVersionSMC.digitalFile.contentType.includes('pdf')
+                                        documentVersion.digitalFile.contentType &&
+                                        documentVersion.digitalFile.contentType.includes('pdf')
                                     "
-                                    :submodel-element-data="documentVersionSMC.digitalFile"></PDFPreview>
+                                    :submodel-element-data="documentVersion.digitalFile"></PDFPreview>
                                 <CADPreview
                                     v-if="
-                                        documentVersionSMC.digitalFile.contentType &&
-                                        (documentVersionSMC.digitalFile.contentType.includes('sla') ||
-                                            documentVersionSMC.digitalFile.contentType.includes('stl') ||
-                                            documentVersionSMC.digitalFile.contentType.includes('model') ||
-                                            documentVersionSMC.digitalFile.contentType.includes('obj') ||
-                                            documentVersionSMC.digitalFile.contentType.includes('gltf'))
+                                        documentVersion.digitalFile.contentType &&
+                                        (documentVersion.digitalFile.contentType.includes('sla') ||
+                                            documentVersion.digitalFile.contentType.includes('stl') ||
+                                            documentVersion.digitalFile.contentType.includes('model') ||
+                                            documentVersion.digitalFile.contentType.includes('obj') ||
+                                            documentVersion.digitalFile.contentType.includes('gltf'))
                                     "
-                                    :submodel-element-data="documentVersionSMC.digitalFile"></CADPreview>
+                                    :submodel-element-data="documentVersion.digitalFile"></CADPreview>
                             </div>
                             <!-- Download Button -->
                             <v-btn
-                                v-if="documentVersionSMC.digitalFile"
+                                v-if="documentVersion.digitalFile"
                                 class="mt-3"
                                 block
                                 color="primary"
                                 variant="tonal"
-                                @click="downloadFile(documentVersionSMC.digitalFile)">
+                                @click="downloadFile(documentVersion.digitalFile)">
                                 <v-icon left>mdi-download</v-icon>
                                 <span>Download Digital File</span>
                             </v-btn>
@@ -216,181 +214,188 @@
                         </template>
                     </template>
                     <!-- DocumentClassifications -->
-                    <v-card variant="outlined" class="mt-3">
-                        <v-table>
-                            <thead>
-                                <tr v-if="documentSMC.documentClassifications.length > 0">
-                                    <th
-                                        v-for="classificationProperty in documentSMC.documentClassifications[0].value"
-                                        :key="classificationProperty.idShort">
-                                        <div class="text-caption">
-                                            <span>{{ nameToDisplay(classificationProperty) }}</span>
-                                            <!-- Show english description, if available -->
-                                            <v-tooltip
-                                                v-if="descriptionToDisplay(classificationProperty)"
-                                                activator="parent"
-                                                open-delay="600"
-                                                transition="slide-y-transition"
-                                                max-width="360px"
-                                                location="bottom">
-                                                <div class="text-caption">
-                                                    {{ descriptionToDisplay(classificationProperty) }}
-                                                </div>
-                                            </v-tooltip>
-                                            <!-- Otherwise show all available descriptions -->
-                                            <v-tooltip
-                                                v-else-if="
-                                                    classificationProperty.description &&
-                                                    classificationProperty.description.length > 0
-                                                "
-                                                activator="parent"
-                                                open-delay="600"
-                                                transition="slide-y-transition"
-                                                max-width="360px"
-                                                location="bottom">
-                                                <div
-                                                    v-for="(description, j) in classificationProperty.description"
-                                                    :key="j"
-                                                    class="text-caption">
-                                                    <span class="font-weight-bold">
-                                                        {{ description.language + ': ' }}
-                                                    </span>
-                                                    {{ description.text }}
-                                                </div>
-                                            </v-tooltip>
-                                        </div>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <template
-                                    v-for="(documentClassificationSMC, j) in documentSMC.documentClassifications"
-                                    :key="documentClassificationSMC.idShort">
-                                    <tr
-                                        v-if="hasValue(documentClassificationSMC)"
-                                        :class="j % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
-                                        <td
-                                            v-for="classificationProperty in documentClassificationSMC.value"
+                    <template v-if="document.documentClassificationSMCs.length > 0">
+                        <v-card variant="outlined" class="mt-3">
+                            <v-table>
+                                <thead>
+                                    <tr>
+                                        <th
+                                            v-for="classificationProperty in document.documentClassificationSMCs[0]
+                                                .value"
                                             :key="classificationProperty.idShort">
-                                            <!-- MultiLanguageProperties -->
-                                            <template
-                                                v-if="classificationProperty.modelType == 'MultiLanguageProperty'">
-                                                <!-- Show english value, if available -->
-                                                <div
-                                                    v-if="valueToDisplay(classificationProperty)"
-                                                    class="text-caption text-subtitleText">
+                                            <div class="text-caption">
+                                                <span>{{ nameToDisplay(classificationProperty) }}</span>
+                                                <!-- Show english description, if available -->
+                                                <v-tooltip
+                                                    v-if="descriptionToDisplay(classificationProperty)"
+                                                    activator="parent"
+                                                    open-delay="600"
+                                                    transition="slide-y-transition"
+                                                    max-width="360px"
+                                                    location="bottom">
+                                                    <div class="text-caption">
+                                                        {{ descriptionToDisplay(classificationProperty) }}
+                                                    </div>
+                                                </v-tooltip>
+                                                <!-- Otherwise show all available descriptions -->
+                                                <v-tooltip
+                                                    v-else-if="
+                                                        classificationProperty.description &&
+                                                        classificationProperty.description.length > 0
+                                                    "
+                                                    activator="parent"
+                                                    open-delay="600"
+                                                    transition="slide-y-transition"
+                                                    max-width="360px"
+                                                    location="bottom">
+                                                    <div
+                                                        v-for="(description, j) in classificationProperty.description"
+                                                        :key="j"
+                                                        class="text-caption">
+                                                        <span class="font-weight-bold">
+                                                            {{ description.language + ': ' }}
+                                                        </span>
+                                                        {{ description.text }}
+                                                    </div>
+                                                </v-tooltip>
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template
+                                        v-for="(documentClassificationSMC, j) in document.documentClassificationSMCs"
+                                        :key="documentClassificationSMC.idShort">
+                                        <tr
+                                            v-if="hasValue(documentClassificationSMC)"
+                                            :class="j % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
+                                            <td
+                                                v-for="classificationProperty in documentClassificationSMC.value"
+                                                :key="classificationProperty.idShort">
+                                                <!-- MultiLanguageProperties -->
+                                                <template
+                                                    v-if="classificationProperty.modelType == 'MultiLanguageProperty'">
+                                                    <!-- Show english value, if available -->
+                                                    <div
+                                                        v-if="valueToDisplay(classificationProperty)"
+                                                        class="text-caption text-subtitleText">
+                                                        {{ valueToDisplay(classificationProperty) }}
+                                                    </div>
+                                                    <!-- Otherwise show all available values -->
+                                                    <template
+                                                        v-for="(langStringSet, k) in classificationProperty.value"
+                                                        v-else
+                                                        :key="k">
+                                                        <div
+                                                            v-if="langStringSet?.text.length > 0"
+                                                            class="text-caption text-subtitleText">
+                                                            <span class="font-weight-bold">
+                                                                {{ langStringSet?.language + ': ' }}
+                                                            </span>
+                                                            {{ langStringSet?.text }}
+                                                        </div>
+                                                    </template>
+                                                </template>
+                                                <!-- Default -->
+                                                <span v-else class="text-caption text-subtitleText">
                                                     {{ valueToDisplay(classificationProperty) }}
-                                                </div>
-                                                <!-- Otherwise show all available values -->
-                                                <template
-                                                    v-for="(langStringSet, k) in classificationProperty.value"
-                                                    v-else
-                                                    :key="k">
-                                                    <div
-                                                        v-if="langStringSet?.text.length > 0"
-                                                        class="text-caption text-subtitleText">
-                                                        <span class="font-weight-bold">
-                                                            {{ langStringSet?.language + ': ' }}
-                                                        </span>
-                                                        {{ langStringSet?.text }}
-                                                    </div>
-                                                </template>
-                                            </template>
-                                            <!-- Default -->
-                                            <span v-else class="text-caption text-subtitleText">{{
-                                                valueToDisplay(classificationProperty)
-                                            }}</span>
-                                        </td>
-                                    </tr>
-                                </template>
-                            </tbody>
-                        </v-table>
-                    </v-card>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </v-table>
+                        </v-card>
+                    </template>
                     <!-- DocumentIds -->
-                    <v-card variant="outlined" class="mt-3">
-                        <v-table>
-                            <thead>
-                                <tr v-if="documentSMC.documentIds.length > 0">
-                                    <th
-                                        v-for="idProperty in documentSMC.documentIds[0].value"
-                                        :key="idProperty.idShort">
-                                        <div class="text-caption">
-                                            <span>{{ nameToDisplay(idProperty) }}</span>
-                                            <!-- Show english description, if available -->
-                                            <v-tooltip
-                                                v-if="descriptionToDisplay(idProperty)"
-                                                activator="parent"
-                                                open-delay="600"
-                                                transition="slide-y-transition"
-                                                max-width="360px"
-                                                location="bottom">
-                                                <div class="text-caption">
-                                                    {{ descriptionToDisplay(idProperty) }}
-                                                </div>
-                                            </v-tooltip>
-                                            <!-- Otherwise show all available descriptions -->
-                                            <v-tooltip
-                                                v-else-if="idProperty.description && idProperty.description.length > 0"
-                                                activator="parent"
-                                                open-delay="600"
-                                                transition="slide-y-transition"
-                                                max-width="360px"
-                                                location="bottom">
-                                                <div
-                                                    v-for="(description, j) in idProperty.description"
-                                                    :key="j"
-                                                    class="text-caption">
-                                                    <span class="font-weight-bold">
-                                                        {{ description.language + ': ' }}
-                                                    </span>
-                                                    {{ description.text }}
-                                                </div>
-                                            </v-tooltip>
-                                        </div>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <template
-                                    v-for="(documentIdSMC, j) in documentSMC.documentIds"
-                                    :key="documentIdSMC.idShort">
-                                    <tr
-                                        v-if="hasValue(documentIdSMC)"
-                                        :class="j % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
-                                        <td v-for="idProperty in documentIdSMC.value" :key="idProperty.idShort">
-                                            <!-- MultiLanguageProperties -->
-                                            <template v-if="idProperty.modelType == 'MultiLanguageProperty'">
-                                                <!-- Show english value, if available -->
-                                                <div
-                                                    v-if="valueToDisplay(idProperty)"
-                                                    class="text-caption text-subtitleText">
-                                                    {{ valueToDisplay(idProperty) }}
-                                                </div>
-                                                <!-- Otherwise show all available values -->
-                                                <template
-                                                    v-for="(langStringSet, k) in idProperty.value"
-                                                    v-else
-                                                    :key="k">
-                                                    <div
-                                                        v-if="langStringSet?.text.length > 0"
-                                                        class="text-caption text-subtitleText">
-                                                        <span class="font-weight-bold">
-                                                            {{ langStringSet?.language + ': ' }}
-                                                        </span>
-                                                        {{ langStringSet?.text }}
+                    <template v-if="document.documentIds.length > 0">
+                        <v-card variant="outlined" class="mt-3">
+                            <v-table>
+                                <thead>
+                                    <tr>
+                                        <th
+                                            v-for="idProperty in document.documentIds[0].value"
+                                            :key="idProperty.idShort">
+                                            <div class="text-caption">
+                                                <span>{{ nameToDisplay(idProperty) }}</span>
+                                                <!-- Show english description, if available -->
+                                                <v-tooltip
+                                                    v-if="descriptionToDisplay(idProperty)"
+                                                    activator="parent"
+                                                    open-delay="600"
+                                                    transition="slide-y-transition"
+                                                    max-width="360px"
+                                                    location="bottom">
+                                                    <div class="text-caption">
+                                                        {{ descriptionToDisplay(idProperty) }}
                                                     </div>
-                                                </template>
-                                            </template>
-                                            <!-- Default -->
-                                            <span v-else class="text-caption text-subtitleText">{{
-                                                valueToDisplay(idProperty)
-                                            }}</span>
-                                        </td>
+                                                </v-tooltip>
+                                                <!-- Otherwise show all available descriptions -->
+                                                <v-tooltip
+                                                    v-else-if="
+                                                        idProperty.description && idProperty.description.length > 0
+                                                    "
+                                                    activator="parent"
+                                                    open-delay="600"
+                                                    transition="slide-y-transition"
+                                                    max-width="360px"
+                                                    location="bottom">
+                                                    <div
+                                                        v-for="(description, j) in idProperty.description"
+                                                        :key="j"
+                                                        class="text-caption">
+                                                        <span class="font-weight-bold">
+                                                            {{ description.language + ': ' }}
+                                                        </span>
+                                                        {{ description.text }}
+                                                    </div>
+                                                </v-tooltip>
+                                            </div>
+                                        </th>
                                     </tr>
-                                </template>
-                            </tbody>
-                        </v-table>
-                    </v-card>
+                                </thead>
+                                <tbody>
+                                    <template
+                                        v-for="(documentIdSMC, j) in document.documentIds"
+                                        :key="documentIdSMC.idShort">
+                                        <tr
+                                            v-if="hasValue(documentIdSMC)"
+                                            :class="j % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
+                                            <td v-for="idProperty in documentIdSMC.value" :key="idProperty.idShort">
+                                                <!-- MultiLanguageProperties -->
+                                                <template v-if="idProperty.modelType == 'MultiLanguageProperty'">
+                                                    <!-- Show english value, if available -->
+                                                    <div
+                                                        v-if="valueToDisplay(idProperty)"
+                                                        class="text-caption text-subtitleText">
+                                                        {{ valueToDisplay(idProperty) }}
+                                                    </div>
+                                                    <!-- Otherwise show all available values -->
+                                                    <template
+                                                        v-for="(langStringSet, k) in idProperty.value"
+                                                        v-else
+                                                        :key="k">
+                                                        <div
+                                                            v-if="langStringSet?.text.length > 0"
+                                                            class="text-caption text-subtitleText">
+                                                            <span class="font-weight-bold">
+                                                                {{ langStringSet?.language + ': ' }}
+                                                            </span>
+                                                            {{ langStringSet?.text }}
+                                                        </div>
+                                                    </template>
+                                                </template>
+                                                <!-- Default -->
+                                                <span v-else class="text-caption text-subtitleText">
+                                                    {{ valueToDisplay(idProperty) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </v-table>
+                        </v-card>
+                    </template>
                 </v-expansion-panel-text>
             </v-expansion-panel>
         </v-expansion-panels>
@@ -430,7 +435,7 @@
     const isLoading = ref(false);
     const handoverDocumentationData = ref({} as any);
     const panel = ref(null as number | null);
-    const documentSMCs = ref([] as Array<any>);
+    const documents = ref([] as Array<any>);
 
     // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode);
@@ -454,47 +459,47 @@
             selectedNode.value.path
         );
 
-        documentSMCs.value = getSubmodelElementsBySemanticId(
+        documents.value = getSubmodelElementsBySemanticId(
             '0173-1#02-ABI500#001/0173-1#01-AHF579#001',
             handoverDocumentationData.value
         );
 
-        documentSMCs.value.forEach((documentSMC: any) => {
-            extractDocumentVersions(documentSMC);
+        documents.value.forEach((document: any) => {
+            extractDocumentVersions(document);
 
             // Extract Document IDs
-            documentSMC.documentIds = getSubmodelElementsBySemanticId(
+            document.documentIds = getSubmodelElementsBySemanticId(
                 '0173-1#02-ABI501#001/0173-1#01-AHF580#001',
-                documentSMC
+                document
             );
 
             // Extract Document Classifications
-            documentSMC.documentClassifications = getSubmodelElementsBySemanticId(
+            document.documentClassificationSMCs = getSubmodelElementsBySemanticId(
                 '0173-1#02-ABI502#001/0173-1#01-AHF581#001*02',
-                documentSMC
+                document
             );
         });
 
         isLoading.value = false;
     }
 
-    function extractDocumentVersions(documentSMC: any) {
+    function extractDocumentVersions(document: any) {
         // Extract Document Version
-        documentSMC.documentVersions = getSubmodelElementsBySemanticId(
+        document.documentVersions = getSubmodelElementsBySemanticId(
             '0173-1#02-ABI503#001/0173-1#01-AHF582#001',
-            documentSMC
+            document
         );
 
         // Extract Digital File / Preview File / Meta data for each Document Version
-        documentSMC.documentVersions.forEach((documentVersionSMC: any) => {
+        document.documentVersions.forEach((documentVersion: any) => {
             // Extract the Digital File
-            documentVersionSMC.digitalFile = getSubmodelElementBySemanticId('0173-1#02-ABI504', documentVersionSMC);
+            documentVersion.digitalFile = getSubmodelElementBySemanticId('0173-1#02-ABI504', documentVersion);
 
             // Extract the Preview File
-            documentVersionSMC.previewFile = getSubmodelElementBySemanticId('0173-1#02-ABI505', documentVersionSMC);
+            documentVersion.previewFile = getSubmodelElementBySemanticId('0173-1#02-ABI505', documentVersion);
 
             // Extract Meta Data
-            documentVersionSMC.meta = documentVersionSMC.value.filter((documentVersionSME: any) => {
+            documentVersion.meta = documentVersion.value.filter((documentVersionSME: any) => {
                 return (
                     checkIdShort(documentVersionSME, 'Language') ||
                     checkIdShort(documentVersionSME, 'Title') ||
@@ -504,7 +509,7 @@
                 );
             });
 
-            documentVersionSMC.fileToggle = 'preview';
+            documentVersion.fileToggle = 'preview';
         });
     }
 </script>
