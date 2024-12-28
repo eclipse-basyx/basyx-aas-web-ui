@@ -1499,7 +1499,7 @@ export default defineComponent({
                 parent.statements.length > 0 &&
                 parent.modelType == 'Entity'
             ) {
-                for (const element of parent.value) {
+                for (const element of parent.statements) {
                     await this.calculateSubmodelElementPaths(element, startPath + '.' + element.idShort);
                 }
             }

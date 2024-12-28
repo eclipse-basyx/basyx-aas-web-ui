@@ -116,7 +116,7 @@ export async function calculateSubmodelElementPaths(parent: any, startPath: stri
         }
     } else if (Array.isArray(parent?.statements) && parent?.statements.length > 0 && parent.modelType == 'Entity') {
         // Entity
-        for (const element of parent.value) {
+        for (const element of parent.statements) {
             await calculateSubmodelElementPaths(element, startPath + '.' + element.idShort);
         }
     }
