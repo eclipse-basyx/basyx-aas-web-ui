@@ -405,7 +405,7 @@
     import { getSubmodelElementBySemanticId, getSubmodelElementsBySemanticId } from '@/utils/SemanticIdUtils';
     import { downloadFile } from '@/utils/SubmodelElements/FileUtils';
     import {
-        calculateSubmodelElementPathes,
+        calculateSubmodelElementPaths,
         hasValue,
         valueToDisplay,
     } from '@/utils/SubmodelElements/SubmodelElementUtils';
@@ -449,7 +449,7 @@
             return;
         }
 
-        handoverDocumentationData.value = await calculateSubmodelElementPathes(
+        handoverDocumentationData.value = await calculateSubmodelElementPaths(
             { ...props.submodelElementData },
             selectedNode.value.path
         );

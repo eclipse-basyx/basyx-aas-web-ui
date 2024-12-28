@@ -23,111 +23,120 @@
                 <v-card-text>
                     <v-table>
                         <tbody>
-                            <tr
+                            <template
                                 v-for="(productProperty, index) in productProperties"
-                                :key="productProperty.idShort"
-                                :class="index % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
-                                <td>
-                                    <div class="text-subtitleText text-caption">
-                                        <span>{{ nameToDisplay(productProperty) }}</span>
-                                        <!-- Show english description, if available -->
-                                        <v-tooltip
-                                            v-if="descriptionToDisplay(productProperty)"
-                                            activator="parent"
-                                            open-delay="600"
-                                            transition="slide-y-transition"
-                                            max-width="360px"
-                                            location="bottom">
-                                            <div class="text-caption">
-                                                {{ descriptionToDisplay(productProperty) }}
-                                            </div>
-                                        </v-tooltip>
-                                        <!-- Otherwise show all available descriptions -->
-                                        <v-tooltip
-                                            v-else-if="
-                                                productProperty.description && productProperty.description.length > 0
-                                            "
-                                            activator="parent"
-                                            open-delay="600"
-                                            transition="slide-y-transition"
-                                            max-width="360px"
-                                            location="bottom">
-                                            <div
-                                                v-for="(description, i) in productProperty.description"
-                                                :key="i"
-                                                class="text-caption">
-                                                <span class="font-weight-bold">
-                                                    {{ description.language + ': ' }}
-                                                </span>
-                                                {{ description.text }}
-                                            </div>
-                                        </v-tooltip>
-                                    </div>
-                                </td>
-                                <td>
-                                    <!-- URIOfTheProduct -->
-                                    <a
-                                        v-if="checkIdShort(productProperty, 'URIOfTheProduct')"
-                                        :href="valueToDisplay(productProperty)"
-                                        target="_blank"
-                                        class="text-caption">
-                                        {{ valueToDisplay(productProperty) }}
-                                    </a>
-                                    <!-- CountryOfOrigin -->
-                                    <template v-else-if="checkIdShort(productProperty, 'CountryOfOrigin')">
-                                        <div
-                                            v-if="getCountryName(valueToDisplay(productProperty))"
+                                :key="productProperty.idShort">
+                                <tr
+                                    v-if="hasValue(productProperty)"
+                                    :class="index % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
+                                    <td>
+                                        <div class="text-subtitleText text-caption">
+                                            <span>{{ nameToDisplay(productProperty) }}</span>
+                                            <!-- Show english description, if available -->
+                                            <v-tooltip
+                                                v-if="descriptionToDisplay(productProperty)"
+                                                activator="parent"
+                                                open-delay="600"
+                                                transition="slide-y-transition"
+                                                max-width="360px"
+                                                location="bottom">
+                                                <div class="text-caption">
+                                                    {{ descriptionToDisplay(productProperty) }}
+                                                </div>
+                                            </v-tooltip>
+                                            <!-- Otherwise show all available descriptions -->
+                                            <v-tooltip
+                                                v-else-if="
+                                                    productProperty.description &&
+                                                    productProperty.description.length > 0
+                                                "
+                                                activator="parent"
+                                                open-delay="600"
+                                                transition="slide-y-transition"
+                                                max-width="360px"
+                                                location="bottom">
+                                                <div
+                                                    v-for="(description, i) in productProperty.description"
+                                                    :key="i"
+                                                    class="text-caption">
+                                                    <span class="font-weight-bold">
+                                                        {{ description.language + ': ' }}
+                                                    </span>
+                                                    {{ description.text }}
+                                                </div>
+                                            </v-tooltip>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <!-- URIOfTheProduct -->
+                                        <a
+                                            v-if="checkIdShort(productProperty, 'URIOfTheProduct')"
+                                            :href="valueToDisplay(productProperty)"
+                                            target="_blank"
                                             class="text-caption">
-                                            <span :class="'fi fi-' + valueToDisplay(productProperty).toLowerCase()">
-                                            </span>
-                                            {{ getCountryName(valueToDisplay(productProperty)) }} ({{
-                                                valueToDisplay(productProperty)
-                                            }})
-                                        </div>
-                                        <div v-else class="text-caption">{{ valueToDisplay(productProperty) }}</div>
-                                    </template>
-                                    <!-- Versions -->
-                                    <template v-else-if="checkIdShort(productProperty, 'Versions')">
-                                        <span
-                                            v-for="(version, i) in productProperty.value"
-                                            :key="i"
-                                            style="white-space: nowrap">
-                                            <span class="text-caption mr-2">{{ nameToDisplay(version) + ':' }}</span>
-                                            <!-- Show english value, if available -->
-                                            <v-chip
-                                                v-if="valueToDisplay(version)"
-                                                label
-                                                size="x-small"
-                                                border
-                                                class="mr-5">
-                                                {{ valueToDisplay(version) }}
-                                            </v-chip>
-                                            <!-- Otherwise show the first value -->
-                                            <v-chip v-else label size="x-small" border class="mr-5">
-                                                {{ version.value[0].text }}
-                                            </v-chip>
-                                        </span>
-                                    </template>
-                                    <!-- MultiLanguageProperties -->
-                                    <template v-else-if="productProperty.modelType == 'MultiLanguageProperty'">
-                                        <!-- Show english value, if available -->
-                                        <div v-if="valueToDisplay(productProperty)" class="text-caption">
                                             {{ valueToDisplay(productProperty) }}
-                                        </div>
-                                        <!-- Otherwise show all available values -->
-                                        <template v-for="(langStringSet, j) in productProperty.value" v-else :key="j">
-                                            <div v-if="langStringSet?.text.length > 0" class="text-caption">
-                                                <span class="font-weight-bold">
-                                                    {{ langStringSet?.language + ': ' }}
+                                        </a>
+                                        <!-- CountryOfOrigin -->
+                                        <template v-else-if="checkIdShort(productProperty, 'CountryOfOrigin')">
+                                            <div
+                                                v-if="getCountryName(valueToDisplay(productProperty))"
+                                                class="text-caption">
+                                                <span :class="'fi fi-' + valueToDisplay(productProperty).toLowerCase()">
                                                 </span>
-                                                {{ langStringSet?.text }}
+                                                {{ getCountryName(valueToDisplay(productProperty)) }} ({{
+                                                    valueToDisplay(productProperty)
+                                                }})
                                             </div>
+                                            <div v-else class="text-caption">{{ valueToDisplay(productProperty) }}</div>
                                         </template>
-                                    </template>
-                                    <!-- Default -->
-                                    <span v-else class="text-caption">{{ valueToDisplay(productProperty) }}</span>
-                                </td>
-                            </tr>
+                                        <!-- Versions -->
+                                        <template v-else-if="checkIdShort(productProperty, 'Versions')">
+                                            <span
+                                                v-for="(version, i) in productProperty.value"
+                                                :key="i"
+                                                style="white-space: nowrap">
+                                                <span class="text-caption mr-2">{{
+                                                    nameToDisplay(version) + ':'
+                                                }}</span>
+                                                <!-- Show english value, if available -->
+                                                <v-chip
+                                                    v-if="valueToDisplay(version)"
+                                                    label
+                                                    size="x-small"
+                                                    border
+                                                    class="mr-5">
+                                                    {{ valueToDisplay(version) }}
+                                                </v-chip>
+                                                <!-- Otherwise show the first value -->
+                                                <v-chip v-else label size="x-small" border class="mr-5">
+                                                    {{ version.value[0].text }}
+                                                </v-chip>
+                                            </span>
+                                        </template>
+                                        <!-- MultiLanguageProperties -->
+                                        <template v-else-if="productProperty.modelType == 'MultiLanguageProperty'">
+                                            <!-- Show english value, if available -->
+                                            <div v-if="valueToDisplay(productProperty)" class="text-caption">
+                                                {{ valueToDisplay(productProperty) }}
+                                            </div>
+                                            <!-- Otherwise show all available values -->
+                                            <template
+                                                v-for="(langStringSet, j) in productProperty.value"
+                                                v-else
+                                                :key="j">
+                                                <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                                                    <span class="font-weight-bold">
+                                                        {{ langStringSet?.language + ': ' }}
+                                                    </span>
+                                                    {{ langStringSet?.text }}
+                                                </div>
+                                            </template>
+                                        </template>
+                                        <!-- Default -->
+                                        <span v-else class="text-caption">{{ valueToDisplay(productProperty) }}</span>
+                                    </td>
+                                </tr>
+                            </template>
                         </tbody>
                     </v-table>
                 </v-card-text>
@@ -140,121 +149,128 @@
                 <v-card-text>
                     <v-table>
                         <tbody>
-                            <tr
+                            <template
                                 v-for="(manufacturerProperty, index) in manufacturerProperties"
-                                :key="manufacturerProperty.idShort"
-                                :class="index % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
-                                <td>
-                                    <div class="text-subtitleText text-caption">
-                                        <span>{{ nameToDisplay(manufacturerProperty) }}</span>
-                                        <!-- Show english description, if available -->
-                                        <v-tooltip
-                                            v-if="descriptionToDisplay(manufacturerProperty)"
-                                            activator="parent"
-                                            open-delay="600"
-                                            transition="slide-y-transition"
-                                            max-width="360px"
-                                            location="bottom">
-                                            <div class="text-caption">
-                                                {{ descriptionToDisplay(manufacturerProperty) }}
-                                            </div>
-                                        </v-tooltip>
-                                        <!-- Otherwise show all available descriptions -->
-                                        <v-tooltip
-                                            v-else-if="
-                                                manufacturerProperty.description &&
-                                                manufacturerProperty.description.length > 0
-                                            "
-                                            activator="parent"
-                                            open-delay="600"
-                                            transition="slide-y-transition"
-                                            max-width="360px"
-                                            location="bottom">
-                                            <div
-                                                v-for="(description, i) in manufacturerProperty.description"
-                                                :key="i"
-                                                class="text-caption">
-                                                <span class="font-weight-bold">
-                                                    {{ description.language + ': ' }}
-                                                </span>
-                                                {{ description.text }}
-                                            </div>
-                                        </v-tooltip>
-                                    </div>
-                                </td>
-                                <td>
-                                    <!-- Address of Additional Link -->
-                                    <a
-                                        v-if="checkIdShort(manufacturerProperty, 'AddressOfAdditionalLink')"
-                                        :href="valueToDisplay(manufacturerProperty)"
-                                        target="_blank"
-                                        class="text-caption">
-                                        {{ valueToDisplay(manufacturerProperty) }}
-                                    </a>
-                                    <!-- Company Logo -->
-                                    <v-img
-                                        v-else-if="checkIdShort(manufacturerProperty, 'CompanyLogo')"
-                                        :src="valueUrl(manufacturerProperty)"
-                                        max-width="100%"
-                                        max-height="100%"
-                                        contain
-                                        class="my-2"></v-img>
-                                    <!-- Telephone number / Fax number / Email -->
-                                    <span
-                                        v-else-if="
-                                            checkIdShort(manufacturerProperty, 'TelephoneNumber') ||
-                                            checkIdShort(manufacturerProperty, 'FaxNumber') ||
-                                            checkIdShort(manufacturerProperty, 'Email')
-                                        "
-                                        class="text-caption">
-                                        <v-chip
-                                            v-if="
-                                                manufacturerProperty?.typeOfValue &&
-                                                manufacturerProperty?.typeOfValue.trim() !== ''
-                                            "
-                                            size="x-small"
-                                            class="mr-1">
-                                            {{ manufacturerProperty.typeOfValue }}
-                                        </v-chip>
-                                        <template
-                                            v-if="checkIdShort(manufacturerProperty, 'TelephoneNumber') && isMobile">
-                                            <a
-                                                :href="`tel:${valueToDisplay(manufacturerProperty).replaceAll(' ', '')}`">
-                                                {{ valueToDisplay(manufacturerProperty) }}
-                                            </a>
-                                        </template>
-                                        <template v-else-if="checkIdShort(manufacturerProperty, 'Email')">
-                                            <a :href="`mailto:${valueToDisplay(manufacturerProperty)}`">
-                                                {{ valueToDisplay(manufacturerProperty) }}
-                                            </a>
-                                        </template>
-                                        <template v-else>
-                                            {{ valueToDisplay(manufacturerProperty) }}
-                                        </template>
-                                    </span>
-                                    <!-- MultiLanguageProperties -->
-                                    <template v-else-if="manufacturerProperty.modelType == 'MultiLanguageProperty'">
-                                        <!-- Show english value, if available -->
-                                        <div v-if="valueToDisplay(manufacturerProperty)" class="text-caption">
-                                            {{ valueToDisplay(manufacturerProperty) }}
+                                :key="manufacturerProperty.idShort">
+                                <tr
+                                    v-if="hasValue(manufacturerProperty)"
+                                    :class="index % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
+                                    <td>
+                                        <div class="text-subtitleText text-caption">
+                                            <span>{{ nameToDisplay(manufacturerProperty) }}</span>
+                                            <!-- Show english description, if available -->
+                                            <v-tooltip
+                                                v-if="descriptionToDisplay(manufacturerProperty)"
+                                                activator="parent"
+                                                open-delay="600"
+                                                transition="slide-y-transition"
+                                                max-width="360px"
+                                                location="bottom">
+                                                <div class="text-caption">
+                                                    {{ descriptionToDisplay(manufacturerProperty) }}
+                                                </div>
+                                            </v-tooltip>
+                                            <!-- Otherwise show all available descriptions -->
+                                            <v-tooltip
+                                                v-else-if="
+                                                    manufacturerProperty.description &&
+                                                    manufacturerProperty.description.length > 0
+                                                "
+                                                activator="parent"
+                                                open-delay="600"
+                                                transition="slide-y-transition"
+                                                max-width="360px"
+                                                location="bottom">
+                                                <div
+                                                    v-for="(description, i) in manufacturerProperty.description"
+                                                    :key="i"
+                                                    class="text-caption">
+                                                    <span class="font-weight-bold">
+                                                        {{ description.language + ': ' }}
+                                                    </span>
+                                                    {{ description.text }}
+                                                </div>
+                                            </v-tooltip>
                                         </div>
-                                        <!-- Otherwise show all available values -->
-                                        <template
-                                            v-for="(langStringSet, j) in manufacturerProperty.value"
-                                            v-else
-                                            :key="j">
-                                            <div v-if="langStringSet?.text.length > 0" class="text-caption">
-                                                <span class="font-weight-bold">
-                                                    {{ langStringSet.language + ': ' }}
-                                                </span>
-                                                {{ langStringSet.text }}
+                                    </td>
+                                    <td>
+                                        <!-- Address of Additional Link -->
+                                        <a
+                                            v-if="checkIdShort(manufacturerProperty, 'AddressOfAdditionalLink')"
+                                            :href="valueToDisplay(manufacturerProperty)"
+                                            target="_blank"
+                                            class="text-caption">
+                                            {{ valueToDisplay(manufacturerProperty) }}
+                                        </a>
+                                        <!-- Company Logo -->
+                                        <v-img
+                                            v-else-if="checkIdShort(manufacturerProperty, 'CompanyLogo')"
+                                            :src="valueUrl(manufacturerProperty)"
+                                            max-width="100%"
+                                            max-height="100%"
+                                            contain
+                                            class="my-2"></v-img>
+                                        <!-- Telephone number / Fax number / Email -->
+                                        <span
+                                            v-else-if="
+                                                checkIdShort(manufacturerProperty, 'TelephoneNumber') ||
+                                                checkIdShort(manufacturerProperty, 'FaxNumber') ||
+                                                checkIdShort(manufacturerProperty, 'Email')
+                                            "
+                                            class="text-caption">
+                                            <v-chip
+                                                v-if="
+                                                    manufacturerProperty?.typeOfValue &&
+                                                    manufacturerProperty?.typeOfValue.trim() !== ''
+                                                "
+                                                size="x-small"
+                                                class="mr-1">
+                                                {{ manufacturerProperty.typeOfValue }}
+                                            </v-chip>
+                                            <template
+                                                v-if="
+                                                    checkIdShort(manufacturerProperty, 'TelephoneNumber') && isMobile
+                                                ">
+                                                <a
+                                                    :href="`tel:${valueToDisplay(manufacturerProperty).replaceAll(' ', '')}`">
+                                                    {{ valueToDisplay(manufacturerProperty) }}
+                                                </a>
+                                            </template>
+                                            <template v-else-if="checkIdShort(manufacturerProperty, 'Email')">
+                                                <a :href="`mailto:${valueToDisplay(manufacturerProperty)}`">
+                                                    {{ valueToDisplay(manufacturerProperty) }}
+                                                </a>
+                                            </template>
+                                            <template v-else>
+                                                {{ valueToDisplay(manufacturerProperty) }}
+                                            </template>
+                                        </span>
+                                        <!-- MultiLanguageProperties -->
+                                        <template v-else-if="manufacturerProperty.modelType == 'MultiLanguageProperty'">
+                                            <!-- Show english value, if available -->
+                                            <div v-if="valueToDisplay(manufacturerProperty)" class="text-caption">
+                                                {{ valueToDisplay(manufacturerProperty) }}
                                             </div>
+                                            <!-- Otherwise show all available values -->
+                                            <template
+                                                v-for="(langStringSet, j) in manufacturerProperty.value"
+                                                v-else
+                                                :key="j">
+                                                <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                                                    <span class="font-weight-bold">
+                                                        {{ langStringSet.language + ': ' }}
+                                                    </span>
+                                                    {{ langStringSet.text }}
+                                                </div>
+                                            </template>
                                         </template>
-                                    </template>
-                                    <!-- Default -->
-                                    <span v-else class="text-caption">{{ valueToDisplay(manufacturerProperty) }}</span>
-                                </td>
-                            </tr>
+                                        <!-- Default -->
+                                        <span v-else class="text-caption">{{
+                                            valueToDisplay(manufacturerProperty)
+                                        }}</span>
+                                    </td>
+                                </tr>
+                            </template>
                         </tbody>
                     </v-table>
                 </v-card-text>
@@ -322,7 +338,7 @@
     import { valueUrl } from '@/utils/SubmodelElements/FileUtils';
     import { firstLangStringSetText } from '@/utils/SubmodelElements/MultiLanguagePropertyUtils';
     import {
-        calculateSubmodelElementPathes,
+        calculateSubmodelElementPaths,
         hasValue,
         valueToDisplay,
     } from '@/utils/SubmodelElements/SubmodelElementUtils';
@@ -382,7 +398,7 @@
             return;
         }
 
-        digitalNameplateData.value = await calculateSubmodelElementPathes(
+        digitalNameplateData.value = await calculateSubmodelElementPaths(
             { ...props.submodelElementData },
             selectedNode.value.path
         );

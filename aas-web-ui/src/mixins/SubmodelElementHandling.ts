@@ -1460,14 +1460,14 @@ export default defineComponent({
         },
 
         // calculate the pathes of the SubmodelElements in a provided Submodel/SubmodelElement
-        async calculateSubmodelElementPathes(parent: any, startPath: string): Promise<any> {
+        async calculateSubmodelElementPaths(parent: any, startPath: string): Promise<any> {
             parent.path = startPath;
             parent.id = this.UUID();
             parent.conceptDescriptions = await this.getConceptDescriptions(parent);
 
             if (parent.submodelElements && parent.submodelElements.length > 0) {
                 for (const element of parent.submodelElements) {
-                    await this.calculateSubmodelElementPathes(
+                    await this.calculateSubmodelElementPaths(
                         element,
                         startPath + '/submodel-elements/' + element.idShort
                     );
@@ -1479,7 +1479,7 @@ export default defineComponent({
                 parent.modelType == 'SubmodelElementCollection'
             ) {
                 for (const element of parent.value) {
-                    await this.calculateSubmodelElementPathes(element, startPath + '.' + element.idShort);
+                    await this.calculateSubmodelElementPaths(element, startPath + '.' + element.idShort);
                 }
             } else if (
                 parent.value &&
@@ -1488,7 +1488,7 @@ export default defineComponent({
                 parent.modelType == 'SubmodelElementList'
             ) {
                 for (const [index, element] of parent.value.entries()) {
-                    await this.calculateSubmodelElementPathes(
+                    await this.calculateSubmodelElementPaths(
                         element,
                         startPath + encodeURIComponent('[') + index + encodeURIComponent(']')
                     );
@@ -1500,7 +1500,7 @@ export default defineComponent({
                 parent.modelType == 'Entity'
             ) {
                 for (const element of parent.value) {
-                    await this.calculateSubmodelElementPathes(element, startPath + '.' + element.idShort);
+                    await this.calculateSubmodelElementPaths(element, startPath + '.' + element.idShort);
                 }
             }
 

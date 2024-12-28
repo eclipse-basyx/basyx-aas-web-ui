@@ -80,8 +80,8 @@ export function valueToDisplay(sme: any, language: string = 'en', defaultValueTo
 }
 
 // Calculate pathes of the SubmodelElements in a provided Submodel/SubmodelElement
-export async function calculateSubmodelElementPathes(parent: any, startPath: string): Promise<any> {
-    // console.log('calculateSubmodelElementPathes()', 'parent:', parent, 'startPath:', startPath);
+export async function calculateSubmodelElementPaths(parent: any, startPath: string): Promise<any> {
+    // console.log('calculateSubmodelElementPaths()', 'parent:', parent, 'startPath:', startPath);
 
     if (!parent || Object.keys(parent).length === 0) return;
 
@@ -94,20 +94,20 @@ export async function calculateSubmodelElementPathes(parent: any, startPath: str
     if (Array.isArray(parent?.submodelElements) && parent?.submodelElements.length > 0) {
         // Submodel
         for (const element of parent.submodelElements) {
-            await calculateSubmodelElementPathes(element, startPath + '/submodel-elements/' + element.idShort);
+            await calculateSubmodelElementPaths(element, startPath + '/submodel-elements/' + element.idShort);
         }
     } else if (Array.isArray(parent?.value) && parent?.value.length > 0) {
         switch (parent.modelType) {
             // SubmodelElementCollection
             case 'SubmodelElementCollection':
                 for (const element of parent.value) {
-                    await calculateSubmodelElementPathes(element, startPath + '.' + element.idShort);
+                    await calculateSubmodelElementPaths(element, startPath + '.' + element.idShort);
                 }
                 break;
             // SubmodelElementList
             case 'SubmodelElementList':
                 for (const [index, element] of parent.value.entries()) {
-                    await calculateSubmodelElementPathes(
+                    await calculateSubmodelElementPaths(
                         element,
                         startPath + encodeURIComponent('[') + index + encodeURIComponent(']')
                     );
@@ -117,7 +117,7 @@ export async function calculateSubmodelElementPathes(parent: any, startPath: str
     } else if (Array.isArray(parent?.statements) && parent?.statements.length > 0 && parent.modelType == 'Entity') {
         // Entity
         for (const element of parent.value) {
-            await calculateSubmodelElementPathes(element, startPath + '.' + element.idShort);
+            await calculateSubmodelElementPaths(element, startPath + '.' + element.idShort);
         }
     }
 
