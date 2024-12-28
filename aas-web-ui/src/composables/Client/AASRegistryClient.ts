@@ -42,6 +42,7 @@ export function useAASRegistryClient() {
 
     // Fetch AAS Descriptor by AAS ID with AAS Registry
     async function fetchAasDescriptorById(aasId: string): Promise<any> {
+        // console.log('fetchAasDescriptorById(), 'aasId:', aasId)
         const failResponse = {} as any;
 
         let aasRegUrl = aasRegistryUrl.value;
@@ -50,7 +51,7 @@ export function useAASRegistryClient() {
             aasRegUrl += '/shell-descriptors';
         }
 
-        const aasRegistryPath = aasRegUrl + '/' + URLEncode(aasId);
+        const aasRegistryPath = aasRegUrl + '/' + URLEncode(aasId).replace(/%3D/g, '');
         const aasRegistryContext = 'retrieving AAS Descriptor';
         const disableMessage = false;
         try {
@@ -60,7 +61,8 @@ export function useAASRegistryClient() {
                 aasRegistryResponse?.data &&
                 Object.keys(aasRegistryResponse?.data).length > 0
             ) {
-                return aasRegistryResponse.data;
+                const aasDescriptor = aasRegistryResponse.data;
+                return aasDescriptor;
             }
         } catch {
             // handle error
