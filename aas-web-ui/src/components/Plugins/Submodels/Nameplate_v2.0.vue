@@ -4,7 +4,7 @@
             :submodel-element-data="submodelElementData"
             default-title="Digital Nameplate for industrial equipment"></VisualizationHeader>
         <!-- Loading -->
-        <v-card v-if="loadingState" class="mb-4">
+        <v-card v-if="isLoading" class="mb-4">
             <!-- Product properties -->
             <v-skeleton-loader type="heading, table-heading@7"></v-skeleton-loader>
             <!-- Manufacturer properties -->
@@ -368,7 +368,7 @@
     });
 
     // Data
-    const loadingState = ref(false);
+    const isLoading = ref(false);
     const digitalNameplateData = ref({} as any);
     const productProperties = ref([] as Array<any>);
     const manufacturerProperties = ref([] as Array<any>);
@@ -390,11 +390,11 @@
 
     async function initializeVisualization() {
         // console.log('initializeVisualization()', 'props', props);
-        loadingState.value = true;
+        isLoading.value = true;
 
         if (!props.submodelElementData || Object.keys(props.submodelElementData).length === 0) {
             digitalNameplateData.value = {};
-            loadingState.value = false;
+            isLoading.value = false;
             return;
         }
 
@@ -408,7 +408,7 @@
         extractMarkings(digitalNameplateData.value);
         extractAssetSpecificProperties(digitalNameplateData.value);
 
-        loadingState.value = false;
+        isLoading.value = false;
     }
 
     function extractProductProperties(digitalNameplateData: any) {

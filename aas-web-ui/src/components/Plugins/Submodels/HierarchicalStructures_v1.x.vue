@@ -60,7 +60,7 @@
     });
 
     // Data
-    const loadingState = ref(false);
+    const isLoading = ref(false);
     const archetype = ref('' as string);
     const bomData = ref({} as any);
     const customDefaultThemeColors = {
@@ -101,11 +101,11 @@
 
     async function initializeVisualization() {
         // console.log('initializeVisualization()', 'props', props);
-        loadingState.value = true;
+        isLoading.value = true;
 
         if (!props.submodelElementData || Object.keys(props.submodelElementData).length === 0) {
             bomData.value = {};
-            loadingState.value = false;
+            isLoading.value = false;
             return;
         }
 

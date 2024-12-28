@@ -4,7 +4,7 @@
             :submodel-element-data="submodelElementData"
             default-title="Contact Information"></VisualizationHeader>
         <!-- Loading -->
-        <v-card v-if="loadingState" class="mb-4">
+        <v-card v-if="isLoading" class="mb-4">
             <v-skeleton-loader type="list-item-avatar, divider, table-heading@8, actions"></v-skeleton-loader>
         </v-card>
         <template v-else-if="Object.keys(contactInformationsData).length > 0 && contactInformations.length > 0">
@@ -283,7 +283,7 @@
     });
 
     // Data
-    const loadingState = ref(false);
+    const isLoading = ref(false);
     const contactInformationsData = ref({} as any);
     const panel = ref(0);
     const contactInformations = ref([] as Array<any>);
@@ -298,11 +298,11 @@
 
     async function initializeVisualization() {
         // console.log('initializeVisualization()', 'props', props);
-        loadingState.value = true;
+        isLoading.value = true;
 
         if (!props.submodelElementData || Object.keys(props.submodelElementData).length === 0) {
             contactInformationsData.value = {};
-            loadingState.value = false;
+            isLoading.value = false;
             return;
         }
 
@@ -479,6 +479,6 @@
             contactInformations.value.push(contactInformation);
         });
 
-        loadingState.value = false;
+        isLoading.value = false;
     }
 </script>

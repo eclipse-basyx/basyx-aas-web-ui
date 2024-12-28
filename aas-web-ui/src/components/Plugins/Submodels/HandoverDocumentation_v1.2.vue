@@ -4,7 +4,7 @@
             :submodel-element-data="submodelElementData"
             default-title="Handover Documentation"></VisualizationHeader>
         <!-- Loading -->
-        <v-card v-if="loadingState">
+        <v-card v-if="isLoading">
             <v-skeleton-loader type="list-item-avatar, divider, list-item-avatar" :height="144"></v-skeleton-loader>
         </v-card>
         <v-expansion-panels v-else v-model="panel">
@@ -427,7 +427,7 @@
     });
 
     // Data
-    const loadingState = ref(false);
+    const isLoading = ref(false);
     const handoverDocumentationData = ref({} as any);
     const panel = ref(null as number | null);
     const documentSMCs = ref([] as Array<any>);
@@ -441,11 +441,11 @@
 
     async function initializeVisualization() {
         // console.log('initializeVisualization()', 'props', props);
-        loadingState.value = true;
+        isLoading.value = true;
 
         if (!props.submodelElementData || Object.keys(props.submodelElementData).length === 0) {
             handoverDocumentationData.value = {};
-            loadingState.value = false;
+            isLoading.value = false;
             return;
         }
 
@@ -475,7 +475,7 @@
             );
         });
 
-        loadingState.value = false;
+        isLoading.value = false;
     }
 
     function extractDocumentVersions(documentSMC: any) {
