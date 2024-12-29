@@ -65,8 +65,12 @@
                                                         ) in contactInformationProperty.description"
                                                         :key="j"
                                                         class="text-caption">
-                                                        <span class="font-weight-bold">
-                                                            {{ description.language + ': ' }}
+                                                        <span class="font-weight-thin">
+                                                            {{
+                                                                (getLanguageName(description.language)
+                                                                    ? getLanguageName(description.language)
+                                                                    : description.language) + ': '
+                                                            }}
                                                         </span>
                                                         {{ description.text }}
                                                     </div>
@@ -109,8 +113,12 @@
                                                     v-else
                                                     :key="j">
                                                     <div v-if="langStringSet?.text.length > 0" class="text-caption">
-                                                        <span class="font-weight-bold">
-                                                            {{ langStringSet?.language + ': ' }}
+                                                        <span class="font-weight-thin">
+                                                            {{
+                                                                (getLanguageName(langStringSet?.language)
+                                                                    ? getLanguageName(langStringSet?.language)
+                                                                    : langStringSet?.language) + ': '
+                                                            }}
                                                         </span>
                                                         {{ langStringSet?.text }}
                                                     </div>
@@ -139,8 +147,12 @@
                                                     v-else
                                                     :key="j">
                                                     <div v-if="langStringSet?.text.length > 0" class="text-caption">
-                                                        <span class="font-weight-bold">
-                                                            {{ langStringSet?.language + ': ' }}
+                                                        <span class="font-weight-thin">
+                                                            {{
+                                                                (getLanguageName(langStringSet?.language)
+                                                                    ? getLanguageName(langStringSet?.language)
+                                                                    : langStringSet?.language) + ': '
+                                                            }}
                                                         </span>
                                                         {{ langStringSet?.text }}
                                                     </div>
@@ -199,8 +211,12 @@
                                                     v-else
                                                     :key="j">
                                                     <div v-if="langStringSet?.text.length > 0" class="text-caption">
-                                                        <span class="font-weight-bold">
-                                                            {{ langStringSet?.language + ': ' }}
+                                                        <span class="font-weight-thin">
+                                                            {{
+                                                                (getLanguageName(langStringSet?.language)
+                                                                    ? getLanguageName(langStringSet?.language)
+                                                                    : langStringSet?.language) + ': '
+                                                            }}
                                                         </span>
                                                         {{ langStringSet?.text }}
                                                     </div>

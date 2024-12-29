@@ -57,8 +57,12 @@
                                                         v-for="(description, k) in metaProperty.description"
                                                         :key="k"
                                                         class="text-caption">
-                                                        <span class="font-weight-bold">
-                                                            {{ description.language + ': ' }}
+                                                        <span class="font-weight-thin">
+                                                            {{
+                                                                (getLanguageName(description.language)
+                                                                    ? getLanguageName(description.language)
+                                                                    : description.language) + ': '
+                                                            }}
                                                         </span>
                                                         {{ description.text }}
                                                     </div>
@@ -88,8 +92,12 @@
                                                     v-else
                                                     :key="k">
                                                     <div v-if="langStringSet?.text.length > 0" class="text-caption">
-                                                        <span class="font-weight-bold">
-                                                            {{ langStringSet?.language + ': ' }}
+                                                        <span class="font-weight-thin">
+                                                            {{
+                                                                (getLanguageName(langStringSet?.language)
+                                                                    ? getLanguageName(langStringSet?.language)
+                                                                    : langStringSet?.language) + ': '
+                                                            }}
                                                         </span>
                                                         {{ langStringSet?.text }}
                                                     </div>
@@ -252,8 +260,12 @@
                                                         v-for="(description, j) in classificationProperty.description"
                                                         :key="j"
                                                         class="text-caption">
-                                                        <span class="font-weight-bold">
-                                                            {{ description.language + ': ' }}
+                                                        <span class="font-weight-thin">
+                                                            {{
+                                                                (getLanguageName(description.language)
+                                                                    ? getLanguageName(description.language)
+                                                                    : description.language) + ': '
+                                                            }}
                                                         </span>
                                                         {{ description.text }}
                                                     </div>
@@ -289,8 +301,12 @@
                                                         <div
                                                             v-if="langStringSet?.text.length > 0"
                                                             class="text-caption text-subtitleText">
-                                                            <span class="font-weight-bold">
-                                                                {{ langStringSet?.language + ': ' }}
+                                                            <span class="font-weight-thin">
+                                                                {{
+                                                                    (getLanguageName(langStringSet?.language)
+                                                                        ? getLanguageName(langStringSet?.language)
+                                                                        : langStringSet?.language) + ': '
+                                                                }}
                                                             </span>
                                                             {{ langStringSet?.text }}
                                                         </div>
@@ -344,8 +360,12 @@
                                                         v-for="(description, j) in idProperty.description"
                                                         :key="j"
                                                         class="text-caption">
-                                                        <span class="font-weight-bold">
-                                                            {{ description.language + ': ' }}
+                                                        <span class="font-weight-thin">
+                                                            {{
+                                                                (getLanguageName(description.language)
+                                                                    ? getLanguageName(description.language)
+                                                                    : description.language) + ': '
+                                                            }}
                                                         </span>
                                                         {{ description.text }}
                                                     </div>
@@ -378,8 +398,12 @@
                                                         <div
                                                             v-if="langStringSet?.text.length > 0"
                                                             class="text-caption text-subtitleText">
-                                                            <span class="font-weight-bold">
-                                                                {{ langStringSet?.language + ': ' }}
+                                                            <span class="font-weight-thin">
+                                                                {{
+                                                                    (getLanguageName(langStringSet?.language)
+                                                                        ? getLanguageName(langStringSet?.language)
+                                                                        : langStringSet?.language) + ': '
+                                                                }}
                                                             </span>
                                                             {{ langStringSet?.text }}
                                                         </div>
