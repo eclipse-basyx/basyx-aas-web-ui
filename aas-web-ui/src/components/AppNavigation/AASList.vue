@@ -42,7 +42,7 @@
                                 <v-list density="compact" class="py-0">
                                     <UploadAAS></UploadAAS>
                                     <v-divider></v-divider>
-                                    <AASForm :newAAS="true"></AASForm>
+                                    <AASForm :new-a-a-s="true"></AASForm>
                                 </v-list>
                             </v-sheet>
                         </v-menu>
@@ -123,7 +123,7 @@
                                                 </template>
                                                 <v-list-item-subtitle>Download AAS</v-list-item-subtitle>
                                             </v-list-item>
-                                            <AASForm :newAAS="false"></AASForm>
+                                            <AASForm :new-a-a-s="false"></AASForm>
                                             <v-list-item @click="showDeleteDialog(item)">
                                                 <template #prepend>
                                                     <v-icon size="x-small">mdi-delete</v-icon>
