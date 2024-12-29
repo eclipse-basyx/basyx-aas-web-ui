@@ -69,7 +69,7 @@
             if (envStore.getSingleAasRedirect) {
                 window.location.replace(envStore.getSingleAasRedirect);
                 return;
-            } else if (route.name !== '404NotFound404') {
+            } else if (route.name !== 'NotFound404') {
                 router.push({ name: 'NotFound404' });
                 return;
             }
