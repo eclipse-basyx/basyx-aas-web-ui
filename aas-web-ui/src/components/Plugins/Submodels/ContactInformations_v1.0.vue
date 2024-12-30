@@ -17,6 +17,7 @@
                             </template>
                             <v-list-item-title>
                                 {{ nameToDisplay(contactInformation, 'en', 'Contact Information') }}
+                                <DescriptionTooltip :description-array="contactInformation?.description" />
                             </v-list-item-title>
                             <!-- <v-list-item-subtitle v-if="descriptionToDisplay(contactInformation)">
                                 {{ descriptionToDisplay(contactInformation) }}
@@ -36,45 +37,8 @@
                                         <td>
                                             <div class="text-subtitleText text-caption">
                                                 <span>{{ nameToDisplay(contactInformationProperty) }}</span>
-                                                <!-- Show english description, if available -->
-                                                <v-tooltip
-                                                    v-if="descriptionToDisplay(contactInformationProperty)"
-                                                    activator="parent"
-                                                    open-delay="600"
-                                                    transition="slide-y-transition"
-                                                    max-width="360px"
-                                                    location="bottom">
-                                                    <div class="text-caption">
-                                                        {{ descriptionToDisplay(contactInformationProperty) }}
-                                                    </div>
-                                                </v-tooltip>
-                                                <!-- Otherwise show all available descriptions -->
-                                                <v-tooltip
-                                                    v-else-if="
-                                                        contactInformationProperty.description &&
-                                                        contactInformationProperty.description.length > 0
-                                                    "
-                                                    activator="parent"
-                                                    open-delay="600"
-                                                    transition="slide-y-transition"
-                                                    max-width="360px"
-                                                    location="bottom">
-                                                    <div
-                                                        v-for="(
-                                                            description, j
-                                                        ) in contactInformationProperty.description"
-                                                        :key="j"
-                                                        class="text-caption">
-                                                        <span class="font-weight-thin">
-                                                            {{
-                                                                (getLanguageName(description.language)
-                                                                    ? getLanguageName(description.language)
-                                                                    : description.language) + ': '
-                                                            }}
-                                                        </span>
-                                                        {{ description.text }}
-                                                    </div>
-                                                </v-tooltip>
+                                                <DescriptionTooltip
+                                                    :description-array="contactInformationProperty?.description" />
                                             </div>
                                         </td>
                                         <td>
@@ -260,12 +224,7 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { getCountryName, getLanguageName } from '@/utils/LocaleUtils';
-    import {
-        checkIdShort,
-        descriptionToDisplay,
-        getSubmodelElementByIdShort,
-        nameToDisplay,
-    } from '@/utils/ReferableUtils';
+    import { checkIdShort, getSubmodelElementByIdShort, nameToDisplay } from '@/utils/ReferableUtils';
     import { checkSemanticId } from '@/utils/SemanticIdUtils';
     import { firstLangStringSetText } from '@/utils/SubmodelElements/MultiLanguagePropertyUtils';
     import {

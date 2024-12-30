@@ -21,6 +21,7 @@
                                 </template>
                                 <v-list-item-title>
                                     {{ nameToDisplay(generalInformationSMC, 'en', 'General Information') }}
+                                    <DescriptionTooltip :description-array="generalInformationSMC?.description" />
                                 </v-list-item-title>
                             </v-list-item>
                         </v-expansion-panel-title>
@@ -35,42 +36,7 @@
                                         <td>
                                             <div class="text-subtitleText text-caption">
                                                 <span>{{ nameToDisplay(generalProperty) }}</span>
-                                                <v-tooltip
-                                                    v-if="descriptionToDisplay(generalProperty)"
-                                                    activator="parent"
-                                                    open-delay="600"
-                                                    transition="slide-y-transition"
-                                                    max-width="360px"
-                                                    location="bottom">
-                                                    <div class="text-caption">
-                                                        {{ descriptionToDisplay(generalProperty) }}
-                                                    </div>
-                                                </v-tooltip>
-                                                <!-- Otherwise show all available descriptions -->
-                                                <v-tooltip
-                                                    v-else-if="
-                                                        generalProperty.description &&
-                                                        generalProperty.description.length > 0
-                                                    "
-                                                    activator="parent"
-                                                    open-delay="600"
-                                                    transition="slide-y-transition"
-                                                    max-width="360px"
-                                                    location="bottom">
-                                                    <div
-                                                        v-for="(description, i) in generalProperty.description"
-                                                        :key="i"
-                                                        class="text-caption">
-                                                        <span class="font-weight-thin">
-                                                            {{
-                                                                (getLanguageName(description.language)
-                                                                    ? getLanguageName(description.language)
-                                                                    : description.language) + ': '
-                                                            }}
-                                                        </span>
-                                                        {{ description.text }}
-                                                    </div>
-                                                </v-tooltip>
+                                                <DescriptionTooltip :description-array="generalProperty?.description" />
                                             </div>
                                         </td>
                                         <td>
@@ -129,6 +95,7 @@
                                 </template>
                                 <v-list-item-title>
                                     {{ nameToDisplay(productClassificationsSMC, 'en', 'Product Classifications') }}
+                                    <DescriptionTooltip :description-array="productClassificationsSMC?.description" />
                                 </v-list-item-title>
                             </v-list-item>
                         </v-expansion-panel-title>
@@ -143,45 +110,8 @@
                                                 :key="classificationProperty.idShort">
                                                 <div class="text-caption">
                                                     <span>{{ nameToDisplay(classificationProperty) }}</span>
-                                                    <!-- Show english description, if available -->
-                                                    <v-tooltip
-                                                        v-if="descriptionToDisplay(classificationProperty)"
-                                                        activator="parent"
-                                                        open-delay="600"
-                                                        transition="slide-y-transition"
-                                                        max-width="360px"
-                                                        location="bottom">
-                                                        <div class="text-caption">
-                                                            {{ descriptionToDisplay(classificationProperty) }}
-                                                        </div>
-                                                    </v-tooltip>
-                                                    <!-- Otherwise show all available descriptions -->
-                                                    <v-tooltip
-                                                        v-else-if="
-                                                            classificationProperty.description &&
-                                                            classificationProperty.description.length > 0
-                                                        "
-                                                        activator="parent"
-                                                        open-delay="600"
-                                                        transition="slide-y-transition"
-                                                        max-width="360px"
-                                                        location="bottom">
-                                                        <div
-                                                            v-for="(
-                                                                description, j
-                                                            ) in classificationProperty.description"
-                                                            :key="j"
-                                                            class="text-caption">
-                                                            <span class="font-weight-thin">
-                                                                {{
-                                                                    (getLanguageName(description.language)
-                                                                        ? getLanguageName(description.language)
-                                                                        : description.language) + ': '
-                                                                }}
-                                                            </span>
-                                                            {{ description.text }}
-                                                        </div>
-                                                    </v-tooltip>
+                                                    <DescriptionTooltip
+                                                        :description-array="classificationProperty?.description" />
                                                 </div>
                                             </th>
                                         </tr>
@@ -249,6 +179,7 @@
                                 </template>
                                 <v-list-item-title>
                                     {{ nameToDisplay(technicalPropertiesSMC, 'en', 'Technical Properties') }}
+                                    <DescriptionTooltip :description-array="technicalPropertiesSMC?.description" />
                                 </v-list-item-title>
                                 <template #append>
                                     <v-switch
@@ -302,6 +233,7 @@
                                 </template>
                                 <v-list-item-title>
                                     {{ nameToDisplay(furtherInformationSMC, 'en', 'Further Information') }}
+                                    <DescriptionTooltip :description-array="furtherInformationSMC?.description" />
                                 </v-list-item-title>
                             </v-list-item>
                         </v-expansion-panel-title>
@@ -318,43 +250,7 @@
                                             <td>
                                                 <div class="text-subtitleText text-caption">
                                                     <span>{{ nameToDisplay(furtherInfo) }}</span>
-                                                    <!-- Show english description, if available -->
-                                                    <v-tooltip
-                                                        v-if="descriptionToDisplay(furtherInfo)"
-                                                        activator="parent"
-                                                        open-delay="600"
-                                                        transition="slide-y-transition"
-                                                        max-width="360px"
-                                                        location="bottom">
-                                                        <div class="text-caption">
-                                                            {{ descriptionToDisplay(furtherInfo) }}
-                                                        </div>
-                                                    </v-tooltip>
-                                                    <!-- Otherwise show all available descriptions -->
-                                                    <v-tooltip
-                                                        v-else-if="
-                                                            furtherInfo.description &&
-                                                            furtherInfo.description.length > 0
-                                                        "
-                                                        activator="parent"
-                                                        open-delay="600"
-                                                        transition="slide-y-transition"
-                                                        max-width="360px"
-                                                        location="bottom">
-                                                        <div
-                                                            v-for="(description, k) in furtherInfo.description"
-                                                            :key="k"
-                                                            class="text-caption">
-                                                            <span class="font-weight-thin">
-                                                                {{
-                                                                    (getLanguageName(description.language)
-                                                                        ? getLanguageName(description.language)
-                                                                        : description.language) + ': '
-                                                                }}
-                                                            </span>
-                                                            {{ description.text }}
-                                                        </div>
-                                                    </v-tooltip>
+                                                    <DescriptionTooltip :description-array="furtherInfo?.description" />
                                                 </div>
                                             </td>
                                             <td>
@@ -402,7 +298,7 @@
     import { computed, onMounted, ref } from 'vue';
     import { useAASStore } from '@/store/AASDataStore';
     import { getLanguageName } from '@/utils/LocaleUtils';
-    import { descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
+    import { nameToDisplay } from '@/utils/ReferableUtils';
     import { checkIdShort } from '@/utils/ReferableUtils';
     import { getSubmodelElementBySemanticId } from '@/utils/SemanticIdUtils';
     import { valueUrl } from '@/utils/SubmodelElements/FileUtils';

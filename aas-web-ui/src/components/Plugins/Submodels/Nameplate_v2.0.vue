@@ -32,43 +32,7 @@
                                     <td>
                                         <div class="text-subtitleText text-caption">
                                             <span>{{ nameToDisplay(productProperty) }}</span>
-                                            <!-- Show english description, if available -->
-                                            <v-tooltip
-                                                v-if="descriptionToDisplay(productProperty)"
-                                                activator="parent"
-                                                open-delay="600"
-                                                transition="slide-y-transition"
-                                                max-width="360px"
-                                                location="bottom">
-                                                <div class="text-caption">
-                                                    {{ descriptionToDisplay(productProperty) }}
-                                                </div>
-                                            </v-tooltip>
-                                            <!-- Otherwise show all available descriptions -->
-                                            <v-tooltip
-                                                v-else-if="
-                                                    productProperty.description &&
-                                                    productProperty.description.length > 0
-                                                "
-                                                activator="parent"
-                                                open-delay="600"
-                                                transition="slide-y-transition"
-                                                max-width="360px"
-                                                location="bottom">
-                                                <div
-                                                    v-for="(description, i) in productProperty.description"
-                                                    :key="i"
-                                                    class="text-caption">
-                                                    <span class="font-weight-thin">
-                                                        {{
-                                                            (getLanguageName(description.language)
-                                                                ? getLanguageName(description.language)
-                                                                : description.language) + ': '
-                                                        }}
-                                                    </span>
-                                                    {{ description.text }}
-                                                </div>
-                                            </v-tooltip>
+                                            <DescriptionTooltip :description-array="productProperty?.description" />
                                         </div>
                                     </td>
                                     <td>
@@ -168,43 +132,8 @@
                                     <td>
                                         <div class="text-subtitleText text-caption">
                                             <span>{{ nameToDisplay(manufacturerProperty) }}</span>
-                                            <!-- Show english description, if available -->
-                                            <v-tooltip
-                                                v-if="descriptionToDisplay(manufacturerProperty)"
-                                                activator="parent"
-                                                open-delay="600"
-                                                transition="slide-y-transition"
-                                                max-width="360px"
-                                                location="bottom">
-                                                <div class="text-caption">
-                                                    {{ descriptionToDisplay(manufacturerProperty) }}
-                                                </div>
-                                            </v-tooltip>
-                                            <!-- Otherwise show all available descriptions -->
-                                            <v-tooltip
-                                                v-else-if="
-                                                    manufacturerProperty.description &&
-                                                    manufacturerProperty.description.length > 0
-                                                "
-                                                activator="parent"
-                                                open-delay="600"
-                                                transition="slide-y-transition"
-                                                max-width="360px"
-                                                location="bottom">
-                                                <div
-                                                    v-for="(description, i) in manufacturerProperty.description"
-                                                    :key="i"
-                                                    class="text-caption">
-                                                    <span class="font-weight-thin">
-                                                        {{
-                                                            (getLanguageName(description.language)
-                                                                ? getLanguageName(description.language)
-                                                                : description.language) + ': '
-                                                        }}
-                                                    </span>
-                                                    {{ description.text }}
-                                                </div>
-                                            </v-tooltip>
+                                            <DescriptionTooltip
+                                                :description-array="manufacturerProperty?.description" />
                                         </div>
                                     </td>
                                     <td>
@@ -316,9 +245,12 @@
                 </l-map>
             </v-card>
             <!-- Markings -->
-            <v-card v-if="markings.length > 0" class="mb-4">
+            <v-card v-if="markingsSMC && Object.keys(markingsSMC).length > 0 && markings.length > 0" class="mb-4">
                 <v-card-title>
-                    <div class="text-subtitle-1">{{ 'Markings' }}</div>
+                    <div class="text-subtitle-1">
+                        {{ nameToDisplay(markingsSMC, 'en', 'Markings') }}
+                        <DescriptionTooltip :description-array="markingsSMC?.description" />
+                    </div>
                 </v-card-title>
                 <v-card-text>
                     <v-row class="text-caption mb-2" justify="start">
@@ -330,12 +262,22 @@
                 </v-card-text>
             </v-card>
             <!-- Asset Specific Properties -->
-            <v-card v-if="Object.keys(assetSpecificProperties).length > 0">
+            <v-card
+                v-if="
+                    assetSpecificPropertiesSMC &&
+                    Object.keys(assetSpecificPropertiesSMC).length > 0 &&
+                    assetSpecificPropertiesSMC?.value &&
+                    Array.isArray(assetSpecificPropertiesSMC?.value) &&
+                    assetSpecificPropertiesSMC.value.length > 0
+                ">
                 <v-card-title>
-                    <div class="text-subtitle-1">{{ 'Asset Specific Properties' }}</div>
+                    <div class="text-subtitle-1">
+                        {{ nameToDisplay(assetSpecificPropertiesSMC, 'en', 'Asset Specific Properties') }}
+                        <DescriptionTooltip :description-array="assetSpecificPropertiesSMC?.description" />
+                    </div>
                 </v-card-title>
                 <v-card-text>
-                    <GenericDataVisu :submodel-element-data="assetSpecificProperties"></GenericDataVisu>
+                    <GenericDataVisu :submodel-element-data="assetSpecificPropertiesSMC.value"></GenericDataVisu>
                 </v-card-text>
             </v-card>
         </template>
@@ -348,16 +290,12 @@
     import { LMap, LMarker, LTileLayer } from '@vue-leaflet/vue-leaflet';
     import { latLng } from 'leaflet';
     import { computed, onMounted, ref } from 'vue';
+    import DescriptionTooltip from '@/components/UIComponents/DescriptionTooltip.vue';
     import { downloadVCard } from '@/composables/VirtualContactFile';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { getCountryName, getLanguageName } from '@/utils/LocaleUtils';
-    import {
-        checkIdShort,
-        descriptionToDisplay,
-        getSubmodelElementByIdShort,
-        nameToDisplay,
-    } from '@/utils/ReferableUtils';
+    import { checkIdShort, getSubmodelElementByIdShort, nameToDisplay } from '@/utils/ReferableUtils';
     import { valueUrl } from '@/utils/SubmodelElements/FileUtils';
     import { firstLangStringSetText } from '@/utils/SubmodelElements/MultiLanguagePropertyUtils';
     import {
@@ -395,8 +333,9 @@
     const digitalNameplateData = ref({} as any);
     const productProperties = ref([] as Array<any>);
     const manufacturerProperties = ref([] as Array<any>);
+    const markingsSMC = ref({} as any);
     const markings = ref([] as Array<any>);
-    const assetSpecificProperties = ref([]);
+    const assetSpecificPropertiesSMC = ref({} as any);
     const vCardString = ref('');
     // Leaflet Map
     const url = ref('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
@@ -565,10 +504,10 @@
     function extractMarkings(digitalNameplateData: any) {
         // console.log('extractMarkings()', 'digitalNameplateData:', digitalNameplateData);
 
-        let markingsSMC = getSubmodelElementByIdShort('Markings', digitalNameplateData);
+        markingsSMC.value = getSubmodelElementByIdShort('Markings', digitalNameplateData);
 
-        if (hasValue(markingsSMC)) {
-            let markingSMCs = markingsSMC.value;
+        if (hasValue(markingsSMC.value)) {
+            let markingSMCs = markingsSMC.value.value;
 
             if (Array.isArray(markingSMCs) && markingSMCs.length > 0) {
                 let formattedMarkings = [] as Array<any>;
@@ -593,11 +532,7 @@
     }
 
     function extractAssetSpecificProperties(digitalNameplateData: any) {
-        let assetSpecificPropertiesSMC = getSubmodelElementByIdShort('AssetSpecificProperties', digitalNameplateData);
-
-        if (hasValue(assetSpecificPropertiesSMC)) {
-            assetSpecificProperties.value = assetSpecificPropertiesSMC.value;
-        }
+        assetSpecificPropertiesSMC.value = getSubmodelElementByIdShort('AssetSpecificProperties', digitalNameplateData);
     }
 
     // Function to set the marker on the map

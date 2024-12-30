@@ -31,6 +31,7 @@ declare module 'vue' {
     DataSpecificationContent: typeof import('./components/UIComponents/DataSpecificationContent.vue')['default']
     DateTimeStampType: typeof import('./components/SubmodelElements/ValueTypes/DateTimeStampType.vue')['default']
     DescriptionElement: typeof import('./components/UIComponents/DescriptionElement.vue')['default']
+    DescriptionTooltip: typeof import('./components/UIComponents/DescriptionTooltip.vue')['default']
     DisplayField: typeof import('./components/Widgets/DisplayField.vue')['default']
     DisplayNameElement: typeof import('./components/UIComponents/DisplayNameElement.vue')['default']
     DonutChart: typeof import('./components/Widgets/DonutChart.vue')['default']
