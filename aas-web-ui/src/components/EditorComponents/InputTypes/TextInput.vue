@@ -33,7 +33,12 @@
     const textValue = ref<string | null>(props.modelValue);
 
     watch(textValue, (newValue) => {
-        emit('update:modelValue', newValue);
+        if (newValue === '') {
+            emit('update:modelValue', null);
+            textValue.value = null;
+        } else {
+            emit('update:modelValue', newValue);
+        }
     });
 
     watch(
