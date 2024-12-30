@@ -42,7 +42,7 @@
                                 <v-list density="compact" class="py-0">
                                     <UploadAAS></UploadAAS>
                                     <v-divider></v-divider>
-                                    <AASForm :new-a-a-s="true"></AASForm>
+                                    <AAS :new-a-a-s="true"></AAS>
                                 </v-list>
                             </v-sheet>
                         </v-menu>
@@ -123,7 +123,7 @@
                                                 </template>
                                                 <v-list-item-subtitle>Download AAS</v-list-item-subtitle>
                                             </v-list-item>
-                                            <AASForm :new-a-a-s="false"></AASForm>
+                                            <AAS :new-a-a-s="false"></AAS>
                                             <v-list-item @click="showDeleteDialog(item)">
                                                 <template #prepend>
                                                     <v-icon size="x-small">mdi-delete</v-icon>
@@ -579,7 +579,7 @@
                     error = true;
                 }
             } else {
-                removeAAS(aasToDelete.value);
+                removeAAS(aasToDelete.value, true);
             }
         } finally {
             deleteDialogShowing.value = false;
@@ -595,7 +595,7 @@
         }
     }
 
-    function removeAAS(AAS: any) {
+    async function removeAAS(AAS: any, reload: boolean = false) {
         // console.log('Remove AAS: ', AAS);
         // return if loading state is true -> prevents multiple requests
         if (loading.value) {
@@ -613,7 +613,12 @@
         let path = aasEndpopint;
         let context = 'removing AAS';
         let disableMessage = false;
-        deleteRequest(path, context, disableMessage);
+        const response = await deleteRequest(path, context, disableMessage);
+        if (response.success) {
+            if (reload) {
+                loadAASListData();
+            }
+        }
     }
 </script>
 

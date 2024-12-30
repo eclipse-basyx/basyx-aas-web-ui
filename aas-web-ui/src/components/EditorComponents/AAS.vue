@@ -28,51 +28,22 @@
                     <v-expansion-panel>
                         <v-expansion-panel-title>Details</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <v-text-field v-model="AASId" label="ID" variant="outlined" density="comfortable">
-                                <template #append-inner>
-                                    <v-btn
-                                        color="primary"
-                                        size="small"
-                                        slim
-                                        border
-                                        variant="text"
-                                        text="Generate IRI"
-                                        class="text-none"
-                                        @click.stop="AASId = generateIri('AssetAdministrationShell')" />
-                                </template>
-                            </v-text-field>
-                            <v-text-field
-                                v-model="AASIdShort"
-                                label="IdShort"
-                                variant="outlined"
-                                density="comfortable"></v-text-field>
-                            <v-select
-                                v-model="AASCategory"
-                                :items="categoryOptions"
-                                label="Category"
-                                variant="outlined"
-                                density="comfortable"></v-select>
+                            <TextInput
+                                v-model="AASId"
+                                label="ID"
+                                :show-generate-iri-button="true"
+                                type="AssetAdministrationShell" />
+                            <TextInput v-model="AASIdShort" label="IdShort" />
+                            <SelectInput v-model="AASCategory" label="Category" type="category" :clearable="true" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Administrative Information -->
                     <v-expansion-panel>
                         <v-expansion-panel-title>Administrative Information</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <v-text-field
-                                v-model="version"
-                                label="Version"
-                                variant="outlined"
-                                density="comfortable"></v-text-field>
-                            <v-text-field
-                                v-model="revision"
-                                label="Revision"
-                                variant="outlined"
-                                density="comfortable"></v-text-field>
-                            <v-text-field
-                                v-model="templateId"
-                                label="Template ID"
-                                variant="outlined"
-                                density="comfortable"></v-text-field>
+                            <TextInput v-model="version" label="Version" />
+                            <TextInput v-model="revision" label="Revision" />
+                            <TextInput v-model="templateId" label="Template ID" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Derivation -->
@@ -84,36 +55,13 @@
                     <v-expansion-panel>
                         <v-expansion-panel-title>Asset</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <v-select
-                                v-model="assetKind"
-                                :items="assetKindOptions"
-                                item-title="text"
-                                item-value="value"
-                                label="Asset Kind"
-                                variant="outlined"
-                                density="comfortable"></v-select>
-                            <v-text-field
+                            <SelectInput v-model="assetKind" label="AssetKind" type="assetKind"></SelectInput>
+                            <TextInput
                                 v-model="globalAssetId"
                                 label="Global Asset ID"
-                                variant="outlined"
-                                density="comfortable">
-                                <template #append-inner>
-                                    <v-btn
-                                        color="primary"
-                                        size="small"
-                                        slim
-                                        border
-                                        variant="text"
-                                        text="Generate IRI"
-                                        class="text-none"
-                                        @click.stop="globalAssetId = generateIri('P')" />
-                                </template>
-                            </v-text-field>
-                            <v-text-field
-                                v-model="assetType"
-                                label="Asset Type"
-                                variant="outlined"
-                                density="comfortable"></v-text-field>
+                                :show-generate-iri-button="true"
+                                type="P" />
+                            <TextInput v-model="assetType" label="Asset Type" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -132,7 +80,7 @@
     import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { ref } from 'vue';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
-    import { generateIri, UUID } from '@/utils/IDUtils';
+    import { UUID } from '@/utils/IDUtils';
 
     const props = defineProps<{
         newAAS: boolean;
@@ -143,12 +91,6 @@
     const editAASDialog = ref(false);
     const AASObject = ref<aasTypes.AssetAdministrationShell | undefined>(undefined);
     const openPanels = ref<number[]>([0, 3]);
-    const categoryOptions = ref<string[]>(['Constant', 'Parameter', 'Variable']);
-    const assetKindOptions = ref([
-        { text: 'Instance', value: aasTypes.AssetKind.Instance },
-        { text: 'Type', value: aasTypes.AssetKind.Type },
-        { text: 'Not Applicable', value: aasTypes.AssetKind.NotApplicable },
-    ]);
 
     const AASId = ref<string | null>(UUID());
     const AASIdShort = ref<string | null>(null);

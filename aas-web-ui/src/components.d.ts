@@ -7,7 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    AASForm: typeof import('./components/EditorComponents/AASForm.vue')['default']
+    AAS: typeof import('./components/EditorComponents/AAS.vue')['default']
     AASList: typeof import('./components/AppNavigation/AASList.vue')['default']
     AASListDetails: typeof import('./components/AppNavigation/AASListDetails.vue')['default']
     AASTreeview: typeof import('./components/AASTreeview.vue')['default']
@@ -54,6 +54,8 @@ declare module 'vue' {
     LineChart: typeof import('./components/Widgets/LineChart.vue')['default']
     MainMenu: typeof import('./components/AppNavigation/MainMenu.vue')['default']
     MultiLanguageProperty: typeof import('./components/SubmodelElements/MultiLanguageProperty.vue')['default']
+    MultiLanguageTextInput: typeof import('./components/EditorComponents/InputTypes/MultiLanguageTextInput.vue')['default']
+    MultiTextInput: typeof import('./components/EditorComponents/InputTypes/MultiTextInput.vue')['default']
     NumberType: typeof import('./components/SubmodelElements/ValueTypes/NumberType.vue')['default']
     Operation: typeof import('./components/SubmodelElements/Operation.vue')['default']
     PDFPreview: typeof import('./components/Plugins/PDFPreview.vue')['default']
@@ -65,6 +67,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     ScatterChart: typeof import('./components/Widgets/ScatterChart.vue')['default']
+    SelectInput: typeof import('./components/EditorComponents/InputTypes/SelectInput.vue')['default']
     SemanticID: typeof import('./components/UIComponents/SemanticID.vue')['default']
     Settings: typeof import('./components/AppNavigation/Settings.vue')['default']
     SpecificAssetIds: typeof import('./components/UIComponents/SpecificAssetIds.vue')['default']
@@ -80,6 +83,7 @@ declare module 'vue' {
     SupplementalSemanticID: typeof import('./components/UIComponents/SupplementalSemanticID.vue')['default']
     Switch: typeof import('./components/Widgets/Switch.vue')['default']
     TechnicalData: typeof import('./components/Plugins/Submodels/TechnicalData.vue')['default']
+    TextInput: typeof import('./components/EditorComponents/InputTypes/TextInput.vue')['default']
     ThemeSwitch: typeof import('./components/AppNavigation/Settings/ThemeSwitch.vue')['default']
     TimeSeriesData: typeof import('./components/Plugins/Submodels/TimeSeriesData.vue')['default']
     UploadAAS: typeof import('./components/AppNavigation/UploadAAS.vue')['default']
