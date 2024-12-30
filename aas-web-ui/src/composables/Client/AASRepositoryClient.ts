@@ -1,11 +1,11 @@
 import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
 import { computed } from 'vue';
 import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
-import { removeNullValues } from '@/utils/generalUtils';
 
 export function useAASRepositoryClient() {
     const { getRequest, postRequest } = useRequestHandling();
@@ -15,12 +15,6 @@ export function useAASRepositoryClient() {
     const navigationStore = useNavigationStore();
 
     const aasRepositoryUrl = computed(() => navigationStore.getAASRepoURL);
-
-    const assetKindMapping = {
-        [aasTypes.AssetKind.Instance]: 'Instance',
-        [aasTypes.AssetKind.Type]: 'Type',
-        [aasTypes.AssetKind.NotApplicable]: 'NotApplicable',
-    };
 
     const uploadURL = computed(() => {
         const aasRepoURL = navigationStore.getAASRepoURL;
@@ -133,19 +127,16 @@ export function useAASRepositoryClient() {
     }
 
     async function postAas(aas: aasTypes.AssetAdministrationShell) {
-        const localAas = { ...aas } as any;
-
-        // Translate assetKind enumeration in assetInformation to the respective string
-        if (localAas.assetInformation) {
-            localAas.assetInformation.assetKind = assetKindMapping[aas.assetInformation.assetKind];
-        }
+        // Convert AAS to JSON
+        const jsonAas = jsonization.toJsonable(aas);
+        console.log('postAas()', jsonAas);
 
         const context = 'creating AAS';
         const disableMessage = false;
         const path = aasRepositoryUrl.value;
         const headers = new Headers();
         headers.append('Content-Type', 'application/json');
-        const body = JSON.stringify(removeNullValues(aas));
+        const body = JSON.stringify(jsonAas);
 
         // Send Request to upload the file
         postRequest(path, body, headers, context, disableMessage).then((response: any) => {

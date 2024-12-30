@@ -63,6 +63,7 @@ declare module 'vue' {
     RadialChart: typeof import('./components/Widgets/RadialChart.vue')['default']
     Range: typeof import('./components/SubmodelElements/Range.vue')['default']
     ReferenceElement: typeof import('./components/SubmodelElements/ReferenceElement.vue')['default']
+    ReferenceInput: typeof import('./components/EditorComponents/InputTypes/ReferenceInput.vue')['default']
     RelationshipElement: typeof import('./components/SubmodelElements/RelationshipElement.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

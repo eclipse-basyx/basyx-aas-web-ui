@@ -43,6 +43,7 @@
                         <v-expansion-panel-text>
                             <TextInput v-model="version" label="Version" />
                             <TextInput v-model="revision" label="Revision" />
+                            <ReferenceInput v-model="creator" label="Creator" />
                             <TextInput v-model="templateId" label="Template ID" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
@@ -98,6 +99,7 @@
 
     const version = ref<string | null>(null);
     const revision = ref<string | null>(null);
+    const creator = ref<aasTypes.Reference | null>(null);
     const templateId = ref<string | null>(null);
 
     const assetKind = ref<aasTypes.AssetKind>(aasTypes.AssetKind.Instance);
@@ -124,6 +126,29 @@
 
             // Add optional parameter defaultThumbnail
 
+            // Create new Administrative Information object
+            const administrativeInformation = new aasTypes.AdministrativeInformation();
+
+            // Add optional parameter version
+            if (version.value !== null) {
+                administrativeInformation.version = version.value;
+            }
+
+            // Add optional parameter revision
+            if (revision.value !== null) {
+                administrativeInformation.revision = revision.value;
+            }
+
+            // Add optional parameter creator
+            if (creator.value !== null) {
+                administrativeInformation.creator = creator.value;
+            }
+
+            // Add optional parameter templateId
+            if (templateId.value !== null) {
+                administrativeInformation.templateId = templateId.value;
+            }
+
             // Create new AAS
             AASObject.value = new aasTypes.AssetAdministrationShell(AASId.value, assetInformation);
 
@@ -144,6 +169,9 @@
             // Add optional parameter description
 
             // Add optional parameter administration
+            if (Object.values(administrativeInformation).some((value) => value !== null)) {
+                AASObject.value.administration = administrativeInformation;
+            }
 
             // Add optional parameter embeddedDataSpecifications
 
@@ -151,7 +179,6 @@
 
             // Add optional parameter submodels
 
-            console.log(AASObject.value);
             postAas(AASObject.value);
         }
         clearForm();
