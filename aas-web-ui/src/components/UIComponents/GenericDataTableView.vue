@@ -17,17 +17,8 @@
             <template v-else-if="['Property', 'MultiLanguageProperty'].includes(submodelElement.modelType)">
                 <tr>
                     <td>
-                        <p>
-                            <v-tooltip
-                                location="bottom start"
-                                open-delay="250"
-                                :text="descriptionToDisplay(submodelElement)">
-                                <template #activator="{ props }">
-                                    <span v-bind="props" class="text-caption">
-                                        {{ nameToDisplay(submodelElement) }}
-                                    </span>
-                                </template>
-                            </v-tooltip>
+                        <p class="text-caption">
+                            {{ nameToDisplay(submodelElement) }}
                         </p>
                     </td>
                     <td>
