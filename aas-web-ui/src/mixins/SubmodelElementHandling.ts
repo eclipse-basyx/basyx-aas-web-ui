@@ -254,15 +254,23 @@ export default defineComponent({
             if (keyValue.endsWith('/')) keyValue = keyValue.substring(0, keyValue.length - 1);
             if (semanticId.endsWith('/')) semanticId = semanticId.substring(0, semanticId.length - 1);
 
-            if (new RegExp(/\/\d{1,}\/\d{1,}$/).test(semanticId)) {
-                // IRI with version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/0/9/
-                return this.getEquivalentIriSemanticIds(semanticId).includes(keyValue);
+            if (
+                new RegExp(/\/\d{1,}\/\d{1,}\/{0,1}$/).test(semanticId) ||
+                new RegExp(/\/\d{1,}\/\d{1,}\//).test(semanticId)
+            ) {
+                // IRI with version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/0/9
+                // IRI with version like https://admin-shell.io/zvei/nameplate/1/0/ContactInformations
+                return (
+                    this.getEquivalentIriSemanticIds(keyValue).findIndex((equivalentSemanticId) => {
+                        return equivalentSemanticId.toLowerCase() === semanticId.toLowerCase();
+                    }, semanticId) != -1
+                );
             }
 
             // IRI without version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/
             return (
                 this.getEquivalentIriSemanticIds(keyValue).findIndex((equivalentSemanticId) => {
-                    return equivalentSemanticId.startsWith(semanticId);
+                    return equivalentSemanticId.toLowerCase().startsWith(semanticId.toLowerCase());
                 }, semanticId) != -1
             );
         },
@@ -1452,14 +1460,14 @@ export default defineComponent({
         },
 
         // calculate the pathes of the SubmodelElements in a provided Submodel/SubmodelElement
-        async calculateSubmodelElementPathes(parent: any, startPath: string): Promise<any> {
+        async calculateSubmodelElementPaths(parent: any, startPath: string): Promise<any> {
             parent.path = startPath;
             parent.id = this.UUID();
             parent.conceptDescriptions = await this.getConceptDescriptions(parent);
 
             if (parent.submodelElements && parent.submodelElements.length > 0) {
                 for (const element of parent.submodelElements) {
-                    await this.calculateSubmodelElementPathes(
+                    await this.calculateSubmodelElementPaths(
                         element,
                         startPath + '/submodel-elements/' + element.idShort
                     );
@@ -1471,7 +1479,7 @@ export default defineComponent({
                 parent.modelType == 'SubmodelElementCollection'
             ) {
                 for (const element of parent.value) {
-                    await this.calculateSubmodelElementPathes(element, startPath + '.' + element.idShort);
+                    await this.calculateSubmodelElementPaths(element, startPath + '.' + element.idShort);
                 }
             } else if (
                 parent.value &&
@@ -1480,7 +1488,7 @@ export default defineComponent({
                 parent.modelType == 'SubmodelElementList'
             ) {
                 for (const [index, element] of parent.value.entries()) {
-                    await this.calculateSubmodelElementPathes(
+                    await this.calculateSubmodelElementPaths(
                         element,
                         startPath + encodeURIComponent('[') + index + encodeURIComponent(']')
                     );
@@ -1491,8 +1499,8 @@ export default defineComponent({
                 parent.statements.length > 0 &&
                 parent.modelType == 'Entity'
             ) {
-                for (const element of parent.value) {
-                    await this.calculateSubmodelElementPathes(element, startPath + '.' + element.idShort);
+                for (const element of parent.statements) {
+                    await this.calculateSubmodelElementPaths(element, startPath + '.' + element.idShort);
                 }
             }
 

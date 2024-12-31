@@ -1,6 +1,6 @@
 // Function to check if the SemanticID of a SubmodelElement matches the given SemanticID
 export function checkSemanticId(submodelElement: any, semanticId: string): boolean {
-    // console.log('checkSemanticId', 'submodelElement', submodelElement, 'semanticId', semanticId);
+    // console.log('checkSemanticId()', 'submodelElement', submodelElement, 'semanticId', semanticId);
     if (semanticId.trim() == '') return false;
 
     if (!Array.isArray(submodelElement?.semanticId?.keys) || submodelElement.semanticId.keys.length == 0) return false;
@@ -108,15 +108,21 @@ export function checkSemanticIdIri(keyValue: string, semanticId: string): boolea
     if (keyValue.endsWith('/')) keyValue = keyValue.substring(0, keyValue.length - 1);
     if (semanticId.endsWith('/')) semanticId = semanticId.substring(0, semanticId.length - 1);
 
-    if (new RegExp(/\/\d{1,}\/\d{1,}$/).test(semanticId)) {
-        // IRI with version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/0/9/
-        return getEquivalentIriSemanticIds(semanticId).includes(keyValue);
+    // console.log("getEquivalentIriSemanticIds('" + semanticId + "')", getEquivalentIriSemanticIds(semanticId));
+    if (new RegExp(/\/\d{1,}\/\d{1,}\/{0,1}$/).test(semanticId) || new RegExp(/\/\d{1,}\/\d{1,}\//).test(semanticId)) {
+        // IRI with version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/0/9
+        // IRI with version like https://admin-shell.io/zvei/nameplate/1/0/ContactInformations
+        return (
+            getEquivalentIriSemanticIds(keyValue).findIndex((equivalentSemanticId) => {
+                return equivalentSemanticId.toLowerCase() === semanticId.toLowerCase();
+            }, semanticId) != -1
+        );
     }
 
     // IRI without version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/
     return (
         getEquivalentIriSemanticIds(keyValue).findIndex((equivalentSemanticId) => {
-            return equivalentSemanticId.startsWith(semanticId);
+            return equivalentSemanticId.toLowerCase().startsWith(semanticId.toLowerCase());
         }, semanticId) != -1
     );
 }
@@ -176,4 +182,72 @@ export function getEquivalentIriSemanticIds(semanticId: string): any[] {
 
     // console.log('getEquivalentIriSemanticIds', 'semanticId', semanticId, 'semanticIds', semanticIds);
     return semanticIds;
+}
+
+export function getSubmodelElementBySemanticId(semanticId: string, submodelElement: any): any {
+    // console.log('getSubmodelElementBySemanticId()', 'semanticId', semanticId, 'submodelElement', submodelElement);
+
+    const failResponse = {} as any;
+
+    if (semanticId.trim() == '') return failResponse;
+
+    if (!submodelElement?.modelType || submodelElement?.modelType.trim() === '') return failResponse;
+
+    switch (submodelElement.modelType) {
+        case 'Submodel':
+            if (
+                submodelElement?.submodelElements &&
+                Array.isArray(submodelElement.submodelElements) &&
+                submodelElement.submodelElements.length > 0
+            ) {
+                return submodelElement.submodelElements.find((sme: any) => {
+                    return checkSemanticId(sme, semanticId);
+                });
+            }
+            break;
+        case 'SubmodelElementCollection':
+        case 'SubmodelElementList':
+            if (submodelElement?.value && Array.isArray(submodelElement.value) && submodelElement.value.length > 0) {
+                return submodelElement.value.find((sme: any) => {
+                    return checkSemanticId(sme, semanticId);
+                });
+            }
+            break;
+    }
+
+    return failResponse;
+}
+
+export function getSubmodelElementsBySemanticId(semanticId: string, submodelElement: any): any[] {
+    // console.log('getSubmodelElementBySemanticId()', 'semanticId', semanticId, 'submodelElement', submodelElement);
+
+    const failResponse = [] as any[];
+
+    if (semanticId.trim() == '') return failResponse;
+
+    if (!submodelElement?.modelType || submodelElement?.modelType.trim() === '') return failResponse;
+
+    switch (submodelElement.modelType) {
+        case 'Submodel':
+            if (
+                submodelElement?.submodelElements &&
+                Array.isArray(submodelElement.submodelElements) &&
+                submodelElement.submodelElements.length > 0
+            ) {
+                return submodelElement.submodelElements.filter((sme: any) => {
+                    return checkSemanticId(sme, semanticId);
+                });
+            }
+            break;
+        case 'SubmodelElementCollection':
+        case 'SubmodelElementList':
+            if (submodelElement?.value && Array.isArray(submodelElement.value) && submodelElement.value.length > 0) {
+                return submodelElement.value.filter((sme: any) => {
+                    return checkSemanticId(sme, semanticId);
+                });
+            }
+            break;
+    }
+
+    return failResponse;
 }

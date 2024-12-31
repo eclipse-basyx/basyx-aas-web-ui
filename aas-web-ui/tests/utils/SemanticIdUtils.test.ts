@@ -1,20 +1,7 @@
-import { shallowMount, VueWrapper } from '@vue/test-utils';
-import { createPinia, setActivePinia } from 'pinia';
-import { beforeEach, describe, expect, it } from 'vitest';
-import { defineComponent } from 'vue';
-import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+import { describe, expect, it } from 'vitest';
+import { checkSemanticId, getEquivalentEclassSemanticIds, getEquivalentIriSemanticIds } from '@/utils/SemanticIdUtils';
 
-describe('SubmodelElementHandling', () => {
-    beforeEach(() => {
-        setActivePinia(createPinia());
-    });
-
-    // Define a test component that uses the mixin
-    const DummyComponent = defineComponent({
-        mixins: [SubmodelElementHandling],
-        template: '<div></div>',
-    });
-
+describe('SemanticIdUtils.ts; Tests for checkSemanticId()', () => {
     // Define semanticId
     const iriWithSlashEnding = 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate/';
     const iriWithoutSlashEnding = 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate';
@@ -22,6 +9,8 @@ describe('SubmodelElementHandling', () => {
     const iriWithVersionWithoutSlashEnding = 'https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/0/9';
     const iriWithoutVersionWithSlashEnding = 'https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/';
     const iriWithoutVersionWithoutSlashEnding = 'https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint';
+    const iriSMContactInformations = 'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations';
+    const iriSMCContactInformation = 'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation';
     const eclassIrdiWithVersion = '0173-1#01-AHF578#001';
     const eclassIrdiWithoutVersion = '0173-1#01-AHF578';
     const eclassIrdiWithVersionAndCardinality = '0173-1#02-ABI502#001/0173-1#01-AHF581#001*02';
@@ -38,6 +27,21 @@ describe('SubmodelElementHandling', () => {
     // Define test data for semanticIdCheck()
     const semanticIdTestCombinations = [
         // IRI test cases
+        {
+            testId: '892c1774-1a70-42b9-bf88-4b65f0d3fe91',
+            semanticId: iriSMContactInformations,
+            submodelElementSemanticId: iriSMCContactInformation,
+            strategy: 'matching',
+            match: false,
+        },
+        {
+            testId: 'b38afe86-a3e8-4309-9e73-94897737ad15',
+            semanticId: iriSMCContactInformation,
+            submodelElementSemanticId: iriSMContactInformations,
+            strategy: 'matching',
+            match: false,
+        },
+
         {
             testId: '82f1c855-0a14-4b0c-97af-d4fbfba09887',
             semanticId: iriWithSlashEnding,
@@ -543,27 +547,26 @@ describe('SubmodelElementHandling', () => {
 
     // Tests for semanticIdCheck()
     semanticIdTestCombinations.forEach(function (semanticIdTestCombination) {
-        it(`${semanticIdTestCombination.testId}: Should return ${semanticIdTestCombination.match.toString().padEnd(5, ' ')} for ${semanticIdTestCombination.strategy.padEnd(14, ' ')} ${semanticIdTestCombination.submodelElementSemanticId.padEnd(75, ' ')} and ${semanticIdTestCombination.semanticId}`, () => {
-            // Mount the component
-            const wrapper: VueWrapper<any> = shallowMount(DummyComponent);
+        // Define test data
+        const semanticId = semanticIdTestCombination.semanticId; //e.g. the ID of a ConceptDescription
+        const submodelElement = {
+            semanticId: { keys: [{ value: semanticIdTestCombination.submodelElementSemanticId }] },
+        };
 
-            // Define test data
-            const semanticId = semanticIdTestCombination.semanticId; //e.g. the ID of a ConceptDescription
-            const submodelElement = {
-                semanticId: { keys: [{ value: semanticIdTestCombination.submodelElementSemanticId }] },
-            };
-
+        it(`${semanticIdTestCombination.testId}: Should return ${semanticIdTestCombination.match.toString().padEnd(5, ' ')} for ${semanticIdTestCombination.strategy.padEnd(14, ' ')} ${semanticIdTestCombination.submodelElementSemanticId.padEnd(85, ' ')} and ${semanticIdTestCombination.semanticId}`, () => {
             // Perform the assertion
-            expect(wrapper.vm.checkSemanticId(submodelElement, semanticId)).toBe(semanticIdTestCombination.match);
+            expect(checkSemanticId(submodelElement, semanticId)).toBe(semanticIdTestCombination.match);
         });
     });
+});
 
+describe('SemanticIdUtils.ts; Tests for getEquivalentEclassSemanticIds()', () => {
     // Define test data for getEquivalentEclassSemanticId()
     const equivalentElcassSemanticIds = [
         {
             testId: 'f53aef0c-dfc8-4408-b803-f501cba3122a',
             semanticId: '0173-1#01-AHF578#001',
-            semanitcIds: [
+            semanticIds: [
                 '0173-1#01-AHF578#001',
                 '0173/1///01#AHF578#001',
                 'https://api.eclass-cdp.com/0173-1-01-AHF578-001',
@@ -572,38 +575,36 @@ describe('SubmodelElementHandling', () => {
         {
             testId: '7106149a-b8fa-4059-9776-d2e37ad35fd2',
             semanticId: '0173-1#01-AHF578',
-            semanitcIds: ['0173-1#01-AHF578', '0173/1///01#AHF578', 'https://api.eclass-cdp.com/0173-1-01-AHF578'],
+            semanticIds: ['0173-1#01-AHF578', '0173/1///01#AHF578', 'https://api.eclass-cdp.com/0173-1-01-AHF578'],
         },
     ];
 
     // Tests for getEquivalentEclassSemanticId()
     equivalentElcassSemanticIds.forEach(function (equivalentElcassSemanticId) {
+        // Define test data
+        const semanticId = equivalentElcassSemanticId.semanticId; //e.g. the ID of a ConceptDescription
+        const semanticIds = equivalentElcassSemanticId.semanticIds;
+
         it(
-            `${equivalentElcassSemanticId.testId}: getEquivalentEclassSemanticIds(${equivalentElcassSemanticId.semanticId}, ` +
+            `${equivalentElcassSemanticId.testId}: getEquivalentEclassSemanticIds(${("'" + semanticId + "'").padEnd(25, ' ')}) === ` +
                 "['" +
-                equivalentElcassSemanticId.semanitcIds.toString().replaceAll(',', "', '") +
-                "']" +
-                ')',
+                semanticIds.toString().replaceAll(',', "', '") +
+                "']",
             () => {
-                // Mount the component
-                const wrapper: VueWrapper<any> = shallowMount(DummyComponent);
-
-                // Define test data
-                const semanticId = equivalentElcassSemanticId.semanticId; //e.g. the ID of a ConceptDescription
-                const semanticIds = equivalentElcassSemanticId.semanitcIds;
-
                 // Perform the assertion
-                expect(wrapper.vm.getEquivalentEclassSemanticIds(semanticId).sort()).toStrictEqual(semanticIds.sort());
+                expect(getEquivalentEclassSemanticIds(semanticId).sort()).toStrictEqual(semanticIds.sort());
             }
         );
     });
+});
 
+describe('SemanticIdUtils.ts; Tests for getEquivalentIriSemanticIds()', () => {
     // Define test data for getEquivalentEclassSemanticId()
     const equivalentIriSemanticIds = [
         {
             testId: '71eeb554-da62-4f91-85b2-bd2be844ada0',
             semanticId: 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate/',
-            semanitcIds: [
+            semanticIds: [
                 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate/',
                 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate',
             ],
@@ -611,7 +612,7 @@ describe('SubmodelElementHandling', () => {
         {
             testId: 'e518544c-f874-4b45-a9b0-442d0c740af9',
             semanticId: 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate',
-            semanitcIds: [
+            semanticIds: [
                 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate/',
                 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate',
             ],
@@ -620,22 +621,18 @@ describe('SubmodelElementHandling', () => {
 
     // Tests for getEquivalentEclassSemanticId()
     equivalentIriSemanticIds.forEach(function (equivalentIriSemanticId) {
+        // Define test data
+        const semanticId = equivalentIriSemanticId.semanticId; //e.g. the ID of a ConceptDescription
+        const semanticIds = equivalentIriSemanticId.semanticIds;
+
         it(
-            `${equivalentIriSemanticId.testId}: getEquivalentIriSemanticIds(${equivalentIriSemanticId.semanticId}, ` +
+            `${equivalentIriSemanticId.testId}: getEquivalentIriSemanticIds(${("'" + semanticId + "'").padEnd(55, ' ')}) === ` +
                 "['" +
-                equivalentIriSemanticId.semanitcIds.toString().replaceAll(',', "', '") +
-                "']" +
-                ')',
+                semanticIds.toString().replaceAll(',', "', '") +
+                "']",
             () => {
-                // Mount the component
-                const wrapper: VueWrapper<any> = shallowMount(DummyComponent);
-
-                // Define test data
-                const semanticId = equivalentIriSemanticId.semanticId; //e.g. the ID of a ConceptDescription
-                const semanticIds = equivalentIriSemanticId.semanitcIds;
-
                 // Perform the assertion
-                expect(wrapper.vm.getEquivalentIriSemanticIds(semanticId).sort()).toStrictEqual(semanticIds.sort());
+                expect(getEquivalentIriSemanticIds(semanticId).sort()).toStrictEqual(semanticIds.sort());
             }
         );
     });

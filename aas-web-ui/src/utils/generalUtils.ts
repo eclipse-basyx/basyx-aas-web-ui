@@ -1,8 +1,3 @@
-// Function to capitalize the first letter of a string
-export function capitalizeFirstLetter(string: string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
 // Function to check if the valueType is a number
 export function isNumber(valueType: string) {
     if (!valueType) return false;
