@@ -1,4 +1,5 @@
 <template>
+    <v-divider></v-divider>
     <v-list-item class="pl-0 pt-0">
         <template #title>
             <div class="text-subtitle-2">{{ label }}</div>
@@ -18,7 +19,7 @@
         prepend-icon="mdi-plus"
         variant="outlined"
         text="Add"
-        class="text-none mb-5"
+        class="text-none mt-1 mb-4"
         @click="addReferenceKey"></v-btn>
 </template>
 

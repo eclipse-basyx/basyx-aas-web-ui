@@ -16,7 +16,7 @@
         </template>
         <span>Creat a new AAS</span>
     </v-tooltip>
-    <v-dialog v-model="editAASDialog" width="860">
+    <v-dialog v-model="editAASDialog" width="860" persistent>
         <v-card>
             <v-card-title>
                 <span class="text-subtile-1">{{ newAAS ? 'Create a new AAS' : 'Edit AAS' }}</span>
@@ -34,6 +34,8 @@
                                 :show-generate-iri-button="true"
                                 type="AssetAdministrationShell" />
                             <TextInput v-model="AASIdShort" label="IdShort" />
+                            <MultiLanguageTextInput v-model="displayName" label="Display Name" type="displayName" />
+                            <MultiLanguageTextInput v-model="description" label="Description" type="description" />
                             <SelectInput v-model="AASCategory" label="Category" type="category" :clearable="true" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
@@ -95,6 +97,8 @@
 
     const AASId = ref<string | null>(UUID());
     const AASIdShort = ref<string | null>(null);
+    const displayName = ref<Array<aasTypes.LangStringNameType> | null>(null);
+    const description = ref<Array<aasTypes.LangStringTextType> | null>(null);
     const AASCategory = ref<string | null>(null);
 
     const version = ref<string | null>(null);
@@ -117,14 +121,14 @@
                 assetInformation.globalAssetId = globalAssetId.value;
             }
 
-            // Add optional parameter specificAssetIds
+            // TODO: Add optional parameter specificAssetIds
 
             // Add optional parameter assetType
             if (assetType.value !== null) {
                 assetInformation.assetType = assetType.value;
             }
 
-            // Add optional parameter defaultThumbnail
+            // TODO: Add optional parameter defaultThumbnail
 
             // Create new Administrative Information object
             const administrativeInformation = new aasTypes.AdministrativeInformation();
@@ -152,8 +156,6 @@
             // Create new AAS
             AASObject.value = new aasTypes.AssetAdministrationShell(AASId.value, assetInformation);
 
-            // Add optional parameter extensions
-
             // Add optional parameter category
             if (AASCategory.value !== null) {
                 AASObject.value.category = AASCategory.value;
@@ -165,20 +167,25 @@
             }
 
             // Add optional parameter displayName
+            if (displayName.value !== null) {
+                AASObject.value.displayName = displayName.value;
+            }
 
             // Add optional parameter description
+            if (description.value !== null) {
+                AASObject.value.description = description.value;
+            }
 
             // Add optional parameter administration
             if (Object.values(administrativeInformation).some((value) => value !== null)) {
                 AASObject.value.administration = administrativeInformation;
             }
 
-            // Add optional parameter embeddedDataSpecifications
+            // TODO: Add optional parameter derivedFrom
 
-            // Add optional parameter derivedFrom
-
-            // Add optional parameter submodels
-
+            // embeddedDataSpecifications are out of scope
+            // extensions are out of scope
+            // Submodels are added when submodels are created
             postAas(AASObject.value);
         }
         clearForm();
