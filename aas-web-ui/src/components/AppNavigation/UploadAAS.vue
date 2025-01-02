@@ -1,16 +1,4 @@
 <template>
-    <v-tooltip open-delay="600" :location="editMode ? 'end' : 'bottom'" :disabled="isMobile">
-        <template #activator="{ props }">
-            <v-list-item v-if="editMode" prepend-icon="mdi-upload" slim v-bind="props" @click="uploadAASDialog = true">
-                <template #prepend>
-                    <v-icon size="small">mdi-upload</v-icon>
-                </template>
-                Upload AAS
-            </v-list-item>
-            <v-btn v-else icon="mdi-upload" variant="plain" v-bind="props" @click="uploadAASDialog = true"></v-btn>
-        </template>
-        <span>Upload AAS File to Environment</span>
-    </v-tooltip>
     <v-dialog v-model="uploadAASDialog" width="600">
         <v-card :loading="loadingUpload">
             <v-card-title>
@@ -46,23 +34,36 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, ref } from 'vue';
-    import { useRoute } from 'vue-router';
+    import { ref, watch } from 'vue';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
-    import { useNavigationStore } from '@/store/NavigationStore';
-
-    const route = useRoute();
-
-    const navigationStore = useNavigationStore();
 
     const { uploadAas } = useAASRepositoryClient();
+
+    const props = defineProps<{
+        modelValue: boolean;
+    }>();
+
+    const emit = defineEmits<{
+        (event: 'update:modelValue', value: boolean): void;
+    }>();
 
     const uploadAASDialog = ref(false);
     const aasFile = ref(null as File | null);
     const loadingUpload = ref(false);
 
-    const isMobile = computed(() => navigationStore.getIsMobile);
-    const editMode = computed(() => route.name === 'AASEditor'); // Check if the current route is the AAS Editor
+    watch(
+        () => props.modelValue,
+        (value) => {
+            uploadAASDialog.value = value;
+        }
+    );
+
+    watch(
+        () => uploadAASDialog.value,
+        (value) => {
+            emit('update:modelValue', value);
+        }
+    );
 
     async function uploadAASFile() {
         if (!aasFile.value) return;
