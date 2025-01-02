@@ -55,7 +55,8 @@
             <v-list
                 v-if="!singleAas"
                 nav
-                class="bg-card card pa-0"
+                bg-color="card"
+                class="pa-0"
                 :style="{
                     display: 'flex',
                     'flex-direction': 'column',
@@ -65,8 +66,13 @@
                     <template #default="{ item }">
                         <!-- Single AAS -->
                         <v-list-item
-                            class="bg-listItem mt-2 mx-2"
+                            class="mt-2 mx-2"
+                            :active="isSelected(item)"
+                            color="primarySurface"
+                            base-color="listItem"
+                            variant="tonal"
                             style="border-top: solid; border-right: solid; border-bottom: solid; border-width: 1px"
+                            :border="isSelected(item) ? 'primary' : 'listItem thin'"
                             :style="{
                                 'border-color': isSelected(item)
                                     ? primaryColor + ' !important'
@@ -96,7 +102,7 @@
                             </template>
                             <!-- id of the AAS -->
                             <template v-if="drawerState" #subtitle>
-                                <div>{{ item['id'] }}</div>
+                                <div class="text-listItemText">{{ item['id'] }}</div>
                             </template>
                             <!-- open Details Button (with Status Badge) -->
                             <template v-if="drawerState" #append>
@@ -112,8 +118,10 @@
                                         <v-btn
                                             icon="mdi-dots-vertical"
                                             variant="plain"
+                                            color="listItemText"
                                             size="x-small"
-                                            v-bind="props"></v-btn>
+                                            v-bind="props"
+                                            @click.prevent></v-btn>
                                     </template>
                                     <v-sheet border>
                                         <v-list dense slim density="compact" class="py-0">
@@ -140,6 +148,7 @@
                                         icon="mdi-download"
                                         size="x-small"
                                         variant="plain"
+                                        color="listItemText"
                                         style="z-index: 9000; margin-left: -6px"
                                         @click.stop="downloadAAS(item)"></v-btn>
                                     <!-- Remove from AAS Registry Button -->
@@ -147,16 +156,11 @@
                                         icon="mdi-close"
                                         size="x-small"
                                         variant="plain"
+                                        color="listItemText"
                                         style="z-index: 9000; margin-left: -6px"
                                         @click.stop="showDeleteDialog(item)"></v-btn>
                                 </template>
                             </template>
-                            <v-overlay
-                                :model-value="isSelected(item)"
-                                scrim="primary"
-                                style="opacity: 0.2"
-                                contained
-                                persistent></v-overlay>
                         </v-list-item>
                     </template>
                 </v-virtual-scroll>
