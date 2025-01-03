@@ -7,7 +7,7 @@ import { URLEncode } from '@/utils/EncodeDecodeUtils';
 import { removeNullValues } from '@/utils/generalUtils';
 
 export function useAASRegistryClient() {
-    const { getRequest, putRequest } = useRequestHandling();
+    const { getRequest, postRequest, putRequest } = useRequestHandling();
 
     const navigationStore = useNavigationStore();
 
@@ -72,8 +72,28 @@ export function useAASRegistryClient() {
         return failResponse;
     }
 
+    async function postAasDescriptor(aasDescriptor: descriptorTypes.AASDescriptor): Promise<void> {
+        let aasRegUrl = aasRegistryUrl.value;
+        if (!aasRegUrl.includes('/shell-descriptors')) {
+            aasRegUrl += '/shell-descriptors';
+        }
+
+        const context = 'updating AAS Descriptor';
+        const disableMessage = false;
+        const path = aasRegUrl;
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const body = JSON.stringify(aasDescriptor);
+
+        // Send Request to upload the file
+        postRequest(path, body, headers, context, disableMessage).then((response: any) => {
+            if (response.success) {
+                navigationStore.dispatchTriggerAASListReload(true); // Reload AAS List
+            }
+        });
+    }
+
     async function putAasDescriptor(aasDescriptor: descriptorTypes.AASDescriptor): Promise<void> {
-        console.log('putAasDescriptor()', aasDescriptor);
         let aasRegUrl = aasRegistryUrl.value;
         if (!aasRegUrl.includes('/shell-descriptors')) {
             aasRegUrl += '/shell-descriptors';
@@ -121,6 +141,7 @@ export function useAASRegistryClient() {
         fetchAasDescriptorList,
         fetchAasDescriptorById,
         putAasDescriptor,
+        postAasDescriptor,
         createDescriptorFromAAS,
     };
 }

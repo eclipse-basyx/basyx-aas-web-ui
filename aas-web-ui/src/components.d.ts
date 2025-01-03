@@ -66,6 +66,7 @@ declare module 'vue' {
     ReferenceElement: typeof import('./components/SubmodelElements/ReferenceElement.vue')['default']
     ReferenceInput: typeof import('./components/EditorComponents/InputTypes/ReferenceInput.vue')['default']
     RelationshipElement: typeof import('./components/SubmodelElements/RelationshipElement.vue')['default']
+    ResourceInput: typeof import('./components/EditorComponents/InputTypes/ResourceInput.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     ScatterChart: typeof import('./components/Widgets/ScatterChart.vue')['default']

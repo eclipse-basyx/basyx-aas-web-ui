@@ -36,7 +36,9 @@
                     <!-- Derivation -->
                     <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(2)">
                         <v-expansion-panel-title>Derivation</v-expansion-panel-title>
-                        <v-expansion-panel-text></v-expansion-panel-text>
+                        <v-expansion-panel-text class="pt-2">
+                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                        </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Asset -->
                     <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
@@ -49,6 +51,12 @@
                                 :show-generate-iri-button="true"
                                 type="P" />
                             <TextInput v-model="assetType" label="Asset Type" />
+                            <ResourceInput
+                                v-model="defaultThumbnail"
+                                label="Default Thumbnail"
+                                :new-shell="newShell"
+                                :aas="aas"
+                                @update:file-thumbnail="handleFileSthumbnail" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -81,7 +89,7 @@
         (event: 'update:modelValue', value: boolean): void;
     }>();
 
-    const { fetchAasById, postAas, putAas } = useAASRepositoryClient();
+    const { fetchAasById, postAas, putAas, putThumbnail } = useAASRepositoryClient();
     const { putAasDescriptor, createDescriptorFromAAS } = useAASRegistryClient();
 
     const editAASDialog = ref(false);
@@ -102,6 +110,9 @@
     const assetKind = ref<aasTypes.AssetKind>(aasTypes.AssetKind.Instance);
     const globalAssetId = ref<string | null>(null);
     const assetType = ref<string | null>(null);
+    const defaultThumbnail = ref<aasTypes.Resource | null>(null);
+
+    const fileThumbnail = ref<File | undefined>(undefined);
 
     const bordersToShow = computed(() => (panel: number) => {
         let border = '';
@@ -158,14 +169,13 @@
             const aas = await fetchAasById(props.aas.id);
 
             // Parse JSON to AssetAdministrationShell
-            console.log('AAS: ', aas);
             const instanceOrError = jsonization.assetAdministrationShellFromJsonable(aas);
             if (instanceOrError.error !== null) {
                 console.error('Error parsing AAS: ', instanceOrError.error);
                 return;
             }
             AASObject.value = instanceOrError.mustValue();
-            console.log('AASObject: ', AASObject.value);
+            // console.log('AASObject: ', AASObject.value);
             // Set values of AAS
             AASId.value = AASObject.value.id;
             AASIdShort.value = AASObject.value.idShort;
@@ -182,6 +192,7 @@
                 assetKind.value = AASObject.value.assetInformation.assetKind;
                 globalAssetId.value = AASObject.value.assetInformation.globalAssetId;
                 assetType.value = AASObject.value.assetInformation.assetType;
+                defaultThumbnail.value = AASObject.value.assetInformation.defaultThumbnail;
             }
         }
     }
@@ -203,7 +214,9 @@
             assetInformation.assetType = assetType.value;
         }
 
-        // TODO: Add optional parameter defaultThumbnail
+        if (defaultThumbnail.value !== null) {
+            assetInformation.defaultThumbnail = defaultThumbnail.value;
+        }
 
         // Create new Administrative Information object
         const administrativeInformation = new aasTypes.AdministrativeInformation();
@@ -228,8 +241,13 @@
             administrativeInformation.templateId = templateId.value;
         }
 
-        // Create new AAS
-        AASObject.value = new aasTypes.AssetAdministrationShell(AASId.value, assetInformation);
+        // Create new AAS if newShell is true
+        if (props.newShell || AASObject.value === undefined) {
+            AASObject.value = new aasTypes.AssetAdministrationShell(AASId.value, assetInformation);
+        } else {
+            // Update existing AAS
+            AASObject.value.assetInformation = assetInformation;
+        }
 
         // Add optional parameter category
         if (AASCategory.value !== null) {
@@ -264,13 +282,22 @@
 
         if (props.newShell) {
             // Create new AAS
-            postAas(AASObject.value);
+            await postAas(AASObject.value);
+            // Upload default thumbnail
+            if (fileThumbnail.value !== undefined) {
+                putThumbnail(fileThumbnail.value, AASObject.value.id);
+            }
         } else {
             // Update existing AAS
-            putAas(AASObject.value);
+            await putAas(AASObject.value);
+            // Update AAS Descriptor
             const jsonAAS = jsonization.toJsonable(AASObject.value);
             const descriptor = createDescriptorFromAAS(jsonAAS, props.aas.endpoints);
             putAasDescriptor(descriptor);
+            // Upload default thumbnail
+            if (fileThumbnail.value !== undefined) {
+                putThumbnail(fileThumbnail.value, AASObject.value.id);
+            }
         }
         clearForm();
         editAASDialog.value = false;
@@ -283,7 +310,7 @@
 
     function clearForm() {
         // Reset all values
-        AASId.value = null;
+        AASId.value = UUID();
         AASIdShort.value = null;
         AASCategory.value = null;
         version.value = null;
@@ -292,7 +319,12 @@
         assetKind.value = aasTypes.AssetKind.Instance;
         globalAssetId.value = null;
         assetType.value = null;
+        defaultThumbnail.value = null;
         // Reset state of expansion panels
         openPanels.value = [0, 3];
+    }
+
+    function handleFileSthumbnail(file: File | undefined) {
+        fileThumbnail.value = file;
     }
 </script>

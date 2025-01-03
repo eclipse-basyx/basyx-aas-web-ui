@@ -130,7 +130,7 @@ export function useAASRepositoryClient() {
     async function postAas(aas: aasTypes.AssetAdministrationShell) {
         // Convert AAS to JSON
         const jsonAas = jsonization.toJsonable(aas);
-        console.log('postAas()', jsonAas);
+        // console.log('postAas()', jsonAas);
 
         const context = 'creating AAS';
         const disableMessage = false;
@@ -155,10 +155,9 @@ export function useAASRepositoryClient() {
     }
 
     async function putAas(aas: aasTypes.AssetAdministrationShell) {
-        console.log('putAas()', aas);
         // Convert AAS to JSON
         const jsonAas = jsonization.toJsonable(aas);
-        console.log('putAas()', jsonAas);
+        // console.log('putAas()', jsonAas);
 
         const context = 'updating AAS';
         const disableMessage = false;
@@ -181,6 +180,28 @@ export function useAASRepositoryClient() {
         });
     }
 
+    async function putThumbnail(thumbnail: File, aasId: string) {
+        // console.log('putThumbnail()', thumbnail);
+        // Create formData
+        const formData = new FormData();
+        formData.append('file', thumbnail);
+
+        const context = 'uploading thumbnail';
+        const disableMessage = false;
+        const path =
+            aasRepositoryUrl.value +
+            '/' +
+            URLEncode(aasId) +
+            '/asset-information/thumbnail' +
+            '?fileName=' +
+            thumbnail.name;
+        const headers = new Headers();
+        const body = formData;
+
+        // Send Request to upload the file
+        putRequest(path, body, headers, context, disableMessage);
+    }
+
     return {
         fetchAasList,
         fetchAasById,
@@ -189,5 +210,6 @@ export function useAASRepositoryClient() {
         uploadAas,
         postAas,
         putAas,
+        putThumbnail,
     };
 }

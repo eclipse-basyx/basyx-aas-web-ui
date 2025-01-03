@@ -9,6 +9,7 @@ import '@mdi/font/css/materialdesignicons.css';
 import 'vuetify/styles';
 // Composables
 import { createVuetify } from 'vuetify';
+import { VFileUpload } from 'vuetify/labs/VFileUpload';
 import { adjustColorBrightness } from '@/utils/ThemeUtils';
 
 export function initializeVuetify(primaryLightColor: string, primaryDarkColor: string) {
@@ -18,6 +19,9 @@ export function initializeVuetify(primaryLightColor: string, primaryDarkColor: s
 
     // https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides
     const vuetify = createVuetify({
+        components: {
+            VFileUpload,
+        },
         theme: {
             themes: {
                 light: {
