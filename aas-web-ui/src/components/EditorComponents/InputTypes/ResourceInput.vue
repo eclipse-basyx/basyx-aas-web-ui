@@ -26,7 +26,7 @@
                 label="Content Type"
                 variant="outlined"
                 density="comfortable"
-                :min-width="160"
+                :width="200"
                 class="mr-3 mt-2"></v-combobox>
         </template>
         <v-text-field

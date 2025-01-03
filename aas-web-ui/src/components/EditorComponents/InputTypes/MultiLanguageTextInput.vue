@@ -7,7 +7,7 @@
     </v-list-item>
     <v-list-item v-for="(langStringElement, i) in langStringValue" :key="i" class="px-0">
         <template #prepend>
-            <v-select
+            <v-combobox
                 v-model="langStringElement.language"
                 :items="languageOptions"
                 label="Language"
@@ -16,7 +16,9 @@
                 variant="outlined"
                 density="comfortable"
                 clearable
-                :min-width="160"
+                :return-object="false"
+                single-line
+                :width="200"
                 class="mr-3">
                 <template #selection="{ item }">
                     <span>{{ item.value }}</span>
@@ -28,17 +30,7 @@
                         </template>
                     </v-list-item>
                 </template>
-                <template #prepend-item>
-                    <v-text-field
-                        v-model="filter"
-                        variant="outlined"
-                        density="compact"
-                        class="mx-2"
-                        append-inner-icon="mdi-magnify"
-                        hide-details></v-text-field>
-                    <v-divider class="mt-2"></v-divider>
-                </template>
-            </v-select>
+            </v-combobox>
         </template>
         <v-text-field
             v-model="langStringElement.text"
