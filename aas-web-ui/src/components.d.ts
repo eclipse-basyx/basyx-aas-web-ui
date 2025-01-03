@@ -56,7 +56,6 @@ declare module 'vue' {
     MainMenu: typeof import('./components/AppNavigation/MainMenu.vue')['default']
     MultiLanguageProperty: typeof import('./components/SubmodelElements/MultiLanguageProperty.vue')['default']
     MultiLanguageTextInput: typeof import('./components/EditorComponents/InputTypes/MultiLanguageTextInput.vue')['default']
-    MultiTextInput: typeof import('./components/EditorComponents/InputTypes/MultiTextInput.vue')['default']
     NumberType: typeof import('./components/SubmodelElements/ValueTypes/NumberType.vue')['default']
     Operation: typeof import('./components/SubmodelElements/Operation.vue')['default']
     PDFPreview: typeof import('./components/Plugins/PDFPreview.vue')['default']
