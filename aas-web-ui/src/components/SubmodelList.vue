@@ -31,9 +31,12 @@
                     <v-list-item
                         v-for="submodel in submodelData"
                         :key="submodel.id"
-                        color="primary"
+                        :active="submodel.isActive"
+                        color="primarySurface"
+                        base-color="listItem"
+                        variant="tonal"
                         nav
-                        class="bg-listItem mb-2"
+                        class="mb-2"
                         style="border-width: 1px"
                         :style="{
                             'border-color': submodel.isActive
@@ -46,15 +49,9 @@
                         <template #prepend>
                             <v-chip label border color="primary" size="x-small" class="mr-3">SM</v-chip>
                         </template>
-                        <v-list-item-title :class="submodel.isActive ? 'text-primary' : ''">{{
+                        <v-list-item-title :class="submodel.isActive ? 'text-primary' : 'text-listItemText'">{{
                             submodel.idShort
                         }}</v-list-item-title>
-                        <v-overlay
-                            :model-value="submodel.isActive"
-                            scrim="primary"
-                            style="opacity: 0.2"
-                            contained
-                            persistent></v-overlay>
                     </v-list-item>
                 </template>
             </v-card-text>
