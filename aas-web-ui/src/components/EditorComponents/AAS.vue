@@ -5,13 +5,14 @@
                 <span class="text-subtile-1">{{ newShell ? 'Create a new AAS' : 'Edit AAS' }}</span>
             </v-card-title>
             <v-divider></v-divider>
-            <v-card-text style="overflow-y: auto">
+            <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
                 <v-expansion-panels v-model="openPanels" multiple>
                     <!-- Details -->
-                    <v-expansion-panel>
+                    <v-expansion-panel class="border-t-thin border-s-thin border-e-thin" :class="bordersToShow(0)">
                         <v-expansion-panel-title>Details</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <TextInput
+                                v-if="newShell"
                                 v-model="AASId"
                                 label="ID"
                                 :show-generate-iri-button="true"
@@ -23,7 +24,7 @@
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Administrative Information -->
-                    <v-expansion-panel>
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(1)">
                         <v-expansion-panel-title>Administrative Information</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <TextInput v-model="version" label="Version" />
@@ -33,12 +34,12 @@
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Derivation -->
-                    <v-expansion-panel>
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(2)">
                         <v-expansion-panel-title>Derivation</v-expansion-panel-title>
                         <v-expansion-panel-text></v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Asset -->
-                    <v-expansion-panel>
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
                         <v-expansion-panel-title>Asset</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <SelectInput v-model="assetKind" label="AssetKind" type="assetKind"></SelectInput>
@@ -64,20 +65,24 @@
 
 <script lang="ts" setup>
     import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
-    import { ref, watch } from 'vue';
+    import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
+    import { computed, ref, watch } from 'vue';
+    import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { UUID } from '@/utils/IDUtils';
 
     const props = defineProps<{
         modelValue: boolean;
         newShell: boolean;
+        aas?: any;
     }>();
 
     const emit = defineEmits<{
         (event: 'update:modelValue', value: boolean): void;
     }>();
 
-    const { postAas } = useAASRepositoryClient();
+    const { fetchAasById, postAas, putAas } = useAASRepositoryClient();
+    const { putAasDescriptor, createDescriptorFromAAS } = useAASRegistryClient();
 
     const editAASDialog = ref(false);
     const AASObject = ref<aasTypes.AssetAdministrationShell | undefined>(undefined);
@@ -98,10 +103,46 @@
     const globalAssetId = ref<string | null>(null);
     const assetType = ref<string | null>(null);
 
+    const bordersToShow = computed(() => (panel: number) => {
+        let border = '';
+        switch (panel) {
+            case 0:
+                if (openPanels.value.includes(0) || openPanels.value.includes(1)) {
+                    border = 'border-b-thin';
+                }
+                break;
+            case 1:
+                if (openPanels.value.includes(0) || openPanels.value.includes(1)) {
+                    border += ' border-t-thin';
+                }
+                if (openPanels.value.includes(1) || openPanels.value.includes(2)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 2:
+                if (openPanels.value.includes(1) || openPanels.value.includes(2)) {
+                    border += ' border-t-thin';
+                }
+                if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 3:
+                if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+                    border = 'border-t-thin';
+                }
+                break;
+        }
+        return border;
+    });
+
     watch(
         () => props.modelValue,
         (value) => {
             editAASDialog.value = value;
+            if (value) {
+                initializeInputs();
+            }
         }
     );
 
@@ -112,83 +153,124 @@
         }
     );
 
-    function saveAAS() {
+    async function initializeInputs() {
+        if (props.newShell === false && props.aas) {
+            const aas = await fetchAasById(props.aas.id);
+
+            // Parse JSON to AssetAdministrationShell
+            console.log('AAS: ', aas);
+            const instanceOrError = jsonization.assetAdministrationShellFromJsonable(aas);
+            if (instanceOrError.error !== null) {
+                console.error('Error parsing AAS: ', instanceOrError.error);
+                return;
+            }
+            AASObject.value = instanceOrError.mustValue();
+            console.log('AASObject: ', AASObject.value);
+            // Set values of AAS
+            AASId.value = AASObject.value.id;
+            AASIdShort.value = AASObject.value.idShort;
+            displayName.value = AASObject.value.displayName;
+            description.value = AASObject.value.description;
+            AASCategory.value = AASObject.value.category;
+            if (AASObject.value.administration !== null && AASObject.value.administration !== undefined) {
+                version.value = AASObject.value.administration.version;
+                revision.value = AASObject.value.administration.revision;
+                creator.value = AASObject.value.administration.creator;
+                templateId.value = AASObject.value.administration.templateId;
+            }
+            if (AASObject.value.assetInformation !== null && AASObject.value.assetInformation !== undefined) {
+                assetKind.value = AASObject.value.assetInformation.assetKind;
+                globalAssetId.value = AASObject.value.assetInformation.globalAssetId;
+                assetType.value = AASObject.value.assetInformation.assetType;
+            }
+        }
+    }
+
+    async function saveAAS() {
         if (AASId.value === null) return;
+        // Create new Asset Information object
+        const assetInformation = new aasTypes.AssetInformation(assetKind.value);
+
+        // Add optional parameter globalAssetId
+        if (globalAssetId.value !== null) {
+            assetInformation.globalAssetId = globalAssetId.value;
+        }
+
+        // TODO: Add optional parameter specificAssetIds
+
+        // Add optional parameter assetType
+        if (assetType.value !== null) {
+            assetInformation.assetType = assetType.value;
+        }
+
+        // TODO: Add optional parameter defaultThumbnail
+
+        // Create new Administrative Information object
+        const administrativeInformation = new aasTypes.AdministrativeInformation();
+
+        // Add optional parameter version
+        if (version.value !== null && version.value !== undefined) {
+            administrativeInformation.version = version.value;
+        }
+
+        // Add optional parameter revision
+        if (revision.value !== null && revision.value !== undefined) {
+            administrativeInformation.revision = revision.value;
+        }
+
+        // Add optional parameter creator
+        if (creator.value !== null && creator.value !== undefined) {
+            administrativeInformation.creator = creator.value;
+        }
+
+        // Add optional parameter templateId
+        if (templateId.value !== null && templateId.value !== undefined) {
+            administrativeInformation.templateId = templateId.value;
+        }
+
+        // Create new AAS
+        AASObject.value = new aasTypes.AssetAdministrationShell(AASId.value, assetInformation);
+
+        // Add optional parameter category
+        if (AASCategory.value !== null) {
+            AASObject.value.category = AASCategory.value;
+        }
+
+        // Add optional parameter idShort
+        if (AASIdShort.value !== null) {
+            AASObject.value.idShort = AASIdShort.value;
+        }
+
+        // Add optional parameter displayName
+        if (displayName.value !== null) {
+            AASObject.value.displayName = displayName.value;
+        }
+
+        // Add optional parameter description
+        if (description.value !== null) {
+            AASObject.value.description = description.value;
+        }
+
+        // Add optional parameter administration
+        if (Object.values(administrativeInformation).some((value) => value !== null)) {
+            AASObject.value.administration = administrativeInformation;
+        }
+
+        // TODO: Add optional parameter derivedFrom
+
+        // embeddedDataSpecifications are out of scope
+        // extensions are out of scope
+        // Submodels are added when submodels are created
+
         if (props.newShell) {
-            // Create new Asset Information object
-            const assetInformation = new aasTypes.AssetInformation(assetKind.value);
-
-            // Add optional parameter globalAssetId
-            if (globalAssetId.value !== null) {
-                assetInformation.globalAssetId = globalAssetId.value;
-            }
-
-            // TODO: Add optional parameter specificAssetIds
-
-            // Add optional parameter assetType
-            if (assetType.value !== null) {
-                assetInformation.assetType = assetType.value;
-            }
-
-            // TODO: Add optional parameter defaultThumbnail
-
-            // Create new Administrative Information object
-            const administrativeInformation = new aasTypes.AdministrativeInformation();
-
-            // Add optional parameter version
-            if (version.value !== null) {
-                administrativeInformation.version = version.value;
-            }
-
-            // Add optional parameter revision
-            if (revision.value !== null) {
-                administrativeInformation.revision = revision.value;
-            }
-
-            // Add optional parameter creator
-            if (creator.value !== null) {
-                administrativeInformation.creator = creator.value;
-            }
-
-            // Add optional parameter templateId
-            if (templateId.value !== null) {
-                administrativeInformation.templateId = templateId.value;
-            }
-
             // Create new AAS
-            AASObject.value = new aasTypes.AssetAdministrationShell(AASId.value, assetInformation);
-
-            // Add optional parameter category
-            if (AASCategory.value !== null) {
-                AASObject.value.category = AASCategory.value;
-            }
-
-            // Add optional parameter idShort
-            if (AASIdShort.value !== null) {
-                AASObject.value.idShort = AASIdShort.value;
-            }
-
-            // Add optional parameter displayName
-            if (displayName.value !== null) {
-                AASObject.value.displayName = displayName.value;
-            }
-
-            // Add optional parameter description
-            if (description.value !== null) {
-                AASObject.value.description = description.value;
-            }
-
-            // Add optional parameter administration
-            if (Object.values(administrativeInformation).some((value) => value !== null)) {
-                AASObject.value.administration = administrativeInformation;
-            }
-
-            // TODO: Add optional parameter derivedFrom
-
-            // embeddedDataSpecifications are out of scope
-            // extensions are out of scope
-            // Submodels are added when submodels are created
             postAas(AASObject.value);
+        } else {
+            // Update existing AAS
+            putAas(AASObject.value);
+            const jsonAAS = jsonization.toJsonable(AASObject.value);
+            const descriptor = createDescriptorFromAAS(jsonAAS, props.aas.endpoints);
+            putAasDescriptor(descriptor);
         }
         clearForm();
         editAASDialog.value = false;

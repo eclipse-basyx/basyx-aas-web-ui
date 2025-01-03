@@ -169,7 +169,7 @@
                                                 </template>
                                                 <v-list-item-subtitle>Download AAS</v-list-item-subtitle>
                                             </v-list-item>
-                                            <v-list-item @click="openEditDialog(false)">
+                                            <v-list-item @click="openEditDialog(false, item)">
                                                 <template #prepend>
                                                     <v-icon size="x-small">mdi-pencil</v-icon>
                                                 </template>
@@ -224,7 +224,7 @@
         </v-card>
     </v-container>
     <!-- Dialog for creating/editing AAS -->
-    <AAS v-model="editDialog" :new-shell="newShell"></AAS>
+    <AAS v-model="editDialog" :new-shell="newShell" :aas="aasToEdit"></AAS>
     <!-- Dialog for uploading AAS -->
     <UploadAAS v-model="uploadAASDialog"></UploadAAS>
     <!-- Dialog for deleting AAS -->
@@ -278,6 +278,7 @@
     const uploadAASDialog = ref(false); // Variable to store if the Upload AAS Dialog should be shown
     const editDialog = ref(false); // Variable to store if the Edit Dialog should be shown
     const newShell = ref(false); // Variable to store if a new Shell should be created
+    const aasToEdit = ref<any | undefined>(undefined); // Variable to store the AAS to be edited
 
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
@@ -579,9 +580,12 @@
         aasToDelete.value = AAS;
     }
 
-    function openEditDialog(createNew: boolean) {
+    function openEditDialog(createNew: boolean, aas?: any) {
         editDialog.value = true;
         newShell.value = createNew;
+        if (createNew === false && aas) {
+            aasToEdit.value = aas;
+        }
     }
 </script>
 

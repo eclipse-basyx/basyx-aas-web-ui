@@ -1,10 +1,13 @@
+import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
 import { computed } from 'vue';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
+import * as descriptorTypes from '@/types/Descriptors';
 import { URLEncode } from '@/utils/EncodeDecodeUtils';
+import { removeNullValues } from '@/utils/generalUtils';
 
 export function useAASRegistryClient() {
-    const { getRequest } = useRequestHandling();
+    const { getRequest, putRequest } = useRequestHandling();
 
     const navigationStore = useNavigationStore();
 
@@ -69,8 +72,55 @@ export function useAASRegistryClient() {
         return failResponse;
     }
 
+    async function putAasDescriptor(aasDescriptor: descriptorTypes.AASDescriptor): Promise<void> {
+        console.log('putAasDescriptor()', aasDescriptor);
+        let aasRegUrl = aasRegistryUrl.value;
+        if (!aasRegUrl.includes('/shell-descriptors')) {
+            aasRegUrl += '/shell-descriptors';
+        }
+
+        const context = 'updating AAS Descriptor';
+        const disableMessage = false;
+        const path = aasRegUrl + '/' + URLEncode(aasDescriptor.id);
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const body = JSON.stringify(aasDescriptor);
+
+        // Send Request to upload the file
+        putRequest(path, body, headers, context, disableMessage).then((response: any) => {
+            if (response.success) {
+                navigationStore.dispatchTriggerAASListReload(true); // Reload AAS List
+            }
+        });
+    }
+
+    function createDescriptorFromAAS(
+        aas: jsonization.JsonObject,
+        endpoints: Array<descriptorTypes.Endpoint>
+    ): descriptorTypes.AASDescriptor {
+        const jsonAAS = JSON.stringify(aas);
+        const parsedAAS = JSON.parse(jsonAAS);
+        let descriptor = new descriptorTypes.AASDescriptor(
+            endpoints,
+            parsedAAS.id,
+            parsedAAS.administration,
+            parsedAAS.assetInformation?.assetKind,
+            parsedAAS.assetInformation?.assetType,
+            parsedAAS.description,
+            parsedAAS.displayName,
+            parsedAAS.extensions,
+            parsedAAS.assetInformation?.globalAssetId,
+            parsedAAS.idShort,
+            parsedAAS.assetInformation?.specificAssetIds
+        );
+        descriptor = removeNullValues(descriptor);
+        return descriptor;
+    }
+
     return {
         fetchAasDescriptorList,
         fetchAasDescriptorById,
+        putAasDescriptor,
+        createDescriptorFromAAS,
     };
 }

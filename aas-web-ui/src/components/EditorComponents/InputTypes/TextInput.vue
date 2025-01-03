@@ -1,5 +1,5 @@
 <template>
-    <v-text-field v-model="textValue" :label="label" variant="outlined" density="comfortable">
+    <v-text-field v-model="textValue" :label="label" variant="outlined" density="comfortable" bg-color="surface">
         <template #append-inner>
             <v-btn
                 v-if="showGenerateIriButton"
