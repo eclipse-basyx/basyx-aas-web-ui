@@ -22,37 +22,47 @@
                     <v-skeleton-loader type="list-item@6"></v-skeleton-loader>
                 </div>
                 <template v-else>
-                    <v-empty-state
-                        v-if="Object.keys(selectedAAS).length > 0 && submodelData.length === 0"
-                        title="No existing Submodels"
-                        text="The selected AAS does not contain any Submodels"
-                        class="text-divider"></v-empty-state>
-                    <!-- List of Submodels -->
-                    <v-list-item
-                        v-for="submodel in submodelData"
-                        :key="submodel.id"
-                        :active="submodel.isActive"
-                        color="primarySurface"
-                        base-color="listItem"
-                        variant="tonal"
-                        nav
-                        class="mb-2"
-                        style="border-width: 1px"
-                        :style="{
-                            'border-color': submodel.isActive
-                                ? primaryColor + ' !important'
-                                : isDark
-                                  ? '#686868 !important'
-                                  : '#ABABAB !important',
-                        }"
-                        @click="toggleNode(submodel)">
-                        <template #prepend>
-                            <v-chip label border color="primary" size="x-small" class="mr-3">SM</v-chip>
+                    <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
+                        <template v-if="submodelData.length > 0">
+                            <!-- List of Submodels -->
+                            <v-list-item
+                                v-for="submodel in submodelData"
+                                :key="submodel.id"
+                                :active="submodel.isActive"
+                                color="primarySurface"
+                                base-color="listItem"
+                                variant="tonal"
+                                nav
+                                class="mb-2"
+                                style="border-width: 1px"
+                                :style="{
+                                    'border-color': submodel.isActive
+                                        ? primaryColor + ' !important'
+                                        : isDark
+                                          ? '#686868 !important'
+                                          : '#ABABAB !important',
+                                }"
+                                @click="toggleNode(submodel)">
+                                <template #prepend>
+                                    <v-chip label border color="primary" size="x-small" class="mr-3">SM</v-chip>
+                                </template>
+                                <v-list-item-title :class="submodel.isActive ? 'text-primary' : 'text-listItemText'">{{
+                                    submodel.idShort
+                                }}</v-list-item-title>
+                            </v-list-item>
                         </template>
-                        <v-list-item-title :class="submodel.isActive ? 'text-primary' : 'text-listItemText'">{{
-                            submodel.idShort
-                        }}</v-list-item-title>
-                    </v-list-item>
+                        <v-empty-state
+                            v-else
+                            title="No existing Submodels"
+                            text="The selected AAS does not contain any Submodels"
+                            class="text-divider"></v-empty-state>
+                    </template>
+                    <template v-else>
+                        <v-empty-state
+                            title="No selected AAS"
+                            text="Select an AAS to view its Submodels"
+                            class="text-divider"></v-empty-state>
+                    </template>
                 </template>
             </v-card-text>
         </v-card>

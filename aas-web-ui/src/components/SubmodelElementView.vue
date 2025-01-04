@@ -5,7 +5,13 @@
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto; height: calc(100vh - 170px)">
                 <!-- Detailed View of the selected SubmodelElement (e.g. Property, Operation, etc.) -->
-                <v-card v-if="submodelElementData && Object.keys(submodelElementData).length > 0">
+                <v-card
+                    v-if="
+                        selectedAAS &&
+                        Object.keys(selectedAAS).length > 0 &&
+                        submodelElementData &&
+                        Object.keys(submodelElementData).length > 0
+                    ">
                     <v-list nav>
                         <!-- SubmodelELement Identification -->
                         <IdentificationElement
@@ -162,6 +168,15 @@
                         </v-list-item>
                     </v-list>
                 </v-card>
+                <v-empty-state
+                    v-else-if="!selectedAAS || Object.keys(selectedAAS).length === 0"
+                    title="No selected AAS"
+                    class="text-divider"></v-empty-state>
+                <v-empty-state
+                    v-else-if="!selectedNode || Object.keys(selectedNode).length === 0"
+                    title="No selected Submodel / Submodel Element"
+                    text="Select a Submodel / Submodel Element to view"
+                    class="text-divider"></v-empty-state>
             </v-card-text>
         </v-card>
     </v-container>
@@ -190,8 +205,8 @@
     // Computed Properties
     const aasRegistryServerURL = computed(() => navigationStore.getAASRegistryURL);
     const submodelRegistryServerURL = computed(() => navigationStore.getSubmodelRegistryURL);
-    const SelectedAAS = computed(() => aasStore.getSelectedAAS);
-    const SelectedNode = computed(() => aasStore.getSelectedNode);
+    const selectedAAS = computed(() => aasStore.getSelectedAAS);
+    const selectedNode = computed(() => aasStore.getSelectedNode);
     const autoSync = computed(() => navigationStore.getAutoSync);
 
     // Watchers
@@ -219,7 +234,7 @@
 
     // Resets the SubmodelElementView when the AAS changes
     watch(
-        () => SelectedAAS.value,
+        () => selectedAAS.value,
         () => {
             submodelElementData.value = {};
             aasStore.dispatchRealTimeObject(submodelElementData);
@@ -228,7 +243,7 @@
 
     // Watch for changes in the selected Node and (re-)initialize the Component
     watch(
-        () => SelectedNode.value,
+        () => selectedNode.value,
         () => {
             // clear old submodelElementData
             submodelElementData.value = {};
@@ -245,7 +260,7 @@
                 window.clearInterval(requestInterval.value); // clear old interval
                 // create new interval
                 requestInterval.value = window.setInterval(() => {
-                    if (Object.keys(SelectedNode.value).length > 0) {
+                    if (Object.keys(selectedNode.value).length > 0) {
                         initializeView();
                     }
                 }, autoSync.value.interval);
@@ -260,7 +275,7 @@
         if (autoSync.value.state) {
             // create new interval
             requestInterval.value = window.setInterval(() => {
-                if (Object.keys(SelectedNode.value).length > 0) {
+                if (Object.keys(selectedNode.value).length > 0) {
                     initializeView();
                 }
             }, autoSync.value.interval);
@@ -274,14 +289,14 @@
     });
 
     function initializeView(withConceptDescriptions = false) {
-        // console.log('Selected Node: ', SelectedNode.value);
+        // console.log('selected Node: ', selectedNode.value);
         // Check if a Node is selected
-        if (Object.keys(SelectedNode.value).length === 0) {
+        if (Object.keys(selectedNode.value).length === 0) {
             submodelElementData.value = {}; // Reset the SubmodelElement Data when no Node is selected
             return;
         }
         // Request the selected SubmodelElement
-        const path = SelectedNode.value.path;
+        const path = selectedNode.value.path;
         const context = 'retrieving SubmodelElement';
         const disableMessage = true;
         getRequest(path, context, disableMessage).then((response: any) => {
@@ -290,14 +305,14 @@
             if (response.success && (response.data?.id || response.data?.idShort)) {
                 // execute if the Request was successful
                 response.data.timestamp = formatDate(new Date()); // add timestamp to the SubmodelElement Data
-                response.data.path = SelectedNode.value.path; // add the path to the SubmodelElement Data
+                response.data.path = selectedNode.value.path; // add the path to the SubmodelElement Data
                 // console.log('SubmodelElement Data: ', response.data);
                 submodelElementData.value = response.data;
             } else {
                 // execute if the Request failed
                 // show the static SubmodelElement Data from the store if the Request failed (the timestamp should show that the data is outdated)
                 submodelElementData.value = {}; // Reset the SubmodelElement Data when Node couldn't be retrieved
-                if (Object.keys(SelectedNode.value).length === 0) {
+                if (Object.keys(selectedNode.value).length === 0) {
                     // don't copy the static SubmodelElement Data if no Node is selected or Node is invalid
                     navigationStore.dispatchSnackbar({
                         status: true,
@@ -308,9 +323,9 @@
                     }); // Show Error Snackbar
                     return;
                 }
-                submodelElementData.value = { ...SelectedNode.value }; // copy the static SubmodelElement Data from the store
+                submodelElementData.value = { ...selectedNode.value }; // copy the static SubmodelElement Data from the store
                 submodelElementData.value.timestamp = 'no sync';
-                submodelElementData.value.path = SelectedNode.value.path; // add the path to the SubmodelElement Data
+                submodelElementData.value.path = selectedNode.value.path; // add the path to the SubmodelElement Data
             }
             if (withConceptDescriptions) {
                 getCD(); // fetch Concept Descriptions for the SubmodelElement
@@ -325,7 +340,7 @@
 
     // Get Concept Descriptions for the SubmodelElement from the ConceptDescription Repository
     function getCD() {
-        getConceptDescriptions(SelectedNode.value).then((response: any) => {
+        getConceptDescriptions(selectedNode.value).then((response: any) => {
             // console.log('ConceptDescription: ', response)
             // add ConceptDescription to the SubmodelElement Data
             if (response) {
