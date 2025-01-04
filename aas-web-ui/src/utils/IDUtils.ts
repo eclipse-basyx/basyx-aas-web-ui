@@ -21,3 +21,15 @@ export function generateUUIDFromString(str: any): string {
         hash.substring(20, 32);
     return guid;
 }
+
+export function generateIri(type: string): string {
+    return `https://example.com/ids/${type}/${generateCustomId()}`;
+}
+
+function generateCustomId(): string {
+    const segment = (): string => {
+        return Math.floor(1000 + Math.random() * 9000).toString();
+    };
+
+    return `${segment()}_${segment()}_${segment()}_${segment()}`;
+}

@@ -55,3 +55,18 @@ export function downloadFile(filename: string, fileContent: Blob) {
     link.click();
     document.body.removeChild(link);
 }
+
+// Function to remove null values from an object
+export function removeNullValues(obj: any): any {
+    if (Array.isArray(obj)) {
+        return obj.map(removeNullValues);
+    } else if (obj !== null && typeof obj === 'object') {
+        return Object.fromEntries(
+            Object.entries(obj)
+                .filter(([, v]) => v !== null)
+                .map(([k, v]) => [k, removeNullValues(v)])
+        );
+    } else {
+        return obj;
+    }
+}
