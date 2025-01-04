@@ -63,7 +63,7 @@ export default defineComponent({
         // converts AAS identification to UTF8 BASE64 encoded URL
         URLEncode(aasId: string) {
             const base64Id = btoa(unescape(encodeURIComponent(aasId)));
-            const urlSafeBase64Id = base64Id.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '%3D');
+            const urlSafeBase64Id = base64Id.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
             return urlSafeBase64Id;
         },
 
@@ -682,7 +682,7 @@ export default defineComponent({
 
             // This is the Submodel layer
             let smRepoUrl = this.submodelRepoUrl;
-            smRepoUrl += '/' + this.URLEncode(smId).replace(/%3D/g, '');
+            smRepoUrl += '/' + this.URLEncode(smId);
 
             // This is the layer directly under the Submodel
             if (
@@ -1366,7 +1366,7 @@ export default defineComponent({
                     if (!aasRegistryUrl.includes('/shell-descriptors')) {
                         aasRegistryUrl += '/shell-descriptors';
                     }
-                    const aasRegistryPath = `${aasRegistryUrl}/${this.URLEncode(aasId).replace(/%3D/g, '')}`;
+                    const aasRegistryPath = `${aasRegistryUrl}/${this.URLEncode(aasId)}`;
                     const aasRegistryContext = 'retrieving AAS Descriptor';
 
                     const aasRegistryResponse = await this.getRequest(

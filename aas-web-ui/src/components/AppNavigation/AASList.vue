@@ -242,7 +242,7 @@
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
-    import { URLEncode } from '@/utils/EncodeDecodeUtils';
+    import { base64Encode } from '@/utils/EncodeDecodeUtils';
     import { downloadFile } from '@/utils/generalUtils';
     import { nameToDisplay } from '@/utils/ReferableUtils';
 
@@ -544,11 +544,11 @@
             if (response.success) {
                 // execute if the Request was successful
                 const submodelRefs = response.data.result;
-                const aasIds = URLEncode(AAS.id);
+                const aasIds = base64Encode(AAS.id);
                 // extract all references in an Array calles submodelIds from each keys[0].value
                 let submodelIds = [] as any;
                 submodelRefs.forEach((submodelRef: any) => {
-                    submodelIds.push(URLEncode(submodelRef.keys[0].value));
+                    submodelIds.push(base64Encode(submodelRef.keys[0].value));
                 });
                 // console.log('aasIds: ', aasIds, ' submodelIds: ', submodelIds);
                 // strip the everything after the last slash from the getAASRepoURL (http://localhost:1500/shells -> http://localhost:1500)

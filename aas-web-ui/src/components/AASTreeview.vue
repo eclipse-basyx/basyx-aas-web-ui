@@ -55,7 +55,7 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
-    import { URLEncode } from '@/utils/EncodeDecodeUtils';
+    import { base64Encode } from '@/utils/EncodeDecodeUtils';
     import { UUID } from '@/utils/IDUtils';
     import { nameToDisplay } from '@/utils/ReferableUtils';
 
@@ -156,7 +156,7 @@
                 smRegistryURL += '/submodel-descriptors';
             }
             const submodelId = submodelRef.keys[0].value;
-            let path = smRegistryURL + '/' + URLEncode(submodelId);
+            let path = smRegistryURL + '/' + base64Encode(submodelId);
             let context = 'retrieving Submodel Endpoint';
             let disableMessage = false;
             return getRequest(path, context, disableMessage).then((response: any) => {

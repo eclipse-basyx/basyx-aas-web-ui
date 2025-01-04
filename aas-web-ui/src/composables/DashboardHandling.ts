@@ -3,7 +3,7 @@ import { useRequestHandling } from '@/composables/RequestHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useEnvStore } from '@/store/EnvironmentStore';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
-import { URLEncode } from '@/utils/EncodeDecodeUtils';
+import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { UUID } from '@/utils/IDUtils';
 
 export function useDashboardHandling() {
@@ -90,7 +90,7 @@ export function useDashboardHandling() {
     }
 
     async function getElements(group: any) {
-        const pathGroup = URLEncode(group);
+        const pathGroup = base64Encode(group);
         const path = dashboardServicePath.value + '/findGroup/' + pathGroup;
         const context = 'fetching all elements of a group';
         const disableMessage = false;
@@ -103,7 +103,7 @@ export function useDashboardHandling() {
 
     async function deleteGroup(groups: any, groupId: any): Promise<any[]> {
         // console.log(groups)
-        const pathGroup = URLEncode(groupId);
+        const pathGroup = base64Encode(groupId);
         const path = dashboardServicePath.value + '/deleteGroup/' + pathGroup;
         const context = 'deleting all elements of a group';
         const disableMessage = false;

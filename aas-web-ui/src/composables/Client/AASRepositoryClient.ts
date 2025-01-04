@@ -6,7 +6,7 @@ import { useRequestHandling } from '@/composables/RequestHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
-import { URLEncode } from '@/utils/EncodeDecodeUtils';
+import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
 export function useAASRepositoryClient() {
     const { getRequest, postRequest, putRequest } = useRequestHandling();
@@ -161,7 +161,7 @@ export function useAASRepositoryClient() {
 
         const context = 'updating AAS';
         const disableMessage = false;
-        const path = aasRepositoryUrl.value + '/' + URLEncode(aas.id);
+        const path = aasRepositoryUrl.value + '/' + base64Encode(aas.id);
         const headers = new Headers();
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(jsonAas);
@@ -191,7 +191,7 @@ export function useAASRepositoryClient() {
         const path =
             aasRepositoryUrl.value +
             '/' +
-            URLEncode(aasId) +
+            base64Encode(aasId) +
             '/asset-information/thumbnail' +
             '?fileName=' +
             thumbnail.name;
