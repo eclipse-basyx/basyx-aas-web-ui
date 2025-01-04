@@ -49,11 +49,9 @@
                                             <div
                                                 v-if="getCountryName(valueToDisplay(productProperty))"
                                                 class="text-caption">
-                                                <span :class="'fi fi-' + valueToDisplay(productProperty).toLowerCase()">
-                                                </span>
-                                                {{ getCountryName(valueToDisplay(productProperty)) }} (
-                                                {{ valueToDisplay(productProperty) }}
-                                                )
+                                                {{ getCountryName(valueToDisplay(productProperty)) }} ({{
+                                                    valueToDisplay(productProperty)
+                                                }})
                                             </div>
                                             <div v-else class="text-caption">{{ valueToDisplay(productProperty) }}</div>
                                         </template>
@@ -286,7 +284,6 @@
 
 <script lang="ts" setup>
     import 'leaflet/dist/leaflet.css';
-    import 'flag-icons/css/flag-icons.min.css'; // Import the flag-icons CSS
     import { LMap, LMarker, LTileLayer } from '@vue-leaflet/vue-leaflet';
     import { latLng } from 'leaflet';
     import { computed, onMounted, ref } from 'vue';

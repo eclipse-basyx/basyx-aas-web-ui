@@ -19,182 +19,184 @@
                                 {{ nameToDisplay(contactInformation, 'en', 'Contact Information') }}
                                 <DescriptionTooltip :description-array="contactInformation?.description" />
                             </v-list-item-title>
-                            <!-- <v-list-item-subtitle v-if="descriptionToDisplay(contactInformation)">
-                                {{ descriptionToDisplay(contactInformation) }}
-                            </v-list-item-subtitle> -->
                         </v-list-item>
                     </v-expansion-panel-title>
                     <v-divider v-if="panel === index"></v-divider>
-                    <v-expansion-panel-text>
-                        <v-table>
-                            <tbody>
-                                <template
-                                    v-for="(contactInformationProperty, i) in contactInformation.properties"
-                                    :key="contactInformationProperty.idShort">
-                                    <tr
-                                        v-if="hasValue(contactInformationProperty)"
-                                        :class="i % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
-                                        <td>
-                                            <div class="text-subtitleText text-caption">
-                                                <span>{{ nameToDisplay(contactInformationProperty) }}</span>
-                                                <DescriptionTooltip
-                                                    :description-array="contactInformationProperty?.description" />
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <!-- Address of Additional Link -->
-                                            <a
-                                                v-if="
-                                                    checkIdShort(contactInformationProperty, 'AddressOfAdditionalLink')
-                                                "
-                                                :href="valueToDisplay(contactInformationProperty)"
-                                                target="_blank"
-                                                class="text-caption">
-                                                {{ valueToDisplay(contactInformationProperty) }}
-                                            </a>
-                                            <!-- Language -->
-                                            <template v-else-if="checkIdShort(contactInformationProperty, 'Language')">
-                                                <!-- Show english value, if available -->
-                                                <div
-                                                    v-if="valueToDisplay(contactInformationProperty)"
+                    <v-expansion-panel-text class="pt-4">
+                        <v-sheet border rounded>
+                            <v-table>
+                                <tbody>
+                                    <template
+                                        v-for="(contactInformationProperty, i) in contactInformation.properties"
+                                        :key="contactInformationProperty.idShort">
+                                        <tr
+                                            v-if="hasValue(contactInformationProperty)"
+                                            :class="i % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
+                                            <td>
+                                                <div class="text-subtitleText text-caption">
+                                                    <span>{{ nameToDisplay(contactInformationProperty) }}</span>
+                                                    <DescriptionTooltip
+                                                        :description-array="contactInformationProperty?.description" />
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <!-- Address of Additional Link -->
+                                                <a
+                                                    v-if="
+                                                        checkIdShort(
+                                                            contactInformationProperty,
+                                                            'AddressOfAdditionalLink'
+                                                        )
+                                                    "
+                                                    :href="valueToDisplay(contactInformationProperty)"
+                                                    target="_blank"
                                                     class="text-caption">
+                                                    {{ valueToDisplay(contactInformationProperty) }}
+                                                </a>
+                                                <!-- Language -->
+                                                <template
+                                                    v-else-if="checkIdShort(contactInformationProperty, 'Language')">
+                                                    <!-- Show english value, if available -->
+                                                    <div
+                                                        v-if="valueToDisplay(contactInformationProperty)"
+                                                        class="text-caption">
+                                                        <template
+                                                            v-if="
+                                                                getLanguageName(
+                                                                    valueToDisplay(contactInformationProperty)
+                                                                )
+                                                            ">
+                                                            {{
+                                                                getLanguageName(
+                                                                    valueToDisplay(contactInformationProperty)
+                                                                )
+                                                            }}
+                                                            ({{ valueToDisplay(contactInformationProperty) }})
+                                                        </template>
+                                                        <template v-else>
+                                                            {{ valueToDisplay(contactInformationProperty) }}
+                                                        </template>
+                                                    </div>
+                                                    <!-- Otherwise show all available values -->
+                                                    <template
+                                                        v-for="(langStringSet, j) in contactInformationProperty.value"
+                                                        v-else
+                                                        :key="j">
+                                                        <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                                                            <span class="font-weight-thin">
+                                                                {{
+                                                                    (getLanguageName(langStringSet?.language)
+                                                                        ? getLanguageName(langStringSet?.language)
+                                                                        : langStringSet?.language) + ': '
+                                                                }}
+                                                            </span>
+                                                            {{ langStringSet?.text }}
+                                                        </div>
+                                                    </template>
+                                                </template>
+                                                <!-- NationalCode -->
+                                                <template
+                                                    v-else-if="
+                                                        checkIdShort(contactInformationProperty, 'NationalCode')
+                                                    ">
+                                                    <!-- Show english value, if available -->
+                                                    <div
+                                                        v-if="valueToDisplay(contactInformationProperty)"
+                                                        class="text-caption">
+                                                        {{ valueToDisplay(contactInformationProperty) }}
+                                                        ({{
+                                                            getCountryName(valueToDisplay(contactInformationProperty))
+                                                        }})
+                                                    </div>
+                                                    <!-- Otherwise show all available values -->
+                                                    <template
+                                                        v-for="(langStringSet, j) in contactInformationProperty.value"
+                                                        v-else
+                                                        :key="j">
+                                                        <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                                                            <span class="font-weight-thin">
+                                                                {{
+                                                                    (getLanguageName(langStringSet?.language)
+                                                                        ? getLanguageName(langStringSet?.language)
+                                                                        : langStringSet?.language) + ': '
+                                                                }}
+                                                            </span>
+                                                            {{ langStringSet?.text }}
+                                                        </div>
+                                                    </template>
+                                                </template>
+                                                <!-- Telephone number / Fax number / Email -->
+                                                <div
+                                                    v-else-if="
+                                                        checkIdShort(contactInformationProperty, 'TelephoneNumber') ||
+                                                        checkIdShort(contactInformationProperty, 'FaxNumber') ||
+                                                        checkIdShort(contactInformationProperty, 'Email')
+                                                    "
+                                                    class="text-caption">
+                                                    <v-chip
+                                                        v-if="
+                                                            contactInformationProperty?.typeOfValue &&
+                                                            contactInformationProperty?.typeOfValue.trim() !== ''
+                                                        "
+                                                        prepend-icon="mdi-office-building"
+                                                        size="x-small"
+                                                        class="mr-1">
+                                                        {{ contactInformationProperty.typeOfValue }}
+                                                    </v-chip>
                                                     <template
                                                         v-if="
-                                                            getLanguageName(valueToDisplay(contactInformationProperty))
+                                                            checkIdShort(contactInformationProperty, 'TelephoneNumber')
                                                         ">
-                                                        {{
-                                                            getLanguageName(valueToDisplay(contactInformationProperty))
-                                                        }}
-                                                        ({{ valueToDisplay(contactInformationProperty) }})
+                                                        <a
+                                                            :href="`tel:${valueToDisplay(contactInformationProperty).replaceAll(' ', '')}`">
+                                                            {{ valueToDisplay(contactInformationProperty) }}
+                                                        </a>
+                                                    </template>
+                                                    <template
+                                                        v-else-if="checkIdShort(contactInformationProperty, 'Email')">
+                                                        <a
+                                                            :href="`mailto:${valueToDisplay(contactInformationProperty)}`">
+                                                            {{ valueToDisplay(contactInformationProperty) }}
+                                                        </a>
                                                     </template>
                                                     <template v-else>
                                                         {{ valueToDisplay(contactInformationProperty) }}
                                                     </template>
                                                 </div>
-                                                <!-- Otherwise show all available values -->
+                                                <!-- MultiLanguageProperties -->
                                                 <template
-                                                    v-for="(langStringSet, j) in contactInformationProperty.value"
-                                                    v-else
-                                                    :key="j">
-                                                    <div v-if="langStringSet?.text.length > 0" class="text-caption">
-                                                        <span class="font-weight-thin">
-                                                            {{
-                                                                (getLanguageName(langStringSet?.language)
-                                                                    ? getLanguageName(langStringSet?.language)
-                                                                    : langStringSet?.language) + ': '
-                                                            }}
-                                                        </span>
-                                                        {{ langStringSet?.text }}
-                                                    </div>
-                                                </template>
-                                            </template>
-                                            <!-- NationalCode -->
-                                            <template
-                                                v-else-if="checkIdShort(contactInformationProperty, 'NationalCode')">
-                                                <!-- Show english value, if available -->
-                                                <div
-                                                    v-if="valueToDisplay(contactInformationProperty)"
-                                                    class="text-caption">
-                                                    {{ valueToDisplay(contactInformationProperty) }}
-                                                    (
-                                                    <span
-                                                        :class="
-                                                            'fi fi-' +
-                                                            valueToDisplay(contactInformationProperty).toLowerCase()
-                                                        ">
-                                                    </span>
-                                                    {{ getCountryName(valueToDisplay(contactInformationProperty)) }})
-                                                </div>
-                                                <!-- Otherwise show all available values -->
-                                                <template
-                                                    v-for="(langStringSet, j) in contactInformationProperty.value"
-                                                    v-else
-                                                    :key="j">
-                                                    <div v-if="langStringSet?.text.length > 0" class="text-caption">
-                                                        <span class="font-weight-thin">
-                                                            {{
-                                                                (getLanguageName(langStringSet?.language)
-                                                                    ? getLanguageName(langStringSet?.language)
-                                                                    : langStringSet?.language) + ': '
-                                                            }}
-                                                        </span>
-                                                        {{ langStringSet?.text }}
-                                                    </div>
-                                                </template>
-                                            </template>
-                                            <!-- Telephone number / Fax number / Email -->
-                                            <div
-                                                v-else-if="
-                                                    checkIdShort(contactInformationProperty, 'TelephoneNumber') ||
-                                                    checkIdShort(contactInformationProperty, 'FaxNumber') ||
-                                                    checkIdShort(contactInformationProperty, 'Email')
-                                                "
-                                                class="text-caption">
-                                                <v-chip
-                                                    v-if="
-                                                        contactInformationProperty?.typeOfValue &&
-                                                        contactInformationProperty?.typeOfValue.trim() !== ''
-                                                    "
-                                                    size="x-small"
-                                                    class="mr-1">
-                                                    {{ contactInformationProperty.typeOfValue }}
-                                                </v-chip>
-                                                <template
-                                                    v-if="
-                                                        checkIdShort(contactInformationProperty, 'TelephoneNumber') &&
-                                                        isMobile
+                                                    v-else-if="
+                                                        contactInformationProperty.modelType == 'MultiLanguageProperty'
                                                     ">
-                                                    <a
-                                                        :href="`tel:${valueToDisplay(contactInformationProperty).replaceAll(' ', '')}`">
+                                                    <!-- Show english value, if available -->
+                                                    <div
+                                                        v-if="valueToDisplay(contactInformationProperty)"
+                                                        class="text-caption">
                                                         {{ valueToDisplay(contactInformationProperty) }}
-                                                    </a>
-                                                </template>
-                                                <template v-else-if="checkIdShort(contactInformationProperty, 'Email')">
-                                                    <a :href="`mailto:${valueToDisplay(contactInformationProperty)}`">
-                                                        {{ valueToDisplay(contactInformationProperty) }}
-                                                    </a>
-                                                </template>
-                                                <template v-else>
-                                                    {{ valueToDisplay(contactInformationProperty) }}
-                                                </template>
-                                            </div>
-                                            <!-- MultiLanguageProperties -->
-                                            <template
-                                                v-else-if="
-                                                    contactInformationProperty.modelType == 'MultiLanguageProperty'
-                                                ">
-                                                <!-- Show english value, if available -->
-                                                <div
-                                                    v-if="valueToDisplay(contactInformationProperty)"
-                                                    class="text-caption">
-                                                    {{ valueToDisplay(contactInformationProperty) }}
-                                                </div>
-                                                <!-- Otherwise show all available values -->
-                                                <template
-                                                    v-for="(langStringSet, j) in contactInformationProperty.value"
-                                                    v-else
-                                                    :key="j">
-                                                    <div v-if="langStringSet?.text.length > 0" class="text-caption">
-                                                        <span class="font-weight-thin">
-                                                            {{
-                                                                (getLanguageName(langStringSet?.language)
-                                                                    ? getLanguageName(langStringSet?.language)
-                                                                    : langStringSet?.language) + ': '
-                                                            }}
-                                                        </span>
-                                                        {{ langStringSet?.text }}
                                                     </div>
+                                                    <!-- Otherwise show all available values -->
+                                                    <template
+                                                        v-for="(langStringSet, j) in contactInformationProperty.value"
+                                                        v-else
+                                                        :key="j">
+                                                        <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                                                            <v-chip size="x-small" label>{{
+                                                                langStringSet.language
+                                                            }}</v-chip>
+                                                            {{ langStringSet?.text }}
+                                                        </div>
+                                                    </template>
                                                 </template>
-                                            </template>
-                                            <!-- Default -->
-                                            <span v-else class="text-caption">
-                                                {{ valueToDisplay(contactInformationProperty) }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                </template>
-                            </tbody>
-                        </v-table>
+                                                <!-- Default -->
+                                                <span v-else class="text-caption">
+                                                    {{ valueToDisplay(contactInformationProperty) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </v-table>
+                        </v-sheet>
                         <v-card-actions
                             v-if="contactInformation?.vCard && contactInformation.vCard.trim() !== ''"
                             class="pa-0">
@@ -203,6 +205,7 @@
                                 size="small"
                                 color="primary"
                                 variant="elevated"
+                                prepend-icon="mdi-card-account-details"
                                 class="text-buttonText"
                                 @click="
                                     downloadVCard(contactInformation.vCard, nameToDisplay(contactInformation) + '.vcf')
@@ -218,11 +221,9 @@
 </template>
 
 <script lang="ts" setup>
-    import 'flag-icons/css/flag-icons.min.css'; // Import the flag-icons CSS
     import { computed, onMounted, ref } from 'vue';
     import { downloadVCard } from '@/composables/VirtualContactFile';
     import { useAASStore } from '@/store/AASDataStore';
-    import { useNavigationStore } from '@/store/NavigationStore';
     import { getCountryName, getLanguageName } from '@/utils/LocaleUtils';
     import { checkIdShort, getSubmodelElementByIdShort, nameToDisplay } from '@/utils/ReferableUtils';
     import { checkSemanticId } from '@/utils/SemanticIdUtils';
@@ -252,7 +253,6 @@
     });
 
     // Stores
-    const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
 
     const props = defineProps({
@@ -270,7 +270,6 @@
 
     // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode);
-    const isMobile = computed(() => navigationStore.getIsMobile);
 
     onMounted(() => {
         initializeVisualization();
@@ -357,6 +356,7 @@
                     'Language',
                     'TimeZone',
                     'AddressOfAdditionalLink',
+                    'NationalCode',
                 ].forEach((idShort: any) => {
                     if (checkIdShort(sme, idShort) && hasValue(sme)) {
                         contactInformation.properties.push(sme);
