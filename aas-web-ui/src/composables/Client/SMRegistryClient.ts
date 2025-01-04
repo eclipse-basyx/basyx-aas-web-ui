@@ -49,7 +49,7 @@ export function useSMRegistryClient() {
             smRegistryUrl += '/shell-descriptors';
         }
 
-        const smRegistryPath = smRegistryUrl + '/' + URLEncode(smId);
+        const smRegistryPath = smRegistryUrl + '/' + URLEncode(smId).replace(/%3D/g, '');
         const smRegistryContext = 'retrieving SM Descriptor';
         const disableMessage = false;
         try {

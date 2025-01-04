@@ -18,8 +18,8 @@ export function useSMRepositoryClient() {
 
         let smRepoUrl = submodelRepoUrl.value;
         if (smRepoUrl.trim() === '') return failResponse;
-        if (!smRepoUrl.includes('/shells')) {
-            smRepoUrl += '/shells';
+        if (!smRepoUrl.includes('/submodels')) {
+            smRepoUrl += '/submodels';
         }
 
         const smRepoPath = smRepoUrl;
