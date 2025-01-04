@@ -1,12 +1,15 @@
+import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
 import { computed } from 'vue';
 import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
+import { URLEncode } from '@/utils/EncodeDecodeUtils';
 
 export function useAASRepositoryClient() {
-    const { getRequest, postRequest } = useRequestHandling();
+    const { getRequest, postRequest, putRequest } = useRequestHandling();
     const { fetchAasDescriptorById } = useAASRegistryClient();
 
     const aasStore = useAASStore();
@@ -124,11 +127,89 @@ export function useAASRepositoryClient() {
         });
     }
 
+    async function postAas(aas: aasTypes.AssetAdministrationShell) {
+        // Convert AAS to JSON
+        const jsonAas = jsonization.toJsonable(aas);
+        // console.log('postAas()', jsonAas);
+
+        const context = 'creating AAS';
+        const disableMessage = false;
+        const path = aasRepositoryUrl.value;
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const body = JSON.stringify(jsonAas);
+
+        // Send Request to upload the file
+        postRequest(path, body, headers, context, disableMessage).then((response: any) => {
+            if (response.success) {
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 4000,
+                    color: 'success',
+                    btnColor: 'buttonText',
+                    text: 'AAS successfully created',
+                }); // Show Success Snackbar
+                navigationStore.dispatchTriggerAASListReload(true); // Reload AAS List
+            }
+        });
+    }
+
+    async function putAas(aas: aasTypes.AssetAdministrationShell) {
+        // Convert AAS to JSON
+        const jsonAas = jsonization.toJsonable(aas);
+        // console.log('putAas()', jsonAas);
+
+        const context = 'updating AAS';
+        const disableMessage = false;
+        const path = aasRepositoryUrl.value + '/' + URLEncode(aas.id);
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const body = JSON.stringify(jsonAas);
+
+        // Send Request to upload the file
+        putRequest(path, body, headers, context, disableMessage).then((response: any) => {
+            if (response.success) {
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 4000,
+                    color: 'success',
+                    btnColor: 'buttonText',
+                    text: 'AAS successfully updated',
+                }); // Show Success Snackbar
+            }
+        });
+    }
+
+    async function putThumbnail(thumbnail: File, aasId: string) {
+        // console.log('putThumbnail()', thumbnail);
+        // Create formData
+        const formData = new FormData();
+        formData.append('file', thumbnail);
+
+        const context = 'uploading thumbnail';
+        const disableMessage = false;
+        const path =
+            aasRepositoryUrl.value +
+            '/' +
+            URLEncode(aasId) +
+            '/asset-information/thumbnail' +
+            '?fileName=' +
+            thumbnail.name;
+        const headers = new Headers();
+        const body = formData;
+
+        // Send Request to upload the file
+        putRequest(path, body, headers, context, disableMessage);
+    }
+
     return {
         fetchAasList,
         fetchAasById,
         fetchAas,
         fetchAndDispatchAas,
         uploadAas,
+        postAas,
+        putAas,
+        putThumbnail,
     };
 }

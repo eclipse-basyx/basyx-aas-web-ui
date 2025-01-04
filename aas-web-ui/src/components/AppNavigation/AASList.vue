@@ -34,7 +34,57 @@
                     </v-col>
                     <!-- Add existing AAS -->
                     <v-col cols="auto" class="px-0">
-                        <UploadAAS></UploadAAS>
+                        <v-menu v-if="editMode">
+                            <template #activator="{ props }">
+                                <v-btn icon="mdi-dots-vertical" variant="plain" v-bind="props"></v-btn>
+                            </template>
+                            <v-sheet border>
+                                <v-list density="compact" class="py-0">
+                                    <!-- Open Upload Dialog -->
+                                    <v-tooltip
+                                        open-delay="600"
+                                        :location="editMode ? 'end' : 'bottom'"
+                                        :disabled="isMobile">
+                                        <template #activator="{ props }">
+                                            <v-list-item
+                                                prepend-icon="mdi-upload"
+                                                slim
+                                                v-bind="props"
+                                                @click="uploadAASDialog = true">
+                                                <template #prepend>
+                                                    <v-icon size="small">mdi-upload</v-icon>
+                                                </template>
+                                                Upload AAS
+                                            </v-list-item>
+                                        </template>
+                                        <span>Upload AAS File to Environment</span>
+                                    </v-tooltip>
+                                    <v-divider></v-divider>
+                                    <!-- Open AAS edit dialog -->
+                                    <v-tooltip open-delay="600" location="end">
+                                        <template #activator="{ props }">
+                                            <v-list-item slim v-bind="props" @click="openEditDialog(true)">
+                                                <template #prepend>
+                                                    <v-icon size="small">mdi-plus</v-icon>
+                                                </template>
+                                                Create AAS
+                                            </v-list-item>
+                                        </template>
+                                        <span>Creat a new AAS</span>
+                                    </v-tooltip>
+                                </v-list>
+                            </v-sheet>
+                        </v-menu>
+                        <v-tooltip v-else open-delay="600" :location="editMode ? 'end' : 'bottom'" :disabled="isMobile">
+                            <template #activator="{ props }">
+                                <v-btn
+                                    icon="mdi-upload"
+                                    variant="plain"
+                                    v-bind="props"
+                                    @click="uploadAASDialog = true"></v-btn>
+                            </template>
+                            <span>Upload AAS File to Environment</span>
+                        </v-tooltip>
                     </v-col>
                 </v-row>
             </v-card-title>
@@ -43,7 +93,8 @@
             <v-list
                 v-if="!singleAas"
                 nav
-                class="bg-card card pa-0"
+                bg-color="card"
+                class="pa-0"
                 :style="{
                     display: 'flex',
                     'flex-direction': 'column',
@@ -53,8 +104,13 @@
                     <template #default="{ item }">
                         <!-- Single AAS -->
                         <v-list-item
-                            class="bg-listItem mt-2 mx-2"
+                            class="mt-2 mx-2"
+                            :active="isSelected(item)"
+                            color="primarySurface"
+                            base-color="listItem"
+                            variant="tonal"
                             style="border-top: solid; border-right: solid; border-bottom: solid; border-width: 1px"
+                            :border="isSelected(item) ? 'primary' : 'listItem thin'"
                             :style="{
                                 'border-color': isSelected(item)
                                     ? primaryColor + ' !important'
@@ -84,7 +140,7 @@
                             </template>
                             <!-- id of the AAS -->
                             <template v-if="drawerState" #subtitle>
-                                <div>{{ item['id'] }}</div>
+                                <div class="text-listItemText">{{ item['id'] }}</div>
                             </template>
                             <!-- open Details Button (with Status Badge) -->
                             <template v-if="drawerState" #append>
@@ -95,28 +151,59 @@
                                     color="error"
                                     text-color="buttonText"
                                     inline></v-badge>
-                                <!-- Download AAS -->
-                                <v-btn
-                                    v-if="aasRepoURL"
-                                    icon="mdi-download"
-                                    size="x-small"
-                                    variant="plain"
-                                    style="z-index: 9000; margin-left: -6px"
-                                    @click.stop="downloadAAS(item)"></v-btn>
-                                <!-- Remove from AAS Registry Button -->
-                                <v-btn
-                                    icon="mdi-close"
-                                    size="x-small"
-                                    variant="plain"
-                                    style="z-index: 9000; margin-left: -6px"
-                                    @click.stop="showDeleteDialog(item)"></v-btn>
+                                <v-menu v-if="editMode">
+                                    <template #activator="{ props }">
+                                        <v-btn
+                                            icon="mdi-dots-vertical"
+                                            variant="plain"
+                                            color="listItemText"
+                                            size="x-small"
+                                            v-bind="props"
+                                            @click.prevent></v-btn>
+                                    </template>
+                                    <v-sheet border>
+                                        <v-list dense slim density="compact" class="py-0">
+                                            <v-list-item @click="downloadAAS(item)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">mdi-download</v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>Download AAS</v-list-item-subtitle>
+                                            </v-list-item>
+                                            <v-list-item @click="openEditDialog(false, item)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">mdi-pencil</v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>Edit AAS</v-list-item-subtitle>
+                                            </v-list-item>
+                                            <v-list-item @click="showDeleteDialog(item)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">mdi-delete</v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>Delete AAS</v-list-item-subtitle>
+                                            </v-list-item>
+                                        </v-list>
+                                    </v-sheet>
+                                </v-menu>
+                                <template v-else>
+                                    <!-- Download AAS -->
+                                    <v-btn
+                                        v-if="aasRepoURL"
+                                        icon="mdi-download"
+                                        size="x-small"
+                                        variant="plain"
+                                        color="listItemText"
+                                        style="z-index: 9000; margin-left: -6px"
+                                        @click.stop="downloadAAS(item)"></v-btn>
+                                    <!-- Remove from AAS Registry Button -->
+                                    <v-btn
+                                        icon="mdi-close"
+                                        size="x-small"
+                                        variant="plain"
+                                        color="listItemText"
+                                        style="z-index: 9000; margin-left: -6px"
+                                        @click.stop="showDeleteDialog(item)"></v-btn>
+                                </template>
                             </template>
-                            <v-overlay
-                                :model-value="isSelected(item)"
-                                scrim="primary"
-                                style="opacity: 0.2"
-                                contained
-                                persistent></v-overlay>
                         </v-list-item>
                     </template>
                 </v-virtual-scroll>
@@ -136,24 +223,12 @@
             </v-list>
         </v-card>
     </v-container>
-    <v-dialog v-model="deleteDialogShowing" max-width="500px">
-        <v-card>
-            <v-card-title>Confirm Delete</v-card-title>
-            <v-divider></v-divider>
-            <v-card-text class="pb-0">
-                <span>Are you sure you want to delete the AAS?</span>
-                <v-checkbox v-model="deleteSubmodels" label="Also delete Submodels" hide-details></v-checkbox>
-                <v-alert v-if="deleteSubmodels" class="mb-2" variant="tonal" border color="warning"
-                    >Warning: If other shells refer to the same submodels, those references are not deleted!</v-alert
-                >
-            </v-card-text>
-            <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn @click="deleteDialogShowing = false">Cancel</v-btn>
-                <v-btn variant="tonal" color="error" :loading="deleteLoading" @click="confirmDelete">Delete</v-btn>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
+    <!-- Dialog for creating/editing AAS -->
+    <AAS v-model="editDialog" :new-shell="newShell" :aas="aasToEdit"></AAS>
+    <!-- Dialog for uploading AAS -->
+    <UploadAAS v-model="uploadAASDialog"></UploadAAS>
+    <!-- Dialog for deleting AAS -->
+    <DeleteAAS v-model="deleteDialog" :aas="aasToDelete" :list-loading-state="loading"></DeleteAAS>
 </template>
 
 <script lang="ts" setup>
@@ -181,7 +256,7 @@
     const router = useRouter();
 
     // composables
-    const { getRequest, deleteRequest } = useRequestHandling();
+    const { getRequest } = useRequestHandling();
     const { fetchAndDispatchAas } = useAASRepositoryClient();
 
     // Stores
@@ -196,12 +271,14 @@
     const AASData = ref([]); // Variable to store the AAS Data
     const unfilteredAASData = ref([]); // Variable to store the AAS Data before filtering
     const listLoading = ref(false); // Variable to store if the AAS List is loading
-    const deleteDialogShowing = ref(false); // Variable to store if the Delete Dialog should be shown
-    const deleteSubmodels = ref(false); // Variable to store if the Submodels should be deleted
+    const deleteDialog = ref(false); // Variable to store if the Delete Dialog should be shown
     const aasToDelete = ref({}); // Variable to store the AAS to be deleted
-    const deleteLoading = ref(false); // Variable to store if the AAS is being deleted
     const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null); // Reference to the Virtual Scroll Component
     const AASStatus = ref(''); // Variable to store the AAS Status
+    const uploadAASDialog = ref(false); // Variable to store if the Upload AAS Dialog should be shown
+    const editDialog = ref(false); // Variable to store if the Edit Dialog should be shown
+    const newShell = ref(false); // Variable to store if a new Shell should be created
+    const aasToEdit = ref<any | undefined>(undefined); // Variable to store the AAS to be edited
 
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
@@ -209,7 +286,6 @@
     const drawerState = computed(() => navigationStore.getDrawerState); // Get Drawer State from store (true -> collapsed, false -> extended)
     const aasRepoURL = computed(() => navigationStore.getAASRepoURL); // Get the AAS Repository URL from the Store
     const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL); // Get AAS Registry URL from Store
-    const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL); // Get Submodel Registry URL from Store
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
     const loading = computed(() => aasStore.getLoadingState); // Get the loading State from Store
     const primaryColor = computed(() => theme.current.value.colors.primary); // returns the primary color of the current theme
@@ -232,6 +308,7 @@
             }
         }
     });
+    const editMode = computed(() => route.name === 'AASEditor'); // Check if the current Route is the AAS Editor
 
     // Watchers
     // Watch the AAS Registry URL for changes and reload the AAS List if the URL changes
@@ -499,80 +576,16 @@
     }
 
     function showDeleteDialog(AAS: any) {
-        deleteDialogShowing.value = true;
+        deleteDialog.value = true;
         aasToDelete.value = AAS;
     }
 
-    async function confirmDelete() {
-        deleteLoading.value = true;
-        let error = false;
-        try {
-            if (deleteSubmodels.value) {
-                const aasEndpopint = extractEndpointHref(aasToDelete.value, 'AAS-3.0');
-                const aasRepoPath = aasEndpopint + '/submodel-refs';
-                const aasRepoContext = 'retrieving Submodel References';
-                const disableMessage = false;
-                const aasRepoResponse = await getRequest(aasRepoPath, aasRepoContext, disableMessage);
-                if (aasRepoResponse.success) {
-                    const submodelRefs = aasRepoResponse.data.result;
-                    // Extract all references in an array called submodelIds from each keys[0].value
-                    const submodelIds = submodelRefs.map((ref: any) => ref.keys[0].value);
-                    removeAAS(aasToDelete.value);
-                    // Remove each submodel
-                    for (const submodelId of submodelIds) {
-                        const submodelRegistryPath = `${submodelRegistryURL.value}/${URLEncode(submodelId)}`;
-                        const submodelRegistryResponse = await getRequest(
-                            submodelRegistryPath,
-                            'Removing Submodels',
-                            disableMessage
-                        );
-                        if (submodelRegistryResponse.success) {
-                            const submodelHref = extractEndpointHref(submodelRegistryResponse.data, 'SUBMODEL-3.0');
-                            const deletePath = submodelHref;
-                            await deleteRequest(deletePath, 'removing Submodel', disableMessage);
-                        } else {
-                            error = true;
-                        }
-                    }
-                } else {
-                    error = true;
-                }
-            } else {
-                removeAAS(aasToDelete.value);
-            }
-        } finally {
-            deleteDialogShowing.value = false;
-            aasToDelete.value = {};
-            deleteSubmodels.value = false;
-            if (!error) {
-                //remove query from URL
-                router.push({ path: route.path, query: {} });
-                aasStore.dispatchSelectedAAS({});
-                loadAASListData(); // reload the AAS List
-            }
-            deleteLoading.value = false;
+    function openEditDialog(createNew: boolean, aas?: any) {
+        editDialog.value = true;
+        newShell.value = createNew;
+        if (createNew === false && aas) {
+            aasToEdit.value = aas;
         }
-    }
-
-    function removeAAS(AAS: any) {
-        // console.log('Remove AAS: ', AAS);
-        // return if loading state is true -> prevents multiple requests
-        if (loading.value) {
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 4000,
-                color: 'error',
-                btnColor: 'buttonText',
-                text: 'Please wait for the current Request to finish.',
-            });
-            return;
-        }
-        // console.log('Remove AAS: ', AAS);
-        const aasEndpopint = extractEndpointHref(AAS, 'AAS-3.0');
-        let path = aasEndpopint;
-        let context = 'removing AAS';
-        let disableMessage = false;
-        deleteRequest(path, context, disableMessage);
     }
 </script>
 
