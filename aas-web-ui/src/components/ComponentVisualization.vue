@@ -27,6 +27,8 @@
                     v-if="
                         selectedAAS &&
                         Object.keys(selectedAAS).length > 0 &&
+                        selectedNode &&
+                        Object.keys(selectedNode).length > 0 &&
                         submodelElementData &&
                         Object.keys(submodelElementData).length > 0
                     ">
@@ -180,7 +182,7 @@
 
         return plugins;
     });
-    const viewerMode = computed(() => route.name === 'AASViewer' || route.name === 'ComponentVisualization');
+    const viewerMode = computed(() => route.name === 'SubmodelViewer' || route.name === 'ComponentVisualization');
 
     // Watchers
     // Resets the submodelElementData when the AAS Registry changes

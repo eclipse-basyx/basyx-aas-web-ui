@@ -32,8 +32,7 @@
                 <template v-else>
                     <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
                         <template v-if="submodelData.length > 0">
-                            <!-- Trees of Submodels -->
-                            <!-- TODO: Replace with Vuetify Treeview Component when it get's released in Q1 2023 -->
+                            <!-- TODO: Evaluate and Replace with Vuetify Treeview Component when it gets fully released in Q1 2025 -->
                             <VTreeview
                                 v-for="item in submodelData"
                                 :key="item.id"
