@@ -153,6 +153,7 @@
                     fetchedAssetInformation.defaultThumbnail.path &&
                     !fetchedAssetInformation.defaultThumbnail.path.startsWith('http')
                 ) {
+                    // TODO: This does not work with active keycloak because there the thumbnail would have to be fetched with a token
                     let assetInformationThumbnailEndpoint = assetInformationEndpoint + '/thumbnail';
                     fetchedAssetInformation.defaultThumbnail.path = assetInformationThumbnailEndpoint;
                 }

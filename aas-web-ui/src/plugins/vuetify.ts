@@ -9,24 +9,26 @@ import '@mdi/font/css/materialdesignicons.css';
 import 'vuetify/styles';
 // Composables
 import { createVuetify } from 'vuetify';
+import { VFileUpload } from 'vuetify/labs/VFileUpload';
+import { adjustColorBrightness } from '@/utils/ThemeUtils';
 
 export function initializeVuetify(primaryLightColor: string, primaryDarkColor: string) {
-    // check if primary color is set
-    if (!primaryLightColor) {
-        primaryLightColor = '#0cb2f0';
-    }
-    if (!primaryDarkColor) {
-        primaryDarkColor = '#F69222';
-    }
+    // Default colors if not provided
+    primaryLightColor = primaryLightColor || '#0cb2f0';
+    primaryDarkColor = primaryDarkColor || '#F69222';
 
     // https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides
     const vuetify = createVuetify({
+        components: {
+            VFileUpload,
+        },
         theme: {
             themes: {
                 light: {
                     dark: false,
                     colors: {
                         primary: primaryLightColor,
+                        primarySurface: adjustColorBrightness(primaryLightColor, 0.5),
                         background: '#FFFFFF',
                         appBar: '#F5F5F5',
                         navigationMenu: '#FFFFFF',
@@ -38,10 +40,11 @@ export function initializeVuetify(primaryLightColor: string, primaryDarkColor: s
                         elevatedCard: '#F1F1F1',
                         detailsCard: '#FBFBFB',
                         detailsHeader: '#F5F5F5',
-                        listItem: '#F5F5F5',
+                        listItem: '#ABABAB',
                         hover: '#242424',
                         buttonText: '#FFFFFF',
                         divider: '#E0E0E0',
+                        listItemText: '#000000',
                         subtitleText: '#626262',
                         normalText: '#000000',
                         lamp: '#7A7A7A',
@@ -58,6 +61,7 @@ export function initializeVuetify(primaryLightColor: string, primaryDarkColor: s
                     dark: true,
                     colors: {
                         primary: primaryDarkColor,
+                        primarySurface: adjustColorBrightness(primaryDarkColor, -0.5),
                         background: '#121212',
                         appBar: '#1E1E1E',
                         navigationMenu: '#1E1E1E',
@@ -69,10 +73,11 @@ export function initializeVuetify(primaryLightColor: string, primaryDarkColor: s
                         elevatedCard: '#343434',
                         detailsCard: '#181818',
                         detailsHeader: '#151515',
-                        listItem: '#1E1E1E',
+                        listItem: '#727272',
                         hover: '#E2E2E2',
                         buttonText: '#272727',
                         divider: '#2F2F2F',
+                        listItemText: '#FFFFFF',
                         subtitleText: '#A5A5A5',
                         normalText: '#FFFFFF',
                         lamp: '#959595',
