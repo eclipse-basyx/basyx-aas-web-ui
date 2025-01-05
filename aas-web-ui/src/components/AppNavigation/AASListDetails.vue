@@ -84,7 +84,6 @@
                         :description-object="selectedAAS.description"
                         :description-title="'Description'"
                         :small="false"></DescriptionElement>
-                    <v-divider v-if="singleAas && !isMobile" class="mt-2"></v-divider>
                 </v-list>
             </v-card-text>
         </v-sheet>
