@@ -100,9 +100,11 @@
                                                         v-if="valueToDisplay(contactInformationProperty)"
                                                         class="text-caption">
                                                         {{ valueToDisplay(contactInformationProperty) }}
-                                                        ({{
+                                                        {{
                                                             getCountryName(valueToDisplay(contactInformationProperty))
-                                                        }})
+                                                                ? ' (getCountryName(valueToDisplay(contactInformationProperty)))'
+                                                                : ''
+                                                        }}
                                                     </div>
                                                     <!-- Otherwise show all available values -->
                                                     <template
