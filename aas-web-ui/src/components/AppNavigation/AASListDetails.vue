@@ -9,8 +9,8 @@
                     <div class="text-caption ml-1" :class="statusColor">
                         {{ status }}
                     </div>
+                    <v-spacer v-if="isMobile || singleAas"></v-spacer>
                     <!-- Jump to Submodel List on mobile -->
-                    <v-spacer v-if="isMobile"></v-spacer>
                     <v-btn
                         v-if="isMobile"
                         color="primary"
@@ -21,6 +21,23 @@
                         class="text-none"
                         text="Submodels"
                         @click="gotoSubmodelList()" />
+                    <!-- Download AAS on Desktop -->
+                    <v-tooltip :open-delay="600" location="end">
+                        <template #activator="{ props }">
+                            <v-btn
+                                v-if="singleAas && !isMobile"
+                                v-bind="props"
+                                color="primary"
+                                density="compact"
+                                variant="tonal"
+                                border
+                                append-icon="mdi-download"
+                                class="text-none"
+                                text="Download"
+                                @click="downloadAasx(selectedAAS)" />
+                        </template>
+                        <span>Download Asset Administration Shell as .aasx file</span>
+                    </v-tooltip>
                 </v-row>
             </v-card-title>
             <v-divider></v-divider>
@@ -76,6 +93,7 @@
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
+    import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
@@ -88,6 +106,7 @@
 
     // Composables
     const { getRequest } = useRequestHandling();
+    const { downloadAasx } = useAASRepositoryClient();
 
     // Stores
     const navigationStore = useNavigationStore();

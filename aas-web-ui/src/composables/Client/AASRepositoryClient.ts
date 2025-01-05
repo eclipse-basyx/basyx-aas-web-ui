@@ -7,6 +7,8 @@ import { useAASStore } from '@/store/AASDataStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
 import { URLEncode } from '@/utils/EncodeDecodeUtils';
+import { downloadFile } from '@/utils/generalUtils';
+import { generateUUIDFromString } from '@/utils/IDUtils';
 
 export function useAASRepositoryClient() {
     const { getRequest, postRequest, putRequest } = useRequestHandling();
@@ -39,7 +41,7 @@ export function useAASRepositoryClient() {
         const disableMessage = false;
         try {
             const aasRepoResponse = await getRequest(aasRepoPath, aasRepoContext, disableMessage);
-            if (aasRepoResponse.success && aasRepoResponse.data.result && aasRepoResponse.data.result.length > 0) {
+            if (aasRepoResponse?.success && aasRepoResponse.data.result && aasRepoResponse.data.result.length > 0) {
                 return aasRepoResponse.data.result;
             }
         } catch {
@@ -240,6 +242,112 @@ export function useAASRepositoryClient() {
         return failResponse;
     }
 
+    async function getSubmodelRefsById(aasId: string): Promise<Array<any>> {
+        const failResponse = [] as Array<any>;
+
+        if (aasId.trim() === '') return failResponse;
+
+        const aasDescriptor = await fetchAasDescriptorById(aasId);
+
+        if (aasDescriptor && Object.keys(aasDescriptor).length > 0) {
+            const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0');
+            return getSubmodelRefs(aasEndpoint);
+        }
+
+        return failResponse;
+    }
+
+    async function getSubmodelRefs(aasEndpoint: string): Promise<Array<any>> {
+        const failResponse = [] as Array<any>;
+
+        if (aasEndpoint.trim() === '') return failResponse;
+
+        const aasRepoPath = aasEndpoint + '/submodel-refs';
+        const aasRepoContext = 'retrieving Submodel References';
+        const disableMessage = true;
+        try {
+            const aasRepoResponse = await getRequest(aasRepoPath, aasRepoContext, disableMessage);
+            if (
+                aasRepoResponse?.success &&
+                aasRepoResponse?.data &&
+                Object.keys(aasRepoResponse?.data).length > 0 &&
+                aasRepoResponse?.data?.result &&
+                Array.isArray(aasRepoResponse?.data?.result) &&
+                aasRepoResponse?.data?.result.length > 0
+            ) {
+                const submodelRefList = aasRepoResponse.data.result;
+                return submodelRefList;
+            }
+        } catch {
+            return failResponse;
+        }
+
+        return failResponse;
+    }
+
+    async function downloadAasx(aas: any) {
+        // console.log('downloadAasx() ', 'aas', aas);
+        if (!aas || Object.keys(aas).length === 0 || !aas.id || aas.id.trim() === '') return;
+
+        const aasId = aas.id;
+
+        const submodelRefList = await getSubmodelRefsById(aasId);
+
+        if (Array.isArray(submodelRefList) && submodelRefList.length > 0) {
+            const submodelIds = submodelRefList.map((submodelRef: any) => submodelRef?.keys[0]?.value);
+
+            let aasSerializationPath = aasRepositoryUrl.value.substring(0, aasRepositoryUrl.value.lastIndexOf('/')); // strips everything after the last slash from aasRepositoryUrl (http://localhost:8081/shells -> http://localhost:8081)
+
+            // e.g. http://localhost:8081/serialization?aasIds=abc&submodelIds=def&submodelIds=ghi&includeConceptDescriptions=true)
+            aasSerializationPath +=
+                '/serialization?aasIds=' +
+                URLEncode(aasId) +
+                '&submodelIds=' +
+                submodelIds.map((submodelId: string) => URLEncode(submodelId)).join('&submodelIds=') +
+                '&includeConceptDescriptions=true';
+
+            const aasSerializationContext = 'retrieving AAS serialization';
+            const disableMessage = false;
+            const aasSerializationHeaders = new Headers();
+            aasSerializationHeaders.append('Accept', 'application/asset-administration-shell-package+xml');
+
+            const aasSerializationResponse = await getRequest(
+                aasSerializationPath,
+                aasSerializationContext,
+                disableMessage,
+                aasSerializationHeaders
+            );
+            if (aasSerializationResponse.success) {
+                const aasSerialization = aasSerializationResponse.data;
+
+                const aasIdShort = aas?.idShort;
+
+                const filename =
+                    (aasIdShort && aasIdShort.trim() !== '' ? aasIdShort : generateUUIDFromString(aas.id)) + '.aasx';
+
+                downloadFile(filename, aasSerialization);
+            }
+        }
+    }
+
+    async function downloadAasxByEndpoint(aasEndpoint: any) {
+        // console.log('downloadAasxByEndpoint() ', 'aasId', aasId);
+        if (aasEndpoint.trim() === '') return;
+
+        const aas = fetchAas(aasEndpoint);
+
+        downloadAasx(aas);
+    }
+
+    async function downloadAasxById(aasId: any) {
+        // console.log('downloadAasx() ', 'aasId', aasId);
+        if (aasId.trim() === '') return;
+
+        const aas = fetchAasById(aasId);
+
+        downloadAasx(aas);
+    }
+
     return {
         fetchAasList,
         fetchAasById,
@@ -250,5 +358,10 @@ export function useAASRepositoryClient() {
         postAas,
         putAas,
         putThumbnail,
+        downloadAasx,
+        downloadAasxByEndpoint,
+        downloadAasxById,
+        getSubmodelRefs,
+        getSubmodelRefsById,
     };
 }

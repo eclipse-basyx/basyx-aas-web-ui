@@ -33,7 +33,7 @@
     const route = useRoute();
     const router = useRouter();
 
-    // composables
+    // Composables
     const { fetchAndDispatchAas } = useAASRepositoryClient();
     const { getRequest } = useRequestHandling();
 
@@ -43,6 +43,14 @@
 
     // Computed Properties
     const allowEditing = computed(() => envStore.getAllowEditing); // Check if the current environment allows showing the AAS Editor
+
+    // Data
+    const routesStayOnPages = ['About', 'NotFound404'] as Array<string>;
+
+    // Computed Properties
+    const currentRouteName = computed((): string => {
+        return route.name as string;
+    });
 
     onMounted(async () => {
         // Check if the platform is a mobile device
@@ -69,12 +77,14 @@
 
         // Check if single AAS mode is on and no aas query is set to either redirect or show 404
         if (envStore.getSingleAas && (aasEndpoint === null || aasEndpoint === undefined || aasEndpoint.trim() === '')) {
-            if (envStore.getSingleAasRedirect) {
-                window.location.replace(envStore.getSingleAasRedirect);
-                return;
-            } else if (route.name !== '404NotFound404') {
-                router.push({ name: 'NotFound404' });
-                return;
+            if (!routesStayOnPages.includes(currentRouteName.value)) {
+                if (envStore.getSingleAasRedirect) {
+                    window.location.replace(envStore.getSingleAasRedirect);
+                    return;
+                } else if (currentRouteName.value !== 'NotFound404') {
+                    router.push({ name: 'NotFound404' });
+                    return;
+                }
             }
         }
 
@@ -96,20 +106,19 @@
 
     // Handle mobile view routing logic
     function handleMobileView(aasEndpoint: string | null, submodelElementPath: string | null) {
-        const currentRouteName = route.name;
         const routesToAASList: Array<RouteRecordNameGeneric> = ['AASViewer', 'AASEditor', 'SubmodelViewer', 'AASList'];
-        if (currentRouteName && routesToAASList.includes(currentRouteName)) {
+        if (currentRouteName.value && routesToAASList.includes(currentRouteName.value)) {
             // Redirect to 'AASList' with existing query parameters
             router.push({ name: 'AASList', query: route.query });
-        } else if (currentRouteName === 'SubmodelList' && aasEndpoint) {
+        } else if (currentRouteName.value === 'SubmodelList' && aasEndpoint) {
             // Redirect to 'SubmodelList' with 'aas' parameter
             router.push({ name: 'SubmodelList', query: { aas: aasEndpoint } });
-        } else if (currentRouteName === 'ComponentVisualization' && aasEndpoint && submodelElementPath) {
+        } else if (currentRouteName.value === 'ComponentVisualization' && aasEndpoint && submodelElementPath) {
             // Redirect to 'ComponentVisualization' with 'aas' and 'path' parameters
             router.push({ name: 'ComponentVisualization', query: { aas: aasEndpoint, path: submodelElementPath } });
-        } else if (currentRouteName === 'About') {
-            // Stay on 'About'
-            router.push({ name: 'About' });
+        } else if (currentRouteName.value && routesStayOnPages.includes(currentRouteName.value)) {
+            // Stay on current page
+            return;
         } else {
             // Redirect to 'AASList' without query parameters
             router.push({ name: 'AASList' });
@@ -118,23 +127,22 @@
 
     // Handle desktop view routing logic
     function handleDesktopView(aasEndpoint: string | null, submodelElementPath: string | null) {
-        const currentRouteName = route.name;
         const routesToAASViewer: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList', 'ComponentVisualization'];
         const query: any = {};
         if (aasEndpoint) query.aas = aasEndpoint;
         if (submodelElementPath) query.path = submodelElementPath;
-        if (currentRouteName && routesToAASViewer.includes(currentRouteName)) {
+        if (currentRouteName.value && routesToAASViewer.includes(currentRouteName.value)) {
             // Redirect to 'AASViewer' with appropriate query parameters
             router.push({ name: 'AASViewer', query });
-        } else if (currentRouteName === 'AASEditor' && allowEditing.value) {
+        } else if (currentRouteName.value === 'AASEditor' && allowEditing.value) {
             // Stay on 'AASEditor' but update query parameters
             router.push({ name: 'AASEditor', query });
-        } else if (currentRouteName === 'SubmodelViewer') {
+        } else if (currentRouteName.value === 'SubmodelViewer') {
             // Stay on 'SubmodelViewer' but update query parameters
             router.push({ name: 'SubmodelViewer', query });
-        } else if (currentRouteName === 'About') {
-            // Stay on 'About'
-            router.push({ name: 'About' });
+        } else if (currentRouteName.value && routesStayOnPages.includes(currentRouteName.value)) {
+            // Stay on current page
+            return;
         } else {
             // Default to 'AASViewer' with query parameters
             router.push({ name: 'AASViewer', query });
@@ -157,6 +165,7 @@
             handleRequestFailure(response);
         }
     }
+
     // Handle request failure and show appropriate message
     function handleRequestFailure(response: any) {
         if (Object.keys(response.data).length === 0) {
