@@ -64,7 +64,7 @@ export function valueUrl(file: any): string {
 }
 
 export function getFilename(file: any): string {
-    console.log('valueUrl()', 'file:', file);
+    // console.log('valueUrl()', 'file:', file);
 
     if (isFile(file) && hasValue(file)) {
         const fileValueUrl = valueUrl(file);

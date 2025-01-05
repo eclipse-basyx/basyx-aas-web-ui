@@ -8,7 +8,7 @@ const isMac = computed(() => navigationStore.getPlatform.mac);
 const isIOs = computed(() => navigationStore.getPlatform.ios);
 
 export function downloadVCard(vCardString: string, filename: string) {
-    console.log('downloadVCard()', 'vCardString:', vCardString, 'filename:', filename);
+    // console.log('downloadVCard()', 'vCardString:', vCardString, 'filename:', filename);
     if (vCardString.startsWith('BEGIN:VCARD') && vCardString.endsWith('END:VCARD')) {
         const blob = new Blob([vCardString], { type: 'text/vcard;charset=utf-8;' });
         const data = window.URL.createObjectURL(blob);
