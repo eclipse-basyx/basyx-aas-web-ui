@@ -60,13 +60,9 @@
                                                     v-else
                                                     :key="k">
                                                     <div v-if="langStringSet?.text.length > 0" class="text-caption">
-                                                        <span class="font-weight-thin">
-                                                            {{
-                                                                (getLanguageName(langStringSet?.language)
-                                                                    ? getLanguageName(langStringSet?.language)
-                                                                    : langStringSet?.language) + ': '
-                                                            }}
-                                                        </span>
+                                                        <v-chip size="x-small" label class="mr-1">{{
+                                                            langStringSet.language
+                                                        }}</v-chip>
                                                         {{ langStringSet?.text }}
                                                     </div>
                                                 </template>
@@ -231,16 +227,10 @@
                                                         v-for="(langStringSet, k) in classificationProperty.value"
                                                         v-else
                                                         :key="k">
-                                                        <div
-                                                            v-if="langStringSet?.text.length > 0"
-                                                            class="text-caption text-subtitleText">
-                                                            <span class="font-weight-thin">
-                                                                {{
-                                                                    (getLanguageName(langStringSet?.language)
-                                                                        ? getLanguageName(langStringSet?.language)
-                                                                        : langStringSet?.language) + ': '
-                                                                }}
-                                                            </span>
+                                                        <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                                                            <v-chip size="x-small" label class="mr-1">{{
+                                                                langStringSet.language
+                                                            }}</v-chip>
                                                             {{ langStringSet?.text }}
                                                         </div>
                                                     </template>
@@ -293,16 +283,10 @@
                                                         v-for="(langStringSet, k) in idProperty.value"
                                                         v-else
                                                         :key="k">
-                                                        <div
-                                                            v-if="langStringSet?.text.length > 0"
-                                                            class="text-caption text-subtitleText">
-                                                            <span class="font-weight-thin">
-                                                                {{
-                                                                    (getLanguageName(langStringSet?.language)
-                                                                        ? getLanguageName(langStringSet?.language)
-                                                                        : langStringSet?.language) + ': '
-                                                                }}
-                                                            </span>
+                                                        <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                                                            <v-chip size="x-small" label class="mr-1">{{
+                                                                langStringSet.language
+                                                            }}</v-chip>
                                                             {{ langStringSet?.text }}
                                                         </div>
                                                     </template>
