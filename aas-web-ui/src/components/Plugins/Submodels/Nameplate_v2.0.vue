@@ -1,5 +1,5 @@
 <template>
-    <v-container v-if="Object.keys(submodelElementData).length > 0" fluid class="pa-0">
+    <v-container fluid class="pa-0">
         <VisualizationHeader
             :submodel-element-data="submodelElementData"
             default-title="Digital Nameplate for industrial equipment"></VisualizationHeader>
