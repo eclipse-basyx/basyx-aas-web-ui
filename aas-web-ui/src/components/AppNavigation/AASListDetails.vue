@@ -9,8 +9,8 @@
                     <div class="text-caption ml-1" :class="statusColor">
                         {{ status }}
                     </div>
+                    <v-spacer v-if="isMobile || singleAas"></v-spacer>
                     <!-- Jump to Submodel List on mobile -->
-                    <v-spacer v-if="isMobile"></v-spacer>
                     <v-btn
                         v-if="isMobile"
                         color="primary"
@@ -21,6 +21,23 @@
                         class="text-none"
                         text="Submodels"
                         @click="gotoSubmodelList()" />
+                    <!-- Download AAS on Desktop -->
+                    <v-tooltip :open-delay="600" location="end">
+                        <template #activator="{ props }">
+                            <v-btn
+                                v-if="singleAas && !isMobile"
+                                v-bind="props"
+                                color="primary"
+                                density="compact"
+                                variant="tonal"
+                                border
+                                append-icon="mdi-download"
+                                class="text-none"
+                                text="Download"
+                                @click="downloadAasx(selectedAAS)" />
+                        </template>
+                        <span>Download Asset Administration Shell as .aasx file</span>
+                    </v-tooltip>
                 </v-row>
             </v-card-title>
             <v-divider></v-divider>
@@ -68,14 +85,6 @@
                         :description-title="'Description'"
                         :small="false"></DescriptionElement>
                     <v-divider v-if="singleAas && !isMobile" class="mt-2"></v-divider>
-                    <!-- Download AAS -->
-                    <v-card-actions v-if="singleAas && !isMobile" class="pa-0">
-                        <v-spacer></v-spacer>
-                        <v-btn size="small" color="primary" variant="tonal" @click="downloadAasx(selectedAAS)">
-                            <v-icon left>mdi-download</v-icon>
-                            <span>Download AASX</span>
-                        </v-btn>
-                    </v-card-actions>
                 </v-list>
             </v-card-text>
         </v-sheet>
