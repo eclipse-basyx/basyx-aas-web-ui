@@ -163,7 +163,7 @@
                                     </template>
                                     <v-sheet border>
                                         <v-list dense slim density="compact" class="py-0">
-                                            <v-list-item @click="downloadAAS(item)">
+                                            <v-list-item @click="downloadAasx(item)">
                                                 <template #prepend>
                                                     <v-icon size="x-small">mdi-download</v-icon>
                                                 </template>
@@ -193,7 +193,7 @@
                                         variant="plain"
                                         color="listItemText"
                                         style="z-index: 9000; margin-left: -6px"
-                                        @click.stop="downloadAAS(item)"></v-btn>
+                                        @click.stop="downloadAasx(item)"></v-btn>
                                     <!-- Remove from AAS Registry Button -->
                                     <v-btn
                                         icon="mdi-close"
@@ -242,8 +242,6 @@
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
-    import { URLEncode } from '@/utils/EncodeDecodeUtils';
-    import { downloadFile } from '@/utils/generalUtils';
     import { nameToDisplay } from '@/utils/ReferableUtils';
 
     // Extend the ComponentPublicInstance type to include scrollToIndex
@@ -255,9 +253,9 @@
     const route = useRoute();
     const router = useRouter();
 
-    // composables
+    // Composables
     const { getRequest } = useRequestHandling();
-    const { fetchAndDispatchAas } = useAASRepositoryClient();
+    const { fetchAndDispatchAas, downloadAasx } = useAASRepositoryClient();
 
     // Stores
     const navigationStore = useNavigationStore();
@@ -530,49 +528,6 @@
                 }
             }, 50);
         }
-    }
-
-    // Function to download the AAS
-    function downloadAAS(AAS: any) {
-        // console.log('Download AAS: ', AAS);
-        // request the Submodel references for the AAS
-        const aasEndpopint = extractEndpointHref(AAS, 'AAS-3.0');
-        let path = aasEndpopint + '/submodel-refs';
-        let context = 'retrieving Submodel References';
-        let disableMessage = false;
-        getRequest(path, context, disableMessage).then(async (response: any) => {
-            if (response.success) {
-                // execute if the Request was successful
-                const submodelRefs = response.data.result;
-                const aasIds = URLEncode(AAS.id);
-                // extract all references in an Array calles submodelIds from each keys[0].value
-                let submodelIds = [] as any;
-                submodelRefs.forEach((submodelRef: any) => {
-                    submodelIds.push(URLEncode(submodelRef.keys[0].value));
-                });
-                // console.log('aasIds: ', aasIds, ' submodelIds: ', submodelIds);
-                // strip the everything after the last slash from the getAASRepoURL (http://localhost:1500/shells -> http://localhost:1500)
-                let path = aasRepoURL.value.substring(0, aasRepoURL.value.lastIndexOf('/'));
-                // add the aasIds and submodelIds to the path (example: http://localhost:1500/serialization?aasIds=abc&submodelIds=def&submodelIds=ghi&includeConceptDescriptions=true)
-                path +=
-                    '/serialization?aasIds=' +
-                    aasIds +
-                    '&submodelIds=' +
-                    submodelIds.join('&submodelIds=') +
-                    '&includeConceptDescriptions=true';
-                let context = 'retrieving AAS serialization';
-                let disableMessage = false;
-                let headers = new Headers();
-                headers.append('Accept', 'application/asset-administration-shell-package+xml');
-                getRequest(path, context, disableMessage, headers).then(async (response: any) => {
-                    if (response.success) {
-                        // execute if the Request was successful
-                        let aasSerialization = response.data;
-                        downloadFile(AAS.idShort + '.aasx', aasSerialization);
-                    }
-                });
-            }
-        });
     }
 
     function showDeleteDialog(AAS: any) {

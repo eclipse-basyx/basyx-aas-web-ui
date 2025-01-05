@@ -67,6 +67,15 @@
                         :description-object="selectedAAS.description"
                         :description-title="'Description'"
                         :small="false"></DescriptionElement>
+                    <v-divider v-if="singleAas && !isMobile" class="mt-2"></v-divider>
+                    <!-- Download AAS -->
+                    <v-card-actions v-if="singleAas && !isMobile" class="pa-0">
+                        <v-spacer></v-spacer>
+                        <v-btn size="small" color="primary" variant="tonal" @click="downloadAasx(selectedAAS)">
+                            <v-icon left>mdi-download</v-icon>
+                            <span>Download AASX</span>
+                        </v-btn>
+                    </v-card-actions>
                 </v-list>
             </v-card-text>
         </v-sheet>
@@ -76,6 +85,7 @@
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
+    import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
@@ -88,6 +98,7 @@
 
     // Composables
     const { getRequest } = useRequestHandling();
+    const { downloadAasx } = useAASRepositoryClient();
 
     // Stores
     const navigationStore = useNavigationStore();
