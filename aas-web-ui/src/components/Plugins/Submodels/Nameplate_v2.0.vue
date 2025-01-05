@@ -160,8 +160,16 @@
                                                     manufacturerProperty?.typeOfValue &&
                                                     manufacturerProperty?.typeOfValue.trim() !== ''
                                                 "
+                                                :prepend-icon="
+                                                    manufacturerProperty.typeOfValue.includes('Office') ||
+                                                    ['Secretary', 'Substitute'].includes(
+                                                        manufacturerProperty.typeOfValue
+                                                    )
+                                                        ? 'mdi-office-building'
+                                                        : 'mdi-home'
+                                                "
                                                 size="x-small"
-                                                class="mr-1">
+                                                class="mr-2">
                                                 {{ manufacturerProperty.typeOfValue }}
                                             </v-chip>
                                             <template
@@ -217,6 +225,7 @@
                         size="small"
                         color="primary"
                         variant="elevated"
+                        prepend-icon="mdi-card-account-details"
                         class="text-buttonText"
                         @click="downloadVCard(vCardString, 'ManufacturerContact.vcf')">
                         {{ 'Download Contact' }}
