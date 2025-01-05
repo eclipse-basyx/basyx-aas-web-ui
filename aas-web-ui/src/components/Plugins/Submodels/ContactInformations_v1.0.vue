@@ -200,7 +200,7 @@
                         </v-sheet>
                         <v-card-actions
                             v-if="contactInformation?.vCard && contactInformation.vCard.trim() !== ''"
-                            class="pa-0">
+                            class="pt-4 pb-0 pr-0">
                             <v-spacer></v-spacer>
                             <v-btn
                                 size="small"
