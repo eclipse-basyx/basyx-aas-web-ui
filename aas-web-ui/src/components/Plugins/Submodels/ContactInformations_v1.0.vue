@@ -102,7 +102,11 @@
                                                         {{ valueToDisplay(contactInformationProperty) }}
                                                         {{
                                                             getCountryName(valueToDisplay(contactInformationProperty))
-                                                                ? ' (getCountryName(valueToDisplay(contactInformationProperty)))'
+                                                                ? ' (' +
+                                                                  getCountryName(
+                                                                      valueToDisplay(contactInformationProperty)
+                                                                  ) +
+                                                                  ')'
                                                                 : ''
                                                         }}
                                                     </div>
