@@ -2,28 +2,32 @@ import countries from 'i18n-iso-countries';
 import english from 'i18n-iso-countries/langs/en.json';
 import ISO6391 from 'iso-639-1';
 
-// Function to get country name by country code (e.g. DE --> Germany)
+/**
+ * Retrieves the name of a country based on its country code.
+ *
+ * @param {string} countryCode - The ISO 3166-1 alpha-2 country code.
+ * @param {string} [language='en'] - The optional language code for localization (default is 'en').
+ * @returns {string} The localized country name or an empty string if the country code is invalid.
+ */
 export function getCountryName(countryCode: string, language: string = 'en'): string {
-    // console.log('getCountryName()', 'countryCode:', countryCode);
+    if (!countryCode || countryCode.trim() === '') return '';
 
-    const failReturn = '';
-
-    if (!countryCode || countryCode.trim() === '') return failReturn;
-
+    // Ensure the countries locale is registered
     countries.registerLocale(english);
 
-    return countries.getName(countryCode, language) || failReturn;
+    // Attempt to get the country name, return empty string if not found
+    return countries.getName(countryCode, language) || '';
 }
 
-// Function to get language name by language code (e.g. de --> German)
+/**
+ * Retrieves the name of a language based on its ISO 639-1 code.
+ *
+ * @param {string} languageCode - The ISO 639-1 language code.
+ * @returns {string} The name of the language or an empty string if the language code is invalid.
+ */
 export function getLanguageName(languageCode: string): string {
-    // console.log('getLanguageName()', 'languageCode:', languageCode);
+    if (!languageCode || languageCode.trim() === '') return '';
 
-    const failReturn = '';
-
-    if (!languageCode || languageCode.trim() === '') return failReturn;
-
-    countries.registerLocale(english);
-
-    return ISO6391.getName(languageCode.toLowerCase()) || failReturn;
+    // Attempt to get the language name, return empty string if not found
+    return ISO6391.getName(languageCode.trim().toLowerCase()) || '';
 }
