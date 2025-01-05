@@ -388,7 +388,9 @@
         documents.value = getSubmodelElementsBySemanticId(
             '0173-1#02-ABI500#001/0173-1#01-AHF579#001',
             handoverDocumentationData.value
-        );
+        ).filter((sme: any) => {
+            return hasValue(sme);
+        });
 
         documents.value.forEach((document: any) => {
             extractDocumentVersions(document);
@@ -397,13 +399,17 @@
             document.documentIds = getSubmodelElementsBySemanticId(
                 '0173-1#02-ABI501#001/0173-1#01-AHF580#001',
                 document
-            );
+            ).filter((sme: any) => {
+                return hasValue(sme);
+            });
 
             // Extract Document Classifications
             document.documentClassificationSMCs = getSubmodelElementsBySemanticId(
                 '0173-1#02-ABI502#001/0173-1#01-AHF581#001*02',
                 document
-            );
+            ).filter((sme: any) => {
+                return hasValue(sme);
+            });
         });
 
         isLoading.value = false;
@@ -414,7 +420,9 @@
         document.documentVersions = getSubmodelElementsBySemanticId(
             '0173-1#02-ABI503#001/0173-1#01-AHF582#001',
             document
-        );
+        ).filter((sme: any) => {
+            return hasValue(sme);
+        });
 
         // Extract Digital File / Preview File / Meta data for each Document Version
         document.documentVersions.forEach((documentVersion: any) => {
@@ -427,11 +435,12 @@
             // Extract Meta Data
             documentVersion.meta = documentVersion.value.filter((documentVersionSME: any) => {
                 return (
-                    checkIdShort(documentVersionSME, 'Language') ||
-                    checkIdShort(documentVersionSME, 'Title') ||
-                    checkIdShort(documentVersionSME, 'SubTitle') ||
-                    checkIdShort(documentVersionSME, 'Summary') ||
-                    checkIdShort(documentVersionSME, 'KeyWords')
+                    hasValue(documentVersionSME) &&
+                    (checkIdShort(documentVersionSME, 'Language') ||
+                        checkIdShort(documentVersionSME, 'Title') ||
+                        checkIdShort(documentVersionSME, 'SubTitle') ||
+                        checkIdShort(documentVersionSME, 'Summary') ||
+                        checkIdShort(documentVersionSME, 'KeyWords'))
                 );
             });
 
