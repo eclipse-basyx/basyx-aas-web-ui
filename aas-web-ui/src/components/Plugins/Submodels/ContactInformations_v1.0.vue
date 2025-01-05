@@ -130,7 +130,14 @@
                                                             contactInformationProperty?.typeOfValue &&
                                                             contactInformationProperty?.typeOfValue.trim() !== ''
                                                         "
-                                                        prepend-icon="mdi-office-building"
+                                                        :prepend-icon="
+                                                            contactInformationProperty.typeOfValue.includes('Office') ||
+                                                            ['Secretary', 'Substitute'].includes(
+                                                                contactInformationProperty.typeOfValue
+                                                            )
+                                                                ? 'mdi-office-building'
+                                                                : 'mdi-home'
+                                                        "
                                                         size="x-small"
                                                         class="mr-1">
                                                         {{ contactInformationProperty.typeOfValue }}
