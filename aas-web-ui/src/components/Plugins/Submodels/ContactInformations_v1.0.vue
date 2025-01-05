@@ -139,7 +139,7 @@
                                                                 : 'mdi-home'
                                                         "
                                                         size="x-small"
-                                                        class="mr-1">
+                                                        class="mr-2">
                                                         {{ contactInformationProperty.typeOfValue }}
                                                     </v-chip>
                                                     <template
