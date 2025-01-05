@@ -22,62 +22,80 @@
                     </v-list-item>
                 </v-expansion-panel-title>
                 <v-divider v-if="panel === i"></v-divider>
-                <v-expansion-panel-text>
+                <v-expansion-panel-text class="pt-4">
                     <template v-for="documentVersion in document.documentVersions" :key="documentVersion.idShort">
                         <!-- General Document Information (DocumentVersion) -->
-                        <v-table>
-                            <tbody>
-                                <template v-for="(metaProperty, j) in documentVersion.meta" :key="metaProperty.idShort">
-                                    <tr
-                                        v-if="hasValue(metaProperty)"
-                                        :class="j % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
-                                        <td>
-                                            <div class="text-subtitleText text-caption">
-                                                <span>{{ nameToDisplay(metaProperty) }}</span>
-                                                <DescriptionTooltip :description-array="metaProperty?.description" />
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <!-- Language -->
-                                            <template v-if="checkIdShort(metaProperty, 'Language')">
-                                                <div v-if="valueToDisplay(metaProperty)" class="text-caption">
-                                                    <template v-if="getLanguageName(valueToDisplay(metaProperty))">
-                                                        {{ getLanguageName(valueToDisplay(metaProperty)) }}
-                                                        ({{ valueToDisplay(metaProperty) }})
-                                                    </template>
-                                                    <template v-else>{{ valueToDisplay(metaProperty) }}</template>
+                        <v-sheet border rounded>
+                            <v-table>
+                                <tbody>
+                                    <template
+                                        v-for="(metaProperty, j) in documentVersion.meta"
+                                        :key="metaProperty.idShort">
+                                        <tr
+                                            v-if="hasValue(metaProperty)"
+                                            :class="j % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
+                                            <td>
+                                                <div class="text-subtitleText text-caption">
+                                                    <span>{{ nameToDisplay(metaProperty) }}</span>
+                                                    <DescriptionTooltip
+                                                        :description-array="metaProperty?.description" />
                                                 </div>
-                                            </template>
-                                            <!-- MultiLanguageProperties -->
-                                            <template v-else-if="metaProperty.modelType == 'MultiLanguageProperty'">
-                                                <!-- Show english value, if available -->
-                                                <div v-if="valueToDisplay(metaProperty)" class="text-caption">
-                                                    {{ valueToDisplay(metaProperty) }}
-                                                </div>
-                                                <!-- Otherwise show all available values -->
-                                                <template
-                                                    v-for="(langStringSet, k) in metaProperty.value"
-                                                    v-else
-                                                    :key="k">
-                                                    <div v-if="langStringSet?.text.length > 0" class="text-caption">
-                                                        <v-chip size="x-small" label class="mr-1">{{
-                                                            langStringSet.language
-                                                        }}</v-chip>
-                                                        {{ langStringSet?.text }}
+                                            </td>
+                                            <td>
+                                                <!-- Language -->
+                                                <template v-if="checkIdShort(metaProperty, 'Language')">
+                                                    <!-- Show english value, if available -->
+                                                    <div v-if="valueToDisplay(metaProperty)" class="text-caption">
+                                                        <template v-if="getLanguageName(valueToDisplay(metaProperty))">
+                                                            {{ getLanguageName(valueToDisplay(metaProperty)) }}
+                                                            ({{ valueToDisplay(metaProperty) }})
+                                                        </template>
+                                                        <template v-else>{{ valueToDisplay(metaProperty) }}</template>
                                                     </div>
+                                                    <!-- Otherwise show all available values -->
+                                                    <template
+                                                        v-for="(langStringSet, k) in metaProperty.value"
+                                                        v-else
+                                                        :key="k">
+                                                        <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                                                            <v-chip size="x-small" label class="mr-1">{{
+                                                                langStringSet.language
+                                                            }}</v-chip>
+                                                            {{ langStringSet?.text }}
+                                                        </div>
+                                                    </template>
                                                 </template>
-                                            </template>
-                                            <!-- Default -->
-                                            <span v-else class="text-caption">
-                                                {{ valueToDisplay(metaProperty) }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                </template>
-                            </tbody>
-                        </v-table>
+                                                <!-- MultiLanguageProperties -->
+                                                <template v-else-if="metaProperty.modelType == 'MultiLanguageProperty'">
+                                                    <!-- Show english value, if available -->
+                                                    <div v-if="valueToDisplay(metaProperty)" class="text-caption">
+                                                        {{ valueToDisplay(metaProperty) }}
+                                                    </div>
+                                                    <!-- Otherwise show all available values -->
+                                                    <template
+                                                        v-for="(langStringSet, k) in metaProperty.value"
+                                                        v-else
+                                                        :key="k">
+                                                        <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                                                            <v-chip size="x-small" label class="mr-1">{{
+                                                                langStringSet.language
+                                                            }}</v-chip>
+                                                            {{ langStringSet?.text }}
+                                                        </div>
+                                                    </template>
+                                                </template>
+                                                <!-- Default -->
+                                                <span v-else class="text-caption">
+                                                    {{ valueToDisplay(metaProperty) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </v-table>
+                        </v-sheet>
                         <!-- Switcher for File Preview/Digital File -->
-                        <v-row justify="center" class="mt-3">
+                        <v-row justify="center" class="my-1">
                             <v-col cols="auto">
                                 <v-btn-toggle
                                     v-model="documentVersion.fileToggle"
@@ -96,7 +114,7 @@
                         </v-row>
                         <!-- File Preview (PreviewFile) -->
                         <template v-if="documentVersion.fileToggle === 'preview'">
-                            <div v-if="documentVersion.previewFile" class="mt-3">
+                            <div v-if="documentVersion.previewFile">
                                 <ImagePreview
                                     v-if="
                                         documentVersion.previewFile.contentType &&
@@ -121,23 +139,24 @@
                                     :submodel-element-data="documentVersion.previewFile"></CADPreview>
                             </div>
                             <!-- Download Button -->
-                            <v-btn
-                                v-if="documentVersion.previewFile"
-                                class="mt-3"
-                                block
-                                color="primary"
-                                variant="tonal"
-                                @click="downloadFile(documentVersion.previewFile)">
-                                <v-icon left>mdi-download</v-icon>
-                                <span>Download Preview File</span>
-                            </v-btn>
-                            <v-alert
-                                v-else
-                                text="No available preview file"
-                                class="mt-3"
-                                density="compact"
-                                type="warning"
-                                variant="outlined"></v-alert>
+                            <v-card-actions class="pt-4 pb-0 pr-0">
+                                <v-spacer></v-spacer>
+                                <v-btn
+                                    v-if="documentVersion.previewFile"
+                                    color="primary"
+                                    variant="elevated"
+                                    prepend-icon="mdi-download"
+                                    @click="downloadFile(documentVersion.previewFile)">
+                                    Download Preview File
+                                </v-btn>
+                                <v-alert
+                                    v-else
+                                    text="No available preview file"
+                                    class="mt-3"
+                                    density="compact"
+                                    type="warning"
+                                    variant="outlined"></v-alert>
+                            </v-card-actions>
                         </template>
                         <!-- File Preview (DigitalFile) -->
                         <template v-else-if="documentVersion.fileToggle === 'digital'">
@@ -166,23 +185,24 @@
                                     :submodel-element-data="documentVersion.digitalFile"></CADPreview>
                             </div>
                             <!-- Download Button -->
-                            <v-btn
-                                v-if="documentVersion.digitalFile"
-                                class="mt-3"
-                                block
-                                color="primary"
-                                variant="tonal"
-                                @click="downloadFile(documentVersion.digitalFile)">
-                                <v-icon left>mdi-download</v-icon>
-                                <span>Download Digital File</span>
-                            </v-btn>
-                            <v-alert
-                                v-else
-                                text="No available digital file"
-                                class="mt-3"
-                                density="compact"
-                                type="warning"
-                                variant="outlined"></v-alert>
+                            <v-card-actions class="pt-4 pb-0 pr-0">
+                                <v-spacer></v-spacer>
+                                <v-btn
+                                    v-if="documentVersion.digitalFile"
+                                    color="primary"
+                                    variant="elevated"
+                                    prepend-icon="mdi-download"
+                                    @click="downloadFile(documentVersion.digitalFile)">
+                                    Download Digital File
+                                </v-btn>
+                                <v-alert
+                                    v-else
+                                    text="No available digital file"
+                                    class="mt-3"
+                                    density="compact"
+                                    type="warning"
+                                    variant="outlined"></v-alert>
+                            </v-card-actions>
                         </template>
                     </template>
                     <!-- DocumentClassifications -->

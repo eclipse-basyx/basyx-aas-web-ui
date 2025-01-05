@@ -26,58 +26,62 @@
                             </v-list-item>
                         </v-expansion-panel-title>
                         <v-divider v-if="panel.includes(0)"></v-divider>
-                        <v-expansion-panel-text>
-                            <v-table>
-                                <tbody>
-                                    <tr
-                                        v-for="(generalProperty, index) in generalInformationProperties"
-                                        :key="generalProperty.idShort"
-                                        :class="index % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
-                                        <td>
-                                            <div class="text-subtitleText text-caption">
-                                                <span>{{ nameToDisplay(generalProperty) }}</span>
-                                                <DescriptionTooltip :description-array="generalProperty?.description" />
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <!-- Files -->
-                                            <v-img
-                                                v-if="
-                                                    checkIdShort(generalProperty, 'ManufacturerLogo') ||
-                                                    checkIdShort(generalProperty, 'ProductImage')
-                                                "
-                                                :src="valueUrl(generalProperty)"
-                                                max-width="100%"
-                                                max-height="100%"
-                                                contain
-                                                class="my-2"></v-img>
-                                            <!-- MultiLanguageProperties -->
-                                            <template v-else-if="generalProperty.modelType == 'MultiLanguageProperty'">
-                                                <!-- Show english value, if available -->
-                                                <div v-if="valueToDisplay(generalProperty)" class="text-caption">
-                                                    {{ valueToDisplay(generalProperty) }}
+                        <v-expansion-panel-text class="pt-4 pb-2">
+                            <v-sheet border rounded>
+                                <v-table>
+                                    <tbody>
+                                        <tr
+                                            v-for="(generalProperty, index) in generalInformationProperties"
+                                            :key="generalProperty.idShort"
+                                            :class="index % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
+                                            <td>
+                                                <div class="text-subtitleText text-caption">
+                                                    <span>{{ nameToDisplay(generalProperty) }}</span>
+                                                    <DescriptionTooltip
+                                                        :description-array="generalProperty?.description" />
                                                 </div>
-                                                <!-- Otherwise show all available values -->
+                                            </td>
+                                            <td>
+                                                <!-- Files -->
+                                                <v-img
+                                                    v-if="
+                                                        checkIdShort(generalProperty, 'ManufacturerLogo') ||
+                                                        checkIdShort(generalProperty, 'ProductImage')
+                                                    "
+                                                    :src="valueUrl(generalProperty)"
+                                                    max-width="300px"
+                                                    max-height="300px"
+                                                    contain
+                                                    class="my-2"></v-img>
+                                                <!-- MultiLanguageProperties -->
                                                 <template
-                                                    v-for="(langStringSet, j) in generalProperty.value"
-                                                    v-else
-                                                    :key="j">
-                                                    <div v-if="langStringSet?.text.length > 0" class="text-caption">
-                                                        <v-chip size="x-small" label class="mr-1">{{
-                                                            langStringSet.language
-                                                        }}</v-chip>
-                                                        {{ langStringSet?.text }}
+                                                    v-else-if="generalProperty.modelType == 'MultiLanguageProperty'">
+                                                    <!-- Show english value, if available -->
+                                                    <div v-if="valueToDisplay(generalProperty)" class="text-caption">
+                                                        {{ valueToDisplay(generalProperty) }}
                                                     </div>
+                                                    <!-- Otherwise show all available values -->
+                                                    <template
+                                                        v-for="(langStringSet, j) in generalProperty.value"
+                                                        v-else
+                                                        :key="j">
+                                                        <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                                                            <v-chip size="x-small" label class="mr-1">{{
+                                                                langStringSet.language
+                                                            }}</v-chip>
+                                                            {{ langStringSet?.text }}
+                                                        </div>
+                                                    </template>
                                                 </template>
-                                            </template>
-                                            <!-- Default -->
-                                            <span v-else class="text-caption">
-                                                {{ valueToDisplay(generalProperty) }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </v-table>
+                                                <!-- Default -->
+                                                <span v-else class="text-caption">
+                                                    {{ valueToDisplay(generalProperty) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </v-table>
+                            </v-sheet>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </template>
@@ -96,7 +100,7 @@
                             </v-list-item>
                         </v-expansion-panel-title>
                         <v-divider v-if="panel.includes(1)"></v-divider>
-                        <v-expansion-panel-text>
+                        <v-expansion-panel-text class="pb-2">
                             <v-card variant="outlined" class="mt-3">
                                 <v-table>
                                     <thead>
@@ -187,7 +191,7 @@
                             </v-list-item>
                         </v-expansion-panel-title>
                         <v-divider v-if="panel.includes(2)"></v-divider>
-                        <v-expansion-panel-text>
+                        <v-expansion-panel-text class="pb-2">
                             <GenericDataVisu
                                 v-if="!tableView"
                                 class="mt-3"
@@ -230,50 +234,55 @@
                             </v-list-item>
                         </v-expansion-panel-title>
                         <v-divider v-if="panel.includes(3)"></v-divider>
-                        <v-expansion-panel-text>
-                            <v-table v-if="furtherInformation.length > 0">
-                                <tbody>
-                                    <template
-                                        v-for="(furtherInfo, index) in furtherInformation"
-                                        :key="furtherInfo.idShort">
-                                        <tr
-                                            v-if="hasValue(furtherInfo)"
-                                            :class="index % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
-                                            <td>
-                                                <div class="text-subtitleText text-caption">
-                                                    <span>{{ nameToDisplay(furtherInfo) }}</span>
-                                                    <DescriptionTooltip :description-array="furtherInfo?.description" />
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <!-- MultiLanguageProperties -->
-                                                <template v-if="furtherInfo.modelType == 'MultiLanguageProperty'">
-                                                    <!-- Show english value, if available -->
-                                                    <div v-if="valueToDisplay(furtherInfo)" class="text-caption">
-                                                        {{ valueToDisplay(furtherInfo) }}
+                        <v-expansion-panel-text class="pt-4 pb-2">
+                            <v-sheet border rounded>
+                                <v-table v-if="furtherInformation.length > 0">
+                                    <tbody>
+                                        <template
+                                            v-for="(furtherInfo, index) in furtherInformation"
+                                            :key="furtherInfo.idShort">
+                                            <tr
+                                                v-if="hasValue(furtherInfo)"
+                                                :class="index % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
+                                                <td>
+                                                    <div class="text-subtitleText text-caption">
+                                                        <span>{{ nameToDisplay(furtherInfo) }}</span>
+                                                        <DescriptionTooltip
+                                                            :description-array="furtherInfo?.description" />
                                                     </div>
-                                                    <!-- Otherwise show all available values -->
-                                                    <template
-                                                        v-for="(langStringSet, k) in furtherInfo.value"
-                                                        v-else
-                                                        :key="k">
-                                                        <div v-if="langStringSet?.text.length > 0" class="text-caption">
-                                                            <v-chip size="x-small" label class="mr-1">{{
-                                                                langStringSet.language
-                                                            }}</v-chip>
-                                                            {{ langStringSet?.text }}
+                                                </td>
+                                                <td>
+                                                    <!-- MultiLanguageProperties -->
+                                                    <template v-if="furtherInfo.modelType == 'MultiLanguageProperty'">
+                                                        <!-- Show english value, if available -->
+                                                        <div v-if="valueToDisplay(furtherInfo)" class="text-caption">
+                                                            {{ valueToDisplay(furtherInfo) }}
                                                         </div>
+                                                        <!-- Otherwise show all available values -->
+                                                        <template
+                                                            v-for="(langStringSet, k) in furtherInfo.value"
+                                                            v-else
+                                                            :key="k">
+                                                            <div
+                                                                v-if="langStringSet?.text.length > 0"
+                                                                class="text-caption">
+                                                                <v-chip size="x-small" label class="mr-1">{{
+                                                                    langStringSet.language
+                                                                }}</v-chip>
+                                                                {{ langStringSet?.text }}
+                                                            </div>
+                                                        </template>
                                                     </template>
-                                                </template>
-                                                <!-- Default -->
-                                                <span v-else class="text-caption">
-                                                    {{ valueToDisplay(furtherInfo) }}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    </template>
-                                </tbody>
-                            </v-table>
+                                                    <!-- Default -->
+                                                    <span v-else class="text-caption">
+                                                        {{ valueToDisplay(furtherInfo) }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </v-table>
+                            </v-sheet>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </template>

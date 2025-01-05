@@ -148,8 +148,8 @@
                                             <v-img
                                                 v-else-if="checkIdShort(manufacturerProperty, 'CompanyLogo')"
                                                 :src="valueUrl(manufacturerProperty)"
-                                                max-width="100%"
-                                                max-height="100%"
+                                                max-width="300px"
+                                                max-height="300px"
                                                 contain
                                                 class="my-2"></v-img>
                                             <!-- Telephone number / Fax number / Email -->
