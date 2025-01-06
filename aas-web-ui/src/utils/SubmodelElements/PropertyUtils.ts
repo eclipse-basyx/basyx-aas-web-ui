@@ -1,7 +1,7 @@
 /**
  * Checks if the given property object is a valid Property model with respect to AAS metamodel specs.
  *
- * @param {any} property - The object to check.
+ * @param {any} property - The property object to check.
  * @returns {boolean} True if the object is a Property model, otherwise false.
  */
 export function isProperty(property: any): boolean {
