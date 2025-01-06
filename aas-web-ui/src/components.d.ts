@@ -10,6 +10,7 @@ declare module 'vue' {
     AAS: typeof import('./components/EditorComponents/AAS.vue')['default']
     AASList: typeof import('./components/AppNavigation/AASList.vue')['default']
     AASListDetails: typeof import('./components/AppNavigation/AASListDetails.vue')['default']
+    AASLogo: typeof import('./components/Logos/AASLogo.vue')['default']
     AASTreeview: typeof import('./components/AASTreeview.vue')['default']
     AdministrativeInformationElement: typeof import('./components/UIComponents/AdministrativeInformationElement.vue')['default']
     AnnotatedRelationshipElement: typeof import('./components/SubmodelElements/AnnotatedRelationshipElement.vue')['default']

@@ -1,20 +1,20 @@
 <template>
     <v-container fluid class="pa-0">
         <v-card color="card" elevation="0">
-            <v-card-title style="padding: 15px 16px 16px">
-                <v-row align="center">
-                    <v-col v-if="isMobile" cols="auto" class="pa-0">
-                        <v-btn class="ml-2" variant="plain" icon="mdi-chevron-left" @click="backToAASList()"></v-btn>
-                    </v-col>
-                    <v-col cols="auto">
-                        <span>Submodel List</span>
-                    </v-col>
-                    <v-col v-if="nameToDisplay(selectedAAS)" cols="auto" class="pl-1 pt-2">
-                        <v-chip size="x-small" color="primary" label border>{{
-                            'AAS: ' + nameToDisplay(selectedAAS)
-                        }}</v-chip>
-                    </v-col>
-                </v-row>
+            <v-card-title :style="{ padding: isMobile ? '' : '15px 16px 16px' }">
+                <div v-if="!selectedAAS || Object.keys(selectedAAS).length === 0">Submodel List</div>
+                <div v-else class="d-flex align-center">
+                    <v-btn
+                        v-if="isMobile"
+                        class="ml-0"
+                        variant="plain"
+                        icon="mdi-chevron-left"
+                        @click="backToAASList()" />
+                    <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
+                    <span class="text-truncate ml-2">
+                        {{ nameToDisplay(selectedAAS) }}
+                    </span>
+                </div>
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto; height: calc(100svh - 170px)" class="py-2 px-2">

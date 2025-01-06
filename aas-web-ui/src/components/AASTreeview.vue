@@ -2,17 +2,14 @@
     <v-container fluid class="pa-0">
         <v-card color="rgba(0,0,0,0)" elevation="0">
             <v-card-title style="padding: 15px 16px 16px">
+                <div v-if="!selectedAAS || Object.keys(selectedAAS).length === 0">AAS Treeview</div>
+                <div v-else class="d-flex align-center">
+                    <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
+                    <span class="text-truncate ml-2">
+                        {{ nameToDisplay(selectedAAS) }}
+                    </span>
+                </div>
                 <!-- TODO: Add Searchfield to filter the Treeview -->
-                <v-row align="center">
-                    <v-col cols="auto">
-                        <span>AAS Treeview</span>
-                    </v-col>
-                    <v-col v-if="nameToDisplay(selectedAAS)" cols="auto" class="pl-1 pt-2">
-                        <v-chip size="x-small" color="primary" label border>{{
-                            'AAS: ' + nameToDisplay(selectedAAS)
-                        }}</v-chip>
-                    </v-col>
-                </v-row>
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto; height: calc(100vh - 170px)">
