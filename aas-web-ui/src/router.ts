@@ -10,6 +10,8 @@ import DashboardGroup from '@/pages/DashboardGroup.vue';
 import Page404 from '@/pages/Page404.vue';
 import SubmodelViewer from '@/pages/SubmodelViewer.vue';
 import { useNavigationStore } from '@/store/NavigationStore';
+import { useAASRepositoryClient } from './composables/Client/AASRepositoryClient';
+import { useSMRepositoryClient } from './composables/Client/SMRepositoryClient';
 
 const routes = [
     { path: '/', name: 'AASViewer', component: AASViewer },
@@ -33,12 +35,16 @@ export async function createAppRouter() {
     // Stores
     const navigationStore = useNavigationStore();
 
+    // Composables
+    const { fetchAndDispatchAas } = useAASRepositoryClient();
+    const { fetchAndDispatchSme } = useSMRepositoryClient();
+
     const router = createRouter({
         history: createWebHistory(base),
         routes,
     });
 
-    router.beforeEach((to, from, next) => {
+    router.beforeEach(async (to, from, next) => {
         if (from.name && from.name !== to.name) {
             if (routeNamesToSaveAndLoadUrlQuery.includes(from.name as string)) {
                 navigationStore.dispatchUrlQuery(from.query); // Save URL query
@@ -54,6 +60,8 @@ export async function createAppRouter() {
 
                 if (query && Object.keys(query).length > 0 && updatedRoute !== to) {
                     next(updatedRoute);
+                    if (query.aas) await fetchAndDispatchAas(query.aas as string);
+                    if (query.path) await fetchAndDispatchSme(query.path as string);
                     return;
                 }
             }
