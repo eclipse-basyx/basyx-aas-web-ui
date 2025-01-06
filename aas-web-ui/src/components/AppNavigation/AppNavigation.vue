@@ -142,55 +142,64 @@
                 <!-- AAS Viewer -->
                 <v-row justify="end" align="center">
                     <v-col cols="auto" class="pr-1">
-                        <v-card class="py-1 px-2 text-buttonText" color="lightButton" @click="gotoRoute('AASList')">
+                        <v-card
+                            class="py-1 px-2 text-buttonText"
+                            color="lightButton"
+                            :to="{ name: 'AASList', query: route.query }">
                             AAS Viewer
                         </v-card>
                     </v-col>
                     <v-col cols="auto" class="py-1">
                         <v-btn
                             icon="mdi-format-list-text"
+                            :to="{ name: 'AASList', query: route.query }"
                             :active="route.path === '/aaslist'"
                             style="z-index: 9990"
                             size="small"
                             color="primary"
-                            class="text-buttonText"
-                            @click="gotoRoute('AASList')"></v-btn>
+                            class="text-buttonText"></v-btn>
                     </v-col>
                 </v-row>
                 <!-- Dashboard -->
                 <v-row v-if="dashboardAvailable" justify="end" align="center">
                     <v-col cols="auto" class="pr-1">
-                        <v-card class="py-1 px-2 text-buttonText" color="lightButton" @click="gotoRoute('Dashboard')">
+                        <v-card
+                            class="py-1 px-2 text-buttonText"
+                            color="lightButton"
+                            :to="{ name: 'Dashboard', query: route.query }">
                             Dashboard
                         </v-card>
                     </v-col>
                     <v-col cols="auto" class="py-1">
                         <v-btn
                             icon="mdi-chart-timeline-variant-shimmer"
+                            :to="{ name: 'Dashboard', query: route.query }"
                             :active="route.path === '/dashboard'"
                             style="z-index: 9990"
                             size="small"
                             color="primary"
-                            class="text-buttonText"
-                            @click="gotoRoute('Dashboard')"></v-btn>
+                            class="text-buttonText"></v-btn>
                     </v-col>
                 </v-row>
                 <!-- About -->
                 <v-row justify="end" align="center">
                     <v-col cols="auto" class="pr-1">
-                        <v-card class="py-1 px-2 text-buttonText" color="lightButton" @click="gotoRoute('About')">
+                        <v-card
+                            class="py-1 px-2 text-buttonText"
+                            color="lightButton"
+                            :to="{ name: 'About', query: route.query }">
                             About
                         </v-card>
                     </v-col>
                     <v-col cols="auto" class="py-1">
                         <v-btn
                             icon="mdi-format-list-group"
+                            :to="{ name: 'About', query: route.query }"
                             :active="route.path === '/about'"
                             style="z-index: 9990"
                             size="small"
                             color="primary"
-                            class="text-buttonText"
-                            @click="gotoRoute('About')"></v-btn>
+                            class="text-buttonText"></v-btn>
                     </v-col>
                 </v-row>
             </div>
@@ -201,7 +210,7 @@
 <script lang="ts" setup>
     import type { BaSyxComponent, RepositoryKey } from '@/types/BaSyx';
     import { computed, mergeProps, onMounted, reactive, ref, watch } from 'vue';
-    import { useRoute, useRouter } from 'vue-router';
+    import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
     import { useDashboardHandling } from '@/composables/DashboardHandling';
     import { useAuthStore } from '@/store/AuthStore';
@@ -210,7 +219,6 @@
 
     // Vue Router
     const route = useRoute();
-    const router = useRouter();
 
     // Composables
     const { checkDashboardAvailability } = useDashboardHandling();
@@ -412,10 +420,5 @@
 
     function logout() {
         authStore.getKeycloak?.logout();
-    }
-
-    function gotoRoute(routeName: string) {
-        // console.log('gotoRoute()', 'routeName:', routeName, 'route.query:', route.query);
-        router.push({ name: routeName, query: route.query });
     }
 </script>
