@@ -10,13 +10,14 @@
                         <span>Submodel List</span>
                     </v-col>
                     <v-col v-else cols="auto">
-                        <div style="display: flex; align-items: center">
-                            <v-img
+                        <div class="d-flex">
+                            <AASLogo
+                                min-height="24px"
                                 height="24px"
+                                min-width="24px"
                                 width="24px"
-                                style="position: relative; top: -2px"
-                                :src="isDark ? AASLogoDark : AASLogoLight"></v-img>
-                            <span class="text-truncate ml-2">
+                                :color="primaryColor" />
+                            <span class="text-truncate ml-2" style="max-width: calc(100vh - 24px)">
                                 {{ nameToDisplay(selectedAAS) }}
                             </span>
                         </div>
@@ -80,8 +81,6 @@
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
-    import AASLogoDark from '@/assets/AAS_dark.png';
-    import AASLogoLight from '@/assets/AAS_light.png';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';

@@ -8,13 +8,14 @@
                         <span>AAS Treeview</span>
                     </v-col>
                     <v-col v-else cols="auto">
-                        <div style="display: flex; align-items: center">
-                            <v-img
+                        <div class="d-flex">
+                            <AASLogo
+                                min-height="24px"
                                 height="24px"
+                                min-width="24px"
                                 width="24px"
-                                style="position: relative; top: -2px"
-                                :src="isDark ? AASLogoDark : AASLogoLight"></v-img>
-                            <span class="text-truncate ml-2">
+                                :color="primaryColor" />
+                            <span class="text-truncate ml-2" style="max-width: calc(100vh - 24px)">
                                 {{ nameToDisplay(selectedAAS) }}
                             </span>
                         </div>
@@ -68,8 +69,6 @@
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
     import { useTheme } from 'vuetify';
-    import AASLogoDark from '@/assets/AAS_dark.png';
-    import AASLogoLight from '@/assets/AAS_light.png';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -102,7 +101,8 @@
     const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL); // get Submodel Registry URL from Store
     const updatedNode = computed(() => aasStore.getUpdatedNode); // get the updated Treeview Node from Store
     const initTree = computed(() => aasStore.getInitTreeByReferenceElement); // get the init treeview flag from Store
-    const isDark = computed(() => theme.global.current.value.dark);
+    // const isDark = computed(() => theme.global.current.value.dark);
+    const primaryColor = computed(() => theme.current.value.colors.primary);
 
     // Watchers
     watch(selectedAAS, () => {
