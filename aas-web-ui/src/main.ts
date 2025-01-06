@@ -25,10 +25,11 @@ const app = createApp(App);
 const pinia = createPinia();
 
 async function loadPlugins() {
-    const router = await createAppRouter();
-
-    app.use(router);
     app.use(pinia);
+
+    const router = await createAppRouter();
+    app.use(router);
+
     app.use(VueApexCharts);
 
     const envStore = useEnvStore(); // Get the store instance
