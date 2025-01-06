@@ -9,7 +9,9 @@ import '@mdi/font/css/materialdesignicons.css';
 import 'vuetify/styles';
 // Composables
 import { createVuetify } from 'vuetify';
+import { mdi } from 'vuetify/iconsets/mdi';
 import { VFileUpload } from 'vuetify/labs/VFileUpload';
+import { customIcons } from '@/assets/Icons/customIcons';
 import { adjustColorBrightness } from '@/utils/ThemeUtils';
 
 export function initializeVuetify(primaryLightColor: string, primaryDarkColor: string) {
@@ -21,6 +23,13 @@ export function initializeVuetify(primaryLightColor: string, primaryDarkColor: s
     const vuetify = createVuetify({
         components: {
             VFileUpload,
+        },
+        icons: {
+            defaultSet: 'mdi',
+            sets: {
+                mdi,
+                custom: customIcons,
+            },
         },
         theme: {
             themes: {

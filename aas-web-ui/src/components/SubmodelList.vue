@@ -11,12 +11,7 @@
                     </v-col>
                     <v-col v-else cols="auto">
                         <div class="d-flex">
-                            <AASLogo
-                                min-height="24px"
-                                height="24px"
-                                min-width="24px"
-                                width="24px"
-                                :color="primaryColor" />
+                            <v-icon icon="custom:aasIcon" color="primary" size="small" />
                             <span class="text-truncate ml-2" style="max-width: calc(100vh - 24px)">
                                 {{ nameToDisplay(selectedAAS) }}
                             </span>

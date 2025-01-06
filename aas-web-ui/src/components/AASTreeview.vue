@@ -9,12 +9,7 @@
                     </v-col>
                     <v-col v-else cols="auto">
                         <div class="d-flex">
-                            <AASLogo
-                                min-height="24px"
-                                height="24px"
-                                min-width="24px"
-                                width="24px"
-                                :color="primaryColor" />
+                            <v-icon icon="custom:aasIcon" color="primary" size="small" />
                             <span class="text-truncate ml-2" style="max-width: calc(100vh - 24px)">
                                 {{ nameToDisplay(selectedAAS) }}
                             </span>
@@ -68,7 +63,6 @@
 
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
-    import { useTheme } from 'vuetify';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -86,9 +80,6 @@
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
 
-    // Vuetify
-    const theme = useTheme();
-
     // Data
     const submodelData = ref([] as Array<any>); // Treeview Data
     const initialUpdate = ref(false); // Flag to check if the initial update of the Treeview is needed and/or done
@@ -101,8 +92,6 @@
     const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL); // get Submodel Registry URL from Store
     const updatedNode = computed(() => aasStore.getUpdatedNode); // get the updated Treeview Node from Store
     const initTree = computed(() => aasStore.getInitTreeByReferenceElement); // get the init treeview flag from Store
-    // const isDark = computed(() => theme.global.current.value.dark);
-    const primaryColor = computed(() => theme.current.value.colors.primary);
 
     // Watchers
     watch(selectedAAS, () => {
