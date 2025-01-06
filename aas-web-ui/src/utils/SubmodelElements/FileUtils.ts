@@ -2,55 +2,64 @@ import mime from 'mime';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { UUID } from '@/utils/IDUtils';
 
-// composables
+// Composables
 const { getRequest } = useRequestHandling();
 
+/**
+ * Checks if the given file object is a valid File model with respect to AAS metamodel specs.
+ *
+ * @param {any} file - The object to check.
+ * @returns {boolean} True if the object is a File model, otherwise false.
+ */
 export function isFile(file: any): boolean {
-    // console.log(
-    //     'isFile()',
-    //     'file:',
-    //     file,
-    // );
-
-    if (file && Object.keys(file).length > 0 && file?.modelType && file.modelType.trim() === 'File') return true;
-    return false;
-}
-
-export function hasValue(file: any): boolean {
-    // console.log(
-    //     'hasValue()',
-    //     'file:',
-    //     file,
-    // );
-
-    if (isFile(file) && file.value && file?.value.trim() !== '') {
+    if (
+        file &&
+        typeof file === 'object' &&
+        Object.keys(file).length > 0 &&
+        file?.modelType &&
+        typeof file.modelType === 'string' &&
+        file.modelType.trim() === 'File'
+    ) {
         return true;
     }
     return false;
 }
 
-export function valueToDisplay(file: any, defaultValueToDisplay: string = ''): string {
-    // console.log(
-    //     'valueToDisplay()',
-    //     'file:',
-    //     file,
-    //     'defaultValueToDisplay:',
-    //     defaultValueToDisplay,
-    // );
+/**
+ * Checks whether the given file object has a non-empty value.
+ *
+ * @param {any} file - The file object to check.
+ * @returns {boolean} True if the file has a non-empty value, otherwise false.
+ */
+export function hasValue(file: any): boolean {
+    if (isFile(file) && file?.value && file.value.trim() !== '') {
+        return true;
+    }
+    return false;
+}
 
+/**
+ * Retrieves the display value of a file if it exists, otherwise returns a default value.
+ *
+ * @param {any} file - The file object to check.
+ * @param {string} [defaultValueToDisplay=''] - The default value to return if the file is invalid or has no value.
+ * @returns {string} The display value of the file or the default value.
+ */
+export function valueToDisplay(file: any, defaultValueToDisplay: string = ''): string {
     if (isFile(file) && hasValue(file)) {
         return file.value;
     }
     return defaultValueToDisplay;
 }
 
+/**
+ * Retrieves the URL value of a file if it exists, otherwise returns a default value.
+ *
+ * @param {any} file - The file object to check.
+ * @param {string} [defaultValueToDisplay=''] - The default value to return if the file is invalid or has no value.
+ * @returns {string} The URL value of the file or the default value.
+ */
 export function valueUrl(file: any): string {
-    // console.log(
-    //     'valueUrl()',
-    //     'file:',
-    //     file,
-    // );
-
     if (isFile(file) && hasValue(file)) {
         try {
             new URL(file.value);
@@ -63,9 +72,13 @@ export function valueUrl(file: any): string {
     return '';
 }
 
+/**
+ * Retrieves the filename of a file if it exists, otherwise returns a default value.
+ *
+ * @param {any} file - The file object to check.
+ * @returns {string} The filename of the file or an empty string if filename determination is not possible.
+ */
 export function getFilename(file: any): string {
-    // console.log('valueUrl()', 'file:', file);
-
     if (isFile(file) && hasValue(file)) {
         const fileValueUrl = valueUrl(file);
 
@@ -115,13 +128,12 @@ export function getFilename(file: any): string {
     return '';
 }
 
+/**
+ * Downloads file if it exists.
+ *
+ * @param {any} file - The file object to check.
+ */
 export function downloadFile(file: any) {
-    // console.log(
-    //     'downloadFile()',
-    //     'file:',
-    //     file,
-    // );
-
     if (isFile(file) && hasValue(file) && valueUrl(file)) {
         const path = valueUrl(file);
         const context = 'retrieving Attachment File';
