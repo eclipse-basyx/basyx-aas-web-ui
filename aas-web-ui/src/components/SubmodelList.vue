@@ -6,13 +6,20 @@
                     <v-col v-if="isMobile" cols="auto" class="pa-0">
                         <v-btn class="ml-2" variant="plain" icon="mdi-chevron-left" @click="backToAASList()"></v-btn>
                     </v-col>
-                    <v-col cols="auto">
+                    <v-col v-if="!selectedAAS || Object.keys(selectedAAS).length === 0" cols="auto">
                         <span>Submodel List</span>
                     </v-col>
-                    <v-col v-if="nameToDisplay(selectedAAS)" cols="auto" class="pl-1 pt-2">
-                        <v-chip size="x-small" color="primary" label border>{{
-                            'AAS: ' + nameToDisplay(selectedAAS)
-                        }}</v-chip>
+                    <v-col v-else cols="auto">
+                        <div style="display: flex; align-items: center">
+                            <v-img
+                                height="24px"
+                                width="24px"
+                                style="position: relative; top: -2px"
+                                :src="isDark ? AASLogoDark : AASLogoLight"></v-img>
+                            <span class="text-truncate ml-2">
+                                {{ nameToDisplay(selectedAAS) }}
+                            </span>
+                        </div>
                     </v-col>
                 </v-row>
             </v-card-title>
@@ -73,6 +80,8 @@
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
+    import AASLogoDark from '@/assets/AAS_dark.png';
+    import AASLogoLight from '@/assets/AAS_light.png';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';

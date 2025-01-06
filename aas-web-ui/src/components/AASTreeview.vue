@@ -4,13 +4,20 @@
             <v-card-title style="padding: 15px 16px 16px">
                 <!-- TODO: Add Searchfield to filter the Treeview -->
                 <v-row align="center">
-                    <v-col cols="auto">
+                    <v-col v-if="!selectedAAS || Object.keys(selectedAAS).length === 0" cols="auto">
                         <span>AAS Treeview</span>
                     </v-col>
-                    <v-col v-if="nameToDisplay(selectedAAS)" cols="auto" class="pl-1 pt-2">
-                        <v-chip size="x-small" color="primary" label border>{{
-                            'AAS: ' + nameToDisplay(selectedAAS)
-                        }}</v-chip>
+                    <v-col v-else cols="auto">
+                        <div style="display: flex; align-items: center">
+                            <v-img
+                                height="24px"
+                                width="24px"
+                                style="position: relative; top: -2px"
+                                :src="isDark ? AASLogoDark : AASLogoLight"></v-img>
+                            <span class="text-truncate ml-2">
+                                {{ nameToDisplay(selectedAAS) }}
+                            </span>
+                        </div>
                     </v-col>
                 </v-row>
             </v-card-title>
@@ -60,6 +67,9 @@
 
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
+    import { useTheme } from 'vuetify';
+    import AASLogoDark from '@/assets/AAS_dark.png';
+    import AASLogoLight from '@/assets/AAS_light.png';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -77,6 +87,9 @@
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
 
+    // Vuetify
+    const theme = useTheme();
+
     // Data
     const submodelData = ref([] as Array<any>); // Treeview Data
     const initialUpdate = ref(false); // Flag to check if the initial update of the Treeview is needed and/or done
@@ -89,6 +102,7 @@
     const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL); // get Submodel Registry URL from Store
     const updatedNode = computed(() => aasStore.getUpdatedNode); // get the updated Treeview Node from Store
     const initTree = computed(() => aasStore.getInitTreeByReferenceElement); // get the init treeview flag from Store
+    const isDark = computed(() => theme.global.current.value.dark);
 
     // Watchers
     watch(selectedAAS, () => {
