@@ -26,6 +26,7 @@ export default [
         rules: {
             '@typescript-eslint/no-explicit-any': 'warn',
             '@typescript-eslint/no-unused-expressions': ['error', { allowTernary: true }],
+            '@typescript-eslint/explicit-function-return-type': ['warn', { allowExpressions: true }],
         },
     },
 
