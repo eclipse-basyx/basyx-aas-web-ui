@@ -23,7 +23,6 @@ declare module 'vue' {
     BooleanType: typeof import('./components/SubmodelElements/ValueTypes/BooleanType.vue')['default']
     Button: typeof import('./components/Widgets/Button.vue')['default']
     CADPreview: typeof import('./components/Plugins/CADPreview.vue')['default']
-    CollectionWrapper: typeof import('./components/UIComponents/CollectionWrapper.vue')['default']
     ColumnChart: typeof import('./components/Widgets/ColumnChart.vue')['default']
     ComponentVisualization: typeof import('./components/ComponentVisualization.vue')['default']
     ConceptDescription: typeof import('./components/UIComponents/ConceptDescription.vue')['default']

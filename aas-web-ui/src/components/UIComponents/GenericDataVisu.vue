@@ -7,6 +7,11 @@
                     <span v-else>{{ 'Element ' + (index + 1) }}</span>
                 </v-expansion-panel-title>
                 <v-expansion-panel-text>
+                    <DescriptionElement
+                        v-if="submodelElement.description && submodelElement.description.length > 0"
+                        :description-object="submodelElement.description"
+                        :description-title="'Description'"
+                        :small="false"></DescriptionElement>
                     <GenericDataVisu
                         v-if="
                             Array.isArray(submodelElement.value) &&

@@ -98,24 +98,30 @@
                         <Property
                             v-else-if="submodelElementData.modelType === 'Property'"
                             :property-object="submodelElementData"
+                            :is-editable="editMode"
                             @update-value="initializeView()"></Property>
                         <MultiLanguageProperty
                             v-else-if="submodelElementData.modelType === 'MultiLanguageProperty'"
-                            :multi-language-property-object="submodelElementData"></MultiLanguageProperty>
+                            :multi-language-property-object="submodelElementData"
+                            :is-editable="editMode"></MultiLanguageProperty>
                         <Operation
                             v-else-if="submodelElementData.modelType === 'Operation'"
-                            :operation-object="submodelElementData"></Operation>
+                            :operation-object="submodelElementData"
+                            :is-editable="editMode"></Operation>
                         <File
                             v-else-if="submodelElementData.modelType === 'File'"
                             :file-object="submodelElementData"
+                            :is-editable="editMode"
                             @update-path="initializeView()"></File>
                         <Blob
                             v-else-if="submodelElementData.modelType === 'Blob'"
                             :blob-object="submodelElementData"
+                            :is-editable="editMode"
                             @update-blob="initializeView"></Blob>
                         <ReferenceElement
                             v-else-if="submodelElementData.modelType === 'ReferenceElement'"
-                            :reference-element-object="submodelElementData"></ReferenceElement>
+                            :reference-element-object="submodelElementData"
+                            :is-editable="editMode"></ReferenceElement>
                         <Range
                             v-else-if="submodelElementData.modelType === 'Range'"
                             :range-object="submodelElementData"></Range>
@@ -127,7 +133,8 @@
                             :relationship-element-object="submodelElementData"></RelationshipElement>
                         <AnnotatedRelationshipElement
                             v-else-if="submodelElementData.modelType === 'AnnotatedRelationshipElement'"
-                            :annotated-relationship-element-object="submodelElementData"></AnnotatedRelationshipElement>
+                            :annotated-relationship-element-object="submodelElementData"
+                            :is-editable="editMode"></AnnotatedRelationshipElement>
                         <InvalidElement v-else :invalid-element-object="submodelElementData"></InvalidElement>
                     </v-list>
                     <!-- ConceptDescriptions -->
@@ -184,11 +191,15 @@
 
 <script lang="ts" setup>
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+    import { useRoute } from 'vue-router';
     import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { formatDate } from '@/utils/DateUtils';
+
+    // Vue Router
+    const route = useRoute();
 
     // Stores
     const navigationStore = useNavigationStore();
@@ -208,6 +219,7 @@
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
     const selectedNode = computed(() => aasStore.getSelectedNode);
     const autoSync = computed(() => navigationStore.getAutoSync);
+    const editMode = computed(() => route.name === 'AASEditor');
 
     // Watchers
     // Resets the SubmodelElementView when the AAS Registry changes
