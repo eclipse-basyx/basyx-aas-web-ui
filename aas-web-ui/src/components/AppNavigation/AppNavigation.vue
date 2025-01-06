@@ -142,17 +142,12 @@
                 <!-- AAS Viewer -->
                 <v-row justify="end" align="center">
                     <v-col cols="auto" class="pr-1">
-                        <v-card
-                            class="py-1 px-2 text-buttonText"
-                            color="lightButton"
-                            :to="{ name: 'AASList', query: route.query }">
-                            AAS Viewer
-                        </v-card>
+                        <v-card class="py-1 px-2 text-buttonText" color="lightButton" to="/aaslist">AAS Viewer</v-card>
                     </v-col>
                     <v-col cols="auto" class="py-1">
                         <v-btn
                             icon="mdi-format-list-text"
-                            :to="{ name: 'AASList', query: route.query }"
+                            to="/aaslist"
                             :active="route.path === '/aaslist'"
                             style="z-index: 9990"
                             size="small"
@@ -163,17 +158,12 @@
                 <!-- Dashboard -->
                 <v-row v-if="dashboardAvailable" justify="end" align="center">
                     <v-col cols="auto" class="pr-1">
-                        <v-card
-                            class="py-1 px-2 text-buttonText"
-                            color="lightButton"
-                            :to="{ name: 'Dashboard', query: route.query }">
-                            Dashboard
-                        </v-card>
+                        <v-card class="py-1 px-2 text-buttonText" color="lightButton" to="/dashboard">Dashboard</v-card>
                     </v-col>
                     <v-col cols="auto" class="py-1">
                         <v-btn
                             icon="mdi-chart-timeline-variant-shimmer"
-                            :to="{ name: 'Dashboard', query: route.query }"
+                            to="/dashboard"
                             :active="route.path === '/dashboard'"
                             style="z-index: 9990"
                             size="small"
@@ -184,17 +174,12 @@
                 <!-- About -->
                 <v-row justify="end" align="center">
                     <v-col cols="auto" class="pr-1">
-                        <v-card
-                            class="py-1 px-2 text-buttonText"
-                            color="lightButton"
-                            :to="{ name: 'About', query: route.query }">
-                            About
-                        </v-card>
+                        <v-card class="py-1 px-2 text-buttonText" color="lightButton" to="/about">About</v-card>
                     </v-col>
                     <v-col cols="auto" class="py-1">
                         <v-btn
                             icon="mdi-format-list-group"
-                            :to="{ name: 'About', query: route.query }"
+                            to="/about"
                             :active="route.path === '/about'"
                             style="z-index: 9990"
                             size="small"

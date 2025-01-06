@@ -36,25 +36,19 @@
                         <span v-if="!isMobile" class="mx-3 text-primary">Switch to</span>
                         <!-- Select the view you want to use -->
                         <v-list v-if="!isMobile" nav class="pa-0 ma-3 bg-navigationMenuSecondary">
-                            <v-list-item :to="{ name: 'AASViewer', query: route.query }" @click="closeMenu()">
+                            <v-list-item to="/" @click="closeMenu()">
                                 <v-list-item-title>AAS Viewer</v-list-item-title>
                             </v-list-item>
-                            <v-list-item
-                                v-if="allowEditing"
-                                :to="{ name: 'AASEditor', query: route.query }"
-                                @click="closeMenu()">
+                            <v-list-item v-if="allowEditing" to="/aaseditor" @click="closeMenu()">
                                 <v-list-item-title>AAS Editor</v-list-item-title>
                             </v-list-item>
-                            <v-list-item :to="{ name: 'SubmodelViewer', query: route.query }" @click="closeMenu()">
+                            <v-list-item to="/submodelviewer" @click="closeMenu()">
                                 <v-list-item-title>Submodel Viewer</v-list-item-title>
                             </v-list-item>
-                            <v-list-item
-                                v-if="dashboardAvailable"
-                                :to="{ name: 'Dashboard', query: route.query }"
-                                @click="closeMenu()">
+                            <v-list-item v-if="dashboardAvailable" to="/dashboard" @click="closeMenu()">
                                 <v-list-item-title>Dashboard</v-list-item-title>
                             </v-list-item>
-                            <v-list-item :to="{ name: 'About', query: route.query }" @click="closeMenu()">
+                            <v-list-item to="/about" @click="closeMenu()">
                                 <v-list-item-title>About</v-list-item-title>
                             </v-list-item>
                         </v-list>
@@ -108,11 +102,12 @@
 
 <script lang="ts" setup>
     import type { BaSyxComponent, RepositoryKey } from '@/types/BaSyx';
-    import { computed, onMounted, reactive, ref } from 'vue';
+    import { computed, onMounted, reactive, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
     import { useDashboardHandling } from '@/composables/DashboardHandling';
     import { useRequestHandling } from '@/composables/RequestHandling';
+    import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
@@ -125,6 +120,7 @@
 
     // Stores
     const navigationStore = useNavigationStore();
+    const aasStore = useAASStore();
     const envStore = useEnvStore();
 
     // Vuetify
@@ -191,7 +187,12 @@
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
     const isDark = computed(() => theme.global.current.value.dark); // Check if the current Theme is dark
+    const currentRoute = computed(() => route.name); // get the current route name
     const allowEditing = computed(() => envStore.getAllowEditing); // Check if the current environment allows showing the AAS Editor
+
+    watch(currentRoute, () => {
+        aasStore.dispatchSelectedAAS({}); // reset selected AAS
+    });
 
     onMounted(async () => {
         dashboardAvailable.value = await checkDashboardAvailability();
