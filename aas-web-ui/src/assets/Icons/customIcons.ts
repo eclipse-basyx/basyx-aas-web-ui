@@ -10,4 +10,4 @@ const customIcons: IconSet = {
     component: (props: IconProps) => h(customSvgNameToComponent[props.icon as string]),
 };
 
-export { customIcons /* aliases */ };
+export { customIcons };
