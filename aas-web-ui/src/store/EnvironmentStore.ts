@@ -65,6 +65,15 @@ export const useEnvStore = defineStore('envStore', () => {
     const allowEditing = ref(
         import.meta.env.VITE_ALLOW_EDITING || (isProduction ? '/__ALLOW_EDITING_PLACEHOLDER__/' : '')
     );
+    const basicAuthActive = ref(
+        import.meta.env.VITE_BASIC_AUTH_ACTIVE || (isProduction ? '/__BASIC_AUTH_ACTIVE_PLACEHOLDER__/' : '')
+    );
+    const basicAuthUsername = ref(
+        import.meta.env.VITE_BASIC_AUTH_USERNAME || (isProduction ? '/__BASIC_AUTH_USERNAME_PLACEHOLDER__/' : '')
+    );
+    const basicAuthPassword = ref(
+        import.meta.env.VITE_BASIC_AUTH_PASSWORD || (isProduction ? '/__BASIC_AUTH_PASSWORD_PLACEHOLDER__/' : '')
+    );
 
     // getters
     const getEnvBasePath = computed(() => basePath.value);
@@ -99,6 +108,9 @@ export const useEnvStore = defineStore('envStore', () => {
         return undefined;
     });
     const getAllowEditing = computed(() => allowEditing.value === 'true');
+    const getBasicAuthActive = computed(() => basicAuthActive.value === 'true');
+    const getBasicAuthUsername = computed(() => basicAuthUsername.value);
+    const getBasicAuthPassword = computed(() => basicAuthPassword.value);
 
     return {
         singleAas,
@@ -123,5 +135,8 @@ export const useEnvStore = defineStore('envStore', () => {
         getSingleAas,
         getSingleAasRedirect,
         getAllowEditing,
+        getBasicAuthActive,
+        getBasicAuthUsername,
+        getBasicAuthPassword,
     };
 });
