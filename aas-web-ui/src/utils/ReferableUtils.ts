@@ -1,25 +1,40 @@
-// Function to extract the english display name from a referable
-export function nameToDisplay(referable: any, language = 'en', defaultNameToDisplay = '') {
-    // console.log(
-    //     'nameToDisplay()',
-    //     'referable:',
-    //     referable,
-    //     'defaultNameToDisplay:',
-    //     defaultNameToDisplay,
-    // );
+/**
+ * Extracts the display name from a referable object based on the specified language.
+ *
+ * The function follows these steps to determine the display name:
+ *  1. If a `displayName` entry with the specified language is found, it returns its text.
+ *  2. If `defaultNameToDisplay` is provided and not an empty string, it returns this value.
+ *  3. If `idShort` is available and not an empty string, it returns `idShort`.
+ *  4. If `id` is available and not an empty string, it returns `id`.
+ *  5. If none of the above conditions are met, it returns an empty string.
+ *
+ * @param {Object} referable - The referable object to extract the display name from.
+ * @param {string} [language='en'] - The language code for the desired display name text. Defaults to 'en'.
+ * @param {string} [defaultNameToDisplay=''] - The default name to return if no display name is found. Defaults to an empty string.
+ * @returns {string} - The determined display name or an appropriate fallback value.
+ */
+export function nameToDisplay(referable: any, language: string = 'en', defaultNameToDisplay: string = ''): string {
+    if (referable && Object.keys(referable).length > 0) {
+        // 1.) Check if displayName is available, if so, return displayName
+        if (referable?.displayName && Array.isArray(referable?.displayName) && referable?.displayName.length > 0) {
+            const displayNameEn = referable.displayName.find((displayName: any) => {
+                return displayName.language === language && displayName?.text;
+            });
+            if (displayNameEn && displayNameEn?.text && displayNameEn?.text.trim() !== '') return displayNameEn.text;
+        }
 
-    if (
-        referable &&
-        Object.keys(referable).length > 0 &&
-        Array.isArray(referable?.displayName) &&
-        referable?.displayName.length > 0
-    ) {
-        const displayNameEn = referable.displayName.find((displayName: any) => {
-            return displayName.language === language && displayName.text !== '';
-        });
-        if (displayNameEn && displayNameEn.text) return displayNameEn.text;
+        // 2.) Otherwise return defaultNameToDisplay (if specified)
+        if (defaultNameToDisplay.trim() !== '') return defaultNameToDisplay;
+
+        // 3.) Otherwise return idShort (if available and not empty string)
+        if (referable?.idShort && referable?.idShort.trim() !== '') return referable.idShort;
+
+        // 4.) Otherwise return id (if available and not empty string)
+        if (referable?.id && referable?.id.trim() !== '') return referable.id;
     }
-    return !defaultNameToDisplay && referable?.idShort ? referable.idShort : defaultNameToDisplay;
+
+    // 4.) Return defaultNameToDisplay if specified, otherwise return an empty string
+    return defaultNameToDisplay.trim() || '';
 }
 
 // Function to extract the english description from a referable
