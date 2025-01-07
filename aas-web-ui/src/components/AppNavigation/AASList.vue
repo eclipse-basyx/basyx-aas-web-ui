@@ -312,7 +312,7 @@
         }
     });
     const editMode = computed(() => route.name === 'AASEditor'); // Check if the current Route is the AAS Editor
-    const allowUploading = computed(() => envStore.getAllowUploading); // Check if the current environment allows showing the AAS Editor
+    const allowUploading = computed(() => envStore.getAllowUploading); // Check if the current environment config allows uploading shells
 
     // Watchers
     // Watch the AAS Registry URL for changes and reload the AAS List if the URL changes
