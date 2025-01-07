@@ -25,6 +25,7 @@
 : "${SINGLE_AAS:=false}"
 : "${SINGLE_AAS_REDIRECT:=}"
 : "${ALLOW_EDITING:=true}"
+: "${ALLOW_UPLOADING:=false}"
 
 # Replace ${BASE_PATH} in the NGINX config template (without trailing slash)
 envsubst '${BASE_PATH}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
@@ -86,6 +87,7 @@ printf "%-38s %s\n" "Endpoint config available:" "$ENDPOINT_CONFIG_AVAILABLE"
 printf "%-38s %s\n" "Single AAS:" "$SINGLE_AAS"
 printf "%-38s %s\n" "Single AAS redirect:" "$SINGLE_AAS_REDIRECT"
 printf "%-38s %s\n" "Allow editing:" "$ALLOW_EDITING"
+printf "%-38s %s\n" "Allow uploading:" "$ALLOW_UPLOADING"
 echo "-------------------------------------------------------------------------------------------------------------------------"
 
 # Replace the placeholders in all relevant files (.js, .html, .css)
@@ -111,6 +113,7 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__SINGLE_AAS_PLACEHOLDER__/|$SINGLE_AAS|g" \
     -e "s|/__SINGLE_AAS_REDIRECT_PLACEHOLDER__/|$SINGLE_AAS_REDIRECT|g" \
     -e "s|/__ALLOW_EDITING_PLACEHOLDER__/|$ALLOW_EDITING|g" \
+    -e "s|/__ALLOW_UPLOADING_PLACEHOLDER__/|$ALLOW_UPLOADING|g" \
     {} \;
 
 # Start Nginx

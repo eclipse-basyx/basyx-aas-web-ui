@@ -65,6 +65,9 @@ export const useEnvStore = defineStore('envStore', () => {
     const allowEditing = ref(
         import.meta.env.VITE_ALLOW_EDITING || (isProduction ? '/__ALLOW_EDITING_PLACEHOLDER__/' : '')
     );
+    const allowUploading = ref(
+        import.meta.env.VITE_ALLOW_UPLOADING || (isProduction ? '/__ALLOW_UPLOADING_PLACEHOLDER__/' : '')
+    );
 
     // getters
     const getEnvBasePath = computed(() => basePath.value);
@@ -99,6 +102,7 @@ export const useEnvStore = defineStore('envStore', () => {
         return undefined;
     });
     const getAllowEditing = computed(() => allowEditing.value === 'true');
+    const getAllowUploading = computed(() => allowUploading.value === 'true');
 
     return {
         singleAas,
@@ -123,5 +127,6 @@ export const useEnvStore = defineStore('envStore', () => {
         getSingleAas,
         getSingleAasRedirect,
         getAllowEditing,
+        getAllowUploading,
     };
 });
