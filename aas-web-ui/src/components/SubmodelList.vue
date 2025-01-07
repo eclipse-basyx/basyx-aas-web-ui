@@ -12,7 +12,7 @@
                         @click="backToAASList()" />
                     <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
                     <span class="text-truncate ml-2">
-                        {{ nameToDisplay(selectedAAS, 'en', selectedAAS.id) }}
+                        {{ nameToDisplay(selectedAAS) }}
                     </span>
                 </div>
             </v-card-title>
