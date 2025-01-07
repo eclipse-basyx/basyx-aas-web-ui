@@ -1,16 +1,9 @@
 <template>
     <v-container fluid class="pa-0">
-        <!-- Header -->
-        <v-card v-if="!hideSettings" class="mb-4">
-            <v-card-title>
-                <div class="text-subtitle-1">
-                    {{ nameToDisplay(submodelElementData, 'en', 'Time Series Data') }}
-                </div>
-            </v-card-title>
-            <v-card-text v-if="descriptionToDisplay(submodelElementData)" class="pt-0">
-                {{ descriptionToDisplay(submodelElementData) }}
-            </v-card-text>
-        </v-card>
+        <VisualizationHeader
+            v-if="!hideSettings"
+            :submodel-element-data="submodelElementData"
+            default-title="Time Series Data"></VisualizationHeader>
         <!-- Data Preview Config -->
         <v-card v-if="!hideSettings || editDialog" class="mb-4">
             <!-- Title -->
@@ -84,25 +77,25 @@
                             size="small"
                             class="text-buttonText"
                             color="primary"
-                            @click="fetchLinkedData()"
-                            >Fetch Data</v-btn
-                        >
+                            @click="fetchLinkedData()">
+                            Fetch Data
+                        </v-btn>
                         <v-btn
                             v-if="segmentType == 'InternalSegment'"
                             size="small"
                             class="text-buttonText"
                             color="primary"
-                            @click="fetchInternalData()"
-                            >Fetch Data</v-btn
-                        >
+                            @click="fetchInternalData()">
+                            Fetch Data
+                        </v-btn>
                         <v-btn
                             v-if="segmentType == 'ExternalSegment'"
                             size="small"
                             class="text-buttonText"
                             color="primary"
-                            @click="fetchExternalData()"
-                            >Fetch Data</v-btn
-                        >
+                            @click="fetchExternalData()">
+                            Fetch Data
+                        </v-btn>
                     </template>
                 </v-list-item>
             </v-list>
@@ -123,9 +116,9 @@
                             size="small"
                             variant="elevated"
                             append-icon="mdi-plus"
-                            @click="createObject()"
-                            >Dashboard</v-btn
-                        >
+                            @click="createObject()">
+                            Dashboard
+                        </v-btn>
                     </template>
                 </v-list-item>
             </v-list>
@@ -315,7 +308,7 @@
         methods: {
             // Function to initialize the TimeSeriesData Plugin
             initializeTimeSeriesData() {
-                if (Object.keys(this.submodelElementData).length === 0) {
+                if (this.submodelElementData && Object.keys(this.submodelElementData).length === 0) {
                     this.timeSeriesData = {};
                     return;
                 }

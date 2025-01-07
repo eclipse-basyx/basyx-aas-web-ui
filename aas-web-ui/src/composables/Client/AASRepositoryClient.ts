@@ -12,7 +12,7 @@ import { generateUUIDFromString } from '@/utils/IDUtils';
 
 export function useAASRepositoryClient() {
     const { getRequest, postRequest, putRequest } = useRequestHandling();
-    const { fetchAasDescriptorById } = useAASRegistryClient();
+    const { fetchAasDescriptorById, fetchAasDescriptorList } = useAASRegistryClient();
 
     const aasStore = useAASStore();
     const navigationStore = useNavigationStore();
@@ -204,6 +204,44 @@ export function useAASRepositoryClient() {
         putRequest(path, body, headers, context, disableMessage);
     }
 
+    // Checks weather an AAS is available
+    // Checks availability in AAS Repo
+    // Checks availability in AAS Registry and AAS Repo if AAS Registry is available
+    async function aasIsAvailableById(aasId: string): Promise<boolean> {
+        // console.log('aasIsAvailableById()', aasId);
+        const failResponse = false;
+
+        if (aasId.trim() === '') return failResponse;
+
+        const aasDescriptorList = await fetchAasDescriptorList();
+        const aasList = await fetchAasList();
+
+        if (aasList && Array.isArray(aasList) && aasList.length > 0) {
+            // Check availability of AAS in AAS Repo
+            const aasFound = aasList.find((aas: any) => {
+                return aas.id == aasId;
+            });
+
+            if (aasFound && Object.keys(aasFound).length > 0) {
+                if (aasDescriptorList && Array.isArray(aasDescriptorList) && aasDescriptorList.length > 0) {
+                    // Check availability of AAS in AAS Registry
+                    const aasDescriptorFound = aasDescriptorList.find((aasDescriptor: any) => {
+                        return aasDescriptor.id == aasId;
+                    });
+
+                    if (aasDescriptorFound && Object.keys(aasDescriptorFound).length > 0) {
+                        return true; // AAS found in AAS Registry and AAS Repo
+                    }
+
+                    return failResponse;
+                }
+                return true; // AAS only found in AAS Repo (AAS Registry not available)
+            }
+        }
+
+        return failResponse;
+    }
+
     async function getSubmodelRefsById(aasId: string): Promise<Array<any>> {
         const failResponse = [] as Array<any>;
 
@@ -316,6 +354,7 @@ export function useAASRepositoryClient() {
         fetchAas,
         fetchAndDispatchAas,
         uploadAas,
+        aasIsAvailableById,
         postAas,
         putAas,
         putThumbnail,
