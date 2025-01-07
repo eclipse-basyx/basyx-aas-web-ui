@@ -29,7 +29,7 @@ export function nameToDisplay(referable: any, language: string = 'en', defaultNa
         // 3.) Otherwise return idShort (if available and not empty string)
         if (referable?.idShort && referable?.idShort.trim() !== '') return referable.idShort;
 
-        // 4.) Otherwise return id (if available and not empty string)
+        // 4.) If referable is also an identifiable at the same time return id (if available and not empty string)
         if (referable?.id && referable?.id.trim() !== '') return referable.id;
     }
 
