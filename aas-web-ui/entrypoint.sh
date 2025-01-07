@@ -25,7 +25,7 @@
 : "${SINGLE_AAS:=false}"
 : "${SINGLE_AAS_REDIRECT:=}"
 : "${ALLOW_EDITING:=true}"
-: "${ALLOW_UPLOADING:=false}"
+: "${ALLOW_UPLOADING:=true}"
 
 # Replace ${BASE_PATH} in the NGINX config template (without trailing slash)
 envsubst '${BASE_PATH}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
