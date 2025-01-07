@@ -101,7 +101,7 @@ export function useAASRepositoryClient() {
         if (aasId.trim() === '') return;
 
         const aas = await fetchAasById(aasId);
-        console.log('fetchAndDispatchAasById()', aasId, 'aas:', aas);
+        // console.log('fetchAndDispatchAasById()', aasId, 'aas:', aas);
 
         aasStore.dispatchSelectedAAS(aas);
     }
