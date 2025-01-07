@@ -68,6 +68,15 @@ export const useEnvStore = defineStore('envStore', () => {
     const allowUploading = ref(
         import.meta.env.VITE_ALLOW_UPLOADING || (isProduction ? '/__ALLOW_UPLOADING_PLACEHOLDER__/' : '')
     );
+    const basicAuthActive = ref(
+        import.meta.env.VITE_BASIC_AUTH_ACTIVE || (isProduction ? '/__BASIC_AUTH_ACTIVE_PLACEHOLDER__/' : '')
+    );
+    const basicAuthUsername = ref(
+        import.meta.env.VITE_BASIC_AUTH_USERNAME || (isProduction ? '/__BASIC_AUTH_USERNAME_PLACEHOLDER__/' : '')
+    );
+    const basicAuthPassword = ref(
+        import.meta.env.VITE_BASIC_AUTH_PASSWORD || (isProduction ? '/__BASIC_AUTH_PASSWORD_PLACEHOLDER__/' : '')
+    );
 
     // getters
     const getEnvBasePath = computed(() => basePath.value);
@@ -103,6 +112,9 @@ export const useEnvStore = defineStore('envStore', () => {
     });
     const getAllowEditing = computed(() => allowEditing.value === 'true');
     const getAllowUploading = computed(() => allowUploading.value === 'true');
+    const getBasicAuthActive = computed(() => basicAuthActive.value === 'true');
+    const getBasicAuthUsername = computed(() => basicAuthUsername.value);
+    const getBasicAuthPassword = computed(() => basicAuthPassword.value);
 
     return {
         singleAas,
@@ -128,5 +140,8 @@ export const useEnvStore = defineStore('envStore', () => {
         getSingleAasRedirect,
         getAllowEditing,
         getAllowUploading,
+        getBasicAuthActive,
+        getBasicAuthUsername,
+        getBasicAuthPassword,
     };
 });
