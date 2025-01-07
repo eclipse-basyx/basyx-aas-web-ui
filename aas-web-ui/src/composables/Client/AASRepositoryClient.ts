@@ -95,6 +95,17 @@ export function useAASRepositoryClient() {
         return failResponse;
     }
 
+    // Fetch and Dispatch AAS from (AAS Repo)
+    async function fetchAndDispatchAasById(aasId: string) {
+        // console.log('fetchAndDispatchAasById()', aasId);
+        if (aasId.trim() === '') return;
+
+        const aas = await fetchAasById(aasId);
+        console.log('fetchAndDispatchAasById()', aasId, 'aas:', aas);
+
+        aasStore.dispatchSelectedAAS(aas);
+    }
+
     // Fetch and Dispatch AAS from (AAS Repo) Endpoint
     async function fetchAndDispatchAas(aasEndpoint: string) {
         if (aasEndpoint.trim() === '') return;
@@ -115,18 +126,17 @@ export function useAASRepositoryClient() {
         formData.append('file', aasFile);
 
         // Send Request to upload the file
-        postRequest(path, formData, headers, context, disableMessage).then((response: any) => {
-            if (response.success) {
-                navigationStore.dispatchSnackbar({
-                    status: true,
-                    timeout: 4000,
-                    color: 'success',
-                    btnColor: 'buttonText',
-                    text: 'AASX-File uploaded.',
-                }); // Show Success Snackbar
-                navigationStore.dispatchTriggerAASListReload(true); // Reload AAS List
-            }
-        });
+        const response = await postRequest(path, formData, headers, context, disableMessage);
+        if (response.success) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'success',
+                btnColor: 'buttonText',
+                text: 'AASX-File uploaded.',
+            }); // Show Success Snackbar
+            navigationStore.dispatchTriggerAASListReload(true); // Reload AAS List
+        }
     }
 
     async function postAas(aas: aasTypes.AssetAdministrationShell) {
@@ -142,18 +152,17 @@ export function useAASRepositoryClient() {
         const body = JSON.stringify(jsonAas);
 
         // Send Request to upload the file
-        postRequest(path, body, headers, context, disableMessage).then((response: any) => {
-            if (response.success) {
-                navigationStore.dispatchSnackbar({
-                    status: true,
-                    timeout: 4000,
-                    color: 'success',
-                    btnColor: 'buttonText',
-                    text: 'AAS successfully created',
-                }); // Show Success Snackbar
-                navigationStore.dispatchTriggerAASListReload(true); // Reload AAS List
-            }
-        });
+        const response = await postRequest(path, body, headers, context, disableMessage);
+        if (response.success) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'success',
+                btnColor: 'buttonText',
+                text: 'AAS successfully created',
+            }); // Show Success Snackbar
+            navigationStore.dispatchTriggerAASListReload(true); // Reload AAS List
+        }
     }
 
     async function putAas(aas: aasTypes.AssetAdministrationShell) {
@@ -169,17 +178,16 @@ export function useAASRepositoryClient() {
         const body = JSON.stringify(jsonAas);
 
         // Send Request to upload the file
-        putRequest(path, body, headers, context, disableMessage).then((response: any) => {
-            if (response.success) {
-                navigationStore.dispatchSnackbar({
-                    status: true,
-                    timeout: 4000,
-                    color: 'success',
-                    btnColor: 'buttonText',
-                    text: 'AAS successfully updated',
-                }); // Show Success Snackbar
-            }
-        });
+        const response = await putRequest(path, body, headers, context, disableMessage);
+        if (response.success) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'success',
+                btnColor: 'buttonText',
+                text: 'AAS successfully updated',
+            }); // Show Success Snackbar
+        }
     }
 
     async function putThumbnail(thumbnail: File, aasId: string) {
@@ -201,7 +209,7 @@ export function useAASRepositoryClient() {
         const body = formData;
 
         // Send Request to upload the file
-        putRequest(path, body, headers, context, disableMessage);
+        await putRequest(path, body, headers, context, disableMessage);
     }
 
     async function getSubmodelRefsById(aasId: string): Promise<Array<any>> {
@@ -315,6 +323,7 @@ export function useAASRepositoryClient() {
         fetchAasById,
         fetchAas,
         fetchAndDispatchAas,
+        fetchAndDispatchAasById,
         uploadAas,
         postAas,
         putAas,
