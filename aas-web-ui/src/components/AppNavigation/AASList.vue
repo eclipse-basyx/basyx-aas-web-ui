@@ -23,7 +23,7 @@
                         </v-tooltip>
                     </v-col>
                     <!-- AAS Search Field -->
-                    <v-col class="px-0">
+                    <v-col class="pl-0" :class="editMode || allowUploading ? 'pr-0' : 'pr-2'">
                         <v-text-field
                             variant="outlined"
                             density="compact"
@@ -42,6 +42,7 @@
                                 <v-list density="compact" class="py-0">
                                     <!-- Open Upload Dialog -->
                                     <v-tooltip
+                                        v-if="allowUploading"
                                         open-delay="600"
                                         :location="editMode ? 'end' : 'bottom'"
                                         :disabled="isMobile">
@@ -59,7 +60,7 @@
                                         </template>
                                         <span>Upload AAS File to Environment</span>
                                     </v-tooltip>
-                                    <v-divider></v-divider>
+                                    <v-divider v-if="allowUploading"></v-divider>
                                     <!-- Open AAS edit dialog -->
                                     <v-tooltip open-delay="600" location="end">
                                         <template #activator="{ props }">
@@ -75,7 +76,11 @@
                                 </v-list>
                             </v-sheet>
                         </v-menu>
-                        <v-tooltip v-else open-delay="600" :location="editMode ? 'end' : 'bottom'" :disabled="isMobile">
+                        <v-tooltip
+                            v-else-if="allowUploading"
+                            open-delay="600"
+                            :location="editMode ? 'end' : 'bottom'"
+                            :disabled="isMobile">
                             <template #activator="{ props }">
                                 <v-btn
                                     icon="mdi-upload"
@@ -307,6 +312,7 @@
         }
     });
     const editMode = computed(() => route.name === 'AASEditor'); // Check if the current Route is the AAS Editor
+    const allowUploading = computed(() => envStore.getAllowUploading); // Check if the current environment allows showing the AAS Editor
 
     // Watchers
     // Watch the AAS Registry URL for changes and reload the AAS List if the URL changes
