@@ -312,9 +312,12 @@
         // Reset all values
         AASId.value = UUID();
         AASIdShort.value = null;
+        displayName.value = null;
+        description.value = null;
         AASCategory.value = null;
         version.value = null;
         revision.value = null;
+        creator.value = null;
         templateId.value = null;
         assetKind.value = aasTypes.AssetKind.Instance;
         globalAssetId.value = null;
