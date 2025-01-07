@@ -6,7 +6,7 @@
                 <div v-else class="d-flex align-center">
                     <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
                     <span class="text-truncate ml-2">
-                        {{ nameToDisplay(selectedAAS, 'en', selectedAAS.id) }}
+                        {{ nameToDisplay(selectedAAS) }}
                     </span>
                 </div>
                 <!-- TODO: Add Searchfield to filter the Treeview -->
