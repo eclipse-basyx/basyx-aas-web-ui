@@ -124,7 +124,7 @@
     });
 
     async function initializeTree() {
-        // console.log('Initialize Treeview', this.SelectedAAS, this.initialUpdate, this.initialNode);
+        // console.log('Initialize Treeview', selectedAAS.value, initialUpdate.value, initialNode.value);
         // return if no endpoints are available
         if (!selectedAAS.value || !selectedAAS.value.endpoints || selectedAAS.value.endpoints.length === 0) {
             // this.navigationStore.dispatchSnackbar({ status: true, timeout: 4000, color: 'error', btnColor: 'buttonText', text: 'AAS with no (valid) Endpoint selected!' });
