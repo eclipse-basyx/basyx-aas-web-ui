@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite",
-    "prebuild": "vitest run && vue-tsc --noEmit",
+    "prebuild": "cross-env NODE_ENV=production yarn lint:check && vitest run && vue-tsc --noEmit",
     "build": "vite build",
     "preview": "vite preview",
     "lint:check": "eslint ./",
