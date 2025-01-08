@@ -49,7 +49,7 @@
                                 v-model="globalAssetId"
                                 label="Global Asset ID"
                                 :show-generate-iri-button="true"
-                                type="P" />
+                                type="Asset" />
                             <TextInput v-model="assetType" label="Asset Type" />
                             <ResourceInput
                                 v-model="defaultThumbnail"
