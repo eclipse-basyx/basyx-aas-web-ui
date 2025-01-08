@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite",
-    "prebuild": "vitest run && vue-tsc --noEmit",
+    "prebuild": "cross-env NODE_ENV=production yarn lint:check && vitest run && vue-tsc --noEmit",
     "build": "vite build",
     "preview": "vite preview",
     "lint:check": "eslint ./",
@@ -51,6 +51,7 @@
     "@vitest/coverage-istanbul": "2.1.8",
     "@vitest/ui": "^2.1.8",
     "@vue/test-utils": "^2.4.6",
+    "cross-env": "^7.0.3",
     "eslint": "^9.17.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",

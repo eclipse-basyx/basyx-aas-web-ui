@@ -77,6 +77,7 @@
     import { computed, ref, watch } from 'vue';
     import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
+    import { useAASStore } from '@/store/AASDataStore';
     import { UUID } from '@/utils/IDUtils';
 
     const props = defineProps<{
@@ -85,11 +86,14 @@
         aas?: any;
     }>();
 
+    // Stores
+    const aasStore = useAASStore();
+
     const emit = defineEmits<{
         (event: 'update:modelValue', value: boolean): void;
     }>();
 
-    const { fetchAasById, postAas, putAas, putThumbnail } = useAASRepositoryClient();
+    const { fetchAasById, postAas, putAas, putThumbnail, fetchAndDispatchAasById } = useAASRepositoryClient();
     const { putAasDescriptor, createDescriptorFromAAS } = useAASRegistryClient();
 
     const editAASDialog = ref(false);
@@ -114,6 +118,8 @@
 
     const fileThumbnail = ref<File | undefined>(undefined);
 
+    // Computed Properties
+    const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
     const bordersToShow = computed(() => (panel: number) => {
         let border = '';
         switch (panel) {
@@ -285,18 +291,22 @@
             await postAas(AASObject.value);
             // Upload default thumbnail
             if (fileThumbnail.value !== undefined) {
-                putThumbnail(fileThumbnail.value, AASObject.value.id);
+                await putThumbnail(fileThumbnail.value, AASObject.value.id);
             }
+            await fetchAndDispatchAasById(AASObject.value.id);
         } else {
             // Update existing AAS
             await putAas(AASObject.value);
             // Update AAS Descriptor
             const jsonAAS = jsonization.toJsonable(AASObject.value);
             const descriptor = createDescriptorFromAAS(jsonAAS, props.aas.endpoints);
-            putAasDescriptor(descriptor);
+            await putAasDescriptor(descriptor);
             // Upload default thumbnail
             if (fileThumbnail.value !== undefined) {
-                putThumbnail(fileThumbnail.value, AASObject.value.id);
+                await putThumbnail(fileThumbnail.value, AASObject.value.id);
+            }
+            if (AASObject.value.id === selectedAAS.value.id) {
+                await fetchAndDispatchAasById(AASObject.value.id);
             }
         }
         clearForm();
@@ -312,9 +322,12 @@
         // Reset all values
         AASId.value = UUID();
         AASIdShort.value = null;
+        displayName.value = null;
+        description.value = null;
         AASCategory.value = null;
         version.value = null;
         revision.value = null;
+        creator.value = null;
         templateId.value = null;
         assetKind.value = aasTypes.AssetKind.Instance;
         globalAssetId.value = null;

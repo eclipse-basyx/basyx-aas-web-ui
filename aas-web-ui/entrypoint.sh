@@ -25,6 +25,9 @@
 : "${SINGLE_AAS:=false}"
 : "${SINGLE_AAS_REDIRECT:=}"
 : "${ALLOW_EDITING:=true}"
+: "${ALLOW_UPLOADING:=true}"
+: "${BASIC_AUTH_USERNAME:=}"
+: "${BASIC_AUTH_PASSWORD:=}"
 
 # Replace ${BASE_PATH} in the NGINX config template (without trailing slash)
 envsubst '${BASE_PATH}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
@@ -49,6 +52,13 @@ if [ -n "$KEYCLOAK_URL" ] && [ -n "$KEYCLOAK_REALM" ] && [ -n "$KEYCLOAK_CLIENT_
     KEYCLOAK_ACTIVE=true
 else
     KEYCLOAK_ACTIVE=false
+fi
+
+# Automatically set BASIC_AUTH_ACTIVE if BASIC_AUTH_USERNAME and BASIC_AUTH_PASSWORD are set
+if [ -n "$BASIC_AUTH_USERNAME" ] && [ -n "$BASIC_AUTH_PASSWORD" ]; then
+    BASIC_AUTH_ACTIVE=true
+else
+    BASIC_AUTH_ACTIVE=false
 fi
 
 # Informational message
@@ -86,6 +96,10 @@ printf "%-38s %s\n" "Endpoint config available:" "$ENDPOINT_CONFIG_AVAILABLE"
 printf "%-38s %s\n" "Single AAS:" "$SINGLE_AAS"
 printf "%-38s %s\n" "Single AAS redirect:" "$SINGLE_AAS_REDIRECT"
 printf "%-38s %s\n" "Allow editing:" "$ALLOW_EDITING"
+printf "%-38s %s\n" "Allow uploading:" "$ALLOW_UPLOADING"
+printf "%-38s %s\n" "Basic Auth active:" "$BASIC_AUTH_ACTIVE"
+printf "%-38s %s\n" "Basic Auth username:" "$BASIC_AUTH_USERNAME"
+printf "%-38s %s\n" "Basic Auth password:" "$BASIC_AUTH_PASSWORD"
 echo "-------------------------------------------------------------------------------------------------------------------------"
 
 # Replace the placeholders in all relevant files (.js, .html, .css)
@@ -111,6 +125,10 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__SINGLE_AAS_PLACEHOLDER__/|$SINGLE_AAS|g" \
     -e "s|/__SINGLE_AAS_REDIRECT_PLACEHOLDER__/|$SINGLE_AAS_REDIRECT|g" \
     -e "s|/__ALLOW_EDITING_PLACEHOLDER__/|$ALLOW_EDITING|g" \
+    -e "s|/__ALLOW_UPLOADING_PLACEHOLDER__/|$ALLOW_UPLOADING|g" \
+    -e "s|/__BASIC_AUTH_ACTIVE_PLACEHOLDER__/|$BASIC_AUTH_ACTIVE|g" \
+    -e "s|/__BASIC_AUTH_USERNAME_PLACEHOLDER__/|$BASIC_AUTH_USERNAME|g" \
+    -e "s|/__BASIC_AUTH_PASSWORD_PLACEHOLDER__/|$BASIC_AUTH_PASSWORD|g" \
     {} \;
 
 # Start Nginx

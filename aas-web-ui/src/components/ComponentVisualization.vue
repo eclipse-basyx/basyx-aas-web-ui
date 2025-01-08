@@ -1,25 +1,15 @@
 <template>
     <v-container fluid class="pa-0">
         <v-card color="card" elevation="0">
-            <v-card-title v-if="!isMobile" style="padding: 15px 16px 16px"> Visualization </v-card-title>
-            <v-card-title v-else style="padding: 15px 16px 16px">
-                <v-row align="center">
-                    <v-col cols="auto" class="pa-0">
-                        <v-btn
-                            class="ml-2"
-                            variant="plain"
-                            icon="mdi-chevron-left"
-                            @click="backToSubmodelList()"></v-btn>
-                    </v-col>
-                    <v-col cols="auto">
-                        <span>Visualization</span>
-                    </v-col>
-                    <v-col v-if="nameToDisplay(selectedAAS)" cols="auto" class="pl-1">
-                        <v-chip size="x-small" color="primary" label border>{{
-                            'AAS: ' + nameToDisplay(selectedAAS)
-                        }}</v-chip>
-                    </v-col>
-                </v-row>
+            <v-card-title :style="{ padding: isMobile ? '' : '15px 16px 16px' }">
+                <div v-if="!isMobile">Visualization</div>
+                <div v-else class="d-flex align-center">
+                    <v-btn class="ml-0" variant="plain" icon="mdi-chevron-left" @click="backToSubmodelList()" />
+                    <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
+                    <span class="text-truncate ml-2">
+                        {{ nameToDisplay(selectedAAS) }}
+                    </span>
+                </div>
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto; height: calc(100svh - 170px)">
@@ -151,7 +141,7 @@
 
         // Sort filtered plugins with respect to semanticId
         plugins
-            .sort((pluginA, pluginB) => {
+            .sort((pluginA: any, pluginB: any) => {
                 let pluginASemanticId = '';
                 let pluginBSemanticId = '';
 
@@ -161,7 +151,7 @@
                 if (Array.isArray(pluginA.semanticId)) {
                     if (pluginA.semanticId.length > 0) {
                         pluginA.semanticId
-                            .sort((semanticIdA, semanticIdB) => semanticIdA.localeCompare(semanticIdB))
+                            .sort((semanticIdA: any, semanticIdB: any) => semanticIdA.localeCompare(semanticIdB))
                             .reverse();
                         pluginASemanticId = pluginA.semanticId[0];
                     }
@@ -170,7 +160,7 @@
                 if (Array.isArray(pluginB.semanticId)) {
                     if (pluginB.semanticId.length > 0) {
                         pluginB.semanticId
-                            .sort((semanticIdA, semanticIdB) => semanticIdA.localeCompare(semanticIdB))
+                            .sort((semanticIdA: any, semanticIdB: any) => semanticIdA.localeCompare(semanticIdB))
                             .reverse();
                         pluginBSemanticId = pluginB.semanticId[0];
                     }
