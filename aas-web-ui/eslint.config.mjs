@@ -27,6 +27,7 @@ export default [
             '@typescript-eslint/no-explicit-any': 'warn',
             '@typescript-eslint/no-unused-expressions': ['error', { allowTernary: true }],
             '@typescript-eslint/explicit-function-return-type': ['warn', { allowExpressions: true }],
+            'no-console': ['warn', { allow: ['warn', 'error'] }],
         },
     },
 
@@ -45,6 +46,15 @@ export default [
             'vue/multi-word-component-names': 'off',
             'vue/no-unused-vars': ['error', { ignorePattern: '^_' }],
             'vue/max-attributes-per-line': ['error', { singleline: 5 }],
+            'vue/no-console': ['warn', { allow: ['warn', 'error'] }],
+        },
+    },
+
+    // Vue template-specific rules
+    {
+        files: ['*.vue'],
+        rules: {
+            'no-console': ['warn', { allow: ['warn', 'error'] }],
         },
     },
 
