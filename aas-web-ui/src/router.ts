@@ -46,14 +46,25 @@ export async function createAppRouter() {
 
     router.beforeEach(async (to, from, next) => {
         if (from.name && from.name !== to.name) {
-            if (routeNamesToSaveAndLoadUrlQuery.includes(from.name as string)) {
-                navigationStore.dispatchUrlQuery(from.query); // Save URL query
+            if (routeNamesToSaveAndLoadUrlQuery.includes(from.name as string) && Object.keys(from.query).length > 0) {
+                // Save URL query
+                const queryToDispatch = from.query;
+                const queryPathToDispatch = queryToDispatch?.path as string;
+
+                // Strip idShortPath in case of switching to Submodel Viewer
+                if (to.name === 'SubmodelViewer' && queryPathToDispatch && queryPathToDispatch.trim() !== '') {
+                    queryToDispatch.path = queryPathToDispatch.trim().split('/submodel-elements/')[0];
+                }
+
+                navigationStore.dispatchUrlQuery(queryToDispatch);
             }
+
             if (
-                (!to.query || Object.keys(to.query).length === 0) &&
-                routeNamesToSaveAndLoadUrlQuery.includes(to.name as string)
+                routeNamesToSaveAndLoadUrlQuery.includes(to.name as string) &&
+                (!to.query || Object.keys(to.query).length === 0)
             ) {
-                const query = navigationStore.getUrlQuery; // Load URL query
+                // Load URL query
+                const query = navigationStore.getUrlQuery;
                 const updatedRoute = Object.assign({}, to, {
                     query: query,
                 });
