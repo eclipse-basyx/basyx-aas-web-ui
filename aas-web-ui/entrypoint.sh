@@ -28,6 +28,7 @@
 : "${ALLOW_UPLOADING:=true}"
 : "${BASIC_AUTH_USERNAME:=}"
 : "${BASIC_AUTH_PASSWORD:=}"
+: "${EDITOR_ID_PREFIX:=https://example.com/}"
 
 # Replace ${BASE_PATH} in the NGINX config template (without trailing slash)
 envsubst '${BASE_PATH}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
@@ -100,6 +101,7 @@ printf "%-38s %s\n" "Allow uploading:" "$ALLOW_UPLOADING"
 printf "%-38s %s\n" "Basic Auth active:" "$BASIC_AUTH_ACTIVE"
 printf "%-38s %s\n" "Basic Auth username:" "$BASIC_AUTH_USERNAME"
 printf "%-38s %s\n" "Basic Auth password:" "$BASIC_AUTH_PASSWORD"
+printf "%-38s %s\n" "Editor ID prefix:" "$EDITOR_ID_PREFIX"
 echo "-------------------------------------------------------------------------------------------------------------------------"
 
 # Replace the placeholders in all relevant files (.js, .html, .css)
@@ -129,6 +131,7 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__BASIC_AUTH_ACTIVE_PLACEHOLDER__/|$BASIC_AUTH_ACTIVE|g" \
     -e "s|/__BASIC_AUTH_USERNAME_PLACEHOLDER__/|$BASIC_AUTH_USERNAME|g" \
     -e "s|/__BASIC_AUTH_PASSWORD_PLACEHOLDER__/|$BASIC_AUTH_PASSWORD|g" \
+    -e "s|/__EDITOR_ID_PREFIX_PLACEHOLDER__/|$EDITOR_ID_PREFIX|g" \
     {} \;
 
 # Start Nginx
