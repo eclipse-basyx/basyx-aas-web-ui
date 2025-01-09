@@ -2,7 +2,7 @@ import { useAuthStore } from '@/store/AuthStore';
 import { useEnvStore } from '@/store/EnvironmentStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 
-export function useRequestHandling(): any {
+export function useRequestHandling() {
     const authStore = useAuthStore();
     const navigationStore = useNavigationStore();
     const envStore = useEnvStore();

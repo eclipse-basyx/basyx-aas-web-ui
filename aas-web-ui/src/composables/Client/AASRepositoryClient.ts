@@ -9,7 +9,7 @@ import { extractEndpointHref } from '@/utils/DescriptorUtils';
 import { URLEncode } from '@/utils/EncodeDecodeUtils';
 import { downloadFile } from '@/utils/generalUtils';
 
-export function useAASRepositoryClient(): any {
+export function useAASRepositoryClient() {
     const { getRequest, postRequest, putRequest } = useRequestHandling();
     const { fetchAasDescriptorById } = useAASRegistryClient();
 

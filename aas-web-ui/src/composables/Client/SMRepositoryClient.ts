@@ -4,7 +4,7 @@ import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
 
-export function useSMRepositoryClient(): any {
+export function useSMRepositoryClient() {
     const { getRequest } = useRequestHandling();
     const { fetchSmDescriptorById } = useSMRegistryClient();
 
