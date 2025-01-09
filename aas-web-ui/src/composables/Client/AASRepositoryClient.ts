@@ -9,7 +9,7 @@ import { extractEndpointHref } from '@/utils/DescriptorUtils';
 import { URLEncode } from '@/utils/EncodeDecodeUtils';
 import { downloadFile } from '@/utils/generalUtils';
 
-export function useAASRepositoryClient(): any {
+export function useAASRepositoryClient() {
     const { getRequest, postRequest, putRequest } = useRequestHandling();
     const { fetchAasDescriptorById } = useAASRegistryClient();
 
@@ -131,7 +131,6 @@ export function useAASRepositoryClient(): any {
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(jsonAas);
 
-        // Send Request to upload the file
         const response = await postRequest(path, body, headers, context, disableMessage);
         if (response.success) {
             navigationStore.dispatchSnackbar({
@@ -157,7 +156,6 @@ export function useAASRepositoryClient(): any {
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(jsonAas);
 
-        // Send Request to upload the file
         const response = await putRequest(path, body, headers, context, disableMessage);
         if (response.success) {
             navigationStore.dispatchSnackbar({

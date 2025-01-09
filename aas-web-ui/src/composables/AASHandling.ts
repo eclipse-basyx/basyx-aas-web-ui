@@ -20,7 +20,7 @@ export function useAASHandling(): any {
         aasStore.dispatchSelectedAAS(aas);
     }
 
-    // Fetch and dispatch AAS
+    // Fetch and dispatch AAS by ID
     async function fetchAndDispatchAasById(aasId: string): Promise<void> {
         // console.log('fetchAndDispatchAasById()', aasId);
 
@@ -32,5 +32,8 @@ export function useAASHandling(): any {
         aasStore.dispatchSelectedAAS(aas);
     }
 
-    return { fetchAndDispatchAas, fetchAndDispatchAasById };
+    return {
+        fetchAndDispatchAas,
+        fetchAndDispatchAasById,
+    };
 }

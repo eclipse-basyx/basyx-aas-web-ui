@@ -7,7 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    AAS: typeof import('./components/EditorComponents/AAS.vue')['default']
+    AASForm: typeof import('./components/EditorComponents/AASForm.vue')['default']
     AASList: typeof import('./components/AppNavigation/AASList.vue')['default']
     AASListDetails: typeof import('./components/AppNavigation/AASListDetails.vue')['default']
     AASTreeview: typeof import('./components/AASTreeview.vue')['default']
@@ -80,6 +80,7 @@ declare module 'vue' {
     SubmodelElementList: typeof import('./components/SubmodelElements/SubmodelElementList.vue')['default']
     SubmodelElementView: typeof import('./components/SubmodelElementView.vue')['default']
     SubmodelElementWrapper: typeof import('./components/UIComponents/SubmodelElementWrapper.vue')['default']
+    SubmodelForm: typeof import('./components/EditorComponents/SubmodelForm.vue')['default']
     SubmodelList: typeof import('./components/SubmodelList.vue')['default']
     SupplementalSemanticID: typeof import('./components/UIComponents/SupplementalSemanticID.vue')['default']
     Switch: typeof import('./components/Widgets/Switch.vue')['default']

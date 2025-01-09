@@ -2,14 +2,14 @@ import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';
 import { useSMRepositoryClient } from './Client/SMRepositoryClient';
 
-export function useSMHandling(): any {
+export function useSMHandling() {
     // Composables
     const smRepoClient = useSMRepositoryClient();
 
     // Stores
     const aasStore = useAASStore();
 
-    // Fetch and dispatch SME
+    // Fetch and dispatch Submodel
     async function fetchAndDispatchSm(smEndpoint: string): Promise<void> {
         // console.log('fetchAndDispatchSm()', smEndpoint);
 
@@ -23,5 +23,20 @@ export function useSMHandling(): any {
         aasStore.dispatchSelectedNode(sm);
     }
 
-    return { fetchAndDispatchSm };
+    // Fetch and dispatch Submodel by ID
+    async function fetchAndDispatchSmById(submodelId: string): Promise<void> {
+        // console.log('fetchAndDispatchSmById()', submodelId);
+
+        if (submodelId.trim() === '') return;
+
+        const submodel = await smRepoClient.fetchSmById(submodelId);
+        // console.log('fetchAndDispatchSmById()', submodelId, 'Submodel:', submodel);
+
+        aasStore.dispatchSelectedNode(submodel);
+    }
+
+    return {
+        fetchAndDispatchSm,
+        fetchAndDispatchSmById,
+    };
 }

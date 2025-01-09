@@ -1,4 +1,6 @@
 <template>
+    <!-- Dialog for creating/editing Submodel -->
+    <SubmodelForm v-model="editDialog" :new-sm="newSm" :submodel="smToEdit"></SubmodelForm>
     <v-container fluid class="pa-0">
         <v-card color="rgba(0,0,0,0)" elevation="0">
             <v-card-title style="padding: 15px 16px 16px">
@@ -28,6 +30,17 @@
                 </div>
                 <template v-else>
                     <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
+                        <!-- Button to add a new Submodel -->
+                        <template v-if="editMode && submodelData.length > 0">
+                            <v-row justify="center">
+                                <v-col cols="auto" class="pt-1 pb-5">
+                                    <v-btn
+                                        prepend-icon="mdi-plus"
+                                        text="Create Submodel"
+                                        @click="openEditDialog(true)" />
+                                </v-col>
+                            </v-row>
+                        </template>
                         <template v-if="submodelData.length > 0">
                             <!-- TODO: Evaluate and Replace with Vuetify Treeview Component when it gets fully released in Q1 2025 -->
                             <VTreeview
@@ -41,7 +54,9 @@
                             v-else
                             title="No existing Submodels"
                             text="The selected AAS does not contain any Submodels"
-                            class="text-divider"></v-empty-state>
+                            :action-text="editMode ? 'Create Submodel' : undefined"
+                            class="text-divider"
+                            @click:action="openEditDialog(true)"></v-empty-state>
                     </template>
                     <template v-else>
                         <v-empty-state
@@ -57,6 +72,7 @@
 
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
+    import { useRoute } from 'vue-router';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useIDUtils } from '@/composables/IDUtils';
     import { useRequestHandling } from '@/composables/RequestHandling';
@@ -65,6 +81,9 @@
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
     import { URLEncode } from '@/utils/EncodeDecodeUtils';
     import { nameToDisplay } from '@/utils/ReferableUtils';
+
+    // Vue Router
+    const route = useRoute();
 
     // Composables
     const { smNotFound } = useSMRepositoryClient();
@@ -79,6 +98,9 @@
     const submodelData = ref([] as Array<any>); // Treeview Data
     const initialUpdate = ref(false); // Flag to check if the initial update of the Treeview is needed and/or done
     const initialNode = ref({} as any); // Initial Node to set the Treeview to
+    const editDialog = ref(false); // // Variable to store if the Edit Dialog should be shown
+    const newSm = ref(false); // Variable to store if a new Submodel should be created
+    const smToEdit = ref<any | undefined>(undefined); // Variable to store the Submodel to be edited
 
     // Computed Properties
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // get selected AAS from Store
@@ -87,6 +109,7 @@
     const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL); // get Submodel Registry URL from Store
     const selectedNode = computed(() => aasStore.getSelectedNode); // get the updated Treeview Node from Store
     const initTree = computed(() => aasStore.getInitTreeByReferenceElement); // get the init treeview flag from Store
+    const editMode = computed(() => route.name === 'AASEditor'); // Check if the current Route is the AAS Editor
 
     // Watchers
     watch(selectedAAS, () => {
@@ -382,6 +405,14 @@
             // set the isActive prop of the node in submodelData to true
             initialUpdate.value = true;
             initialNode.value = node;
+        }
+    }
+
+    function openEditDialog(createNew: boolean, submodel?: any): void {
+        editDialog.value = true;
+        newSm.value = createNew;
+        if (createNew === false && submodel) {
+            smToEdit.value = submodel;
         }
     }
 </script>

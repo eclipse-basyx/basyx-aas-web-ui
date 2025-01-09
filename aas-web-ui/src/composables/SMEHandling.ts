@@ -11,7 +11,7 @@ export function useSMEHandling(): any {
 
     // Fetch and dispatch SME
     async function fetchAndDispatchSme(submodelElementPath: string): Promise<void> {
-        // console.log('fetchAndDispatchSme()', submodelElementPath);
+        console.log('fetchAndDispatchSme()', submodelElementPath);
 
         if (submodelElementPath.trim() === '') return;
 
@@ -19,6 +19,8 @@ export function useSMEHandling(): any {
         sme.timestamp = formatDate(new Date());
         sme.path = submodelElementPath;
         sme.isActive = true;
+
+        console.log('fetchAndDispatchSme()', 'sme', sme);
 
         aasStore.dispatchSelectedNode(sme);
     }
