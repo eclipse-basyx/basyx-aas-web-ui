@@ -10,14 +10,17 @@
                 variant="text"
                 text="Generate IRI"
                 class="text-none"
-                @click.stop="textValue = generateIri(type!)" />
+                @click.stop="textValue = idUtils.generateIri(type!)" />
         </template>
     </v-text-field>
 </template>
 
 <script lang="ts" setup>
     import { ref, watch } from 'vue';
-    import { generateIri } from '@/utils/IDUtils';
+    import { useIDUtils } from '@/composables/IDUtils';
+
+    // Composables
+    const idUtils = useIDUtils();
 
     type Props = {
         label: string;

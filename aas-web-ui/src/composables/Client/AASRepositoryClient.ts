@@ -2,17 +2,20 @@ import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
 import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
 import { computed } from 'vue';
 import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
+import { useIDUtils } from '@/composables/IDUtils';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
 import { URLEncode } from '@/utils/EncodeDecodeUtils';
 import { downloadFile } from '@/utils/generalUtils';
-import { generateUUIDFromString } from '@/utils/IDUtils';
 
 export function useAASRepositoryClient() {
     const { getRequest, postRequest, putRequest } = useRequestHandling();
     const { fetchAasDescriptorById } = useAASRegistryClient();
+
+    // Composables
+    const idUtils = useIDUtils();
 
     const aasStore = useAASStore();
     const navigationStore = useNavigationStore();
@@ -293,7 +296,8 @@ export function useAASRepositoryClient() {
                 const aasIdShort = aas?.idShort;
 
                 const filename =
-                    (aasIdShort && aasIdShort.trim() !== '' ? aasIdShort : generateUUIDFromString(aas.id)) + '.aasx';
+                    (aasIdShort && aasIdShort.trim() !== '' ? aasIdShort : idUtils.generateUUIDFromString(aas.id)) +
+                    '.aasx';
 
                 downloadFile(filename, aasSerialization);
             }

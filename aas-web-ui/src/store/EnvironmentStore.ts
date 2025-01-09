@@ -77,6 +77,9 @@ export const useEnvStore = defineStore('envStore', () => {
     const basicAuthPassword = ref(
         import.meta.env.VITE_BASIC_AUTH_PASSWORD || (isProduction ? '/__BASIC_AUTH_PASSWORD_PLACEHOLDER__/' : '')
     );
+    const editorIdPrefix = ref(
+        import.meta.env.VITE_EDITOR_ID_PREFIX || (isProduction ? '/__EDITOR_ID_PREFIX_PLACEHOLDER__/' : '')
+    );
 
     // getters
     const getEnvBasePath = computed(() => basePath.value);
@@ -115,6 +118,7 @@ export const useEnvStore = defineStore('envStore', () => {
     const getBasicAuthActive = computed(() => basicAuthActive.value === 'true');
     const getBasicAuthUsername = computed(() => basicAuthUsername.value);
     const getBasicAuthPassword = computed(() => basicAuthPassword.value);
+    const getEditorIdPrefix = computed(() => editorIdPrefix.value);
 
     return {
         singleAas,
@@ -143,5 +147,6 @@ export const useEnvStore = defineStore('envStore', () => {
         getBasicAuthActive,
         getBasicAuthUsername,
         getBasicAuthPassword,
+        getEditorIdPrefix,
     };
 });

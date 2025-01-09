@@ -58,17 +58,18 @@
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+    import { useIDUtils } from '@/composables/IDUtils';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
     import { URLEncode } from '@/utils/EncodeDecodeUtils';
-    import { UUID } from '@/utils/IDUtils';
     import { nameToDisplay } from '@/utils/ReferableUtils';
 
     // Composables
     const { smNotFound } = useSMRepositoryClient();
     const { getRequest } = useRequestHandling();
+    const idUtils = useIDUtils();
 
     // Stores
     const navigationStore = useNavigationStore();
@@ -228,7 +229,7 @@
         // iterate over all elements in the current level of the tree (SubmodelElements [e.g. SubmodelElementCollections, SubmodelElementLists, Entities, Properties, ...])
         SubmodelElements.forEach((element: any, index: number) => {
             // give the Element a unique ID
-            element.id = UUID();
+            element.id = idUtils.UUID();
             // set the active State of each Element
             element.isActive = false;
             // set the Parent of each Element
