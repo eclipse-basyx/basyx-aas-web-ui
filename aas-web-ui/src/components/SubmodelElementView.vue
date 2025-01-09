@@ -193,10 +193,8 @@
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
-    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { formatDate } from '@/utils/DateUtils';
 
     // Vue Router
     const route = useRoute();
@@ -207,7 +205,6 @@
 
     // Composables
     const { getConceptDescriptions } = useConceptDescriptionHandling();
-    const { getRequest } = useRequestHandling();
 
     // Data
     const submodelElementData = ref({} as any);
