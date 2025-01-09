@@ -17,10 +17,10 @@
     import { computed, onMounted } from 'vue';
     import { RouteRecordNameGeneric, useRoute, useRouter } from 'vue-router';
     import { useDisplay } from 'vuetify';
-    import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { useSMRepositoryClient } from './composables/Client/SMRepositoryClient';
+    import { useAASHandling } from './composables/AASHandling';
+    import { useSMEHandling } from './composables/SMEHandling';
 
     // Stores
     const navigationStore = useNavigationStore();
@@ -31,8 +31,8 @@
     const router = useRouter();
 
     // Composables
-    const { fetchAndDispatchAas } = useAASRepositoryClient();
-    const { fetchAndDispatchSme } = useSMRepositoryClient();
+    const { fetchAndDispatchAas } = useAASHandling();
+    const { fetchAndDispatchSme } = useSMEHandling();
 
     // Vuetify
     const { mobile } = useDisplay();
