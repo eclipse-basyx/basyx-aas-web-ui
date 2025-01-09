@@ -88,7 +88,7 @@
     // Composables
     const { smNotFound } = useSMRepositoryClient();
     const { getRequest } = useRequestHandling();
-    const idUtils = useIDUtils();
+    const { UUID } = useIDUtils();
 
     // Stores
     const navigationStore = useNavigationStore();
@@ -252,7 +252,7 @@
         // iterate over all elements in the current level of the tree (SubmodelElements [e.g. SubmodelElementCollections, SubmodelElementLists, Entities, Properties, ...])
         SubmodelElements.forEach((element: any, index: number) => {
             // give the Element a unique ID
-            element.id = idUtils.UUID();
+            element.id = UUID();
             // set the active State of each Element
             element.isActive = false;
             // set the Parent of each Element

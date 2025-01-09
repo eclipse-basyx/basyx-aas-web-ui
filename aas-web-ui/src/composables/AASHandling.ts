@@ -1,7 +1,7 @@
 import { useAASStore } from '@/store/AASDataStore';
 import { useAASRepositoryClient } from './Client/AASRepositoryClient';
 
-export function useAASHandling(): any {
+export function useAASHandling() {
     // Composables
     const aasRepoClient = useAASRepositoryClient();
 

@@ -490,13 +490,14 @@
             if (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0) {
                 scrollToAasAfterDispatch = true;
             }
+
             // Select AAS
             AASStatus.value = AAS.status;
             const aasEndpoint = extractEndpointHref(AAS, 'AAS-3.0');
-            // Add AAS Endpoint as Query to the Router
+
             router.push({ query: { aas: aasEndpoint } });
-            // dispatch the selected AAS to the Store
             await fetchAndDispatchAas(aasEndpoint);
+
             if (scrollToAasAfterDispatch) scrollToSelectedAAS();
         }
     }

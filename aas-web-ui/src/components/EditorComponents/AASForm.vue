@@ -76,6 +76,7 @@
     import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
     import { computed, ref, watch } from 'vue';
     import { useAASHandling } from '@/composables/AASHandling';
+    import { useAASHandling } from '@/composables/AASHandling';
     import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useIDUtils } from '@/composables/IDUtils';
@@ -88,7 +89,7 @@
     }>();
 
     // Composables
-    const idUtils = useIDUtils();
+    const { UUID } = useIDUtils();
     const { fetchAndDispatchAasById } = useAASHandling();
 
     // Stores
@@ -105,7 +106,7 @@
     const AASObject = ref<aasTypes.AssetAdministrationShell | undefined>(undefined);
     const openPanels = ref<number[]>([0, 3]);
 
-    const AASId = ref<string | null>(idUtils.UUID());
+    const AASId = ref<string | null>(UUID());
     const AASIdShort = ref<string | null>(null);
     const displayName = ref<Array<aasTypes.LangStringNameType> | null>(null);
     const description = ref<Array<aasTypes.LangStringTextType> | null>(null);
@@ -325,7 +326,7 @@
 
     function clearForm() {
         // Reset all values
-        AASId.value = idUtils.UUID();
+        AASId.value = UUID();
         AASIdShort.value = null;
         displayName.value = null;
         description.value = null;

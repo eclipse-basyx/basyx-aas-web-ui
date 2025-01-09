@@ -2,7 +2,7 @@ import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';
 import { useSMRepositoryClient } from './Client/SMRepositoryClient';
 
-export function useSMEHandling(): any {
+export function useSMEHandling() {
     // Composables
     const smRepoClient = useSMRepositoryClient();
 
