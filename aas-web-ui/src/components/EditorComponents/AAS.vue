@@ -77,14 +77,17 @@
     import { computed, ref, watch } from 'vue';
     import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
+    import { useIDUtils } from '@/composables/IDUtils';
     import { useAASStore } from '@/store/AASDataStore';
-    import { UUID } from '@/utils/IDUtils';
 
     const props = defineProps<{
         modelValue: boolean;
         newShell: boolean;
         aas?: any;
     }>();
+
+    // Composables
+    const idUtils = useIDUtils();
 
     // Stores
     const aasStore = useAASStore();
@@ -100,7 +103,7 @@
     const AASObject = ref<aasTypes.AssetAdministrationShell | undefined>(undefined);
     const openPanels = ref<number[]>([0, 3]);
 
-    const AASId = ref<string | null>(UUID());
+    const AASId = ref<string | null>(idUtils.UUID());
     const AASIdShort = ref<string | null>(null);
     const displayName = ref<Array<aasTypes.LangStringNameType> | null>(null);
     const description = ref<Array<aasTypes.LangStringTextType> | null>(null);

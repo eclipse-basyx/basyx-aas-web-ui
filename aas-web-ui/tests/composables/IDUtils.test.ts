@@ -1,6 +1,12 @@
 import _ from 'lodash';
+import { createPinia, setActivePinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
-import { customIdRegex, generateCustomId, generateIri } from '@/utils/IDUtils';
+import { useIDUtils } from '@/composables/IDUtils';
+
+const pinia = createPinia();
+setActivePinia(pinia); // Activate Pinia for the test environment
+
+const idUtils = useIDUtils();
 
 describe("IDUtils.ts; Tests for 'generateIri()'", () => {
     // Test data for generateIri()
@@ -26,20 +32,16 @@ describe("IDUtils.ts; Tests for 'generateIri()'", () => {
             outputPrefix: 'https://example.com/ids/',
         },
     ];
-
     // Tests for generateIri()
     generateIriTestData.forEach(function (generateIriTestDataset) {
         // Define test data
         const testId = generateIriTestDataset.testId;
         const type = generateIriTestDataset.type;
-
         // Expected data/output
         const expectedOutputPrefix = generateIriTestDataset.outputPrefix;
         const expectedRegex = new RegExp('^' + _.escapeRegExp(expectedOutputPrefix) + '\\d{4}_\\d{4}_\\d{4}_\\d{4}$');
-
         // Actual output
-        const output = generateIri(type);
-
+        const output = idUtils.generateIri(type);
         it(`${testId}: generateIri(${("'" + type + "'").padEnd(26, ' ')})`, () => {
             // Perform the assertion
             expect(expectedRegex.test(output)).toBeTruthy();
@@ -51,11 +53,9 @@ describe("IDUtils.ts; Tests for 'generateCustomId()'", () => {
     // Tests for generateIri()
     for (let i = 0; i < 100; i++) {
         // Expected data/output
-        const expectedRegex = new RegExp(customIdRegex);
-
+        const expectedRegex = new RegExp(idUtils.customIdRegex);
         // Actual output
-        const output = generateCustomId();
-
+        const output = idUtils.generateCustomId();
         it(`${i}: generateCustomId() = ${output}`, () => {
             // Perform the assertion
             expect(expectedRegex.test(output)).toBeTruthy();

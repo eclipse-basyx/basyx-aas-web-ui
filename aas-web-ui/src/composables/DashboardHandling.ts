@@ -1,13 +1,16 @@
 import { computed } from 'vue';
+import { useIDUtils } from '@/composables/IDUtils';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useEnvStore } from '@/store/EnvironmentStore';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
 import { URLEncode } from '@/utils/EncodeDecodeUtils';
-import { UUID } from '@/utils/IDUtils';
 
 export function useDashboardHandling() {
     const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
+
+    // Composables
+    const idUtils = useIDUtils();
 
     const aasStore = useAASStore();
 
@@ -160,7 +163,7 @@ export function useDashboardHandling() {
             if (response && response.success) {
                 return response.data;
             }
-            return { idShort: 'new Group', id: UUID() };
+            return { idShort: 'new Group', id: idUtils.UUID() };
         }
     }
 
