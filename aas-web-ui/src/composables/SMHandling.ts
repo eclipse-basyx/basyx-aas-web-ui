@@ -2,13 +2,13 @@ import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';
 import { useSMRepositoryClient } from './Client/SMRepositoryClient';
 
-// Composables
-const smRepoClient = useSMRepositoryClient();
-
-// Stores
-const aasStore = useAASStore();
-
 export function useSMHandling(): any {
+    // Composables
+    const smRepoClient = useSMRepositoryClient();
+
+    // Stores
+    const aasStore = useAASStore();
+
     // Fetch and dispatch SME
     async function fetchAndDispatchSm(smEndpoint: string): Promise<void> {
         // console.log('fetchAndDispatchSm()', smEndpoint);

@@ -1,13 +1,13 @@
 import { useAASStore } from '@/store/AASDataStore';
 import { useAASRepositoryClient } from './Client/AASRepositoryClient';
 
-// Composables
-const aasRepoClient = useAASRepositoryClient();
-
-// Stores
-const aasStore = useAASStore();
-
 export function useAASHandling(): any {
+    // Composables
+    const aasRepoClient = useAASRepositoryClient();
+
+    // Stores
+    const aasStore = useAASStore();
+
     // Fetch and dispatch AAS
     async function fetchAndDispatchAas(aasEndpoint: string): Promise<void> {
         // console.log('fetchAndDispatchAas()', aasEndpoint);
