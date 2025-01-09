@@ -2,7 +2,7 @@ import md5 from 'md5';
 import { v4 as uuidv4 } from 'uuid';
 import { useEnvStore } from '@/store/EnvironmentStore';
 
-export function useIDUtils(): any {
+export function useIDUtils() {
     // Stores
     const envStore = useEnvStore();
 

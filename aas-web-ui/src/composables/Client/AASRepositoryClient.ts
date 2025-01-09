@@ -9,12 +9,12 @@ import { extractEndpointHref } from '@/utils/DescriptorUtils';
 import { URLEncode } from '@/utils/EncodeDecodeUtils';
 import { downloadFile } from '@/utils/generalUtils';
 
-export function useAASRepositoryClient(): any {
+export function useAASRepositoryClient() {
     const { getRequest, postRequest, putRequest } = useRequestHandling();
     const { fetchAasDescriptorById } = useAASRegistryClient();
 
     // Composables
-    const idUtils = useIDUtils();
+    const { generateUUIDFromString } = useIDUtils();
 
     const navigationStore = useNavigationStore();
 
@@ -273,8 +273,7 @@ export function useAASRepositoryClient(): any {
                 const aasIdShort = aas?.idShort;
 
                 const filename =
-                    (aasIdShort && aasIdShort.trim() !== '' ? aasIdShort : idUtils.generateUUIDFromString(aas.id)) +
-                    '.aasx';
+                    (aasIdShort && aasIdShort.trim() !== '' ? aasIdShort : generateUUIDFromString(aas.id)) + '.aasx';
 
                 downloadFile(filename, aasSerialization);
             }

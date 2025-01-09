@@ -6,7 +6,7 @@ import { useIDUtils } from '@/composables/IDUtils';
 const pinia = createPinia();
 setActivePinia(pinia); // Activate Pinia for the test environment
 
-const idUtils = useIDUtils();
+const { customIdRegex, generateCustomId, generateIri } = useIDUtils();
 
 describe("IDUtils.ts; Tests for 'generateIri()'", () => {
     // Test data for generateIri()
@@ -41,7 +41,7 @@ describe("IDUtils.ts; Tests for 'generateIri()'", () => {
         const expectedOutputPrefix = generateIriTestDataset.outputPrefix;
         const expectedRegex = new RegExp('^' + _.escapeRegExp(expectedOutputPrefix) + '\\d{4}_\\d{4}_\\d{4}_\\d{4}$');
         // Actual output
-        const output = idUtils.generateIri(type);
+        const output = generateIri(type);
         it(`${testId}: generateIri(${("'" + type + "'").padEnd(26, ' ')})`, () => {
             // Perform the assertion
             expect(expectedRegex.test(output)).toBeTruthy();
@@ -53,9 +53,9 @@ describe("IDUtils.ts; Tests for 'generateCustomId()'", () => {
     // Tests for generateIri()
     for (let i = 0; i < 100; i++) {
         // Expected data/output
-        const expectedRegex = new RegExp(idUtils.customIdRegex);
+        const expectedRegex = new RegExp(customIdRegex);
         // Actual output
-        const output = idUtils.generateCustomId();
+        const output = generateCustomId();
         it(`${i}: generateCustomId() = ${output}`, () => {
             // Perform the assertion
             expect(expectedRegex.test(output)).toBeTruthy();
