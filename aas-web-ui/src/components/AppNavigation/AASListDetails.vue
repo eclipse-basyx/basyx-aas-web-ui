@@ -183,7 +183,7 @@
 
     function gotoSubmodelList() {
         router.push({
-            path: '/submodellist',
+            name: 'SubmodelList',
             query: { aas: route.query.aas },
         });
     }

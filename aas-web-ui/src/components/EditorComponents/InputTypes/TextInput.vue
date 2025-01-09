@@ -10,7 +10,7 @@
                 variant="text"
                 text="Generate IRI"
                 class="text-none"
-                @click.stop="textValue = idUtils.generateIri(type!)" />
+                @click.stop="textValue = generateIri(type!)" />
         </template>
     </v-text-field>
 </template>
@@ -20,7 +20,7 @@
     import { useIDUtils } from '@/composables/IDUtils';
 
     // Composables
-    const idUtils = useIDUtils();
+    const { generateIri } = useIDUtils();
 
     type Props = {
         label: string;

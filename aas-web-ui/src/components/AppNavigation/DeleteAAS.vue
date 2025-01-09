@@ -23,14 +23,13 @@
 
 <script lang="ts" setup>
     import { computed, ref, watch } from 'vue';
-    import { useRoute, useRouter } from 'vue-router';
+    import { useRouter } from 'vue-router';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
     import { URLEncode } from '@/utils/EncodeDecodeUtils';
 
-    const route = useRoute();
     const router = useRouter();
 
     const aasStore = useAASStore();
@@ -110,7 +109,7 @@
             deleteSubmodels.value = false;
             if (!error) {
                 //remove query from URL
-                router.push({ path: route.path, query: {} });
+                router.push({ query: {} });
                 aasStore.dispatchSelectedAAS({});
                 navigationStore.dispatchTriggerAASListReload(true); // Reload AAS List
             }
