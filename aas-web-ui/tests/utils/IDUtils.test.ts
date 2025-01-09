@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { describe, expect, it } from 'vitest';
-import { generateIri } from '@/utils/IDUtils';
+import { customIdRegex, generateCustomId, generateIri } from '@/utils/IDUtils';
 
 describe("IDUtils.ts; Tests for 'generateIri()'", () => {
     // Test data for generateIri()
@@ -45,4 +45,20 @@ describe("IDUtils.ts; Tests for 'generateIri()'", () => {
             expect(expectedRegex.test(output)).toBeTruthy();
         });
     });
+});
+
+describe("IDUtils.ts; Tests for 'generateCustomId()'", () => {
+    // Tests for generateIri()
+    for (let i = 0; i < 100; i++) {
+        // Expected data/output
+        const expectedRegex = new RegExp(customIdRegex);
+
+        // Actual output
+        const output = generateCustomId();
+
+        it(`${i}: generateCustomId() = ${output}`, () => {
+            // Perform the assertion
+            expect(expectedRegex.test(output)).toBeTruthy();
+        });
+    }
 });
