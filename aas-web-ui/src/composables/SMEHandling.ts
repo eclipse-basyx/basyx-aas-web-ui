@@ -3,15 +3,15 @@ import { formatDate } from '@/utils/DateUtils';
 import { useSMRepositoryClient } from './Client/SMRepositoryClient';
 
 export function useSMEHandling(): any {
+    // Composables
+    const smRepoClient = useSMRepositoryClient();
+
+    // Stores
+    const aasStore = useAASStore();
+
     // Fetch and dispatch SME
     async function fetchAndDispatchSme(submodelElementPath: string): Promise<void> {
         // console.log('fetchAndDispatchSme()', submodelElementPath);
-
-        // Composables
-        const smRepoClient = useSMRepositoryClient();
-
-        // Stores
-        const aasStore = useAASStore();
 
         if (submodelElementPath.trim() === '') return;
 
