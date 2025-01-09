@@ -1,9 +1,9 @@
 import md5 from 'md5';
 import { v4 as uuidv4 } from 'uuid';
-// import { useEnvStore } from '@/store/EnvironmentStore';
+import { useEnvStore } from '@/store/EnvironmentStore';
 
 // Stores
-// const envStore = useEnvStore();
+const envStore = useEnvStore();
 
 export function UUID(): string {
     return uuidv4();
@@ -51,9 +51,8 @@ export function generateIri(type: string): string {
     // Check type
     if (!type || !['Asset', 'AssetAdministrationShell', 'Submodel'].includes(type)) type = '';
 
-    // const idPrefix = envStore.getEditorIdPrefix || defaultIdPrefix;
+    let idPrefix = envStore.getEditorIdPrefix || defaultIdPrefix;
 
-    let idPrefix = defaultIdPrefix;
     if (!idPrefix.endsWith('/')) idPrefix += '/';
 
     type = type.replace('AssetAdministrationShell', 'AAS').replace('Submodel', 'SM').toLocaleLowerCase();
