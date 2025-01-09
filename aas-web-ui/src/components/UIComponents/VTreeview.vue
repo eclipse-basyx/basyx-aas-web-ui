@@ -185,7 +185,6 @@
                     let query = { ...this.route.query };
                     delete query.path;
                     this.router.push({ query: query });
-                    // dispatch the selected Node to the store
                     this.aasStore.dispatchSelectedNode({});
                 }
             },
