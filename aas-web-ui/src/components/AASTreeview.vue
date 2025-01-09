@@ -324,8 +324,6 @@
                 if (!foundNode) {
                     foundNode = true;
                     element.isActive = true;
-                    aasStore.dispatchSelectedNode(element);
-                    aasStore.dispatchRealTimeObject(element);
                 }
                 // if prop showChildren exists, set it to true
                 if ('showChildren' in element) {

@@ -228,7 +228,6 @@
         () => {
             if (!aasRegistryServerURL.value) {
                 submodelElementData.value = {};
-                aasStore.dispatchRealTimeObject(submodelElementData);
             }
         }
     );
@@ -239,7 +238,6 @@
         () => {
             if (!submodelRegistryServerURL.value) {
                 submodelElementData.value = {};
-                aasStore.dispatchRealTimeObject(submodelElementData);
             }
         }
     );
@@ -249,7 +247,6 @@
         () => selectedAAS.value,
         () => {
             submodelElementData.value = {};
-            aasStore.dispatchRealTimeObject(submodelElementData);
         }
     );
 
@@ -346,7 +343,7 @@
             }
             // console.log('SubmodelElement Data (SubmodelElementView): ', this.submodelElementData)
             // add SubmodelElement Data to the store (as RealTimeDataObject)
-            aasStore.dispatchRealTimeObject(submodelElementData);
+            // aasStore.dispatchRealTimeObject(submodelElementData);
         });
     }
 

@@ -151,8 +151,8 @@
                 fetchedSubmodelData.forEach((submodel: any) => {
                     if (submodel.path === initialNode.value.path) {
                         submodel.isActive = true;
+                        console.log('initSubmodelList');
                         aasStore.dispatchSelectedNode(submodel);
-                        aasStore.dispatchRealTimeObject(submodel);
                     }
                 });
                 initialUpdate.value = false;
@@ -262,16 +262,15 @@
                     },
                 });
             }
+            console.log('toggleNode1');
+            aasStore.dispatchSelectedNode(localSubmodel);
         } else {
             // remove the path query from the Route entirely
             let query = { ...route.query };
             delete query.path;
             router.push({ query: query });
+            aasStore.dispatchSelectedNode({});
         }
-        // dispatch the selected Node to the store
-        aasStore.dispatchSelectedNode(localSubmodel);
-        // add Submodel to the store (as RealTimeDataObject)
-        aasStore.dispatchRealTimeObject(localSubmodel);
     }
 
     // Function to initialize the Submodel List with the Route Parameters

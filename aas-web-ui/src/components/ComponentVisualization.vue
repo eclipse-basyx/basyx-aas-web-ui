@@ -114,7 +114,6 @@
     const submodelRegistryServerURL = computed(() => navigationStore.getSubmodelRegistryURL);
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
     const selectedNode = computed(() => aasStore.getSelectedNode);
-    const realTimeObject = computed(() => aasStore.getRealTimeObject);
     const isMobile = computed(() => navigationStore.getIsMobile);
     const importedPlugins = computed(() => navigationStore.getPlugins);
     const filteredPlugins = computed(() => {
@@ -201,13 +200,6 @@
         initializeView(); // initialize list
     });
 
-    // Watch for changes in the RealTimeDataObject and (re-)initialize the Component
-    watch(realTimeObject, () => {
-        // clear old submodelElementData
-        submodelElementData.value = {};
-        initializeView(); // initialize list
-    });
-
     onMounted(() => {
         if (Object.keys(selectedNode.value).length > 0 && isMobile.value) {
             // initialize if component got mounted on mobile devices (needed there because it is rendered in a separate view)
@@ -227,11 +219,11 @@
     function initializeView() {
         // console.log('Selected Node: ', this.realTimeObject);
         // Check if a Node is selected
-        if (Object.keys(realTimeObject.value).length === 0) {
+        if (Object.keys(selectedNode.value).length === 0) {
             submodelElementData.value = {}; // Reset the SubmodelElement Data when no Node is selected
             return;
         }
-        submodelElementData.value = { ...realTimeObject.value }; // create local copy of the SubmodelElement Object
+        submodelElementData.value = { ...selectedNode.value }; // create local copy of the SubmodelElement Object
         // console.log('SubmodelElement Data (ComponentVisualization): ', this.submodelElementData);
     }
 
@@ -255,7 +247,8 @@
                     // console.log('SubmodelElement Data: ', response.data)
                     // dispatch the SubmodelElementPath set by the URL to the store
                     submodelElementData.value = response.data;
-                    aasStore.dispatchRealTimeObject(submodelElementData.value);
+                    console.log('initializeViewWithRouteParams');
+                    aasStore.dispatchSelectedNode(submodelElementData.value);
                 } else {
                     // execute if the Request failed
                     if (Object.keys(response.data).length === 0) {

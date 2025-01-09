@@ -179,14 +179,16 @@
                             },
                         });
                     }
+                    console.log('toggleNode2');
+                    this.aasStore.dispatchSelectedNode(localItem);
                 } else {
                     // remove the path query from the Route entirely
                     let query = { ...this.route.query };
                     delete query.path;
                     this.router.push({ query: query });
+                    // dispatch the selected Node to the store
+                    this.aasStore.dispatchSelectedNode({});
                 }
-                // dispatch the selected Node to the store
-                this.aasStore.dispatchSelectedNode(localItem);
             },
 
             // Function to copy the path of the current Node to the Clipboard
