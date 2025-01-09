@@ -1,8 +1,9 @@
+import _ from 'lodash';
 import { describe, expect, it } from 'vitest';
 import { generateIri } from '@/utils/IDUtils';
 
 describe("IDUtils.ts; Tests for 'generateIri()'", () => {
-    // Define test data for nameToDisplay()
+    // Test data for generateIri()
     const generateIriTestData = [
         {
             testId: '59206aa5-bc25-4505-9395-afc9aa8051f3',
@@ -26,16 +27,22 @@ describe("IDUtils.ts; Tests for 'generateIri()'", () => {
         },
     ];
 
-    // Tests for nameToDisplay()
+    // Tests for generateIri()
     generateIriTestData.forEach(function (generateIriTestDataset) {
         // Define test data
+        const testId = generateIriTestDataset.testId;
         const type = generateIriTestDataset.type;
-        const outputPrefix = generateIriTestDataset.outputPrefix;
 
-        it(`${generateIriTestDataset.testId}: generateIri(${("'" + type + "'").padEnd(25, ' ')})`, () => {
+        // Expected data/output
+        const expectedOutputPrefix = generateIriTestDataset.outputPrefix;
+        const expectedRegex = new RegExp('^' + _.escapeRegExp(expectedOutputPrefix) + '\\d{4}_\\d{4}_\\d{4}_\\d{4}$');
+
+        // Actual output
+        const output = generateIri(type);
+
+        it(`${testId}: generateIri(${("'" + type + "'").padEnd(26, ' ')})`, () => {
             // Perform the assertion
-            expect(generateIri(type).startsWith(outputPrefix)).toBeTruthy();
-            expect(/\/\d{4}_\d{4}_\d{4}_\d{4}$/.test(generateIri(type))).toBeTruthy();
+            expect(expectedRegex.test(output)).toBeTruthy();
         });
     });
 });
