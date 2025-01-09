@@ -88,8 +88,8 @@
     }>();
 
     // Composables
-    const idUtils = useIDUtils();
-    const aasHandling = useAASHandling();
+    const { UUID } = useIDUtils();
+    const { fetchAndDispatchAasById } = useAASHandling();
 
     // Stores
     const aasStore = useAASStore();
@@ -105,7 +105,7 @@
     const AASObject = ref<aasTypes.AssetAdministrationShell | undefined>(undefined);
     const openPanels = ref<number[]>([0, 3]);
 
-    const AASId = ref<string | null>(idUtils.UUID());
+    const AASId = ref<string | null>(UUID());
     const AASIdShort = ref<string | null>(null);
     const displayName = ref<Array<aasTypes.LangStringNameType> | null>(null);
     const description = ref<Array<aasTypes.LangStringTextType> | null>(null);
@@ -298,7 +298,7 @@
             if (fileThumbnail.value !== undefined) {
                 await putThumbnail(fileThumbnail.value, AASObject.value.id);
             }
-            await aasHandling.fetchAndDispatchAasById(AASObject.value.id);
+            await fetchAndDispatchAasById(AASObject.value.id);
         } else {
             // Update existing AAS
             await putAas(AASObject.value);
@@ -311,7 +311,7 @@
                 await putThumbnail(fileThumbnail.value, AASObject.value.id);
             }
             if (AASObject.value.id === selectedAAS.value.id) {
-                await aasHandling.fetchAndDispatchAasById(AASObject.value.id);
+                await fetchAndDispatchAasById(AASObject.value.id);
             }
         }
         clearForm();
@@ -325,7 +325,7 @@
 
     function clearForm() {
         // Reset all values
-        AASId.value = idUtils.UUID();
+        AASId.value = UUID();
         AASIdShort.value = null;
         displayName.value = null;
         description.value = null;
