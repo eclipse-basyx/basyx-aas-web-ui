@@ -20,7 +20,7 @@ export function useSMHandling(): any {
         sm.path = smEndpoint;
         sm.isActive = true;
 
-        aasStore.dispatchNode(sm);
+        aasStore.dispatchSelectedNode(sm);
     }
 
     return { fetchAndDispatchSm };

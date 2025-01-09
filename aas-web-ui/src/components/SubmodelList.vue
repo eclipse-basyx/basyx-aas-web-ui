@@ -151,7 +151,7 @@
                 fetchedSubmodelData.forEach((submodel: any) => {
                     if (submodel.path === initialNode.value.path) {
                         submodel.isActive = true;
-                        aasStore.dispatchNode(submodel);
+                        aasStore.dispatchSelectedNode(submodel);
                         aasStore.dispatchRealTimeObject(submodel);
                     }
                 });
@@ -269,7 +269,7 @@
             router.push({ query: query });
         }
         // dispatch the selected Node to the store
-        aasStore.dispatchNode(localSubmodel);
+        aasStore.dispatchSelectedNode(localSubmodel);
         // add Submodel to the store (as RealTimeDataObject)
         aasStore.dispatchRealTimeObject(localSubmodel);
     }

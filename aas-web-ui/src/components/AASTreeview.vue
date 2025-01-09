@@ -85,7 +85,7 @@
     const loading = computed(() => aasStore.getLoadingState); // gets loading State from Store
     const aasRegistryServerURL = computed(() => navigationStore.getAASRegistryURL); // get AAS Registry URL from Store
     const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL); // get Submodel Registry URL from Store
-    const updatedNode = computed(() => aasStore.getUpdatedNode); // get the updated Treeview Node from Store
+    const selectedNode = computed(() => aasStore.getSelectedNode); // get the updated Treeview Node from Store
     const initTree = computed(() => aasStore.getInitTreeByReferenceElement); // get the init treeview flag from Store
 
     // Watchers
@@ -108,8 +108,8 @@
     });
 
     // change the submodelData Object when the updated Node changes
-    watch(updatedNode, () => {
-        updateNode(updatedNode.value);
+    watch(selectedNode, () => {
+        updateNode(selectedNode.value);
     });
 
     // initialize Treeview when the initTree flag changes
@@ -324,7 +324,7 @@
                 if (!foundNode) {
                     foundNode = true;
                     element.isActive = true;
-                    aasStore.dispatchNode(element);
+                    aasStore.dispatchSelectedNode(element);
                     aasStore.dispatchRealTimeObject(element);
                 }
                 // if prop showChildren exists, set it to true
