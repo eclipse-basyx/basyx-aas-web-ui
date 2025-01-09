@@ -75,6 +75,7 @@
     import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
     import { computed, ref, watch } from 'vue';
+    import { useAASHandling } from '@/composables/AASHandling';
     import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useIDUtils } from '@/composables/IDUtils';
@@ -88,6 +89,7 @@
 
     // Composables
     const idUtils = useIDUtils();
+    const aasHandling = useAASHandling();
 
     // Stores
     const aasStore = useAASStore();
@@ -96,7 +98,7 @@
         (event: 'update:modelValue', value: boolean): void;
     }>();
 
-    const { fetchAasById, postAas, putAas, putThumbnail, fetchAndDispatchAasById } = useAASRepositoryClient();
+    const { fetchAasById, postAas, putAas, putThumbnail } = useAASRepositoryClient();
     const { putAasDescriptor, createDescriptorFromAAS } = useAASRegistryClient();
 
     const editAASDialog = ref(false);
@@ -296,7 +298,7 @@
             if (fileThumbnail.value !== undefined) {
                 await putThumbnail(fileThumbnail.value, AASObject.value.id);
             }
-            await fetchAndDispatchAasById(AASObject.value.id);
+            await aasHandling.fetchAndDispatchAasById(AASObject.value.id);
         } else {
             // Update existing AAS
             await putAas(AASObject.value);
@@ -309,7 +311,7 @@
                 await putThumbnail(fileThumbnail.value, AASObject.value.id);
             }
             if (AASObject.value.id === selectedAAS.value.id) {
-                await fetchAndDispatchAasById(AASObject.value.id);
+                await aasHandling.fetchAndDispatchAasById(AASObject.value.id);
             }
         }
         clearForm();
