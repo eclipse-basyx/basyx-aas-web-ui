@@ -1,16 +1,16 @@
 import { useAASStore } from '@/store/AASDataStore';
 import { useAASRepositoryClient } from './Client/AASRepositoryClient';
 
+// Composables
+const aasRepoClient = useAASRepositoryClient();
+
+// Stores
+const aasStore = useAASStore();
+
 export function useAASHandling(): any {
     // Fetch and dispatch AAS
     async function fetchAndDispatchAas(aasEndpoint: string): Promise<void> {
         // console.log('fetchAndDispatchAas()', aasEndpoint);
-
-        // Composables
-        const aasRepoClient = useAASRepositoryClient();
-
-        // Stores
-        const aasStore = useAASStore();
 
         if (aasEndpoint.trim() === '') return;
 
@@ -23,12 +23,6 @@ export function useAASHandling(): any {
     // Fetch and dispatch AAS
     async function fetchAndDispatchAasById(aasId: string): Promise<void> {
         // console.log('fetchAndDispatchAasById()', aasId);
-
-        // Composables
-        const aasRepoClient = useAASRepositoryClient();
-
-        // Stores
-        const aasStore = useAASStore();
 
         if (aasId.trim() === '') return;
 
