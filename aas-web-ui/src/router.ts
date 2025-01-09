@@ -10,8 +10,8 @@ import DashboardGroup from '@/pages/DashboardGroup.vue';
 import Page404 from '@/pages/Page404.vue';
 import SubmodelViewer from '@/pages/SubmodelViewer.vue';
 import { useNavigationStore } from '@/store/NavigationStore';
-import { useAASRepositoryClient } from './composables/Client/AASRepositoryClient';
-import { useSMRepositoryClient } from './composables/Client/SMRepositoryClient';
+import { useAASHandling } from './composables/AASHandling';
+import { useSMEHandling } from './composables/SMEHandling';
 
 const routes = [
     { path: '/', name: 'AASViewer', component: AASViewer },
@@ -36,8 +36,8 @@ export async function createAppRouter(): Promise<Router> {
     const navigationStore = useNavigationStore();
 
     // Composables
-    const { fetchAndDispatchAas } = useAASRepositoryClient();
-    const { fetchAndDispatchSme } = useSMRepositoryClient();
+    const { fetchAndDispatchAas } = useAASHandling();
+    const { fetchAndDispatchSme } = useSMEHandling();
 
     const router = createRouter({
         history: createWebHistory(base),

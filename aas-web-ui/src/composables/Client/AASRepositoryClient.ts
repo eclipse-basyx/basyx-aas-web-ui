@@ -4,20 +4,18 @@ import { computed } from 'vue';
 import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
 import { useIDUtils } from '@/composables/IDUtils';
 import { useRequestHandling } from '@/composables/RequestHandling';
-import { useAASStore } from '@/store/AASDataStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
 import { URLEncode } from '@/utils/EncodeDecodeUtils';
 import { downloadFile } from '@/utils/generalUtils';
 
-export function useAASRepositoryClient() {
+export function useAASRepositoryClient(): any {
     const { getRequest, postRequest, putRequest } = useRequestHandling();
     const { fetchAasDescriptorById } = useAASRegistryClient();
 
     // Composables
     const idUtils = useIDUtils();
 
-    const aasStore = useAASStore();
     const navigationStore = useNavigationStore();
 
     const aasRepositoryUrl = computed(() => navigationStore.getAASRepoURL);
@@ -96,27 +94,6 @@ export function useAASRepositoryClient() {
         }
 
         return failResponse;
-    }
-
-    // Fetch and Dispatch AAS from (AAS Repo)
-    async function fetchAndDispatchAasById(aasId: string) {
-        // console.log('fetchAndDispatchAasById()', aasId);
-        if (aasId.trim() === '') return;
-
-        const aas = await fetchAasById(aasId);
-        // console.log('fetchAndDispatchAasById()', aasId, 'aas:', aas);
-
-        aasStore.dispatchSelectedAAS(aas);
-    }
-
-    // Fetch and Dispatch AAS from (AAS Repo) Endpoint
-    async function fetchAndDispatchAas(aasEndpoint: string) {
-        if (aasEndpoint.trim() === '') return;
-
-        const aas = await fetchAas(aasEndpoint);
-        // console.log('fetchAndDispatchAas()', aasEndpoint, 'aas', aas);
-
-        aasStore.dispatchSelectedAAS(aas);
     }
 
     // Upload an AAS to the AAS Repository
@@ -326,8 +303,6 @@ export function useAASRepositoryClient() {
         fetchAasList,
         fetchAasById,
         fetchAas,
-        fetchAndDispatchAas,
-        fetchAndDispatchAasById,
         uploadAas,
         postAas,
         putAas,

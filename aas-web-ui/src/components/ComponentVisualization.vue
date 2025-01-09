@@ -86,7 +86,7 @@
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
-    import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
+    import { useAASHandling } from '@/composables/AASHandling';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -100,7 +100,7 @@
 
     // Composables
     const { getRequest } = useRequestHandling();
-    const { fetchAndDispatchAas } = useAASRepositoryClient();
+    const { fetchAndDispatchAas } = useAASHandling();
 
     // Stores
     const navigationStore = useNavigationStore();

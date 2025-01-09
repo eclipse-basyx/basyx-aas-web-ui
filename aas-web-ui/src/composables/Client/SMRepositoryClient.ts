@@ -1,17 +1,14 @@
 import { computed } from 'vue';
 import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
 import { useRequestHandling } from '@/composables/RequestHandling';
-import { useAASStore } from '@/store/AASDataStore';
 import { useNavigationStore } from '@/store/NavigationStore';
-import { formatDate } from '@/utils/DateUtils';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
 
-export function useSMRepositoryClient() {
+export function useSMRepositoryClient(): any {
     const { getRequest } = useRequestHandling();
     const { fetchSmDescriptorById } = useSMRegistryClient();
 
     const navigationStore = useNavigationStore();
-    const aasStore = useAASStore();
 
     const submodelRepoUrl = computed(() => navigationStore.getSubmodelRepoURL);
 
@@ -64,6 +61,11 @@ export function useSMRepositoryClient() {
 
         if (smEndpoint.trim() === '') return failResponse;
 
+        if (smEndpoint.includes('/submodel-elements/')) {
+            // smEndoint seems to be an SME endpoint
+            return fetchSme(smEndpoint);
+        }
+
         const smRepoPath = smEndpoint;
         const smRepoContext = 'retrieving SM Data';
         const disableMessage = true;
@@ -92,6 +94,11 @@ export function useSMRepositoryClient() {
 
         if (submodelElementPath.trim() === '') return failResponse;
 
+        if (!submodelElementPath.includes('/submodel-elements/')) {
+            // Not valid SME path, maybe just SM endpoint
+            return fetchSm(submodelElementPath);
+        }
+
         const smRepoPath = submodelElementPath;
         const smRepoContext = 'retrieving SubmodelElement';
         const disableMessage = true;
@@ -114,19 +121,6 @@ export function useSMRepositoryClient() {
         }
 
         return failResponse;
-    }
-
-    // Fetch and Dispatch AAS from (AAS Repo) Endpoint
-    async function fetchAndDispatchSme(submodelElementPath: string) {
-        // console.log('fetchAndDispatchSme()', submodelElementPath);
-        if (submodelElementPath.trim() === '') return;
-
-        const sme = await fetchSme(submodelElementPath);
-        sme.timestamp = formatDate(new Date());
-        sme.path = submodelElementPath;
-        sme.isActive = true;
-
-        aasStore.dispatchNode(sme);
     }
 
     function smNotFound(response: any, submodelId: string, path: string, text: string): any {
@@ -180,7 +174,6 @@ export function useSMRepositoryClient() {
         fetchSmById,
         fetchSm,
         fetchSme,
-        fetchAndDispatchSme,
         smNotFound,
     };
 }

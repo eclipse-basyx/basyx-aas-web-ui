@@ -241,6 +241,7 @@
     import { computed, onActivated, onMounted, Ref, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
+    import { useAASHandling } from '@/composables/AASHandling';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -260,7 +261,8 @@
 
     // Composables
     const { getRequest } = useRequestHandling();
-    const { fetchAndDispatchAas, downloadAasx } = useAASRepositoryClient();
+    const { downloadAasx } = useAASRepositoryClient();
+    const { fetchAndDispatchAas } = useAASHandling();
 
     // Stores
     const navigationStore = useNavigationStore();
