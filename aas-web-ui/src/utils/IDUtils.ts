@@ -62,10 +62,22 @@ export function generateIri(type: string): string {
     return `${idPrefix}ids/${type.trim() !== '' ? type : ''}${generateCustomId()}`;
 }
 
-function generateCustomId(): string {
+/**
+ * Generates a custom ID consisting of four segments, each being a random number between 1000 and 9999,
+ * joined by underscores.
+ *
+ * The return value matches the regular expression: /^((1000|[1-9][0-9]{3})_){3}(1000|[1-9][0-9]{3})$/
+ *
+ * @returns {string} A custom ID in the format of "xxxx_xxxx_xxxx_xxxx" where each "xxxx" is a random number
+ * between 1000 and 9999 (regex: ).
+ */
+export function generateCustomId(): string {
+    // Random number between 1000 and 9999
     const segment = (): string => {
         return Math.floor(1000 + Math.random() * 9000).toString();
     };
 
     return `${segment()}_${segment()}_${segment()}_${segment()}`;
 }
+
+export const customIdRegex = /^((1000|[1-9][0-9]{3})_){3}(1000|[1-9][0-9]{3})$/;
