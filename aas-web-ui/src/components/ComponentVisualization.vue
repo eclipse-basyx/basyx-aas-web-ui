@@ -247,7 +247,6 @@
                     // console.log('SubmodelElement Data: ', response.data)
                     // dispatch the SubmodelElementPath set by the URL to the store
                     submodelElementData.value = response.data;
-                    console.log('initializeViewWithRouteParams');
                     aasStore.dispatchSelectedNode(submodelElementData.value);
                 } else {
                     // execute if the Request failed

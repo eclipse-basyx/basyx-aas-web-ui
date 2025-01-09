@@ -179,7 +179,6 @@
                             },
                         });
                     }
-                    console.log('toggleNode2');
                     this.aasStore.dispatchSelectedNode(localItem);
                 } else {
                     // remove the path query from the Route entirely

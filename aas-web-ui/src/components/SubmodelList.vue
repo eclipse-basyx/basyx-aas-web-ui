@@ -151,7 +151,6 @@
                 fetchedSubmodelData.forEach((submodel: any) => {
                     if (submodel.path === initialNode.value.path) {
                         submodel.isActive = true;
-                        console.log('initSubmodelList');
                         aasStore.dispatchSelectedNode(submodel);
                     }
                 });
@@ -262,7 +261,6 @@
                     },
                 });
             }
-            console.log('toggleNode1');
             aasStore.dispatchSelectedNode(localSubmodel);
         } else {
             // remove the path query from the Route entirely

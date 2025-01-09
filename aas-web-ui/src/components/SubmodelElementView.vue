@@ -227,7 +227,7 @@
         () => aasRegistryServerURL.value,
         () => {
             if (!aasRegistryServerURL.value) {
-                submodelElementData.value = {};
+                initializeView();
             }
         }
     );
@@ -237,7 +237,7 @@
         () => submodelRegistryServerURL.value,
         () => {
             if (!submodelRegistryServerURL.value) {
-                submodelElementData.value = {};
+                initializeView();
             }
         }
     );
@@ -246,7 +246,7 @@
     watch(
         () => selectedAAS.value,
         () => {
-            submodelElementData.value = {};
+            initializeView();
         }
     );
 
@@ -254,9 +254,7 @@
     watch(
         () => selectedNode.value,
         () => {
-            // clear old submodelElementData
-            submodelElementData.value = {};
-            initializeView(true);
+            initializeView();
         },
         { deep: true }
     );
@@ -289,7 +287,7 @@
                 }
             }, autoSync.value.interval);
         } else {
-            initializeView(true);
+            initializeView();
         }
     });
 
@@ -297,64 +295,20 @@
         window.clearInterval(requestInterval.value); // clear old interval
     });
 
-    function initializeView(withConceptDescriptions = false) {
-        // console.log('selected Node: ', selectedNode.value);
-        // Check if a Node is selected
+    async function initializeView(): Promise<void> {
         if (Object.keys(selectedNode.value).length === 0) {
-            submodelElementData.value = {}; // Reset the SubmodelElement Data when no Node is selected
+            submodelElementData.value = {};
             return;
         }
-        // Request the selected SubmodelElement
-        const path = selectedNode.value.path;
-        const context = 'retrieving SubmodelElement';
-        const disableMessage = true;
-        getRequest(path, context, disableMessage).then((response: any) => {
-            // save Concept Descriptions before overwriting the SubmodelElement Data
-            let conceptDescriptions = submodelElementData.value.conceptDescriptions;
-            if (response.success && (response.data?.id || response.data?.idShort)) {
-                // execute if the Request was successful
-                response.data.timestamp = formatDate(new Date()); // add timestamp to the SubmodelElement Data
-                response.data.path = selectedNode.value.path; // add the path to the SubmodelElement Data
-                // console.log('SubmodelElement Data: ', response.data);
-                submodelElementData.value = response.data;
-            } else {
-                // execute if the Request failed
-                // show the static SubmodelElement Data from the store if the Request failed (the timestamp should show that the data is outdated)
-                submodelElementData.value = {}; // Reset the SubmodelElement Data when Node couldn't be retrieved
-                if (Object.keys(selectedNode.value).length === 0) {
-                    // don't copy the static SubmodelElement Data if no Node is selected or Node is invalid
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 60000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'No valid SubmodelElement under the given Path',
-                    }); // Show Error Snackbar
-                    return;
-                }
-                submodelElementData.value = { ...selectedNode.value }; // copy the static SubmodelElement Data from the store
-                submodelElementData.value.timestamp = 'no sync';
-                submodelElementData.value.path = selectedNode.value.path; // add the path to the SubmodelElement Data
-            }
-            if (withConceptDescriptions) {
-                getCD(); // fetch Concept Descriptions for the SubmodelElement
-            } else {
-                submodelElementData.value.conceptDescriptions = conceptDescriptions; // add Concept Descriptions to the SubmodelElement Data
-            }
-            // console.log('SubmodelElement Data (SubmodelElementView): ', this.submodelElementData)
-            // add SubmodelElement Data to the store (as RealTimeDataObject)
-            // aasStore.dispatchRealTimeObject(submodelElementData);
-        });
-    }
 
-    // Get Concept Descriptions for the SubmodelElement from the ConceptDescription Repository
-    function getCD() {
-        getConceptDescriptions(selectedNode.value).then((response: any) => {
-            // console.log('ConceptDescription: ', response)
-            // add ConceptDescription to the SubmodelElement Data
-            if (response) {
-                submodelElementData.value.conceptDescriptions = response;
-            }
-        });
+        submodelElementData.value = { ...selectedNode.value }; // create local copy
+
+        if (
+            !submodelElementData.value?.conceptDescriptions ||
+            !Array.isArray(submodelElementData.value.conceptDescriptions) ||
+            submodelElementData.value.conceptDescriptions.length === 0
+        ) {
+            submodelElementData.value.conceptDescriptions = await getConceptDescriptions(selectedNode.value);
+        }
     }
 </script>
