@@ -18,15 +18,12 @@
     import { RouteRecordNameGeneric, useRoute, useRouter } from 'vue-router';
     import { useDisplay } from 'vuetify';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
-    import { useRequestHandling } from '@/composables/RequestHandling';
-    import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { formatDate } from '@/utils/DateUtils';
+    import { useSMRepositoryClient } from './composables/Client/SMRepositoryClient';
 
     // Stores
     const navigationStore = useNavigationStore();
-    const aasStore = useAASStore();
     const envStore = useEnvStore();
 
     // Vue Router
@@ -35,7 +32,7 @@
 
     // Composables
     const { fetchAndDispatchAas } = useAASRepositoryClient();
-    const { getRequest } = useRequestHandling();
+    const { fetchAndDispatchSme } = useSMRepositoryClient();
 
     // Vuetify
     const { mobile } = useDisplay();
@@ -100,7 +97,7 @@
         }
 
         if (aasEndpoint && submodelElementPath) {
-            handleSubmodelElement(submodelElementPath);
+            await fetchAndDispatchSme(submodelElementPath);
         }
     });
 
@@ -146,37 +143,6 @@
         } else {
             // Default to 'AASViewer' with query parameters
             router.push({ name: 'AASViewer', query });
-        }
-    }
-
-    // Handle the selected submodel element
-    async function handleSubmodelElement(submodelElementPath: string) {
-        const path = submodelElementPath;
-        const context = 'retrieving SubmodelElement';
-        const disableMessage = true;
-        const response = await getRequest(path, context, disableMessage);
-        if (response.success) {
-            const data = response.data;
-            data.timestamp = formatDate(new Date());
-            data.path = submodelElementPath;
-            data.isActive = true;
-            aasStore.dispatchNode(data);
-        } else {
-            handleRequestFailure(response);
-        }
-    }
-
-    // Handle request failure and show appropriate message
-    function handleRequestFailure(response: any) {
-        if (Object.keys(response.data).length === 0) {
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 60000,
-                color: 'error',
-                btnColor: 'buttonText',
-                text: 'No valid SubmodelElement under the given Path',
-            });
-            aasStore.dispatchNode({});
         }
     }
 </script>
