@@ -164,7 +164,7 @@
                     if (this.isMobile) {
                         // Change to SubmodelElementView on Mobile and add the path to the URL
                         this.router.push({
-                            path: '/submodelelementview',
+                            name: 'SubmodelViewer',
                             query: {
                                 aas: aasEndpopint,
                                 path: localItem.path,
