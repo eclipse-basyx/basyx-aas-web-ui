@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory, Router } from 'vue-router';
 import AASList from '@/components/AppNavigation/AASList.vue';
 import ComponentVisualization from '@/components/ComponentVisualization.vue';
 import SubmodelList from '@/components/SubmodelList.vue';
@@ -29,7 +29,7 @@ const routes = [
 
 const routeNamesToSaveAndLoadUrlQuery = ['AASList', 'AASEditor', 'AASViewer', 'SubmodelViewer'];
 
-export async function createAppRouter() {
+export async function createAppRouter(): Promise<Router> {
     const base = import.meta.env.BASE_URL;
 
     // Stores
@@ -45,35 +45,54 @@ export async function createAppRouter() {
     });
 
     router.beforeEach(async (to, from, next) => {
+        // Same route
+        if (from.name && from.name === to.name) {
+            // But changed URL query
+            if (from.query !== to.query) {
+                // Just for routes to save/load Query
+                if (routeNamesToSaveAndLoadUrlQuery.includes(from.name as string))
+                    // Save URL query
+                    navigationStore.dispatchUrlQuery(to.query);
+                // NOTE Fetching and dispatching of AAS/SM/SME (within same route) with respect to URL query parameter is
+                // done in other components, like AASList, AASTreeview, VTreeView, SubmodelElementView up till now
+                // TODO Fetching and dispatching of AAS/SM/SME at this central point (instead of in other components)
+            }
+        }
+
+        // Switch from one route to another
         if (from.name && from.name !== to.name) {
-            if (routeNamesToSaveAndLoadUrlQuery.includes(from.name as string) && Object.keys(from.query).length > 0) {
+            // Just for switching from a route to Save/Load Query
+            if (routeNamesToSaveAndLoadUrlQuery.includes(from.name as string)) {
                 // Save URL query
-                const queryToDispatch = from.query;
-                const queryPathToDispatch = queryToDispatch?.path as string;
+                if (Object.keys(from.query).length > 0) {
+                    const queryToDispatch = from.query;
 
-                // Strip idShortPath in case of switching to Submodel Viewer
-                if (to.name === 'SubmodelViewer' && queryPathToDispatch && queryPathToDispatch.trim() !== '') {
-                    queryToDispatch.path = queryPathToDispatch.trim().split('/submodel-elements/')[0];
+                    // Strip idShortPath in case of switching to Submodel Viewer
+                    const queryPathToDispatch = queryToDispatch?.path as string;
+                    if (to.name === 'SubmodelViewer' && queryPathToDispatch && queryPathToDispatch.trim() !== '') {
+                        queryToDispatch.path = queryPathToDispatch.trim().split('/submodel-elements/')[0];
+                    }
+
+                    navigationStore.dispatchUrlQuery(queryToDispatch);
                 }
-
-                navigationStore.dispatchUrlQuery(queryToDispatch);
             }
 
-            if (
-                routeNamesToSaveAndLoadUrlQuery.includes(to.name as string) &&
-                (!to.query || Object.keys(to.query).length === 0)
-            ) {
+            // Just for switching to a route to save/load Query
+            if (routeNamesToSaveAndLoadUrlQuery.includes(to.name as string)) {
                 // Load URL query
-                const query = navigationStore.getUrlQuery;
-                const updatedRoute = Object.assign({}, to, {
-                    query: query,
-                });
+                if (!to.query || Object.keys(to.query).length === 0) {
+                    const queryLoaded = navigationStore.getUrlQuery;
+                    const updatedRoute = Object.assign({}, to, {
+                        query: queryLoaded,
+                    });
 
-                if (query && Object.keys(query).length > 0 && updatedRoute !== to) {
-                    next(updatedRoute);
-                    if (query.aas) await fetchAndDispatchAas(query.aas as string);
-                    if (query.path) await fetchAndDispatchSme(query.path as string);
-                    return;
+                    if (queryLoaded && Object.keys(queryLoaded).length > 0 && updatedRoute !== to) {
+                        next(updatedRoute);
+                        // Dispatch AAS/SM/SME with respect to URL query parameter
+                        if (queryLoaded.aas) await fetchAndDispatchAas(queryLoaded.aas as string);
+                        if (queryLoaded.path) await fetchAndDispatchSme(queryLoaded.path as string);
+                        return;
+                    }
                 }
             }
         }
