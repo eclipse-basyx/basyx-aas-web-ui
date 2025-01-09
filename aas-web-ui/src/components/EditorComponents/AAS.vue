@@ -323,7 +323,7 @@
 
     function clearForm() {
         // Reset all values
-        AASId.value = UUID();
+        AASId.value = idUtils.UUID();
         AASIdShort.value = null;
         displayName.value = null;
         description.value = null;
