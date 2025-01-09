@@ -186,7 +186,7 @@
                     this.router.push({ query: query });
                 }
                 // dispatch the selected Node to the store
-                this.aasStore.dispatchNode(localItem);
+                this.aasStore.dispatchSelectedNode(localItem);
             },
 
             // Function to copy the path of the current Node to the Clipboard

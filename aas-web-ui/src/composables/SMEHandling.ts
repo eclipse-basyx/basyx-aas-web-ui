@@ -20,7 +20,7 @@ export function useSMEHandling(): any {
         sme.path = submodelElementPath;
         sme.isActive = true;
 
-        aasStore.dispatchNode(sme);
+        aasStore.dispatchSelectedNode(sme);
     }
 
     return { fetchAndDispatchSme };
