@@ -18,6 +18,7 @@
                                 :show-generate-iri-button="true"
                                 type="Submodel" />
                             <TextInput v-model="submodelIdShort" label="IdShort" />
+                            <SelectInput v-model="submodelKind" label="Modelling Kind" type="modellingKind" />
                             <MultiLanguageTextInput v-model="displayName" label="Display Name" type="displayName" />
                             <MultiLanguageTextInput v-model="description" label="Description" type="description" />
                             <SelectInput
@@ -35,6 +36,20 @@
                             <TextInput v-model="revision" label="Revision" />
                             <ReferenceInput v-model="creator" label="Creator" />
                             <TextInput v-model="templateId" label="Template ID" />
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
+                    <!-- Semantic ID -->
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(2)">
+                        <v-expansion-panel-title>Semantic ID</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" />
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
+                    <!-- Data Specification -->
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
+                        <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -93,10 +108,11 @@
 
     const editSMDialog = ref(false);
     const submodelObject = ref<aasTypes.Submodel | undefined>(undefined);
-    const openPanels = ref<number[]>([0, 3]);
+    const openPanels = ref<number[]>([0]);
 
     const submodelId = ref<string | null>(UUID());
     const submodelIdShort = ref<string | null>(null);
+    const submodelKind = ref<aasTypes.ModellingKind | null>(aasTypes.ModellingKind.Instance);
     const displayName = ref<Array<aasTypes.LangStringNameType> | null>(null);
     const description = ref<Array<aasTypes.LangStringTextType> | null>(null);
     const submodelCategory = ref<string | null>(null);
@@ -105,6 +121,8 @@
     const revision = ref<string | null>(null);
     const creator = ref<aasTypes.Reference | null>(null);
     const templateId = ref<string | null>(null);
+
+    const semanticId = ref<aasTypes.Reference | null>(null);
 
     // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode); // Get the selected AAS from Store
@@ -175,6 +193,7 @@
             // Set values of AAS
             submodelId.value = submodelObject.value.id;
             submodelIdShort.value = submodelObject.value.idShort;
+            submodelKind.value = submodelObject.value.kind;
             displayName.value = submodelObject.value.displayName;
             description.value = submodelObject.value.description;
             submodelCategory.value = submodelObject.value.category;
@@ -184,13 +203,11 @@
                 creator.value = submodelObject.value.administration.creator;
                 templateId.value = submodelObject.value.administration.templateId;
             }
+            semanticId.value = submodelObject.value.semanticId;
         }
     }
 
-    async function saveSubmodel(): Promise<void> {
-        if (submodelId.value === null) return;
-
-        // Create new Administrative Information object
+    function createAdministrativeInformation(): aasTypes.AdministrativeInformation {
         const administrativeInformation = new aasTypes.AdministrativeInformation();
 
         // Add optional parameter version
@@ -213,7 +230,16 @@
             administrativeInformation.templateId = templateId.value;
         }
 
-        // Create new Submodel if newSm is true
+        return administrativeInformation;
+    }
+
+    async function saveSubmodel(): Promise<void> {
+        if (submodelId.value === null) return;
+
+        const administrativeInformation = createAdministrativeInformation();
+
+        // TODO: Add embeddedDataSpecifications
+
         if (props.newSm || submodelObject.value === undefined) {
             submodelObject.value = new aasTypes.Submodel(submodelId.value);
         }
@@ -226,6 +252,11 @@
         // Add optional parameter idShort
         if (submodelIdShort.value !== null) {
             submodelObject.value.idShort = submodelIdShort.value;
+        }
+
+        // Add optional parameter kind
+        if (submodelObject.value.kind === null) {
+            submodelObject.value.kind = submodelKind.value;
         }
 
         // Add optional parameter displayName
@@ -243,9 +274,14 @@
             submodelObject.value.administration = administrativeInformation;
         }
 
-        // embeddedDataSpecifications are out of scope
+        // Add optional parameter semanticId
+        if (semanticId.value !== null) {
+            submodelObject.value.semanticId = semanticId.value;
+        }
+
         // extensions are out of scope
-        // SubmodelElements are added when submodels are created
+        // SupplementalSemanticIds are out of scope
+        // SubmodelElements are added when they are created
 
         if (props.newSm) {
             // Create new Submodel
