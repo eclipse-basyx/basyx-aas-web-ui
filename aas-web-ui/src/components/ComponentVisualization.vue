@@ -214,12 +214,7 @@
     });
 
     onMounted(() => {
-        if (Object.keys(selectedNode.value).length > 0 && isMobile.value) {
-            // initialize if component got mounted on mobile devices (needed there because it is rendered in a separate view)
-            initializeView();
-        } else if (Object.keys(selectedNode.value).length === 0 && routesToVisualization.includes(route.name)) {
-            initializeViewWithRouteParams();
-        }
+        initializeView();
     });
 
     function initializeView() {
@@ -231,19 +226,6 @@
         }
         submodelElementData.value = { ...selectedNode.value }; // create local copy of the SubmodelElement Object
         // console.log('SubmodelElement Data (ComponentVisualization): ', this.submodelElementData);
-    }
-
-    async function initializeViewWithRouteParams() {
-        const searchParams = new URL(window.location.href).searchParams;
-        const aasEndpoint = searchParams.get('aas');
-        const path = searchParams.get('path');
-
-        if (aasEndpoint && path) {
-            await fetchAndDispatchAas(aasEndpoint);
-            await fetchAndDispatchSme(path);
-        }
-
-        // TODO route to AASViewer if no aas or no path specified (realisation with route guard)
     }
 
     function backToSubmodelList() {
