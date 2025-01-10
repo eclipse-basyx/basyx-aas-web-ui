@@ -32,10 +32,12 @@
                 </v-list-item>
                 <!-- Hint -->
                 <v-list-item class="py-0" style="margin-top: -10px">
-                    <v-list-item-subtitle class="ml-1">{{
-                        'Only SubmodelElements can be auto-synced.'
-                    }}</v-list-item-subtitle>
-                    <v-list-item-subtitle class="ml-1">{{ 'Submodels are synced on selection.' }}</v-list-item-subtitle>
+                    <v-list-item-subtitle class="ml-1">
+                        {{ 'Selected AAS and SM/SME are auto-synced.' }}
+                    </v-list-item-subtitle>
+                    <v-list-item-subtitle class="ml-1">
+                        {{ 'Submodel list/tree is not auto-synced!' }}
+                    </v-list-item-subtitle>
                 </v-list-item>
                 <!-- Input Field to set the sync-interval -->
                 <v-list-item class="py-0">
@@ -73,7 +75,7 @@
     const navigationStore = useNavigationStore();
 
     const autoSyncStatus = ref(navigationStore.getAutoSync ? navigationStore.getAutoSync.state : false);
-    const intervalTime = ref(1000);
+    const intervalTime = ref(3000);
 
     const isMobile = computed(() => navigationStore.getIsMobile);
 

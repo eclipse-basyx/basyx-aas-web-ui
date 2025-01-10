@@ -96,6 +96,52 @@ export function useAASRepositoryClient() {
         return failResponse;
     }
 
+    async function fetchAssetInformationById(aasId: string): Promise<any> {
+        const failResponse = {} as any;
+
+        if (aasId.trim() === '') return failResponse;
+
+        const aasDescriptor = await fetchAasDescriptorById(aasId);
+
+        if (aasDescriptor && Object.keys(aasDescriptor).length > 0) {
+            const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0');
+            return fetchAssetInformation(aasEndpoint);
+        }
+    }
+
+    async function fetchAssetInformation(aasEndpoint: string): Promise<any> {
+        const failResponse = {} as any;
+
+        if (aasEndpoint.trim() === '') return failResponse;
+
+        const assetInformationEndpoint = aasEndpoint + '/asset-information';
+
+        const aasRepoPath = assetInformationEndpoint;
+        const aasRepoContext = 'retrieving asset information';
+        const disableMessage = true;
+        try {
+            const aasRepoResponse = await getRequest(aasRepoPath, aasRepoContext, disableMessage);
+            if (aasRepoResponse?.success && aasRepoResponse?.data && Object.keys(aasRepoResponse?.data).length > 0) {
+                const assetInformation = aasRepoResponse.data;
+                if (
+                    assetInformation.defaultThumbnail &&
+                    assetInformation.defaultThumbnail.path &&
+                    !assetInformation.defaultThumbnail.path.startsWith('http')
+                ) {
+                    // TODO: This does not work with active keycloak because there the thumbnail would have to be fetched with a token
+                    const assetInformationThumbnailEndpoint = assetInformationEndpoint + '/thumbnail';
+                    assetInformation.defaultThumbnail.path = assetInformationThumbnailEndpoint;
+                }
+
+                return assetInformation;
+            }
+        } catch {
+            return failResponse;
+        }
+
+        return failResponse;
+    }
+
     // Upload an AAS to the AAS Repository
     async function uploadAas(aasFile: File) {
         const context = 'uploading AAS';
@@ -302,6 +348,8 @@ export function useAASRepositoryClient() {
         fetchAasList,
         fetchAasById,
         fetchAas,
+        fetchAssetInformationById,
+        fetchAssetInformation,
         uploadAas,
         postAas,
         putAas,

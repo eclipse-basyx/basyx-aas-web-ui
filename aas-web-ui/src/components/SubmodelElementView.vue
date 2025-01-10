@@ -160,20 +160,7 @@
                     </v-list>
                     <!-- Last Sync -->
                     <v-divider></v-divider>
-                    <v-list class="py-0">
-                        <v-list-item>
-                            <v-list-item-subtitle>
-                                <span class="text-caption">{{ 'Last sync: ' }}</span>
-                                <span
-                                    class="text-caption"
-                                    :class="
-                                        submodelElementData.timestamp == 'no sync' ? 'text-error' : 'text-subtitleText'
-                                    "
-                                    >{{ submodelElementData.timestamp }}</span
-                                >
-                            </v-list-item-subtitle>
-                        </v-list-item>
-                    </v-list>
+                    <LastSync :timestamp="submodelElementData.timestamp"></LastSync>
                 </v-card>
                 <v-empty-state
                     v-else-if="!selectedAAS || Object.keys(selectedAAS).length === 0"
@@ -196,6 +183,7 @@
     import { useSMEHandling } from '@/composables/SMEHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import LastSync from './UIComponents/LastSync.vue';
 
     // Vue Router
     const route = useRoute();
@@ -210,7 +198,7 @@
 
     // Data
     const submodelElementData = ref({} as any);
-    const requestInterval = ref<number | undefined>(undefined); // interval to send requests to the AAS
+    const autoSyncInterval = ref<number | undefined>(undefined); // interval to send requests to the AAS
 
     // Computed Properties
     const aasRegistryServerURL = computed(() => navigationStore.getAASRegistryURL);
@@ -258,20 +246,20 @@
         { deep: true }
     );
 
-    // watch for changes in the autoSync state and create or clear the requestInterval
+    // watch for changes in the autoSync state and create or clear the autoSyncInterval
     watch(
         () => autoSync.value,
         () => {
             if (autoSync.value.state) {
-                window.clearInterval(requestInterval.value); // clear old interval
+                window.clearInterval(autoSyncInterval.value); // clear old interval
                 // create new interval
-                requestInterval.value = window.setInterval(() => {
-                    if (Object.keys(selectedNode.value).length > 0) {
+                autoSyncInterval.value = window.setInterval(() => {
+                    if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
                         fetchAndDispatchSme(selectedNode.value.path, true);
                     }
                 }, autoSync.value.interval);
             } else {
-                window.clearInterval(requestInterval.value);
+                window.clearInterval(autoSyncInterval.value);
             }
         },
         { deep: true }
@@ -280,8 +268,8 @@
     onMounted(() => {
         if (autoSync.value.state) {
             // create new interval
-            requestInterval.value = window.setInterval(() => {
-                if (Object.keys(selectedNode.value).length > 0) {
+            autoSyncInterval.value = window.setInterval(() => {
+                if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
                     fetchAndDispatchSme(selectedNode.value.path, true);
                 }
             }, autoSync.value.interval);
@@ -291,11 +279,11 @@
     });
 
     onBeforeUnmount(() => {
-        window.clearInterval(requestInterval.value); // clear old interval
+        window.clearInterval(autoSyncInterval.value); // clear old interval
     });
 
     async function initializeView(): Promise<void> {
-        if (Object.keys(selectedNode.value).length === 0) {
+        if (!selectedNode.value || Object.keys(selectedNode.value).length === 0) {
             submodelElementData.value = {};
             return;
         }

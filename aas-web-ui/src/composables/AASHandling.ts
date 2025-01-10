@@ -1,38 +1,71 @@
 import { useAASStore } from '@/store/AASDataStore';
+import { formatDate } from '@/utils/DateUtils';
+import { extractEndpointHref } from '@/utils/DescriptorUtils';
 import { useAASRepositoryClient } from './Client/AASRepositoryClient';
 
 export function useAASHandling() {
     // Composables
-    const aasRepoClient = useAASRepositoryClient();
+    const { fetchAas: fetchAasFromRepo, fetchAasById: fetchAasByIdFromRepo } = useAASRepositoryClient();
 
     // Stores
     const aasStore = useAASStore();
 
     // Fetch and dispatch AAS
-    async function fetchAndDispatchAas(aasEndpoint: string): Promise<void> {
+    async function fetchAndDispatchAas(aasEndpoint: string): Promise<any> {
+        // console.log('fetchAndDispatchAas()', aasEndpoint);
+
+        const aas = await fetchAas(aasEndpoint);
+
+        aasStore.dispatchSelectedAAS(aas);
+
+        return aas;
+    }
+
+    // Fetch and dispatch AAS
+    async function fetchAndDispatchAasById(aasId: string): Promise<any> {
+        // console.log('fetchAndDispatchAasById()', aasId);
+
+        const aas = await fetchAasById(aasId);
+        // console.log('fetchAndDispatchAasById()', aasId, 'aas:', aas);
+
+        aasStore.dispatchSelectedAAS(aas);
+
+        return aas;
+    }
+
+    // Fetch and dispatch AAS
+    async function fetchAas(aasEndpoint: string): Promise<any> {
         // console.log('fetchAndDispatchAas()', aasEndpoint);
 
         aasEndpoint = aasEndpoint.trim();
 
         if (aasEndpoint === '') return;
 
-        const aas = await aasRepoClient.fetchAas(aasEndpoint);
-        // console.log('fetchAndDispatchAas()', aasEndpoint, 'aas', aas);
+        const aas = await fetchAasFromRepo(aasEndpoint);
 
-        aasStore.dispatchSelectedAAS(aas);
+        aas.timestamp = formatDate(new Date());
+        aas.path = aasEndpoint;
+        aas.isActive = true;
+
+        return aas;
     }
 
     // Fetch and dispatch AAS
-    async function fetchAndDispatchAasById(aasId: string): Promise<void> {
-        // console.log('fetchAndDispatchAasById()', aasId);
+    async function fetchAasById(aasId: string): Promise<any> {
+        // console.log('fetchAasById()', aasEndpoint);
 
-        if (aasId.trim() === '') return;
+        aasId = aasId.trim();
 
-        const aas = await aasRepoClient.fetchAasById(aasId);
-        // console.log('fetchAndDispatchAasById()', aasId, 'aas:', aas);
+        if (aasId === '') return {};
 
-        aasStore.dispatchSelectedAAS(aas);
+        const aas = await fetchAasByIdFromRepo(aasId);
+
+        aas.timestamp = formatDate(new Date());
+        aas.path = extractEndpointHref(aas, 'AAS-3.0');
+        aas.isActive = true;
+
+        return aas;
     }
 
-    return { fetchAndDispatchAas, fetchAndDispatchAasById };
+    return { fetchAas, fetchAasById, fetchAndDispatchAas, fetchAndDispatchAasById };
 }
