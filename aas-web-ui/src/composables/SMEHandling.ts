@@ -2,13 +2,11 @@ import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';
 import { useSMRepositoryClient } from './Client/SMRepositoryClient';
 import { useConceptDescriptionHandling } from './ConceptDescriptionHandling';
-import { useSMHandling } from './SMHandling';
 
 export function useSMEHandling() {
     // Composables
-    const { fetchSme } = useSMRepositoryClient();
+    const { fetchSm, fetchSme } = useSMRepositoryClient();
     const { getConceptDescriptions } = useConceptDescriptionHandling();
-    const { fetchAndDispatchSm } = useSMHandling();
 
     // Stores
     const aasStore = useAASStore();
@@ -17,24 +15,36 @@ export function useSMEHandling() {
     async function fetchAndDispatchSme(submodelElementPath: string, withConceptDescriptions = false): Promise<void> {
         // console.log('fetchAndDispatchSme()', submodelElementPath);
 
-        if (submodelElementPath.trim() === '') return;
+        submodelElementPath = submodelElementPath.trim();
 
-        if (!submodelElementPath.includes('/submodel-elements/')) {
+        if (submodelElementPath === '') return;
+
+        let smOrSme = {} as any;
+        if (submodelElementPath.includes('/submodel-elements/')) {
+            smOrSme = await fetchSme(submodelElementPath);
+        } else {
             // No valid SME path, maybe just SM endpoint
-            fetchAndDispatchSm(submodelElementPath, withConceptDescriptions);
+            smOrSme = await fetchSm(submodelElementPath);
+
+            // Note usage of fetchAndDispatchSm() (SMHandling) not possible
+            // Reciprocal import of SMHandling/SMEHandling leads to error "Maximum call stack size exceeded"
+        }
+
+        if (!smOrSme || Object.keys(smOrSme).length === 0) {
+            console.warn('Fetched empty SME/SM');
+            aasStore.dispatchSelectedNode({});
             return;
         }
 
-        const sme = await fetchSme(submodelElementPath);
-        sme.timestamp = formatDate(new Date());
-        sme.path = submodelElementPath;
-        sme.isActive = true;
+        smOrSme.timestamp = formatDate(new Date());
+        smOrSme.path = submodelElementPath;
+        smOrSme.isActive = true;
 
         if (withConceptDescriptions) {
-            sme.conceptDescriptions = await getConceptDescriptions(sme);
+            smOrSme.conceptDescriptions = await getConceptDescriptions(smOrSme);
         }
 
-        aasStore.dispatchSelectedNode(sme);
+        aasStore.dispatchSelectedNode(smOrSme);
     }
 
     return { fetchAndDispatchSme };

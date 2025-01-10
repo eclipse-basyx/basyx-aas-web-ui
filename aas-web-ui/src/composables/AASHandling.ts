@@ -12,7 +12,9 @@ export function useAASHandling() {
     async function fetchAndDispatchAas(aasEndpoint: string): Promise<void> {
         // console.log('fetchAndDispatchAas()', aasEndpoint);
 
-        if (aasEndpoint.trim() === '') return;
+        aasEndpoint = aasEndpoint.trim();
+
+        if (aasEndpoint === '') return;
 
         const aas = await aasRepoClient.fetchAas(aasEndpoint);
         // console.log('fetchAndDispatchAas()', aasEndpoint, 'aas', aas);
