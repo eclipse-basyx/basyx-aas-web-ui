@@ -234,7 +234,7 @@
     function toggleNode(submodel: any) {
         // console.log('Selected Submodel: ', submodel);
         // dublicate the selected Node Object
-        let localSubmodel = submodel;
+        let localSubmodel = { ...submodel };
         localSubmodel.isActive = true;
         // set the isActive Property of all other Submodels to false
         submodelData.value.forEach((submodel: any) => {
