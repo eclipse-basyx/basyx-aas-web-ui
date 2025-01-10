@@ -4,21 +4,25 @@ import { useSMRepositoryClient } from './Client/SMRepositoryClient';
 
 export function useSMHandling() {
     // Composables
-    const smRepoClient = useSMRepositoryClient();
+    const { fetchSm } = useSMRepositoryClient();
 
     // Stores
     const aasStore = useAASStore();
 
     // Fetch and dispatch SME
-    async function fetchAndDispatchSm(smEndpoint: string): Promise<void> {
+    async function fetchAndDispatchSm(smEndpoint: string, withConceptDescriptions = false): Promise<void> {
         // console.log('fetchAndDispatchSm()', smEndpoint);
 
         if (smEndpoint.trim() === '') return;
 
-        const sm = await smRepoClient.fetchSm(smEndpoint);
+        const sm = await fetchSm(smEndpoint);
         sm.timestamp = formatDate(new Date());
         sm.path = smEndpoint;
         sm.isActive = true;
+
+        if (withConceptDescriptions) {
+            sm.conceptDescriptions = await getConceptDescriptions(selectedNode.value);
+        }
 
         aasStore.dispatchSelectedNode(sm);
     }

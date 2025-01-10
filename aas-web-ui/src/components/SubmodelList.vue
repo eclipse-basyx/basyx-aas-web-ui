@@ -77,6 +77,7 @@
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { formatDate } from '@/utils/DateUtils';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
     import { URLEncode } from '@/utils/EncodeDecodeUtils';
     import { nameToDisplay } from '@/utils/ReferableUtils';
@@ -151,6 +152,7 @@
                 fetchedSubmodelData.forEach((submodel: any) => {
                     if (submodel.path === initialNode.value.path) {
                         submodel.isActive = true;
+                        submodel.timestamp = formatDate(new Date());
                         aasStore.dispatchSelectedNode(submodel);
                     }
                 });

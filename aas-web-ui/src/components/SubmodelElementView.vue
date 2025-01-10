@@ -193,6 +193,7 @@
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
+    import { useSMEHandling } from '@/composables/SMEHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
@@ -205,6 +206,7 @@
 
     // Composables
     const { getConceptDescriptions } = useConceptDescriptionHandling();
+    const { fetchAndDispatchSme } = useSMEHandling();
 
     // Data
     const submodelElementData = ref({} as any);
@@ -265,7 +267,7 @@
                 // create new interval
                 requestInterval.value = window.setInterval(() => {
                     if (Object.keys(selectedNode.value).length > 0) {
-                        initializeView();
+                        fetchAndDispatchSme(selectedNode.value.path, true);
                     }
                 }, autoSync.value.interval);
             } else {
@@ -280,7 +282,7 @@
             // create new interval
             requestInterval.value = window.setInterval(() => {
                 if (Object.keys(selectedNode.value).length > 0) {
-                    initializeView();
+                    fetchAndDispatchSme(selectedNode.value.path, true);
                 }
             }, autoSync.value.interval);
         } else {
