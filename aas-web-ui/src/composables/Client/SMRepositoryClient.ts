@@ -98,7 +98,7 @@ export function useSMRepositoryClient() {
         if (submodelElementPath.trim() === '') return failResponse;
 
         if (!submodelElementPath.includes('/submodel-elements/')) {
-            // Not valid SME path, maybe just SM endpoint
+            // No valid SME path, maybe just SM endpoint
             return fetchSm(submodelElementPath);
         }
 

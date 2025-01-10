@@ -77,6 +77,7 @@
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { formatDate } from '@/utils/DateUtils';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
     import { URLEncode } from '@/utils/EncodeDecodeUtils';
     import { nameToDisplay } from '@/utils/ReferableUtils';
@@ -151,8 +152,8 @@
                 fetchedSubmodelData.forEach((submodel: any) => {
                     if (submodel.path === initialNode.value.path) {
                         submodel.isActive = true;
+                        submodel.timestamp = formatDate(new Date());
                         aasStore.dispatchSelectedNode(submodel);
-                        aasStore.dispatchRealTimeObject(submodel);
                     }
                 });
                 initialUpdate.value = false;
@@ -233,12 +234,14 @@
     function toggleNode(submodel: any) {
         // console.log('Selected Submodel: ', submodel);
         // dublicate the selected Node Object
-        let localSubmodel = submodel;
+        let localSubmodel = { ...submodel };
         localSubmodel.isActive = true;
         // set the isActive Property of all other Submodels to false
         submodelData.value.forEach((submodel: any) => {
             if (submodel.id !== localSubmodel.id) {
                 submodel.isActive = false;
+            } else {
+                submodel.isActive = true;
             }
         });
         // Add path of the selected Node to the URL as Router Query
@@ -247,7 +250,7 @@
             if (isMobile.value) {
                 // Change to SubmodelElementView on Mobile and add the path to the URL
                 router.push({
-                    name: 'ComponentVisualization',
+                    name: 'Visualization',
                     query: {
                         aas: aasEndpopint,
                         path: localSubmodel.path,
@@ -262,16 +265,14 @@
                     },
                 });
             }
+            aasStore.dispatchSelectedNode(localSubmodel);
         } else {
             // remove the path query from the Route entirely
             let query = { ...route.query };
             delete query.path;
             router.push({ query: query });
+            aasStore.dispatchSelectedNode({});
         }
-        // dispatch the selected Node to the store
-        aasStore.dispatchSelectedNode(localSubmodel);
-        // add Submodel to the store (as RealTimeDataObject)
-        aasStore.dispatchRealTimeObject(localSubmodel);
     }
 
     // Function to initialize the Submodel List with the Route Parameters
