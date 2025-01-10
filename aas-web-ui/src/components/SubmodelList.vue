@@ -240,6 +240,8 @@
         submodelData.value.forEach((submodel: any) => {
             if (submodel.id !== localSubmodel.id) {
                 submodel.isActive = false;
+            } else {
+                submodel.isActive = true;
             }
         });
         // Add path of the selected Node to the URL as Router Query
@@ -248,7 +250,7 @@
             if (isMobile.value) {
                 // Change to SubmodelElementView on Mobile and add the path to the URL
                 router.push({
-                    name: 'ComponentVisualization',
+                    name: 'Visualization',
                     query: {
                         aas: aasEndpopint,
                         path: localSubmodel.path,
