@@ -99,8 +99,6 @@
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
     import { RouteRecordNameGeneric, useRoute, useRouter } from 'vue-router';
-    import { useAASHandling } from '@/composables/AASHandling';
-    import { useSMEHandling } from '@/composables/SMEHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { nameToDisplay } from '@/utils/ReferableUtils';
@@ -109,10 +107,6 @@
     // Vue Router
     const route = useRoute();
     const router = useRouter();
-
-    // Composables
-    const { fetchAndDispatchAas } = useAASHandling();
-    const { fetchAndDispatchSme } = useSMEHandling();
 
     // Stores
     const navigationStore = useNavigationStore();
