@@ -214,7 +214,7 @@
                 </v-virtual-scroll>
             </v-list>
             <!-- AAS Details (only visible if the Information Button is pressed on an AAS) -->
-            <AASListDetails v-if="selectedAAS && Object.keys(selectedAAS).length > 0" :status="AASStatus" />
+            <AASListDetails v-if="selectedAAS && Object.keys(selectedAAS).length > 0" />
             <!-- Collapse/extend Sidebar Button -->
             <v-list v-if="!isMobile" nav style="width: 100%; z-index: 9000" class="bg-detailsCard pa-0">
                 <v-divider style="margin-left: -8px; margin-right: -8px"></v-divider>
@@ -242,6 +242,7 @@
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
     import { useAASHandling } from '@/composables/AASHandling';
+    import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -262,6 +263,7 @@
     // Composables
     const { getRequest } = useRequestHandling();
     const { downloadAasx } = useAASRepositoryClient();
+    const { isAvailableById } = useAASRegistryClient();
     const { fetchAndDispatchAas } = useAASHandling();
 
     // Stores
@@ -279,11 +281,11 @@
     const deleteDialog = ref(false); // Variable to store if the Delete Dialog should be shown
     const aasToDelete = ref({}); // Variable to store the AAS to be deleted
     const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null); // Reference to the Virtual Scroll Component
-    const AASStatus = ref(''); // Variable to store the AAS Status
     const uploadAASDialog = ref(false); // Variable to store if the Upload AAS Dialog should be shown
     const editDialog = ref(false); // Variable to store if the Edit Dialog should be shown
     const newShell = ref(false); // Variable to store if a new Shell should be created
     const aasToEdit = ref<any | undefined>(undefined); // Variable to store the AAS to be edited
+    const statusCheckInterval = ref<number | undefined>(undefined);
 
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
@@ -294,7 +296,6 @@
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
     const loading = computed(() => aasStore.getLoadingState); // Get the loading State from Store
     const primaryColor = computed(() => theme.current.value.colors.primary); // returns the primary color of the current theme
-    const statusCheck = computed(() => navigationStore.getStatusCheck); // Get the status-check state from the store
     const triggerAASListReload = computed(() => navigationStore.getTriggerAASListReload); // Get the trigger signal for AAS List reload from store
     const triggerAASListScroll = computed(() => navigationStore.getTriggerAASListScroll); // Get the trigger signal for AAS List scroll from store
     const singleAas = computed(() => envStore.getSingleAas); // Get the single AAS state from the Store
@@ -315,31 +316,34 @@
     });
     const editMode = computed(() => route.name === 'AASEditor'); // Check if the current Route is the AAS Editor
     const allowUploading = computed(() => envStore.getAllowUploading); // Check if the current environment config allows uploading shells
+    const aasStatusCheck = computed(() => navigationStore.getAASStatusCheck);
 
     // Watchers
-    // Watch the AAS Registry URL for changes and reload the AAS List if the URL changes
     watch(
         () => aasRegistryURL.value,
         (newValue) => {
             if (newValue !== '') {
                 loadAASListData();
-                if (statusCheck.value) {
-                    addConnectionInterval();
-                }
             } else {
                 AASData.value = [];
             }
         }
     );
 
-    // watch for changes in the status-check state and add/remove the connection interval
     watch(
-        () => statusCheck.value,
-        (newValue) => {
-            if (newValue) {
-                addConnectionInterval();
+        () => aasStatusCheck.value,
+        (statusCheckValue) => {
+            if (statusCheckValue.state) {
+                window.clearInterval(statusCheckInterval.value); // clear old interval
+                // create new interval
+                statusCheckInterval.value = window.setInterval(async () => {
+                    await updateAasStatus();
+                }, statusCheckValue.interval);
+            } else {
+                window.clearInterval(statusCheckInterval.value); // clear interval
             }
-        }
+        },
+        { deep: true }
     );
 
     // watch for changes in the trigger for AAS List reload
@@ -368,9 +372,9 @@
         }
 
         // check if the status-check is set in the local storage and if so set the status-check state in the store
-        const statusCheck = localStorage.getItem('statusCheck');
-        if (statusCheck) {
-            navigationStore.dispatchUpdateStatusCheck(statusCheck === 'true');
+        const aasStatusCheck = JSON.parse(localStorage.getItem('aasStatusCheck') || '');
+        if (aasStatusCheck) {
+            navigationStore.dispatchUpdateStatusCheck(aasStatusCheck);
         }
     });
 
@@ -412,42 +416,16 @@
                 AASData.value = Object.freeze(sortedData); // store the sorted data in the AASData variable
                 unfilteredAASData.value = sortedData; // make a copy of the sorted data and store it in the unfilteredAASData variable
                 scrollToSelectedAAS(); // scroll to the selected AAS
-                if (statusCheck.value) checkAASStatus(); // check the AAS Status
+                if (aasStatusCheck.value.state) updateAasStatus();
             }
             listLoading.value = false;
         });
     }
 
-    // Function which adds an Interval to check if the Shells in the AAS Registry are still available
-    function addConnectionInterval() {
-        // check if the AAS Registry URL is set
-        if (aasRegistryURL.value !== '') {
-            // add an Interval to check if the Shells in the AAS Registry are still available
-            setInterval(() => {
-                // Check if the AAS is online
-                checkAASStatus();
-            }, 30000); // check every 60 seconds
-        }
-    }
-
     // Function to check the AAS Status
-    function checkAASStatus() {
-        // console.log('Check AAS Status');
-        // iterate over all AAS in the AAS List
-        AASData.value.forEach((AAS: any) => {
-            const aasEndpopint = extractEndpointHref(AAS, 'AAS-3.0');
-            let path = aasEndpopint;
-            let context = 'evaluating AAS Status';
-            let disableMessage = true;
-            getRequest(path, context, disableMessage).then((response: any) => {
-                if (response.success) {
-                    // execute if the AAS Registry is found
-                    AAS.status = 'online';
-                } else {
-                    // execute if the AAS Registry is not found
-                    AAS.status = 'offline';
-                }
-            });
+    async function updateAasStatus() {
+        AASData.value.forEach(async (aas: any) => {
+            aas.status = (await isAvailableById(aas.id)) ? 'online' : 'offline';
         });
     }
 
@@ -482,7 +460,6 @@
         }
         if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0 && selectedAAS.value.id === AAS.id) {
             // Deselect AAS
-            AASStatus.value = '';
             router.push({ query: {} });
             aasStore.dispatchSelectedAAS({});
         } else {
@@ -492,7 +469,6 @@
             }
 
             // Select AAS
-            AASStatus.value = AAS.status;
             const aasEndpoint = extractEndpointHref(AAS, 'AAS-3.0');
 
             router.push({ query: { aas: aasEndpoint } });
@@ -513,11 +489,7 @@
         }
         const aasEndpointFromList = extractEndpointHref(AAS, 'AAS-3.0');
         const aasEndpointSelected = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
-        let isSelected = aasEndpointFromList === aasEndpointSelected;
-        if (isSelected) {
-            AASStatus.value = AAS.status;
-        }
-        return isSelected;
+        return aasEndpointFromList === aasEndpointSelected;
     }
 
     // Function to scroll to the selected AAS

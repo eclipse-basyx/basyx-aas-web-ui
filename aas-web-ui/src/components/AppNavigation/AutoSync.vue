@@ -31,7 +31,7 @@
                     </v-switch>
                 </v-list-item>
                 <!-- Hint -->
-                <v-list-item class="py-0" style="margin-top: -10px">
+                <v-list-item class="py-0 mt-n5">
                     <v-list-item-subtitle class="ml-1">
                         {{ 'Selected AAS and SM/SME are auto-synced.' }}
                     </v-list-item-subtitle>
@@ -40,7 +40,7 @@
                     </v-list-item-subtitle>
                 </v-list-item>
                 <!-- Input Field to set the sync-interval -->
-                <v-list-item class="py-0">
+                <v-list-item class="py-0 mt-n2">
                     <v-text-field
                         v-model="intervalTime"
                         density="compact"
@@ -48,13 +48,16 @@
                         type="number"
                         hide-details
                         @update:focused="checkMin">
+                        <template #prepend-inner>
+                            <v-icon>mdi-timer</v-icon>
+                        </template>
                         <template #append-inner>
                             <span>ms</span>
                         </template>
                     </v-text-field>
                 </v-list-item>
                 <!-- Hint -->
-                <v-list-item class="py-0" style="margin-top: -10px">
+                <v-list-item class="py-0 mt-n2">
                     <v-list-item-subtitle class="ml-1">{{ 'Be careful decreasing the time!' }}</v-list-item-subtitle>
                     <v-list-item-subtitle class="ml-1">{{
                         'A smaller time means more requests.'

@@ -13,6 +13,11 @@ export interface AutoSyncType {
     interval: number;
 }
 
+export interface AASStatusCheckType {
+    state: boolean;
+    interval: number;
+}
+
 export interface PlatformType {
     android: boolean;
     chrome: boolean;
@@ -51,7 +56,7 @@ export const useNavigationStore = defineStore({
         ConceptDescriptionRepoURL: '' as string,
         Snackbar: {} as SnackbarType,
         AutoSync: {} as AutoSyncType,
-        StatusCheck: false as boolean,
+        AASStatusCheck: { state: false, interval: 1000 } as AASStatusCheckType,
         isMobile: false as boolean,
         platform: {} as PlatformType,
         plugins: [] as PluginType[],
@@ -70,7 +75,7 @@ export const useNavigationStore = defineStore({
         getConceptDescriptionRepoURL: (state) => state.ConceptDescriptionRepoURL,
         getSnackbar: (state) => state.Snackbar,
         getAutoSync: (state) => state.AutoSync,
-        getStatusCheck: (state) => state.StatusCheck,
+        getAASStatusCheck: (state) => state.AASStatusCheck,
         getIsMobile: (state) => state.isMobile,
         getPlatform: (state) => state.platform,
         getPlugins: (state) => state.plugins,
@@ -114,8 +119,8 @@ export const useNavigationStore = defineStore({
         dispatchUpdateAutoSync(autoSync: AutoSyncType) {
             this.AutoSync = autoSync;
         },
-        dispatchUpdateStatusCheck(statusCheck: boolean) {
-            this.StatusCheck = statusCheck;
+        dispatchUpdateStatusCheck(aasStatusCheck: AASStatusCheckType) {
+            this.AASStatusCheck = aasStatusCheck;
         },
         dispatchIsMobile(isMobile: boolean) {
             this.isMobile = isMobile;
