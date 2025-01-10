@@ -242,7 +242,6 @@
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
     import { useAASHandling } from '@/composables/AASHandling';
-    import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -262,8 +261,7 @@
 
     // Composables
     const { getRequest } = useRequestHandling();
-    const { downloadAasx } = useAASRepositoryClient();
-    const { isAvailableById } = useAASRegistryClient();
+    const { downloadAasx, isAvailableById } = useAASRepositoryClient();
     const { fetchAndDispatchAas } = useAASHandling();
 
     // Stores

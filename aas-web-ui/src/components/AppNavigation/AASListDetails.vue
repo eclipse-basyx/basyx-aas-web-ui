@@ -112,7 +112,6 @@
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useAASHandling } from '@/composables/AASHandling';
-    import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
@@ -124,8 +123,7 @@
     const router = useRouter();
 
     // Composables
-    const { downloadAasx, fetchAssetInformation } = useAASRepositoryClient();
-    const { isAvailableById } = useAASRegistryClient();
+    const { downloadAasx, fetchAssetInformation, isAvailableById } = useAASRepositoryClient();
     const { fetchAas } = useAASHandling();
 
     // Stores
