@@ -5,7 +5,7 @@
         <v-main style="padding-top: 33px">
             <!-- App Content (eg. AASViewer, AASEditor, etc.) -->
             <router-view v-slot="{ Component }">
-                <keep-alive :include="['AASList', 'SubmodelList']">
+                <keep-alive :include="['AASList', 'AASTreeview', 'SubmodelList']">
                     <component :is="Component" />
                 </keep-alive>
             </router-view>
