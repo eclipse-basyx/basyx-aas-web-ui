@@ -92,9 +92,6 @@
 
     export default defineComponent({
         name: 'DashboardEditElement',
-        components: {
-            TimeSeries_v11,
-        },
         mixins: [SubmodelElementHandling, DashboardHandling],
         props: ['aasData', 'dashboardData'],
 
