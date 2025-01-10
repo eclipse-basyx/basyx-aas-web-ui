@@ -96,6 +96,40 @@ export function useAASRepositoryClient() {
         return failResponse;
     }
 
+    async function isAvailableById(aasId: string): Promise<boolean> {
+        const failResponse = {} as any;
+
+        if (aasId.trim() === '') return failResponse;
+
+        const aasDescriptor = await fetchAasDescriptorById(aasId);
+
+        if (aasDescriptor && Object.keys(aasDescriptor).length > 0) {
+            const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0');
+            return isAvailable(aasEndpoint);
+        }
+
+        return failResponse;
+    }
+
+    async function isAvailable(aasEndpoint: string): Promise<boolean> {
+        const failResponse = false;
+
+        const aasRepoPath = aasEndpoint;
+        const aasRepoContext = 'evaluating AAS Status';
+        const disableMessage = true;
+
+        try {
+            const aasRepoResponse = await getRequest(aasRepoPath, aasRepoContext, disableMessage);
+            if (aasRepoResponse?.success && aasRepoResponse?.data && Object.keys(aasRepoResponse?.data).length > 0) {
+                return true;
+            }
+        } catch {
+            return failResponse;
+        }
+
+        return failResponse;
+    }
+
     async function fetchAssetInformationById(aasId: string): Promise<any> {
         const failResponse = {} as any;
 
@@ -348,6 +382,8 @@ export function useAASRepositoryClient() {
         fetchAasList,
         fetchAasById,
         fetchAas,
+        isAvailableById,
+        isAvailable,
         fetchAssetInformationById,
         fetchAssetInformation,
         uploadAas,

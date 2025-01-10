@@ -72,6 +72,34 @@ export function useAASRegistryClient() {
         return failResponse;
     }
 
+    async function isAvailableById(aasId: string): Promise<boolean> {
+        const failResponse = false;
+
+        let aasRegUrl = aasRegistryUrl.value;
+        if (aasRegUrl.trim() === '') return failResponse;
+        if (!aasRegUrl.includes('/shell-descriptors')) {
+            aasRegUrl += '/shell-descriptors';
+        }
+
+        const aasRegistryPath = aasRegUrl + '/' + URLEncode(aasId);
+        const aasRegistryContext = 'evaluating AAS Descriptor Status';
+        const disableMessage = false;
+        try {
+            const aasRegistryResponse = await getRequest(aasRegistryPath, aasRegistryContext, disableMessage);
+            if (
+                aasRegistryResponse?.success &&
+                aasRegistryResponse?.data &&
+                Object.keys(aasRegistryResponse?.data).length > 0
+            ) {
+                return true;
+            }
+        } catch {
+            // handle error
+            return failResponse;
+        }
+        return failResponse;
+    }
+
     async function postAasDescriptor(aasDescriptor: descriptorTypes.AASDescriptor): Promise<void> {
         let aasRegUrl = aasRegistryUrl.value;
         if (!aasRegUrl.includes('/shell-descriptors')) {
@@ -138,6 +166,7 @@ export function useAASRegistryClient() {
     return {
         fetchAasDescriptorList,
         fetchAasDescriptorById,
+        isAvailableById,
         putAasDescriptor,
         postAasDescriptor,
         createDescriptorFromAAS,
