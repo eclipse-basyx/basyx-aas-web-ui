@@ -55,7 +55,7 @@
                         </template>
                     </v-combobox>
                     <template v-if="aasData && Object.keys(aasData).length > 0">
-                        <TimeSeries_v11
+                        <TimeSeries_v1_1
                             v-if="
                                 checkSemanticId(
                                     dashboardData.configObject,
@@ -66,7 +66,7 @@
                             :submodel-element-data="aasData"
                             :config-data="dashboardData"
                             :edit-dialog="true"
-                            @new-options="setNewOptions"></TimeSeries_v11>
+                            @new-options="setNewOptions"></TimeSeries_v1_1>
                     </template>
                 </v-card-text>
                 <v-divider></v-divider>
