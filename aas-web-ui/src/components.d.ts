@@ -86,6 +86,7 @@ declare module 'vue' {
     TechnicalData: typeof import('./components/Plugins/Submodels/TechnicalData.vue')['default']
     TextInput: typeof import('./components/EditorComponents/InputTypes/TextInput.vue')['default']
     ThemeSwitch: typeof import('./components/AppNavigation/Settings/ThemeSwitch.vue')['default']
+    'TimeSeries_v1.1': typeof import('./components/Plugins/Submodels/TimeSeries_v1.1.vue')['default']
     TimeSeriesData: typeof import('./components/Plugins/Submodels/TimeSeriesData.vue')['default']
     UploadAAS: typeof import('./components/AppNavigation/UploadAAS.vue')['default']
     VTreeview: typeof import('./components/UIComponents/VTreeview.vue')['default']
