@@ -5,13 +5,13 @@ import { useConceptDescriptionHandling } from './ConceptDescriptionHandling';
 
 export function useSMHandling() {
     // Composables
-    const { fetchSm, fetchSme } = useSMRepositoryClient();
+    const { fetchSm, fetchSme, fetchSmById } = useSMRepositoryClient();
     const { getConceptDescriptions } = useConceptDescriptionHandling();
 
     // Stores
     const aasStore = useAASStore();
 
-    // Fetch and dispatch SME
+    // Fetch and dispatch Submodel
     async function fetchAndDispatchSm(smEndpoint: string, withConceptDescriptions = false): Promise<void> {
         // console.log('fetchAndDispatchSm()', smEndpoint);
 
@@ -53,7 +53,7 @@ export function useSMHandling() {
 
         if (submodelId.trim() === '') return;
 
-        const submodel = await smRepoClient.fetchSmById(submodelId);
+        const submodel = await fetchSmById(submodelId);
         // console.log('fetchAndDispatchSmById()', submodelId, 'Submodel:', submodel);
 
         aasStore.dispatchSelectedNode(submodel);
