@@ -14,7 +14,12 @@ export function useAASHandling() {
     async function fetchAndDispatchAas(aasEndpoint: string): Promise<any> {
         // console.log('fetchAndDispatchAas()', aasEndpoint);
 
-        const aas = await fetchAas(aasEndpoint);
+        aasEndpoint = aasEndpoint.trim();
+
+        if (aasEndpoint === '') return;
+
+        const aas = await fetchAasFromRepo(aasEndpoint);
+        // console.log('fetchAndDispatchAas()', aasEndpoint, 'aas', aas);
 
         aasStore.dispatchSelectedAAS(aas);
 
@@ -25,7 +30,7 @@ export function useAASHandling() {
     async function fetchAndDispatchAasById(aasId: string): Promise<any> {
         // console.log('fetchAndDispatchAasById()', aasId);
 
-        const aas = await fetchAasById(aasId);
+        const aas = await fetchAasByIdFromRepo(aasId);
         // console.log('fetchAndDispatchAasById()', aasId, 'aas:', aas);
 
         aasStore.dispatchSelectedAAS(aas);

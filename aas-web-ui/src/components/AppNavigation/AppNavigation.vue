@@ -284,14 +284,15 @@
     });
     const showMobileMenu = computed(() => isMobile.value && !mainMenu.value);
     const showAutoSync = computed(() => {
-        return (
-            route.name === 'AASViewer' ||
-            route.name === 'AASList' ||
-            route.name === 'SubmodelList' ||
-            route.name === 'ComponentVisualization' ||
-            route.name === 'AASEditor' ||
-            route.name === 'SubmodelViewer'
-        );
+        return [
+            'AASViewer',
+            'AASList',
+            'SubmodelList',
+            'ComponentVisualization',
+            'Visualization',
+            'AASEditor',
+            'SubmodelViewer',
+        ].includes(route.name as string);
     });
     const authStatus = computed(() => (authStore.getAuthStatus ? 'Authenticated' : 'Not Authenticated'));
     const isAuthEnabled = computed(() => authStore.getAuthEnabled);
