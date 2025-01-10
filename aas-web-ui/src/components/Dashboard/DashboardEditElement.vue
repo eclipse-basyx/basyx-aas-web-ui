@@ -86,13 +86,16 @@
 </template>
 <script lang="ts">
     import { defineComponent } from 'vue';
+    import TimeSeries_v11 from '@/components/Plugins/Submodels/TimeSeries_v1.1.vue';
     import DashboardHandling from '@/mixins/DashboardHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useEnvStore } from '@/store/EnvironmentStore';
-    import TimeSeries_v11 from '../Plugins/Submodels/TimeSeries_v1.1.vue';
 
     export default defineComponent({
         name: 'DashboardEditElement',
+        components: {
+            TimeSeries_v11,
+        },
         mixins: [SubmodelElementHandling, DashboardHandling],
         props: ['aasData', 'dashboardData'],
 
