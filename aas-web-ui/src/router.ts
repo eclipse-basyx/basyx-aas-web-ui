@@ -18,6 +18,7 @@ const routes = [
     { path: '/aaslist', name: 'AASList', component: AASList },
     { path: '/submodellist', name: 'SubmodelList', component: SubmodelList },
     { path: '/componentvisualization', name: 'ComponentVisualization', component: ComponentVisualization },
+    { path: '/visu', name: 'Visualization', component: ComponentVisualization },
     { path: '/aaseditor', name: 'AASEditor', component: AASEditor },
     { path: '/submodelviewer', name: 'SubmodelViewer', component: SubmodelViewer },
     { path: '/about', name: 'About', component: About },

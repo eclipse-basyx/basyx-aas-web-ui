@@ -43,6 +43,9 @@
 
     // Data
     const routesStayOnPages = ['About', 'NotFound404'] as Array<string>;
+    const routesToAASViewer: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList'];
+    const routesToAASList: Array<RouteRecordNameGeneric> = ['AASViewer', 'AASEditor', 'SubmodelViewer', 'AASList'];
+    const routesToVisualization: Array<RouteRecordNameGeneric> = ['ComponentVisualization', 'Visualization'];
 
     // Computed Properties
     const currentRouteName = computed((): string => {
@@ -103,16 +106,15 @@
 
     // Handle mobile view routing logic
     function handleMobileView(aasEndpoint: string | null, submodelElementPath: string | null) {
-        const routesToAASList: Array<RouteRecordNameGeneric> = ['AASViewer', 'AASEditor', 'SubmodelViewer', 'AASList'];
         if (currentRouteName.value && routesToAASList.includes(currentRouteName.value)) {
             // Redirect to 'AASList' with existing query parameters
             router.push({ name: 'AASList', query: route.query });
         } else if (currentRouteName.value === 'SubmodelList' && aasEndpoint) {
             // Redirect to 'SubmodelList' with 'aas' parameter
             router.push({ name: 'SubmodelList', query: { aas: aasEndpoint } });
-        } else if (currentRouteName.value === 'ComponentVisualization' && aasEndpoint && submodelElementPath) {
-            // Redirect to 'ComponentVisualization' with 'aas' and 'path' parameters
-            router.push({ name: 'ComponentVisualization', query: { aas: aasEndpoint, path: submodelElementPath } });
+        } else if (currentRouteName.value && routesToVisualization.includes(currentRouteName.value)) {
+            // Redirect to 'Visualization' with 'aas' and 'path' parameters
+            router.push({ name: 'Visualization', query: { aas: aasEndpoint, path: submodelElementPath } });
         } else if (currentRouteName.value && routesStayOnPages.includes(currentRouteName.value)) {
             // Stay on current page
             return;
@@ -124,13 +126,15 @@
 
     // Handle desktop view routing logic
     function handleDesktopView(aasEndpoint: string | null, submodelElementPath: string | null) {
-        const routesToAASViewer: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList', 'ComponentVisualization'];
         const query: any = {};
         if (aasEndpoint) query.aas = aasEndpoint;
         if (submodelElementPath) query.path = submodelElementPath;
         if (currentRouteName.value && routesToAASViewer.includes(currentRouteName.value)) {
             // Redirect to 'AASViewer' with appropriate query parameters
             router.push({ name: 'AASViewer', query });
+        } else if (currentRouteName.value && routesToVisualization.includes(currentRouteName.value)) {
+            // Redirect to 'AASViewer' with appropriate query parameters
+            router.push({ name: 'Visualization', query });
         } else if (currentRouteName.value === 'AASEditor' && allowEditing.value) {
             // Stay on 'AASEditor' but update query parameters
             router.push({ name: 'AASEditor', query });

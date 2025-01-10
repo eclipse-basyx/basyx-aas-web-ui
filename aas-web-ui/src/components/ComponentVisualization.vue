@@ -2,7 +2,20 @@
     <v-container fluid class="pa-0">
         <v-card color="card" elevation="0">
             <v-card-title :style="{ padding: isMobile ? '' : '15px 16px 16px' }">
-                <div v-if="!isMobile">Visualization</div>
+                <div v-if="!isMobile">
+                    <template v-if="routesToVisualization.includes(route.name)">
+                        <v-btn class="ml-0" variant="plain" icon="mdi-chevron-left" @click="backToAASViewer()" />
+                        <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
+                        <span class="text-truncate ml-2">
+                            {{ nameToDisplay(selectedAAS) }}
+                        </span>
+                        <template v-if="nameToDisplay(selectedNode)">
+                            <span class="text-truncate ml-2">|</span>
+                            <span class="text-truncate ml-2">{{ nameToDisplay(selectedNode) }}</span>
+                        </template>
+                    </template>
+                    <span v-else>Visualization</span>
+                </div>
                 <div v-else class="d-flex align-center">
                     <v-btn class="ml-0" variant="plain" icon="mdi-chevron-left" @click="backToSubmodelList()" />
                     <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
@@ -85,7 +98,7 @@
 
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
-    import { useRoute, useRouter } from 'vue-router';
+    import { RouteRecordNameGeneric, useRoute, useRouter } from 'vue-router';
     import { useAASHandling } from '@/composables/AASHandling';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -108,6 +121,7 @@
 
     // Data
     const submodelElementData = ref({} as any);
+    const routesToVisualization: Array<RouteRecordNameGeneric> = ['ComponentVisualization', 'Visualization'];
 
     // Computed Properties
     const aasRegistryServerURL = computed(() => navigationStore.getAASRegistryURL);
@@ -172,7 +186,7 @@
 
         return plugins;
     });
-    const viewerMode = computed(() => route.name === 'SubmodelViewer' || route.name === 'ComponentVisualization');
+    const viewerMode = computed(() => route.name === 'SubmodelViewer' || routesToVisualization.includes(route.name));
 
     // Watchers
     // Resets the submodelElementData when the AAS Registry changes
@@ -212,15 +226,8 @@
         if (Object.keys(selectedNode.value).length > 0 && isMobile.value) {
             // initialize if component got mounted on mobile devices (needed there because it is rendered in a separate view)
             initializeView();
-        } else if (Object.keys(selectedNode.value).length === 0 && route.path == '/componentvisualization') {
-            const searchParams = new URL(window.location.href).searchParams;
-            const aasEndpoint = searchParams.get('aas');
-            const path = searchParams.get('path');
-
-            // check if the aas Query and the path Query are set in the URL and if so initialize
-            if (aasEndpoint && path) {
-                initializeViewWithRouteParams();
-            }
+        } else if (Object.keys(selectedNode.value).length === 0 && routesToVisualization.includes(route.name)) {
+            initializeViewWithRouteParams();
         }
     });
 
@@ -276,5 +283,9 @@
 
     function backToSubmodelList() {
         router.push({ name: 'SubmodelList', query: route.query });
+    }
+
+    function backToAASViewer() {
+        router.push({ name: 'AASViewer', query: route.query });
     }
 </script>

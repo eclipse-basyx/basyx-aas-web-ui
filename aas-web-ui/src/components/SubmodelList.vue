@@ -247,7 +247,7 @@
             if (isMobile.value) {
                 // Change to SubmodelElementView on Mobile and add the path to the URL
                 router.push({
-                    name: 'ComponentVisualization',
+                    name: 'Visualization',
                     query: {
                         aas: aasEndpopint,
                         path: localSubmodel.path,
