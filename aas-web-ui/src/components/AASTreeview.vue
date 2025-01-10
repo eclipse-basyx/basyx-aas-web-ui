@@ -62,6 +62,7 @@
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { formatDate } from '@/utils/DateUtils';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
     import { URLEncode } from '@/utils/EncodeDecodeUtils';
     import { nameToDisplay } from '@/utils/ReferableUtils';
@@ -185,6 +186,7 @@
                                 submodel.isActive = false;
                                 // set the Path of the Submodel
                                 submodel.path = path;
+                                submodel.timestamp = formatDate(new Date());
                                 // check if submodel has SubmodelElements
                                 if (submodel.submodelElements && submodel.submodelElements.length > 0) {
                                     // recursively create treestructure for contained submodelElements
@@ -233,6 +235,7 @@
             // set the active State of each Element
             element.isActive = false;
             // set the Parent of each Element
+            element.timestamp = formatDate(new Date());
             element.parent = parent;
             // set the Path of each Element
             if (element.parent.modelType == 'Submodel') {
