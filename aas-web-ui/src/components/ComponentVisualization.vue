@@ -279,6 +279,8 @@
                 }
             });
         }
+
+        // TODO route to AASViewer if no aas or no path specified (realisation with route guard)
     }
 
     function backToSubmodelList() {
