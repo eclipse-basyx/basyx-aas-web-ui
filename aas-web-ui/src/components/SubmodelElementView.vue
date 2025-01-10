@@ -138,24 +138,13 @@
                         <InvalidElement v-else :invalid-element-object="submodelElementData"></InvalidElement>
                     </v-list>
                     <!-- ConceptDescriptions -->
-                    <v-divider
-                        v-if="
-                            submodelElementData.conceptDescriptions &&
-                            submodelElementData.conceptDescriptions.length > 0
-                        "></v-divider>
-                    <v-list
-                        v-if="
-                            submodelElementData.conceptDescriptions &&
-                            submodelElementData.conceptDescriptions.length > 0
-                        "
-                        nav>
+                    <v-divider v-if="conceptDescriptions && conceptDescriptions.length > 0"></v-divider>
+                    <v-list v-if="conceptDescriptions && conceptDescriptions.length > 0" nav>
                         <v-list-item
-                            v-for="(conceptDescription, index) in submodelElementData.conceptDescriptions"
+                            v-for="(conceptDescription, index) in conceptDescriptions"
                             :key="conceptDescription.id">
                             <ConceptDescription :concept-description-object="conceptDescription"></ConceptDescription>
-                            <v-divider
-                                v-if="index !== submodelElementData.conceptDescriptions.length - 1"
-                                class="mt-2"></v-divider>
+                            <v-divider v-if="index !== conceptDescriptions.length - 1" class="mt-2"></v-divider>
                         </v-list-item>
                     </v-list>
                     <!-- Last Sync -->
@@ -210,6 +199,7 @@
 
     // Data
     const submodelElementData = ref({} as any);
+    const conceptDescriptions = ref([] as Array<any>);
     const requestInterval = ref<number | undefined>(undefined); // interval to send requests to the AAS
 
     // Computed Properties
@@ -267,7 +257,7 @@
                 // create new interval
                 requestInterval.value = window.setInterval(() => {
                     if (Object.keys(selectedNode.value).length > 0) {
-                        fetchAndDispatchSme(selectedNode.value.path, true);
+                        fetchAndDispatchSme(selectedNode.value.path, false);
                     }
                 }, autoSync.value.interval);
             } else {
@@ -282,7 +272,7 @@
             // create new interval
             requestInterval.value = window.setInterval(() => {
                 if (Object.keys(selectedNode.value).length > 0) {
-                    fetchAndDispatchSme(selectedNode.value.path, true);
+                    fetchAndDispatchSme(selectedNode.value.path, false);
                 }
             }, autoSync.value.interval);
         } else {
@@ -303,11 +293,11 @@
         submodelElementData.value = { ...selectedNode.value }; // create local copy
 
         if (
-            !submodelElementData.value?.conceptDescriptions ||
-            !Array.isArray(submodelElementData.value.conceptDescriptions) ||
-            submodelElementData.value.conceptDescriptions.length === 0
+            !conceptDescriptions.value ||
+            !Array.isArray(conceptDescriptions.value) ||
+            conceptDescriptions.value.length === 0
         ) {
-            submodelElementData.value.conceptDescriptions = await getConceptDescriptions(selectedNode.value);
+            conceptDescriptions.value = await getConceptDescriptions(selectedNode.value);
         }
     }
 </script>
