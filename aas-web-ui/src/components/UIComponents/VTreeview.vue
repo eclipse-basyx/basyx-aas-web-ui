@@ -179,6 +179,7 @@
                             },
                         });
                     }
+                    if (localItem.modelType !== 'Submodel') delete localItem.id;
                     this.aasStore.dispatchSelectedNode(localItem);
                 } else {
                     // remove the path query from the Route entirely
