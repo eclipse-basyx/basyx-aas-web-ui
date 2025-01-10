@@ -55,7 +55,7 @@
                         </template>
                     </v-combobox>
                     <template v-if="aasData && Object.keys(aasData).length > 0">
-                        <TimeSeriesData
+                        <TimeSeries_v11
                             v-if="
                                 checkSemanticId(
                                     dashboardData.configObject,
@@ -66,7 +66,7 @@
                             :submodel-element-data="aasData"
                             :config-data="dashboardData"
                             :edit-dialog="true"
-                            @new-options="setNewOptions"></TimeSeriesData>
+                            @new-options="setNewOptions"></TimeSeries_v11>
                     </template>
                 </v-card-text>
                 <v-divider></v-divider>
@@ -89,6 +89,7 @@
     import DashboardHandling from '@/mixins/DashboardHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useEnvStore } from '@/store/EnvironmentStore';
+    import TimeSeries_v11 from '../Plugins/Submodels/TimeSeries_v1.1.vue';
 
     export default defineComponent({
         name: 'DashboardEditElement',
