@@ -46,6 +46,10 @@ export async function createAppRouter(): Promise<Router> {
     });
 
     router.beforeEach(async (to, from, next) => {
+        // TODO Fetch and dispatching of AAS/SM/SME with respect to URL query parameter
+        // TODO Remove keep alive from App.vue
+        // TODO Move route handling (handleMobileView(), handleDesktopView()) from App.vue to this route guard
+
         // Same route
         if (from.name && from.name === to.name) {
             // But changed URL query
@@ -54,9 +58,6 @@ export async function createAppRouter(): Promise<Router> {
                 if (routeNamesToSaveAndLoadUrlQuery.includes(from.name as string))
                     // Save URL query
                     navigationStore.dispatchUrlQuery(to.query);
-                // NOTE Fetching and dispatching of AAS/SM/SME (within same route) with respect to URL query parameter is
-                // done in other components, like AASList, AASTreeview, VTreeView, SubmodelElementView up till now
-                // TODO Fetching and dispatching of AAS/SM/SME at this central point (instead of in other components)
             }
         }
 
