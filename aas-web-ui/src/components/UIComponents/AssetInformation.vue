@@ -4,12 +4,14 @@
             <IdentificationElement
                 id="assetInformationIdentification"
                 :identification-object="assetInfo"
-                :model-type="assetObject.assetKind"
-                :id-type="'Global Asset ID'"
-                :name-type="'assetType'"></IdentificationElement>
+                :v-chip-content="assetObject.assetKind"
+                :identification-name="'Global Asset ID'"></IdentificationElement>
             <v-divider
-                v-if="Array.isArray(assetObject?.specificAssetIds) && assetObject?.specificAssetIds.length > 0"
-                class="mt-2"></v-divider>
+                v-if="
+                    assetObject?.specificAssetIds &&
+                    Array.isArray(assetObject?.specificAssetIds) &&
+                    assetObject?.specificAssetIds.length > 0
+                "></v-divider>
             <!-- Specific Asset IDs -->
             <SpecificAssetIds :asset-object="assetObject"></SpecificAssetIds>
             <v-divider v-if="assetObject.defaultThumbnail" class="mt-2"></v-divider>
@@ -40,8 +42,9 @@
         computed: {
             assetInfo() {
                 let assetInfo = {
-                    idShort: this.assetObject.assetType,
+                    idShort: this.assetObject?.assetType ? this.assetObject?.assetType : 'Asset',
                     id: this.assetObject.globalAssetId,
+                    modelType: 'Asset',
                 };
                 return assetInfo;
             },

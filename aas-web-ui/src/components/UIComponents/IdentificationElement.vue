@@ -1,40 +1,74 @@
 <template>
     <v-container fluid class="pa-0">
         <v-hover v-slot="{ isHovering, props }">
-            <v-list-item>
-                <!-- Tooltip with idShort and identification id -->
-                <v-tooltip activator="parent" open-delay="600" transition="slide-x-transition">
-                    <div v-if="identificationObject && identificationObject?.id" class="text-caption">
-                        <span class="font-weight-bold">{{ 'ID: ' }}</span
-                        >{{ identificationObject['id'] }}
+            <v-list-item v-if="identificationObject">
+                <!-- Tooltip with ID and idShort -->
+                <div>
+                    <div class="d-flex justify-space-between align-center">
+                        <v-tooltip activator="parent" open-delay="600" transition="slide-x-transition">
+                            <div v-if="identificationObject?.id" class="text-caption">
+                                <span class="font-weight-bold">{{ identificationName + ': ' }}</span
+                                >{{ identificationObject['id'] }}
+                            </div>
+                            <div
+                                v-if="
+                                    identificationObject?.idShort &&
+                                    (!identificationObject?.modelType || identificationObject.modelType !== 'Asset')
+                                "
+                                class="text-caption">
+                                <span class="font-weight-bold">{{ 'idShort: ' }}</span
+                                >{{ identificationObject['idShort'] }}
+                            </div>
+                        </v-tooltip>
+                        <v-list-item-title>
+                            <div class="text-primary text-subtitle-1">{{ nameToDisplay(identificationObject) }}</div>
+                        </v-list-item-title>
+                        <!-- modelType -->
+                        <v-chip v-if="vChipContent" size="x-small" color="primary">{{ vChipContent }}</v-chip>
+                        <v-chip
+                            v-else-if="identificationObject?.modelType && identificationObject.modelType.trim() !== ''"
+                            size="x-small"
+                            color="primary"
+                            >{{ identificationObject.modelType }}</v-chip
+                        >
                     </div>
-                    <div v-if="identificationObject && identificationObject?.idShort" class="text-caption">
-                        <span class="font-weight-bold">{{ nameType + ': ' }}</span
-                        >{{ identificationObject['idShort'] }}
-                    </div>
-                </v-tooltip>
-                <!-- idShort -->
-                <template #title>
-                    <div class="text-primary text-subtitle-1">{{ nameToDisplay(identificationObject) }}</div>
-                    <div v-if="identificationObject.id">{{ idType + ':' }}</div>
-                </template>
-                <!-- identification id -->
-                <template #subtitle>
-                    <div
-                        v-if="identificationObject.id"
-                        v-bind="props"
-                        :class="isHovering ? 'cursor-pointer' : ''"
-                        @click="copyToClipboard()">
-                        <v-icon v-if="isHovering" color="subtitleText" size="x-small" class="mr-1">{{
-                            copyIcon
-                        }}</v-icon>
-                        <span>{{ identificationObject.id ? identificationObject.id : '' }}</span>
-                    </div>
-                </template>
-                <!-- modelType -->
-                <template #append>
-                    <v-chip size="x-small" color="primary">{{ modelType }}</v-chip>
-                </template>
+                    <!-- ID -->
+                    <v-list-item v-if="identificationObject?.id" class="pa-0 mt-n2 mb-0">
+                        <v-list-item-title>
+                            <div>
+                                {{ identificationName + ':' }}
+                            </div>
+                        </v-list-item-title>
+                        <v-list-item-subtitle>
+                            <span v-bind="props" :class="isHovering ? 'cursor-pointer' : ''" @click="copyToClipboard()">
+                                <v-icon v-if="isHovering" color="subtitleText" size="x-small" class="mr-1">{{
+                                    copyIcon
+                                }}</v-icon>
+                                <span>{{ identificationObject.id }}</span>
+                            </span>
+                        </v-list-item-subtitle>
+                    </v-list-item>
+                    <!-- idShort -->
+                    <v-list-item
+                        v-if="
+                            identificationObject?.idShort &&
+                            (!identificationObject?.modelType || identificationObject.modelType !== 'Asset')
+                        "
+                        class="pa-0 mb-0"
+                        :class="identificationObject?.id && identificationObject?.idShort ? 'mt-n3' : 'mt-n2'">
+                        <v-list-item-title>
+                            <div>{{ 'idShort:' }}</div>
+                        </v-list-item-title>
+                        <v-list-item-subtitle>
+                            <span v-bind="props" :class="isHovering ? 'cursor-pointer' : ''" @click="copyToClipboard()">
+                                <v-icon v-if="isHovering" color="subtitleText" size="x-small" class="mr-1">{{
+                                    copyIcon
+                                }}</v-icon>
+                                <span>{{ identificationObject.idShort }}</span>
+                            </span>
+                        </v-list-item-subtitle>
+                    </v-list-item>
+                </div>
             </v-list-item>
         </v-hover>
     </v-container>
@@ -48,7 +82,20 @@
     export default defineComponent({
         name: 'IdentificationElement',
         mixins: [SubmodelElementHandling],
-        props: ['identificationObject', 'modelType', 'idType', 'nameType'],
+        props: {
+            identificationObject: {
+                type: Object as any,
+                default: {} as any,
+            },
+            vChipContent: {
+                type: String,
+                default: '',
+            },
+            identificationName: {
+                type: String,
+                default: 'Identification (ID)',
+            },
+        },
 
         setup() {
             const navigationStore = useNavigationStore();
