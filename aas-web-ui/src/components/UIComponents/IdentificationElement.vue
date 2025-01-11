@@ -4,13 +4,13 @@
             <v-list-item>
                 <!-- Tooltip with idShort and identification id -->
                 <v-tooltip activator="parent" open-delay="600" transition="slide-x-transition">
-                    <div v-if="identificationObject.idShort" class="text-caption">
-                        <span class="font-weight-bold">{{ nameType + ': ' }}</span
-                        >{{ identificationObject['idShort'] }}
-                    </div>
-                    <div v-if="identificationObject && identificationObject.id" class="text-caption">
+                    <div v-if="identificationObject && identificationObject?.id" class="text-caption">
                         <span class="font-weight-bold">{{ 'ID: ' }}</span
                         >{{ identificationObject['id'] }}
+                    </div>
+                    <div v-if="identificationObject && identificationObject?.idShort" class="text-caption">
+                        <span class="font-weight-bold">{{ nameType + ': ' }}</span
+                        >{{ identificationObject['idShort'] }}
                     </div>
                 </v-tooltip>
                 <!-- idShort -->
