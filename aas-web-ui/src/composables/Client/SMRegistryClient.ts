@@ -1,10 +1,11 @@
 import { computed } from 'vue';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
+import * as descriptorTypes from '@/types/Descriptors';
 import { URLEncode } from '@/utils/EncodeDecodeUtils';
 
 export function useSMRegistryClient() {
-    const { getRequest } = useRequestHandling();
+    const { getRequest, postRequest } = useRequestHandling();
 
     const navigationStore = useNavigationStore();
 
@@ -68,8 +69,29 @@ export function useSMRegistryClient() {
         return failResponse;
     }
 
+    async function postSMDescriptor(smDescriptor: descriptorTypes.SubmodelDescriptor): Promise<void> {
+        let smRegUrl = submodelRegistryUrl.value;
+        if (!smRegUrl.includes('/submodel-descriptors')) {
+          smRegUrl += '/submodel-descriptors';
+        }
+
+        const context = 'updating Submodel Descriptor';
+        const disableMessage = false;
+        const path = smRegUrl;
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const body = JSON.stringify(smDescriptor);
+
+        // Send Request to upload the file
+        const response = await postRequest(path, body, headers, context, disableMessage);
+        if (response.success) {
+            //
+        }
+    }
+
     return {
         fetchSmDescriptorList,
         fetchSmDescriptorById,
+        postSMDescriptor,
     };
 }

@@ -70,7 +70,7 @@ export function useAASRepositoryClient() {
 
     // Fetch AAS from (AAS Repo) Endpoint
     async function fetchAas(aasEndpoint: string): Promise<any> {
-        // console.log('fetchAas()', aasEndpoint);
+        console.log('fetchAas()', aasEndpoint);
         const failResponse = {} as any;
 
         if (aasEndpoint.trim() === '') return failResponse;
@@ -82,7 +82,7 @@ export function useAASRepositoryClient() {
             const aasRepoResponse = await getRequest(aasRepoPath, aasRepoContext, disableMessage);
             if (aasRepoResponse?.success && aasRepoResponse?.data && Object.keys(aasRepoResponse?.data).length > 0) {
                 const aas = aasRepoResponse.data;
-                // console.log('fetchAas()', aasEndpoint, 'aas', aas);
+                console.log('fetchAas()', aasEndpoint, 'aas', aas);
 
                 // Add endpoint to AAS
                 aas.endpoints = [{ protocolInformation: { href: aasEndpoint }, interface: 'AAS-3.0' }];
@@ -117,6 +117,8 @@ export function useAASRepositoryClient() {
             }); // Show Success Snackbar
             navigationStore.dispatchTriggerAASListReload(true); // Reload AAS List
         }
+
+        return response;
     }
 
     async function postAas(aas: aasTypes.AssetAdministrationShell) {

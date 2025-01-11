@@ -93,7 +93,7 @@ export class Endpoint {
 
 export class ProtocolInformation {
     href: string;
-    securityAttributes: SecurityAttributes;
+    securityAttributes?: SecurityAttributes;
     endpointProtocol?: string | null;
     endpointProtocolVersion?: Array<string> | null;
     subProtocol?: string | null;
