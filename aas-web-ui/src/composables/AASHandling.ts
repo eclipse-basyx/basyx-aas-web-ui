@@ -16,10 +16,9 @@ export function useAASHandling() {
 
         aasEndpoint = aasEndpoint.trim();
 
-        if (aasEndpoint === '') return;
+        if (aasEndpoint === '') return {};
 
-        const aas = await fetchAasFromRepo(aasEndpoint);
-        // console.log('fetchAndDispatchAas()', aasEndpoint, 'aas', aas);
+        const aas = await fetchAas(aasEndpoint);
 
         aasStore.dispatchSelectedAAS(aas);
 
@@ -30,8 +29,11 @@ export function useAASHandling() {
     async function fetchAndDispatchAasById(aasId: string): Promise<any> {
         // console.log('fetchAndDispatchAasById()', aasId);
 
-        const aas = await fetchAasByIdFromRepo(aasId);
-        // console.log('fetchAndDispatchAasById()', aasId, 'aas:', aas);
+        aasId = aasId.trim();
+
+        if (aasId === '') return {};
+
+        const aas = await fetchAasById(aasId);
 
         aasStore.dispatchSelectedAAS(aas);
 
@@ -47,6 +49,10 @@ export function useAASHandling() {
         if (aasEndpoint === '') return;
 
         const aas = await fetchAasFromRepo(aasEndpoint);
+
+        if (!aas || Object.keys(aas).length === 0) {
+            console.warn('Fetched empty AAS');
+        }
 
         aas.timestamp = formatDate(new Date());
         aas.path = aasEndpoint;
@@ -65,8 +71,15 @@ export function useAASHandling() {
 
         const aas = await fetchAasByIdFromRepo(aasId);
 
+        if (!aas || Object.keys(aas).length === 0) {
+            console.warn('Fetched empty AAS');
+            return;
+        }
+
+        const aasEndpoint = extractEndpointHref(aas, 'AAS-3.0');
+
         aas.timestamp = formatDate(new Date());
-        aas.path = extractEndpointHref(aas, 'AAS-3.0');
+        aas.path = aasEndpoint;
         aas.isActive = true;
 
         return aas;
