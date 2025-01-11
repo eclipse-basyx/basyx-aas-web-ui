@@ -242,9 +242,10 @@
             if (autoSync.value.state) {
                 window.clearInterval(autoSyncInterval.value); // clear old interval
                 // create new interval
-                autoSyncInterval.value = window.setInterval(() => {
+                autoSyncInterval.value = window.setInterval(async () => {
                     if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
-                        fetchAndDispatchSme(selectedNode.value.path, false);
+                        // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
+                        await fetchAndDispatchSme(selectedNode.value.path);
                     }
                 }, autoSync.value.interval);
             } else {
@@ -257,9 +258,10 @@
     onMounted(() => {
         if (autoSync.value.state) {
             // create new interval
-            autoSyncInterval.value = window.setInterval(() => {
+            autoSyncInterval.value = window.setInterval(async () => {
                 if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
-                    fetchAndDispatchSme(selectedNode.value.path, false);
+                    // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
+                    await fetchAndDispatchSme(selectedNode.value.path);
                 }
             }, autoSync.value.interval);
         } else {
@@ -278,6 +280,14 @@
         }
 
         submodelElementData.value = { ...selectedNode.value }; // create local copy
+
+        if (
+            selectedNode.value?.conceptDescriptions &&
+            Array.isArray(selectedNode.value.conceptDescriptions) &&
+            selectedNode.value.conceptDescriptions.length > 0
+        ) {
+            conceptDescriptions.value = { ...selectedNode.value.conceptDescriptions };
+        }
 
         if (
             !conceptDescriptions.value ||
