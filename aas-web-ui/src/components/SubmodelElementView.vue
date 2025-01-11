@@ -244,7 +244,7 @@
                 // create new interval
                 autoSyncInterval.value = window.setInterval(() => {
                     if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
-                        fetchAndDispatchSme(selectedNode.value.path, true);
+                        fetchAndDispatchSme(selectedNode.value.path, false);
                     }
                 }, autoSync.value.interval);
             } else {
@@ -259,7 +259,7 @@
             // create new interval
             autoSyncInterval.value = window.setInterval(() => {
                 if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
-                    fetchAndDispatchSme(selectedNode.value.path, true);
+                    fetchAndDispatchSme(selectedNode.value.path, false);
                 }
             }, autoSync.value.interval);
         } else {
