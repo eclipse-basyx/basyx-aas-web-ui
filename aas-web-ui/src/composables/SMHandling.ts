@@ -73,6 +73,8 @@ export function useSMHandling() {
 
         if (withConceptDescriptions) {
             smOrSme.conceptDescriptions = await getConceptDescriptions(smOrSme);
+        } else {
+            smOrSme.conceptDescriptions = [];
         }
 
         return smOrSme;
@@ -101,6 +103,8 @@ export function useSMHandling() {
 
         if (withConceptDescriptions) {
             sm.conceptDescriptions = await getConceptDescriptions(sm);
+        } else {
+            sm.conceptDescriptions = [];
         }
 
         return sm;

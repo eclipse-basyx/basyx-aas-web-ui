@@ -3,7 +3,7 @@
     <v-badge
         v-if="isMobile"
         dot
-        :color="autoSyncStatus ? 'success' : 'rgba(0,0,0,0)'"
+        :color="autoSync.state ? 'success' : 'rgba(0,0,0,0)'"
         :offset-x="10"
         :offset-y="10"
         @click="toggleAutoSync()">
@@ -12,14 +12,14 @@
     <!-- Desktop Autosync Menu -->
     <v-btn v-else class="mr-6" variant="outlined">
         <span class="mr-1">{{ 'Auto Sync:' }}</span>
-        <span class="text-primary">{{ autoSyncStatus ? 'On' : 'Off' }}</span>
-        <v-icon :style="{ 'margin-left': autoSyncStatus ? '12.5px' : '6px' }">mdi-chevron-down</v-icon>
+        <span class="text-primary">{{ autoSync.state ? 'On' : 'Off' }}</span>
+        <v-icon :style="{ 'margin-left': autoSync.state ? '12.5px' : '6px' }">mdi-chevron-down</v-icon>
         <v-menu activator="parent" :close-on-content-click="false" width="300px">
             <v-list nav class="py-0 bg-navigationMenu" style="border-style: solid; border-width: 1px">
                 <!-- Switch to activate/deactive auto-sync -->
                 <v-list-item class="py-0">
                     <v-switch
-                        v-model="autoSyncStatus"
+                        v-model="autoSync.state"
                         label="Auto Sync"
                         color="primary"
                         class="mx-3"
@@ -42,7 +42,7 @@
                 <!-- Input Field to set the sync-interval -->
                 <v-list-item class="py-0">
                     <v-text-field
-                        v-model="intervalTime"
+                        v-model="autoSync.interval"
                         density="compact"
                         variant="outlined"
                         type="number"
@@ -69,33 +69,40 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, ref } from 'vue';
-    import { useNavigationStore } from '@/store/NavigationStore';
+    import { computed, onMounted } from 'vue';
+    import { AutoSyncType, useNavigationStore } from '@/store/NavigationStore';
 
     const navigationStore = useNavigationStore();
 
-    const autoSyncStatus = ref(navigationStore.getAutoSync ? navigationStore.getAutoSync.state : false);
-    const intervalTime = ref(3000);
+    // Data
+    const autoSyncDefault = { state: false, interval: 3000 } as AutoSyncType;
 
+    // Computed properties
     const isMobile = computed(() => navigationStore.getIsMobile);
+    const autoSync = computed(() => navigationStore.getAutoSync);
+
+    onMounted(async () => {
+        // Get auto-sync object from the lcoal storage, if not set use auto-sync default object
+        var autoSyncToDispatch = JSON.parse(
+            localStorage.getItem('autoSync') || JSON.stringify(autoSyncDefault)
+        ) as AutoSyncType;
+        navigationStore.dispatchUpdateAutoSync(autoSyncToDispatch);
+    });
 
     // Checks if the input is smaller than 100ms and sets it to 100ms if it is
     function checkMin(e: boolean) {
-        if (intervalTime.value < 100 && !e) intervalTime.value = 100;
+        if (autoSync.value.interval < 100 && !e) autoSync.value.interval = 100;
         if (!e) updateAutoSync();
     }
 
-    // Updates the auto-sync (+ interval) in the store
+    // Updates the auto-sync object in the store and local storage
     function updateAutoSync() {
-        navigationStore.dispatchUpdateAutoSync({
-            state: autoSyncStatus.value,
-            interval: intervalTime.value,
-        });
+        localStorage.setItem('autoSync', JSON.stringify(autoSync));
+        navigationStore.dispatchUpdateAutoSync(autoSync.value);
     }
 
-    // Toggles the auto-sync
     function toggleAutoSync() {
-        autoSyncStatus.value = !autoSyncStatus.value;
+        autoSync.value.state = !autoSync.value.state;
         updateAutoSync();
     }
 </script>

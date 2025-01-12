@@ -230,7 +230,7 @@
     watch(
         () => selectedNode.value,
         () => {
-            initializeView();
+            initializeView(false);
         },
         { deep: true }
     );
@@ -245,7 +245,7 @@
                 autoSyncInterval.value = window.setInterval(async () => {
                     if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
                         // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
-                        await fetchAndDispatchSme(selectedNode.value.path);
+                        await fetchAndDispatchSme(selectedNode.value.path, false);
                     }
                 }, autoSync.value.interval);
             } else {
@@ -261,11 +261,11 @@
             autoSyncInterval.value = window.setInterval(async () => {
                 if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
                     // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
-                    await fetchAndDispatchSme(selectedNode.value.path);
+                    await fetchAndDispatchSme(selectedNode.value.path, false);
                 }
             }, autoSync.value.interval);
         } else {
-            initializeView();
+            initializeView(true);
         }
     });
 
@@ -273,28 +273,31 @@
         window.clearInterval(autoSyncInterval.value); // clear old interval
     });
 
-    async function initializeView(): Promise<void> {
+    async function initializeView(withConceptDescriptions: boolean = false): Promise<void> {
         if (!selectedNode.value || Object.keys(selectedNode.value).length === 0) {
             submodelElementData.value = {};
+            conceptDescriptions.value = [];
             return;
         }
 
         submodelElementData.value = { ...selectedNode.value }; // create local copy
 
-        if (
-            selectedNode.value?.conceptDescriptions &&
-            Array.isArray(selectedNode.value.conceptDescriptions) &&
-            selectedNode.value.conceptDescriptions.length > 0
-        ) {
-            conceptDescriptions.value = { ...selectedNode.value.conceptDescriptions };
-        }
+        if (withConceptDescriptions) {
+            if (
+                selectedNode.value?.conceptDescriptions &&
+                Array.isArray(selectedNode.value.conceptDescriptions) &&
+                selectedNode.value.conceptDescriptions.length > 0
+            ) {
+                conceptDescriptions.value = { ...selectedNode.value.conceptDescriptions };
+            }
 
-        if (
-            !conceptDescriptions.value ||
-            !Array.isArray(conceptDescriptions.value) ||
-            conceptDescriptions.value.length === 0
-        ) {
-            conceptDescriptions.value = await getConceptDescriptions(selectedNode.value);
+            if (
+                !conceptDescriptions.value ||
+                !Array.isArray(conceptDescriptions.value) ||
+                conceptDescriptions.value.length === 0
+            ) {
+                conceptDescriptions.value = await getConceptDescriptions(selectedNode.value);
+            }
         }
     }
 </script>

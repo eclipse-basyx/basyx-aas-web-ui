@@ -12,7 +12,10 @@ export function useSMEHandling() {
     const aasStore = useAASStore();
 
     // Fetch and dispatch SME
-    async function fetchAndDispatchSme(submodelElementPath: string, withConceptDescriptions = false): Promise<void> {
+    async function fetchAndDispatchSme(
+        submodelElementPath: string,
+        withConceptDescriptions: boolean = false
+    ): Promise<void> {
         submodelElementPath = submodelElementPath.trim();
 
         if (submodelElementPath === '') return;
@@ -23,7 +26,7 @@ export function useSMEHandling() {
     }
 
     // Fetch SME
-    async function fetchSme(submodelElementPath: string, withConceptDescriptions = false): Promise<any> {
+    async function fetchSme(submodelElementPath: string, withConceptDescriptions: boolean = false): Promise<any> {
         const failResponse = {};
 
         submodelElementPath = submodelElementPath.trim();
@@ -53,6 +56,8 @@ export function useSMEHandling() {
 
         if (withConceptDescriptions) {
             smOrSme.conceptDescriptions = await getConceptDescriptions(smOrSme);
+        } else {
+            smOrSme.conceptDescriptions = [];
         }
 
         return smOrSme;
