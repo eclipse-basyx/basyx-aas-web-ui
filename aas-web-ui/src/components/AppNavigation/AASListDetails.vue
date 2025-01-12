@@ -182,26 +182,6 @@
         () => selectedAAS.value,
         async () => {
             await initializeView(!statusCheck.value.state);
-
-            // if (selectedAASValue && Object.keys(selectedAASValue).length > 0) {
-            //     // if (autoSync.value.state) {
-            //     //     window.clearInterval(autoSyncInterval.value); // clear old interval
-            //     //     // create new interval
-            //     //     autoSyncInterval.value = window.setInterval(async () => {
-            //     //         if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
-            //     //             aasData.value = await fetchAas(selectedAAS.value.path); // update AAS data
-            //     //         }
-            //     //     }, autoSync.value.interval);
-            //     // }
-            //     window.clearInterval(statusCheckInterval.value); // clear old interval
-            //     if (statusCheck.value.state === true) {
-            //         await updateStatusOfAas();
-            //         // create new interval
-            //         statusCheckInterval.value = window.setInterval(async () => {
-            //             await updateStatusOfAas();
-            //         }, statusCheck.value.interval);
-            //     }
-            // }
         }
     );
 
@@ -227,7 +207,7 @@
     watch(
         () => autoSync.value,
         (autoSync) => {
-            if (autoSync.state) {
+            if (autoSync.state === true) {
                 window.clearInterval(autoSyncInterval.value); // clear old interval
                 // create new interval
                 autoSyncInterval.value = window.setInterval(async () => {
