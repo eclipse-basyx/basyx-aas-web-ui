@@ -45,8 +45,8 @@ export function useSMRegistryClient() {
 
         let smRegistryUrl = submodelRegistryUrl.value;
         if (smRegistryUrl.trim() === '') return failResponse;
-        if (!smRegistryUrl.includes('/shell-descriptors')) {
-            smRegistryUrl += '/shell-descriptors';
+        if (!smRegistryUrl.includes('/submodel-descriptors')) {
+            smRegistryUrl += '/submodel-descriptors';
         }
 
         const smRegistryPath = smRegistryUrl + '/' + base64Encode(smId);
