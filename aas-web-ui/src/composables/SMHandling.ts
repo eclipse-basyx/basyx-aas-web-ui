@@ -51,9 +51,9 @@ export function useSMHandling() {
     }
 
     async function getEndpointById(smId: string): Promise<string> {
-        const failReponse = '';
+        const failResponse = '';
 
-        if (smId.trim() === '') return failReponse;
+        if (smId.trim() === '') return failResponse;
 
         const smDescriptor = await fetchSmDescriptorById(smId);
 
@@ -61,9 +61,9 @@ export function useSMHandling() {
     }
 
     async function getEndpoint(sm: any): Promise<string> {
-        const failReponse = '';
+        const failResponse = '';
 
-        if (!sm || Object.keys(sm).length === 0 || !sm.id || sm.id.trim() === '') return failReponse;
+        if (!sm || Object.keys(sm).length === 0 || !sm.id || sm.id.trim() === '') return failResponse;
 
         return extractEndpointHref(sm, 'SUBMODEL-3.0');
     }

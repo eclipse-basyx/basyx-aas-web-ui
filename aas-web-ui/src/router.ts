@@ -1,12 +1,4 @@
-import {
-    createRouter,
-    createWebHistory,
-    LocationQuery,
-    NavigationGuardNext,
-    RouteLocation,
-    RouteLocationNormalizedGeneric,
-    Router,
-} from 'vue-router';
+import { createRouter, createWebHistory, LocationQuery, Router } from 'vue-router';
 import AASList from '@/components/AppNavigation/AASList.vue';
 import ComponentVisualization from '@/components/ComponentVisualization.vue';
 import SubmodelList from '@/components/SubmodelList.vue';
@@ -19,6 +11,7 @@ import Page404 from '@/pages/Page404.vue';
 import SubmodelViewer from '@/pages/SubmodelViewer.vue';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { useAASHandling } from './composables/AASHandling';
+import { useAASDicoveryClient } from './composables/Client/AASDiscoveryClient';
 import { useSMEHandling } from './composables/SMEHandling';
 import { useSMHandling } from './composables/SMHandling';
 
@@ -46,6 +39,7 @@ export async function createAppRouter(): Promise<Router> {
     const navigationStore = useNavigationStore();
 
     // Composables
+    const { getAasId } = useAASDicoveryClient();
     const { fetchAndDispatchAas, getEndpointById: getAasEndpointById } = useAASHandling();
     const { getEndpointById: getSmEndpointById } = useSMHandling();
     const { fetchAndDispatchSme } = useSMEHandling();
@@ -61,31 +55,53 @@ export async function createAppRouter(): Promise<Router> {
         // TODO Move route handling (handleMobileView(), handleDesktopView()) from App.vue to this route guard
 
         // Resolving ID query parameter
-        if (from.query.aasId || from.query.smId) {
+        if (from.query.globalassetid || from.query.aasId || from.query.smId) {
             let aasEndpoint = '';
             let smEndpoint = '';
-            if (from.query.aasId) {
-                const aasIdBase64Encoded = from.query.aasId as string;
-                const aasId = URLDecode(aasIdBase64Encoded);
-                aasEndpoint = await getAasEndpointById(aasId);
+
+            // Resolve globalAssetId (ignore possible specified aasId/smId)
+            if (from.query.globalassetid) {
+                const globalAssetIdBase64Encoded = from.query.globalassetid as string;
+                const globalAssetId = URLDecode(globalAssetIdBase64Encoded);
+                const aasId = await getAasId(globalAssetId);
+                const aasEndpoint = await getAasEndpointById(aasId);
+                const query = {} as LocationQuery;
+
+                if (aasEndpoint.trim() !== '') {
+                    query.aas = aasEndpoint;
+                    const updatedRoute = Object.assign({}, to, {
+                        query: query,
+                    });
+                    next(updatedRoute);
+                    return;
+                }
             }
-            if (from.query.smId) {
-                const smIdBase64Encoded = from.query.smId as string;
-                const smId = URLDecode(smIdBase64Encoded);
-                smEndpoint = await getSmEndpointById(smId);
+
+            // Resolve aasId and/or smId
+            if (from.query.aasId || from.query.smId) {
+                if (from.query.aasId) {
+                    const aasIdBase64Encoded = from.query.aasId as string;
+                    const aasId = URLDecode(aasIdBase64Encoded);
+                    aasEndpoint = await getAasEndpointById(aasId);
+                }
+                if (from.query.smId) {
+                    const smIdBase64Encoded = from.query.smId as string;
+                    const smId = URLDecode(smIdBase64Encoded);
+                    smEndpoint = await getSmEndpointById(smId);
+                }
+
+                const query = {} as LocationQuery;
+
+                if (aasEndpoint.trim() !== '') query.aas = aasEndpoint;
+                if (smEndpoint.trim() !== '') query.path = smEndpoint;
+
+                const updatedRoute = Object.assign({}, to, {
+                    query: query,
+                });
+
+                next(updatedRoute);
+                return;
             }
-
-            const query = {} as LocationQuery;
-
-            if (aasEndpoint.trim() !== '') query.aas = aasEndpoint;
-            if (smEndpoint.trim() !== '') query.path = smEndpoint;
-
-            const updatedRoute = Object.assign({}, to, {
-                query: query,
-            });
-
-            next(updatedRoute);
-            return;
         }
 
         // Same route

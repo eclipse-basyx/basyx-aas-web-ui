@@ -13,8 +13,6 @@ export function useAASHandling() {
 
     // Fetch and dispatch AAS
     async function fetchAndDispatchAas(aasEndpoint: string): Promise<void> {
-        // console.log('fetchAndDispatchAas()', aasEndpoint);
-
         aasEndpoint = aasEndpoint.trim();
 
         if (aasEndpoint === '') return;
@@ -27,9 +25,9 @@ export function useAASHandling() {
 
     // Fetch and dispatch AAS
     async function fetchAndDispatchAasById(aasId: string): Promise<void> {
-        // console.log('fetchAndDispatchAasById()', aasId);
+        aasId = aasId.trim();
 
-        if (aasId.trim() === '') return;
+        if (aasId === '') return;
 
         const aas = await fetchAasById(aasId);
         // console.log('fetchAndDispatchAasById()', aasId, 'aas:', aas);
@@ -38,9 +36,11 @@ export function useAASHandling() {
     }
 
     async function getEndpointById(aasId: string): Promise<string> {
-        const failReponse = '';
+        const failResponse = '';
 
-        if (aasId.trim() === '') return failReponse;
+        aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
 
         const aasDescriptor = await fetchAasDescriptorById(aasId);
 
@@ -48,9 +48,9 @@ export function useAASHandling() {
     }
 
     async function getEndpoint(aas: any): Promise<string> {
-        const failReponse = '';
+        const failResponse = '';
 
-        if (!aas || Object.keys(aas).length === 0 || !aas.id || aas.id.trim() === '') return failReponse;
+        if (!aas || Object.keys(aas).length === 0 || !aas.id || aas.id.trim() === '') return failResponse;
 
         return extractEndpointHref(aas, 'AAS-3.0');
     }
