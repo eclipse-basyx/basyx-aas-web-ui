@@ -25,7 +25,7 @@ export function useAASDicoveryClient() {
         }
 
         const assetIdObject = JSON.stringify({ name: 'globalAssetId', value: globalAssetId });
-        const aasDiscoveryPath = `${aasDiscoveryUrl.value}?assetIds=${base64Encode(assetIdObject)}`;
+        const aasDiscoveryPath = `${aasDiscUrl}?assetIds=${base64Encode(assetIdObject)}`;
         const aasDiscoveryContext = 'retrieving AAS ID by AssetID';
         const disableMessage = true;
         try {
