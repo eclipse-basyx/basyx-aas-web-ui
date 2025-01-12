@@ -1,22 +1,15 @@
-import { Ref } from 'vue';
 import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
-import { wait } from '@/utils/generalUtils';
 import { useAASRegistryClient } from './Client/AASRegistryClient';
 import { useAASRepositoryClient } from './Client/AASRepositoryClient';
 
 export function useAASHandling() {
     // Composables
-    const {
-        fetchAas: fetchAasFromRepo,
-        fetchAasById: fetchAasByIdFromRepo,
-        isAvailableById: isAvailableByIdInRepo,
-    } = useAASRepositoryClient();
+    const { fetchAas: fetchAasFromRepo, fetchAasById: fetchAasByIdFromRepo } = useAASRepositoryClient();
     const {
         fetchAasDescriptorById: fetchAasDescriptorByIdFromRegistry,
         fetchAasDescriptorList: fetchAasDescriptorListFromRegistry,
-        isAvailableById: isAvailableByIdInRegistry,
     } = useAASRegistryClient();
 
     // Stores
