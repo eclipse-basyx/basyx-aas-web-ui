@@ -47,6 +47,9 @@ export function useAASRegistryClient() {
     async function fetchAasDescriptorById(aasId: string): Promise<any> {
         const failResponse = {} as any;
 
+        if (!aasId || aasId.trim() === '') return failResponse;
+        aasId = aasId.trim();
+
         let aasRegUrl = aasRegistryUrl.value;
         if (aasRegUrl.trim() === '') return failResponse;
         if (!aasRegUrl.includes('/shell-descriptors')) {
@@ -75,28 +78,15 @@ export function useAASRegistryClient() {
     async function isAvailableById(aasId: string): Promise<boolean> {
         const failResponse = false;
 
-        let aasRegUrl = aasRegistryUrl.value;
-        if (aasRegUrl.trim() === '') return failResponse;
-        if (!aasRegUrl.includes('/shell-descriptors')) {
-            aasRegUrl += '/shell-descriptors';
+        if (!aasId || aasId.trim() === '') return failResponse;
+        aasId = aasId.trim();
+
+        const aasDescriptor = await fetchAasDescriptorById(aasId);
+
+        if (aasDescriptor && Object.keys(aasDescriptor).length > 0) {
+            return true;
         }
 
-        const aasRegistryPath = aasRegUrl + '/' + URLEncode(aasId);
-        const aasRegistryContext = 'evaluating AAS Descriptor Status';
-        const disableMessage = false;
-        try {
-            const aasRegistryResponse = await getRequest(aasRegistryPath, aasRegistryContext, disableMessage);
-            if (
-                aasRegistryResponse?.success &&
-                aasRegistryResponse?.data &&
-                Object.keys(aasRegistryResponse?.data).length > 0
-            ) {
-                return true;
-            }
-        } catch {
-            // handle error
-            return failResponse;
-        }
         return failResponse;
     }
 
@@ -116,7 +106,7 @@ export function useAASRegistryClient() {
         // Send Request to upload the file
         const response = await postRequest(path, body, headers, context, disableMessage);
         if (response.success) {
-            navigationStore.dispatchTriggerAASListReload(true); // Reload AAS List
+            navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
         }
     }
 
@@ -136,7 +126,7 @@ export function useAASRegistryClient() {
         // Send Request to upload the file
         const response = await putRequest(path, body, headers, context, disableMessage);
         if (response.success) {
-            navigationStore.dispatchTriggerAASListReload(true); // Reload AAS List
+            navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
         }
     }
 

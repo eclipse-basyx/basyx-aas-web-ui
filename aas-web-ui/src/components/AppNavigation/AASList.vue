@@ -30,7 +30,7 @@
                             hide-details
                             label="Search for AAS..."
                             clearable
-                            @update:model-value="filterAASList"></v-text-field>
+                            @update:model-value="filterAasDescriptorList"></v-text-field>
                     </v-col>
                     <!-- Add existing AAS -->
                     <v-col cols="auto" class="px-0">
@@ -64,7 +64,7 @@
                                     <!-- Open AAS edit dialog -->
                                     <v-tooltip open-delay="600" location="end">
                                         <template #activator="{ props }">
-                                            <v-list-item slim v-bind="props" @click="openEditDialog(true)">
+                                            <v-list-item slim v-bind="props" @click="openAASEditDialog(true)">
                                                 <template #prepend>
                                                     <v-icon size="small">mdi-plus</v-icon>
                                                 </template>
@@ -105,10 +105,15 @@
                     'flex-direction': 'column',
                     height: listHeight,
                 }">
-                <v-virtual-scroll ref="virtualScrollRef" :items="AASData" :item-height="56" class="pb-2 bg-card">
+                <v-virtual-scroll
+                    ref="virtualScrollRef"
+                    :items="aasDescriptorList"
+                    :item-height="56"
+                    class="pb-2 bg-card">
                     <template #default="{ item }">
                         <!-- Single AAS -->
                         <v-list-item
+                            v-if="item && Object.keys(item).length > 0"
                             class="mt-2 mx-2"
                             :active="isSelected(item)"
                             color="primarySurface"
@@ -131,31 +136,33 @@
                                 transition="slide-x-transition"
                                 :disabled="isMobile">
                                 <div class="text-caption">
-                                    <span class="font-weight-bold">{{ 'idShort: ' }}</span
-                                    >{{ item['idShort'] }}
+                                    <span class="font-weight-bold"> {{ 'idShort: ' }}</span>
+                                    {{ item.idShort }}
                                 </div>
                                 <div class="text-caption">
-                                    <span class="font-weight-bold">{{ 'ID: ' }}</span
-                                    >{{ item['id'] }}
+                                    <span class="font-weight-bold">{{ 'ID: ' }}</span>
+                                    {{ item.id }}
                                 </div>
                             </v-tooltip>
-                            <!-- idShort of the AAS -->
-                            <template v-if="drawerState" #title>
-                                <div class="text-primary" style="z-index: 9999">{{ nameToDisplay(item) }}</div>
+                            <template v-if="!isMobile && item.status && item.status.trim() !== ''" #prepend>
+                                <v-tooltip :text="'AAS status ' + item.status" class="pr-n2 mr-n2">
+                                    <template #activator="{ props }">
+                                        <v-icon size="small" v-bind="props" :class="statusTextClass(item.status)">
+                                            {{ statusCloudIcon(item.status) || 'mdi-cloud-off-outline' }}
+                                        </v-icon>
+                                    </template>
+                                </v-tooltip>
                             </template>
-                            <!-- id of the AAS -->
-                            <template v-if="drawerState" #subtitle>
-                                <div class="text-listItemText">{{ item['id'] }}</div>
+                            <template #title>
+                                <div class="text-primary" style="z-index: 9999">
+                                    {{ nameToDisplay(item) }}
+                                </div>
+                            </template>
+                            <template #subtitle>
+                                <div class="text-listItemText">{{ item.id }}</div>
                             </template>
                             <!-- open Details Button (with Status Badge) -->
-                            <template v-if="drawerState" #append>
-                                <!-- Badge that show's the Status of the AAS -->
-                                <v-badge
-                                    :model-value="item['status'] && item['status'] == 'offline'"
-                                    icon="mdi-network-strength-4-alert"
-                                    color="error"
-                                    text-color="buttonText"
-                                    inline></v-badge>
+                            <template #append>
                                 <v-menu v-if="editMode">
                                     <template #activator="{ props }">
                                         <v-btn
@@ -174,13 +181,13 @@
                                                 </template>
                                                 <v-list-item-subtitle>Download AAS</v-list-item-subtitle>
                                             </v-list-item>
-                                            <v-list-item @click="openEditDialog(false, item)">
+                                            <v-list-item @click="openAASEditDialog(false, item)">
                                                 <template #prepend>
                                                     <v-icon size="x-small">mdi-pencil</v-icon>
                                                 </template>
                                                 <v-list-item-subtitle>Edit AAS</v-list-item-subtitle>
                                             </v-list-item>
-                                            <v-list-item @click="showDeleteDialog(item)">
+                                            <v-list-item @click="showAASDeleteDialog(item)">
                                                 <template #prepend>
                                                     <v-icon size="x-small">mdi-delete</v-icon>
                                                 </template>
@@ -206,7 +213,7 @@
                                         variant="plain"
                                         color="listItemText"
                                         style="z-index: 9000; margin-left: -6px"
-                                        @click.stop="showDeleteDialog(item)"></v-btn>
+                                        @click.stop="showAASDeleteDialog(item)"></v-btn>
                                 </template>
                             </template>
                         </v-list-item>
@@ -238,17 +245,17 @@
 
 <script lang="ts" setup>
     import type { ComponentPublicInstance } from 'vue';
-    import { computed, onActivated, onMounted, Ref, ref, watch } from 'vue';
+    import { computed, onActivated, onBeforeUnmount, onMounted, Ref, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
     import { useAASHandling } from '@/composables/AASHandling';
+    import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
-    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { extractEndpointHref } from '@/utils/DescriptorUtils';
-    import { nameToDisplay } from '@/utils/ReferableUtils';
+    import { descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
+    import { statusCloudIcon, statusTextClass } from '@/utils/StatusCheckUtils';
 
     // Extend the ComponentPublicInstance type to include scrollToIndex
     interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -260,9 +267,9 @@
     const router = useRouter();
 
     // Composables
-    const { getRequest } = useRequestHandling();
-    const { downloadAasx, isAvailableById } = useAASRepositoryClient();
-    const { fetchAndDispatchAas } = useAASHandling();
+    const { isAvailableById: isAvailableByIdInRegistry } = useAASRegistryClient();
+    const { downloadAasx } = useAASRepositoryClient();
+    const { fetchAndDispatchAasById, fetchAasDescriptorList } = useAASHandling();
 
     // Stores
     const navigationStore = useNavigationStore();
@@ -273,8 +280,8 @@
     const theme = useTheme();
 
     // Data
-    const AASData = ref([]); // Variable to store the AAS Data
-    const unfilteredAASData = ref([]); // Variable to store the AAS Data before filtering
+    const aasDescriptorList = ref([] as Array<any>) as Ref<Array<any>>; // Variable to store the AAS Data
+    const aasDescriptorListUnfiltered = ref([] as Array<any>) as Ref<Array<any>>; // Variable to store the AAS Data before filtering
     const listLoading = ref(false); // Variable to store if the AAS List is loading
     const deleteDialog = ref(false); // Variable to store if the Delete Dialog should be shown
     const aasToDelete = ref({}); // Variable to store the AAS to be deleted
@@ -288,14 +295,12 @@
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
     const isDark = computed(() => theme.global.current.value.dark); // Check if the current Theme is dark
-    const drawerState = computed(() => navigationStore.getDrawerState); // Get Drawer State from store (true -> collapsed, false -> extended)
     const aasRepoURL = computed(() => navigationStore.getAASRepoURL); // Get the AAS Repository URL from the Store
     const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL); // Get AAS Registry URL from Store
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
     const loading = computed(() => aasStore.getLoadingState); // Get the loading State from Store
     const primaryColor = computed(() => theme.current.value.colors.primary); // returns the primary color of the current theme
     const triggerAASListReload = computed(() => navigationStore.getTriggerAASListReload); // Get the trigger signal for AAS List reload from store
-    const triggerAASListScroll = computed(() => navigationStore.getTriggerAASListScroll); // Get the trigger signal for AAS List scroll from store
     const singleAas = computed(() => envStore.getSingleAas); // Get the single AAS state from the Store
     const listHeight = computed(() => {
         if (isMobile.value) {
@@ -312,134 +317,147 @@
             }
         }
     });
+
     const editMode = computed(() => route.name === 'AASEditor'); // Check if the current Route is the AAS Editor
     const allowUploading = computed(() => envStore.getAllowUploading); // Check if the current environment config allows uploading shells
     const statusCheck = computed(() => navigationStore.getStatusCheck);
+    const triggerStatusCheckChanged = computed(() => navigationStore.getTriggerStatusCheckChanged);
 
     // Watchers
     watch(
         () => aasRegistryURL.value,
-        (newValue) => {
+        async (newValue) => {
             if (newValue !== '') {
-                loadAASListData();
-            } else {
-                AASData.value = [];
+                await loadAASListData(!statusCheck.value.state);
             }
         }
     );
 
     watch(
-        () => statusCheck.value,
-        (statusCheckValue) => {
-            if (statusCheckValue.state) {
-                window.clearInterval(statusCheckInterval.value); // clear old interval
-                // create new interval
-                statusCheckInterval.value = window.setInterval(async () => {
-                    await updateAasStatus();
-                }, statusCheckValue.interval);
-            } else {
-                window.clearInterval(statusCheckInterval.value); // clear interval
-            }
-        },
-        { deep: true }
-    );
-
-    // watch for changes in the trigger for AAS List reload
-    watch(
-        () => triggerAASListReload.value,
-        (triggerVal) => {
-            if (triggerVal === true) {
-                loadAASListData();
-                navigationStore.dispatchTriggerAASListReload(false);
-            }
-        }
-    );
-
-    // watch for changes in the trigger for AAS List scroll
-    watch(
-        () => triggerAASListScroll.value,
-        () => {
+        () => selectedAAS.value,
+        async () => {
             scrollToSelectedAAS();
         }
     );
 
-    onMounted(() => {
-        // Load the AAS List on Startup if the AAS Registry URL is set
-        if (aasRegistryURL.value !== '' && !singleAas.value) {
-            loadAASListData();
+    watch(
+        () => triggerStatusCheckChanged.value,
+        async (triggerVal) => {
+            if (triggerVal === true) {
+                window.clearInterval(statusCheckInterval.value); // clear old interval
+                if (statusCheck.value.state === true) {
+                    await updateStatusOfAasDescriptorList();
+
+                    // create new interval
+                    statusCheckInterval.value = window.setInterval(async () => {
+                        await updateStatusOfAasDescriptorList();
+                    }, statusCheck.value.interval);
+                } else {
+                    aasDescriptorList.value.forEach(async (aasDescriptor: any) => {
+                        aasDescriptor.status = 'check disabled';
+                    });
+                }
+            }
         }
+    );
+
+    watch(
+        () => triggerAASListReload.value,
+        async (triggerVal) => {
+            if (triggerVal === true) {
+                await loadAASListData(!statusCheck.value.state);
+            }
+        }
+    );
+
+    onMounted(async () => {
+        if (statusCheck.value.state === true) {
+            await updateStatusOfAasDescriptorList();
+            window.clearInterval(statusCheckInterval.value); // clear old interval
+            // create new interval
+            statusCheckInterval.value = window.setInterval(async () => {
+                await updateStatusOfAasDescriptorList();
+            }, statusCheck.value.interval);
+        }
+
+        await loadAASListData(!statusCheck.value.state);
+    });
+
+    onBeforeUnmount(() => {
+        window.clearInterval(statusCheckInterval.value);
     });
 
     onActivated(() => {
         scrollToSelectedAAS();
     });
 
-    function collapseSidebar() {
+    function collapseSidebar(): void {
         navigationStore.dispatchDrawerState(false);
     }
 
     // Function to get the AAS Data from the Registry Server
-    function loadAASListData() {
+    async function loadAASListData(init: boolean = false): Promise<void> {
         listLoading.value = true;
 
-        // check if aasRegistryURL includes "/shell-descriptors" and add id if not (backward compatibility)
-        let aasRegURL = aasRegistryURL.value;
-        if (!aasRegistryURL.value.includes('/shell-descriptors')) {
-            aasRegURL += '/shell-descriptors';
-        }
+        const aasDescriptors = await fetchAasDescriptorList();
+        let aasDescriptorsSorted = aasDescriptors.sort((a: { [x: string]: number }, b: { [x: string]: number }) =>
+            a['id'] > b['id'] ? 1 : -1
+        );
 
-        const path = aasRegURL;
-        const context = 'retrieving AAS Data';
-        const disableMessage = false;
+        aasDescriptorList.value = aasDescriptorsSorted;
 
-        getRequest(path, context, disableMessage).then((response: any) => {
-            if (response.success) {
-                // execute if the AAS Registry is found
-                // sort data by identification id (ascending) and store it in the AASData variable
-                let registeredAAS = response.data.result;
-                let sortedData = registeredAAS.sort((a: { [x: string]: number }, b: { [x: string]: number }) =>
-                    a['id'] > b['id'] ? 1 : -1
-                );
+        await updateStatusOfAasDescriptorList(init);
 
-                // add status online to the AAS Data
-                sortedData.forEach((AAS: any) => {
-                    AAS['status'] = 'check disabled';
-                });
-                AASData.value = Object.freeze(sortedData); // store the sorted data in the AASData variable
-                unfilteredAASData.value = sortedData; // make a copy of the sorted data and store it in the unfilteredAASData variable
-                scrollToSelectedAAS(); // scroll to the selected AAS
-                if (statusCheck.value.state) updateAasStatus();
-            }
-            listLoading.value = false;
-        });
+        aasDescriptorListUnfiltered.value = aasDescriptorList.value;
+
+        scrollToSelectedAAS();
+
+        listLoading.value = false;
     }
 
-    // Function to check the AAS Status
-    async function updateAasStatus() {
-        AASData.value.forEach(async (aas: any) => {
-            aas.status = (await isAvailableById(aas.id)) ? 'online' : 'offline';
-        });
+    async function updateStatusOfAasDescriptorList(init: boolean = false): Promise<void> {
+        if (Array.isArray(aasDescriptorList.value) && aasDescriptorList.value.length > 0)
+            aasDescriptorList.value.forEach(async (aasDescriptor: any) => {
+                if (aasDescriptor && Object.keys(aasDescriptor).length > 0) {
+                    if (!init) aasDescriptor.status = 'status loading';
+
+                    await new Promise((resolve) => setTimeout(resolve, 600)); // Give the UI the chance to refresh status icons // Give the UI the chance to refresh status icons
+                    if (await isAvailableByIdInRegistry(aasDescriptor.id)) {
+                        aasDescriptor.status = init
+                            ? ''
+                            : statusCheck.value.state === true
+                              ? 'online'
+                              : 'check disabled';
+                    } else {
+                        aasDescriptor.status = init
+                            ? ''
+                            : statusCheck.value.state === true
+                              ? 'offline'
+                              : 'check disabled';
+                    }
+                }
+            });
     }
 
-    // Function to filter the AAS List
-    function filterAASList(value: string) {
-        // console.log('Filter AAS List: ', value);
-        // if the Search Field is empty, show all AAS
-        if (value === '' || value === null) {
-            AASData.value = unfilteredAASData.value;
+    function filterAasDescriptorList(value: string): void {
+        if (!value || value.trim() === '') {
+            aasDescriptorList.value = aasDescriptorListUnfiltered.value;
         } else {
-            // filter the AAS List by the Search Field Value
-            let filteredAASData = unfilteredAASData.value.filter((AAS: { [x: string]: string }) =>
-                AAS['idShort'].toLowerCase().includes(value.toLowerCase())
+            // filter list of AAS Descriptors
+            let aasDescriptorListFiltered = aasDescriptorListUnfiltered.value.filter(
+                (aasDescriptor: any) =>
+                    aasDescriptor.id.toLowerCase().includes(value.toLowerCase()) ||
+                    aasDescriptor.idShort.toLowerCase().includes(value.toLowerCase()) ||
+                    nameToDisplay(aasDescriptor).toLowerCase().includes(value.toLowerCase()) ||
+                    descriptionToDisplay(aasDescriptor).toLowerCase().includes(value.toLowerCase())
             );
-            AASData.value = filteredAASData;
+            aasDescriptorList.value = aasDescriptorListFiltered;
         }
+        scrollToSelectedAAS();
     }
 
     // Function to select an AAS
-    async function selectAAS(AAS: any) {
-        // console.log('Select AAS: ', AAS);
-        // return if loading state is true -> prevents multiple requests
+    async function selectAAS(aas: any): Promise<void> {
         if (loading.value) {
             navigationStore.dispatchSnackbar({
                 status: true,
@@ -450,7 +468,7 @@
             });
             return;
         }
-        if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0 && selectedAAS.value.id === AAS.id) {
+        if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0 && selectedAAS.value.id === aas.id) {
             // Deselect AAS
             router.push({ query: {} });
             aasStore.dispatchSelectedAAS({});
@@ -460,34 +478,28 @@
                 scrollToAasAfterDispatch = true;
             }
 
-            // Select AAS
-            const aasEndpoint = extractEndpointHref(AAS, 'AAS-3.0');
-
-            router.push({ query: { aas: aasEndpoint } });
-            await fetchAndDispatchAas(aasEndpoint);
+            await fetchAndDispatchAasById(aas.id);
 
             if (scrollToAasAfterDispatch) scrollToSelectedAAS();
         }
     }
 
-    // checks if the AAS is selected
-    function isSelected(AAS: any) {
+    function isSelected(aas: any): boolean {
         if (
-            selectedAAS.value === undefined ||
-            selectedAAS.value === null ||
-            Object.keys(selectedAAS.value).length === 0
+            !selectedAAS.value ||
+            Object.keys(selectedAAS.value).length === 0 ||
+            !aas ||
+            Object.keys(aas).length === 0
         ) {
             return false;
         }
-        const aasEndpointFromList = extractEndpointHref(AAS, 'AAS-3.0');
-        const aasEndpointSelected = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
-        return aasEndpointFromList === aasEndpointSelected;
+        return selectedAAS.value.id === aas.id;
     }
 
     // Function to scroll to the selected AAS
-    async function scrollToSelectedAAS() {
+    async function scrollToSelectedAAS(): Promise<void> {
         // Find the index of the selected item
-        const index = AASData.value.findIndex((item: any) => isSelected(item));
+        const index = aasDescriptorList.value.findIndex((aasDescriptor: any) => isSelected(aasDescriptor));
 
         if (index !== -1) {
             const intervalId = setInterval(() => {
@@ -503,12 +515,12 @@
         }
     }
 
-    function showDeleteDialog(AAS: any) {
+    function showAASDeleteDialog(aas: any): void {
         deleteDialog.value = true;
-        aasToDelete.value = AAS;
+        aasToDelete.value = aas;
     }
 
-    function openEditDialog(createNew: boolean, aas?: any) {
+    function openAASEditDialog(createNew: boolean, aas?: any) {
         editDialog.value = true;
         newShell.value = createNew;
         if (createNew === false && aas) {

@@ -2,26 +2,22 @@
     <v-container class="pa-0" fluid>
         <v-sheet>
             <v-divider v-if="!singleAas || !isMobile"></v-divider>
-            <v-card-title class="bg-detailsHeader pl-3">
-                <v-row align="center" class="pl-4" style="height: 40px">
+            <v-card-title class="bg-detailsHeader px-1">
+                <v-row align="center" style="height: 40px" class="mx-0">
                     <!-- AAS Status -->
-                    <div class="text-caption" :class="statusColor">
+                    <div
+                        v-if="!isMobile && singleAas && aasData.status && aasData.status.trim() !== ''"
+                        class="text-caption px-1">
                         <v-tooltip :text="'AAS status ' + aasData.status">
                             <template #activator="{ props }">
-                                <template v-if="aasData.status === 'check disabled'">
-                                    <v-icon size="small" v-bind="props">mdi-cloud-off-outline</v-icon>
-                                </template>
-                                <template v-else-if="aasData.status === 'online'">
-                                    <v-icon size="small" v-bind="props">mdi-cloud-check-outline</v-icon>
-                                </template>
-                                <template v-else>
-                                    <v-icon size="small" v-bind="props">mdi-cloud-remove-outline</v-icon>
-                                </template>
+                                <v-icon size="small" v-bind="props" :class="statusTextClass(aasData.status)">
+                                    {{ statusCloudIcon(aasData.status) || 'mdi-cloud-off-outline' }}
+                                </v-icon>
                             </template>
                         </v-tooltip>
                     </div>
                     <!-- Last Sync -->
-                    <div class="text-caption ml-2">
+                    <div class="text-caption pl-1">
                         <v-icon class="text-caption" size="small">mdi-autorenew</v-icon>
                         <span
                             class="text-caption ml-1"
@@ -117,13 +113,14 @@
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
+    import { statusCloudIcon, statusTextClass } from '@/utils/StatusCheckUtils';
 
     // Vue Router
     const route = useRoute();
     const router = useRouter();
 
     // Composables
-    const { downloadAasx, fetchAssetInformation, isAvailableById } = useAASRepositoryClient();
+    const { downloadAasx, fetchAssetInformation, isAvailableById: isAvailableByIdInRepo } = useAASRepositoryClient();
     const { fetchAas } = useAASHandling();
 
     // Stores
@@ -158,25 +155,16 @@
             }
         }
     });
-    const statusColor = computed(() => {
-        if (aasData.value?.status) {
-            if (aasData.value.status === 'online') {
-                return 'text-success';
-            } else if (aasData.value.status === 'check disabled') {
-                return 'text-warning';
-            }
-        }
-        return 'text-error';
-    });
     const autoSync = computed(() => navigationStore.getAutoSync);
     const statusCheck = computed(() => navigationStore.getStatusCheck);
+    const triggerStatusCheckChanged = computed(() => navigationStore.getTriggerStatusCheckChanged);
 
     // Watchers
     watch(
         () => aasRegistryURL.value,
         async (newValue) => {
             if (newValue !== '') {
-                await initializeView();
+                await initializeView(!statusCheck.value.state);
             }
         }
     );
@@ -185,33 +173,55 @@
         () => aasRepoURL.value,
         async (newValue) => {
             if (newValue !== '') {
-                await initializeView();
+                await initializeView(!statusCheck.value.state);
             }
         }
     );
 
-    // Resets the SubmodelElementView when the AAS changes
     watch(
         () => selectedAAS.value,
         async () => {
-            await initializeView();
+            await initializeView(!statusCheck.value.state);
+
+            // if (selectedAASValue && Object.keys(selectedAASValue).length > 0) {
+            //     // if (autoSync.value.state) {
+            //     //     window.clearInterval(autoSyncInterval.value); // clear old interval
+            //     //     // create new interval
+            //     //     autoSyncInterval.value = window.setInterval(async () => {
+            //     //         if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
+            //     //             aasData.value = await fetchAas(selectedAAS.value.path); // update AAS data
+            //     //         }
+            //     //     }, autoSync.value.interval);
+            //     // }
+            //     window.clearInterval(statusCheckInterval.value); // clear old interval
+            //     if (statusCheck.value.state === true) {
+            //         await updateStatusOfAas();
+            //         // create new interval
+            //         statusCheckInterval.value = window.setInterval(async () => {
+            //             await updateStatusOfAas();
+            //         }, statusCheck.value.interval);
+            //     }
+            // }
         }
     );
 
     watch(
-        () => statusCheck.value,
-        (statusCheck) => {
-            if (statusCheck.state) {
+        () => triggerStatusCheckChanged.value,
+        async (triggerVal) => {
+            if (triggerVal === true) {
                 window.clearInterval(statusCheckInterval.value); // clear old interval
-                // create new interval
-                statusCheckInterval.value = window.setInterval(async () => {
-                    updateAasStatus();
-                }, statusCheck.interval);
-            } else {
-                window.clearInterval(statusCheckInterval.value); // clear interval
+                if (statusCheck.value.state === true) {
+                    await updateStatusOfAas();
+
+                    // create new interval
+                    statusCheckInterval.value = window.setInterval(async () => {
+                        await updateStatusOfAas();
+                    }, statusCheck.value.interval);
+                } else {
+                    aasData.value.status = 'check disabled';
+                }
             }
-        },
-        { deep: true }
+        }
     );
 
     watch(
@@ -234,6 +244,7 @@
 
     onMounted(async () => {
         if (autoSync.value.state) {
+            window.clearInterval(autoSyncInterval.value); // clear old interval
             // create new interval
             autoSyncInterval.value = window.setInterval(async () => {
                 if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
@@ -242,13 +253,17 @@
             }, autoSync.value.interval);
         }
 
-        if (statusCheck.value.state) {
+        if (statusCheck.value.state === true) {
+            window.clearInterval(statusCheckInterval.value); // clear old interval
+            await updateStatusOfAas();
+
             // create new interval
             statusCheckInterval.value = window.setInterval(async () => {
-                updateAasStatus();
+                await updateStatusOfAas();
             }, statusCheck.value.interval);
         }
-        await initializeView();
+
+        await initializeView(!statusCheck.value.state);
     });
 
     onBeforeUnmount(() => {
@@ -256,7 +271,7 @@
         window.clearInterval(statusCheckInterval.value);
     });
 
-    async function initializeView(): Promise<void> {
+    async function initializeView(init: boolean = false): Promise<void> {
         if (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0) {
             aasData.value = {};
             assetInformation.value = {};
@@ -264,19 +279,27 @@
         }
 
         aasData.value = { ...selectedAAS.value }; // create local copy
+        updateAssetInformation();
 
-        updateAasStatus();
-        await updateAssetInformation();
+        updateStatusOfAas(init);
+    }
+
+    async function updateStatusOfAas(init: boolean = false): Promise<void> {
+        if (aasData.value && Object.keys(aasData.value).length > 0) {
+            if (!init) aasData.value.status = 'status loading';
+
+            await new Promise((resolve) => setTimeout(resolve, 600)); // Give the UI the chance to refresh status icons
+            const aasIsAvailable = await isAvailableByIdInRepo(aasData.value.id);
+            if (aasIsAvailable) {
+                aasData.value.status = init ? '' : statusCheck.value.state === true ? 'online' : 'check disabled';
+            } else {
+                aasData.value.status = init ? '' : statusCheck.value.state === true ? 'offline' : 'check disabled';
+            }
+        }
     }
 
     async function updateAssetInformation(): Promise<void> {
         assetInformation.value = await fetchAssetInformation(extractEndpointHref(aasData.value, 'AAS-3.0'));
-    }
-
-    async function updateAasStatus(): Promise<void> {
-        if (aasData.value && Object.keys(aasData.value).length > 0) {
-            aasData.value.status = (await isAvailableById(aasData.value.id)) ? 'online' : 'offline';
-        }
     }
 
     function gotoSubmodelList(): void {

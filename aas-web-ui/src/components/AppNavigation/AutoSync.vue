@@ -10,9 +10,14 @@
         <v-btn icon="mdi-autorenew"></v-btn>
     </v-badge>
     <!-- Desktop Autosync Menu -->
-    <v-btn v-else class="mr-6" variant="outlined">
-        <span class="mr-1">{{ 'Auto Sync:' }}</span>
-        <span class="text-primary">{{ autoSync.state ? 'On' : 'Off' }}</span>
+    <v-btn v-else class="multiline-button mr-6" variant="outlined">
+        <div class="text-left">
+            <span class="mr-1">{{ 'Auto Sync:' }}</span>
+            <span class="text-primary">{{ autoSync.state ? 'On' : 'Off' }}</span>
+            <br />
+            <span class="mr-1">{{ 'Status Check:' }}</span>
+            <span class="text-primary">{{ statusCheck.state ? 'On' : 'Off' }}</span>
+        </div>
         <v-icon :style="{ 'margin-left': autoSync.state ? '12.5px' : '6px' }">mdi-chevron-down</v-icon>
         <v-menu activator="parent" :close-on-content-click="false" width="300px">
             <v-list nav class="py-0 bg-navigationMenu" style="border-style: solid; border-width: 1px">
@@ -72,26 +77,16 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, onMounted } from 'vue';
-    import { AutoSyncType, useNavigationStore } from '@/store/NavigationStore';
+    import { computed } from 'vue';
+    import { useNavigationStore } from '@/store/NavigationStore';
 
     // Stores
     const navigationStore = useNavigationStore();
 
-    // Data
-    const autoSyncDefault = { state: false, interval: 3000 } as AutoSyncType;
-
     // Computed properties
     const isMobile = computed(() => navigationStore.getIsMobile);
     const autoSync = computed(() => navigationStore.getAutoSync);
-
-    onMounted(async () => {
-        // Get auto-sync object from the lcoal storage, if not set use auto-sync default object
-        var autoSyncToDispatch = JSON.parse(
-            localStorage.getItem('autoSync') || JSON.stringify(autoSyncDefault)
-        ) as AutoSyncType;
-        navigationStore.dispatchUpdateAutoSync(autoSyncToDispatch);
-    });
+    const statusCheck = computed(() => navigationStore.getStatusCheck);
 
     // Checks if the input is smaller than 100ms and sets it to 100ms if it is
     function checkMin(e: boolean) {

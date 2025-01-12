@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router';
 import RequestHandling from '@/mixins/RequestHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useNavigationStore } from '@/store/NavigationStore';
+import { formatDate } from '@/utils/DateUtils';
 
 export default defineComponent({
     name: 'SubmodelElementHandling',
@@ -800,7 +801,6 @@ export default defineComponent({
                     }
                     // dispatch the AAS set by the ReferenceElement to the store
                     await this.fetchAndDispatchAas(aasEndpoint);
-                    this.navigationStore.dispatchTriggerAASListScroll();
                     // Request the referenced SubmodelElement
                     const elementPath = smRepoUrl;
                     const context = 'retrieving SubmodelElement';
@@ -984,6 +984,10 @@ export default defineComponent({
             const aas = await this.fetchAas(aasEndpoint);
             // console.log('fetchAndDispatchAas()', aasEndpoint, 'aas', aas);
 
+            aas.timestamp = formatDate(new Date());
+            aas.path = aasEndpoint;
+            aas.isActive = true;
+
             this.aasStore.dispatchSelectedAAS(aas);
         },
 
@@ -1093,7 +1097,6 @@ export default defineComponent({
                 this.router.push({ query: { aas: aasEndpoint } });
             }
             await this.fetchAndDispatchAas(aasEndpoint);
-            this.navigationStore.dispatchTriggerAASListScroll();
         },
 
         ////////////////////////////////////////////////// SM Stuff //////////////////////////////////////////////////

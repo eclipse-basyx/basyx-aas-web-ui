@@ -55,13 +55,13 @@ export const useNavigationStore = defineStore({
         SubmodelRepoURL: '' as string,
         ConceptDescriptionRepoURL: '' as string,
         Snackbar: {} as SnackbarType,
-        AutoSync: {} as AutoSyncType,
-        StatusCheck: { state: false, interval: 1000 } as StatusCheckType,
+        autoSync: {} as AutoSyncType,
+        statusCheck: { state: false, interval: 1000 } as StatusCheckType,
+        triggerStatusCheckChanged: false as boolean,
         isMobile: false as boolean,
         platform: {} as PlatformType,
         plugins: [] as PluginType[],
         triggerAASListReload: false as boolean,
-        triggerAASListScroll: false as boolean,
         urlQuery: {} as LocationQuery,
     }),
 
@@ -74,13 +74,13 @@ export const useNavigationStore = defineStore({
         getSubmodelRepoURL: (state) => state.SubmodelRepoURL,
         getConceptDescriptionRepoURL: (state) => state.ConceptDescriptionRepoURL,
         getSnackbar: (state) => state.Snackbar,
-        getAutoSync: (state) => state.AutoSync,
-        getStatusCheck: (state) => state.StatusCheck,
+        getAutoSync: (state) => state.autoSync,
+        getStatusCheck: (state) => state.statusCheck,
+        getTriggerStatusCheckChanged: (state) => state.triggerStatusCheckChanged,
         getIsMobile: (state) => state.isMobile,
         getPlatform: (state) => state.platform,
         getPlugins: (state) => state.plugins,
         getTriggerAASListReload: (state) => state.triggerAASListReload,
-        getTriggerAASListScroll: (state) => state.triggerAASListScroll,
         getUrlQuery: (state) => state.urlQuery,
     },
 
@@ -117,10 +117,10 @@ export const useNavigationStore = defineStore({
             this.Snackbar = snackbarObj;
         },
         dispatchUpdateAutoSync(autoSync: AutoSyncType) {
-            this.AutoSync = autoSync;
+            this.autoSync = autoSync;
         },
-        dispatchUpdateStatusCheck(StatusCheck: StatusCheckType) {
-            this.StatusCheck = StatusCheck;
+        dispatchUpdateStatusCheck(statusCheck: StatusCheckType) {
+            this.statusCheck = statusCheck;
         },
         dispatchIsMobile(isMobile: boolean) {
             this.isMobile = isMobile;
@@ -131,11 +131,21 @@ export const useNavigationStore = defineStore({
         dispatchPlugins(plugins: Array<PluginType>) {
             this.plugins = plugins;
         },
-        dispatchTriggerAASListReload(triggerAASListReload: boolean) {
-            this.triggerAASListReload = triggerAASListReload;
+        dispatchTriggerAASListReload() {
+            this.triggerAASListReload = !this.triggerAASListReload;
+
+            setTimeout(() => {
+                // Reset triggerStatusCheckChanged after 100 ms
+                this.triggerStatusCheckChanged = false;
+            }, 100);
         },
-        dispatchTriggerAASListScroll() {
-            this.triggerAASListScroll = !this.triggerAASListScroll;
+        dispatchTriggerStatusCheckChanged() {
+            this.triggerStatusCheckChanged = !this.triggerStatusCheckChanged;
+
+            setTimeout(() => {
+                // Reset triggerStatusCheckChanged after 100 ms
+                this.triggerStatusCheckChanged = false;
+            }, 100);
         },
         dispatchUrlQuery(query: LocationQuery) {
             this.urlQuery = query;
