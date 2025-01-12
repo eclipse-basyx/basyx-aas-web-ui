@@ -174,32 +174,27 @@
     // Watchers
     watch(
         () => aasRegistryURL.value,
-        (newValue) => {
+        async (newValue) => {
             if (newValue !== '') {
-                initializeView();
-            } else {
-                aasData.value = {};
-                assetInformation.value = {};
+                await initializeView();
             }
         }
     );
 
     watch(
         () => aasRepoURL.value,
-        (newValue) => {
+        async (newValue) => {
             if (newValue !== '') {
-                initializeView();
-            } else {
-                aasData.value = {};
-                assetInformation.value = {};
+                await initializeView();
             }
         }
     );
 
+    // Resets the SubmodelElementView when the AAS changes
     watch(
         () => selectedAAS.value,
-        () => {
-            initializeView();
+        async () => {
+            await initializeView();
         }
     );
 
@@ -237,8 +232,23 @@
         { deep: true }
     );
 
-    onMounted(() => {
-        initializeView();
+    onMounted(async () => {
+        if (autoSync.value.state) {
+            // create new interval
+            autoSyncInterval.value = window.setInterval(async () => {
+                if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
+                    aasData.value = await fetchAas(selectedAAS.value.path); // update AAS data
+                }
+            }, autoSync.value.interval);
+        }
+
+        if (statusCheck.value.state) {
+            // create new interval
+            statusCheckInterval.value = window.setInterval(async () => {
+                updateAasStatus();
+            }, statusCheck.value.interval);
+        }
+        await initializeView();
     });
 
     onBeforeUnmount(() => {
