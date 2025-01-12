@@ -192,18 +192,19 @@
     });
     const autoSync = computed(() => navigationStore.getAutoSync);
 
+    // Watchers
     // watch for changes in the autoSync state and create or clear the autoSyncInterval
     watch(
         () => autoSync.value,
-        () => {
-            if (autoSync.value.state) {
+        (autoSyncValue) => {
+            if (autoSyncValue.state) {
                 window.clearInterval(autoSyncInterval.value); // clear old interval
                 // create new interval
                 autoSyncInterval.value = window.setInterval(async () => {
                     if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
                         assetAdministrationShellData.value = await fetchAas(selectedAAS.value.path);
                     }
-                }, autoSync.value.interval);
+                }, autoSyncValue.interval);
             } else {
                 window.clearInterval(autoSyncInterval.value);
             }
@@ -214,13 +215,21 @@
     // Resets the SubmodelElementView when the AAS changes
     watch(
         () => selectedAAS.value,
-        () => {
-            initializeView();
+        async () => {
+            await initializeView();
         }
     );
 
-    onMounted(() => {
-        initializeView();
+    onMounted(async () => {
+        if (autoSync.value.state) {
+            // create new interval
+            autoSyncInterval.value = window.setInterval(async () => {
+                if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
+                    assetAdministrationShellData.value = await fetchAas(selectedAAS.value.path);
+                }
+            }, autoSync.value.interval);
+        }
+        await initializeView();
     });
 
     onBeforeUnmount(() => {

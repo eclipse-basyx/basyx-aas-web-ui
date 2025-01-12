@@ -201,9 +201,9 @@
     // Resets the SubmodelElementView when the AAS Registry changes
     watch(
         () => aasRegistryServerURL.value,
-        () => {
+        async () => {
             if (!aasRegistryServerURL.value) {
-                initializeView();
+                await initializeView();
             }
         }
     );
@@ -211,9 +211,9 @@
     // Resets the SubmodelElementView when the Submodel Registry changes
     watch(
         () => submodelRegistryServerURL.value,
-        () => {
+        async () => {
             if (!submodelRegistryServerURL.value) {
-                initializeView();
+                await initializeView();
             }
         }
     );
@@ -221,16 +221,16 @@
     // Resets the SubmodelElementView when the AAS changes
     watch(
         () => selectedAAS.value,
-        () => {
-            initializeView();
+        async () => {
+            await initializeView();
         }
     );
 
     // Watch for changes in the selected Node and (re-)initialize the Component
     watch(
         () => selectedNode.value,
-        () => {
-            initializeView(false);
+        async () => {
+            await initializeView(false);
         },
         { deep: true }
     );
@@ -238,8 +238,8 @@
     // watch for changes in the autoSync state and create or clear the autoSyncInterval
     watch(
         () => autoSync.value,
-        () => {
-            if (autoSync.value.state) {
+        (autoSyncValue) => {
+            if (autoSyncValue.state) {
                 window.clearInterval(autoSyncInterval.value); // clear old interval
                 // create new interval
                 autoSyncInterval.value = window.setInterval(async () => {
@@ -247,7 +247,7 @@
                         // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
                         await fetchAndDispatchSme(selectedNode.value.path, false);
                     }
-                }, autoSync.value.interval);
+                }, autoSyncValue.interval);
             } else {
                 window.clearInterval(autoSyncInterval.value);
             }
@@ -255,7 +255,7 @@
         { deep: true }
     );
 
-    onMounted(() => {
+    onMounted(async () => {
         if (autoSync.value.state) {
             // create new interval
             autoSyncInterval.value = window.setInterval(async () => {
@@ -264,9 +264,8 @@
                     await fetchAndDispatchSme(selectedNode.value.path, false);
                 }
             }, autoSync.value.interval);
-        } else {
-            initializeView(true);
         }
+        await initializeView(true);
     });
 
     onBeforeUnmount(() => {
