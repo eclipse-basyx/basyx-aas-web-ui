@@ -1,7 +1,7 @@
+import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
+import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
 import { useAASStore } from '@/store/AASDataStore';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
-import { useAASRegistryClient } from './Client/AASRegistryClient';
-import { useAASRepositoryClient } from './Client/AASRepositoryClient';
 
 export function useAASHandling() {
     // Composables
