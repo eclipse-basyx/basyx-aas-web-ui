@@ -314,7 +314,7 @@
     });
     const editMode = computed(() => route.name === 'AASEditor'); // Check if the current Route is the AAS Editor
     const allowUploading = computed(() => envStore.getAllowUploading); // Check if the current environment config allows uploading shells
-    const aasStatusCheck = computed(() => navigationStore.getAASStatusCheck);
+    const statusCheck = computed(() => navigationStore.getStatusCheck);
 
     // Watchers
     watch(
@@ -329,7 +329,7 @@
     );
 
     watch(
-        () => aasStatusCheck.value,
+        () => statusCheck.value,
         (statusCheckValue) => {
             if (statusCheckValue.state) {
                 window.clearInterval(statusCheckInterval.value); // clear old interval
@@ -367,12 +367,6 @@
         // Load the AAS List on Startup if the AAS Registry URL is set
         if (aasRegistryURL.value !== '' && !singleAas.value) {
             loadAASListData();
-        }
-
-        // check if the status-check is set in the local storage and if so set the status-check state in the store
-        const aasStatusCheck = JSON.parse(localStorage.getItem('aasStatusCheck') || '');
-        if (aasStatusCheck) {
-            navigationStore.dispatchUpdateStatusCheck(aasStatusCheck);
         }
     });
 
@@ -414,7 +408,7 @@
                 AASData.value = Object.freeze(sortedData); // store the sorted data in the AASData variable
                 unfilteredAASData.value = sortedData; // make a copy of the sorted data and store it in the unfilteredAASData variable
                 scrollToSelectedAAS(); // scroll to the selected AAS
-                if (aasStatusCheck.value.state) updateAasStatus();
+                if (statusCheck.value.state) updateAasStatus();
             }
             listLoading.value = false;
         });

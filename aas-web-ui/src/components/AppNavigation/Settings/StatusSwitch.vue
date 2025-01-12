@@ -1,7 +1,7 @@
 <template>
     <v-list-item class="py-0">
         <v-switch
-            v-model="localAasStatusCheck.state"
+            v-model="statusCheck.state"
             color="primary"
             class="mx-3"
             hide-details
@@ -15,7 +15,7 @@
     <!-- Input Field to set the sync-interval -->
     <v-list-item class="py-y0 mt-n3">
         <v-text-field
-            v-model="localAasStatusCheck.interval"
+            v-model="statusCheck.interval"
             density="compact"
             variant="outlined"
             type="number"
@@ -33,30 +33,34 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, onMounted, ref } from 'vue';
-    import { AASStatusCheckType, useNavigationStore } from '@/store/NavigationStore';
+    import { computed, onMounted } from 'vue';
+    import { StatusCheckType, useNavigationStore } from '@/store/NavigationStore';
 
     // Stores
     const navigationStore = useNavigationStore();
 
     // Data
-    const localAasStatusCheck = ref({} as AASStatusCheckType);
+    const statusCheckDefault = { state: true, interval: 3000 } as StatusCheckType;
 
     // Computed Properties
-    const aasStatusCheck = computed(() => navigationStore.getAASStatusCheck);
+    const statusCheck = computed(() => navigationStore.getStatusCheck);
 
-    onMounted(() => {
-        localAasStatusCheck.value = aasStatusCheck.value;
+    onMounted(async () => {
+        // Get auto-sync object from the lcoal storage, if not set use auto-sync default object
+        var statusCheckToDispatch = JSON.parse(
+            localStorage.getItem('statusCheck') || JSON.stringify(statusCheckDefault)
+        ) as StatusCheckType;
+        navigationStore.dispatchUpdateStatusCheck(statusCheckToDispatch);
     });
 
     // Checks if the input is smaller than 100ms and sets it to 100ms if it is
     function checkMin(e: boolean) {
-        if (localAasStatusCheck.value.interval < 100 && !e) localAasStatusCheck.value.interval = 100;
+        if (statusCheck.value.interval < 100 && !e) statusCheck.value.interval = 100;
         if (!e) updateStatusCheck();
     }
 
     function updateStatusCheck() {
-        navigationStore.dispatchUpdateStatusCheck(localAasStatusCheck.value);
-        localStorage.setItem('aasStatusCheck', JSON.stringify(localAasStatusCheck.value)); // save status-check preference in local storage
+        localStorage.setItem('statusCheck', JSON.stringify(statusCheck.value));
+        navigationStore.dispatchUpdateStatusCheck(statusCheck.value);
     }
 </script>

@@ -75,6 +75,7 @@
     import { computed, onMounted } from 'vue';
     import { AutoSyncType, useNavigationStore } from '@/store/NavigationStore';
 
+    // Stores
     const navigationStore = useNavigationStore();
 
     // Data
@@ -100,7 +101,7 @@
 
     // Updates the auto-sync object in the store and local storage
     function updateAutoSync() {
-        localStorage.setItem('autoSync', JSON.stringify(autoSync));
+        localStorage.setItem('autoSync', JSON.stringify(autoSync.value));
         navigationStore.dispatchUpdateAutoSync(autoSync.value);
     }
 

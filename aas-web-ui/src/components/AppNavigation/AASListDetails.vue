@@ -169,7 +169,7 @@
         return 'text-error';
     });
     const autoSync = computed(() => navigationStore.getAutoSync);
-    const aasStatusCheck = computed(() => navigationStore.getAASStatusCheck);
+    const statusCheck = computed(() => navigationStore.getStatusCheck);
 
     // Watchers
     watch(
@@ -204,14 +204,14 @@
     );
 
     watch(
-        () => aasStatusCheck.value,
-        (aasStatusCheckValue) => {
-            if (aasStatusCheckValue.state) {
+        () => statusCheck.value,
+        (statusCheck) => {
+            if (statusCheck.state) {
                 window.clearInterval(statusCheckInterval.value); // clear old interval
                 // create new interval
                 statusCheckInterval.value = window.setInterval(async () => {
                     updateAasStatus();
-                }, aasStatusCheckValue.interval);
+                }, statusCheck.interval);
             } else {
                 window.clearInterval(statusCheckInterval.value); // clear interval
             }
@@ -221,15 +221,15 @@
 
     watch(
         () => autoSync.value,
-        (autoSyncValue) => {
-            if (autoSyncValue) {
+        (autoSync) => {
+            if (autoSync.state) {
                 window.clearInterval(autoSyncInterval.value); // clear old interval
                 // create new interval
                 autoSyncInterval.value = window.setInterval(async () => {
                     if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
                         aasData.value = await fetchAas(selectedAAS.value.path); // update AAS data
                     }
-                }, autoSync.value.interval);
+                }, autoSync.interval);
             } else {
                 window.clearInterval(autoSyncInterval.value); // clear interval
             }
