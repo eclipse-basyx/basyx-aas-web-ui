@@ -33,11 +33,8 @@
 <script lang="ts" setup>
     import { computed, onBeforeUnmount, onMounted } from 'vue';
     import { useTheme } from 'vuetify';
-    import { useAASStore } from '@/store/AASDataStore';
 
     const theme = useTheme();
-
-    const aasStore = useAASStore();
 
     const primaryColor = computed(() => theme.current.value.colors.primary);
 
@@ -60,8 +57,6 @@
             document.removeEventListener('mousemove', function () {});
             document.removeEventListener('mouseup', function () {});
         }
-        // clear the current AAS
-        aasStore.dispatchSelectedAAS({});
     });
 
     // creates a div element (Resize Bar) on each Divider between Windows to allow the user to resize the windows

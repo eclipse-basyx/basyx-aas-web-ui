@@ -35,6 +35,7 @@ export interface PluginType {
 }
 
 import { defineStore } from 'pinia';
+import { LocationQuery } from 'vue-router';
 import { useAASStore } from './AASDataStore';
 
 export const useNavigationStore = defineStore({
@@ -56,6 +57,7 @@ export const useNavigationStore = defineStore({
         plugins: [] as PluginType[],
         triggerAASListReload: false as boolean,
         triggerAASListScroll: false as boolean,
+        urlQuery: {} as LocationQuery,
     }),
 
     getters: {
@@ -74,6 +76,7 @@ export const useNavigationStore = defineStore({
         getPlugins: (state) => state.plugins,
         getTriggerAASListReload: (state) => state.triggerAASListReload,
         getTriggerAASListScroll: (state) => state.triggerAASListScroll,
+        getUrlQuery: (state) => state.urlQuery,
     },
 
     actions: {
@@ -128,6 +131,9 @@ export const useNavigationStore = defineStore({
         },
         dispatchTriggerAASListScroll() {
             this.triggerAASListScroll = !this.triggerAASListScroll;
+        },
+        dispatchUrlQuery(query: LocationQuery) {
+            this.urlQuery = query;
         },
     },
 });

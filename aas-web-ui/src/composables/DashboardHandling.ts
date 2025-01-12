@@ -1,13 +1,16 @@
 import { computed } from 'vue';
+import { useIDUtils } from '@/composables/IDUtils';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useEnvStore } from '@/store/EnvironmentStore';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
-import { UUID } from '@/utils/IDUtils';
 
 export function useDashboardHandling() {
     const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
+
+    // Composables
+    const { UUID } = useIDUtils();
 
     const aasStore = useAASStore();
 

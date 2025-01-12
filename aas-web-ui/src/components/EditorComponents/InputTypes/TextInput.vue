@@ -17,7 +17,10 @@
 
 <script lang="ts" setup>
     import { ref, watch } from 'vue';
-    import { generateIri } from '@/utils/IDUtils';
+    import { useIDUtils } from '@/composables/IDUtils';
+
+    // Composables
+    const { generateIri } = useIDUtils();
 
     type Props = {
         label: string;

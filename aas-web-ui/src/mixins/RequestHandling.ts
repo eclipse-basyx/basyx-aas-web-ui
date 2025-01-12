@@ -1,5 +1,6 @@
 import { defineComponent } from 'vue';
 import { useAuthStore } from '@/store/AuthStore';
+import { useEnvStore } from '@/store/EnvironmentStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 
 export default defineComponent({
@@ -7,14 +8,25 @@ export default defineComponent({
     data() {
         return {
             navigationStore: useNavigationStore(), // NavigationStore Object
+            envStore: useEnvStore(), // EnvironmentStore Object
             authStore: useAuthStore(), // AuthStore Object
         };
     },
 
     methods: {
         addAuthorizationHeader(headers: Headers): Headers {
-            headers.set('Authorization', 'Bearer ' + this.authStore.getToken);
-            return headers;
+            if (this.authStore.getAuthStatus) {
+                headers.set('Authorization', 'Bearer ' + this.authStore.getToken);
+                return headers;
+            } else if (this.envStore.getBasicAuthActive) {
+                headers.set(
+                    'Authorization',
+                    'Basic ' + btoa(this.envStore.getBasicAuthUsername + ':' + this.envStore.getBasicAuthPassword)
+                );
+                return headers;
+            } else {
+                return headers;
+            }
         },
         // Function to send get Request which returns a Promise
         getRequest(path: string, context: string, disableMessage: boolean, headers: Headers = new Headers()): any {

@@ -86,11 +86,10 @@ export function useAASRegistryClient() {
         const body = JSON.stringify(aasDescriptor);
 
         // Send Request to upload the file
-        postRequest(path, body, headers, context, disableMessage).then((response: any) => {
-            if (response.success) {
-                navigationStore.dispatchTriggerAASListReload(true); // Reload AAS List
-            }
-        });
+        const response = await postRequest(path, body, headers, context, disableMessage);
+        if (response.success) {
+            navigationStore.dispatchTriggerAASListReload(true); // Reload AAS List
+        }
     }
 
     async function putAasDescriptor(aasDescriptor: descriptorTypes.AASDescriptor): Promise<void> {
@@ -107,11 +106,10 @@ export function useAASRegistryClient() {
         const body = JSON.stringify(aasDescriptor);
 
         // Send Request to upload the file
-        putRequest(path, body, headers, context, disableMessage).then((response: any) => {
-            if (response.success) {
-                navigationStore.dispatchTriggerAASListReload(true); // Reload AAS List
-            }
-        });
+        const response = await putRequest(path, body, headers, context, disableMessage);
+        if (response.success) {
+            navigationStore.dispatchTriggerAASListReload(true); // Reload AAS List
+        }
     }
 
     function createDescriptorFromAAS(

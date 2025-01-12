@@ -61,6 +61,11 @@ export function useSMRepositoryClient() {
 
         if (smEndpoint.trim() === '') return failResponse;
 
+        if (smEndpoint.includes('/submodel-elements/')) {
+            // smEndoint seems to be an SME endpoint
+            return fetchSme(smEndpoint);
+        }
+
         const smRepoPath = smEndpoint;
         const smRepoContext = 'retrieving SM Data';
         const disableMessage = true;
@@ -76,6 +81,42 @@ export function useSMRepositoryClient() {
                 return sm;
             }
         } catch {
+            return failResponse;
+        }
+
+        return failResponse;
+    }
+
+    // Fetch SME from (SM Repo) Endpoint
+    async function fetchSme(submodelElementPath: string): Promise<any> {
+        // console.log('fetchSme()', submodelElementPath);
+        const failResponse = {} as any;
+
+        if (submodelElementPath.trim() === '') return failResponse;
+
+        if (!submodelElementPath.includes('/submodel-elements/')) {
+            // No valid SME path, maybe just SM endpoint
+            return fetchSm(submodelElementPath);
+        }
+
+        const smRepoPath = submodelElementPath;
+        const smRepoContext = 'retrieving SubmodelElement';
+        const disableMessage = true;
+        try {
+            const smRepoResponse = await getRequest(smRepoPath, smRepoContext, disableMessage);
+            if (smRepoResponse?.success && smRepoResponse?.data && Object.keys(smRepoResponse?.data).length > 0) {
+                const sme = smRepoResponse.data;
+
+                return sme;
+            }
+        } catch {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 60000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'No valid SubmodelElement under the given Path',
+            });
             return failResponse;
         }
 
@@ -132,6 +173,7 @@ export function useSMRepositoryClient() {
         fetchSmList,
         fetchSmById,
         fetchSm,
+        fetchSme,
         smNotFound,
     };
 }

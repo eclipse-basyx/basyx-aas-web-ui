@@ -1,9 +1,11 @@
 import { useAuthStore } from '@/store/AuthStore';
+import { useEnvStore } from '@/store/EnvironmentStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 
 export function useRequestHandling() {
     const authStore = useAuthStore();
     const navigationStore = useNavigationStore();
+    const envStore = useEnvStore();
 
     function getRequest(path: string, context: string, disableMessage: boolean, headers: Headers = new Headers()): any {
         headers = addAuthorizationHeader(headers); // Add the Authorization header
@@ -287,12 +289,21 @@ export function useRequestHandling() {
     }
 
     function addAuthorizationHeader(headers: Headers): Headers {
-        if (!authStore.getAuthStatus) return headers;
-        headers.set('Authorization', 'Bearer ' + authStore.getToken);
-        return headers;
+        if (authStore.getAuthStatus) {
+            headers.set('Authorization', 'Bearer ' + authStore.getToken);
+            return headers;
+        } else if (envStore.getBasicAuthActive) {
+            headers.set(
+                'Authorization',
+                'Basic ' + btoa(envStore.getBasicAuthUsername + ':' + envStore.getBasicAuthPassword)
+            );
+            return headers;
+        } else {
+            return headers;
+        }
     }
 
-    function errorHandler(errorData: any, context: string) {
+    function errorHandler(errorData: any, context: string): void {
         // console.log('Error: ', errorData, 'Context: ', context)
         const initialErrorMessage = 'Error ' + context + '!';
         let errorMessage = '';

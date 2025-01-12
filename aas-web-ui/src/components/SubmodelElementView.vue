@@ -5,7 +5,13 @@
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto; height: calc(100vh - 170px)">
                 <!-- Detailed View of the selected SubmodelElement (e.g. Property, Operation, etc.) -->
-                <v-card v-if="submodelElementData && Object.keys(submodelElementData).length > 0">
+                <v-card
+                    v-if="
+                        selectedAAS &&
+                        Object.keys(selectedAAS).length > 0 &&
+                        submodelElementData &&
+                        Object.keys(submodelElementData).length > 0
+                    ">
                     <v-list nav>
                         <!-- SubmodelELement Identification -->
                         <IdentificationElement
@@ -92,24 +98,30 @@
                         <Property
                             v-else-if="submodelElementData.modelType === 'Property'"
                             :property-object="submodelElementData"
+                            :is-editable="editMode"
                             @update-value="initializeView()"></Property>
                         <MultiLanguageProperty
                             v-else-if="submodelElementData.modelType === 'MultiLanguageProperty'"
-                            :multi-language-property-object="submodelElementData"></MultiLanguageProperty>
+                            :multi-language-property-object="submodelElementData"
+                            :is-editable="editMode"></MultiLanguageProperty>
                         <Operation
                             v-else-if="submodelElementData.modelType === 'Operation'"
-                            :operation-object="submodelElementData"></Operation>
+                            :operation-object="submodelElementData"
+                            :is-editable="editMode"></Operation>
                         <File
                             v-else-if="submodelElementData.modelType === 'File'"
                             :file-object="submodelElementData"
+                            :is-editable="editMode"
                             @update-path="initializeView()"></File>
                         <Blob
                             v-else-if="submodelElementData.modelType === 'Blob'"
                             :blob-object="submodelElementData"
+                            :is-editable="editMode"
                             @update-blob="initializeView"></Blob>
                         <ReferenceElement
                             v-else-if="submodelElementData.modelType === 'ReferenceElement'"
-                            :reference-element-object="submodelElementData"></ReferenceElement>
+                            :reference-element-object="submodelElementData"
+                            :is-editable="editMode"></ReferenceElement>
                         <Range
                             v-else-if="submodelElementData.modelType === 'Range'"
                             :range-object="submodelElementData"></Range>
@@ -121,28 +133,18 @@
                             :relationship-element-object="submodelElementData"></RelationshipElement>
                         <AnnotatedRelationshipElement
                             v-else-if="submodelElementData.modelType === 'AnnotatedRelationshipElement'"
-                            :annotated-relationship-element-object="submodelElementData"></AnnotatedRelationshipElement>
+                            :annotated-relationship-element-object="submodelElementData"
+                            :is-editable="editMode"></AnnotatedRelationshipElement>
                         <InvalidElement v-else :invalid-element-object="submodelElementData"></InvalidElement>
                     </v-list>
                     <!-- ConceptDescriptions -->
-                    <v-divider
-                        v-if="
-                            submodelElementData.conceptDescriptions &&
-                            submodelElementData.conceptDescriptions.length > 0
-                        "></v-divider>
-                    <v-list
-                        v-if="
-                            submodelElementData.conceptDescriptions &&
-                            submodelElementData.conceptDescriptions.length > 0
-                        "
-                        nav>
+                    <v-divider v-if="conceptDescriptions && conceptDescriptions.length > 0"></v-divider>
+                    <v-list v-if="conceptDescriptions && conceptDescriptions.length > 0" nav>
                         <v-list-item
-                            v-for="(conceptDescription, index) in submodelElementData.conceptDescriptions"
+                            v-for="(conceptDescription, index) in conceptDescriptions"
                             :key="conceptDescription.id">
                             <ConceptDescription :concept-description-object="conceptDescription"></ConceptDescription>
-                            <v-divider
-                                v-if="index !== submodelElementData.conceptDescriptions.length - 1"
-                                class="mt-2"></v-divider>
+                            <v-divider v-if="index !== conceptDescriptions.length - 1" class="mt-2"></v-divider>
                         </v-list-item>
                     </v-list>
                     <!-- Last Sync -->
@@ -162,6 +164,15 @@
                         </v-list-item>
                     </v-list>
                 </v-card>
+                <v-empty-state
+                    v-else-if="!selectedAAS || Object.keys(selectedAAS).length === 0"
+                    title="No selected AAS"
+                    class="text-divider"></v-empty-state>
+                <v-empty-state
+                    v-else-if="!selectedNode || Object.keys(selectedNode).length === 0"
+                    title="No selected Submodel / Submodel Element"
+                    text="Select a Submodel / Submodel Element to view"
+                    class="text-divider"></v-empty-state>
             </v-card-text>
         </v-card>
     </v-container>
@@ -169,11 +180,14 @@
 
 <script lang="ts" setup>
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+    import { useRoute } from 'vue-router';
     import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
-    import { useRequestHandling } from '@/composables/RequestHandling';
+    import { useSMEHandling } from '@/composables/SMEHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { formatDate } from '@/utils/DateUtils';
+
+    // Vue Router
+    const route = useRoute();
 
     // Stores
     const navigationStore = useNavigationStore();
@@ -181,18 +195,20 @@
 
     // Composables
     const { getConceptDescriptions } = useConceptDescriptionHandling();
-    const { getRequest } = useRequestHandling();
+    const { fetchAndDispatchSme } = useSMEHandling();
 
     // Data
     const submodelElementData = ref({} as any);
+    const conceptDescriptions = ref([] as Array<any>);
     const requestInterval = ref<number | undefined>(undefined); // interval to send requests to the AAS
 
     // Computed Properties
     const aasRegistryServerURL = computed(() => navigationStore.getAASRegistryURL);
     const submodelRegistryServerURL = computed(() => navigationStore.getSubmodelRegistryURL);
-    const SelectedAAS = computed(() => aasStore.getSelectedAAS);
-    const SelectedNode = computed(() => aasStore.getSelectedNode);
+    const selectedAAS = computed(() => aasStore.getSelectedAAS);
+    const selectedNode = computed(() => aasStore.getSelectedNode);
     const autoSync = computed(() => navigationStore.getAutoSync);
+    const editMode = computed(() => route.name === 'AASEditor');
 
     // Watchers
     // Resets the SubmodelElementView when the AAS Registry changes
@@ -200,8 +216,7 @@
         () => aasRegistryServerURL.value,
         () => {
             if (!aasRegistryServerURL.value) {
-                submodelElementData.value = {};
-                aasStore.dispatchRealTimeObject(submodelElementData);
+                initializeView();
             }
         }
     );
@@ -211,28 +226,24 @@
         () => submodelRegistryServerURL.value,
         () => {
             if (!submodelRegistryServerURL.value) {
-                submodelElementData.value = {};
-                aasStore.dispatchRealTimeObject(submodelElementData);
+                initializeView();
             }
         }
     );
 
     // Resets the SubmodelElementView when the AAS changes
     watch(
-        () => SelectedAAS.value,
+        () => selectedAAS.value,
         () => {
-            submodelElementData.value = {};
-            aasStore.dispatchRealTimeObject(submodelElementData);
+            initializeView();
         }
     );
 
     // Watch for changes in the selected Node and (re-)initialize the Component
     watch(
-        () => SelectedNode.value,
+        () => selectedNode.value,
         () => {
-            // clear old submodelElementData
-            submodelElementData.value = {};
-            initializeView(true);
+            initializeView();
         },
         { deep: true }
     );
@@ -245,8 +256,8 @@
                 window.clearInterval(requestInterval.value); // clear old interval
                 // create new interval
                 requestInterval.value = window.setInterval(() => {
-                    if (Object.keys(SelectedNode.value).length > 0) {
-                        initializeView();
+                    if (Object.keys(selectedNode.value).length > 0) {
+                        fetchAndDispatchSme(selectedNode.value.path, false);
                     }
                 }, autoSync.value.interval);
             } else {
@@ -260,12 +271,12 @@
         if (autoSync.value.state) {
             // create new interval
             requestInterval.value = window.setInterval(() => {
-                if (Object.keys(SelectedNode.value).length > 0) {
-                    initializeView();
+                if (Object.keys(selectedNode.value).length > 0) {
+                    fetchAndDispatchSme(selectedNode.value.path, false);
                 }
             }, autoSync.value.interval);
         } else {
-            initializeView(true);
+            initializeView();
         }
     });
 
@@ -273,64 +284,20 @@
         window.clearInterval(requestInterval.value); // clear old interval
     });
 
-    function initializeView(withConceptDescriptions = false) {
-        // console.log('Selected Node: ', SelectedNode.value);
-        // Check if a Node is selected
-        if (Object.keys(SelectedNode.value).length === 0) {
-            submodelElementData.value = {}; // Reset the SubmodelElement Data when no Node is selected
+    async function initializeView(): Promise<void> {
+        if (Object.keys(selectedNode.value).length === 0) {
+            submodelElementData.value = {};
             return;
         }
-        // Request the selected SubmodelElement
-        const path = SelectedNode.value.path;
-        const context = 'retrieving SubmodelElement';
-        const disableMessage = true;
-        getRequest(path, context, disableMessage).then((response: any) => {
-            // save Concept Descriptions before overwriting the SubmodelElement Data
-            let conceptDescriptions = submodelElementData.value.conceptDescriptions;
-            if (response.success && (response.data?.id || response.data?.idShort)) {
-                // execute if the Request was successful
-                response.data.timestamp = formatDate(new Date()); // add timestamp to the SubmodelElement Data
-                response.data.path = SelectedNode.value.path; // add the path to the SubmodelElement Data
-                // console.log('SubmodelElement Data: ', response.data);
-                submodelElementData.value = response.data;
-            } else {
-                // execute if the Request failed
-                // show the static SubmodelElement Data from the store if the Request failed (the timestamp should show that the data is outdated)
-                submodelElementData.value = {}; // Reset the SubmodelElement Data when Node couldn't be retrieved
-                if (Object.keys(SelectedNode.value).length === 0) {
-                    // don't copy the static SubmodelElement Data if no Node is selected or Node is invalid
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 60000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'No valid SubmodelElement under the given Path',
-                    }); // Show Error Snackbar
-                    return;
-                }
-                submodelElementData.value = { ...SelectedNode.value }; // copy the static SubmodelElement Data from the store
-                submodelElementData.value.timestamp = 'no sync';
-                submodelElementData.value.path = SelectedNode.value.path; // add the path to the SubmodelElement Data
-            }
-            if (withConceptDescriptions) {
-                getCD(); // fetch Concept Descriptions for the SubmodelElement
-            } else {
-                submodelElementData.value.conceptDescriptions = conceptDescriptions; // add Concept Descriptions to the SubmodelElement Data
-            }
-            // console.log('SubmodelElement Data (SubmodelElementView): ', this.submodelElementData)
-            // add SubmodelElement Data to the store (as RealTimeDataObject)
-            aasStore.dispatchRealTimeObject(submodelElementData);
-        });
-    }
 
-    // Get Concept Descriptions for the SubmodelElement from the ConceptDescription Repository
-    function getCD() {
-        getConceptDescriptions(SelectedNode.value).then((response: any) => {
-            // console.log('ConceptDescription: ', response)
-            // add ConceptDescription to the SubmodelElement Data
-            if (response) {
-                submodelElementData.value.conceptDescriptions = response;
-            }
-        });
+        submodelElementData.value = { ...selectedNode.value }; // create local copy
+
+        if (
+            !conceptDescriptions.value ||
+            !Array.isArray(conceptDescriptions.value) ||
+            conceptDescriptions.value.length === 0
+        ) {
+            conceptDescriptions.value = await getConceptDescriptions(selectedNode.value);
+        }
     }
 </script>

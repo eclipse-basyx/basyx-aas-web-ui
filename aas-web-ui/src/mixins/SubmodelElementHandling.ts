@@ -811,7 +811,7 @@ export default defineComponent({
                             node.timestamp = this.formatDate(new Date()); // add timestamp to the SubmodelElement Data
                             node.path = smRepoUrl; // add the path to the SubmodelElement Data
                             node.isActive = true; // add the isActive Property to the SubmodelElement Data
-                            this.aasStore.dispatchNode(node); // set the updatedNode in the AASStore
+                            this.aasStore.dispatchSelectedNode(node); // set the updatedNode in the AASStore
                             this.aasStore.dispatchInitTreeByReferenceElement(true); // set the initTreeByReferenceElement in the AASStore to true to init + expand the Treeview on the referenced Element
                         } else {
                             // execute if the Request failed
@@ -826,7 +826,7 @@ export default defineComponent({
                                 }); // Show Error Snackbar
                                 return;
                             }
-                            this.aasStore.dispatchNode({});
+                            this.aasStore.dispatchSelectedNode({});
                         }
                     });
                 })

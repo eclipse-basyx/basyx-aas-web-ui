@@ -164,7 +164,7 @@
                     if (this.isMobile) {
                         // Change to SubmodelElementView on Mobile and add the path to the URL
                         this.router.push({
-                            path: '/submodelelementview',
+                            name: 'SubmodelViewer',
                             query: {
                                 aas: aasEndpopint,
                                 path: localItem.path,
@@ -179,14 +179,15 @@
                             },
                         });
                     }
+                    if (localItem.modelType !== 'Submodel') delete localItem.id;
+                    this.aasStore.dispatchSelectedNode(localItem);
                 } else {
                     // remove the path query from the Route entirely
                     let query = { ...this.route.query };
                     delete query.path;
                     this.router.push({ query: query });
+                    this.aasStore.dispatchSelectedNode({});
                 }
-                // dispatch the selected Node to the store
-                this.aasStore.dispatchNode(localItem);
             },
 
             // Function to copy the path of the current Node to the Clipboard

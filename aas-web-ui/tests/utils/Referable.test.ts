@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { checkIdShort, descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
 
-describe('IdentifiableUtils Test', () => {
+describe("ReferableUtils.ts; Tests for 'nameToDisplay()'", () => {
     // Define test data for nameToDisplay()
     const nameToDisplayTestData = [
         {
@@ -29,6 +29,18 @@ describe('IdentifiableUtils Test', () => {
             result: 'fooBarDefaultNameToDisplay',
         },
         {
+            testId: '9e20d66a-9564-41e4-ab04-d35fe03aa153',
+            referable: { id: 'fooBarId' },
+            defaultNameToDisplay: '',
+            result: 'fooBarId',
+        },
+        {
+            testId: 'f2d8ad07-57ac-404c-b07a-ea9ed2157c29',
+            referable: { id: 'fooBarId' },
+            defaultNameToDisplay: 'fooBarDefaultNameToDisplay',
+            result: 'fooBarDefaultNameToDisplay',
+        },
+        {
             testId: 'cb0a5aba-658f-4159-8ff3-fccb335e4bf0',
             referable: { idShort: 'fooBarIdShort' },
             defaultNameToDisplay: '',
@@ -37,6 +49,18 @@ describe('IdentifiableUtils Test', () => {
         {
             testId: '4ee522e6-2328-4770-8324-e28cdf0425d4',
             referable: { idShort: 'fooBarIdShort' },
+            defaultNameToDisplay: 'fooBarDefaultNameToDisplay',
+            result: 'fooBarDefaultNameToDisplay',
+        },
+        {
+            testId: '18fa0407-3abd-4b91-a9ea-3136f91bed40',
+            referable: { id: 'fooBarId', idShort: 'fooBarIdShort' },
+            defaultNameToDisplay: '',
+            result: 'fooBarIdShort',
+        },
+        {
+            testId: '9ca168ee-898f-4c3d-834a-87d12d39a8b8',
+            referable: { id: 'fooBarId', idShort: 'fooBarIdShort' },
             defaultNameToDisplay: 'fooBarDefaultNameToDisplay',
             result: 'fooBarDefaultNameToDisplay',
         },
@@ -53,6 +77,18 @@ describe('IdentifiableUtils Test', () => {
             result: 'fooBarDefaultNameToDisplay',
         },
         {
+            testId: '462a7919-645f-4e20-aeac-ea8d79783478',
+            referable: { id: 'fooBarId', displayName: null },
+            defaultNameToDisplay: '',
+            result: 'fooBarId',
+        },
+        {
+            testId: '559c56f8-048c-4db1-be2f-db01aa2e9c7f',
+            referable: { id: 'fooBarId', displayName: null },
+            defaultNameToDisplay: 'fooBarDefaultNameToDisplay',
+            result: 'fooBarDefaultNameToDisplay',
+        },
+        {
             testId: '16646eb3-5069-4752-96eb-3affb1cd58a2',
             referable: { idShort: 'fooBarIdShort', displayName: null },
             defaultNameToDisplay: '',
@@ -61,6 +97,18 @@ describe('IdentifiableUtils Test', () => {
         {
             testId: '479dd3a8-409e-4ccf-b234-9381d5c304ce',
             referable: { idShort: 'fooBarIdShort', displayName: null },
+            defaultNameToDisplay: 'fooBarDefaultNameToDisplay',
+            result: 'fooBarDefaultNameToDisplay',
+        },
+        {
+            testId: '6729cdcd-7bea-4651-a1fd-9ad9413bfd6c',
+            referable: { id: 'fooBarId', idShort: 'fooBarIdShort', displayName: null },
+            defaultNameToDisplay: '',
+            result: 'fooBarIdShort',
+        },
+        {
+            testId: '05f29504-6310-4933-b132-8e004e8234b4',
+            referable: { id: 'fooBarId', idShort: 'fooBarIdShort', displayName: null },
             defaultNameToDisplay: 'fooBarDefaultNameToDisplay',
             result: 'fooBarDefaultNameToDisplay',
         },
@@ -77,6 +125,18 @@ describe('IdentifiableUtils Test', () => {
             result: 'fooBarDefaultNameToDisplay',
         },
         {
+            testId: '2e76d269-5a0b-4821-86a5-c735ab128e32',
+            referable: { id: 'fooBarId', displayName: [] },
+            defaultNameToDisplay: '',
+            result: 'fooBarId',
+        },
+        {
+            testId: '63f33b47-ec10-462a-bc23-689bc4d2c6df',
+            referable: { id: 'fooBarId', displayName: [] },
+            defaultNameToDisplay: 'fooBarDefaultNameToDisplay',
+            result: 'fooBarDefaultNameToDisplay',
+        },
+        {
             testId: 'daec92cb-eaa1-4f2c-9589-b13618898fe7',
             referable: { idShort: 'fooBarIdShort', displayName: [] },
             defaultNameToDisplay: '',
@@ -85,6 +145,18 @@ describe('IdentifiableUtils Test', () => {
         {
             testId: '7e4cdaa0-629e-4abc-ba79-8b7893652dd0',
             referable: { idShort: 'fooBarIdShort', displayName: [] },
+            defaultNameToDisplay: 'fooBarDefaultNameToDisplay',
+            result: 'fooBarDefaultNameToDisplay',
+        },
+        {
+            testId: '10f15523-cb72-4aad-b2f6-85fd2d177f9c',
+            referable: { id: 'fooBarId', idShort: 'fooBarIdShort', displayName: [] },
+            defaultNameToDisplay: '',
+            result: 'fooBarIdShort',
+        },
+        {
+            testId: '78ff572d-ffcf-414c-8648-33b925c1f5a4',
+            referable: { id: 'fooBarId', idShort: 'fooBarIdShort', displayName: [] },
             defaultNameToDisplay: 'fooBarDefaultNameToDisplay',
             result: 'fooBarDefaultNameToDisplay',
         },
@@ -101,6 +173,18 @@ describe('IdentifiableUtils Test', () => {
             result: 'fooBarDefaultNameToDisplay',
         },
         {
+            testId: '21c91697-4936-4b33-992f-dd2c560d00c9',
+            referable: { id: 'fooBarId', displayName: [{}] },
+            defaultNameToDisplay: '',
+            result: 'fooBarId',
+        },
+        {
+            testId: 'b3c781ac-302e-4330-bb23-c4e51ab8307e',
+            referable: { id: 'fooBarId', displayName: [{}] },
+            defaultNameToDisplay: 'fooBarDefaultNameToDisplay',
+            result: 'fooBarDefaultNameToDisplay',
+        },
+        {
             testId: '122a2406-7eae-433f-9180-10b95386e723',
             referable: { idShort: 'fooBarIdShort', displayName: [{}] },
             defaultNameToDisplay: '',
@@ -109,6 +193,18 @@ describe('IdentifiableUtils Test', () => {
         {
             testId: '862d297d-e112-434c-b943-82171c03b30a',
             referable: { idShort: 'fooBarIdShort', displayName: [{}] },
+            defaultNameToDisplay: 'fooBarDefaultNameToDisplay',
+            result: 'fooBarDefaultNameToDisplay',
+        },
+        {
+            testId: '54f58f52-8c69-49a7-9ff4-5d05d6b3052a',
+            referable: { id: 'fooBarId', idShort: 'fooBarIdShort', displayName: [{}] },
+            defaultNameToDisplay: '',
+            result: 'fooBarIdShort',
+        },
+        {
+            testId: 'e2a453b3-1bf7-4d99-a9d6-3f5c6a4be9f5',
+            referable: { id: 'fooBarId', idShort: 'fooBarIdShort', displayName: [{}] },
             defaultNameToDisplay: 'fooBarDefaultNameToDisplay',
             result: 'fooBarDefaultNameToDisplay',
         },
@@ -125,6 +221,18 @@ describe('IdentifiableUtils Test', () => {
             result: 'fooBarDefaultNameToDisplay',
         },
         {
+            testId: 'b8a144f7-45aa-404b-b393-52454a67e18c',
+            referable: { id: 'fooBarId', displayName: [{ language: 'en' }] },
+            defaultNameToDisplay: '',
+            result: 'fooBarId',
+        },
+        {
+            testId: 'cdc99cc3-1695-44c8-831b-3b684bf10564',
+            referable: { id: 'fooBarId', displayName: [{ language: 'en' }] },
+            defaultNameToDisplay: 'fooBarDefaultNameToDisplay',
+            result: 'fooBarDefaultNameToDisplay',
+        },
+        {
             testId: '9464e584-fa0a-4e13-9d12-9a6ce1a4ddf9',
             referable: { idShort: 'fooBarIdShort', displayName: [{ language: 'en' }] },
             defaultNameToDisplay: '',
@@ -133,6 +241,18 @@ describe('IdentifiableUtils Test', () => {
         {
             testId: '1fc26134-c7a1-4843-a61e-1a7bd87d8dd4',
             referable: { idShort: 'fooBarIdShort', displayName: [{ language: 'en' }] },
+            defaultNameToDisplay: 'fooBarDefaultNameToDisplay',
+            result: 'fooBarDefaultNameToDisplay',
+        },
+        {
+            testId: 'a7512ba2-5ca3-465a-86f2-7d83aab048c6',
+            referable: { id: 'fooBarId', idShort: 'fooBarIdShort', displayName: [{ language: 'en' }] },
+            defaultNameToDisplay: '',
+            result: 'fooBarIdShort',
+        },
+        {
+            testId: '80ade774-5f3c-4a02-b7cb-c54d08018f62',
+            referable: { id: 'fooBarId', idShort: 'fooBarIdShort', displayName: [{ language: 'en' }] },
             defaultNameToDisplay: 'fooBarDefaultNameToDisplay',
             result: 'fooBarDefaultNameToDisplay',
         },
@@ -149,6 +269,18 @@ describe('IdentifiableUtils Test', () => {
             result: 'fooBarDisplayName',
         },
         {
+            testId: 'f689b75b-fd8a-42bd-b9b3-fc9c8c14a03a',
+            referable: { id: 'fooBarId', displayName: [{ language: 'en', text: 'fooBarDisplayName' }] },
+            defaultNameToDisplay: '',
+            result: 'fooBarDisplayName',
+        },
+        {
+            testId: 'c3cf0f58-f3e9-43cc-bc64-9a25ef840ec9',
+            referable: { id: 'fooBarId', displayName: [{ language: 'en', text: 'fooBarDisplayName' }] },
+            defaultNameToDisplay: 'fooBarDefaultNameToDisplay',
+            result: 'fooBarDisplayName',
+        },
+        {
             testId: 'ce1f905a-74ec-4415-ae73-f90cb7040cae',
             referable: { idShort: 'fooBarIdShort', displayName: [{ language: 'en', text: 'fooBarDisplayName' }] },
             defaultNameToDisplay: '',
@@ -157,6 +289,26 @@ describe('IdentifiableUtils Test', () => {
         {
             testId: '5839bbcc-87a4-4969-b013-46a95d93b316',
             referable: { idShort: 'fooBarIdShort', displayName: [{ language: 'en', text: 'fooBarDisplayName' }] },
+            defaultNameToDisplay: 'fooBarDefaultNameToDisplay',
+            result: 'fooBarDisplayName',
+        },
+        {
+            testId: '0c8449f5-f032-4081-9126-17faf65e7e90',
+            referable: {
+                id: 'fooBarId',
+                idShort: 'fooBarIdShort',
+                displayName: [{ language: 'en', text: 'fooBarDisplayName' }],
+            },
+            defaultNameToDisplay: '',
+            result: 'fooBarDisplayName',
+        },
+        {
+            testId: 'fcc9c0cc-8958-4a19-96dc-e1959b731961',
+            referable: {
+                id: 'fooBarId',
+                idShort: 'fooBarIdShort',
+                displayName: [{ language: 'en', text: 'fooBarDisplayName' }],
+            },
             defaultNameToDisplay: 'fooBarDefaultNameToDisplay',
             result: 'fooBarDisplayName',
         },
@@ -169,7 +321,7 @@ describe('IdentifiableUtils Test', () => {
         const defaultNameToDisplay = nameToDisplayTestDataset.defaultNameToDisplay;
         const result = nameToDisplayTestDataset.result;
 
-        it(`${nameToDisplayTestDataset.testId}: nameToDisplay(${referable}, '${defaultNameToDisplay}')`, () => {
+        it(`${nameToDisplayTestDataset.testId}: nameToDisplay(${referable}, 'en', ${("'" + defaultNameToDisplay + "'").padEnd(30, ' ')})`, () => {
             // Perform the assertion
             expect(nameToDisplay(referable, 'en', defaultNameToDisplay)).toStrictEqual(result);
         });

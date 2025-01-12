@@ -5,7 +5,7 @@
         <v-main style="padding-top: 33px">
             <!-- App Content (eg. AASViewer, AASEditor, etc.) -->
             <router-view v-slot="{ Component }">
-                <keep-alive :include="['AASList', 'SubmodelList']">
+                <keep-alive :include="['AASList', 'AASTreeview', 'SubmodelList']">
                     <component :is="Component" />
                 </keep-alive>
             </router-view>
@@ -17,16 +17,13 @@
     import { computed, onMounted } from 'vue';
     import { RouteRecordNameGeneric, useRoute, useRouter } from 'vue-router';
     import { useDisplay } from 'vuetify';
-    import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
-    import { useRequestHandling } from '@/composables/RequestHandling';
-    import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { formatDate } from '@/utils/DateUtils';
+    import { useAASHandling } from './composables/AASHandling';
+    import { useSMEHandling } from './composables/SMEHandling';
 
     // Stores
     const navigationStore = useNavigationStore();
-    const aasStore = useAASStore();
     const envStore = useEnvStore();
 
     // Vue Router
@@ -34,8 +31,8 @@
     const router = useRouter();
 
     // Composables
-    const { fetchAndDispatchAas } = useAASRepositoryClient();
-    const { getRequest } = useRequestHandling();
+    const { fetchAndDispatchAas } = useAASHandling();
+    const { fetchAndDispatchSme } = useSMEHandling();
 
     // Vuetify
     const { mobile } = useDisplay();
@@ -46,6 +43,9 @@
 
     // Data
     const routesStayOnPages = ['About', 'NotFound404'] as Array<string>;
+    const routesToAASViewer: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList'];
+    const routesToAASList: Array<RouteRecordNameGeneric> = ['AASViewer', 'AASEditor', 'SubmodelViewer', 'AASList'];
+    const routesToVisualization: Array<RouteRecordNameGeneric> = ['ComponentVisualization', 'Visualization'];
 
     // Computed Properties
     const currentRouteName = computed((): string => {
@@ -100,22 +100,21 @@
         }
 
         if (aasEndpoint && submodelElementPath) {
-            handleSubmodelElement(submodelElementPath);
+            await fetchAndDispatchSme(submodelElementPath);
         }
     });
 
     // Handle mobile view routing logic
     function handleMobileView(aasEndpoint: string | null, submodelElementPath: string | null) {
-        const routesToAASList: Array<RouteRecordNameGeneric> = ['AASViewer', 'AASEditor', 'SubmodelViewer', 'AASList'];
         if (currentRouteName.value && routesToAASList.includes(currentRouteName.value)) {
             // Redirect to 'AASList' with existing query parameters
             router.push({ name: 'AASList', query: route.query });
         } else if (currentRouteName.value === 'SubmodelList' && aasEndpoint) {
             // Redirect to 'SubmodelList' with 'aas' parameter
             router.push({ name: 'SubmodelList', query: { aas: aasEndpoint } });
-        } else if (currentRouteName.value === 'ComponentVisualization' && aasEndpoint && submodelElementPath) {
-            // Redirect to 'ComponentVisualization' with 'aas' and 'path' parameters
-            router.push({ name: 'ComponentVisualization', query: { aas: aasEndpoint, path: submodelElementPath } });
+        } else if (currentRouteName.value && routesToVisualization.includes(currentRouteName.value)) {
+            // Redirect to 'Visualization' with 'aas' and 'path' parameters
+            router.push({ name: 'Visualization', query: { aas: aasEndpoint, path: submodelElementPath } });
         } else if (currentRouteName.value && routesStayOnPages.includes(currentRouteName.value)) {
             // Stay on current page
             return;
@@ -127,13 +126,15 @@
 
     // Handle desktop view routing logic
     function handleDesktopView(aasEndpoint: string | null, submodelElementPath: string | null) {
-        const routesToAASViewer: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList', 'ComponentVisualization'];
         const query: any = {};
         if (aasEndpoint) query.aas = aasEndpoint;
         if (submodelElementPath) query.path = submodelElementPath;
         if (currentRouteName.value && routesToAASViewer.includes(currentRouteName.value)) {
             // Redirect to 'AASViewer' with appropriate query parameters
             router.push({ name: 'AASViewer', query });
+        } else if (currentRouteName.value && routesToVisualization.includes(currentRouteName.value)) {
+            // Redirect to 'AASViewer' with appropriate query parameters
+            router.push({ name: 'Visualization', query });
         } else if (currentRouteName.value === 'AASEditor' && allowEditing.value) {
             // Stay on 'AASEditor' but update query parameters
             router.push({ name: 'AASEditor', query });
@@ -146,37 +147,6 @@
         } else {
             // Default to 'AASViewer' with query parameters
             router.push({ name: 'AASViewer', query });
-        }
-    }
-
-    // Handle the selected submodel element
-    async function handleSubmodelElement(submodelElementPath: string) {
-        const path = submodelElementPath;
-        const context = 'retrieving SubmodelElement';
-        const disableMessage = true;
-        const response = await getRequest(path, context, disableMessage);
-        if (response.success) {
-            const data = response.data;
-            data.timestamp = formatDate(new Date());
-            data.path = submodelElementPath;
-            data.isActive = true;
-            aasStore.dispatchNode(data);
-        } else {
-            handleRequestFailure(response);
-        }
-    }
-
-    // Handle request failure and show appropriate message
-    function handleRequestFailure(response: any) {
-        if (Object.keys(response.data).length === 0) {
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 60000,
-                color: 'error',
-                btnColor: 'buttonText',
-                text: 'No valid SubmodelElement under the given Path',
-            });
-            aasStore.dispatchNode({});
         }
     }
 </script>

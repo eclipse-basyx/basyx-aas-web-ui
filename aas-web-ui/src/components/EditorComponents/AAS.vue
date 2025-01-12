@@ -49,7 +49,7 @@
                                 v-model="globalAssetId"
                                 label="Global Asset ID"
                                 :show-generate-iri-button="true"
-                                type="P" />
+                                type="Asset" />
                             <TextInput v-model="assetType" label="Asset Type" />
                             <ResourceInput
                                 v-model="defaultThumbnail"
@@ -75,15 +75,24 @@
     import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
     import { computed, ref, watch } from 'vue';
+    import { useAASHandling } from '@/composables/AASHandling';
     import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
-    import { UUID } from '@/utils/IDUtils';
+    import { useIDUtils } from '@/composables/IDUtils';
+    import { useAASStore } from '@/store/AASDataStore';
 
     const props = defineProps<{
         modelValue: boolean;
         newShell: boolean;
         aas?: any;
     }>();
+
+    // Composables
+    const { UUID } = useIDUtils();
+    const { fetchAndDispatchAasById } = useAASHandling();
+
+    // Stores
+    const aasStore = useAASStore();
 
     const emit = defineEmits<{
         (event: 'update:modelValue', value: boolean): void;
@@ -114,6 +123,8 @@
 
     const fileThumbnail = ref<File | undefined>(undefined);
 
+    // Computed Properties
+    const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
     const bordersToShow = computed(() => (panel: number) => {
         let border = '';
         switch (panel) {
@@ -285,18 +296,22 @@
             await postAas(AASObject.value);
             // Upload default thumbnail
             if (fileThumbnail.value !== undefined) {
-                putThumbnail(fileThumbnail.value, AASObject.value.id);
+                await putThumbnail(fileThumbnail.value, AASObject.value.id);
             }
+            await fetchAndDispatchAasById(AASObject.value.id);
         } else {
             // Update existing AAS
             await putAas(AASObject.value);
             // Update AAS Descriptor
             const jsonAAS = jsonization.toJsonable(AASObject.value);
             const descriptor = createDescriptorFromAAS(jsonAAS, props.aas.endpoints);
-            putAasDescriptor(descriptor);
+            await putAasDescriptor(descriptor);
             // Upload default thumbnail
             if (fileThumbnail.value !== undefined) {
-                putThumbnail(fileThumbnail.value, AASObject.value.id);
+                await putThumbnail(fileThumbnail.value, AASObject.value.id);
+            }
+            if (AASObject.value.id === selectedAAS.value.id) {
+                await fetchAndDispatchAasById(AASObject.value.id);
             }
         }
         clearForm();
@@ -312,9 +327,12 @@
         // Reset all values
         AASId.value = UUID();
         AASIdShort.value = null;
+        displayName.value = null;
+        description.value = null;
         AASCategory.value = null;
         version.value = null;
         revision.value = null;
+        creator.value = null;
         templateId.value = null;
         assetKind.value = aasTypes.AssetKind.Instance;
         globalAssetId.value = null;

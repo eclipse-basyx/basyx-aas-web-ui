@@ -2,17 +2,14 @@
     <v-container fluid class="pa-0">
         <v-card color="rgba(0,0,0,0)" elevation="0">
             <v-card-title style="padding: 15px 16px 16px">
+                <div v-if="!selectedAAS || Object.keys(selectedAAS).length === 0">AAS Treeview</div>
+                <div v-else class="d-flex align-center">
+                    <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
+                    <span class="text-truncate ml-2">
+                        {{ nameToDisplay(selectedAAS) }}
+                    </span>
+                </div>
                 <!-- TODO: Add Searchfield to filter the Treeview -->
-                <v-row align="center">
-                    <v-col cols="auto">
-                        <span>AAS Treeview</span>
-                    </v-col>
-                    <v-col v-if="nameToDisplay(selectedAAS)" cols="auto" class="pl-1 pt-2">
-                        <v-chip size="x-small" color="primary" label border>{{
-                            'AAS: ' + nameToDisplay(selectedAAS)
-                        }}</v-chip>
-                    </v-col>
-                </v-row>
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto; height: calc(100vh - 170px)">
@@ -30,18 +27,28 @@
                     </v-list-item>
                 </div>
                 <template v-else>
-                    <v-empty-state
-                        v-if="selectedAAS && Object.keys(selectedAAS).length > 0 && submodelData.length === 0"
-                        title="No existing Submodels"
-                        text="The selected AAS does not contain any Submodels"
-                        class="text-divider"></v-empty-state>
-                    <!-- TODO: Replace with Vuetify Treeview Component when it get's released in Q1 2023 -->
-                    <VTreeview
-                        v-for="item in submodelData"
-                        :key="item.id"
-                        class="root"
-                        :item="item"
-                        :depth="0"></VTreeview>
+                    <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
+                        <template v-if="submodelData.length > 0">
+                            <!-- TODO: Evaluate and Replace with Vuetify Treeview Component when it gets fully released in Q1 2025 -->
+                            <VTreeview
+                                v-for="item in submodelData"
+                                :key="item.id"
+                                class="root"
+                                :item="item"
+                                :depth="0"></VTreeview>
+                        </template>
+                        <v-empty-state
+                            v-else
+                            title="No existing Submodels"
+                            text="The selected AAS does not contain any Submodels"
+                            class="text-divider"></v-empty-state>
+                    </template>
+                    <template v-else>
+                        <v-empty-state
+                            title="No selected AAS"
+                            text="Select an AAS to view its Submodels and Submodel Elements"
+                            class="text-divider"></v-empty-state>
+                    </template>
                 </template>
             </v-card-text>
         </v-card>
@@ -51,17 +58,19 @@
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+    import { useIDUtils } from '@/composables/IDUtils';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { formatDate } from '@/utils/DateUtils';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
     import { base64Encode } from '@/utils/EncodeDecodeUtils';
-    import { UUID } from '@/utils/IDUtils';
     import { nameToDisplay } from '@/utils/ReferableUtils';
 
     // Composables
     const { smNotFound } = useSMRepositoryClient();
     const { getRequest } = useRequestHandling();
+    const { UUID } = useIDUtils();
 
     // Stores
     const navigationStore = useNavigationStore();
@@ -77,7 +86,7 @@
     const loading = computed(() => aasStore.getLoadingState); // gets loading State from Store
     const aasRegistryServerURL = computed(() => navigationStore.getAASRegistryURL); // get AAS Registry URL from Store
     const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL); // get Submodel Registry URL from Store
-    const updatedNode = computed(() => aasStore.getUpdatedNode); // get the updated Treeview Node from Store
+    const selectedNode = computed(() => aasStore.getSelectedNode); // get the updated Treeview Node from Store
     const initTree = computed(() => aasStore.getInitTreeByReferenceElement); // get the init treeview flag from Store
 
     // Watchers
@@ -100,8 +109,8 @@
     });
 
     // change the submodelData Object when the updated Node changes
-    watch(updatedNode, () => {
-        updateNode(updatedNode.value);
+    watch(selectedNode, () => {
+        updateNode(selectedNode.value);
     });
 
     // initialize Treeview when the initTree flag changes
@@ -117,7 +126,7 @@
     });
 
     async function initializeTree() {
-        // console.log('Initialize Treeview', this.SelectedAAS, this.initialUpdate, this.initialNode);
+        // console.log('Initialize Treeview', selectedAAS.value, initialUpdate.value, initialNode.value);
         // return if no endpoints are available
         if (!selectedAAS.value || !selectedAAS.value.endpoints || selectedAAS.value.endpoints.length === 0) {
             // this.navigationStore.dispatchSnackbar({ status: true, timeout: 4000, color: 'error', btnColor: 'buttonText', text: 'AAS with no (valid) Endpoint selected!' });
@@ -177,6 +186,7 @@
                                 submodel.isActive = false;
                                 // set the Path of the Submodel
                                 submodel.path = path;
+                                submodel.timestamp = formatDate(new Date());
                                 // check if submodel has SubmodelElements
                                 if (submodel.submodelElements && submodel.submodelElements.length > 0) {
                                     // recursively create treestructure for contained submodelElements
@@ -225,6 +235,7 @@
             // set the active State of each Element
             element.isActive = false;
             // set the Parent of each Element
+            element.timestamp = formatDate(new Date());
             element.parent = parent;
             // set the Path of each Element
             if (element.parent.modelType == 'Submodel') {
@@ -316,8 +327,6 @@
                 if (!foundNode) {
                     foundNode = true;
                     element.isActive = true;
-                    aasStore.dispatchNode(element);
-                    aasStore.dispatchRealTimeObject(element);
                 }
                 // if prop showChildren exists, set it to true
                 if ('showChildren' in element) {

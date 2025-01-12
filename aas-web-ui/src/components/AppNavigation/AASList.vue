@@ -23,7 +23,7 @@
                         </v-tooltip>
                     </v-col>
                     <!-- AAS Search Field -->
-                    <v-col class="px-0">
+                    <v-col class="pl-0" :class="editMode || allowUploading ? 'pr-0' : 'pr-2'">
                         <v-text-field
                             variant="outlined"
                             density="compact"
@@ -42,6 +42,7 @@
                                 <v-list density="compact" class="py-0">
                                     <!-- Open Upload Dialog -->
                                     <v-tooltip
+                                        v-if="allowUploading"
                                         open-delay="600"
                                         :location="editMode ? 'end' : 'bottom'"
                                         :disabled="isMobile">
@@ -59,7 +60,7 @@
                                         </template>
                                         <span>Upload AAS File to Environment</span>
                                     </v-tooltip>
-                                    <v-divider></v-divider>
+                                    <v-divider v-if="allowUploading"></v-divider>
                                     <!-- Open AAS edit dialog -->
                                     <v-tooltip open-delay="600" location="end">
                                         <template #activator="{ props }">
@@ -75,7 +76,11 @@
                                 </v-list>
                             </v-sheet>
                         </v-menu>
-                        <v-tooltip v-else open-delay="600" :location="editMode ? 'end' : 'bottom'" :disabled="isMobile">
+                        <v-tooltip
+                            v-else-if="allowUploading"
+                            open-delay="600"
+                            :location="editMode ? 'end' : 'bottom'"
+                            :disabled="isMobile">
                             <template #activator="{ props }">
                                 <v-btn
                                     icon="mdi-upload"
@@ -163,7 +168,7 @@
                                     </template>
                                     <v-sheet border>
                                         <v-list dense slim density="compact" class="py-0">
-                                            <v-list-item @click="downloadAAS(item)">
+                                            <v-list-item @click="downloadAasx(item)">
                                                 <template #prepend>
                                                     <v-icon size="x-small">mdi-download</v-icon>
                                                 </template>
@@ -193,7 +198,7 @@
                                         variant="plain"
                                         color="listItemText"
                                         style="z-index: 9000; margin-left: -6px"
-                                        @click.stop="downloadAAS(item)"></v-btn>
+                                        @click.stop="downloadAasx(item)"></v-btn>
                                     <!-- Remove from AAS Registry Button -->
                                     <v-btn
                                         icon="mdi-close"
@@ -236,14 +241,13 @@
     import { computed, onActivated, onMounted, Ref, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
+    import { useAASHandling } from '@/composables/AASHandling';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
-    import { base64Encode } from '@/utils/EncodeDecodeUtils';
-    import { downloadFile } from '@/utils/generalUtils';
     import { nameToDisplay } from '@/utils/ReferableUtils';
 
     // Extend the ComponentPublicInstance type to include scrollToIndex
@@ -255,9 +259,10 @@
     const route = useRoute();
     const router = useRouter();
 
-    // composables
+    // Composables
     const { getRequest } = useRequestHandling();
-    const { fetchAndDispatchAas } = useAASRepositoryClient();
+    const { downloadAasx } = useAASRepositoryClient();
+    const { fetchAndDispatchAas } = useAASHandling();
 
     // Stores
     const navigationStore = useNavigationStore();
@@ -309,6 +314,7 @@
         }
     });
     const editMode = computed(() => route.name === 'AASEditor'); // Check if the current Route is the AAS Editor
+    const allowUploading = computed(() => envStore.getAllowUploading); // Check if the current environment config allows uploading shells
 
     // Watchers
     // Watch the AAS Registry URL for changes and reload the AAS List if the URL changes
@@ -484,13 +490,14 @@
             if (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0) {
                 scrollToAasAfterDispatch = true;
             }
+
             // Select AAS
             AASStatus.value = AAS.status;
             const aasEndpoint = extractEndpointHref(AAS, 'AAS-3.0');
-            // Add AAS Endpoint as Query to the Router
+
             router.push({ query: { aas: aasEndpoint } });
-            // dispatch the selected AAS to the Store
             await fetchAndDispatchAas(aasEndpoint);
+
             if (scrollToAasAfterDispatch) scrollToSelectedAAS();
         }
     }
@@ -530,49 +537,6 @@
                 }
             }, 50);
         }
-    }
-
-    // Function to download the AAS
-    function downloadAAS(AAS: any) {
-        // console.log('Download AAS: ', AAS);
-        // request the Submodel references for the AAS
-        const aasEndpopint = extractEndpointHref(AAS, 'AAS-3.0');
-        let path = aasEndpopint + '/submodel-refs';
-        let context = 'retrieving Submodel References';
-        let disableMessage = false;
-        getRequest(path, context, disableMessage).then(async (response: any) => {
-            if (response.success) {
-                // execute if the Request was successful
-                const submodelRefs = response.data.result;
-                const aasIds = base64Encode(AAS.id);
-                // extract all references in an Array calles submodelIds from each keys[0].value
-                let submodelIds = [] as any;
-                submodelRefs.forEach((submodelRef: any) => {
-                    submodelIds.push(base64Encode(submodelRef.keys[0].value));
-                });
-                // console.log('aasIds: ', aasIds, ' submodelIds: ', submodelIds);
-                // strip the everything after the last slash from the getAASRepoURL (http://localhost:1500/shells -> http://localhost:1500)
-                let path = aasRepoURL.value.substring(0, aasRepoURL.value.lastIndexOf('/'));
-                // add the aasIds and submodelIds to the path (example: http://localhost:1500/serialization?aasIds=abc&submodelIds=def&submodelIds=ghi&includeConceptDescriptions=true)
-                path +=
-                    '/serialization?aasIds=' +
-                    aasIds +
-                    '&submodelIds=' +
-                    submodelIds.join('&submodelIds=') +
-                    '&includeConceptDescriptions=true';
-                let context = 'retrieving AAS serialization';
-                let disableMessage = false;
-                let headers = new Headers();
-                headers.append('Accept', 'application/asset-administration-shell-package+xml');
-                getRequest(path, context, disableMessage, headers).then(async (response: any) => {
-                    if (response.success) {
-                        // execute if the Request was successful
-                        let aasSerialization = response.data;
-                        downloadFile(AAS.idShort + '.aasx', aasSerialization);
-                    }
-                });
-            }
-        });
     }
 
     function showDeleteDialog(AAS: any) {

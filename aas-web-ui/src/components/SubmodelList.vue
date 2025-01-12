@@ -1,20 +1,20 @@
 <template>
     <v-container fluid class="pa-0">
         <v-card color="card" elevation="0">
-            <v-card-title style="padding: 15px 16px 16px">
-                <v-row align="center">
-                    <v-col v-if="isMobile" cols="auto" class="pa-0">
-                        <v-btn class="ml-2" variant="plain" icon="mdi-chevron-left" @click="backToAASList()"></v-btn>
-                    </v-col>
-                    <v-col cols="auto">
-                        <span>Submodel List</span>
-                    </v-col>
-                    <v-col v-if="nameToDisplay(selectedAAS)" cols="auto" class="pl-1 pt-2">
-                        <v-chip size="x-small" color="primary" label border>{{
-                            'AAS: ' + nameToDisplay(selectedAAS)
-                        }}</v-chip>
-                    </v-col>
-                </v-row>
+            <v-card-title :style="{ padding: isMobile ? '' : '15px 16px 16px' }">
+                <div v-if="!selectedAAS || Object.keys(selectedAAS).length === 0">Submodel List</div>
+                <div v-else class="d-flex align-center">
+                    <v-btn
+                        v-if="isMobile"
+                        class="ml-0"
+                        variant="plain"
+                        icon="mdi-chevron-left"
+                        @click="backToAASList()" />
+                    <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
+                    <span class="text-truncate ml-2">
+                        {{ nameToDisplay(selectedAAS) }}
+                    </span>
+                </div>
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto; height: calc(100svh - 170px)" class="py-2 px-2">
@@ -22,37 +22,47 @@
                     <v-skeleton-loader type="list-item@6"></v-skeleton-loader>
                 </div>
                 <template v-else>
-                    <v-empty-state
-                        v-if="Object.keys(selectedAAS).length > 0 && submodelData.length === 0"
-                        title="No existing Submodels"
-                        text="The selected AAS does not contain any Submodels"
-                        class="text-divider"></v-empty-state>
-                    <!-- List of Submodels -->
-                    <v-list-item
-                        v-for="submodel in submodelData"
-                        :key="submodel.id"
-                        :active="submodel.isActive"
-                        color="primarySurface"
-                        base-color="listItem"
-                        variant="tonal"
-                        nav
-                        class="mb-2"
-                        style="border-width: 1px"
-                        :style="{
-                            'border-color': submodel.isActive
-                                ? primaryColor + ' !important'
-                                : isDark
-                                  ? '#686868 !important'
-                                  : '#ABABAB !important',
-                        }"
-                        @click="toggleNode(submodel)">
-                        <template #prepend>
-                            <v-chip label border color="primary" size="x-small" class="mr-3">SM</v-chip>
+                    <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
+                        <template v-if="submodelData.length > 0">
+                            <!-- List of Submodels -->
+                            <v-list-item
+                                v-for="submodel in submodelData"
+                                :key="submodel.id"
+                                :active="submodel.isActive"
+                                color="primarySurface"
+                                base-color="listItem"
+                                variant="tonal"
+                                nav
+                                class="mb-2"
+                                style="border-width: 1px"
+                                :style="{
+                                    'border-color': submodel.isActive
+                                        ? primaryColor + ' !important'
+                                        : isDark
+                                          ? '#686868 !important'
+                                          : '#ABABAB !important',
+                                }"
+                                @click="toggleNode(submodel)">
+                                <template #prepend>
+                                    <v-chip label border color="primary" size="x-small" class="mr-3">SM</v-chip>
+                                </template>
+                                <v-list-item-title :class="submodel.isActive ? 'text-primary' : 'text-listItemText'">{{
+                                    submodel.idShort
+                                }}</v-list-item-title>
+                            </v-list-item>
                         </template>
-                        <v-list-item-title :class="submodel.isActive ? 'text-primary' : 'text-listItemText'">{{
-                            submodel.idShort
-                        }}</v-list-item-title>
-                    </v-list-item>
+                        <v-empty-state
+                            v-else
+                            title="No existing Submodels"
+                            text="The selected AAS does not contain any Submodels"
+                            class="text-divider"></v-empty-state>
+                    </template>
+                    <template v-else>
+                        <v-empty-state
+                            title="No selected AAS"
+                            text="Select an AAS to view its Submodels"
+                            class="text-divider"></v-empty-state>
+                    </template>
                 </template>
             </v-card-text>
         </v-card>
@@ -67,6 +77,7 @@
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { formatDate } from '@/utils/DateUtils';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
     import { base64Encode } from '@/utils/EncodeDecodeUtils';
     import { nameToDisplay } from '@/utils/ReferableUtils';
@@ -141,8 +152,8 @@
                 fetchedSubmodelData.forEach((submodel: any) => {
                     if (submodel.path === initialNode.value.path) {
                         submodel.isActive = true;
-                        aasStore.dispatchNode(submodel);
-                        aasStore.dispatchRealTimeObject(submodel);
+                        submodel.timestamp = formatDate(new Date());
+                        aasStore.dispatchSelectedNode(submodel);
                     }
                 });
                 initialUpdate.value = false;
@@ -223,12 +234,14 @@
     function toggleNode(submodel: any) {
         // console.log('Selected Submodel: ', submodel);
         // dublicate the selected Node Object
-        let localSubmodel = submodel;
+        let localSubmodel = { ...submodel };
         localSubmodel.isActive = true;
         // set the isActive Property of all other Submodels to false
         submodelData.value.forEach((submodel: any) => {
             if (submodel.id !== localSubmodel.id) {
                 submodel.isActive = false;
+            } else {
+                submodel.isActive = true;
             }
         });
         // Add path of the selected Node to the URL as Router Query
@@ -237,7 +250,7 @@
             if (isMobile.value) {
                 // Change to SubmodelElementView on Mobile and add the path to the URL
                 router.push({
-                    path: '/componentvisualization',
+                    name: 'Visualization',
                     query: {
                         aas: aasEndpopint,
                         path: localSubmodel.path,
@@ -252,16 +265,14 @@
                     },
                 });
             }
+            aasStore.dispatchSelectedNode(localSubmodel);
         } else {
             // remove the path query from the Route entirely
             let query = { ...route.query };
             delete query.path;
             router.push({ query: query });
+            aasStore.dispatchSelectedNode({});
         }
-        // dispatch the selected Node to the store
-        aasStore.dispatchNode(localSubmodel);
-        // add Submodel to the store (as RealTimeDataObject)
-        aasStore.dispatchRealTimeObject(localSubmodel);
     }
 
     // Function to initialize the Submodel List with the Route Parameters
