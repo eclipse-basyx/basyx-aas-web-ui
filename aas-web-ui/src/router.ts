@@ -2,6 +2,10 @@ import { createRouter, createWebHistory, LocationQuery, Router } from 'vue-route
 import AASList from '@/components/AppNavigation/AASList.vue';
 import ComponentVisualization from '@/components/ComponentVisualization.vue';
 import SubmodelList from '@/components/SubmodelList.vue';
+import { useAASHandling } from '@/composables/AASHandling';
+import { useAASDicoveryClient } from '@/composables/Client/AASDiscoveryClient';
+import { useSMEHandling } from '@/composables/SMEHandling';
+import { useSMHandling } from '@/composables/SMHandling';
 import AASEditor from '@/pages/AASEditor.vue';
 import AASViewer from '@/pages/AASViewer.vue';
 import About from '@/pages/About.vue';
@@ -10,10 +14,7 @@ import DashboardGroup from '@/pages/DashboardGroup.vue';
 import Page404 from '@/pages/Page404.vue';
 import SubmodelViewer from '@/pages/SubmodelViewer.vue';
 import { useNavigationStore } from '@/store/NavigationStore';
-import { useAASHandling } from './composables/AASHandling';
-import { useAASDicoveryClient } from './composables/Client/AASDiscoveryClient';
-import { useSMEHandling } from './composables/SMEHandling';
-import { useSMHandling } from './composables/SMHandling';
+import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
 const routes = [
     { path: '/', name: 'AASViewer', component: AASViewer },
@@ -62,7 +63,7 @@ export async function createAppRouter(): Promise<Router> {
             // Resolve globalAssetId (ignore possible specified aasId/smId)
             if (from.query.globalassetid) {
                 const globalAssetIdBase64Encoded = from.query.globalassetid as string;
-                const globalAssetId = URLDecode(globalAssetIdBase64Encoded);
+                const globalAssetId = base64Decode(globalAssetIdBase64Encoded);
                 const aasId = await getAasId(globalAssetId);
                 const aasEndpoint = await getAasEndpointById(aasId);
                 const query = {} as LocationQuery;
@@ -81,12 +82,12 @@ export async function createAppRouter(): Promise<Router> {
             if (from.query.aasId || from.query.smId) {
                 if (from.query.aasId) {
                     const aasIdBase64Encoded = from.query.aasId as string;
-                    const aasId = URLDecode(aasIdBase64Encoded);
+                    const aasId = base64Decode(aasIdBase64Encoded);
                     aasEndpoint = await getAasEndpointById(aasId);
                 }
                 if (from.query.smId) {
                     const smIdBase64Encoded = from.query.smId as string;
-                    const smId = URLDecode(smIdBase64Encoded);
+                    const smId = base64Decode(smIdBase64Encoded);
                     smEndpoint = await getSmEndpointById(smId);
                 }
 
