@@ -1,4 +1,12 @@
-import { createRouter, createWebHistory, Router } from 'vue-router';
+import {
+    createRouter,
+    createWebHistory,
+    LocationQuery,
+    NavigationGuardNext,
+    RouteLocation,
+    RouteLocationNormalizedGeneric,
+    Router,
+} from 'vue-router';
 import AASList from '@/components/AppNavigation/AASList.vue';
 import ComponentVisualization from '@/components/ComponentVisualization.vue';
 import SubmodelList from '@/components/SubmodelList.vue';
@@ -12,6 +20,7 @@ import SubmodelViewer from '@/pages/SubmodelViewer.vue';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { useAASHandling } from './composables/AASHandling';
 import { useSMEHandling } from './composables/SMEHandling';
+import { useSMHandling } from './composables/SMHandling';
 
 const routes = [
     { path: '/', name: 'AASViewer', component: AASViewer },
@@ -37,7 +46,8 @@ export async function createAppRouter(): Promise<Router> {
     const navigationStore = useNavigationStore();
 
     // Composables
-    const { fetchAndDispatchAas } = useAASHandling();
+    const { fetchAndDispatchAas, getEndpointById: getAasEndpointById } = useAASHandling();
+    const { getEndpointById: getSmEndpointById } = useSMHandling();
     const { fetchAndDispatchSme } = useSMEHandling();
 
     const router = createRouter({
@@ -49,6 +59,34 @@ export async function createAppRouter(): Promise<Router> {
         // TODO Fetch and dispatching of AAS/SM/SME with respect to URL query parameter
         // TODO Remove keep alive from App.vue
         // TODO Move route handling (handleMobileView(), handleDesktopView()) from App.vue to this route guard
+
+        // Resolving ID query parameter
+        if (from.query.aasId || from.query.smId) {
+            let aasEndpoint = '';
+            let smEndpoint = '';
+            if (from.query.aasId) {
+                const aasIdBase64Encoded = from.query.aasId as string;
+                const aasId = URLDecode(aasIdBase64Encoded);
+                aasEndpoint = await getAasEndpointById(aasId);
+            }
+            if (from.query.smId) {
+                const smIdBase64Encoded = from.query.smId as string;
+                const smId = URLDecode(smIdBase64Encoded);
+                smEndpoint = await getSmEndpointById(smId);
+            }
+
+            const query = {} as LocationQuery;
+
+            if (aasEndpoint.trim() !== '') query.aas = aasEndpoint;
+            if (smEndpoint.trim() !== '') query.path = smEndpoint;
+
+            const updatedRoute = Object.assign({}, to, {
+                query: query,
+            });
+
+            next(updatedRoute);
+            return;
+        }
 
         // Same route
         if (from.name && from.name === to.name) {
