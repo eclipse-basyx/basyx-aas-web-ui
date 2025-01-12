@@ -53,14 +53,17 @@ export function useSMHandling() {
     async function getEndpointById(smId: string): Promise<string> {
         const failResponse = '';
 
-        if (smId.trim() === '') return failResponse;
+        smId = smId.trim();
+
+        if (smId === '') return failResponse;
 
         const smDescriptor = await fetchSmDescriptorById(smId);
+        const smEndpoint = getEndpoint(smDescriptor);
 
-        return getEndpoint(smDescriptor);
+        return smEndpoint;
     }
 
-    async function getEndpoint(sm: any): Promise<string> {
+    function getEndpoint(sm: any): string {
         const failResponse = '';
 
         if (!sm || Object.keys(sm).length === 0 || !sm.id || sm.id.trim() === '') return failResponse;
