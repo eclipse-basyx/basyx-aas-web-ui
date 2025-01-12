@@ -1,3 +1,4 @@
+import type { BaSyxComponent, RepositoryKey } from '@/types/BaSyx';
 import { createRouter, createWebHistory, LocationQuery, Router } from 'vue-router';
 import AASList from '@/components/AppNavigation/AASList.vue';
 import ComponentVisualization from '@/components/ComponentVisualization.vue';
@@ -13,6 +14,7 @@ import Dashboard from '@/pages/Dashboard.vue';
 import DashboardGroup from '@/pages/DashboardGroup.vue';
 import Page404 from '@/pages/Page404.vue';
 import SubmodelViewer from '@/pages/SubmodelViewer.vue';
+import { useEnvStore } from '@/store/EnvironmentStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
@@ -38,6 +40,99 @@ export async function createAppRouter(): Promise<Router> {
 
     // Stores
     const navigationStore = useNavigationStore();
+    const envStore = useEnvStore();
+
+    // Reactive BaSyx Components Configurations
+    const basyxComponents = reactive<Record<RepositoryKey, BaSyxComponent>>({
+        AASDiscovery: {
+            url: ref(navigationStore.getAASDiscoveryURL), // Ensure the getter is invoked
+            loading: ref(false),
+            connect: () => connectComponent('AASDiscovery'),
+            label: 'AAS Discovery URL',
+        },
+        AASRegistry: {
+            url: ref(navigationStore.getAASRegistryURL),
+            loading: ref(false),
+            connect: () => connectComponent('AASRegistry'),
+            label: 'AAS Registry URL',
+        },
+        SubmodelRegistry: {
+            url: ref(navigationStore.getSubmodelRegistryURL),
+            loading: ref(false),
+            connect: () => connectComponent('SubmodelRegistry'),
+            label: 'Submodel Registry URL',
+        },
+        AASRepo: {
+            url: ref(navigationStore.getAASRepoURL),
+            loading: ref(false),
+            connect: () => connectComponent('AASRepo'),
+            label: 'AAS Repository URL',
+        },
+        SubmodelRepo: {
+            url: ref(navigationStore.getSubmodelRepoURL),
+            loading: ref(false),
+            connect: () => connectComponent('SubmodelRepo'),
+            label: 'Submodel Repository URL',
+        },
+        ConceptDescriptionRepo: {
+            url: ref(navigationStore.getConceptDescriptionRepoURL),
+            loading: ref(false),
+            connect: () => connectComponent('ConceptDescriptionRepo'),
+            label: 'Concept Description Repository URL',
+        },
+    });
+
+    const endpointConfigAvailable = ref(envStore.getEndpointConfigAvailable);
+
+    const EnvAASDiscoveryPath = computed(() => envStore.getEnvAASDiscoveryPath);
+    const EnvAASRegistryPath = computed(() => envStore.getEnvAASRegistryPath);
+    const EnvSubmodelRegistryPath = computed(() => envStore.getEnvSubmodelRegistryPath);
+    const EnvAASRepoPath = computed(() => envStore.getEnvAASRepoPath);
+    const EnvSubmodelRepoPath = computed(() => envStore.getEnvSubmodelRepoPath);
+    const EnvConceptDescriptionRepoPath = computed(() => envStore.getEnvConceptDescriptionRepoPath);
+
+    // Auto connect to BaSyx Components
+    Object.keys(basyxComponents).forEach((key) => {
+        const repoKey = key as RepositoryKey;
+        const storedURL = window.localStorage.getItem(repoKey);
+
+        // console.log('storedURL: ', storedURL, repoKey);
+
+        if (endpointConfigAvailable.value && storedURL) {
+            basyxComponents[repoKey].url = storedURL;
+            basyxComponents[repoKey].connect();
+        } else {
+            // Check environment path
+            let envPath = '';
+            switch (repoKey) {
+                case 'AASDiscovery':
+                    envPath = EnvAASDiscoveryPath.value;
+                    break;
+                case 'AASRegistry':
+                    envPath = EnvAASRegistryPath.value;
+                    break;
+                case 'SubmodelRegistry':
+                    envPath = EnvSubmodelRegistryPath.value;
+                    break;
+                case 'AASRepo':
+                    envPath = EnvAASRepoPath.value;
+                    break;
+                case 'SubmodelRepo':
+                    envPath = EnvSubmodelRepoPath.value;
+                    break;
+                case 'ConceptDescriptionRepo':
+                    envPath = EnvConceptDescriptionRepoPath.value;
+                    break;
+                default:
+                    break;
+            }
+
+            if (!basyxComponents[repoKey].url && envPath && envPath.trim() !== '') {
+                basyxComponents[repoKey].url = envPath;
+                basyxComponents[repoKey].connect();
+            }
+        }
+    });
 
     // Composables
     const { getAasId } = useAASDicoveryClient();
@@ -55,38 +150,46 @@ export async function createAppRouter(): Promise<Router> {
         // TODO Remove keep alive from App.vue
         // TODO Move route handling (handleMobileView(), handleDesktopView()) from App.vue to this route guard
 
+        console.log('Route Guard: ', 'from:', from, 'to:', to);
+
         // Resolving ID query parameter
-        if (from.query.globalassetid || from.query.aasId || from.query.smId) {
+        if (to.query.globalassetid || to.query.aasId || to.query.smId) {
+            console.log('aasId/smId resolving from:', to);
             let aasEndpoint = '';
             let smEndpoint = '';
 
             // Resolve globalAssetId (ignore possible specified aasId/smId)
-            if (from.query.globalassetid) {
-                const globalAssetIdBase64Encoded = from.query.globalassetid as string;
-                const globalAssetId = base64Decode(globalAssetIdBase64Encoded);
-                const aasId = await getAasId(globalAssetId);
-                const aasEndpoint = await getAasEndpointById(aasId);
-                const query = {} as LocationQuery;
+            // if (to.query.globalassetid) {
+            //     const globalAssetIdBase64Encoded = to.query.globalassetid as string;
+            //     const globalAssetId = base64Decode(globalAssetIdBase64Encoded);
+            //     const aasId = await getAasId(globalAssetId);
+            //     const aasEndpoint = await getAasEndpointById(aasId);
+            //     const query = {} as LocationQuery;
 
-                if (aasEndpoint.trim() !== '') {
-                    query.aas = aasEndpoint;
-                    const updatedRoute = Object.assign({}, to, {
-                        query: query,
-                    });
-                    next(updatedRoute);
-                    return;
-                }
-            }
+            //     if (aasEndpoint.trim() !== '') {
+            //         query.aas = aasEndpoint;
+            //         const updatedRoute = Object.assign({}, to, {
+            //             query: query,
+            //         });
+            //         next(updatedRoute);
+            //         return;
+            //     }
+            // }
 
             // Resolve aasId and/or smId
-            if (from.query.aasId || from.query.smId) {
-                if (from.query.aasId) {
-                    const aasIdBase64Encoded = from.query.aasId as string;
+            if (to.query.aasId || to.query.smId) {
+                if (to.query.aasId) {
+                    const aasIdBase64Encoded = to.query.aasId as string;
+                    console.log('aasIdBase64Encoded:', aasIdBase64Encoded);
                     const aasId = base64Decode(aasIdBase64Encoded);
+                    console.log('aasId:', aasId);
+                    // Note aasRegistryURL not dispatched
+                    console.log('navigationStore.getAASRegistryURL', navigationStore.getAASRegistryURL);
                     aasEndpoint = await getAasEndpointById(aasId);
+                    console.log('aasEndpoint:', aasEndpoint);
                 }
-                if (from.query.smId) {
-                    const smIdBase64Encoded = from.query.smId as string;
+                if (to.query.smId) {
+                    const smIdBase64Encoded = to.query.smId as string;
                     const smId = base64Decode(smIdBase64Encoded);
                     smEndpoint = await getSmEndpointById(smId);
                 }
@@ -100,8 +203,10 @@ export async function createAppRouter(): Promise<Router> {
                     query: query,
                 });
 
-                next(updatedRoute);
-                return;
+                console.log('aasId/smId resolving to:', updatedRoute);
+
+                // next(updatedRoute);
+                // return;
             }
         }
 
@@ -155,6 +260,10 @@ export async function createAppRouter(): Promise<Router> {
         }
         next();
     });
+
+    function connectComponent(repoKey: keyof typeof basyxComponents) {
+        navigationStore.dispatchComponentURL(repoKey, basyxComponents[repoKey].url, false);
+    }
 
     return router;
 }

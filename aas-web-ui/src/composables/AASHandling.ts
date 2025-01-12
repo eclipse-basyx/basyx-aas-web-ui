@@ -43,11 +43,12 @@ export function useAASHandling() {
         if (aasId === '') return failResponse;
 
         const aasDescriptor = await fetchAasDescriptorById(aasId);
+        const aasEndpoint = getEndpoint(aasDescriptor);
 
-        return getEndpoint(aasDescriptor);
+        return aasEndpoint;
     }
 
-    async function getEndpoint(aas: any): Promise<string> {
+    function getEndpoint(aas: any): string {
         const failResponse = '';
 
         if (!aas || Object.keys(aas).length === 0 || !aas.id || aas.id.trim() === '') return failResponse;
