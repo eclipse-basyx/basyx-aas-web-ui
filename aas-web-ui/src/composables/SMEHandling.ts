@@ -5,26 +5,40 @@ import { useConceptDescriptionHandling } from './ConceptDescriptionHandling';
 
 export function useSMEHandling() {
     // Composables
-    const { fetchSm, fetchSme } = useSMRepositoryClient();
+    const { fetchSm: fetchSmFromRepo, fetchSme: fetchSmeFromRepo } = useSMRepositoryClient();
     const { getConceptDescriptions } = useConceptDescriptionHandling();
 
     // Stores
     const aasStore = useAASStore();
 
     // Fetch and dispatch SME
-    async function fetchAndDispatchSme(submodelElementPath: string, withConceptDescriptions = false): Promise<void> {
-        // console.log('fetchAndDispatchSme()', submodelElementPath);
-
+    async function fetchAndDispatchSme(
+        submodelElementPath: string,
+        withConceptDescriptions: boolean = false
+    ): Promise<void> {
         submodelElementPath = submodelElementPath.trim();
 
         if (submodelElementPath === '') return;
 
+        const smOrSme = await fetchSme(submodelElementPath, withConceptDescriptions);
+
+        aasStore.dispatchSelectedNode(smOrSme);
+    }
+
+    // Fetch SME
+    async function fetchSme(submodelElementPath: string, withConceptDescriptions: boolean = false): Promise<any> {
+        const failResponse = {};
+
+        submodelElementPath = submodelElementPath.trim();
+
+        if (submodelElementPath === '') return failResponse;
+
         let smOrSme = {} as any;
         if (submodelElementPath.includes('/submodel-elements/')) {
-            smOrSme = await fetchSme(submodelElementPath);
+            smOrSme = await fetchSmeFromRepo(submodelElementPath);
         } else {
             // No valid SME path, maybe just SM endpoint
-            smOrSme = await fetchSm(submodelElementPath);
+            smOrSme = await fetchSmFromRepo(submodelElementPath);
 
             // Note usage of fetchAndDispatchSm() (SMHandling) not possible
             // Reciprocal import of SMHandling/SMEHandling leads to error "Maximum call stack size exceeded"
@@ -33,7 +47,7 @@ export function useSMEHandling() {
         if (!smOrSme || Object.keys(smOrSme).length === 0) {
             console.warn('Fetched empty SME/SM');
             aasStore.dispatchSelectedNode({});
-            return;
+            return failResponse;
         }
 
         smOrSme.timestamp = formatDate(new Date());
@@ -42,10 +56,12 @@ export function useSMEHandling() {
 
         if (withConceptDescriptions) {
             smOrSme.conceptDescriptions = await getConceptDescriptions(smOrSme);
+        } else {
+            smOrSme.conceptDescriptions = [];
         }
 
-        aasStore.dispatchSelectedNode(smOrSme);
+        return smOrSme;
     }
 
-    return { fetchAndDispatchSme };
+    return { fetchSme, fetchAndDispatchSme };
 }

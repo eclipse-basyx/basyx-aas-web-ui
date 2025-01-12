@@ -12,11 +12,11 @@ export function useAASHandling() {
 
     // Fetch and dispatch AAS
     async function fetchAndDispatchAas(aasEndpoint: string): Promise<any> {
-        // console.log('fetchAndDispatchAas()', aasEndpoint);
+        const failResponse = {};
 
         aasEndpoint = aasEndpoint.trim();
 
-        if (aasEndpoint === '') return {};
+        if (aasEndpoint === '') return failResponse;
 
         const aas = await fetchAas(aasEndpoint);
 
@@ -27,11 +27,11 @@ export function useAASHandling() {
 
     // Fetch and dispatch AAS
     async function fetchAndDispatchAasById(aasId: string): Promise<any> {
-        // console.log('fetchAndDispatchAasById()', aasId);
+        const failResponse = {};
 
         aasId = aasId.trim();
 
-        if (aasId === '') return {};
+        if (aasId === '') return failResponse;
 
         const aas = await fetchAasById(aasId);
 
@@ -40,13 +40,13 @@ export function useAASHandling() {
         return aas;
     }
 
-    // Fetch and dispatch AAS
+    // Fetch AAS
     async function fetchAas(aasEndpoint: string): Promise<any> {
-        // console.log('fetchAndDispatchAas()', aasEndpoint);
+        const failResponse = {};
 
         aasEndpoint = aasEndpoint.trim();
 
-        if (aasEndpoint === '') return;
+        if (aasEndpoint === '') return failResponse;
 
         const aas = await fetchAasFromRepo(aasEndpoint);
 
@@ -61,19 +61,19 @@ export function useAASHandling() {
         return aas;
     }
 
-    // Fetch and dispatch AAS
+    // Fetch AAS
     async function fetchAasById(aasId: string): Promise<any> {
-        // console.log('fetchAasById()', aasEndpoint);
+        const failResponse = {};
 
         aasId = aasId.trim();
 
-        if (aasId === '') return {};
+        if (aasId === '') return failResponse;
 
         const aas = await fetchAasByIdFromRepo(aasId);
 
         if (!aas || Object.keys(aas).length === 0) {
             console.warn('Fetched empty AAS');
-            return;
+            return failResponse;
         }
 
         const aasEndpoint = extractEndpointHref(aas, 'AAS-3.0');
