@@ -1,7 +1,7 @@
 import { computed } from 'vue';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
-import { URLEncode } from '@/utils/EncodeDecodeUtils';
+import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
 export function useAASDicoveryClient() {
     const { getRequest } = useRequestHandling();
@@ -25,7 +25,7 @@ export function useAASDicoveryClient() {
         }
 
         const assetIdObject = JSON.stringify({ name: 'globalAssetId', value: globalAssetId });
-        const aasDiscoveryPath = `${aasDiscoveryUrl.value}?assetIds=${URLEncode(assetIdObject)}`;
+        const aasDiscoveryPath = `${aasDiscoveryUrl.value}?assetIds=${base64Encode(assetIdObject)}`;
         const aasDiscoveryContext = 'retrieving AAS ID by AssetID';
         const disableMessage = true;
         try {
