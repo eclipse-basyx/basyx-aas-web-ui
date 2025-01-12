@@ -4,10 +4,16 @@ import { base64Decode, base64Encode } from '@/utils/EncodeDecodeUtils';
 // Define test data
 const testData = [
     {
-        testId: '86b04fb5-a1d4-4f8b-9b60-e2c8ee3ff0e3',
+        testId: 'f2d87b2f-78b2-4aa4-ada5-ed7a8b10523f',
         id: 'https://basyx.org/aas/123456789',
         base64Id: 'aHR0cHM6Ly9iYXN5eC5vcmcvYWFzLzEyMzQ1Njc4OQ==',
         urlSafeBase64Id: 'aHR0cHM6Ly9iYXN5eC5vcmcvYWFzLzEyMzQ1Njc4OQ',
+    },
+    {
+        testId: '625bfc82-f01b-4f52-b8f8-ed10fb2476f8',
+        id: '',
+        base64Id: '',
+        urlSafeBase64Id: '',
     },
 ];
 
@@ -22,6 +28,7 @@ describe("EncodeDecodeUtils.ts; Tests for 'base64Encode()'", () => {
         it(`${testDataset.testId}: base64Encode('${input}') === '${resultUrlSafe}'`, () => {
             // Perform the assertion
             expect(base64Encode(input)).toStrictEqual(resultUrlSafe);
+            expect(base64Encode(input, true)).toStrictEqual(resultUrlSafe);
         });
 
         it(`${testDataset.testId}: base64Encode('${input}') === '${result}'`, () => {
