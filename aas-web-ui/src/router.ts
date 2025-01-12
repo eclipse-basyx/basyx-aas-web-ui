@@ -150,63 +150,78 @@ export async function createAppRouter(): Promise<Router> {
         // TODO Remove keep alive from App.vue
         // TODO Move route handling (handleMobileView(), handleDesktopView()) from App.vue to this route guard
 
-        console.log('Route Guard: ', 'from:', from, 'to:', to);
+        // console.log('Route Guard: ', 'from:', from, 'to:', to);
 
-        // Resolving ID query parameter
-        if (to.query.globalassetid || to.query.aasId || to.query.smId) {
-            console.log('aasId/smId resolving from:', to);
-            let aasEndpoint = '';
-            let smEndpoint = '';
+        // Resolving ID query parameter; note that query parameter are handled case sensitive
+        const possibleGloBalAssetIdQueryParameter = ['globalAssetId', 'globalassedid'];
+        const possibleAasIdQueryParameter = ['aasId', 'aasid'];
+        const possibleSmIdQueryParameter = ['smId', 'smid'];
+        const possibleIdQueryParameter = [
+            ...possibleGloBalAssetIdQueryParameter,
+            ...possibleAasIdQueryParameter,
+            ...possibleSmIdQueryParameter,
+        ];
+        if (possibleIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater))) {
+            // console.log('globalAssetId/aasId/smId resolving from:', to);
 
             // Resolve globalAssetId (ignore possible specified aasId/smId)
-            // if (to.query.globalassetid) {
-            //     const globalAssetIdBase64Encoded = to.query.globalassetid as string;
-            //     const globalAssetId = base64Decode(globalAssetIdBase64Encoded);
-            //     const aasId = await getAasId(globalAssetId);
-            //     const aasEndpoint = await getAasEndpointById(aasId);
-            //     const query = {} as LocationQuery;
+            if (possibleGloBalAssetIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater))) {
+                // console.log('globalAssetId resolving from:', to);
+                const globalAssetIdBase64Encoded = to.query[possibleGloBalAssetIdQueryParameter[0]]
+                    ? (to.query[possibleGloBalAssetIdQueryParameter[0]] as string)
+                    : (to.query[possibleGloBalAssetIdQueryParameter[1]] as string);
+                const globalAssetId = base64Decode(globalAssetIdBase64Encoded);
+                const aasId = await getAasId(globalAssetId);
+                const aasEndpoint = await getAasEndpointById(aasId);
+                const query = {} as LocationQuery;
 
-            //     if (aasEndpoint.trim() !== '') {
-            //         query.aas = aasEndpoint;
-            //         const updatedRoute = Object.assign({}, to, {
-            //             query: query,
-            //         });
-            //         next(updatedRoute);
-            //         return;
-            //     }
-            // }
+                if (aasEndpoint.trim() !== '') {
+                    query.aas = aasEndpoint.trim();
+                    const updatedRoute = Object.assign({}, to, {
+                        query: query,
+                    });
+                    next(updatedRoute);
+                    return;
+                }
+            }
 
             // Resolve aasId and/or smId
-            if (to.query.aasId || to.query.smId) {
+            if (
+                possibleAasIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater)) ||
+                possibleSmIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater))
+            ) {
+                // console.log('aasId/smid resolving from:', to);
+                let aasEndpoint = '';
+                let smEndpoint = '';
+
                 if (to.query.aasId) {
-                    const aasIdBase64Encoded = to.query.aasId as string;
-                    console.log('aasIdBase64Encoded:', aasIdBase64Encoded);
+                    // console.log('aasId resolving');
+                    const aasIdBase64Encoded = to.query[possibleAasIdQueryParameter[0]]
+                        ? (to.query[possibleAasIdQueryParameter[0]] as string)
+                        : (to.query[possibleAasIdQueryParameter[1]] as string);
                     const aasId = base64Decode(aasIdBase64Encoded);
-                    console.log('aasId:', aasId);
-                    // Note aasRegistryURL not dispatched
-                    console.log('navigationStore.getAASRegistryURL', navigationStore.getAASRegistryURL);
                     aasEndpoint = await getAasEndpointById(aasId);
-                    console.log('aasEndpoint:', aasEndpoint);
                 }
                 if (to.query.smId) {
-                    const smIdBase64Encoded = to.query.smId as string;
+                    // console.log('smId resolving');
+                    const smIdBase64Encoded = to.query[possibleSmIdQueryParameter[0]]
+                        ? (to.query[possibleSmIdQueryParameter[0]] as string)
+                        : (to.query[possibleSmIdQueryParameter[1]] as string);
                     const smId = base64Decode(smIdBase64Encoded);
                     smEndpoint = await getSmEndpointById(smId);
                 }
 
                 const query = {} as LocationQuery;
 
-                if (aasEndpoint.trim() !== '') query.aas = aasEndpoint;
-                if (smEndpoint.trim() !== '') query.path = smEndpoint;
+                if (aasEndpoint.trim() !== '') query.aas = aasEndpoint.trim();
+                if (smEndpoint.trim() !== '') query.path = smEndpoint.trim();
 
                 const updatedRoute = Object.assign({}, to, {
                     query: query,
                 });
 
-                console.log('aasId/smId resolving to:', updatedRoute);
-
-                // next(updatedRoute);
-                // return;
+                next(updatedRoute);
+                return;
             }
         }
 
