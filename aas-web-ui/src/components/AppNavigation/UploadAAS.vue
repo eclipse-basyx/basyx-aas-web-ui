@@ -45,12 +45,12 @@
     import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
     import { AASDescriptor, AdministrativeInformation, Endpoint, ProtocolInformation, SubmodelDescriptor } from '@/types/Descriptors';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
-import { sub } from 'three/webgpu';
 
     const { fetchAas, uploadAas } = useAASRepositoryClient();
     const { fetchSmById } = useSMRepositoryClient();
     const navigationStore = useNavigationStore();
     const aasRepositoryUrl = computed(() => navigationStore.getAASRepoURL);
+    const smRepositoryUrl = computed(() => navigationStore.getSubmodelRepoURL);
     const { postAasDescriptor } = useAASRegistryClient();
     const { postSMDescriptor } = useSMRegistryClient();
 
@@ -168,9 +168,10 @@ import { sub } from 'three/webgpu';
     {
       let submodelId64 = btoa(submodelId);
       let submodel = await fetchSmById(submodelId64);
+      let href = smRepositoryUrl.value + "/" + submodelId64;
 
       const protocolInformation = new ProtocolInformation(
-            `http://localhost/aas4iih-api/api/v3.0/submodels/${submodelId64}`,
+            href,
             null,
             "http",
             null,
