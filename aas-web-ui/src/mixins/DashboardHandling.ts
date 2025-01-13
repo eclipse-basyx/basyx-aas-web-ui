@@ -4,6 +4,7 @@ import RequestHandling from '@/mixins/RequestHandling';
 import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useEnvStore } from '@/store/EnvironmentStore';
+import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
 export default defineComponent({
     name: 'DashboardHandling',
@@ -99,7 +100,7 @@ export default defineComponent({
         },
 
         async getElements(group: any) {
-            const pathGroup = this.URLEncode(group);
+            const pathGroup = base64Encode(group);
             const path = this.dashboardServicePath + '/findGroup/' + pathGroup;
             const context = 'fetching all elements of a group';
             const disableMessage = false;
@@ -112,7 +113,7 @@ export default defineComponent({
 
         async deleteGroup(groups: any, groupId: any): Promise<any[]> {
             // console.log(groups)
-            const pathGroup = this.URLEncode(groupId);
+            const pathGroup = base64Encode(groupId);
             const path = this.dashboardServicePath + '/deleteGroup/' + pathGroup;
             const context = 'deleting all elements of a group';
             const disableMessage = false;

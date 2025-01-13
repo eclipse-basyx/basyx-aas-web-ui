@@ -2,15 +2,11 @@
     <v-container fluid class="pa-0">
         <v-list nav class="pt-0 px-0">
             <!-- ConceptDescription Identification -->
-            <IdentificationElement
-                :identification-object="conceptDescriptionObject"
-                :model-type="conceptDescriptionObject.modelType"
-                :id-type="'Identification (ID)'"
-                :name-type="'idShort'"
-                :path="conceptDescriptionObject.path"></IdentificationElement>
+            <IdentificationElement :identification-object="conceptDescriptionObject"></IdentificationElement>
             <v-divider
-                v-if="conceptDescriptionObject.displayName && conceptDescriptionObject.displayName.length > 0"
-                class="mt-2"></v-divider>
+                v-if="
+                    conceptDescriptionObject.displayName && conceptDescriptionObject.displayName.length > 0
+                "></v-divider>
             <!-- ConceptDescription DisplayName -->
             <DisplayNameElement
                 v-if="conceptDescriptionObject.displayName && conceptDescriptionObject.displayName.length > 0"

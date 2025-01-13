@@ -37,6 +37,7 @@
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
+    import { nameToDisplay } from '@/utils/ReferableUtils';
 
     declare global {
         interface Window {
@@ -268,13 +269,13 @@
                     graphDefinition +=
                         parentNode.idShort +
                         '(' +
-                        parentNode.idShort +
+                        nameToDisplay(parentNode) +
                         ') -->|' +
                         relationship +
                         '| ' +
                         child.idShort +
                         '(' +
-                        child.idShort +
+                        nameToDisplay(child) +
                         ')\n'; // add the relationship to the graphDefinition
                     callBacks += 'click ' + child.idShort + ' call callback(' + child.globalAssetId + ')\n'; // add the callback to the callBacks
                     if (child.statements) {

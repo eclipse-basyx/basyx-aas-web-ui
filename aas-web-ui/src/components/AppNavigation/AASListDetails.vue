@@ -79,11 +79,8 @@
                 <v-list v-if="assetAdministrationShellData" lines="one" nav class="bg-detailsCard">
                     <!-- AAS Identification -->
                     <IdentificationElement
-                        class="mb-2"
                         :identification-object="assetAdministrationShellData"
-                        :model-type="'AAS'"
-                        :id-type="'Identification (ID)'"
-                        :name-type="'idShort'"></IdentificationElement>
+                        :v-chip-content="getKeyTypeAbbreviation(selectedAAS.modelType)"></IdentificationElement>
                     <!-- AAS Administrative Information-->
                     <v-divider v-if="assetAdministrationShellData?.administration" class="mt-2"></v-divider>
                     <AdministrativeInformationElement
@@ -136,6 +133,7 @@
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
+    import { getKeyTypeAbbreviation } from '@/utils/KeyTypesUtil';
 
     // Vue Router
     const route = useRoute();
