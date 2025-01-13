@@ -6,7 +6,7 @@ import { useIDUtils } from '@/composables/IDUtils';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
-import { URLEncode } from '@/utils/EncodeDecodeUtils';
+import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { downloadFile } from '@/utils/generalUtils';
 
 export function useAASRepositoryClient() {
@@ -152,7 +152,7 @@ export function useAASRepositoryClient() {
 
         const context = 'updating AAS';
         const disableMessage = false;
-        const path = aasRepositoryUrl.value + '/' + URLEncode(aas.id);
+        const path = aasRepositoryUrl.value + '/' + base64Encode(aas.id);
         const headers = new Headers();
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(jsonAas);
@@ -181,7 +181,7 @@ export function useAASRepositoryClient() {
         const path =
             aasRepositoryUrl.value +
             '/' +
-            URLEncode(aasId) +
+            base64Encode(aasId) +
             '/asset-information/thumbnail' +
             '?fileName=' +
             thumbnail.name;
@@ -251,9 +251,9 @@ export function useAASRepositoryClient() {
             // e.g. http://localhost:8081/serialization?aasIds=abc&submodelIds=def&submodelIds=ghi&includeConceptDescriptions=true)
             aasSerializationPath +=
                 '/serialization?aasIds=' +
-                URLEncode(aasId) +
+                base64Encode(aasId) +
                 '&submodelIds=' +
-                submodelIds.map((submodelId: string) => URLEncode(submodelId)).join('&submodelIds=') +
+                submodelIds.map((submodelId: string) => base64Encode(submodelId)).join('&submodelIds=') +
                 '&includeConceptDescriptions=true';
 
             const aasSerializationContext = 'retrieving AAS serialization';
