@@ -1,5 +1,12 @@
 import type { BaSyxComponent, RepositoryKey } from '@/types/BaSyx';
-import { createRouter, createWebHistory, LocationQuery, Router } from 'vue-router';
+import {
+    createRouter,
+    createWebHistory,
+    LocationQuery,
+    NavigationGuardNext,
+    RouteLocationNormalizedGeneric,
+    Router,
+} from 'vue-router';
 import AASList from '@/components/AppNavigation/AASList.vue';
 import ComponentVisualization from '@/components/ComponentVisualization.vue';
 import SubmodelList from '@/components/SubmodelList.vue';
@@ -140,90 +147,26 @@ export async function createAppRouter(): Promise<Router> {
     const { getEndpointById: getSmEndpointById } = useSMHandling();
     const { fetchAndDispatchSme } = useSMEHandling();
 
+    // Data
+    const possibleGloBalAssetIdQueryParameter = ['globalAssetId', 'globalassedid'];
+    const possibleAasIdQueryParameter = ['aasId', 'aasid'];
+    const possibleSmIdQueryParameter = ['smId', 'smid'];
+    const possibleIdQueryParameter = [
+        ...possibleGloBalAssetIdQueryParameter,
+        ...possibleAasIdQueryParameter,
+        ...possibleSmIdQueryParameter,
+    ];
+
     const router = createRouter({
         history: createWebHistory(base),
         routes,
     });
 
     router.beforeEach(async (to, from, next) => {
-        // TODO Fetch and dispatching of AAS/SM/SME with respect to URL query parameter
-        // TODO Remove keep alive from App.vue
+        // Handle redirection of `globalAssetId`, `aasId` and `smId`
+        if (await idRedirectHandled(to, next)) return;
+
         // TODO Move route handling (handleMobileView(), handleDesktopView()) from App.vue to this route guard
-
-        // console.log('Route Guard: ', 'from:', from, 'to:', to);
-
-        // Resolving ID query parameter; note that query parameter are handled case sensitive
-        const possibleGloBalAssetIdQueryParameter = ['globalAssetId', 'globalassedid'];
-        const possibleAasIdQueryParameter = ['aasId', 'aasid'];
-        const possibleSmIdQueryParameter = ['smId', 'smid'];
-        const possibleIdQueryParameter = [
-            ...possibleGloBalAssetIdQueryParameter,
-            ...possibleAasIdQueryParameter,
-            ...possibleSmIdQueryParameter,
-        ];
-        if (possibleIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater))) {
-            // console.log('globalAssetId/aasId/smId resolving from:', to);
-
-            // Resolve globalAssetId (ignore possible specified aasId/smId)
-            if (possibleGloBalAssetIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater))) {
-                // console.log('globalAssetId resolving from:', to);
-                const globalAssetIdBase64Encoded = to.query[possibleGloBalAssetIdQueryParameter[0]]
-                    ? (to.query[possibleGloBalAssetIdQueryParameter[0]] as string)
-                    : (to.query[possibleGloBalAssetIdQueryParameter[1]] as string);
-                const globalAssetId = base64Decode(globalAssetIdBase64Encoded);
-                const aasId = await getAasId(globalAssetId);
-                const aasEndpoint = await getAasEndpointById(aasId);
-                const query = {} as LocationQuery;
-
-                if (aasEndpoint.trim() !== '') {
-                    query.aas = aasEndpoint.trim();
-                    const updatedRoute = Object.assign({}, to, {
-                        query: query,
-                    });
-                    next(updatedRoute);
-                    return;
-                }
-            }
-
-            // Resolve aasId and/or smId
-            if (
-                possibleAasIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater)) ||
-                possibleSmIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater))
-            ) {
-                // console.log('aasId/smid resolving from:', to);
-                let aasEndpoint = '';
-                let smEndpoint = '';
-
-                if (to.query.aasId) {
-                    // console.log('aasId resolving');
-                    const aasIdBase64Encoded = to.query[possibleAasIdQueryParameter[0]]
-                        ? (to.query[possibleAasIdQueryParameter[0]] as string)
-                        : (to.query[possibleAasIdQueryParameter[1]] as string);
-                    const aasId = base64Decode(aasIdBase64Encoded);
-                    aasEndpoint = await getAasEndpointById(aasId);
-                }
-                if (to.query.smId) {
-                    // console.log('smId resolving');
-                    const smIdBase64Encoded = to.query[possibleSmIdQueryParameter[0]]
-                        ? (to.query[possibleSmIdQueryParameter[0]] as string)
-                        : (to.query[possibleSmIdQueryParameter[1]] as string);
-                    const smId = base64Decode(smIdBase64Encoded);
-                    smEndpoint = await getSmEndpointById(smId);
-                }
-
-                const query = {} as LocationQuery;
-
-                if (aasEndpoint.trim() !== '') query.aas = aasEndpoint.trim();
-                if (smEndpoint.trim() !== '') query.path = smEndpoint.trim();
-
-                const updatedRoute = Object.assign({}, to, {
-                    query: query,
-                });
-
-                next(updatedRoute);
-                return;
-            }
-        }
 
         // Same route
         if (from.name && from.name === to.name) {
@@ -273,11 +216,124 @@ export async function createAppRouter(): Promise<Router> {
                 }
             }
         }
+
+        // TODO Fetch and dispatching of AAS/SM/SME with respect to URL query parameter
+        // TODO Remove keep alive from App.vue
+
         next();
     });
 
     function connectComponent(repoKey: keyof typeof basyxComponents) {
         navigationStore.dispatchComponentURL(repoKey, basyxComponents[repoKey].url, false);
+    }
+
+    /**
+     * Handles the redirection of `globalAssetId`, `aasId` and `smId` query parameter from the given route location.
+     *
+     * @async
+     * @function idRedirectHandled
+     * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
+     * @param {NavigationGuardNext} next - A function that must be called to resolve the hook. The action depends on the arguments provided to `next`.
+     * @returns {Promise<boolean>} - Returns a promise that resolves to true if a redirection was performed, otherwise false.
+     */
+    async function idRedirectHandled(to: RouteLocationNormalizedGeneric, next: NavigationGuardNext): Promise<boolean> {
+        // Note: Query parameter are handled case sensitive!
+        if (possibleIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater))) {
+            if (await globalAssetIdRedirectHandled(to, next)) return true;
+            if (await aasIdSmIdRedirectHandled(to, next)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Handles the redirection of `globalAssetId` query parameter from the given route location.
+     * It resolves the `globalAssetId` to an `aasId` and finally to an `aasEndpoint`, and updates the route query.
+     *
+     * @async
+     * @function globalAssetIdRedirectHandled
+     * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
+     * @param {NavigationGuardNext} next - A function that must be called to resolve the hook. The action depends on the arguments provided to `next`.
+     * @returns {Promise<boolean>} - Returns a promise that resolves to true if a redirection was performed, otherwise false.
+     */
+    async function globalAssetIdRedirectHandled(
+        to: RouteLocationNormalizedGeneric,
+        next: NavigationGuardNext
+    ): Promise<boolean> {
+        if (possibleGloBalAssetIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater))) {
+            const globalAssetIdBase64Encoded = to.query[possibleGloBalAssetIdQueryParameter[0]]
+                ? (to.query[possibleGloBalAssetIdQueryParameter[0]] as string)
+                : (to.query[possibleGloBalAssetIdQueryParameter[1]] as string);
+            const globalAssetId = base64Decode(globalAssetIdBase64Encoded);
+            const aasId = await getAasId(globalAssetId);
+            const aasEndpoint = await getAasEndpointById(aasId);
+            const query = {} as LocationQuery;
+
+            if (aasEndpoint.trim() !== '') {
+                query.aas = aasEndpoint.trim();
+                const updatedRoute = Object.assign({}, to, {
+                    query: query,
+                });
+                next(updatedRoute);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Handles the redirection of `aasId` and `smId` query parameter from the given route location.
+     * It resolves the `aasId`to an `aasEndpoint`, the `smId`to an `smEndpoint` and updates the route query.
+     *
+     * @async
+     * @function aasIdSmIdRedirectHandled
+     * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
+     * @param {NavigationGuardNext} next - A function that must be called to resolve the hook. The action depends on the arguments provided to `next`.
+     * @returns {Promise<boolean>} - Returns a promise that resolves to true if a redirection was performed, otherwise false.
+     */
+    async function aasIdSmIdRedirectHandled(
+        to: RouteLocationNormalizedGeneric,
+        next: NavigationGuardNext
+    ): Promise<boolean> {
+        if (
+            possibleAasIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater)) ||
+            possibleSmIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater))
+        ) {
+            let aasEndpoint = '';
+            let smEndpoint = '';
+
+            if (to.query.aasId) {
+                const aasIdBase64Encoded = to.query[possibleAasIdQueryParameter[0]]
+                    ? (to.query[possibleAasIdQueryParameter[0]] as string)
+                    : (to.query[possibleAasIdQueryParameter[1]] as string);
+                const aasId = base64Decode(aasIdBase64Encoded);
+                aasEndpoint = await getAasEndpointById(aasId);
+            }
+            if (to.query.smId) {
+                const smIdBase64Encoded = to.query[possibleSmIdQueryParameter[0]]
+                    ? (to.query[possibleSmIdQueryParameter[0]] as string)
+                    : (to.query[possibleSmIdQueryParameter[1]] as string);
+                const smId = base64Decode(smIdBase64Encoded);
+                smEndpoint = await getSmEndpointById(smId);
+            }
+
+            aasEndpoint = aasEndpoint.trim();
+            smEndpoint = smEndpoint.trim();
+
+            if (aasEndpoint !== '' || smEndpoint !== '') {
+                const query = {} as LocationQuery;
+
+                if (aasEndpoint !== '') query.aas = aasEndpoint.trim();
+                if (smEndpoint !== '') query.path = smEndpoint.trim();
+
+                const updatedRoute = Object.assign({}, to, {
+                    query: query,
+                });
+
+                next(updatedRoute);
+                return true;
+            }
+        }
+        return false;
     }
 
     return router;
