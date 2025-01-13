@@ -24,7 +24,7 @@
                 v-if="dataSpecificationObject.levelTypes && dataSpecificationObject.levelTypes.length > 0"
                 class="mt-2"></v-divider>
             <!-- levelTypes -->
-            <!-- TODO: needs visual update -->
+            <!-- TODO: DataSpecification levelTypes needs visual update -->
             <v-list-item-title
                 v-if="dataSpecificationObject.levelTypes && dataSpecificationObject.levelTypes.length > 0"
                 class="pt-2 pl-2">
@@ -80,7 +80,7 @@
                 v-if="dataSpecificationObject.valueList && dataSpecificationObject.valueList.length > 0"
                 class="mt-2"></v-divider>
             <!-- valueList -->
-            <!-- TODO: needs visual update -->
+            <!-- TODO: DataSpecification valueList needs visual update -->
             <v-list-item-title
                 v-if="dataSpecificationObject.valueList && dataSpecificationObject.valueList.length > 0"
                 class="pt-2 pl-2">
