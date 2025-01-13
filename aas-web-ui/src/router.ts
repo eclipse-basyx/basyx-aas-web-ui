@@ -166,7 +166,7 @@ export async function createAppRouter(): Promise<Router> {
         // Handle redirection of `globalAssetId`, `aasId` and `smId`
         if (await idRedirectHandled(to, next)) return;
 
-        // TODO Move route handling (handleMobileView(), handleDesktopView()) from App.vue to this route guard
+        // TODO Move route handling (handleMobileView(), handleDesktopView()) from App.vue to this route guard: https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/225
 
         // Same route
         if (from.name && from.name === to.name) {
