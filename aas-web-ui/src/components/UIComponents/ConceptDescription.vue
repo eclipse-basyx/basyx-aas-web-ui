@@ -1,6 +1,6 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-list nav class="pt-0 px-0">
+        <v-list nav>
             <!-- ConceptDescription Identification -->
             <IdentificationElement
                 :identification-object="conceptDescriptionObject"
@@ -72,6 +72,9 @@
                 </v-list>
             </v-card>
         </v-list>
+        <!-- Last Sync -->
+        <v-divider></v-divider>
+        <LastSync :timestamp="conceptDescriptionObject.timestamp"></LastSync>
     </v-container>
 </template>
 

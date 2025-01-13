@@ -137,32 +137,24 @@
                             :is-editable="editMode"></AnnotatedRelationshipElement>
                         <InvalidElement v-else :invalid-element-object="submodelElementData"></InvalidElement>
                     </v-list>
-                    <!-- ConceptDescriptions -->
-                    <v-divider v-if="conceptDescriptions && conceptDescriptions.length > 0"></v-divider>
-                    <v-list v-if="conceptDescriptions && conceptDescriptions.length > 0" nav>
-                        <v-list-item
-                            v-for="(conceptDescription, index) in conceptDescriptions"
-                            :key="conceptDescription.id">
-                            <ConceptDescription :concept-description-object="conceptDescription"></ConceptDescription>
-                            <v-divider v-if="index !== conceptDescriptions.length - 1" class="mt-2"></v-divider>
-                        </v-list-item>
-                    </v-list>
                     <!-- Last Sync -->
                     <v-divider></v-divider>
-                    <v-list class="py-0">
-                        <v-list-item>
-                            <v-list-item-subtitle>
-                                <span class="text-caption">{{ 'Last sync: ' }}</span>
-                                <span
-                                    class="text-caption"
-                                    :class="
-                                        submodelElementData.timestamp == 'no sync' ? 'text-error' : 'text-subtitleText'
-                                    "
-                                    >{{ submodelElementData.timestamp }}</span
-                                >
-                            </v-list-item-subtitle>
-                        </v-list-item>
-                    </v-list>
+                    <LastSync :timestamp="submodelElementData.timestamp"></LastSync>
+                </v-card>
+                <v-card
+                    v-if="
+                        selectedAAS &&
+                        Object.keys(selectedAAS).length > 0 &&
+                        submodelElementData &&
+                        Object.keys(submodelElementData).length > 0 &&
+                        conceptDescriptions &&
+                        conceptDescriptions.length > 0
+                    "
+                    class="mt-3">
+                    <template v-for="(conceptDescription, index) in conceptDescriptions" :key="conceptDescription.id">
+                        <ConceptDescription :concept-description-object="conceptDescription"></ConceptDescription>
+                        <v-divider v-if="index !== conceptDescriptions.length - 1" class="mt-2"></v-divider>
+                    </template>
                 </v-card>
                 <v-empty-state
                     v-else-if="!selectedAAS || Object.keys(selectedAAS).length === 0"
