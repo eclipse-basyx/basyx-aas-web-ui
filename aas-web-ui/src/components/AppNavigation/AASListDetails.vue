@@ -47,7 +47,7 @@
                 <!-- 2) Minimal (empty) AssetInformation (generated with aas4j) will be { assetKind: null } -->
                 <AssetInformation
                     v-if="assetInformation?.assetKind && Object.keys(assetInformation).length > 1"
-                    :asset-object="assetInformation"></AssetInformation>
+                    :asset-information="assetInformation"></AssetInformation>
                 <v-divider
                     v-if="assetInformation?.assetKind && Object.keys(assetInformation).length > 1"
                     thickness="2"></v-divider>
