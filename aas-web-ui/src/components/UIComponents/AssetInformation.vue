@@ -16,8 +16,8 @@
             <SpecificAssetIds :asset-object="assetInformation"></SpecificAssetIds>
             <v-divider v-if="assetInformation.defaultThumbnail" class="mt-2"></v-divider>
             <v-img
-                v-if="assetInformation.defaultThumbnail"
-                :src="assetInformation.defaultThumbnail.path"
+                v-if="defaultThumbnailUrl"
+                :src="defaultThumbnailUrl"
                 max-width="100%"
                 :max-height="thumbnailMaxHeight"
                 contain
@@ -27,7 +27,12 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, onBeforeMount, onMounted, ref } from 'vue';
+    import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+    import { useTechnicalData_v1_2Utils } from '@/composables/SubmodelTemplates/TechnicalData_v1_2Utils';
+    import { useAASStore } from '@/store/AASDataStore';
+
+    // Composables
+    const { getProductImageUrl: getProductImageUrlFromSmTechnicalData } = useTechnicalData_v1_2Utils();
 
     // Props
     const props = defineProps({
@@ -37,8 +42,12 @@
         },
     });
 
+    // Stores
+    const aasStore = useAASStore();
+
     // Data
     const thumbnailMaxHeight = ref(0 as number);
+    const defaultThumbnailUrl = ref('' as string);
 
     // Computed
     const assetInfo = computed(() => {
@@ -47,24 +56,60 @@
             id: props.assetInformation.globalAssetId,
         };
     });
+    const selectedAas = computed(() => aasStore.getSelectedAAS);
     const screenHeight = computed(() => {
         return document.documentElement.clientHeight;
     });
 
+    // Watcher
+    watch(
+        () => props.assetInformation,
+        () => {
+            initialize();
+        }
+    );
+
     onMounted(() => {
         window.addEventListener('resize', handleResize);
+        initialize();
         handleResize();
     });
 
-    onBeforeMount(() => {
+    onBeforeUnmount(() => {
         window.removeEventListener('resize', handleResize);
     });
 
-    function handleResize() {
+    async function initialize(): Promise<void> {
+        if (!props.assetInformation || Object.keys(props.assetInformation).length === 0) {
+            defaultThumbnailUrl.value = '';
+            return;
+        }
+
+        if (
+            props.assetInformation.defaultThumbnail &&
+            Object.keys(props.assetInformation.defaultThumbnail).length > 0 &&
+            props.assetInformation.defaultThumbnail?.path &&
+            props.assetInformation.defaultThumbnail?.path.trim() !== ''
+        ) {
+            defaultThumbnailUrl.value = props.assetInformation.defaultThumbnail.path.trim();
+        } else {
+            const productImageUrlFromSmTechnicalData = await getProductImageUrlFromSmTechnicalData(
+                selectedAas.value.id
+            );
+
+            if (productImageUrlFromSmTechnicalData && productImageUrlFromSmTechnicalData.trim() !== '') {
+                defaultThumbnailUrl.value = productImageUrlFromSmTechnicalData.trim();
+            } else {
+                defaultThumbnailUrl.value = '';
+            }
+        }
+    }
+
+    function handleResize(): void {
         calcThumbnailMaxHeight();
     }
 
-    function calcThumbnailMaxHeight() {
+    function calcThumbnailMaxHeight(): void {
         const toolbarHeight = document.getElementsByClassName('v-toolbar')[0]?.clientHeight as number;
         const footerHeight = document.getElementsByClassName('v-footer')[0]?.clientHeight as number;
         const closeSidebarHeight = document.getElementById('closeAasList')?.clientHeight as number;
