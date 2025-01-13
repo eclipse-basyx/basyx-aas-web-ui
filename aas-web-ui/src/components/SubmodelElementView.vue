@@ -14,11 +14,7 @@
                     ">
                     <v-list nav>
                         <!-- SubmodelELement Identification -->
-                        <IdentificationElement
-                            :identification-object="submodelElementData"
-                            :model-type="submodelElementData.modelType"
-                            :id-type="'Identification (ID)'"
-                            :name-type="'idShort'"></IdentificationElement>
+                        <IdentificationElement :identification-object="submodelElementData"></IdentificationElement>
                         <!-- Submodel Administrative Information-->
                         <v-divider
                             v-if="
