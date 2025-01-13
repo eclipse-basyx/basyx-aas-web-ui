@@ -5,7 +5,7 @@
                 id="assetInformationIdentification"
                 :identification-object="assetInfo"
                 :v-chip-content="assetObject.assetKind"
-                :identification-name="'Global Asset ID'"></IdentificationElement>
+                :identification-title="'Global Asset ID'"></IdentificationElement>
             <v-divider
                 v-if="
                     assetObject?.specificAssetIds &&
