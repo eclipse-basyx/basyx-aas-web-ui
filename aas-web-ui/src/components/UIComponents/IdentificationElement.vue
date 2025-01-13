@@ -15,7 +15,7 @@
                                 (!identificationObject?.modelType || identificationObject.modelType !== 'Asset')
                             "
                             class="text-caption">
-                            <span class="font-weight-bold">{{ idShortTitle + ':' }}</span
+                            <span class="font-weight-bold">{{ idShortTitle + ': ' }}</span
                             >{{ identificationObject['idShort'] }}
                         </div>
                     </v-tooltip>
