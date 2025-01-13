@@ -80,7 +80,9 @@
                     <!-- AAS Identification -->
                     <IdentificationElement
                         :identification-object="assetAdministrationShellData"
-                        :v-chip-content="getKeyTypeAbbreviation(selectedAAS.modelType)"></IdentificationElement>
+                        :v-chip-content="
+                            getKeyTypeAbbreviation(assetAdministrationShellData.modelType)
+                        "></IdentificationElement>
                     <!-- AAS Administrative Information-->
                     <v-divider v-if="assetAdministrationShellData?.administration" class="mt-2"></v-divider>
                     <AdministrativeInformationElement
