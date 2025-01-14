@@ -1,6 +1,6 @@
 <template>
     <!-- Dialog for creating/editing Submodel -->
-    <SubmodelForm v-model="editDialog" :new-sm="newSm" :submodel="smToEdit"></SubmodelForm>
+    <SubmodelForm v-model="editDialog" :new-sm="newSubmodel" :submodel="submodelToEdit"></SubmodelForm>
     <v-container fluid class="pa-0">
         <v-card color="rgba(0,0,0,0)" elevation="0">
             <v-card-title style="padding: 15px 16px 16px">
@@ -48,7 +48,8 @@
                                 :key="item.id"
                                 class="root"
                                 :item="item"
-                                :depth="0"></VTreeview>
+                                :depth="0"
+                                @open-edit-dialog="openEditDialog(false, $event)"></VTreeview>
                         </template>
                         <v-empty-state
                             v-else
@@ -100,8 +101,8 @@
     const initialUpdate = ref(false); // Flag to check if the initial update of the Treeview is needed and/or done
     const initialNode = ref({} as any); // Initial Node to set the Treeview to
     const editDialog = ref(false); // // Variable to store if the Edit Dialog should be shown
-    const newSm = ref(false); // Variable to store if a new Submodel should be created
-    const smToEdit = ref<any | undefined>(undefined); // Variable to store the Submodel to be edited
+    const newSubmodel = ref(false); // Variable to store if a new Submodel should be created
+    const submodelToEdit = ref<any | undefined>(undefined); // Variable to store the Submodel to be edited
 
     // Computed Properties
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // get selected AAS from Store
@@ -411,9 +412,9 @@
 
     function openEditDialog(createNew: boolean, submodel?: any): void {
         editDialog.value = true;
-        newSm.value = createNew;
+        newSubmodel.value = createNew;
         if (createNew === false && submodel) {
-            smToEdit.value = submodel;
+            submodelToEdit.value = submodel;
         }
     }
 </script>

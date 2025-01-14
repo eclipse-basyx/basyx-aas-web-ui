@@ -66,7 +66,11 @@
                         >{{ item.modelType }}</v-chip
                     >
                     <!-- Button to Copy the Path to the Clipboard -->
-                    <v-tooltip v-if="isActive" text="Copy Path to Clipboard" :open-delay="600" location="bottom">
+                    <v-tooltip
+                        v-if="isActive && (!editMode || item.modelType !== 'Submodel')"
+                        text="Copy Path to Clipboard"
+                        :open-delay="600"
+                        location="bottom">
                         <template #activator="{ props }">
                             <v-icon
                                 color="subtitleText"
@@ -76,6 +80,41 @@
                             >
                         </template>
                     </v-tooltip>
+                    <!-- Context menu for Submodels -->
+                    <v-menu v-if="editMode && item.modelType === 'Submodel'">
+                        <template #activator="{ props }">
+                            <v-btn icon="mdi-dots-vertical" variant="plain" color="subtitleText" v-bind="props"></v-btn>
+                        </template>
+                        <v-sheet border>
+                            <v-list density="compact" class="py-0">
+                                <!-- Copy Path to Clipboard -->
+                                <v-tooltip :open-delay="600" location="end">
+                                    <template #activator="{ props }">
+                                        <v-list-item slim v-bind="props" @click="copyPathToClipboard(item.path)">
+                                            <template #prepend>
+                                                <v-icon size="small">{{ copyIcon }} </v-icon>
+                                            </template>
+                                            Copy Path
+                                        </v-list-item>
+                                    </template>
+                                    <span>Copy Path to Clipboard</span>
+                                </v-tooltip>
+                                <v-divider></v-divider>
+                                <!-- Open Submodel edit dialog -->
+                                <v-tooltip :open-delay="600" location="end">
+                                    <template #activator="{ props }">
+                                        <v-list-item slim v-bind="props" @click="openEditDialog()">
+                                            <template #prepend>
+                                                <v-icon size="small">mdi-plus</v-icon>
+                                            </template>
+                                            Edit Submodel
+                                        </v-list-item>
+                                    </template>
+                                    <span>Edit existing Submodel</span>
+                                </v-tooltip>
+                            </v-list>
+                        </v-sheet>
+                    </v-menu>
                 </template>
             </v-list-item>
         </v-lazy>
@@ -135,6 +174,11 @@
             // get selected AAS from Store
             SelectedAAS() {
                 return this.aasStore.getSelectedAAS;
+            },
+
+            // Check if the current Route is the AAS Editor
+            editMode() {
+                return this.route.name === 'AASEditor';
             },
         },
 
@@ -209,6 +253,10 @@
                     btnColor: 'buttonText',
                     text: 'Path copied to Clipboard.',
                 });
+            },
+
+            openEditDialog() {
+                this.$emit('openEditDialog', this.item);
             },
         },
     });

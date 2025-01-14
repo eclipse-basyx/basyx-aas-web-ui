@@ -95,7 +95,7 @@ export function useSMRegistryClient() {
 
         const context = 'updating Submodel Descriptor';
         const disableMessage = false;
-        const path = submodelRegUrl + '/' + URLEncode(submodelDescriptor.id);
+        const path = submodelRegUrl + '/' + URLEncode(submodelDescriptor.id).replace(/%3D/g, '');
         const headers = new Headers();
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(submodelDescriptor);

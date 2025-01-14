@@ -103,7 +103,7 @@
     }>();
 
     const { fetchSmById, postSubmodel, putSubmodel } = useSMRepositoryClient();
-    const { putSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient();
+    const { putSubmodelDescriptor, createDescriptorFromSubmodel, fetchSmDescriptorById } = useSMRegistryClient();
     const { putAas } = useAASRepositoryClient();
 
     const editSMDialog = ref(false);
@@ -298,9 +298,11 @@
         } else {
             // Update existing Submodel
             await putSubmodel(submodelObject.value);
-            // Update AAS Descriptor
             const jsonSubmodel = jsonization.toJsonable(submodelObject.value);
-            const descriptor = createDescriptorFromSubmodel(jsonSubmodel, props.submodel.endpoints);
+            // Fetch the current desciptor from the registry
+            const fetchedDescriptor = await fetchSmDescriptorById(submodelObject.value.id);
+            const descriptor = createDescriptorFromSubmodel(jsonSubmodel, fetchedDescriptor.endpoints);
+            // Update AAS Descriptor
             await putSubmodelDescriptor(descriptor);
             if (submodelObject.value.id === selectedNode.value.id) {
                 const path = submodelRepoUrl.value + '/' + URLEncode(submodelObject.value.id).replace(/%3D/g, '');
