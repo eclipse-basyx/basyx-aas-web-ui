@@ -4,7 +4,7 @@ import { computed, ref } from 'vue';
 const isProduction = import.meta.env.MODE === 'production';
 
 export const useEnvStore = defineStore('envStore', () => {
-    // state
+    // States
     const basePath = ref(import.meta.env.VITE_BASE_PATH || (isProduction ? '/__BASE_PATH_PLACEHOLDER__/' : ''));
     const logoLightPath = ref(
         import.meta.env.VITE_LOGO_LIGHT_PATH || (isProduction ? '/__LOGO_LIGHT_PATH_PLACEHOLDER__/' : '')
@@ -81,7 +81,7 @@ export const useEnvStore = defineStore('envStore', () => {
         import.meta.env.VITE_EDITOR_ID_PREFIX || (isProduction ? '/__EDITOR_ID_PREFIX_PLACEHOLDER__/' : '')
     );
 
-    // getters
+    // Getters
     const getEnvBasePath = computed(() => basePath.value);
     const getEnvLogoLightPath = computed(() => logoLightPath.value);
     const getEnvLogoDarkPath = computed(() => logoDarkPath.value);
@@ -118,7 +118,15 @@ export const useEnvStore = defineStore('envStore', () => {
     const getBasicAuthActive = computed(() => basicAuthActive.value === 'true');
     const getBasicAuthUsername = computed(() => basicAuthUsername.value);
     const getBasicAuthPassword = computed(() => basicAuthPassword.value);
-    const getEditorIdPrefix = computed(() => editorIdPrefix.value);
+    const getEditorIdPrefix = computed(() => {
+        editorIdPrefix.value = editorIdPrefix.value.trim();
+
+        // Ensures editorIdPrefix ends with '/'
+        if (editorIdPrefix.value !== '' && !editorIdPrefix.value.endsWith('/')) {
+            editorIdPrefix.value += '/';
+        }
+        return editorIdPrefix.value;
+    });
 
     return {
         singleAas,
