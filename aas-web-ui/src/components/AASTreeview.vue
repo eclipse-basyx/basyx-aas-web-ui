@@ -1,18 +1,22 @@
 <template>
     <v-container fluid class="pa-0">
         <v-card color="rgba(0,0,0,0)" elevation="0">
-            <v-card-title style="padding: 15px 16px 16px">
-                <div v-if="!selectedAAS || Object.keys(selectedAAS).length === 0">AAS Treeview</div>
-                <div v-else class="d-flex align-center">
-                    <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
-                    <span class="text-truncate ml-2">
-                        {{ nameToDisplay(selectedAAS) }}
-                    </span>
-                </div>
-                <!-- TODO: Add Searchfield https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/148 -->
-            </v-card-title>
-            <v-divider></v-divider>
-            <v-card-text style="overflow-y: auto; height: calc(100vh - 170px)">
+            <template v-if="!singleAas">
+                <!-- Title Bar in the AASTreeview -->
+                <!-- <v-card-title>: height: 64px; <v-divider>: height: 1px-->
+                <v-card-title style="padding: 15px 16px 16px">
+                    <div v-if="!selectedAAS || Object.keys(selectedAAS).length === 0">AAS Treeview</div>
+                    <div v-else class="d-flex align-center">
+                        <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
+                        <span class="text-truncate ml-2">
+                            {{ nameToDisplay(selectedAAS) }}
+                        </span>
+                    </div>
+                    <!-- TODO: Add Searchfield https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/148 -->
+                </v-card-title>
+                <v-divider></v-divider>
+            </template>
+            <v-card-text style="overflow-y: auto; height: calc(100vh - 169px)">
                 <div v-if="loading">
                     <v-list-item v-for="i in 6" :key="i" density="compact" nav class="pa-0">
                         <template #prepend>
@@ -61,6 +65,7 @@
     import { useIDUtils } from '@/composables/IDUtils';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { formatDate } from '@/utils/DateUtils';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
@@ -75,6 +80,7 @@
     // Stores
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
+    const envStore = useEnvStore();
 
     // Data
     const submodelData = ref([] as Array<any>); // Treeview Data
@@ -87,6 +93,7 @@
     const aasRegistryServerURL = computed(() => navigationStore.getAASRegistryURL); // get AAS Registry URL from Store
     const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL); // get Submodel Registry URL from Store
     const selectedNode = computed(() => aasStore.getSelectedNode); // get the updated Treeview Node from Store
+    const singleAas = computed(() => envStore.getSingleAas); // Get the single AAS state from the Store
     const initTree = computed(() => aasStore.getInitTreeByReferenceElement); // get the init treeview flag from Store
 
     // Watchers

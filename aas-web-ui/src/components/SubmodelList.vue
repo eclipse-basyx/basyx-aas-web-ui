@@ -1,24 +1,31 @@
 <template>
     <v-container fluid class="pa-0">
         <v-card color="card" elevation="0">
-            <v-card-title :style="{ padding: isMobile ? '' : '15px 16px 16px' }">
-                <div v-if="!selectedAAS || Object.keys(selectedAAS).length === 0">Submodel List</div>
-                <div v-else class="d-flex align-center">
-                    <v-btn
-                        v-if="isMobile"
-                        class="ml-0"
-                        variant="plain"
-                        icon="mdi-chevron-left"
-                        @click="backToAASList()" />
-                    <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
-                    <span class="text-truncate ml-2">
-                        {{ nameToDisplay(selectedAAS) }}
-                    </span>
-                </div>
-                <!-- TODO: Add Searchfield https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/148 -->
-            </v-card-title>
-            <v-divider></v-divider>
-            <v-card-text style="overflow-y: auto; height: calc(100svh - 170px)" class="py-2 px-2">
+            <template v-if="!singleAas || isMobile">
+                <!-- Title Bar in the Submodel List -->
+                <!-- <v-card-title>: height: 64px; <v-divider>: height: 1px-->
+                <v-card-title :style="{ padding: isMobile ? '' : '15px 16px 16px' }">
+                    <div v-if="!selectedAAS || Object.keys(selectedAAS).length === 0">Submodel List</div>
+                    <div v-else class="d-flex align-center">
+                        <v-btn
+                            v-if="isMobile"
+                            class="ml-0"
+                            variant="plain"
+                            icon="mdi-chevron-left"
+                            @click="backToAASList()" />
+                        <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
+                        <span class="text-truncate ml-2">
+                            {{ nameToDisplay(selectedAAS) }}
+                        </span>
+                    </div>
+                    <!-- TODO: Add Searchfield https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/148 -->
+                </v-card-title>
+                <v-divider></v-divider>
+            </template>
+            <v-card-text
+                class="py-2 px-2"
+                style="overflow-y: auto"
+                :style="singleAas ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 169px)'">
                 <div v-if="loading">
                     <v-skeleton-loader type="list-item@6"></v-skeleton-loader>
                 </div>
@@ -77,6 +84,7 @@
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { formatDate } from '@/utils/DateUtils';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
@@ -94,6 +102,7 @@
     // Stores
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
+    const envStore = useEnvStore();
 
     // Vuetify
     const theme = useTheme();
@@ -111,6 +120,7 @@
     const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL);
     const isMobile = computed(() => navigationStore.getIsMobile);
     const primaryColor = computed(() => theme.current.value.colors.primary);
+    const singleAas = computed(() => envStore.getSingleAas); // Get the single AAS state from the Store
 
     // Watchers
     // initialize Submodel List when AAS gets selected or changes
