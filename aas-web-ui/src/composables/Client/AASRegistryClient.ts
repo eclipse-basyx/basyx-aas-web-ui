@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
 import * as descriptorTypes from '@/types/Descriptors';
-import { URLEncode } from '@/utils/EncodeDecodeUtils';
+import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { removeNullValues } from '@/utils/generalUtils';
 
 export function useAASRegistryClient() {
@@ -53,7 +53,7 @@ export function useAASRegistryClient() {
             aasRegUrl += '/shell-descriptors';
         }
 
-        const aasRegistryPath = aasRegUrl + '/' + URLEncode(aasId);
+        const aasRegistryPath = aasRegUrl + '/' + base64Encode(aasId);
         const aasRegistryContext = 'retrieving AAS Descriptor';
         const disableMessage = false;
         try {
@@ -100,7 +100,7 @@ export function useAASRegistryClient() {
 
         const context = 'updating AAS Descriptor';
         const disableMessage = false;
-        const path = aasRegUrl + '/' + URLEncode(aasDescriptor.id);
+        const path = aasRegUrl + '/' + base64Encode(aasDescriptor.id);
         const headers = new Headers();
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(aasDescriptor);
