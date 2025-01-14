@@ -1,31 +1,37 @@
 <template>
     <v-container fluid class="pa-0">
         <v-card color="card" elevation="0">
-            <v-card-title :style="{ padding: isMobile ? '' : '15px 16px 16px' }">
-                <div v-if="!isMobile">
-                    <template v-if="routesToVisualization.includes(route.name)">
-                        <v-btn class="ml-0" variant="plain" icon="mdi-chevron-left" @click="backToAASViewer()" />
+            <template v-if="!singleAas || isMobile">
+                <!-- Title Bar in the Submodel Element View -->
+                <!-- <v-card-title>: height: 64px; <v-divider>: height: 1px-->
+                <v-card-title :style="{ padding: isMobile ? '' : '15px 16px 16px' }">
+                    <div v-if="!isMobile">
+                        <template v-if="routesToVisualization.includes(route.name)">
+                            <v-btn class="ml-0" variant="plain" icon="mdi-chevron-left" @click="backToAASViewer()" />
+                            <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
+                            <span class="text-truncate ml-2">
+                                {{ nameToDisplay(selectedAAS) }}
+                            </span>
+                            <template v-if="nameToDisplay(selectedNode)">
+                                <span class="text-truncate ml-2">|</span>
+                                <span class="text-truncate ml-2">{{ nameToDisplay(selectedNode) }}</span>
+                            </template>
+                        </template>
+                        <span v-else>Visualization</span>
+                    </div>
+                    <div v-else class="d-flex align-center">
+                        <v-btn class="ml-0" variant="plain" icon="mdi-chevron-left" @click="backToSubmodelList()" />
                         <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
                         <span class="text-truncate ml-2">
                             {{ nameToDisplay(selectedAAS) }}
                         </span>
-                        <template v-if="nameToDisplay(selectedNode)">
-                            <span class="text-truncate ml-2">|</span>
-                            <span class="text-truncate ml-2">{{ nameToDisplay(selectedNode) }}</span>
-                        </template>
-                    </template>
-                    <span v-else>Visualization</span>
-                </div>
-                <div v-else class="d-flex align-center">
-                    <v-btn class="ml-0" variant="plain" icon="mdi-chevron-left" @click="backToSubmodelList()" />
-                    <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
-                    <span class="text-truncate ml-2">
-                        {{ nameToDisplay(selectedAAS) }}
-                    </span>
-                </div>
-            </v-card-title>
-            <v-divider></v-divider>
-            <v-card-text style="overflow-y: auto; height: calc(100svh - 170px)">
+                    </div>
+                </v-card-title>
+                <v-divider></v-divider>
+            </template>
+            <v-card-text
+                style="overflow-y: auto"
+                :style="singleAas ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 169px)'">
                 <template
                     v-if="
                         selectedAAS &&
@@ -100,6 +106,7 @@
     import { computed, onMounted, ref, watch } from 'vue';
     import { RouteRecordNameGeneric, useRoute, useRouter } from 'vue-router';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { nameToDisplay } from '@/utils/ReferableUtils';
     import { checkSemanticId } from '@/utils/SemanticIdUtils';
@@ -111,6 +118,7 @@
     // Stores
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
+    const envStore = useEnvStore();
 
     // Data
     const submodelElementData = ref({} as any);
@@ -122,6 +130,7 @@
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
     const selectedNode = computed(() => aasStore.getSelectedNode);
     const isMobile = computed(() => navigationStore.getIsMobile);
+    const singleAas = computed(() => envStore.getSingleAas);
     const importedPlugins = computed(() => navigationStore.getPlugins);
     const filteredPlugins = computed(() => {
         let plugins = importedPlugins.value.filter((plugin: any) => {
