@@ -65,8 +65,7 @@ export function useIDUtils() {
         const regex = new RegExp(expression);
 
         // Check idPrefix
-        let idPrefix =
-            idPrefixFromStore !== '' && idPrefixFromStore.value.match(regex) ? idPrefixFromStore : defaultIdPrefix;
+        let idPrefix = idPrefixFromStore !== '' && idPrefixFromStore.match(regex) ? idPrefixFromStore : defaultIdPrefix;
 
         // Fix idPrefix
         idPrefix = idPrefix.trim();
