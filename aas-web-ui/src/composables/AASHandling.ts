@@ -12,7 +12,12 @@ export function useAASHandling() {
     // Stores
     const aasStore = useAASStore();
 
-    // Fetch and dispatch AAS
+    /**
+     * Fetches an Asset Administration Shell (AAS) by the provided AAS endpoint
+     * and dispatches it to the AAS store.
+     *
+     * @param {string} aasEndpoint - The endpoint URL of the AAS to fetch.
+     */
     async function fetchAndDispatchAas(aasEndpoint: string): Promise<void> {
         aasEndpoint = aasEndpoint.trim();
 
@@ -23,7 +28,12 @@ export function useAASHandling() {
         aasStore.dispatchSelectedAAS(aas);
     }
 
-    // Fetch and dispatch AAS
+    /**
+     * Fetches an Asset Administration Shell (AAS) by the provided AAS ID
+     * and dispatches it to the AAS store.
+     *
+     * @param {string} aasId - The ID of the AAS to fetch.
+     */
     async function fetchAndDispatchAasById(aasId: string): Promise<void> {
         if (aasId.trim() === '') return;
 
@@ -32,7 +42,11 @@ export function useAASHandling() {
         aasStore.dispatchSelectedAAS(aas);
     }
 
-    // Fetch SME
+    /**
+     * Fetches an Asset Administration Shell (AAS) by the provided AAS endpoint.
+     *
+     * @param {string} aasEndpoint - The endpoint URL of the AAS to fetch.
+     */
     async function fetchAas(aasEndpoint: string): Promise<any> {
         const failResponse = {};
 
@@ -55,7 +69,11 @@ export function useAASHandling() {
         return aas;
     }
 
-    // Fetch SME
+    /**
+     * Fetches an Asset Administration Shell (AAS) by the provided AAS ID.
+     *
+     * @param {string} aasId - The ID of the AAS to fetch.
+     */
     async function fetchAasById(aasId: string): Promise<any> {
         const failResponse = {};
 
@@ -80,6 +98,11 @@ export function useAASHandling() {
         return aas;
     }
 
+    /**
+     * Retrieves the Asset Administration Shell (AAS) endpoint URL by its ID.
+     *
+     * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
+     */
     async function getAasEndpointById(aasId: string): Promise<string> {
         const failResponse = '';
 
@@ -93,6 +116,11 @@ export function useAASHandling() {
         return aasEndpoint;
     }
 
+    /**
+     * Retrieves the Asset Administration Shell (AAS) endpoint URL of an AAS object.
+     *
+     * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
+     */
     function getAasEndpoint(aas: any): string {
         const failResponse = '';
 

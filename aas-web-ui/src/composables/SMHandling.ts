@@ -18,7 +18,12 @@ export function useSMHandling() {
     // Stores
     const aasStore = useAASStore();
 
-    // Fetch and dispatch SME
+    /**
+     * Fetches a Submodel (SM) by the provided SM endpoint
+     * and dispatches it to the AAS store.
+     *
+     * @param {string} smEndpoint - The endpoint URL of the SM to fetch.
+     */
     async function fetchAndDispatchSm(smEndpoint: string, withConceptDescriptions = false): Promise<void> {
         smEndpoint = smEndpoint.trim();
 
@@ -29,7 +34,12 @@ export function useSMHandling() {
         aasStore.dispatchSelectedNode(smOrSme);
     }
 
-    // Fetch and dispatch SME
+    /**
+     * Fetches a Submodel (SM) by the provided SM ID
+     * and dispatches it to the AAS store.
+     *
+     * @param {string} smId - The ID of the SM to fetch.
+     */
     async function fetchAndDispatchSmById(smId: string, withConceptDescriptions = false): Promise<void> {
         smId = smId.trim();
 
@@ -40,7 +50,11 @@ export function useSMHandling() {
         aasStore.dispatchSelectedNode(sm);
     }
 
-    // Fetch SME
+    /**
+     * Fetches a Submodel (SM) by the provided SM endpoint.
+     *
+     * @param {string} smEndpoint - The endpoint URL of the SM to fetch.
+     */
     async function fetchSm(smEndpoint: string, withConceptDescriptions = false): Promise<any> {
         const failResponse = {};
 
@@ -78,7 +92,11 @@ export function useSMHandling() {
         return smOrSme;
     }
 
-    // Fetch SME
+    /**
+     * Fetches a Submodel (SM) by the provided SM ID.
+     *
+     * @param {string} smId - The ID of the SM to fetch.
+     */
     async function fetchSmById(smId: string, withConceptDescriptions = false): Promise<any> {
         const failResponse = {};
 
@@ -109,6 +127,11 @@ export function useSMHandling() {
         return sm;
     }
 
+    /**
+     * Retrieves the Submodel (SM) endpoint URL by its ID.
+     *
+     * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
+     */
     async function getSmEndpointById(smId: string): Promise<string> {
         const failResponse = '';
 
@@ -122,6 +145,11 @@ export function useSMHandling() {
         return smEndpoint;
     }
 
+    /**
+     * Retrieves the Submodel (SM) endpoint URL of an SM object.
+     *
+     * @param {string} sm - The ID of the SM to retrieve the endpoint for.
+     */
     function getSmEndpoint(sm: any): string {
         const failResponse = '';
 
