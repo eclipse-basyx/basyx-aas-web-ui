@@ -1,46 +1,52 @@
+import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
 import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
-import { useAASRepositoryClient } from './Client/AASRepositoryClient';
+import { useAASRegistryClient } from './Client/AASRegistryClient';
 
 export function useAASHandling() {
     // Composables
+    const { fetchAasDescriptorById: fetchAasDescriptorByIdFromRegistry } = useAASRegistryClient();
     const { fetchAas: fetchAasFromRepo, fetchAasById: fetchAasByIdFromRepo } = useAASRepositoryClient();
 
     // Stores
     const aasStore = useAASStore();
 
-    // Fetch and dispatch AAS
-    async function fetchAndDispatchAas(aasEndpoint: string): Promise<any> {
-        const failResponse = {};
-
+    /**
+     * Fetches an Asset Administration Shell (AAS) by the provided AAS endpoint
+     * and dispatches it to the AAS store.
+     *
+     * @param {string} aasEndpoint - The endpoint URL of the AAS to fetch.
+     */
+    async function fetchAndDispatchAas(aasEndpoint: string): Promise<void> {
         aasEndpoint = aasEndpoint.trim();
 
-        if (aasEndpoint === '') return failResponse;
+        if (aasEndpoint === '') return;
 
         const aas = await fetchAas(aasEndpoint);
 
         aasStore.dispatchSelectedAAS(aas);
-
-        return aas;
     }
 
-    // Fetch and dispatch AAS
-    async function fetchAndDispatchAasById(aasId: string): Promise<any> {
-        const failResponse = {};
-
-        aasId = aasId.trim();
-
-        if (aasId === '') return failResponse;
+    /**
+     * Fetches an Asset Administration Shell (AAS) by the provided AAS ID
+     * and dispatches it to the AAS store.
+     *
+     * @param {string} aasId - The ID of the AAS to fetch.
+     */
+    async function fetchAndDispatchAasById(aasId: string): Promise<void> {
+        if (aasId.trim() === '') return;
 
         const aas = await fetchAasById(aasId);
 
         aasStore.dispatchSelectedAAS(aas);
-
-        return aas;
     }
 
-    // Fetch AAS
+    /**
+     * Fetches an Asset Administration Shell (AAS) by the provided AAS endpoint.
+     *
+     * @param {string} aasEndpoint - The endpoint URL of the AAS to fetch.
+     */
     async function fetchAas(aasEndpoint: string): Promise<any> {
         const failResponse = {};
 
@@ -52,6 +58,8 @@ export function useAASHandling() {
 
         if (!aas || Object.keys(aas).length === 0) {
             console.warn('Fetched empty AAS');
+            aasStore.dispatchSelectedNode({});
+            return failResponse;
         }
 
         aas.timestamp = formatDate(new Date());
@@ -61,7 +69,11 @@ export function useAASHandling() {
         return aas;
     }
 
-    // Fetch AAS
+    /**
+     * Fetches an Asset Administration Shell (AAS) by the provided AAS ID.
+     *
+     * @param {string} aasId - The ID of the AAS to fetch.
+     */
     async function fetchAasById(aasId: string): Promise<any> {
         const failResponse = {};
 
@@ -73,10 +85,11 @@ export function useAASHandling() {
 
         if (!aas || Object.keys(aas).length === 0) {
             console.warn('Fetched empty AAS');
+            aasStore.dispatchSelectedNode({});
             return failResponse;
         }
 
-        const aasEndpoint = extractEndpointHref(aas, 'AAS-3.0');
+        const aasEndpoint = extractEndpointHref(aas, 'SUBMODEL-3.0');
 
         aas.timestamp = formatDate(new Date());
         aas.path = aasEndpoint;
@@ -85,5 +98,36 @@ export function useAASHandling() {
         return aas;
     }
 
-    return { fetchAas, fetchAasById, fetchAndDispatchAas, fetchAndDispatchAasById };
+    /**
+     * Retrieves the Asset Administration Shell (AAS) endpoint URL by its ID.
+     *
+     * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
+     */
+    async function getAasEndpointById(aasId: string): Promise<string> {
+        const failResponse = '';
+
+        aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
+
+        const aasDescriptor = await fetchAasDescriptorByIdFromRegistry(aasId);
+        const aasEndpoint = getAasEndpoint(aasDescriptor);
+
+        return aasEndpoint;
+    }
+
+    /**
+     * Retrieves the Asset Administration Shell (AAS) endpoint URL of an AAS object.
+     *
+     * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
+     */
+    function getAasEndpoint(aas: any): string {
+        const failResponse = '';
+
+        if (!aas || Object.keys(aas).length === 0 || !aas.id || aas.id.trim() === '') return failResponse;
+
+        return extractEndpointHref(aas, 'AAS-3.0');
+    }
+
+    return { fetchAndDispatchAas, fetchAndDispatchAasById, fetchAas, fetchAasById, getAasEndpoint, getAasEndpointById };
 }
