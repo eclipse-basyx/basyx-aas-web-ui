@@ -9,7 +9,7 @@
                         {{ nameToDisplay(selectedAAS) }}
                     </span>
                 </div>
-                <!-- TODO: Add Searchfield to filter the Treeview -->
+                <!-- TODO: Add Searchfield https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/148 -->
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto; height: calc(100vh - 170px)">

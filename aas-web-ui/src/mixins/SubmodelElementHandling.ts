@@ -1449,7 +1449,7 @@ export default defineComponent({
         async calculateSubmodelElementPathes(parent: any, startPath: string): Promise<any> {
             parent.path = startPath;
             parent.id = this.UUID();
-            parent.conceptDescriptions = await this.getConceptDescriptions(parent);
+            // parent.conceptDescriptions = await this.getConceptDescriptions(parent);
 
             if (parent.submodelElements && parent.submodelElements.length > 0) {
                 for (const element of parent.submodelElements) {
@@ -1614,12 +1614,23 @@ export default defineComponent({
                     case 'Blob':
                         if (submodelElement.value.startsWith('http')) return submodelElement.value;
                         return submodelElement.path + '/attachment';
-                    case 'Operation': // TODO
-                    case 'ReferenceElement': // TODO
-                    case 'Range': // TODO
-                    case 'Entity': // TODO
-                    case 'RelationshipElement': // TODO
-                    case 'AnnotatedRelationshipElement': // TODO
+                    // TODO valueToDisplay() for modelType='Operation'
+                    case 'Operation':
+                        return '';
+                    // TODO valueToDisplay() for modelType='ReferenceElement'
+                    case 'ReferenceElement':
+                        return '';
+                    // TODO valueToDisplay() for modelType='Range'
+                    case 'Range':
+                        return '';
+                    // TODO valueToDisplay() for modelType='Entity'
+                    case 'Entity':
+                        return '';
+                    // TODO valueToDisplay() for modelType='RelationshipElement'
+                    case 'RelationshipElement':
+                        return '';
+                    // TODO valueToDisplay() for modelType='AnnotatedRelationshipElement'
+                    case 'AnnotatedRelationshipElement':
                         return '';
                     default:
                         return '';

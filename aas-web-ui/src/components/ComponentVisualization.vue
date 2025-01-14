@@ -181,31 +181,42 @@
     const viewerMode = computed(() => route.name === 'SubmodelViewer' || routesToVisualization.includes(route.name));
 
     // Watchers
-    // Resets the submodelElementData when the AAS Registry changes
-    watch(aasRegistryServerURL, () => {
-        if (!aasRegistryServerURL.value) {
-            submodelElementData.value = {};
+    // Resets the SubmodelElementView when the AAS Registry changes
+    watch(
+        () => aasRegistryServerURL.value,
+        () => {
+            if (!aasRegistryServerURL.value) {
+                initializeView();
+            }
         }
-    });
+    );
 
-    // Resets the submodelElementData when the Submodel Registry changes
-    watch(submodelRegistryServerURL, () => {
-        if (!submodelRegistryServerURL.value) {
-            submodelElementData.value = {};
+    // Resets the SubmodelElementView when the Submodel Registry changes
+    watch(
+        () => submodelRegistryServerURL.value,
+        () => {
+            if (!submodelRegistryServerURL.value) {
+                initializeView();
+            }
         }
-    });
+    );
 
-    // Resets the submodelElementData when the AAS changes
-    watch(selectedAAS, () => {
-        submodelElementData.value = {};
-    });
+    // Resets the SubmodelElementView when the AAS changes
+    watch(
+        () => selectedAAS.value,
+        () => {
+            initializeView();
+        }
+    );
 
-    // Watch for changes in the selectedNode and (re-)initialize the Component
-    watch(selectedNode, () => {
-        // clear old submodelElementData
-        submodelElementData.value = {};
-        initializeView(); // initialize list
-    });
+    // Watch for changes in the selected Node and (re-)initialize the Component
+    watch(
+        () => selectedNode.value,
+        () => {
+            initializeView();
+        },
+        { deep: true }
+    );
 
     onMounted(() => {
         initializeView();

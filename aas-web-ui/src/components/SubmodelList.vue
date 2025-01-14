@@ -15,6 +15,7 @@
                         {{ nameToDisplay(selectedAAS) }}
                     </span>
                 </div>
+                <!-- TODO: Add Searchfield https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/148 -->
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto; height: calc(100svh - 170px)" class="py-2 px-2">

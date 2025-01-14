@@ -143,8 +143,8 @@ export async function createAppRouter(): Promise<Router> {
 
     // Composables
     const { getAasId } = useAASDicoveryClient();
-    const { fetchAndDispatchAas, getEndpointById: getAasEndpointById } = useAASHandling();
-    const { getEndpointById: getSmEndpointById } = useSMHandling();
+    const { fetchAndDispatchAas, getAasEndpointById } = useAASHandling();
+    const { getSmEndpointById } = useSMHandling();
     const { fetchAndDispatchSme } = useSMEHandling();
 
     // Data
@@ -210,7 +210,7 @@ export async function createAppRouter(): Promise<Router> {
                         next(updatedRoute);
                         // Dispatch AAS/SM/SME with respect to URL query parameter
                         if (queryLoaded.aas) await fetchAndDispatchAas(queryLoaded.aas as string);
-                        if (queryLoaded.path) await fetchAndDispatchSme(queryLoaded.path as string);
+                        if (queryLoaded.path) await fetchAndDispatchSme(queryLoaded.path as string, true);
                         return;
                     }
                 }

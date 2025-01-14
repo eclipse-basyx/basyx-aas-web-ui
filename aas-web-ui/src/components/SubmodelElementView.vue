@@ -14,11 +14,7 @@
                     ">
                     <v-list nav>
                         <!-- SubmodelELement Identification -->
-                        <IdentificationElement
-                            :identification-object="submodelElementData"
-                            :model-type="submodelElementData.modelType"
-                            :id-type="'Identification (ID)'"
-                            :name-type="'idShort'"></IdentificationElement>
+                        <IdentificationElement :identification-object="submodelElementData"></IdentificationElement>
                         <!-- Submodel Administrative Information-->
                         <v-divider
                             v-if="
@@ -149,20 +145,7 @@
                     </v-list>
                     <!-- Last Sync -->
                     <v-divider></v-divider>
-                    <v-list class="py-0">
-                        <v-list-item>
-                            <v-list-item-subtitle>
-                                <span class="text-caption">{{ 'Last sync: ' }}</span>
-                                <span
-                                    class="text-caption"
-                                    :class="
-                                        submodelElementData.timestamp == 'no sync' ? 'text-error' : 'text-subtitleText'
-                                    "
-                                    >{{ submodelElementData.timestamp }}</span
-                                >
-                            </v-list-item-subtitle>
-                        </v-list-item>
-                    </v-list>
+                    <LastSync :timestamp="submodelElementData.timestamp"></LastSync>
                 </v-card>
                 <v-empty-state
                     v-else-if="!selectedAAS || Object.keys(selectedAAS).length === 0"
@@ -200,7 +183,7 @@
     // Data
     const submodelElementData = ref({} as any);
     const conceptDescriptions = ref([] as Array<any>);
-    const requestInterval = ref<number | undefined>(undefined); // interval to send requests to the AAS
+    const autoSyncInterval = ref<number | undefined>(undefined); // interval to send requests to the AAS
 
     // Computed Properties
     const aasRegistryServerURL = computed(() => navigationStore.getAASRegistryURL);
@@ -214,9 +197,9 @@
     // Resets the SubmodelElementView when the AAS Registry changes
     watch(
         () => aasRegistryServerURL.value,
-        () => {
+        async () => {
             if (!aasRegistryServerURL.value) {
-                initializeView();
+                await initializeView();
             }
         }
     );
@@ -224,9 +207,9 @@
     // Resets the SubmodelElementView when the Submodel Registry changes
     watch(
         () => submodelRegistryServerURL.value,
-        () => {
+        async () => {
             if (!submodelRegistryServerURL.value) {
-                initializeView();
+                await initializeView();
             }
         }
     );
@@ -234,70 +217,82 @@
     // Resets the SubmodelElementView when the AAS changes
     watch(
         () => selectedAAS.value,
-        () => {
-            initializeView();
+        async () => {
+            await initializeView();
         }
     );
 
     // Watch for changes in the selected Node and (re-)initialize the Component
     watch(
         () => selectedNode.value,
-        () => {
-            initializeView();
+        async () => {
+            await initializeView(false);
         },
         { deep: true }
     );
 
-    // watch for changes in the autoSync state and create or clear the requestInterval
+    // watch for changes in the autoSync state and create or clear the autoSyncInterval
     watch(
         () => autoSync.value,
-        () => {
-            if (autoSync.value.state) {
-                window.clearInterval(requestInterval.value); // clear old interval
+        (autoSyncValue) => {
+            if (autoSyncValue.state) {
+                window.clearInterval(autoSyncInterval.value); // clear old interval
                 // create new interval
-                requestInterval.value = window.setInterval(() => {
-                    if (Object.keys(selectedNode.value).length > 0) {
-                        fetchAndDispatchSme(selectedNode.value.path, false);
+                autoSyncInterval.value = window.setInterval(async () => {
+                    if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
+                        // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
+                        await fetchAndDispatchSme(selectedNode.value.path, false);
                     }
-                }, autoSync.value.interval);
+                }, autoSyncValue.interval);
             } else {
-                window.clearInterval(requestInterval.value);
+                window.clearInterval(autoSyncInterval.value);
             }
         },
         { deep: true }
     );
 
-    onMounted(() => {
+    onMounted(async () => {
         if (autoSync.value.state) {
             // create new interval
-            requestInterval.value = window.setInterval(() => {
-                if (Object.keys(selectedNode.value).length > 0) {
-                    fetchAndDispatchSme(selectedNode.value.path, false);
+            autoSyncInterval.value = window.setInterval(async () => {
+                if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
+                    // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
+                    await fetchAndDispatchSme(selectedNode.value.path, false);
                 }
             }, autoSync.value.interval);
-        } else {
-            initializeView();
         }
+        await initializeView(true);
     });
 
     onBeforeUnmount(() => {
-        window.clearInterval(requestInterval.value); // clear old interval
+        window.clearInterval(autoSyncInterval.value); // clear old interval
     });
 
-    async function initializeView(): Promise<void> {
-        if (Object.keys(selectedNode.value).length === 0) {
+    async function initializeView(withConceptDescriptions: boolean = false): Promise<void> {
+        if (!selectedNode.value || Object.keys(selectedNode.value).length === 0) {
             submodelElementData.value = {};
+            conceptDescriptions.value = [];
             return;
         }
 
         submodelElementData.value = { ...selectedNode.value }; // create local copy
 
-        if (
-            !conceptDescriptions.value ||
-            !Array.isArray(conceptDescriptions.value) ||
-            conceptDescriptions.value.length === 0
-        ) {
-            conceptDescriptions.value = await getConceptDescriptions(selectedNode.value);
+        if (withConceptDescriptions) {
+            if (
+                selectedNode.value?.conceptDescriptions &&
+                Array.isArray(selectedNode.value.conceptDescriptions) &&
+                selectedNode.value.conceptDescriptions.length > 0
+            ) {
+                conceptDescriptions.value = { ...selectedNode.value.conceptDescriptions };
+            }
+
+            if (
+                !conceptDescriptions.value ||
+                !Array.isArray(conceptDescriptions.value) ||
+                conceptDescriptions.value.length === 0
+            ) {
+                conceptDescriptions.value = await getConceptDescriptions(selectedNode.value);
+            }
         }
     }
 </script>
