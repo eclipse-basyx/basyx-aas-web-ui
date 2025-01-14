@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router';
 import RequestHandling from '@/mixins/RequestHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useNavigationStore } from '@/store/NavigationStore';
+import { formatDate } from '@/utils/DateUtils';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
 export default defineComponent({
@@ -491,7 +492,6 @@ export default defineComponent({
                                 }
                                 return failResponse;
                             } catch {
-                                // handle error
                                 return failResponse;
                             }
                         }
@@ -794,7 +794,6 @@ export default defineComponent({
                     }
                     // dispatch the AAS set by the ReferenceElement to the store
                     await this.fetchAndDispatchAas(aasEndpoint);
-                    this.navigationStore.dispatchTriggerAASListScroll();
                     // Request the referenced SubmodelElement
                     const elementPath = smRepoUrl;
                     const context = 'retrieving SubmodelElement';
@@ -856,7 +855,6 @@ export default defineComponent({
                     return aasRegistryResponse.data.result;
                 }
             } catch {
-                // handle error
                 return failResponse;
             }
 
@@ -884,7 +882,6 @@ export default defineComponent({
                     return aasRepoResponse.data.result;
                 }
             } catch {
-                // handle error
                 return failResponse;
             }
             return failResponse;
@@ -915,7 +912,6 @@ export default defineComponent({
                     return aasRegistryResponse.data;
                 }
             } catch {
-                // handle error
                 return failResponse;
             }
             return failResponse;
@@ -977,6 +973,10 @@ export default defineComponent({
 
             const aas = await this.fetchAas(aasEndpoint);
             // console.log('fetchAndDispatchAas()', aasEndpoint, 'aas', aas);
+
+            aas.timestamp = formatDate(new Date());
+            aas.path = aasEndpoint;
+            aas.isActive = true;
 
             this.aasStore.dispatchSelectedAAS(aas);
         },
@@ -1087,7 +1087,6 @@ export default defineComponent({
                 this.router.push({ query: { aas: aasEndpoint } });
             }
             await this.fetchAndDispatchAas(aasEndpoint);
-            this.navigationStore.dispatchTriggerAASListScroll();
         },
 
         ////////////////////////////////////////////////// SM Stuff //////////////////////////////////////////////////
@@ -1117,7 +1116,6 @@ export default defineComponent({
                     return smRegistryResponse.data.result;
                 }
             } catch {
-                // handle error
                 return failResponse;
             }
             return failResponse;
@@ -1144,7 +1142,6 @@ export default defineComponent({
                     return smRepoResponse.data.result;
                 }
             } catch {
-                // handle error
                 return failResponse;
             }
             return failResponse;
@@ -1175,7 +1172,6 @@ export default defineComponent({
                     return smRegistryResponse.data;
                 }
             } catch {
-                // handle error
                 return failResponse;
             }
             return failResponse;

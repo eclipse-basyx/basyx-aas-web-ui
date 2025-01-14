@@ -199,7 +199,7 @@
         () => aasRegistryServerURL.value,
         async () => {
             if (!aasRegistryServerURL.value) {
-                await initializeView();
+                await initializeView(false);
             }
         }
     );
@@ -209,7 +209,7 @@
         () => submodelRegistryServerURL.value,
         async () => {
             if (!submodelRegistryServerURL.value) {
-                await initializeView();
+                await initializeView(false);
             }
         }
     );
@@ -218,7 +218,7 @@
     watch(
         () => selectedAAS.value,
         async () => {
-            await initializeView();
+            await initializeView(false);
         }
     );
 
@@ -226,7 +226,7 @@
     watch(
         () => selectedNode.value,
         async () => {
-            await initializeView(false);
+            await initializeView(true);
         },
         { deep: true }
     );
@@ -261,7 +261,7 @@
                 }
             }, autoSync.value.interval);
         }
-        await initializeView(true);
+        // await initializeView(true); // Not needed, cause this component does not stand alone
     });
 
     onBeforeUnmount(() => {
