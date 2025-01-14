@@ -74,7 +74,7 @@
                         :identification-object="aasData"
                         :v-chip-content="getKeyTypeAbbreviation(aasData.modelType)"></IdentificationElement>
                     <!-- AAS Administrative Information-->
-                    <v-divider v-if="aasData?.administration" class="mt-2"></v-divider>
+                    <v-divider v-if="aasData?.administration"></v-divider>
                     <AdministrativeInformationElement
                         v-if="aasData.administration"
                         :administrative-information-object="aasData.administration"
@@ -110,8 +110,8 @@
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
-    import { statusCloudIcon, statusTextClass } from '@/utils/StatusCheckUtils';
     import { getKeyTypeAbbreviation } from '@/utils/KeyTypesUtil';
+    import { statusCloudIcon, statusTextClass } from '@/utils/StatusCheckUtils';
 
     // Vue Router
     const route = useRoute();

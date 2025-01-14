@@ -89,6 +89,7 @@
     // Computed properties
     const isMobile = computed(() => navigationStore.getIsMobile);
     const autoSync = computed(() => navigationStore.getAutoSync);
+    const statusCheck = computed(() => navigationStore.getStatusCheck);
 
     onMounted(async () => {
         // Get auto-sync object from the lcoal storage, if not set use auto-sync default object

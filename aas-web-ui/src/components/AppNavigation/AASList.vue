@@ -372,7 +372,6 @@
 
     onMounted(async () => {
         if (statusCheck.value.state === true) {
-            await updateStatusOfAasDescriptorList();
             window.clearInterval(statusCheckInterval.value); // clear old interval
             // create new interval
             statusCheckInterval.value = window.setInterval(async () => {
