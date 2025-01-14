@@ -492,7 +492,6 @@ export default defineComponent({
                                 }
                                 return failResponse;
                             } catch {
-                                // handle error
                                 return failResponse;
                             }
                         }
@@ -856,7 +855,6 @@ export default defineComponent({
                     return aasRegistryResponse.data.result;
                 }
             } catch {
-                // handle error
                 return failResponse;
             }
 
@@ -884,7 +882,6 @@ export default defineComponent({
                     return aasRepoResponse.data.result;
                 }
             } catch {
-                // handle error
                 return failResponse;
             }
             return failResponse;
@@ -915,7 +912,6 @@ export default defineComponent({
                     return aasRegistryResponse.data;
                 }
             } catch {
-                // handle error
                 return failResponse;
             }
             return failResponse;
@@ -1120,7 +1116,6 @@ export default defineComponent({
                     return smRegistryResponse.data.result;
                 }
             } catch {
-                // handle error
                 return failResponse;
             }
             return failResponse;
@@ -1147,7 +1142,6 @@ export default defineComponent({
                     return smRepoResponse.data.result;
                 }
             } catch {
-                // handle error
                 return failResponse;
             }
             return failResponse;
@@ -1178,7 +1172,6 @@ export default defineComponent({
                     return smRegistryResponse.data;
                 }
             } catch {
-                // handle error
                 return failResponse;
             }
             return failResponse;

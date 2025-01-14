@@ -7,7 +7,10 @@ import { useSMRegistryClient } from './Client/SMRegistryClient';
 
 export function useSMHandling() {
     // Composables
-    const { fetchSmDescriptorById: fetchSmDescriptorByIdFromRegistry } = useSMRegistryClient();
+    const {
+        fetchSmDescriptorById: fetchSmDescriptorByIdFromRegistry,
+        fetchSmDescriptorList: fetchSmDescriptorListFromRegistry,
+    } = useSMRegistryClient();
     const {
         fetchSmById: fetchSmByIdFromRepo,
         fetchSm: fetchSmFromRepo,
@@ -31,6 +34,10 @@ export function useSMHandling() {
 
         const smOrSme = await fetchSm(smEndpoint, withConceptDescriptions);
 
+        if (!smOrSme || Object.keys(smOrSme).length === 0) return;
+
+        smOrSme.isActive = true;
+
         aasStore.dispatchSelectedNode(smOrSme);
     }
 
@@ -47,7 +54,56 @@ export function useSMHandling() {
 
         const sm = await fetchSmById(smId, withConceptDescriptions);
 
+        if (!sm || Object.keys(sm).length === 0) return;
+
+        sm.isActive = true;
+
         aasStore.dispatchSelectedNode(sm);
+    }
+
+    /**
+     * Fetches a list of all available Submodel (SM) Descriptors.
+     *
+     * @returns {Promise<Array<any>>} A promise that resolves to an array of SM Descriptors.
+     * An empty array is returned if the request fails or no SM Descriptors are found.
+     */
+    async function fetchSmDescriptorList(): Promise<Array<any>> {
+        const failResponse = [] as Array<any>;
+
+        let smDescriptors = await fetchSmDescriptorListFromRegistry();
+
+        if (!smDescriptors || !Array.isArray(smDescriptors) || smDescriptors.length === 0) return failResponse;
+
+        smDescriptors = smDescriptors.map((smDescriptor: any) => {
+            smDescriptor.timestamp = formatDate(new Date());
+            return smDescriptor;
+        });
+
+        return smDescriptors;
+    }
+
+    /**
+     * Fetches an Submodel (SM) Descriptor by the provided SM ID.
+     *
+     * @param {string} smId - The ID of the SM Descriptor to fetch.
+     */
+    async function fetchSmDescriptor(smId: string): Promise<any> {
+        const failResponse = {};
+
+        smId = smId.trim();
+
+        if (smId === '') return failResponse;
+
+        const smDescriptor = await fetchSmDescriptorByIdFromRegistry(smId);
+
+        if (!smDescriptor || Object.keys(smDescriptor).length === 0) {
+            console.warn('Fetched empty AAS Descriptor');
+            return failResponse;
+        }
+
+        smDescriptor.timestamp = formatDate(new Date());
+
+        return smDescriptor;
     }
 
     /**
@@ -67,7 +123,7 @@ export function useSMHandling() {
             // smEndoint seems to be an SME endpoint
             smOrSme = await fetchSmeFromRepo(smEndpoint);
 
-            // Note usage of fetchAndDispatchSme() (SMHandling) not possible
+            // Note usage of fetchSme() (SMHandling) not possible
             // Reciprocal import of SMHandling/SMEHandling leads to error "Maximum call stack size exceeded"
         } else {
             smOrSme = await fetchSmFromRepo(smEndpoint);
@@ -75,13 +131,11 @@ export function useSMHandling() {
 
         if (!smOrSme || Object.keys(smOrSme).length === 0) {
             console.warn('Fetched empty SM/SME');
-            aasStore.dispatchSelectedNode({});
             return failResponse;
         }
 
         smOrSme.timestamp = formatDate(new Date());
         smOrSme.path = smEndpoint;
-        smOrSme.isActive = true;
 
         if (withConceptDescriptions) {
             smOrSme.conceptDescriptions = await getConceptDescriptions(smOrSme);
@@ -108,7 +162,6 @@ export function useSMHandling() {
 
         if (!sm || Object.keys(sm).length === 0) {
             console.warn('Fetched empty SM');
-            aasStore.dispatchSelectedNode({});
             return failResponse;
         }
 
@@ -116,7 +169,6 @@ export function useSMHandling() {
 
         sm.timestamp = formatDate(new Date());
         sm.path = smEndpoint;
-        sm.isActive = true;
 
         if (withConceptDescriptions) {
             sm.conceptDescriptions = await getConceptDescriptions(sm);
@@ -158,5 +210,14 @@ export function useSMHandling() {
         return extractEndpointHref(sm, 'SUBMODEL-3.0');
     }
 
-    return { fetchAndDispatchSm, fetchAndDispatchSmById, fetchSm, fetchSmById, getSmEndpoint, getSmEndpointById };
+    return {
+        fetchAndDispatchSm,
+        fetchAndDispatchSmById,
+        fetchSmDescriptorList,
+        fetchSmDescriptor,
+        fetchSm,
+        fetchSmById,
+        getSmEndpoint,
+        getSmEndpointById,
+    };
 }

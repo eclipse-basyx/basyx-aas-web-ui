@@ -23,6 +23,7 @@ export function useSMEHandling() {
         if (smePath === '') return;
 
         const smOrSme = await fetchSme(smePath, withConceptDescriptions);
+        smOrSme.isActive = true;
 
         aasStore.dispatchSelectedNode(smOrSme);
     }
@@ -46,7 +47,7 @@ export function useSMEHandling() {
             // No valid SME path, maybe just SM endpoint
             smOrSme = await fetchSmFromRepo(smePath);
 
-            // Note usage of fetchAndDispatchSm() (SMHandling) not possible
+            // Note usage of fetchSm() (SMHandling) not possible
             // Reciprocal import of SMHandling/SMEHandling leads to error "Maximum call stack size exceeded"
         }
 
@@ -58,7 +59,6 @@ export function useSMEHandling() {
 
         smOrSme.timestamp = formatDate(new Date());
         smOrSme.path = smePath;
-        smOrSme.isActive = true;
 
         if (withConceptDescriptions) {
             smOrSme.conceptDescriptions = await getConceptDescriptions(smOrSme);

@@ -6,7 +6,10 @@ import { useAASRegistryClient } from './Client/AASRegistryClient';
 
 export function useAASHandling() {
     // Composables
-    const { fetchAasDescriptorById: fetchAasDescriptorByIdFromRegistry } = useAASRegistryClient();
+    const {
+        fetchAasDescriptorById: fetchAasDescriptorByIdFromRegistry,
+        fetchAasDescriptorList: fetchAasDescriptorListFromRegistry,
+    } = useAASRegistryClient();
     const { fetchAas: fetchAasFromRepo, fetchAasById: fetchAasByIdFromRepo } = useAASRepositoryClient();
 
     // Stores
@@ -25,6 +28,10 @@ export function useAASHandling() {
 
         const aas = await fetchAas(aasEndpoint);
 
+        if (!aas || Object.keys(aas).length === 0) return;
+
+        aas.isActive = true;
+
         aasStore.dispatchSelectedAAS(aas);
     }
 
@@ -39,7 +46,56 @@ export function useAASHandling() {
 
         const aas = await fetchAasById(aasId);
 
+        if (!aas || Object.keys(aas).length === 0) return;
+
+        aas.isActive = true;
+
         aasStore.dispatchSelectedAAS(aas);
+    }
+
+    /**
+     * Fetches a list of all available Asset Administration Shell (AAS) Descriptors.
+     *
+     * @returns {Promise<Array<any>>} A promise that resolves to an array of AAS Descriptors.
+     * An empty array is returned if the request fails or no AAS Descriptors are found.
+     */
+    async function fetchAasDescriptorList(): Promise<Array<any>> {
+        const failResponse = [] as Array<any>;
+
+        let aasDescriptors = await fetchAasDescriptorListFromRegistry();
+
+        if (!aasDescriptors || !Array.isArray(aasDescriptors) || aasDescriptors.length === 0) return failResponse;
+
+        aasDescriptors = aasDescriptors.map((aasDescriptor: any) => {
+            aasDescriptor.timestamp = formatDate(new Date());
+            return aasDescriptor;
+        });
+
+        return aasDescriptors;
+    }
+
+    /**
+     * Fetches an Asset Administration Shell (AAS) Descriptor by the provided AAS ID.
+     *
+     * @param {string} aasId - The ID of the AAS Descriptor to fetch.
+     */
+    async function fetchAasDescriptor(aasId: string): Promise<any> {
+        const failResponse = {};
+
+        aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
+
+        const aasDescriptor = await fetchAasDescriptorByIdFromRegistry(aasId);
+
+        if (!aasDescriptor || Object.keys(aasDescriptor).length === 0) {
+            console.warn('Fetched empty AAS Descriptor');
+            return failResponse;
+        }
+
+        aasDescriptor.timestamp = formatDate(new Date());
+
+        return aasDescriptor;
     }
 
     /**
@@ -58,13 +114,11 @@ export function useAASHandling() {
 
         if (!aas || Object.keys(aas).length === 0) {
             console.warn('Fetched empty AAS');
-            aasStore.dispatchSelectedNode({});
             return failResponse;
         }
 
         aas.timestamp = formatDate(new Date());
         aas.path = aasEndpoint;
-        aas.isActive = true;
 
         return aas;
     }
@@ -85,7 +139,6 @@ export function useAASHandling() {
 
         if (!aas || Object.keys(aas).length === 0) {
             console.warn('Fetched empty AAS');
-            aasStore.dispatchSelectedNode({});
             return failResponse;
         }
 
@@ -93,7 +146,6 @@ export function useAASHandling() {
 
         aas.timestamp = formatDate(new Date());
         aas.path = aasEndpoint;
-        aas.isActive = true;
 
         return aas;
     }
@@ -129,5 +181,14 @@ export function useAASHandling() {
         return extractEndpointHref(aas, 'AAS-3.0');
     }
 
-    return { fetchAndDispatchAas, fetchAndDispatchAasById, fetchAas, fetchAasById, getAasEndpoint, getAasEndpointById };
+    return {
+        fetchAndDispatchAas,
+        fetchAndDispatchAasById,
+        fetchAasDescriptorList,
+        fetchAasDescriptor,
+        fetchAas,
+        fetchAasById,
+        getAasEndpoint,
+        getAasEndpointById,
+    };
 }

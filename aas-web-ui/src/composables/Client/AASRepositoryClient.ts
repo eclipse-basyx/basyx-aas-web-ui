@@ -18,7 +18,6 @@ export function useAASRepositoryClient() {
 
     const navigationStore = useNavigationStore();
 
-    const aasRegistryUrl = computed(() => navigationStore.getAASRegistryURL);
     const aasRepositoryUrl = computed(() => navigationStore.getAASRepoURL);
 
     const uploadURL = computed(() => {
@@ -28,7 +27,12 @@ export function useAASRepositoryClient() {
         return aasRepoURL.replace('/shells', '') + '/upload';
     });
 
-    // Fetch List of all available AAS
+    /**
+     * Fetches a list of all available Asset Administration Shells (AAS).
+     *
+     * @returns {Promise<Array<any>>} A promise that resolves to an array of Asset Administration Shells.
+     * An empty array is returned if the request fails or no Asset Administration Shells are found.
+     */
     async function fetchAasList(): Promise<Array<any>> {
         const failResponse = [] as Array<any>;
 
@@ -44,61 +48,42 @@ export function useAASRepositoryClient() {
         try {
             const aasRepoResponse = await getRequest(aasRepoPath, aasRepoContext, disableMessage);
             if (aasRepoResponse?.success && aasRepoResponse.data.result && aasRepoResponse.data.result.length > 0) {
-                return aasRepoResponse.data.result;
+                const aasList = aasRepoResponse.data.result;
+                return aasList;
             }
         } catch {
-            // handle error
             return failResponse;
         }
         return failResponse;
     }
 
-    // Fetch AAS from AAS Repo
+    /**
+     * Fetches a Asset Administration Shell (AAS) by the provided AAS ID.
+     *
+     * @param {string} aasId - The ID of the AAS to fetch.
+     */
     async function fetchAasById(aasId: string): Promise<any> {
         const failResponse = {} as any;
 
         if (!aasId || aasId.trim() === '') return failResponse;
         aasId = aasId.trim();
 
-        if (aasRegistryUrl.value.trim() !== '') {
-            // With the help of the AAS descriptor (going via AAS registry)
-            const aasDescriptor = await fetchAasDescriptorById(aasId);
+        // TODO fetchAasById just with the repository (e.g. if registry is not available)
+        const aasDescriptor = await fetchAasDescriptorById(aasId);
 
-            if (aasDescriptor && Object.keys(aasDescriptor).length > 0) {
-                const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0');
-                return fetchAas(aasEndpoint);
-            }
-        } else {
-            // Just with the AAS Repository
-            let aasRepoUrl = aasRegistryUrl.value;
-            if (aasRepoUrl.trim() === '') return failResponse;
-            if (!aasRepoUrl.includes('/shells')) {
-                aasRepoUrl += '/shells';
-            }
-
-            const aasRepoPath = aasRepoUrl + '/' + base64Encode(aasId);
-            const aasRepoContext = 'retrieving AAS';
-            const disableMessage = false;
-            try {
-                const aasRepoResponse = await getRequest(aasRepoPath, aasRepoContext, disableMessage);
-                if (
-                    aasRepoResponse?.success &&
-                    aasRepoResponse?.data &&
-                    Object.keys(aasRepoResponse?.data).length > 0
-                ) {
-                    return aasRepoResponse.data;
-                }
-            } catch {
-                // handle error
-                return failResponse;
-            }
-            return failResponse;
+        if (aasDescriptor && Object.keys(aasDescriptor).length > 0) {
+            const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0');
+            return fetchAas(aasEndpoint);
         }
 
         return failResponse;
     }
 
-    // Fetch AAS from (AAS Repo) Endpoint
+    /**
+     * Fetches a Asset Administration Shell (AAS) by the provided AAS endpoint.
+     *
+     * @param {string} aasEndpoint - The endpoint URL of the AAS to fetch.
+     */
     async function fetchAas(aasEndpoint: string): Promise<any> {
         const failResponse = {} as any;
 
@@ -106,13 +91,12 @@ export function useAASRepositoryClient() {
         aasEndpoint = aasEndpoint.trim();
 
         const aasRepoPath = aasEndpoint;
-        const aasRepoContext = 'retrieving AAS Data';
+        const aasRepoContext = 'retrieving AAS';
         const disableMessage = true;
         try {
             const aasRepoResponse = await getRequest(aasRepoPath, aasRepoContext, disableMessage);
             if (aasRepoResponse?.success && aasRepoResponse?.data && Object.keys(aasRepoResponse?.data).length > 0) {
                 const aas = aasRepoResponse.data;
-                // console.log('fetchAas()', aasEndpoint, 'aas', aas);
 
                 // Add endpoint to AAS
                 aas.endpoints = [{ protocolInformation: { href: aasEndpoint }, interface: 'AAS-3.0' }];
@@ -126,18 +110,32 @@ export function useAASRepositoryClient() {
         return failResponse;
     }
 
+    /**
+     * Checks if Asset Administration Shell (AAS) with provided ID is available (in registry or repository).
+     *
+     * @param {string} aasId - The ID of the AAS to check.
+     * @returns {Promise<boolean>} - A promise that resolves to `true` if AAS with provided ID is available, otherwise `false`.
+     */
     async function isAvailableById(aasId: string): Promise<boolean> {
         const failResponse = false;
 
         if (!aasId || aasId.trim() === '') return failResponse;
         aasId = aasId.trim();
 
+        // First check the registry
         if (await isAvailableByIdInRegistry(aasId)) return true;
+        // Second check the repository (e.g. if registry is no available)
         if (await isAvailableByIdInRepo(aasId)) return true;
 
         return failResponse;
     }
 
+    /**
+     * Checks if Asset Administration Shell with provided ID is available (in registry)
+     *
+     * @param {string} aasId - The ID of the AAS to check.
+     * @returns {Promise<boolean>} - A promise that resolves to `true` if AAS with provided ID is available, otherwise `false`.
+     */
     async function isAvailableByIdInRepo(aasId: string): Promise<boolean> {
         const failResponse = false;
 
@@ -151,6 +149,12 @@ export function useAASRepositoryClient() {
         return failResponse;
     }
 
+    /**
+     * Checks if Asset Administration Shell (AAS) is available (in repository) by the provided AAS endpoint
+     *
+     * @param {string} aasEndpoint - The endpoint URL of the AAS to check.
+     * @returns {Promise<boolean>} - A promise that resolves to `true` if AAS with provided ID is available, otherwise `false`.
+     */
     async function isAvailable(aasEndpoint: string): Promise<boolean> {
         const failResponse = false;
 
@@ -173,6 +177,12 @@ export function useAASRepositoryClient() {
         return failResponse;
     }
 
+    /**
+     * Fetches asset information by Asset Administration Shell (AAS) ID.
+     *
+     * @param {string} aasId - The ID of the AAS to check.
+     * @returns {Promise<any>} - A promise that resolves to the asset information if found, otherwise an empty object.
+     */
     async function fetchAssetInformationById(aasId: string): Promise<any> {
         const failResponse = {} as any;
 
@@ -186,6 +196,12 @@ export function useAASRepositoryClient() {
         }
     }
 
+    /**
+     * Fetches asset information by Asset Administration Shell (AAS) endpoint URL.
+     *
+     * @param {string} aasEndpoint - The endpoint URL of the AAS.
+     * @returns {Promise<any>} - A promise that resolves to the asset information if found, otherwise an empty object.
+     */
     async function fetchAssetInformation(aasEndpoint: string): Promise<any> {
         const failResponse = {} as any;
 
@@ -430,6 +446,11 @@ export function useAASRepositoryClient() {
         fetchAasList,
         fetchAasById,
         fetchAas,
+        isAvailableById,
+        isAvailableByIdInRepo,
+        isAvailable,
+        fetchAssetInformation,
+        fetchAssetInformationById,
         uploadAas,
         postAas,
         putAas,
