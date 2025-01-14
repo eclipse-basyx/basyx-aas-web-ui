@@ -1,7 +1,7 @@
 import { computed } from 'vue';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
-import { URLEncode } from '@/utils/EncodeDecodeUtils';
+import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
 export function useSMRegistryClient() {
     const { getRequest } = useRequestHandling();
@@ -45,11 +45,11 @@ export function useSMRegistryClient() {
 
         let smRegistryUrl = submodelRegistryUrl.value;
         if (smRegistryUrl.trim() === '') return failResponse;
-        if (!smRegistryUrl.includes('/shell-descriptors')) {
-            smRegistryUrl += '/shell-descriptors';
+        if (!smRegistryUrl.includes('/submodel-descriptors')) {
+            smRegistryUrl += '/submodel-descriptors';
         }
 
-        const smRegistryPath = smRegistryUrl + '/' + URLEncode(smId).replace(/%3D/g, '');
+        const smRegistryPath = smRegistryUrl + '/' + base64Encode(smId);
         const smRegistryContext = 'retrieving SM Descriptor';
         const disableMessage = false;
         try {

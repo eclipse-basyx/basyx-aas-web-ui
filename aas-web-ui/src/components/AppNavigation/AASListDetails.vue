@@ -71,11 +71,8 @@
                 <v-list v-if="aasData" lines="one" nav class="bg-detailsCard">
                     <!-- AAS Identification -->
                     <IdentificationElement
-                        class="mb-2"
                         :identification-object="aasData"
-                        :model-type="'AAS'"
-                        :id-type="'Identification (ID)'"
-                        :name-type="'idShort'"></IdentificationElement>
+                        :v-chip-content="getKeyTypeAbbreviation(aasData.modelType)"></IdentificationElement>
                     <!-- AAS Administrative Information-->
                     <v-divider v-if="aasData?.administration" class="mt-2"></v-divider>
                     <AdministrativeInformationElement
@@ -114,6 +111,7 @@
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
     import { statusCloudIcon, statusTextClass } from '@/utils/StatusCheckUtils';
+    import { getKeyTypeAbbreviation } from '@/utils/KeyTypesUtil';
 
     // Vue Router
     const route = useRoute();

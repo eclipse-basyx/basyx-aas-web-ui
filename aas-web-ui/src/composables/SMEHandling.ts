@@ -1,7 +1,7 @@
+import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';
-import { useSMRepositoryClient } from './Client/SMRepositoryClient';
-import { useConceptDescriptionHandling } from './ConceptDescriptionHandling';
 
 export function useSMEHandling() {
     // Composables
@@ -11,34 +11,40 @@ export function useSMEHandling() {
     // Stores
     const aasStore = useAASStore();
 
-    // Fetch and dispatch SME
-    async function fetchAndDispatchSme(
-        submodelElementPath: string,
-        withConceptDescriptions: boolean = false
-    ): Promise<void> {
-        submodelElementPath = submodelElementPath.trim();
+    /**
+     * Fetches a Submodel Element (SME) by the provided SME path.
+     * and dispatches it to the AAS store.
+     *
+     * @param {string} smePath - The path URL of the SME to fetch.
+     */
+    async function fetchAndDispatchSme(smePath: string, withConceptDescriptions: boolean = false): Promise<void> {
+        smePath = smePath.trim();
 
-        if (submodelElementPath === '') return;
+        if (smePath === '') return;
 
-        const smOrSme = await fetchSme(submodelElementPath, withConceptDescriptions);
+        const smOrSme = await fetchSme(smePath, withConceptDescriptions);
 
         aasStore.dispatchSelectedNode(smOrSme);
     }
 
-    // Fetch SME
-    async function fetchSme(submodelElementPath: string, withConceptDescriptions: boolean = false): Promise<any> {
+    /**
+     * Fetches a Submodel Element (SME) by the provided SME path.
+     *
+     * @param {string} smePath - The path URL of the SME to fetch.
+     */
+    async function fetchSme(smePath: string, withConceptDescriptions: boolean = false): Promise<any> {
         const failResponse = {};
 
-        submodelElementPath = submodelElementPath.trim();
+        smePath = smePath.trim();
 
-        if (submodelElementPath === '') return failResponse;
+        if (smePath === '') return failResponse;
 
         let smOrSme = {} as any;
-        if (submodelElementPath.includes('/submodel-elements/')) {
-            smOrSme = await fetchSmeFromRepo(submodelElementPath);
+        if (smePath.includes('/submodel-elements/')) {
+            smOrSme = await fetchSmeFromRepo(smePath);
         } else {
             // No valid SME path, maybe just SM endpoint
-            smOrSme = await fetchSmFromRepo(submodelElementPath);
+            smOrSme = await fetchSmFromRepo(smePath);
 
             // Note usage of fetchAndDispatchSm() (SMHandling) not possible
             // Reciprocal import of SMHandling/SMEHandling leads to error "Maximum call stack size exceeded"
@@ -51,7 +57,7 @@ export function useSMEHandling() {
         }
 
         smOrSme.timestamp = formatDate(new Date());
-        smOrSme.path = submodelElementPath;
+        smOrSme.path = smePath;
         smOrSme.isActive = true;
 
         if (withConceptDescriptions) {
