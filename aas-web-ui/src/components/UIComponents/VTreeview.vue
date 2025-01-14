@@ -86,32 +86,28 @@
                             <v-btn icon="mdi-dots-vertical" variant="plain" color="subtitleText" v-bind="props"></v-btn>
                         </template>
                         <v-sheet border>
-                            <v-list density="compact" class="py-0">
+                            <v-list dense density="compact" class="py-0">
                                 <!-- Copy Path to Clipboard -->
-                                <v-tooltip :open-delay="600" location="end">
-                                    <template #activator="{ props }">
-                                        <v-list-item slim v-bind="props" @click="copyPathToClipboard(item.path)">
-                                            <template #prepend>
-                                                <v-icon size="small">{{ copyIcon }} </v-icon>
-                                            </template>
-                                            Copy Path
-                                        </v-list-item>
+                                <v-list-item @click="copyPathToClipboard(item.path)">
+                                    <template #prepend>
+                                        <v-icon size="x-small">{{ copyIcon }} </v-icon>
                                     </template>
-                                    <span>Copy Path to Clipboard</span>
-                                </v-tooltip>
-                                <v-divider></v-divider>
+                                    <v-list-item-subtitle>Copy Path</v-list-item-subtitle>
+                                </v-list-item>
                                 <!-- Open Submodel edit dialog -->
-                                <v-tooltip :open-delay="600" location="end">
-                                    <template #activator="{ props }">
-                                        <v-list-item slim v-bind="props" @click="openEditDialog()">
-                                            <template #prepend>
-                                                <v-icon size="small">mdi-plus</v-icon>
-                                            </template>
-                                            Edit Submodel
-                                        </v-list-item>
+                                <v-list-item @click="openEditDialog()">
+                                    <template #prepend>
+                                        <v-icon size="x-small">mdi-pencil</v-icon>
                                     </template>
-                                    <span>Edit existing Submodel</span>
-                                </v-tooltip>
+                                    <v-list-item-subtitle>Edit Submodel</v-list-item-subtitle>
+                                </v-list-item>
+                                <!-- Delete Submodel -->
+                                <v-list-item @click="showDeleteDialog()">
+                                    <template #prepend>
+                                        <v-icon size="x-small">mdi-delete</v-icon>
+                                    </template>
+                                    <v-list-item-subtitle>Delete Submodel</v-list-item-subtitle>
+                                </v-list-item>
                             </v-list>
                         </v-sheet>
                     </v-menu>
@@ -257,6 +253,10 @@
 
             openEditDialog() {
                 this.$emit('openEditDialog', this.item);
+            },
+
+            showDeleteDialog() {
+                this.$emit('showDeleteDialog', this.item);
             },
         },
     });

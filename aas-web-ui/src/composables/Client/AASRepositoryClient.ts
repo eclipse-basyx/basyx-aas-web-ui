@@ -10,7 +10,7 @@ import { URLEncode } from '@/utils/EncodeDecodeUtils';
 import { downloadFile } from '@/utils/generalUtils';
 
 export function useAASRepositoryClient() {
-    const { getRequest, postRequest, putRequest } = useRequestHandling();
+    const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
     const { fetchAasDescriptorById } = useAASRegistryClient();
 
     // Composables
@@ -233,6 +233,15 @@ export function useAASRepositoryClient() {
         return failResponse;
     }
 
+    async function deleteSubmodelRef(aasPath: string, submodelId: string): Promise<void> {
+        if (aasPath.trim() === '' || submodelId.trim() === '') return;
+
+        const path = aasPath + '/submodel-refs/' + URLEncode(submodelId);
+        const context = 'deleting Submodel Reference';
+        const disableMessage = false;
+        await deleteRequest(path, context, disableMessage);
+    }
+
     async function downloadAasx(aas: any) {
         // console.log('downloadAasx() ', 'aas', aas);
         if (!aas || Object.keys(aas).length === 0 || !aas.id || aas.id.trim() === '') return;
@@ -309,5 +318,6 @@ export function useAASRepositoryClient() {
         downloadAasxById,
         getSubmodelRefs,
         getSubmodelRefsById,
+        deleteSubmodelRef,
     };
 }

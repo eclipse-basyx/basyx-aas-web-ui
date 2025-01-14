@@ -1,6 +1,8 @@
 <template>
     <!-- Dialog for creating/editing Submodel -->
     <SubmodelForm v-model="editDialog" :new-sm="newSubmodel" :submodel="submodelToEdit"></SubmodelForm>
+    <!-- Dialog for deleting Element -->
+    <DeleteDialog v-model="deleteDialog" :element="elementToDelete"></DeleteDialog>
     <v-container fluid class="pa-0">
         <v-card color="rgba(0,0,0,0)" elevation="0">
             <v-card-title style="padding: 15px 16px 16px">
@@ -49,7 +51,8 @@
                                 class="root"
                                 :item="item"
                                 :depth="0"
-                                @open-edit-dialog="openEditDialog(false, $event)"></VTreeview>
+                                @open-edit-dialog="openEditDialog(false, $event)"
+                                @show-delete-dialog="showDeleteDialog"></VTreeview>
                         </template>
                         <v-empty-state
                             v-else
@@ -103,6 +106,8 @@
     const editDialog = ref(false); // // Variable to store if the Edit Dialog should be shown
     const newSubmodel = ref(false); // Variable to store if a new Submodel should be created
     const submodelToEdit = ref<any | undefined>(undefined); // Variable to store the Submodel to be edited
+    const deleteDialog = ref(false); // Variable to store if the Delete Dialog should be shown
+    const elementToDelete = ref<any | undefined>(undefined); // Variable to store the Element to be deleted
 
     // Computed Properties
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // get selected AAS from Store
@@ -416,6 +421,11 @@
         if (createNew === false && submodel) {
             submodelToEdit.value = submodel;
         }
+    }
+
+    function showDeleteDialog(element: any): void {
+        deleteDialog.value = true;
+        elementToDelete.value = element;
     }
 </script>
 
