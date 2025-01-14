@@ -15,9 +15,27 @@ export const useAASStore = defineStore({
         getInitTreeByReferenceElement: (state) => state.initTreeByReferenceElement,
     },
     actions: {
-        dispatchSelectedAAS(aasData: object) {
+        dispatchSelectedAAS(aasData: any) {
+            if (
+                this.aasObject &&
+                Object.keys(this.aasObject).length > 0 &&
+                this.aasObject?.id &&
+                aasData &&
+                Object.keys(aasData).length > 0 &&
+                aasData?.id
+            ) {
+                // if existing AAS is replaced by another one, clear selectedNode
+                if (this.aasObject?.id !== aasData?.id) this.selectedNode = {};
+            }
+
+            if (!aasData || Object.keys(aasData).length === 0) {
+                // empty AAS is dispatched, clear selectedNode
+                this.selectedNode = {};
+            }
+
+            // If the same AAS is dispatch, nothing happened with the selectedNode
+
             this.aasObject = aasData;
-            this.selectedNode = {}; // Clear node
         },
         dispatchLoadingState(loadingState: boolean) {
             this.loadingState = loadingState;

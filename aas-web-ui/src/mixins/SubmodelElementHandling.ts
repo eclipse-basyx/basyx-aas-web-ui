@@ -1449,7 +1449,7 @@ export default defineComponent({
         async calculateSubmodelElementPathes(parent: any, startPath: string): Promise<any> {
             parent.path = startPath;
             parent.id = this.UUID();
-            parent.conceptDescriptions = await this.getConceptDescriptions(parent);
+            // parent.conceptDescriptions = await this.getConceptDescriptions(parent);
 
             if (parent.submodelElements && parent.submodelElements.length > 0) {
                 for (const element of parent.submodelElements) {
