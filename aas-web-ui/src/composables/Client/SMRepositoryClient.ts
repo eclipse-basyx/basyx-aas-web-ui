@@ -5,7 +5,7 @@ import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
-import { URLEncode } from '@/utils/EncodeDecodeUtils';
+import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
 export function useSMRepositoryClient() {
     const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
@@ -157,7 +157,7 @@ export function useSMRepositoryClient() {
 
         const context = 'updating Submodel';
         const disableMessage = false;
-        const path = submodelRepoUrl.value + '/' + URLEncode(submodel.id).replace(/%3D/g, '');
+        const path = submodelRepoUrl.value + '/' + base64Encode(submodel.id);
         const headers = new Headers();
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(jsonSubmodel);
@@ -177,7 +177,7 @@ export function useSMRepositoryClient() {
     async function deleteSubmodel(submodelId: string): Promise<void> {
         const context = 'deleting Submodel';
         const disableMessage = false;
-        const path = submodelRepoUrl.value + '/' + URLEncode(submodelId).replace(/%3D/g, '');
+        const path = submodelRepoUrl.value + '/' + base64Encode(submodelId);
 
         const response = await deleteRequest(path, context, disableMessage);
         if (response.success) {
