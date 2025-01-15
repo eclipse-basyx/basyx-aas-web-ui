@@ -79,5 +79,7 @@
             await deleteSubmodelRef(aasEndpoint, props.element.id);
         }
         deleteLoading.value = false;
+        // close the dialog
+        deleteDialog.value = false;
     }
 </script>
