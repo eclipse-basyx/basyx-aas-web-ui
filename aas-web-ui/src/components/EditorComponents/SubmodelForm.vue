@@ -78,7 +78,7 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
-    import { URLEncode } from '@/utils/EncodeDecodeUtils';
+    import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
     const props = defineProps<{
         modelValue: boolean;
@@ -289,7 +289,7 @@
             // Add Submodel Reference to AAS
             await addSubmodelReferenceToAas(submodelObject.value);
             // Fetch and dispatch Submodel
-            const path = submodelRepoUrl.value + '/' + URLEncode(submodelObject.value.id).replace(/%3D/g, '');
+            const path = submodelRepoUrl.value + '/' + base64Encode(submodelObject.value.id);
             const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
             router.push({ query: { aas: aasEndpoint, path: path } });
             await fetchAndDispatchSme(path);
@@ -305,7 +305,7 @@
             // Update AAS Descriptor
             await putSubmodelDescriptor(descriptor);
             if (submodelObject.value.id === selectedNode.value.id) {
-                const path = submodelRepoUrl.value + '/' + URLEncode(submodelObject.value.id).replace(/%3D/g, '');
+                const path = submodelRepoUrl.value + '/' + base64Encode(submodelObject.value.id);
                 await fetchAndDispatchSme(path);
             }
         }
