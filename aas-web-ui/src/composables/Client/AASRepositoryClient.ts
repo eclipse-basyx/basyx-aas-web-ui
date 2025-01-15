@@ -282,7 +282,7 @@ export function useAASRepositoryClient() {
     async function deleteSubmodelRef(aasPath: string, submodelId: string): Promise<void> {
         if (aasPath.trim() === '' || submodelId.trim() === '') return;
 
-        const path = aasPath + '/submodel-refs/' + URLEncode(submodelId);
+        const path = aasPath + '/submodel-refs/' + base64Encode(submodelId);
         const context = 'deleting Submodel Reference';
         const disableMessage = false;
         await deleteRequest(path, context, disableMessage);
