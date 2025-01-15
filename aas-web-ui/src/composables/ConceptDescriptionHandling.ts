@@ -1,7 +1,7 @@
 import { computed } from 'vue';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
-import { URLEncode } from '@/utils/EncodeDecodeUtils';
+import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { getEquivalentEclassSemanticIds, getEquivalentIriSemanticIds } from '@/utils/SemanticIdUtils';
 
 export function useConceptDescriptionHandling() {
@@ -74,7 +74,7 @@ export function useConceptDescriptionHandling() {
         );
 
         const cdPromises = semanticIdsUniqueToFetch.map((semanticId: string) => {
-            const path = conceptDescriptionRepoURL + '/' + URLEncode(semanticId);
+            const path = conceptDescriptionRepoURL + '/' + base64Encode(semanticId);
             const context = 'retrieving ConceptDescriptions';
             const disableMessage = true;
 

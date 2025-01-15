@@ -100,7 +100,7 @@
         }
 
         if (aasEndpoint && submodelElementPath) {
-            await fetchAndDispatchSme(submodelElementPath);
+            await fetchAndDispatchSme(submodelElementPath, true);
         }
     });
 

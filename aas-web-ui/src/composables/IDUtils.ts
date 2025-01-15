@@ -52,12 +52,24 @@ export function useIDUtils() {
         // Check type
         if (!type || !['Asset', 'AssetAdministrationShell', 'Submodel'].includes(type)) type = '';
 
-        let idPrefix = envStore.getEditorIdPrefix || defaultIdPrefix;
-
-        if (!idPrefix.endsWith('/')) idPrefix += '/';
-
+        // Fix type
+        type = type.trim();
         type = type.replace('AssetAdministrationShell', 'AAS').replace('Submodel', 'SM').toLocaleLowerCase();
-        if (type.trim() !== '' && !type.endsWith('/')) type += '/';
+        if (type !== '' && !type.endsWith('/')) type = type + '/';
+
+        const idPrefixFromStore = envStore.getEditorIdPrefix.trim();
+
+        // URL Regex
+        const expression =
+            /^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z0-9\u00a1-\uffff][a-z0-9\u00a1-\uffff_-]{0,62})?[a-z0-9\u00a1-\uffff]\.)+(?:[a-z\u00a1-\uffff]{2,}\.?))(?::\d{2,5})?(?:[/?#]\S*)?$/i;
+        const regex = new RegExp(expression);
+
+        // Check idPrefix
+        let idPrefix = idPrefixFromStore !== '' && idPrefixFromStore.match(regex) ? idPrefixFromStore : defaultIdPrefix;
+
+        // Fix idPrefix
+        idPrefix = idPrefix.trim();
+        if (idPrefix !== '' && !idPrefix.endsWith('/')) idPrefix = idPrefix + '/';
 
         return `${idPrefix}ids/${type.trim() !== '' ? type : ''}${generateCustomId()}`;
     }

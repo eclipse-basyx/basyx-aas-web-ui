@@ -28,7 +28,7 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
-    import { URLEncode } from '@/utils/EncodeDecodeUtils';
+    import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
     const router = useRouter();
 
@@ -84,7 +84,7 @@
                     removeAAS(props.aas);
                     // Remove each submodel
                     for (const submodelId of submodelIds) {
-                        const submodelRegistryPath = `${submodelRegistryURL.value}/${URLEncode(submodelId)}`;
+                        const submodelRegistryPath = `${submodelRegistryURL.value}/${base64Encode(submodelId)}`;
                         const submodelRegistryResponse = await getRequest(
                             submodelRegistryPath,
                             'Removing Submodels',

@@ -300,7 +300,7 @@
 
         // embeddedDataSpecifications are out of scope
         // extensions are out of scope
-        // Submodels are added when submodels are created
+        // TODO Add Submodels; wait for https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/195
 
         if (props.newShell) {
             // Create new AAS

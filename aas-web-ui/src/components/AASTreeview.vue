@@ -13,7 +13,7 @@
                         {{ nameToDisplay(selectedAAS) }}
                     </span>
                 </div>
-                <!-- TODO: Add Searchfield to filter the Treeview -->
+                <!-- TODO: Add Searchfield https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/148 -->
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto; height: calc(100vh - 170px)">
@@ -84,7 +84,7 @@
     import { useNavigationStore } from '@/store/NavigationStore';
     import { formatDate } from '@/utils/DateUtils';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
-    import { URLEncode } from '@/utils/EncodeDecodeUtils';
+    import { base64Encode } from '@/utils/EncodeDecodeUtils';
     import { nameToDisplay } from '@/utils/ReferableUtils';
 
     // Vue Router
@@ -194,7 +194,7 @@
                 smRegistryURL += '/submodel-descriptors';
             }
             const submodelId = submodelRef.keys[0].value;
-            let path = smRegistryURL + '/' + URLEncode(submodelId);
+            let path = smRegistryURL + '/' + base64Encode(submodelId);
             let context = 'retrieving Submodel Endpoint';
             let disableMessage = false;
             return getRequest(path, context, disableMessage).then((response: any) => {

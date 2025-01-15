@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
 import * as descriptorTypes from '@/types/Descriptors';
-import { URLEncode } from '@/utils/EncodeDecodeUtils';
+import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { removeNullValues } from '@/utils/generalUtils';
 
 export function useSMRegistryClient() {
@@ -52,7 +52,7 @@ export function useSMRegistryClient() {
             smRegistryUrl += '/submodel-descriptors';
         }
 
-        const smRegistryPath = smRegistryUrl + '/' + URLEncode(smId).replace(/%3D/g, '');
+        const smRegistryPath = smRegistryUrl + '/' + base64Encode(smId);
         const smRegistryContext = 'retrieving SM Descriptor';
         const disableMessage = false;
         try {
@@ -95,7 +95,7 @@ export function useSMRegistryClient() {
 
         const context = 'updating Submodel Descriptor';
         const disableMessage = false;
-        const path = submodelRegUrl + '/' + URLEncode(submodelDescriptor.id).replace(/%3D/g, '');
+        const path = submodelRegUrl + '/' + base64Encode(submodelDescriptor.id);
         const headers = new Headers();
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(submodelDescriptor);
