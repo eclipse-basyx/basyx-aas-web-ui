@@ -1,11 +1,14 @@
+import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
 import { computed } from 'vue';
 import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
+import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
 export function useSMRepositoryClient() {
-    const { getRequest } = useRequestHandling();
+    const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
     const { fetchSmDescriptorById } = useSMRegistryClient();
 
     const navigationStore = useNavigationStore();
@@ -39,7 +42,7 @@ export function useSMRepositoryClient() {
 
     // Fetch SM from SM Repo (with the help of the SM Registry)
     async function fetchSmById(smId: string): Promise<any> {
-        // console.log('fetchAasById()', aasId);
+        // console.log('fetchSmById()', smId);
         const failResponse = {} as any;
 
         if (smId.trim() === '') return failResponse;
@@ -56,7 +59,7 @@ export function useSMRepositoryClient() {
 
     // Fetch SM from (SM Repo) Endpoint
     async function fetchSm(smEndpoint: string): Promise<any> {
-        // console.log('fetchSm()', aasEndpoint);
+        // console.log('fetchSm()', smEndpoint);
         const failResponse = {} as any;
 
         if (smEndpoint.trim() === '') return failResponse;
@@ -75,7 +78,7 @@ export function useSMRepositoryClient() {
                 const sm = smRepoResponse.data;
                 // console.log('fetchSm()', smEndpoint, 'sm', sm);
 
-                // Add endpoint to AAS
+                // Add endpoint to Submodel
                 sm.endpoints = [{ protocolInformation: { href: smEndpoint }, interface: 'SUBMODEL-3.0' }];
 
                 return sm;
@@ -121,6 +124,71 @@ export function useSMRepositoryClient() {
         }
 
         return failResponse;
+    }
+
+    async function postSubmodel(submodel: aasTypes.Submodel): Promise<void> {
+        // Convert Submodel to JSON
+        const jsonSubmodel = jsonization.toJsonable(submodel);
+        // console.log('postSubmodel()', jsonSubmodel);
+
+        const context = 'creating Submodel';
+        const disableMessage = false;
+        const path = submodelRepoUrl.value;
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const body = JSON.stringify(jsonSubmodel);
+
+        const response = await postRequest(path, body, headers, context, disableMessage);
+        if (response.success) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'success',
+                btnColor: 'buttonText',
+                text: 'Submodel successfully created',
+            }); // Show Success Snackbar
+        }
+    }
+
+    async function putSubmodel(submodel: aasTypes.Submodel): Promise<void> {
+        // Convert Submodel to JSON
+        const jsonSubmodel = jsonization.toJsonable(submodel);
+        // console.log('putSubmodel()', jsonSubmodel);
+
+        const context = 'updating Submodel';
+        const disableMessage = false;
+        const path = submodelRepoUrl.value + '/' + base64Encode(submodel.id);
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const body = JSON.stringify(jsonSubmodel);
+
+        const response = await putRequest(path, body, headers, context, disableMessage);
+        if (response.success) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'success',
+                btnColor: 'buttonText',
+                text: 'Submodel successfully updated',
+            }); // Show Success Snackbar
+        }
+    }
+
+    async function deleteSubmodel(submodelId: string): Promise<void> {
+        const context = 'deleting Submodel';
+        const disableMessage = false;
+        const path = submodelRepoUrl.value + '/' + base64Encode(submodelId);
+
+        const response = await deleteRequest(path, context, disableMessage);
+        if (response.success) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'success',
+                btnColor: 'buttonText',
+                text: 'Submodel successfully deleted',
+            }); // Show Success Snackbar
+        }
     }
 
     function smNotFound(response: any, submodelId: string, path: string, text: string): any {
@@ -174,6 +242,9 @@ export function useSMRepositoryClient() {
         fetchSmById,
         fetchSm,
         fetchSme,
+        postSubmodel,
+        putSubmodel,
+        deleteSubmodel,
         smNotFound,
     };
 }

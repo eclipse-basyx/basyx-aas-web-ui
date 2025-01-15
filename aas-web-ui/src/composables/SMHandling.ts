@@ -16,7 +16,7 @@ export function useSMHandling() {
     // Stores
     const aasStore = useAASStore();
 
-    // Fetch and dispatch SME
+    // Fetch and dispatch Submodel
     async function fetchAndDispatchSm(smEndpoint: string, withConceptDescriptions = false): Promise<void> {
         smEndpoint = smEndpoint.trim();
 
@@ -110,5 +110,10 @@ export function useSMHandling() {
         return sm;
     }
 
-    return { fetchSm, fetchSmById, fetchAndDispatchSm, fetchAndDispatchSmById };
+    return {
+        fetchSm,
+        fetchSmById,
+        fetchAndDispatchSm,
+        fetchAndDispatchSmById,
+    };
 }
