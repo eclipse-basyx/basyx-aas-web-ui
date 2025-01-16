@@ -52,7 +52,7 @@
     const aasRepositoryUrl = computed(() => navigationStore.getAASRepoURL);
     const smRepositoryUrl = computed(() => navigationStore.getSubmodelRepoURL);
     const { postAasDescriptor } = useAASRegistryClient();
-    const { postSMDescriptor } = useSMRegistryClient();
+    const { postSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient();
 
     const props = defineProps<{
         modelValue: boolean;
@@ -131,8 +131,11 @@
       }));
 
       for (const submodelInfo of submodelInfos) {
-        let submodelDescriptor = await createSubmodelDescriptior(submodelInfo.keys[0].value);
-        postSMDescriptor(submodelDescriptor);
+        let submodel = await fetchSmById(btoa(submodelInfo.keys[0].value));
+        const endpoint = new Endpoint("SUBMODEL-3.0", protocolInformation);
+        const endpoints: Array<Endpoint> = [endpoint];
+        let submodelDescriptor = await createDescriptorFromSubmodel(submodel, endpoints);
+        await postSubmodelDescriptor(submodelDescriptor);
       }
 
       const protocolInformation = new ProtocolInformation(
@@ -163,40 +166,5 @@
       );
 
       await postAasDescriptor(aasDescriptor);
-    }
-
-    async function createSubmodelDescriptior(submodelId: string)
-    {
-      let submodelId64 = btoa(submodelId);
-      let submodel = await fetchSmById(submodelId64);
-      let href = smRepositoryUrl.value + "/" + submodelId64;
-
-      const protocolInformation = new ProtocolInformation(
-            href,
-            null,
-            "http",
-            null,
-            null,
-            null,
-            null,
-        );
-
-        const endpoint = new Endpoint("SUBMODEL-3.0", protocolInformation);
-        const endpoints: Array<Endpoint> = [endpoint];
-
-        // Create the SubmodelDescriptor instance
-        const submodelDescriptor = new SubmodelDescriptor(
-            endpoints,
-            submodelId,
-            null,                 // administration (optional)
-            submodel.description ? submodel.description[0].text : null,
-            null,                 // displayName (optional)
-            null,                 // extensions (optional)
-            submodel.idShort,
-            submodel.semanticId,
-            null                  // supplementalSemanticIds (optional)
-        );
-
-        return submodelDescriptor;
     }
 </script>
