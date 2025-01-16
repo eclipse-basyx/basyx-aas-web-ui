@@ -3,20 +3,17 @@
         <!-- Main App Bar -->
         <v-app-bar class="px-3" color="appBar">
             <v-row class="mx-0" align="center">
-                <v-card flat color="appBar" class="ml-2">
+                <v-card flat color="appBar" class="ml-2" style="display: flex; align-items: center">
                     <!-- Logo in the App Bar -->
                     <img :src="LogoPath" style="min-height: 42px; max-height: 42px" alt="Logo" />
                 </v-card>
+                <v-divider v-if="!isMobile" vertical inset class="ml-6"></v-divider>
                 <!-- Menu Toggle (Desktop) -->
-                <v-menu v-if="!isMobile" v-model="mainMenu" :close-on-content-click="false">
-                    <template #activator="{ props: menu }">
-                        <v-tooltip text="Main Menu" location="bottom" :open-delay="600">
-                            <template #activator="{ props: tooltip }">
-                                <v-app-bar-nav-icon
-                                    class="ml-3"
-                                    v-bind="mergeProps(menu, tooltip)"></v-app-bar-nav-icon>
-                            </template>
-                        </v-tooltip>
+                <v-menu v-if="!isMobile" v-model="mainMenu" :close-on-content-click="false" :offset="8">
+                    <template #activator="{ props }">
+                        <v-btn class="text-none ml-3" v-bind="props" append-icon="mdi-chevron-down" variant="text">
+                            {{ route.meta.name }}
+                        </v-btn>
                     </template>
                     <!-- Main Menu Component -->
                     <MainMenu @close-menu="mainMenu = false"></MainMenu>
@@ -201,7 +198,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, mergeProps, onMounted, ref, watch } from 'vue';
+    import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
     import { useDashboardHandling } from '@/composables/DashboardHandling';

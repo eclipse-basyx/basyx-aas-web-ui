@@ -3,6 +3,7 @@ import type { BaSyxComponent, RepositoryKey } from '@/types/BaSyx';
 import { defineStore } from 'pinia';
 import { computed, reactive, ref } from 'vue';
 import { LocationQuery } from 'vue-router';
+import { RouteRecordRaw } from 'vue-router';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useEnvStore } from '@/store/EnvironmentStore';
@@ -35,6 +36,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const triggerAASListReload = ref(false);
     const triggerAASListScroll = ref(false);
     const urlQuery = ref<LocationQuery>({} as LocationQuery);
+    const moduleRoutes = ref<Array<RouteRecordRaw>>([]);
 
     // Reactive BaSyx Components Configurations
     const basyxComponents = reactive<Record<RepositoryKey, BaSyxComponent>>({
@@ -99,6 +101,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const getTriggerAASListReload = computed(() => triggerAASListReload.value);
     const getTriggerAASListScroll = computed(() => triggerAASListScroll.value);
     const getUrlQuery = computed(() => urlQuery.value);
+    const getModuleRoutes = computed(() => moduleRoutes.value);
     const getBasyxComponents = computed(() => basyxComponents);
 
     // Actions
@@ -140,6 +143,10 @@ export const useNavigationStore = defineStore('navigationStore', () => {
 
     function dispatchUrlQuery(query: LocationQuery): void {
         urlQuery.value = query;
+    }
+
+    function dispatchModuleRoutes(routes: RouteRecordRaw[]): void {
+        moduleRoutes.value = routes;
     }
 
     function dispatchComponentURL(componentKey: RepositoryKey, url: string, clearSelectedNode: boolean = true): void {
@@ -302,6 +309,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         getTriggerAASListReload,
         getTriggerAASListScroll,
         getUrlQuery,
+        getModuleRoutes,
         getBasyxComponents,
 
         // Actions
@@ -316,6 +324,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         dispatchTriggerAASListReload,
         dispatchTriggerAASListScroll,
         dispatchUrlQuery,
+        dispatchModuleRoutes,
         connectComponents,
     };
 });

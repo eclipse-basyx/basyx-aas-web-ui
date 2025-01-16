@@ -15,13 +15,28 @@ import { useSMEHandling } from './composables/SMEHandling';
 
 // Static routes
 const staticRoutes: Array<RouteRecordRaw> = [
-    { path: '/', name: 'AASViewer', component: AASViewer },
+    {
+        path: '/',
+        name: 'AASViewer',
+        component: AASViewer,
+        meta: { name: 'AAS Viewer', subtitle: 'Visualize Asset Administration Shells' },
+    },
     { path: '/aaslist', name: 'AASList', component: AASList },
     { path: '/submodellist', name: 'SubmodelList', component: SubmodelList },
     { path: '/componentvisualization', name: 'ComponentVisualization', component: ComponentVisualization },
     { path: '/visu', name: 'Visualization', component: ComponentVisualization },
-    { path: '/aaseditor', name: 'AASEditor', component: AASEditor },
-    { path: '/submodelviewer', name: 'SubmodelViewer', component: SubmodelViewer },
+    {
+        path: '/aaseditor',
+        name: 'AASEditor',
+        component: AASEditor,
+        meta: { name: 'AAS Editor', subtitle: 'Edit Asset Administration Shells' },
+    },
+    {
+        path: '/submodelviewer',
+        name: 'SubmodelViewer',
+        component: SubmodelViewer,
+        meta: { name: 'Submodel Viewer', subtitle: 'Visualize Submodels' },
+    },
     { path: '/about', name: 'About', component: About },
     { path: '/404', name: 'NotFound404', component: Page404 },
     { path: '/dashboard', name: 'Dashboard', component: Dashboard },
@@ -47,6 +62,7 @@ const generateModuleRoutes = (): Array<RouteRecordRaw> => {
         moduleRoutes.push({
             path: routePath,
             name: fileName,
+            meta: { name: fileName, subtitle: 'Module' },
             // Lazy-load the component
             component: modules[path] as () => Promise<unknown>,
         });
@@ -55,8 +71,10 @@ const generateModuleRoutes = (): Array<RouteRecordRaw> => {
     return moduleRoutes;
 };
 
+const moduleRoutes = generateModuleRoutes();
+
 // Combine static routes with module routes
-const routes: Array<RouteRecordRaw> = [...staticRoutes, ...generateModuleRoutes()];
+const routes: Array<RouteRecordRaw> = [...staticRoutes, ...moduleRoutes];
 
 export async function createAppRouter(): Promise<Router> {
     const base = import.meta.env.BASE_URL;
@@ -67,6 +85,9 @@ export async function createAppRouter(): Promise<Router> {
     // Composables
     const { fetchAndDispatchAas } = useAASHandling();
     const { fetchAndDispatchSme } = useSMEHandling();
+
+    // Save the generated routes in the navigation store
+    navigationStore.dispatchModuleRoutes(moduleRoutes);
 
     const router = createRouter({
         history: createWebHistory(base),
