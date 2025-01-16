@@ -333,6 +333,8 @@
         applyTheme();
 
         // Auto connect to BaSyx Components
+        // navigationStore.connectComponents();
+
         Object.keys(basyxComponents).forEach((key) => {
             const repoKey = key as RepositoryKey;
             const storedURL = window.localStorage.getItem(repoKey);

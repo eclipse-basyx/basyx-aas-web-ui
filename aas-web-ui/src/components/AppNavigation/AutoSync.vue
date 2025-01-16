@@ -70,7 +70,8 @@
 
 <script lang="ts" setup>
     import { computed, onMounted } from 'vue';
-    import { AutoSyncType, useNavigationStore } from '@/store/NavigationStore';
+    import { useNavigationStore } from '@/store/NavigationStore';
+    import { AutoSyncType } from '@/types/Application';
 
     const navigationStore = useNavigationStore();
 

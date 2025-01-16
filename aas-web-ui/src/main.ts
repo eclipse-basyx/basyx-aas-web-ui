@@ -14,11 +14,12 @@ import { defineComponent } from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
 // Plugins
 import { registerPlugins } from '@/plugins';
+import { PluginType } from '@/types/Application';
 import App from './App.vue';
 import { createAppRouter } from './router';
 import { useAuthStore } from './store/AuthStore';
 import { useEnvStore } from './store/EnvironmentStore';
-import { PluginType, useNavigationStore } from './store/NavigationStore';
+import { useNavigationStore } from './store/NavigationStore';
 
 const app = createApp(App);
 

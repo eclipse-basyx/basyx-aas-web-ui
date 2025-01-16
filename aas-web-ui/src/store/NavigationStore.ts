@@ -1,139 +1,140 @@
-export interface SnackbarType {
-    status: boolean;
-    timeout?: number;
-    color?: string;
-    btnColor?: string;
-    text?: string;
-    baseError?: string;
-    extendedError?: string;
-}
-
-export interface AutoSyncType {
-    state: boolean;
-    interval: number;
-}
-
-export interface PlatformType {
-    android: boolean;
-    chrome: boolean;
-    cordova: boolean;
-    edge: boolean;
-    electron: boolean;
-    firefox: boolean;
-    ios: boolean;
-    linux: boolean;
-    mac: boolean;
-    opera: boolean;
-    ssr: boolean;
-    touch: boolean;
-    win: boolean;
-}
-
-export interface PluginType {
-    name: string;
-    semanticId: string;
-}
-
 import { defineStore } from 'pinia';
+import { computed, ref } from 'vue';
 import { LocationQuery } from 'vue-router';
+import { AutoSyncType, PlatformType, PluginType, SnackbarType } from '@/types/Application';
 import { useAASStore } from './AASDataStore';
 
-export const useNavigationStore = defineStore({
-    id: 'navigationStore',
+export const useNavigationStore = defineStore('navigationStore', () => {
+    // States
+    const drawerState = ref(true);
+    const AASDiscoveryURL = ref('');
+    const AASRegistryURL = ref('');
+    const SubmodelRegistryURL = ref('');
+    const AASRepoURL = ref('');
+    const SubmodelRepoURL = ref('');
+    const ConceptDescriptionRepoURL = ref('');
+    const Snackbar = ref({} as SnackbarType);
+    const AutoSync = ref({} as AutoSyncType);
+    const StatusCheck = ref(false);
+    const isMobile = ref(false);
+    const platform = ref({} as PlatformType);
+    const plugins = ref([] as PluginType[]);
+    const triggerAASListReload = ref(false);
+    const triggerAASListScroll = ref(false);
+    const urlQuery = ref({} as LocationQuery);
 
-    state: () => ({
-        drawerState: true as boolean,
-        AASDiscoveryURL: '' as string,
-        AASRegistryURL: '' as string,
-        SubmodelRegistryURL: '' as string,
-        AASRepoURL: '' as string,
-        SubmodelRepoURL: '' as string,
-        ConceptDescriptionRepoURL: '' as string,
-        Snackbar: {} as SnackbarType,
-        AutoSync: {} as AutoSyncType,
-        StatusCheck: false as boolean,
-        isMobile: false as boolean,
-        platform: {} as PlatformType,
-        plugins: [] as PluginType[],
-        triggerAASListReload: false as boolean,
-        triggerAASListScroll: false as boolean,
-        urlQuery: {} as LocationQuery,
-    }),
+    // Getters
+    const getDrawerState = computed(() => drawerState.value);
+    const getAASDiscoveryURL = computed(() => AASDiscoveryURL.value);
+    const getAASRegistryURL = computed(() => AASRegistryURL.value);
+    const getSubmodelRegistryURL = computed(() => SubmodelRegistryURL.value);
+    const getAASRepoURL = computed(() => AASRepoURL.value);
+    const getSubmodelRepoURL = computed(() => SubmodelRepoURL.value);
+    const getConceptDescriptionRepoURL = computed(() => ConceptDescriptionRepoURL.value);
+    const getSnackbar = computed(() => Snackbar.value);
+    const getAutoSync = computed(() => AutoSync.value);
+    const getStatusCheck = computed(() => StatusCheck.value);
+    const getIsMobile = computed(() => isMobile.value);
+    const getPlatform = computed(() => platform.value);
+    const getPlugins = computed(() => plugins.value);
+    const getTriggerAASListReload = computed(() => triggerAASListReload.value);
+    const getTriggerAASListScroll = computed(() => triggerAASListScroll.value);
+    const getUrlQuery = computed(() => urlQuery.value);
 
-    getters: {
-        getDrawerState: (state) => state.drawerState,
-        getAASDiscoveryURL: (state) => state.AASDiscoveryURL,
-        getAASRegistryURL: (state) => state.AASRegistryURL,
-        getSubmodelRegistryURL: (state) => state.SubmodelRegistryURL,
-        getAASRepoURL: (state) => state.AASRepoURL,
-        getSubmodelRepoURL: (state) => state.SubmodelRepoURL,
-        getConceptDescriptionRepoURL: (state) => state.ConceptDescriptionRepoURL,
-        getSnackbar: (state) => state.Snackbar,
-        getAutoSync: (state) => state.AutoSync,
-        getStatusCheck: (state) => state.StatusCheck,
-        getIsMobile: (state) => state.isMobile,
-        getPlatform: (state) => state.platform,
-        getPlugins: (state) => state.plugins,
-        getTriggerAASListReload: (state) => state.triggerAASListReload,
-        getTriggerAASListScroll: (state) => state.triggerAASListScroll,
-        getUrlQuery: (state) => state.urlQuery,
-    },
+    // Actions
+    function dispatchComponentURL(componentKey: string, url: string, clearSelectedNode: boolean = true): void {
+        // console.log('dispatchComponentURL', componentKey, url, clearSelectedNode);
+        switch (componentKey) {
+            case 'AASDiscovery':
+                AASDiscoveryURL.value = url;
+                break;
+            case 'AASRegistry':
+                AASRegistryURL.value = url;
+                if (clearSelectedNode) useAASStore().dispatchSelectedNode({});
+                break;
+            case 'SubmodelRegistry':
+                SubmodelRegistryURL.value = url;
+                if (clearSelectedNode) useAASStore().dispatchSelectedNode({});
+                break;
+            case 'AASRepo':
+                AASRepoURL.value = url;
+                break;
+            case 'SubmodelRepo':
+                SubmodelRepoURL.value = url;
+                break;
+            case 'ConceptDescriptionRepo':
+                ConceptDescriptionRepoURL.value = url;
+                break;
+        }
+    }
 
-    actions: {
-        dispatchComponentURL(componentKey: string, url: string, clearSelectedNode: boolean = true) {
-            // console.log('dispatchComponentURL', componentKey, url, clearSelectedNode);
-            switch (componentKey) {
-                case 'AASDiscovery':
-                    this.AASDiscoveryURL = url;
-                    break;
-                case 'AASRegistry':
-                    this.AASRegistryURL = url;
-                    if (clearSelectedNode) useAASStore().dispatchSelectedNode({});
-                    break;
-                case 'SubmodelRegistry':
-                    this.SubmodelRegistryURL = url;
-                    if (clearSelectedNode) useAASStore().dispatchSelectedNode({});
-                    break;
-                case 'AASRepo':
-                    this.AASRepoURL = url;
-                    break;
-                case 'SubmodelRepo':
-                    this.SubmodelRepoURL = url;
-                    break;
-                case 'ConceptDescriptionRepo':
-                    this.ConceptDescriptionRepoURL = url;
-                    break;
-            }
-        },
-        dispatchDrawerState(drawerState: boolean) {
-            this.drawerState = drawerState;
-        },
-        dispatchSnackbar(snackbarObj: SnackbarType) {
-            this.Snackbar = snackbarObj;
-        },
-        dispatchUpdateAutoSync(autoSync: AutoSyncType) {
-            this.AutoSync = autoSync;
-        },
-        dispatchUpdateStatusCheck(statusCheck: boolean) {
-            this.StatusCheck = statusCheck;
-        },
-        dispatchIsMobile(isMobile: boolean) {
-            this.isMobile = isMobile;
-        },
-        dispatchPlatform(platform: PlatformType) {
-            this.platform = platform;
-        },
-        dispatchPlugins(plugins: Array<PluginType>) {
-            this.plugins = plugins;
-        },
-        dispatchTriggerAASListReload(triggerAASListReload: boolean) {
-            this.triggerAASListReload = triggerAASListReload;
-        },
-        dispatchTriggerAASListScroll() {
-            this.triggerAASListScroll = !this.triggerAASListScroll;
-        },
-        dispatchUrlQuery(query: LocationQuery) {
-            this.urlQuery = query;
-        },
-    },
+    function dispatchDrawerState(dispatchedDrawerState: boolean): void {
+        drawerState.value = dispatchedDrawerState;
+    }
+
+    function dispatchSnackbar(snackbarObj: SnackbarType): void {
+        Snackbar.value = snackbarObj;
+    }
+
+    function dispatchUpdateAutoSync(autoSync: AutoSyncType): void {
+        AutoSync.value = autoSync;
+    }
+
+    function dispatchUpdateStatusCheck(statusCheck: boolean): void {
+        StatusCheck.value = statusCheck;
+    }
+
+    function dispatchIsMobile(dispatchedIsMobile: boolean): void {
+        isMobile.value = dispatchedIsMobile;
+    }
+
+    function dispatchPlatform(dispatchedPlatform: PlatformType): void {
+        platform.value = dispatchedPlatform;
+    }
+
+    function dispatchPlugins(dispatchedPlugins: Array<PluginType>): void {
+        plugins.value = dispatchedPlugins;
+    }
+
+    function dispatchTriggerAASListReload(dispatchedTriggerAASListReload: boolean): void {
+        triggerAASListReload.value = dispatchedTriggerAASListReload;
+    }
+
+    function dispatchTriggerAASListScroll(): void {
+        triggerAASListScroll.value = !triggerAASListScroll.value;
+    }
+
+    function dispatchUrlQuery(query: LocationQuery): void {
+        urlQuery.value = query;
+    }
+
+    return {
+        getDrawerState,
+        getAASDiscoveryURL,
+        getAASRegistryURL,
+        getSubmodelRegistryURL,
+        getAASRepoURL,
+        getSubmodelRepoURL,
+        getConceptDescriptionRepoURL,
+        getSnackbar,
+        getAutoSync,
+        getStatusCheck,
+        getIsMobile,
+        getPlatform,
+        getPlugins,
+        getTriggerAASListReload,
+        getTriggerAASListScroll,
+        getUrlQuery,
+        dispatchComponentURL,
+        dispatchDrawerState,
+        dispatchSnackbar,
+        dispatchUpdateAutoSync,
+        dispatchUpdateStatusCheck,
+        dispatchIsMobile,
+        dispatchPlatform,
+        dispatchPlugins,
+        dispatchTriggerAASListReload,
+        dispatchTriggerAASListScroll,
+        dispatchUrlQuery,
+    };
 });
