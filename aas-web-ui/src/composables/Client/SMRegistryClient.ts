@@ -69,26 +69,45 @@ export function useSMRegistryClient() {
         return failResponse;
     }
 
-    async function postSMDescriptor(smDescriptor: descriptorTypes.SubmodelDescriptor): Promise<void> {
-        let smRegUrl = submodelRegistryUrl.value;
-        if (!smRegUrl.includes('/submodel-descriptors')) {
-          smRegUrl += '/submodel-descriptors';
+    async function postSubmodelDescriptor(submodelDescriptor: descriptorTypes.SubmodelDescriptor): Promise<void> {
+        let submodelRegUrl = submodelRegistryUrl.value;
+        if (!submodelRegUrl.includes('/submodel-descriptors')) {
+            submodelRegUrl += '/submodel-descriptors';
         }
 
         const context = 'updating Submodel Descriptor';
         const disableMessage = false;
-        const path = smRegUrl;
+        const path = submodelRegUrl;
         const headers = new Headers();
         headers.append('Content-Type', 'application/json');
-        const body = JSON.stringify(smDescriptor);
+        const body = JSON.stringify(submodelDescriptor);
 
-        // Send Request to upload the file
         await postRequest(path, body, headers, context, disableMessage);
+    }
+    
+    function createDescriptorFromSubmodel(
+        submodel: jsonization.JsonObject,
+        endpoints: Array<descriptorTypes.Endpoint>
+    ): descriptorTypes.SubmodelDescriptor {
+        const jsonSubmodel = JSON.stringify(submodel);
+        const parsedSubmodel = JSON.parse(jsonSubmodel);
+        let descriptor = new descriptorTypes.SubmodelDescriptor(
+            endpoints,
+            parsedSubmodel.id,
+            parsedSubmodel.administration,
+            parsedSubmodel.description,
+            parsedSubmodel.displayName,
+            parsedSubmodel.extensions,
+            parsedSubmodel.idShort
+        );
+        descriptor = removeNullValues(descriptor);
+        return descriptor;
     }
 
     return {
         fetchSmDescriptorList,
         fetchSmDescriptorById,
-        postSMDescriptor,
+        postSubmodelDescriptor,
+        createDescriptorFromSubmodel,
     };
 }
