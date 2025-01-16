@@ -229,36 +229,42 @@
         AASDiscovery: {
             url: ref(navigationStore.getAASDiscoveryURL), // Ensure the getter is invoked
             loading: ref(false),
+            connected: ref(null),
             connect: () => connectComponent('AASDiscovery'),
             label: 'AAS Discovery URL',
         },
         AASRegistry: {
             url: ref(navigationStore.getAASRegistryURL),
             loading: ref(false),
+            connected: ref(null),
             connect: () => connectComponent('AASRegistry'),
             label: 'AAS Registry URL',
         },
         SubmodelRegistry: {
             url: ref(navigationStore.getSubmodelRegistryURL),
             loading: ref(false),
+            connected: ref(null),
             connect: () => connectComponent('SubmodelRegistry'),
             label: 'Submodel Registry URL',
         },
         AASRepo: {
             url: ref(navigationStore.getAASRepoURL),
             loading: ref(false),
+            connected: ref(null),
             connect: () => connectComponent('AASRepo'),
             label: 'AAS Repository URL',
         },
         SubmodelRepo: {
             url: ref(navigationStore.getSubmodelRepoURL),
             loading: ref(false),
+            connected: ref(null),
             connect: () => connectComponent('SubmodelRepo'),
             label: 'Submodel Repository URL',
         },
         ConceptDescriptionRepo: {
             url: ref(navigationStore.getConceptDescriptionRepoURL),
             loading: ref(false),
+            connected: ref(null),
             connect: () => connectComponent('ConceptDescriptionRepo'),
             label: 'Concept Description Repository URL',
         },
