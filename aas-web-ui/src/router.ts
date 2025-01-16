@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory, Router } from 'vue-router';
+import { createRouter, createWebHistory, Router, RouteRecordRaw } from 'vue-router';
 import AASList from '@/components/AppNavigation/AASList.vue';
 import ComponentVisualization from '@/components/ComponentVisualization.vue';
 import SubmodelList from '@/components/SubmodelList.vue';
@@ -13,7 +13,8 @@ import { useNavigationStore } from '@/store/NavigationStore';
 import { useAASHandling } from './composables/AASHandling';
 import { useSMEHandling } from './composables/SMEHandling';
 
-const routes = [
+// Static routes
+const staticRoutes: Array<RouteRecordRaw> = [
     { path: '/', name: 'AASViewer', component: AASViewer },
     { path: '/aaslist', name: 'AASList', component: AASList },
     { path: '/submodellist', name: 'SubmodelList', component: SubmodelList },
@@ -29,6 +30,33 @@ const routes = [
 ];
 
 const routeNamesToSaveAndLoadUrlQuery = ['AASList', 'AASEditor', 'AASViewer', 'SubmodelViewer'];
+
+// Function to generate routes from modules
+const generateModuleRoutes = (): Array<RouteRecordRaw> => {
+    const modules = import.meta.glob('@/pages/modules/*.vue');
+
+    const moduleRoutes: Array<RouteRecordRaw> = [];
+
+    for (const path in modules) {
+        // Extract the file name to use as the route name and path
+        const fileName = path.split('/').pop()?.replace('.vue', '') || 'UnnamedModule';
+
+        // Define the route path, e.g., '/modules/module-a' if needed
+        const routePath = `/modules/${fileName.toLowerCase()}`;
+
+        moduleRoutes.push({
+            path: routePath,
+            name: fileName,
+            // Lazy-load the component
+            component: modules[path] as () => Promise<unknown>,
+        });
+    }
+
+    return moduleRoutes;
+};
+
+// Combine static routes with module routes
+const routes: Array<RouteRecordRaw> = [...staticRoutes, ...generateModuleRoutes()];
 
 export async function createAppRouter(): Promise<Router> {
     const base = import.meta.env.BASE_URL;
