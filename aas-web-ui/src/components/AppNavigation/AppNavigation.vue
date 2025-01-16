@@ -46,7 +46,7 @@
                         </v-toolbar>
                         <!-- Settings in Mobile View -->
                         <v-row justify="center" align="start" style="max-height: calc(100vh - 64px); overflow-y: auto">
-                            <v-col cols="12" class="text-center">
+                            <v-col cols="12" class="text-center px-5">
                                 <ThemeSwitch></ThemeSwitch>
                                 <v-divider v-if="endpointConfigAvailable" class="mt-2"></v-divider>
                                 <!-- Backend Configuration -->
