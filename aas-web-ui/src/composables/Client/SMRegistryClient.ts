@@ -83,10 +83,7 @@ export function useSMRegistryClient() {
         const body = JSON.stringify(smDescriptor);
 
         // Send Request to upload the file
-        const response = await postRequest(path, body, headers, context, disableMessage);
-        if (response.success) {
-            //
-        }
+        await postRequest(path, body, headers, context, disableMessage);
     }
 
     return {
