@@ -111,6 +111,7 @@
       let data = await fetchAas(href);
 
       const id = data.id;
+      const idShort = data.idShort;
       const assetKind = data.assetInformation.assetKind;
       const globalAssetId = data.assetInformation.globalAssetId;
 
@@ -156,7 +157,7 @@
           displayName,
           undefined, // extensions
           globalAssetId,
-          undefined, // idShort
+          idShort,
           undefined, // specificAssetId
           undefined, // submodelDescriptors
       );
