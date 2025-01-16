@@ -4,6 +4,8 @@
  * Bootstraps Vuetify and other plugins then mounts the App`
  */
 
+// Types
+import type { PluginType } from '@/types/Application';
 // Components
 import Keycloak from 'keycloak-js';
 import { KeycloakOnLoad } from 'keycloak-js';
@@ -14,7 +16,6 @@ import { defineComponent } from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
 // Plugins
 import { registerPlugins } from '@/plugins';
-import { PluginType } from '@/types/Application';
 import App from './App.vue';
 import { createAppRouter } from './router';
 import { useAuthStore } from './store/AuthStore';
