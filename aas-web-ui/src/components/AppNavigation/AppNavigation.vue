@@ -44,15 +44,23 @@
                                 <v-btn icon="mdi-close" class="mr-3" @click="mainMenu = false"></v-btn>
                             </v-toolbar-items>
                         </v-toolbar>
-                        <!-- Auto-Sync and Theme Settings in Mobile View -->
-                        <v-row justify="center" style="max-height: 128px !important">
+                        <!-- Settings in Mobile View -->
+                        <v-row justify="center" align="start" style="max-height: calc(100vh - 64px); overflow-y: auto">
                             <v-col cols="12" class="text-center">
                                 <ThemeSwitch></ThemeSwitch>
+                                <v-divider v-if="endpointConfigAvailable" class="mt-2"></v-divider>
+                                <!-- Backend Configuration -->
+                                <BackendConfig v-if="endpointConfigAvailable"></BackendConfig>
+                            </v-col>
+                            <v-col cols="12" class="text-center">
+                                <!-- Platform I 4.0 Logo -->
+                                <v-img
+                                    src="@/assets/I40.png"
+                                    max-width="260px"
+                                    class="mx-auto"
+                                    :style="{ filter: isDark ? 'invert(1)' : 'invert(0)' }" />
                             </v-col>
                         </v-row>
-                        <v-divider></v-divider>
-                        <!-- Main Menu Component -->
-                        <MainMenu @close-menu="mainMenu = false"></MainMenu>
                     </v-card>
                 </v-dialog>
                 <!-- Settings Menu -->
