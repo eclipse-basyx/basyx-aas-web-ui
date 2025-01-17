@@ -1,8 +1,10 @@
+import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
 import { computed } from 'vue';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
 import * as descriptorTypes from '@/types/Descriptors';
 import { URLEncode } from '@/utils/EncodeDecodeUtils';
+import { removeNullValues } from '@/utils/generalUtils';
 
 export function useSMRegistryClient() {
     const { getRequest, postRequest } = useRequestHandling();
@@ -84,7 +86,7 @@ export function useSMRegistryClient() {
 
         await postRequest(path, body, headers, context, disableMessage);
     }
-    
+
     function createDescriptorFromSubmodel(
         submodel: jsonization.JsonObject,
         endpoints: Array<descriptorTypes.Endpoint>
