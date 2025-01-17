@@ -160,8 +160,8 @@
     async function createSubmodelDescriptor(submodelId: string)
     {
       let submodelId64 = btoa(submodelId);
-      let submodel = await fetchSmById(submodelId64);
       let href = smRepositoryUrl.value + "/" + submodelId64;
+      let submodel = await fetchSmById(submodelId64);   //TODO - check why this works, because it shouldn't (looking for a registered Submodel that is not yet registered)
 
       const protocolInformation = new ProtocolInformation(
             href, null, "http", null, null, null, null,
@@ -182,7 +182,7 @@
           submodel.semanticId,
           null                  // supplementalSemanticIds (optional)
       );
-      //let submodelDescriptor = createDescriptorFromSubmodel(submodel, endpoints);   //TODO - does not work
+      //let submodelDescriptor = createDescriptorFromSubmodel(submodel, endpoints);   //TODO - does not work, but should be uses instead
       return submodelDescriptor;
     }
 </script>
