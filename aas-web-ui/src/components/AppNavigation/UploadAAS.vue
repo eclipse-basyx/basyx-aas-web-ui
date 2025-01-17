@@ -182,7 +182,7 @@
           submodel.semanticId,
           null                  // supplementalSemanticIds (optional)
       );
-      //let submodelDescriptor = createDescriptorFromSubmodel(submodel, endpoints);   //TODO - does not work, but should be uses instead
+      //let submodelDescriptor = createDescriptorFromSubmodel(submodel, endpoints);   //TODO - does not work, but should be used instead
       return submodelDescriptor;
     }
 </script>
