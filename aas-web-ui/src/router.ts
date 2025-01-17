@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory, Router } from 'vue-router';
+import { createRouter, createWebHistory, Router, RouteRecordRaw } from 'vue-router';
 import AASList from '@/components/AppNavigation/AASList.vue';
 import ComponentVisualization from '@/components/ComponentVisualization.vue';
 import SubmodelList from '@/components/SubmodelList.vue';
@@ -13,14 +13,30 @@ import { useNavigationStore } from '@/store/NavigationStore';
 import { useAASHandling } from './composables/AASHandling';
 import { useSMEHandling } from './composables/SMEHandling';
 
-const routes = [
-    { path: '/', name: 'AASViewer', component: AASViewer },
+// Static routes
+const staticRoutes: Array<RouteRecordRaw> = [
+    {
+        path: '/',
+        name: 'AASViewer',
+        component: AASViewer,
+        meta: { name: 'AAS Viewer', subtitle: 'Visualize Asset Administration Shells' },
+    },
     { path: '/aaslist', name: 'AASList', component: AASList },
     { path: '/submodellist', name: 'SubmodelList', component: SubmodelList },
     { path: '/componentvisualization', name: 'ComponentVisualization', component: ComponentVisualization },
     { path: '/visu', name: 'Visualization', component: ComponentVisualization },
-    { path: '/aaseditor', name: 'AASEditor', component: AASEditor },
-    { path: '/submodelviewer', name: 'SubmodelViewer', component: SubmodelViewer },
+    {
+        path: '/aaseditor',
+        name: 'AASEditor',
+        component: AASEditor,
+        meta: { name: 'AAS Editor', subtitle: 'Edit Asset Administration Shells' },
+    },
+    {
+        path: '/submodelviewer',
+        name: 'SubmodelViewer',
+        component: SubmodelViewer,
+        meta: { name: 'Submodel Viewer', subtitle: 'Visualize Submodels' },
+    },
     { path: '/about', name: 'About', component: About },
     { path: '/404', name: 'NotFound404', component: Page404 },
     { path: '/dashboard', name: 'Dashboard', component: Dashboard },
@@ -29,6 +45,36 @@ const routes = [
 ];
 
 const routeNamesToSaveAndLoadUrlQuery = ['AASList', 'AASEditor', 'AASViewer', 'SubmodelViewer'];
+
+// Function to generate routes from modules
+const generateModuleRoutes = (): Array<RouteRecordRaw> => {
+    const modules = import.meta.glob('@/pages/modules/*.vue');
+
+    const moduleRoutes: Array<RouteRecordRaw> = [];
+
+    for (const path in modules) {
+        // Extract the file name to use as the route name and path
+        const fileName = path.split('/').pop()?.replace('.vue', '') || 'UnnamedModule';
+
+        // Define the route path, e.g., '/modules/module-a' if needed
+        const routePath = `/modules/${fileName.toLowerCase()}`;
+
+        moduleRoutes.push({
+            path: routePath,
+            name: fileName,
+            meta: { name: fileName, subtitle: 'Module' },
+            // Lazy-load the component
+            component: modules[path] as () => Promise<unknown>,
+        });
+    }
+
+    return moduleRoutes;
+};
+
+const moduleRoutes = generateModuleRoutes();
+
+// Combine static routes with module routes
+const routes: Array<RouteRecordRaw> = [...staticRoutes, ...moduleRoutes];
 
 export async function createAppRouter(): Promise<Router> {
     const base = import.meta.env.BASE_URL;
@@ -39,6 +85,9 @@ export async function createAppRouter(): Promise<Router> {
     // Composables
     const { fetchAndDispatchAas } = useAASHandling();
     const { fetchAndDispatchSme } = useSMEHandling();
+
+    // Save the generated routes in the navigation store
+    navigationStore.dispatchModuleRoutes(moduleRoutes);
 
     const router = createRouter({
         history: createWebHistory(base),

@@ -17,6 +17,7 @@ declare module 'vue' {
     AreaChart: typeof import('./components/Widgets/AreaChart.vue')['default']
     AssetInformation: typeof import('./components/UIComponents/AssetInformation.vue')['default']
     AutoSync: typeof import('./components/AppNavigation/AutoSync.vue')['default']
+    BackendConfig: typeof import('./components/AppNavigation/Settings/BackendConfig.vue')['default']
     BarChart: typeof import('./components/Widgets/BarChart.vue')['default']
     Blob: typeof import('./components/SubmodelElements/Blob.vue')['default']
     BooleanType: typeof import('./components/SubmodelElements/ValueTypes/BooleanType.vue')['default']
