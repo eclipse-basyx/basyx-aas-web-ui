@@ -237,18 +237,6 @@ export const useNavigationStore = defineStore('navigationStore', () => {
             basyxComponent.loading = true;
             const path = basyxComponent.url;
 
-            // Note .pathCheck never defined
-            // // Append path check for backward compatibility if defined
-            // if (basyxComponent.pathCheck && !path.includes(basyxComponent.pathCheck)) {
-            //     path += basyxComponent.pathCheck;
-            // }
-
-            // Note .additionalParams never defined
-            // // Append additional parameters if any
-            // if (basyxComponent.additionalParams) {
-            //     path += basyxComponent.additionalParams(componentKey);
-            // }
-
             const context = `connecting to ${basyxComponent.label}`;
             const disableMessage = false;
 
