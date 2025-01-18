@@ -18,6 +18,8 @@ export function useSMEHandling() {
      * @param {string} smePath - The path URL of the SME to fetch.
      */
     async function fetchAndDispatchSme(smePath: string, withConceptDescriptions: boolean = false): Promise<void> {
+        if (!smePath) return;
+
         smePath = smePath.trim();
 
         if (smePath === '') return;
@@ -34,6 +36,8 @@ export function useSMEHandling() {
      */
     async function fetchSme(smePath: string, withConceptDescriptions: boolean = false): Promise<any> {
         const failResponse = {};
+
+        if (!smePath) return failResponse;
 
         smePath = smePath.trim();
 

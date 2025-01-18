@@ -19,6 +19,8 @@ export function useAASHandling() {
      * @param {string} aasEndpoint - The endpoint URL of the AAS to fetch.
      */
     async function fetchAndDispatchAas(aasEndpoint: string): Promise<void> {
+        if (!aasEndpoint) return;
+
         aasEndpoint = aasEndpoint.trim();
 
         if (aasEndpoint === '') return;
@@ -35,9 +37,11 @@ export function useAASHandling() {
      * @param {string} aasId - The ID of the AAS to fetch.
      */
     async function fetchAndDispatchAasById(aasId: string): Promise<void> {
-        if (aasId.trim() === '') return;
+        if (!aasId) return;
 
         aasId = aasId.trim();
+
+        if (aasId === '') return;
 
         const aas = await fetchAasById(aasId);
 
@@ -51,6 +55,8 @@ export function useAASHandling() {
      */
     async function fetchAas(aasEndpoint: string): Promise<any> {
         const failResponse = {};
+
+        if (!aasEndpoint) return failResponse;
 
         aasEndpoint = aasEndpoint.trim();
 
@@ -78,6 +84,8 @@ export function useAASHandling() {
      */
     async function fetchAasById(aasId: string): Promise<any> {
         const failResponse = {};
+
+        if (!aasId) return failResponse;
 
         aasId = aasId.trim();
 
@@ -107,6 +115,8 @@ export function useAASHandling() {
      */
     async function getAasEndpointById(aasId: string): Promise<string> {
         const failResponse = '';
+
+        if (!aasId) return failResponse;
 
         aasId = aasId.trim();
 

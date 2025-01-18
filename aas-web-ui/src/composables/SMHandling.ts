@@ -25,6 +25,8 @@ export function useSMHandling() {
      * @param {string} smEndpoint - The endpoint URL of the SM to fetch.
      */
     async function fetchAndDispatchSm(smEndpoint: string, withConceptDescriptions = false): Promise<void> {
+        if (!smEndpoint) return;
+
         smEndpoint = smEndpoint.trim();
 
         if (smEndpoint === '') return;
@@ -41,6 +43,8 @@ export function useSMHandling() {
      * @param {string} smId - The ID of the SM to fetch.
      */
     async function fetchAndDispatchSmById(smId: string, withConceptDescriptions = false): Promise<void> {
+        if (!smId) return;
+
         smId = smId.trim();
 
         if (smId === '') return;
@@ -57,6 +61,8 @@ export function useSMHandling() {
      */
     async function fetchSm(smEndpoint: string, withConceptDescriptions = false): Promise<any> {
         const failResponse = {};
+
+        if (!smEndpoint) return failResponse;
 
         smEndpoint = smEndpoint.trim();
 
@@ -100,6 +106,8 @@ export function useSMHandling() {
     async function fetchSmById(smId: string, withConceptDescriptions = false): Promise<any> {
         const failResponse = {};
 
+        if (!smId) return failResponse;
+
         smId = smId.trim();
 
         if (smId === '') return failResponse;
@@ -134,6 +142,8 @@ export function useSMHandling() {
      */
     async function getSmEndpointById(smId: string): Promise<string> {
         const failResponse = '';
+
+        if (!smId) return failResponse;
 
         smId = smId.trim();
 
