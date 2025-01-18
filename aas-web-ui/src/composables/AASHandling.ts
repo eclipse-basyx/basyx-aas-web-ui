@@ -30,12 +30,14 @@ export function useAASHandling() {
 
     /**
      * Fetches an Asset Administration Shell (AAS) by the provided AAS ID
-     * and dispatches it to the AAS store.
+     * and dispatches it to the AAS by ID store.
      *
      * @param {string} aasId - The ID of the AAS to fetch.
      */
     async function fetchAndDispatchAasById(aasId: string): Promise<void> {
         if (aasId.trim() === '') return;
+
+        aasId = aasId.trim();
 
         const aas = await fetchAasById(aasId);
 

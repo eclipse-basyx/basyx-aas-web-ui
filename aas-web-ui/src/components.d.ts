@@ -7,7 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    AAS: typeof import('./components/EditorComponents/AAS.vue')['default']
+    AASForm: typeof import('./components/EditorComponents/AASForm.vue')['default']
     AASList: typeof import('./components/AppNavigation/AASList.vue')['default']
     AASListDetails: typeof import('./components/AppNavigation/AASListDetails.vue')['default']
     AASTreeview: typeof import('./components/AASTreeview.vue')['default']
@@ -17,6 +17,7 @@ declare module 'vue' {
     AreaChart: typeof import('./components/Widgets/AreaChart.vue')['default']
     AssetInformation: typeof import('./components/UIComponents/AssetInformation.vue')['default']
     AutoSync: typeof import('./components/AppNavigation/AutoSync.vue')['default']
+    BackendConfig: typeof import('./components/AppNavigation/Settings/BackendConfig.vue')['default']
     BarChart: typeof import('./components/Widgets/BarChart.vue')['default']
     Blob: typeof import('./components/SubmodelElements/Blob.vue')['default']
     BooleanType: typeof import('./components/SubmodelElements/ValueTypes/BooleanType.vue')['default']
@@ -31,6 +32,7 @@ declare module 'vue' {
     DataSpecificationContent: typeof import('./components/UIComponents/DataSpecificationContent.vue')['default']
     DateTimeStampType: typeof import('./components/SubmodelElements/ValueTypes/DateTimeStampType.vue')['default']
     DeleteAAS: typeof import('./components/AppNavigation/DeleteAAS.vue')['default']
+    DeleteDialog: typeof import('./components/EditorComponents/DeleteDialog.vue')['default']
     DescriptionElement: typeof import('./components/UIComponents/DescriptionElement.vue')['default']
     DisplayField: typeof import('./components/Widgets/DisplayField.vue')['default']
     DisplayNameElement: typeof import('./components/UIComponents/DisplayNameElement.vue')['default']
@@ -81,6 +83,7 @@ declare module 'vue' {
     SubmodelElementList: typeof import('./components/SubmodelElements/SubmodelElementList.vue')['default']
     SubmodelElementView: typeof import('./components/SubmodelElementView.vue')['default']
     SubmodelElementWrapper: typeof import('./components/UIComponents/SubmodelElementWrapper.vue')['default']
+    SubmodelForm: typeof import('./components/EditorComponents/SubmodelForm.vue')['default']
     SubmodelList: typeof import('./components/SubmodelList.vue')['default']
     SupplementalSemanticID: typeof import('./components/UIComponents/SupplementalSemanticID.vue')['default']
     Switch: typeof import('./components/Widgets/Switch.vue')['default']
