@@ -1,9 +1,9 @@
+import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
 import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
-import { useSMRegistryClient } from './Client/SMRegistryClient';
 
 export function useSMHandling() {
     // Composables
