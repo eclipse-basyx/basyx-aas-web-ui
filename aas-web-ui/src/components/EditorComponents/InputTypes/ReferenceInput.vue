@@ -1,6 +1,6 @@
 <template>
-    <v-divider></v-divider>
-    <v-list-item class="pl-0 pt-0">
+    <v-divider v-if="!noHeader"></v-divider>
+    <v-list-item v-if="!noHeader" class="pl-0 pt-0">
         <template #title>
             <div class="text-subtitle-2">{{ label }}</div>
         </template>
@@ -29,10 +29,13 @@
 
     type Props = {
         label: string;
+        noHeader?: boolean;
         modelValue: aasTypes.Reference | null;
-    } & ({ showGenerateIriButton: true; type: string } | { showGenerateIriButton?: false; type?: never });
+    };
 
-    const props = defineProps<Props>();
+    const props = withDefaults(defineProps<Props>(), {
+        noHeader: false,
+    });
 
     const emit = defineEmits<{
         (event: 'update:modelValue', value: aasTypes.Reference | null): void;

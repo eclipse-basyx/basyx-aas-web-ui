@@ -25,7 +25,7 @@ export function useAASHandling() {
         return aas;
     }
 
-    // Fetch and dispatch AAS
+    // Fetch and dispatch AAS by ID
     async function fetchAndDispatchAasById(aasId: string): Promise<any> {
         const failResponse = {};
 
@@ -85,5 +85,10 @@ export function useAASHandling() {
         return aas;
     }
 
-    return { fetchAas, fetchAasById, fetchAndDispatchAas, fetchAndDispatchAasById };
+    return {
+        fetchAas,
+        fetchAasById,
+        fetchAndDispatchAas,
+        fetchAndDispatchAasById,
+    };
 }

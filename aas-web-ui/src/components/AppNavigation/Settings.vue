@@ -10,17 +10,23 @@
             <v-list nav class="pt-0 pb-2" :class="isMobile ? 'bg-card' : 'bg-navigationMenu'">
                 <!-- Switch to change the app theme -->
                 <ThemeSwitch></ThemeSwitch>
+                <v-divider v-if="endpointConfigAvailable" class="mt-3"></v-divider>
+                <!-- Backend Configuration -->
+                <BackendConfig v-if="endpointConfigAvailable"></BackendConfig>
             </v-list>
         </v-card>
     </v-menu>
 </template>
 
 <script lang="ts" setup>
-    import { computed } from 'vue';
+    import { computed, ref } from 'vue';
+    import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import ThemeSwitch from './Settings/ThemeSwitch.vue';
 
+    const envStore = useEnvStore();
     const navigationStore = useNavigationStore();
+
+    const endpointConfigAvailable = ref(envStore.getEndpointConfigAvailable);
 
     const isMobile = computed(() => navigationStore.getIsMobile);
 </script>
