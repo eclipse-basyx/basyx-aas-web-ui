@@ -226,7 +226,7 @@
     watch(
         () => selectedNode.value,
         async () => {
-            await initializeView(false);
+            await initializeView(true);
         },
         { deep: true }
     );
