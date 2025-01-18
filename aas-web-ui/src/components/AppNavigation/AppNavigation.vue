@@ -198,7 +198,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, mergeProps, onMounted, ref, watch } from 'vue';
+    import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
     import { useDashboardHandling } from '@/composables/DashboardHandling';
