@@ -10,7 +10,7 @@ export interface BaSyxComponent {
     additionalParams?: (type?: string) => string;
 }
 
-export type RepositoryKey =
+export type BaSyxComponentKey =
     | 'AASDiscovery'
     | 'AASRegistry'
     | 'SubmodelRegistry'

@@ -1,5 +1,5 @@
 import type { AutoSyncType, PlatformType, PluginType, SnackbarType } from '@/types/Application';
-import type { BaSyxComponent, RepositoryKey } from '@/types/BaSyx';
+import type { BaSyxComponent, BaSyxComponentKey } from '@/types/BaSyx';
 import { defineStore } from 'pinia';
 import { computed, reactive, ref } from 'vue';
 import { LocationQuery } from 'vue-router';
@@ -18,6 +18,12 @@ export const useNavigationStore = defineStore('navigationStore', () => {
 
     // Computed Property
     const endpointConfigAvailable = computed(() => envStore.getEndpointConfigAvailable);
+    const EnvAASDiscoveryPath = computed(() => envStore.getEnvAASDiscoveryPath);
+    const EnvAASRegistryPath = computed(() => envStore.getEnvAASRegistryPath);
+    const EnvSubmodelRegistryPath = computed(() => envStore.getEnvSubmodelRegistryPath);
+    const EnvAASRepoPath = computed(() => envStore.getEnvAASRepoPath);
+    const EnvSubmodelRepoPath = computed(() => envStore.getEnvSubmodelRepoPath);
+    const EnvConceptDescriptionRepoPath = computed(() => envStore.getEnvConceptDescriptionRepoPath);
 
     // State Variables
     const drawerState = ref(true);
@@ -39,7 +45,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const moduleRoutes = ref<Array<RouteRecordRaw>>([]);
 
     // Reactive BaSyx Components Configurations
-    const basyxComponents = reactive<Record<RepositoryKey, BaSyxComponent>>({
+    const basyxComponents = reactive<Record<BaSyxComponentKey, BaSyxComponent>>({
         AASDiscovery: {
             url: AASDiscoveryURL,
             loading: ref(false),
@@ -149,7 +155,11 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         moduleRoutes.value = routes;
     }
 
-    function dispatchComponentURL(componentKey: RepositoryKey, url: string, clearSelectedNode: boolean = true): void {
+    function dispatchComponentURL(
+        componentKey: BaSyxComponentKey,
+        url: string,
+        clearSelectedNode: boolean = true
+    ): void {
         switch (componentKey) {
             case 'AASDiscovery':
                 AASDiscoveryURL.value = url;
@@ -179,10 +189,10 @@ export const useNavigationStore = defineStore('navigationStore', () => {
 
     function connectComponents(): void {
         // Ensure that Object.keys returns RepositoryKey[]
-        const keys = Object.keys(basyxComponents) as RepositoryKey[];
+        const keys = Object.keys(basyxComponents) as BaSyxComponentKey[];
 
         keys.forEach((repoKey) => {
-            const storedURL = window.localStorage.getItem(repoKey);
+            const storedURL = window.localStorage.getItem(repoKey + 'URL');
 
             if (endpointConfigAvailable.value && storedURL) {
                 basyxComponents[repoKey].url = storedURL;
@@ -192,22 +202,22 @@ export const useNavigationStore = defineStore('navigationStore', () => {
                 let envPath = '';
                 switch (repoKey) {
                     case 'AASDiscovery':
-                        envPath = AASDiscoveryURL.value;
+                        envPath = EnvAASDiscoveryPath.value;
                         break;
                     case 'AASRegistry':
-                        envPath = AASRegistryURL.value;
+                        envPath = EnvAASRegistryPath.value;
                         break;
                     case 'SubmodelRegistry':
-                        envPath = SubmodelRegistryURL.value;
+                        envPath = EnvSubmodelRegistryPath.value;
                         break;
                     case 'AASRepo':
-                        envPath = AASRepoURL.value;
+                        envPath = EnvAASRepoPath.value;
                         break;
                     case 'SubmodelRepo':
-                        envPath = SubmodelRepoURL.value;
+                        envPath = EnvSubmodelRepoPath.value;
                         break;
                     case 'ConceptDescriptionRepo':
-                        envPath = ConceptDescriptionRepoURL.value;
+                        envPath = EnvConceptDescriptionRepoPath.value;
                         break;
                     default:
                         break;
@@ -221,73 +231,75 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         });
     }
 
-    async function connectComponent(repoKey: keyof typeof basyxComponents): Promise<void> {
-        const repo = basyxComponents[repoKey];
-        if (repo.url && repo.url.trim() !== '') {
-            repo.loading = true;
-            let path = repo.url;
+    async function connectComponent(componentKey: keyof typeof basyxComponents): Promise<void> {
+        const basyxComponent = basyxComponents[componentKey];
+        if (basyxComponent.url && basyxComponent.url.trim() !== '') {
+            basyxComponent.loading = true;
+            const path = basyxComponent.url;
 
-            // Append path check for backward compatibility if defined
-            if (repo.pathCheck && !path.includes(repo.pathCheck)) {
-                path += repo.pathCheck;
-            }
+            // Note .pathCheck never defined
+            // // Append path check for backward compatibility if defined
+            // if (basyxComponent.pathCheck && !path.includes(basyxComponent.pathCheck)) {
+            //     path += basyxComponent.pathCheck;
+            // }
 
-            // Append additional parameters if any
-            if (repo.additionalParams) {
-                path += repo.additionalParams(repoKey);
-            }
+            // Note .additionalParams never defined
+            // // Append additional parameters if any
+            // if (basyxComponent.additionalParams) {
+            //     path += basyxComponent.additionalParams(componentKey);
+            // }
 
-            const context = `connecting to ${repo.label}`;
+            const context = `connecting to ${basyxComponent.label}`;
             const disableMessage = false;
 
             try {
                 const response = await getRequest(path, context, disableMessage);
-                repo.loading = false;
+                basyxComponent.loading = false;
 
                 if (response.success) {
                     // Dispatch to the navigation store
-                    dispatchComponentURL(repoKey, repo.url);
+                    dispatchComponentURL(componentKey, basyxComponent.url);
 
                     // Save to localStorage if endpoint config is available
                     if (endpointConfigAvailable.value) {
                         // console.log(`Saving ${repoKey} URL to localStorage:`, repo.url);
-                        window.localStorage.setItem(repoKey, repo.url);
+                        window.localStorage.setItem(componentKey + 'URL', basyxComponent.url);
                     }
 
                     // Update the connected status
-                    repo.connected = true;
+                    basyxComponent.connected = true;
                 } else {
                     // Clear the URL in the navigation store
-                    dispatchComponentURL(repoKey, '');
+                    dispatchComponentURL(componentKey, '');
 
                     // Remove from localStorage if endpoint config is available
                     if (endpointConfigAvailable.value) {
                         // console.log(`Removing ${repoKey} URL from localStorage:`, repo.url);
-                        window.localStorage.removeItem(repoKey);
+                        window.localStorage.removeItem(componentKey + 'URL');
                     }
 
                     // Update the connected status
-                    repo.connected = false;
+                    basyxComponent.connected = false;
                 }
             } catch (error) {
-                repo.loading = false;
-                console.error(`Error connecting to ${repo.label}:`, error);
+                basyxComponent.loading = false;
+                console.error(`Error connecting to ${basyxComponent.label}:`, error);
 
                 // Clear the URL in the navigation store
-                dispatchComponentURL(repoKey, '');
+                dispatchComponentURL(componentKey, '');
 
                 // Remove from localStorage if endpoint config is available
                 if (endpointConfigAvailable.value) {
                     // console.log(`Removing ${repoKey} URL from localStorage:`, repo.url);
-                    window.localStorage.removeItem(repoKey);
+                    window.localStorage.removeItem(componentKey + 'URL');
                 }
 
                 // Update the connected status
-                repo.connected = false;
+                basyxComponent.connected = false;
             }
         } else {
-            repo.connected = false;
-            console.warn(`Repository URL for ${repoKey} is not defined or empty.`);
+            basyxComponent.connected = false;
+            console.warn(`Repository URL for ${componentKey} is not defined or empty.`);
         }
     }
 
