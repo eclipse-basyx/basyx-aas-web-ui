@@ -224,6 +224,7 @@
     const mainMenu = ref(false); // Variable to show the Main Menu
     const mobileMenu = ref(false); // Variable to show the Mobile Menu
     const dashboardAvailable = ref(false); // Dashboard Availability
+    const endpointConfigAvailable = ref(envStore.getEndpointConfigAvailable);
     const drawerVisibility = ref(true); // Variable to show the AAS List Drawer
 
     // Computed Properties
