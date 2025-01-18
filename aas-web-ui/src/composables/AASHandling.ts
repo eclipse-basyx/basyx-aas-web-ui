@@ -91,7 +91,7 @@ export function useAASHandling() {
             return failResponse;
         }
 
-        const aasEndpoint = extractEndpointHref(aas, 'SUBMODEL-3.0');
+        const aasEndpoint = extractEndpointHref(aas, 'AAS-3.0');
 
         aas.timestamp = formatDate(new Date());
         aas.path = aasEndpoint;
