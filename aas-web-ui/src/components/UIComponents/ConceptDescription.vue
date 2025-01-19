@@ -22,19 +22,12 @@
                     :description-object="conceptDescriptionObject.description"
                     :description-title="'Description'"
                     :small="false"></DescriptionElement>
-                <v-divider
-                    v-if="
-                        conceptDescriptionObject.embeddedDataSpecifications &&
-                        conceptDescriptionObject.embeddedDataSpecifications > 0
-                    "
-                    class="mt-2"></v-divider>
             </v-list>
             <v-divider
                 v-if="
                     conceptDescriptionObject.embeddedDataSpecifications &&
                     conceptDescriptionObject.embeddedDataSpecifications.length > 0
-                "
-                class="mt-2"></v-divider>
+                "></v-divider>
             <v-list
                 v-if="
                     conceptDescriptionObject.embeddedDataSpecifications &&
