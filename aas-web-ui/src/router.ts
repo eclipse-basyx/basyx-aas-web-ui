@@ -37,7 +37,12 @@ const staticRoutes: Array<RouteRecordRaw> = [
         component: SubmodelViewer,
         meta: { name: 'Submodel Viewer', subtitle: 'Visualize Submodels' },
     },
-    { path: '/about', name: 'About', component: About },
+    {
+        path: '/about',
+        name: 'About',
+        component: About,
+        meta: { name: 'About' },
+    },
     { path: '/404', name: 'NotFound404', component: Page404 },
     { path: '/dashboard', name: 'Dashboard', component: Dashboard },
     { path: '/dashboard-group', name: 'DashboardGroup', component: DashboardGroup },
