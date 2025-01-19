@@ -95,7 +95,8 @@
                         v-if="
                             assetAdministrationShellData.displayName &&
                             assetAdministrationShellData.displayName.length > 0
-                        "></v-divider>
+                        "
+                        class="mt-2"></v-divider>
                     <!-- AAS DisplayName -->
                     <DisplayNameElement
                         v-if="
