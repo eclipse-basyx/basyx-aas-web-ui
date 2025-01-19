@@ -41,9 +41,8 @@
     import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { AASDescriptor, Endpoint, ProtocolInformation, SubmodelDescriptor } from '@/types/Descriptors';
+    import { Endpoint, ProtocolInformation, SubmodelDescriptor } from '@/types/Descriptors';
     import { base64Encode } from '@/utils/EncodeDecodeUtils';
-
     // Stores
     const navigationStore = useNavigationStore();
     const aasRepositoryUrl = computed(() => navigationStore.getAASRepoURL);
@@ -52,7 +51,7 @@
     // Composables
     const { fetchAas, uploadAas } = useAASRepositoryClient();
     const { fetchSmById } = useSMRepositoryClient();
-    const { postAasDescriptor } = useAASRegistryClient();
+    const { postAasDescriptor, createDescriptorFromAAS } = useAASRegistryClient();
     const { postSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient();
 
     const props = defineProps<{
@@ -86,101 +85,83 @@
         if (!aasFile.value) return;
         loadingUpload.value = true;
 
-        let response = await uploadAas(aasFile.value);
+        try {
+            let response = await uploadAas(aasFile.value);
 
-        if (registerAAS.value) {
-            for (const aasId of response.data.aasIds) {
-                createAndPostDescriptors(aasId);
+            if (registerAAS.value) {
+                for (const aasId of response.data.aasIds) {
+                    createAndPostDescriptors(aasId);
+                }
             }
+        } catch (error) {
+            console.error('Error uploading AAS:', error);
+        } finally {
+            resetUploadState();
         }
+    }
 
+    watchEffect(() => {
+        if (uploadAASDialog.value) {
+            resetUploadState();
+        }
+    });
+
+    function resetUploadState(): void {
         aasFile.value = null;
         uploadAASDialog.value = false;
         loadingUpload.value = false;
         registerAAS.value = false;
     }
 
-    watchEffect(() => {
-        if (uploadAASDialog.value) {
-            aasFile.value = null;
-            registerAAS.value = false;
-        }
-    });
+    function createEndpoints(href: string, type: string): Array<Endpoint> {
+        const protocolInformation = new ProtocolInformation(href, null, 'http');
+        return [new Endpoint(type, protocolInformation)];
+    }
 
-    async function createAndPostDescriptors(aasId: string): Promise<void> {
-        const href = aasRepositoryUrl.value + '/' + base64Encode(aasId);
-        let data = await fetchAas(href);
-
-        const id = data.id;
-        const idShort = data.idShort;
-        const assetKind = data.assetInformation.assetKind;
-        const globalAssetId = data.assetInformation.globalAssetId;
-
-        /*const description = data.description.map((desc: any) => ({
-            language: desc.language,
-            text: desc.text
-        }));*/
-
-        const displayName = data.displayName;
-
-        const submodelInfos = data.submodels.map((submodel: any) => ({
+    function extractSubmodelInfos(fetchedShell: any): Array<any> {
+        return fetchedShell.submodels.map((submodel: any) => ({
             type: submodel.type,
             keys: submodel.keys.map((key: any) => ({
                 type: key.type,
                 value: key.value,
             })),
         }));
+    }
 
-        for (const submodelInfo of submodelInfos) {
-            let submodelDescriptor = await createSubmodelDescriptor(submodelInfo.keys[0].value);
-            await postSubmodelDescriptor(submodelDescriptor);
+    async function createAndPostDescriptors(aasId: string): Promise<void> {
+        try {
+            const href = aasRepositoryUrl.value + '/' + base64Encode(aasId);
+            const fetchedShell = await fetchAas(href);
+
+            const endpoints = createEndpoints(href, 'AAS-3.0');
+
+            const aasDescriptor = createDescriptorFromAAS(fetchedShell, endpoints);
+
+            const submodelInfos = extractSubmodelInfos(fetchedShell);
+
+            for (const submodelInfo of submodelInfos) {
+                let submodelDescriptor = await createSubmodelDescriptor(submodelInfo.keys[0].value);
+                await postSubmodelDescriptor(submodelDescriptor);
+            }
+
+            await postAasDescriptor(aasDescriptor);
+        } catch (error) {
+            console.error('Error creating and posting descriptors:', error);
         }
-
-        const protocolInformation = new ProtocolInformation(href, null, 'http', null, null, null, null);
-        const endpoint = new Endpoint('AAS-3.0', protocolInformation);
-        const endpoints: Array<Endpoint> = [endpoint];
-
-        const aasDescriptor = new AASDescriptor(
-            endpoints,
-            id,
-            undefined, // administration
-            assetKind,
-            undefined, // assetType
-            undefined, // description,
-            displayName,
-            undefined, // extensions
-            globalAssetId,
-            idShort,
-            undefined, // specificAssetId
-            undefined // submodelDescriptors
-        );
-
-        await postAasDescriptor(aasDescriptor);
     }
 
     async function createSubmodelDescriptor(submodelId: string): Promise<SubmodelDescriptor> {
-        let submodelId64 = base64Encode(submodelId);
-        let href = smRepositoryUrl.value + '/' + submodelId64;
-        let submodel = await fetchSmById(submodelId64); // TODO - check why this works, because it shouldn't (looking for a registered Submodel that is not yet registered)
+        try {
+            let submodelId64 = base64Encode(submodelId);
+            let href = smRepositoryUrl.value + '/' + submodelId64;
+            let submodel = await fetchSmById(submodelId64);
 
-        const protocolInformation = new ProtocolInformation(href, null, 'http', null, null, null, null);
+            const endpoints = createEndpoints(href, 'SUBMODEL-3.0');
 
-        const endpoint = new Endpoint('SUBMODEL-3.0', protocolInformation);
-        const endpoints: Array<Endpoint> = [endpoint];
-
-        // Create the SubmodelDescriptor instance
-        let submodelDescriptor = new SubmodelDescriptor(
-            endpoints,
-            submodelId,
-            null, // administration (optional)
-            submodel.description ? submodel.description[0].text : null,
-            null, // displayName (optional)
-            null, // extensions (optional)
-            submodel.idShort,
-            submodel.semanticId,
-            null // supplementalSemanticIds (optional)
-        );
-        //let submodelDescriptor = createDescriptorFromSubmodel(submodel, endpoints);   //TODO - does not work, but should be used instead
-        return submodelDescriptor;
+            return createDescriptorFromSubmodel(submodel, endpoints);
+        } catch (error) {
+            console.error('Error creating submodel descriptor:', error);
+            throw error;
+        }
     }
 </script>
