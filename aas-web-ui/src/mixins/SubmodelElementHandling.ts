@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router';
 import RequestHandling from '@/mixins/RequestHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useNavigationStore } from '@/store/NavigationStore';
+import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
 export default defineComponent({
     name: 'SubmodelElementHandling',
@@ -60,13 +61,6 @@ export default defineComponent({
     },
 
     methods: {
-        // converts AAS identification to UTF8 BASE64 encoded URL
-        URLEncode(aasId: string) {
-            const base64Id = btoa(unescape(encodeURIComponent(aasId)));
-            const urlSafeBase64Id = base64Id.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '%3D');
-            return urlSafeBase64Id;
-        },
-
         // generate a unique ID (UUID)
         UUID() {
             return uuidv4();
@@ -682,7 +676,7 @@ export default defineComponent({
 
             // This is the Submodel layer
             let smRepoUrl = this.submodelRepoUrl;
-            smRepoUrl += '/' + this.URLEncode(smId).replace(/%3D/g, '');
+            smRepoUrl += '/' + base64Encode(smId);
 
             // This is the layer directly under the Submodel
             if (
@@ -908,7 +902,7 @@ export default defineComponent({
                 aasRegistryUrl += '/shell-descriptors';
             }
 
-            const aasRegistryPath = aasRegistryUrl + '/' + this.URLEncode(aasId);
+            const aasRegistryPath = aasRegistryUrl + '/' + base64Encode(aasId);
             const aasRegistryContext = 'retrieving AAS Descriptor';
             const disableMessage = false;
             try {
@@ -1168,7 +1162,7 @@ export default defineComponent({
                 smRegistryUrl += '/shell-descriptors';
             }
 
-            const smRegistryPath = smRegistryUrl + '/' + this.URLEncode(smId);
+            const smRegistryPath = smRegistryUrl + '/' + base64Encode(smId);
             const smRegistryContext = 'retrieving SM Descriptor';
             const disableMessage = false;
             try {
@@ -1347,7 +1341,7 @@ export default defineComponent({
             }
             // construct the assetId Object
             const assetIdObject = JSON.stringify({ name: 'globalAssetId', value: globalAssetId });
-            const aasDiscoveryPath = `${aasDiscoveryUrl}?assetIds=${this.URLEncode(assetIdObject)}`; // Use template literal and encodeURIComponent
+            const aasDiscoveryPath = `${aasDiscoveryUrl}?assetIds=${base64Encode(assetIdObject)}`; // Use template literal and encodeURIComponent
             const aasDiscoveryContext = 'retrieving AAS ID by AssetID';
             const disableMessage = true;
             try {
@@ -1366,7 +1360,7 @@ export default defineComponent({
                     if (!aasRegistryUrl.includes('/shell-descriptors')) {
                         aasRegistryUrl += '/shell-descriptors';
                     }
-                    const aasRegistryPath = `${aasRegistryUrl}/${this.URLEncode(aasId).replace(/%3D/g, '')}`;
+                    const aasRegistryPath = `${aasRegistryUrl}/${base64Encode(aasId)}`;
                     const aasRegistryContext = 'retrieving AAS Descriptor';
 
                     const aasRegistryResponse = await this.getRequest(
@@ -1419,7 +1413,7 @@ export default defineComponent({
             );
 
             const cdPromises = semanticIdsUniqueToFetch.map((semanticId: string) => {
-                const path = this.conceptDescriptionRepoUrl + '/' + this.URLEncode(semanticId);
+                const path = this.conceptDescriptionRepoUrl + '/' + base64Encode(semanticId);
                 const context = 'retrieving ConceptDescriptions';
                 const disableMessage = true;
 
@@ -1455,7 +1449,7 @@ export default defineComponent({
         async calculateSubmodelElementPathes(parent: any, startPath: string): Promise<any> {
             parent.path = startPath;
             parent.id = this.UUID();
-            parent.conceptDescriptions = await this.getConceptDescriptions(parent);
+            // parent.conceptDescriptions = await this.getConceptDescriptions(parent);
 
             if (parent.submodelElements && parent.submodelElements.length > 0) {
                 for (const element of parent.submodelElements) {
@@ -1620,12 +1614,23 @@ export default defineComponent({
                     case 'Blob':
                         if (submodelElement.value.startsWith('http')) return submodelElement.value;
                         return submodelElement.path + '/attachment';
-                    case 'Operation': // TODO
-                    case 'ReferenceElement': // TODO
-                    case 'Range': // TODO
-                    case 'Entity': // TODO
-                    case 'RelationshipElement': // TODO
-                    case 'AnnotatedRelationshipElement': // TODO
+                    // TODO valueToDisplay() for modelType='Operation'
+                    case 'Operation':
+                        return '';
+                    // TODO valueToDisplay() for modelType='ReferenceElement'
+                    case 'ReferenceElement':
+                        return '';
+                    // TODO valueToDisplay() for modelType='Range'
+                    case 'Range':
+                        return '';
+                    // TODO valueToDisplay() for modelType='Entity'
+                    case 'Entity':
+                        return '';
+                    // TODO valueToDisplay() for modelType='RelationshipElement'
+                    case 'RelationshipElement':
+                        return '';
+                    // TODO valueToDisplay() for modelType='AnnotatedRelationshipElement'
+                    case 'AnnotatedRelationshipElement':
                         return '';
                     default:
                         return '';

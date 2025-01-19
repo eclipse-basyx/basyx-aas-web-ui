@@ -44,7 +44,7 @@
                     <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
                         <v-expansion-panel-title>Asset</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <SelectInput v-model="assetKind" label="AssetKind" type="assetKind"></SelectInput>
+                            <SelectInput v-model="assetKind" label="Asset Kind" type="assetKind"></SelectInput>
                             <TextInput
                                 v-model="globalAssetId"
                                 label="Global Asset ID"
@@ -208,9 +208,7 @@
         }
     }
 
-    async function saveAAS() {
-        if (AASId.value === null) return;
-        // Create new Asset Information object
+    function createAssetInformation(): aasTypes.AssetInformation {
         const assetInformation = new aasTypes.AssetInformation(assetKind.value);
 
         // Add optional parameter globalAssetId
@@ -229,7 +227,10 @@
             assetInformation.defaultThumbnail = defaultThumbnail.value;
         }
 
-        // Create new Administrative Information object
+        return assetInformation;
+    }
+
+    function createAdministrativeInformation(): aasTypes.AdministrativeInformation {
         const administrativeInformation = new aasTypes.AdministrativeInformation();
 
         // Add optional parameter version
@@ -251,6 +252,16 @@
         if (templateId.value !== null && templateId.value !== undefined) {
             administrativeInformation.templateId = templateId.value;
         }
+
+        return administrativeInformation;
+    }
+
+    async function saveAAS(): Promise<void> {
+        if (AASId.value === null) return;
+
+        const assetInformation = createAssetInformation();
+
+        const administrativeInformation = createAdministrativeInformation();
 
         // Create new AAS if newShell is true
         if (props.newShell || AASObject.value === undefined) {
@@ -289,7 +300,7 @@
 
         // embeddedDataSpecifications are out of scope
         // extensions are out of scope
-        // Submodels are added when submodels are created
+        // TODO Add Submodels; wait for https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/195
 
         if (props.newShell) {
             // Create new AAS

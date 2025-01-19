@@ -6,11 +6,11 @@ import { useIDUtils } from '@/composables/IDUtils';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
-import { URLEncode } from '@/utils/EncodeDecodeUtils';
+import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { downloadFile } from '@/utils/generalUtils';
 
 export function useAASRepositoryClient() {
-    const { getRequest, postRequest, putRequest } = useRequestHandling();
+    const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
     const { fetchAasDescriptorById } = useAASRegistryClient();
 
     // Composables
@@ -96,6 +96,52 @@ export function useAASRepositoryClient() {
         return failResponse;
     }
 
+    async function fetchAssetInformationById(aasId: string): Promise<any> {
+        const failResponse = {} as any;
+
+        if (aasId.trim() === '') return failResponse;
+
+        const aasDescriptor = await fetchAasDescriptorById(aasId);
+
+        if (aasDescriptor && Object.keys(aasDescriptor).length > 0) {
+            const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0');
+            return fetchAssetInformation(aasEndpoint);
+        }
+    }
+
+    async function fetchAssetInformation(aasEndpoint: string): Promise<any> {
+        const failResponse = {} as any;
+
+        if (aasEndpoint.trim() === '') return failResponse;
+
+        const assetInformationEndpoint = aasEndpoint + '/asset-information';
+
+        const aasRepoPath = assetInformationEndpoint;
+        const aasRepoContext = 'retrieving asset information';
+        const disableMessage = true;
+        try {
+            const aasRepoResponse = await getRequest(aasRepoPath, aasRepoContext, disableMessage);
+            if (aasRepoResponse?.success && aasRepoResponse?.data && Object.keys(aasRepoResponse?.data).length > 0) {
+                const assetInformation = aasRepoResponse.data;
+                if (
+                    assetInformation.defaultThumbnail &&
+                    assetInformation.defaultThumbnail.path &&
+                    !assetInformation.defaultThumbnail.path.startsWith('http')
+                ) {
+                    // TODO: This does not work with active keycloak because there the thumbnail would have to be fetched with a token
+                    const assetInformationThumbnailEndpoint = assetInformationEndpoint + '/thumbnail';
+                    assetInformation.defaultThumbnail.path = assetInformationThumbnailEndpoint;
+                }
+
+                return assetInformation;
+            }
+        } catch {
+            return failResponse;
+        }
+
+        return failResponse;
+    }
+
     // Upload an AAS to the AAS Repository
     async function uploadAas(aasFile: File) {
         const context = 'uploading AAS';
@@ -133,7 +179,6 @@ export function useAASRepositoryClient() {
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(jsonAas);
 
-        // Send Request to upload the file
         const response = await postRequest(path, body, headers, context, disableMessage);
         if (response.success) {
             navigationStore.dispatchSnackbar({
@@ -154,12 +199,11 @@ export function useAASRepositoryClient() {
 
         const context = 'updating AAS';
         const disableMessage = false;
-        const path = aasRepositoryUrl.value + '/' + URLEncode(aas.id);
+        const path = aasRepositoryUrl.value + '/' + base64Encode(aas.id);
         const headers = new Headers();
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(jsonAas);
 
-        // Send Request to upload the file
         const response = await putRequest(path, body, headers, context, disableMessage);
         if (response.success) {
             navigationStore.dispatchSnackbar({
@@ -183,7 +227,7 @@ export function useAASRepositoryClient() {
         const path =
             aasRepositoryUrl.value +
             '/' +
-            URLEncode(aasId) +
+            base64Encode(aasId) +
             '/asset-information/thumbnail' +
             '?fileName=' +
             thumbnail.name;
@@ -237,6 +281,15 @@ export function useAASRepositoryClient() {
         return failResponse;
     }
 
+    async function deleteSubmodelRef(aasPath: string, submodelId: string): Promise<void> {
+        if (aasPath.trim() === '' || submodelId.trim() === '') return;
+
+        const path = aasPath + '/submodel-refs/' + base64Encode(submodelId);
+        const context = 'deleting Submodel Reference';
+        const disableMessage = false;
+        await deleteRequest(path, context, disableMessage);
+    }
+
     async function downloadAasx(aas: any) {
         // console.log('downloadAasx() ', 'aas', aas);
         if (!aas || Object.keys(aas).length === 0 || !aas.id || aas.id.trim() === '') return;
@@ -253,9 +306,9 @@ export function useAASRepositoryClient() {
             // e.g. http://localhost:8081/serialization?aasIds=abc&submodelIds=def&submodelIds=ghi&includeConceptDescriptions=true)
             aasSerializationPath +=
                 '/serialization?aasIds=' +
-                URLEncode(aasId) +
+                base64Encode(aasId) +
                 '&submodelIds=' +
-                submodelIds.map((submodelId: string) => URLEncode(submodelId)).join('&submodelIds=') +
+                submodelIds.map((submodelId: string) => base64Encode(submodelId)).join('&submodelIds=') +
                 '&includeConceptDescriptions=true';
 
             const aasSerializationContext = 'retrieving AAS serialization';
@@ -304,6 +357,8 @@ export function useAASRepositoryClient() {
         fetchAasList,
         fetchAasById,
         fetchAas,
+        fetchAssetInformationById,
+        fetchAssetInformation,
         uploadAas,
         postAas,
         putAas,
@@ -313,5 +368,6 @@ export function useAASRepositoryClient() {
         downloadAasxById,
         getSubmodelRefs,
         getSubmodelRefsById,
+        deleteSubmodelRef,
     };
 }

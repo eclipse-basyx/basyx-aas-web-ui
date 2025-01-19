@@ -2,7 +2,20 @@
     <v-container fluid class="pa-0">
         <v-card color="card" elevation="0">
             <v-card-title :style="{ padding: isMobile ? '' : '15px 16px 16px' }">
-                <div v-if="!isMobile">Visualization</div>
+                <div v-if="!isMobile">
+                    <template v-if="routesToVisualization.includes(route.name)">
+                        <v-btn class="ml-0" variant="plain" icon="mdi-chevron-left" @click="backToAASViewer()" />
+                        <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
+                        <span class="text-truncate ml-2">
+                            {{ nameToDisplay(selectedAAS) }}
+                        </span>
+                        <template v-if="nameToDisplay(selectedNode)">
+                            <span class="text-truncate ml-2">|</span>
+                            <span class="text-truncate ml-2">{{ nameToDisplay(selectedNode) }}</span>
+                        </template>
+                    </template>
+                    <span v-else>Visualization</span>
+                </div>
                 <div v-else class="d-flex align-center">
                     <v-btn class="ml-0" variant="plain" icon="mdi-chevron-left" @click="backToSubmodelList()" />
                     <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
@@ -85,12 +98,9 @@
 
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
-    import { useRoute, useRouter } from 'vue-router';
-    import { useAASHandling } from '@/composables/AASHandling';
-    import { useRequestHandling } from '@/composables/RequestHandling';
+    import { RouteRecordNameGeneric, useRoute, useRouter } from 'vue-router';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { formatDate } from '@/utils/DateUtils';
     import { nameToDisplay } from '@/utils/ReferableUtils';
     import { checkSemanticId } from '@/utils/SemanticIdUtils';
 
@@ -98,23 +108,19 @@
     const route = useRoute();
     const router = useRouter();
 
-    // Composables
-    const { getRequest } = useRequestHandling();
-    const { fetchAndDispatchAas } = useAASHandling();
-
     // Stores
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
 
     // Data
     const submodelElementData = ref({} as any);
+    const routesToVisualization: Array<RouteRecordNameGeneric> = ['ComponentVisualization', 'Visualization'];
 
     // Computed Properties
     const aasRegistryServerURL = computed(() => navigationStore.getAASRegistryURL);
     const submodelRegistryServerURL = computed(() => navigationStore.getSubmodelRegistryURL);
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
     const selectedNode = computed(() => aasStore.getSelectedNode);
-    const realTimeObject = computed(() => aasStore.getRealTimeObject);
     const isMobile = computed(() => navigationStore.getIsMobile);
     const importedPlugins = computed(() => navigationStore.getPlugins);
     const filteredPlugins = computed(() => {
@@ -172,109 +178,66 @@
 
         return plugins;
     });
-    const viewerMode = computed(() => route.name === 'SubmodelViewer' || route.name === 'ComponentVisualization');
+    const viewerMode = computed(() => route.name === 'SubmodelViewer' || routesToVisualization.includes(route.name));
 
     // Watchers
-    // Resets the submodelElementData when the AAS Registry changes
-    watch(aasRegistryServerURL, () => {
-        if (!aasRegistryServerURL.value) {
-            submodelElementData.value = {};
-        }
-    });
-
-    // Resets the submodelElementData when the Submodel Registry changes
-    watch(submodelRegistryServerURL, () => {
-        if (!submodelRegistryServerURL.value) {
-            submodelElementData.value = {};
-        }
-    });
-
-    // Resets the submodelElementData when the AAS changes
-    watch(selectedAAS, () => {
-        submodelElementData.value = {};
-    });
-
-    // Watch for changes in the selectedNode and (re-)initialize the Component
-    watch(selectedNode, () => {
-        // clear old submodelElementData
-        submodelElementData.value = {};
-        initializeView(); // initialize list
-    });
-
-    // Watch for changes in the RealTimeDataObject and (re-)initialize the Component
-    watch(realTimeObject, () => {
-        // clear old submodelElementData
-        submodelElementData.value = {};
-        initializeView(); // initialize list
-    });
-
-    onMounted(() => {
-        if (Object.keys(selectedNode.value).length > 0 && isMobile.value) {
-            // initialize if component got mounted on mobile devices (needed there because it is rendered in a separate view)
-            initializeView();
-        } else if (Object.keys(selectedNode.value).length === 0 && route.path == '/componentvisualization') {
-            const searchParams = new URL(window.location.href).searchParams;
-            const aasEndpoint = searchParams.get('aas');
-            const path = searchParams.get('path');
-
-            // check if the aas Query and the path Query are set in the URL and if so initialize
-            if (aasEndpoint && path) {
-                initializeViewWithRouteParams();
+    // Resets the SubmodelElementView when the AAS Registry changes
+    watch(
+        () => aasRegistryServerURL.value,
+        () => {
+            if (!aasRegistryServerURL.value) {
+                initializeView();
             }
         }
+    );
+
+    // Resets the SubmodelElementView when the Submodel Registry changes
+    watch(
+        () => submodelRegistryServerURL.value,
+        () => {
+            if (!submodelRegistryServerURL.value) {
+                initializeView();
+            }
+        }
+    );
+
+    // Resets the SubmodelElementView when the AAS changes
+    watch(
+        () => selectedAAS.value,
+        () => {
+            initializeView();
+        }
+    );
+
+    // Watch for changes in the selected Node and (re-)initialize the Component
+    watch(
+        () => selectedNode.value,
+        () => {
+            initializeView();
+        },
+        { deep: true }
+    );
+
+    onMounted(() => {
+        initializeView();
     });
 
     function initializeView() {
         // console.log('Selected Node: ', this.realTimeObject);
         // Check if a Node is selected
-        if (Object.keys(realTimeObject.value).length === 0) {
+        if (Object.keys(selectedNode.value).length === 0) {
             submodelElementData.value = {}; // Reset the SubmodelElement Data when no Node is selected
             return;
         }
-        submodelElementData.value = { ...realTimeObject.value }; // create local copy of the SubmodelElement Object
+        submodelElementData.value = { ...selectedNode.value }; // create local copy of the SubmodelElement Object
         // console.log('SubmodelElement Data (ComponentVisualization): ', this.submodelElementData);
-    }
-
-    async function initializeViewWithRouteParams() {
-        const searchParams = new URL(window.location.href).searchParams;
-        const aasEndpoint = searchParams.get('aas');
-        const path = searchParams.get('path');
-
-        if (aasEndpoint && path) {
-            await fetchAndDispatchAas(aasEndpoint);
-
-            // Request the selected SubmodelElement
-            let context = 'retrieving SubmodelElement';
-            let disableMessage = true;
-            getRequest(path, context, disableMessage).then((response: any) => {
-                if (response.success) {
-                    // execute if the Request was successful
-                    response.data.timestamp = formatDate(new Date()); // add timestamp to the SubmodelElement Data
-                    response.data.path = path; // add the path to the SubmodelElement Data
-                    response.data.isActive = true; // add the isActive Property to the SubmodelElement Data
-                    // console.log('SubmodelElement Data: ', response.data)
-                    // dispatch the SubmodelElementPath set by the URL to the store
-                    submodelElementData.value = response.data;
-                    aasStore.dispatchRealTimeObject(submodelElementData.value);
-                } else {
-                    // execute if the Request failed
-                    if (Object.keys(response.data).length === 0) {
-                        // don't copy the static SubmodelElement Data if no Node is selected or Node is invalid
-                        navigationStore.dispatchSnackbar({
-                            status: true,
-                            timeout: 60000,
-                            color: 'error',
-                            btnColor: 'buttonText',
-                            text: 'No valid SubmodelElement under the given Path',
-                        }); // Show Error Snackbar
-                        return;
-                    }
-                }
-            });
-        }
     }
 
     function backToSubmodelList() {
         router.push({ name: 'SubmodelList', query: route.query });
+    }
+
+    function backToAASViewer() {
+        router.push({ name: 'AASViewer', query: route.query });
     }
 </script>

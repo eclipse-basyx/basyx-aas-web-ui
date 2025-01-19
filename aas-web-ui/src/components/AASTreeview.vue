@@ -1,4 +1,8 @@
 <template>
+    <!-- Dialog for creating/editing Submodel -->
+    <SubmodelForm v-model="editDialog" :new-sm="newSubmodel" :submodel="submodelToEdit"></SubmodelForm>
+    <!-- Dialog for deleting Element -->
+    <DeleteDialog v-model="deleteDialog" :element="elementToDelete"></DeleteDialog>
     <v-container fluid class="pa-0">
         <v-card color="rgba(0,0,0,0)" elevation="0">
             <v-card-title style="padding: 15px 16px 16px">
@@ -9,7 +13,7 @@
                         {{ nameToDisplay(selectedAAS) }}
                     </span>
                 </div>
-                <!-- TODO: Add Searchfield to filter the Treeview -->
+                <!-- TODO: Add Searchfield https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/148 -->
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto; height: calc(100vh - 170px)">
@@ -28,6 +32,17 @@
                 </div>
                 <template v-else>
                     <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
+                        <!-- Button to add a new Submodel -->
+                        <template v-if="editMode && submodelData.length > 0">
+                            <v-row justify="center">
+                                <v-col cols="auto" class="pt-1 pb-5">
+                                    <v-btn
+                                        prepend-icon="mdi-plus"
+                                        text="Create Submodel"
+                                        @click="openEditDialog(true)" />
+                                </v-col>
+                            </v-row>
+                        </template>
                         <template v-if="submodelData.length > 0">
                             <!-- TODO: Evaluate and Replace with Vuetify Treeview Component when it gets fully released in Q1 2025 -->
                             <VTreeview
@@ -35,13 +50,17 @@
                                 :key="item.id"
                                 class="root"
                                 :item="item"
-                                :depth="0"></VTreeview>
+                                :depth="0"
+                                @open-edit-dialog="openEditDialog(false, $event)"
+                                @show-delete-dialog="showDeleteDialog"></VTreeview>
                         </template>
                         <v-empty-state
                             v-else
                             title="No existing Submodels"
                             text="The selected AAS does not contain any Submodels"
-                            class="text-divider"></v-empty-state>
+                            :action-text="editMode ? 'Create Submodel' : undefined"
+                            class="text-divider"
+                            @click:action="openEditDialog(true)"></v-empty-state>
                     </template>
                     <template v-else>
                         <v-empty-state
@@ -57,14 +76,19 @@
 
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
+    import { useRoute } from 'vue-router';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useIDUtils } from '@/composables/IDUtils';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { formatDate } from '@/utils/DateUtils';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
-    import { URLEncode } from '@/utils/EncodeDecodeUtils';
+    import { base64Encode } from '@/utils/EncodeDecodeUtils';
     import { nameToDisplay } from '@/utils/ReferableUtils';
+
+    // Vue Router
+    const route = useRoute();
 
     // Composables
     const { smNotFound } = useSMRepositoryClient();
@@ -79,6 +103,11 @@
     const submodelData = ref([] as Array<any>); // Treeview Data
     const initialUpdate = ref(false); // Flag to check if the initial update of the Treeview is needed and/or done
     const initialNode = ref({} as any); // Initial Node to set the Treeview to
+    const editDialog = ref(false); // // Variable to store if the Edit Dialog should be shown
+    const newSubmodel = ref(false); // Variable to store if a new Submodel should be created
+    const submodelToEdit = ref<any | undefined>(undefined); // Variable to store the Submodel to be edited
+    const deleteDialog = ref(false); // Variable to store if the Delete Dialog should be shown
+    const elementToDelete = ref<any | undefined>(undefined); // Variable to store the Element to be deleted
 
     // Computed Properties
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // get selected AAS from Store
@@ -87,6 +116,7 @@
     const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL); // get Submodel Registry URL from Store
     const selectedNode = computed(() => aasStore.getSelectedNode); // get the updated Treeview Node from Store
     const initTree = computed(() => aasStore.getInitTreeByReferenceElement); // get the init treeview flag from Store
+    const editMode = computed(() => route.name === 'AASEditor'); // Check if the current Route is the AAS Editor
 
     // Watchers
     watch(selectedAAS, () => {
@@ -164,7 +194,7 @@
                 smRegistryURL += '/submodel-descriptors';
             }
             const submodelId = submodelRef.keys[0].value;
-            let path = smRegistryURL + '/' + URLEncode(submodelId);
+            let path = smRegistryURL + '/' + base64Encode(submodelId);
             let context = 'retrieving Submodel Endpoint';
             let disableMessage = false;
             return getRequest(path, context, disableMessage).then((response: any) => {
@@ -185,6 +215,7 @@
                                 submodel.isActive = false;
                                 // set the Path of the Submodel
                                 submodel.path = path;
+                                submodel.timestamp = formatDate(new Date());
                                 // check if submodel has SubmodelElements
                                 if (submodel.submodelElements && submodel.submodelElements.length > 0) {
                                     // recursively create treestructure for contained submodelElements
@@ -233,6 +264,7 @@
             // set the active State of each Element
             element.isActive = false;
             // set the Parent of each Element
+            element.timestamp = formatDate(new Date());
             element.parent = parent;
             // set the Path of each Element
             if (element.parent.modelType == 'Submodel') {
@@ -324,8 +356,6 @@
                 if (!foundNode) {
                     foundNode = true;
                     element.isActive = true;
-                    aasStore.dispatchSelectedNode(element);
-                    aasStore.dispatchRealTimeObject(element);
                 }
                 // if prop showChildren exists, set it to true
                 if ('showChildren' in element) {
@@ -383,6 +413,19 @@
             initialUpdate.value = true;
             initialNode.value = node;
         }
+    }
+
+    function openEditDialog(createNew: boolean, submodel?: any): void {
+        editDialog.value = true;
+        newSubmodel.value = createNew;
+        if (createNew === false && submodel) {
+            submodelToEdit.value = submodel;
+        }
+    }
+
+    function showDeleteDialog(element: any): void {
+        deleteDialog.value = true;
+        elementToDelete.value = element;
     }
 </script>
 
