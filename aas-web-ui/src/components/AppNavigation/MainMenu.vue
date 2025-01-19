@@ -91,7 +91,7 @@
 
                 <v-spacer></v-spacer>
 
-                <v-img src="@/assets/PoweredByBaSyx.svg" :height="42" style="margin-right: -36px"></v-img>
+                <v-img src="@/assets/PoweredByBaSyx.svg" :height="42" :max-width="126"></v-img>
             </template>
         </v-card>
     </v-container>
