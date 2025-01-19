@@ -45,6 +45,7 @@
     import { useNavigationStore } from '@/store/NavigationStore';
     import { Endpoint, ProtocolInformation, SubmodelDescriptor } from '@/types/Descriptors';
     import { base64Encode } from '@/utils/EncodeDecodeUtils';
+
     // Stores
     const navigationStore = useNavigationStore();
     const aasRepositoryUrl = computed(() => navigationStore.getAASRepoURL);
@@ -85,6 +86,7 @@
 
     async function uploadAASFile(): Promise<void> {
         if (!aasFile.value) return;
+
         loadingUpload.value = true;
 
         try {
