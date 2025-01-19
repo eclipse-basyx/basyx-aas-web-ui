@@ -41,7 +41,8 @@
                     conceptDescriptionObject.embeddedDataSpecifications &&
                     conceptDescriptionObject.embeddedDataSpecifications.length > 0
                 "
-                nav>
+                nav
+                class="px-4 pt-2 pb-4">
                 <v-card
                     v-for="(embeddedDataSpecification, i) in conceptDescriptionObject.embeddedDataSpecifications"
                     :key="i"
