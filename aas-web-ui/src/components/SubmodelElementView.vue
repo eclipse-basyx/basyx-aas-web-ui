@@ -287,7 +287,7 @@
                 !Array.isArray(conceptDescriptions.value) ||
                 conceptDescriptions.value.length === 0
             ) {
-                conceptDescriptions.value = await getConceptDescriptions(selectedNode.value);
+                conceptDescriptions.value = await getConceptDescriptions(submodelElementData.value);
             }
         }
     }
