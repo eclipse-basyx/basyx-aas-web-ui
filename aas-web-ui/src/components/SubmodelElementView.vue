@@ -21,8 +21,7 @@
                                 submodelElementData.administration &&
                                 (submodelElementData.administration.revision != '' ||
                                     submodelElementData.administration.version != '')
-                            "
-                            class="mt-2"></v-divider>
+                            "></v-divider>
                         <AdministrativeInformationElement
                             v-if="submodelElementData.administration"
                             :administrative-information-object="submodelElementData.administration"

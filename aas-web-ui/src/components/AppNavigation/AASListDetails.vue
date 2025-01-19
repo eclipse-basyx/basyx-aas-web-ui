@@ -84,7 +84,7 @@
                             getKeyTypeAbbreviation(assetAdministrationShellData.modelType)
                         "></IdentificationElement>
                     <!-- AAS Administrative Information-->
-                    <v-divider v-if="assetAdministrationShellData?.administration" class="mt-2"></v-divider>
+                    <v-divider v-if="assetAdministrationShellData?.administration"></v-divider>
                     <AdministrativeInformationElement
                         v-if="assetAdministrationShellData.administration"
                         :administrative-information-object="assetAdministrationShellData.administration"
