@@ -271,6 +271,7 @@
         }
 
         submodelElementData.value = { ...selectedNode.value }; // create local copy
+        conceptDescriptions.value = [];
 
         if (withConceptDescriptions) {
             if (
