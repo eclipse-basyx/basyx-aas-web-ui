@@ -2,7 +2,7 @@
     <v-container fluid class="pa-0">
         <v-list-item v-if="Array.isArray(assetObject?.specificAssetIds) && assetObject?.specificAssetIds.length > 0">
             <template #title>
-                <div class="mt-2 mb-2 text-subtitle-2">
+                <div class="mt-1 mb-2 text-subtitle-2">
                     {{ 'Specific Asset IDs:' }}
                 </div>
             </template>
