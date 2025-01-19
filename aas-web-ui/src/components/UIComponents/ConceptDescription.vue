@@ -5,9 +5,8 @@
                 <!-- ConceptDescription Identification -->
                 <IdentificationElement :identification-object="conceptDescriptionObject"></IdentificationElement>
                 <v-divider
-                    v-if="
-                        conceptDescriptionObject.displayName && conceptDescriptionObject.displayName.length > 0
-                    "></v-divider>
+                    v-if="conceptDescriptionObject.displayName && conceptDescriptionObject.displayName.length > 0"
+                    class="mt-2"></v-divider>
                 <!-- ConceptDescription DisplayName -->
                 <DisplayNameElement
                     v-if="conceptDescriptionObject.displayName && conceptDescriptionObject.displayName.length > 0"
@@ -60,7 +59,7 @@
                             :semantic-title="'Data Specification'"
                             :small="false"
                             class="mb-2"></SemanticID>
-                        <v-divider v-if="embeddedDataSpecification.dataSpecificationContent"></v-divider>
+                        <v-divider v-if="embeddedDataSpecification.dataSpecificationContent" class="mt-2"></v-divider>
                         <!-- dataSpecificationContent -->
                         <DataSpecificationContent
                             v-if="embeddedDataSpecification.dataSpecificationContent"

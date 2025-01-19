@@ -22,16 +22,16 @@
                                     submodelElementData.administration &&
                                     (submodelElementData.administration.revision != '' ||
                                         submodelElementData.administration.version != '')
-                                "></v-divider>
+                                "
+                                class="mt-2"></v-divider>
                             <AdministrativeInformationElement
                                 v-if="submodelElementData.administration"
                                 :administrative-information-object="submodelElementData.administration"
                                 :administrative-information-title="'Administrative Information'"
                                 :small="false"></AdministrativeInformationElement>
                             <v-divider
-                                v-if="
-                                    submodelElementData.displayName && submodelElementData.displayName.length > 0
-                                "></v-divider>
+                                v-if="submodelElementData.displayName && submodelElementData.displayName.length > 0"
+                                class="mt-2"></v-divider>
                             <!-- SubmodelELement DisplayName -->
                             <DisplayNameElement
                                 v-if="submodelElementData.displayName && submodelElementData.displayName.length > 0"

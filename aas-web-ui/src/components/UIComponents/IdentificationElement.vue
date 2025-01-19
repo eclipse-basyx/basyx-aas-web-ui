@@ -71,7 +71,7 @@
                             identificationObject?.idShort &&
                             (!identificationObject?.modelType || identificationObject.modelType !== 'Asset')
                         "
-                        class="pa-0 mb-0 mt-n2">
+                        class="pa-0 mb-0 mt-n2 mb-n2">
                         <v-list-item-title>
                             <div>{{ idShortTitle + ':' }}</div>
                         </v-list-item-title>
