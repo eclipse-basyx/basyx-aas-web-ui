@@ -28,7 +28,9 @@
                         >
                     </template>
                 </v-file-input>
-                <v-checkbox v-model="registerAAS" label="Register AAS"></v-checkbox>
+                <v-checkbox
+                    v-model="registerAAS"
+                    label="Register AAS (Don't use when BaSyx is the Backend!)"></v-checkbox>
             </v-card-text>
         </v-card>
     </v-dialog>
@@ -50,7 +52,7 @@
 
     // Composables
     const { fetchAas, uploadAas } = useAASRepositoryClient();
-    const { fetchSmById } = useSMRepositoryClient();
+    const { fetchSm } = useSMRepositoryClient();
     const { postAasDescriptor, createDescriptorFromAAS } = useAASRegistryClient();
     const { postSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient();
 
@@ -101,7 +103,7 @@
     }
 
     watchEffect(() => {
-        if (uploadAASDialog.value) {
+        if (!uploadAASDialog.value) {
             resetUploadState();
         }
     });
@@ -154,7 +156,7 @@
         try {
             let submodelId64 = base64Encode(submodelId);
             let href = smRepositoryUrl.value + '/' + submodelId64;
-            let submodel = await fetchSmById(submodelId64);
+            let submodel = await fetchSm(href);
 
             const endpoints = createEndpoints(href, 'SUBMODEL-3.0');
 
