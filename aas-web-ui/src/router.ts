@@ -23,8 +23,12 @@ const staticRoutes: Array<RouteRecordRaw> = [
     },
     { path: '/aaslist', name: 'AASList', component: AASList },
     { path: '/submodellist', name: 'SubmodelList', component: SubmodelList },
-    { path: '/componentvisualization', name: 'ComponentVisualization', component: ComponentVisualization },
-    { path: '/visu', name: 'Visualization', component: ComponentVisualization },
+    {
+        path: '/componentvisualization',
+        name: 'ComponentVisualization',
+        component: ComponentVisualization,
+    },
+    { path: '/visu', name: 'Visualization', component: ComponentVisualization, meta: { name: 'Visualization' } },
     {
         path: '/aaseditor',
         name: 'AASEditor',
@@ -43,7 +47,7 @@ const staticRoutes: Array<RouteRecordRaw> = [
         component: About,
         meta: { name: 'About' },
     },
-    { path: '/404', name: 'NotFound404', component: Page404 },
+    { path: '/404', name: 'NotFound404', component: Page404, meta: { name: 'Page not found | 404' } },
     { path: '/dashboard', name: 'Dashboard', component: Dashboard },
     { path: '/dashboard-group', name: 'DashboardGroup', component: DashboardGroup },
     { path: '/:pathMatch(.*)*', name: 'NotFound', component: Page404 },
