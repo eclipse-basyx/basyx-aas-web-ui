@@ -22,6 +22,7 @@
     </v-container>
 </template>
 
+// TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent, shallowRef } from 'vue';
 

@@ -33,6 +33,7 @@
     </v-container>
 </template>
 
+// TODO Transfer to composition API
 <script lang="ts">
     import _ from 'lodash';
     import { defineComponent } from 'vue';
