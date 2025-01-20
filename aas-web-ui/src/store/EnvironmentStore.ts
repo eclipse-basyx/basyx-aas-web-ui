@@ -4,7 +4,7 @@ import { computed, ref } from 'vue';
 const isProduction = import.meta.env.MODE === 'production';
 
 export const useEnvStore = defineStore('envStore', () => {
-    // state
+    // States
     const basePath = ref(import.meta.env.VITE_BASE_PATH || (isProduction ? '/__BASE_PATH_PLACEHOLDER__/' : ''));
     const logoLightPath = ref(
         import.meta.env.VITE_LOGO_LIGHT_PATH || (isProduction ? '/__LOGO_LIGHT_PATH_PLACEHOLDER__/' : '')
@@ -81,7 +81,7 @@ export const useEnvStore = defineStore('envStore', () => {
         import.meta.env.VITE_EDITOR_ID_PREFIX || (isProduction ? '/__EDITOR_ID_PREFIX_PLACEHOLDER__/' : '')
     );
 
-    // getters
+    // Getters
     const getEnvBasePath = computed(() => basePath.value);
     const getEnvLogoLightPath = computed(() => logoLightPath.value);
     const getEnvLogoDarkPath = computed(() => logoDarkPath.value);
@@ -103,6 +103,7 @@ export const useEnvStore = defineStore('envStore', () => {
     const getSingleAas = computed(() => singleAas.value === 'true');
     const getSingleAasRedirect = computed(() => {
         if (singleAas.value === 'true' && singleAasRedirect.value) {
+            // URL regex
             const expression =
                 /^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z0-9\u00a1-\uffff][a-z0-9\u00a1-\uffff_-]{0,62})?[a-z0-9\u00a1-\uffff]\.)+(?:[a-z\u00a1-\uffff]{2,}\.?))(?::\d{2,5})?(?:[/?#]\S*)?$/i;
             const regex = new RegExp(expression);
@@ -118,7 +119,15 @@ export const useEnvStore = defineStore('envStore', () => {
     const getBasicAuthActive = computed(() => basicAuthActive.value === 'true');
     const getBasicAuthUsername = computed(() => basicAuthUsername.value);
     const getBasicAuthPassword = computed(() => basicAuthPassword.value);
-    const getEditorIdPrefix = computed(() => editorIdPrefix.value);
+    const getEditorIdPrefix = computed(() => {
+        editorIdPrefix.value = editorIdPrefix.value.trim();
+
+        // Ensures editorIdPrefix ends with '/'
+        if (editorIdPrefix.value !== '' && !editorIdPrefix.value.endsWith('/')) {
+            editorIdPrefix.value += '/';
+        }
+        return editorIdPrefix.value;
+    });
 
     return {
         singleAas,

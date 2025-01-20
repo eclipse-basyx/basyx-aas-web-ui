@@ -4,6 +4,8 @@
  * Bootstraps Vuetify and other plugins then mounts the App`
  */
 
+// Types
+import type { PluginType } from '@/types/Application';
 // Components
 import Keycloak from 'keycloak-js';
 import { KeycloakOnLoad } from 'keycloak-js';
@@ -18,7 +20,7 @@ import App from './App.vue';
 import { createAppRouter } from './router';
 import { useAuthStore } from './store/AuthStore';
 import { useEnvStore } from './store/EnvironmentStore';
-import { PluginType, useNavigationStore } from './store/NavigationStore';
+import { useNavigationStore } from './store/NavigationStore';
 
 const app = createApp(App);
 

@@ -232,7 +232,7 @@
         </v-card>
     </v-container>
     <!-- Dialog for creating/editing AAS -->
-    <AAS v-model="editDialog" :new-shell="newShell" :aas="aasToEdit"></AAS>
+    <AASForm v-model="editDialog" :new-shell="newShell" :aas="aasToEdit"></AASForm>
     <!-- Dialog for uploading AAS -->
     <UploadAAS v-model="uploadAASDialog"></UploadAAS>
     <!-- Dialog for deleting AAS -->

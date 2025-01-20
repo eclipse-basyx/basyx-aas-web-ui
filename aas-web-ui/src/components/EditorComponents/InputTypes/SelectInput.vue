@@ -2,7 +2,7 @@
     <v-select
         v-model="selectedValue"
         :items="selectOptions"
-        label="Category"
+        :label="label"
         variant="outlined"
         density="comfortable"
         :clearable="clearable"></v-select>
@@ -16,6 +16,7 @@
     type ValueMap = {
         category: string;
         assetKind: aasTypes.AssetKind;
+        modellingKind: aasTypes.ModellingKind;
     };
 
     type ValueType<T extends keyof ValueMap> = ValueMap[T];
@@ -51,6 +52,11 @@
                     { title: 'Instance', value: aasTypes.AssetKind.Instance },
                     { title: 'Type', value: aasTypes.AssetKind.Type },
                     { title: 'Not Applicable', value: aasTypes.AssetKind.NotApplicable },
+                ];
+            case 'modellingKind':
+                return [
+                    { title: 'Instance', value: aasTypes.ModellingKind.Instance },
+                    { title: 'Template', value: aasTypes.ModellingKind.Template },
                 ];
             default:
                 return [];
