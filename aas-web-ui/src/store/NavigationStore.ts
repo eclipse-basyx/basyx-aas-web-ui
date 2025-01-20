@@ -34,9 +34,8 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const SubmodelRepoURL = ref('');
     const ConceptDescriptionRepoURL = ref('');
     const Snackbar = ref<SnackbarType>({} as SnackbarType);
-    const AutoSync = ref<AutoSyncType>({} as AutoSyncType);
-    const StatusCheck = ref<StatusCheckType>({ state: false, interval: 1000 } as StatusCheckType);
-    const triggerStatusCheckChanged = ref(false);
+    const autoSync = ref<AutoSyncType>({ state: false, interval: 3000 } as AutoSyncType);
+    const statusCheck = ref<StatusCheckType>({ state: false, interval: 10000 } as StatusCheckType);
     const isMobile = ref(false);
     const platform = ref<PlatformType>({} as PlatformType);
     const plugins = ref<PluginType[]>([]);
@@ -100,9 +99,8 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const getSubmodelRepoURL = computed(() => SubmodelRepoURL.value);
     const getConceptDescriptionRepoURL = computed(() => ConceptDescriptionRepoURL.value);
     const getSnackbar = computed(() => Snackbar.value);
-    const getAutoSync = computed(() => AutoSync.value);
-    const getStatusCheck = computed(() => StatusCheck.value);
-    const getTriggerStatusCheckChanged = computed(() => triggerStatusCheckChanged.value);
+    const getAutoSync = computed(() => autoSync.value);
+    const getStatusCheck = computed(() => statusCheck.value);
     const getIsMobile = computed(() => isMobile.value);
     const getPlatform = computed(() => platform.value);
     const getPlugins = computed(() => plugins.value);
@@ -121,12 +119,12 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         Snackbar.value = snackbarObj;
     }
 
-    function dispatchUpdateAutoSync(autoSync: AutoSyncType): void {
-        AutoSync.value = autoSync;
+    function dispatchAutoSync(updatedAutoSync: AutoSyncType): void {
+        autoSync.value = updatedAutoSync;
     }
 
-    function dispatchUpdateStatusCheck(statusCheck: StatusCheckType): void {
-        StatusCheck.value = statusCheck;
+    function dispatchStatusCheck(updatedStatusCheck: StatusCheckType): void {
+        statusCheck.value = updatedStatusCheck;
     }
 
     function dispatchIsMobile(dispatchedIsMobile: boolean): void {
@@ -145,17 +143,8 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         triggerAASListReload.value = !triggerAASListReload.value;
 
         setTimeout(() => {
-            // Reset triggerStatusCheckChanged after 100 ms
+            // Reset dispatchTriggerAASListReload after 100 ms
             triggerAASListReload.value = false;
-        }, 100);
-    }
-
-    function dispatchTriggerStatusCheckChanged(): void {
-        triggerStatusCheckChanged.value = !triggerStatusCheckChanged.value;
-
-        setTimeout(() => {
-            // Reset triggerStatusCheckChanged after 100 ms
-            triggerStatusCheckChanged.value = false;
         }, 100);
     }
 
@@ -324,7 +313,6 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         getPlugins,
         getTriggerAASListReload,
         getTriggerAASListScroll,
-        getTriggerStatusCheckChanged,
         getUrlQuery,
         getModuleRoutes,
         getBasyxComponents,
@@ -333,12 +321,11 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         dispatchComponentURL,
         dispatchDrawerState,
         dispatchSnackbar,
-        dispatchUpdateAutoSync,
-        dispatchUpdateStatusCheck,
+        dispatchAutoSync,
+        dispatchStatusCheck,
         dispatchIsMobile,
         dispatchPlatform,
         dispatchPlugins,
-        dispatchTriggerStatusCheckChanged,
         dispatchTriggerAASListReload,
         dispatchTriggerAASListScroll,
         dispatchUrlQuery,

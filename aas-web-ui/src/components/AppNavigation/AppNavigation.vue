@@ -204,7 +204,8 @@
     import { useDashboardHandling } from '@/composables/DashboardHandling';
     import { useAuthStore } from '@/store/AuthStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
-    import { AutoSyncType, StatusCheckType, useNavigationStore } from '@/store/NavigationStore';
+    import { useNavigationStore } from '@/store/NavigationStore';
+    import { AutoSyncType, StatusCheckType } from '@/types/Application';
 
     // Vue Router
     const route = useRoute();
@@ -226,8 +227,6 @@
     const dashboardAvailable = ref(false); // Dashboard Availability
     const endpointConfigAvailable = ref(envStore.getEndpointConfigAvailable);
     const drawerVisibility = ref(true); // Variable to show the AAS List Drawer
-    const autoSyncDefault = { state: false, interval: 3000 } as AutoSyncType;
-    const statusCheckDefault = { state: true, interval: 10000 } as StatusCheckType;
 
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile);
@@ -282,17 +281,16 @@
         navigationStore.connectComponents();
 
         // Get auto-sync object from the lcoal storage, if not set use auto-sync default object
-        var autoSyncToDispatch = JSON.parse(
-            localStorage.getItem('autoSync') || JSON.stringify(autoSyncDefault)
-        ) as AutoSyncType;
-        navigationStore.dispatchUpdateAutoSync(autoSyncToDispatch);
+        const autoSyncToDispatch = JSON.parse(localStorage.getItem('autoSync') || '{}') as AutoSyncType;
+        if (autoSyncToDispatch && Object.keys(autoSyncToDispatch).length > 0) {
+            navigationStore.dispatchAutoSync(autoSyncToDispatch);
+        }
 
         // Get status-check object from the lcoal storage, if not set use auto-status default object
-        var statusCheckToDispatch = JSON.parse(
-            localStorage.getItem('statusCheck') || JSON.stringify(statusCheckDefault)
-        ) as StatusCheckType;
-        navigationStore.dispatchUpdateStatusCheck(statusCheckToDispatch);
-        if (statusCheckToDispatch.state === true) navigationStore.dispatchTriggerStatusCheckChanged();
+        const statusCheckToDispatch = JSON.parse(localStorage.getItem('statusCheck') || '{}') as StatusCheckType;
+        if (statusCheckToDispatch && Object.keys(statusCheckToDispatch).length > 0) {
+            navigationStore.dispatchStatusCheck(statusCheckToDispatch);
+        }
     });
 
     function closeSnackbar() {

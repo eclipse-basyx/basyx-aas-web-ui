@@ -50,7 +50,6 @@
 
     function updateStatusCheck() {
         localStorage.setItem('statusCheck', JSON.stringify(statusCheck.value));
-        navigationStore.dispatchUpdateStatusCheck(statusCheck.value);
-        navigationStore.dispatchTriggerStatusCheckChanged();
+        navigationStore.dispatchStatusCheck(statusCheck.value);
     }
 </script>

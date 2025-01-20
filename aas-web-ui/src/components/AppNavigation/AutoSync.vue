@@ -77,28 +77,16 @@
 </template>
 
 <script lang="ts" setup>
-    import type { AutoSyncType } from '@/types/Application';
-    import { computed, onMounted } from 'vue';
+    import { computed } from 'vue';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     // Stores
     const navigationStore = useNavigationStore();
 
-    // Data
-    const autoSyncDefault = { state: false, interval: 3000 } as AutoSyncType;
-
     // Computed properties
     const isMobile = computed(() => navigationStore.getIsMobile);
     const autoSync = computed(() => navigationStore.getAutoSync);
     const statusCheck = computed(() => navigationStore.getStatusCheck);
-
-    onMounted(async () => {
-        // Get auto-sync object from the lcoal storage, if not set use auto-sync default object
-        var autoSyncToDispatch = JSON.parse(
-            localStorage.getItem('autoSync') || JSON.stringify(autoSyncDefault)
-        ) as AutoSyncType;
-        navigationStore.dispatchUpdateAutoSync(autoSyncToDispatch);
-    });
 
     // Checks if the input is smaller than 100ms and sets it to 100ms if it is
     function checkMin(e: boolean) {
@@ -108,8 +96,9 @@
 
     // Updates the auto-sync object in the store and local storage
     function updateAutoSync() {
+        console.log(autoSync.value);
         localStorage.setItem('autoSync', JSON.stringify(autoSync.value));
-        navigationStore.dispatchUpdateAutoSync(autoSync.value);
+        navigationStore.dispatchAutoSync(autoSync.value);
     }
 
     function toggleAutoSync() {

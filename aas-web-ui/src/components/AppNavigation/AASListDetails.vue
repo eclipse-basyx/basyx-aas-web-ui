@@ -155,14 +155,13 @@
     });
     const autoSync = computed(() => navigationStore.getAutoSync);
     const statusCheck = computed(() => navigationStore.getStatusCheck);
-    const triggerStatusCheckChanged = computed(() => navigationStore.getTriggerStatusCheckChanged);
 
     // Watchers
     watch(
         () => aasRegistryURL.value,
         async (newValue) => {
             if (newValue !== '') {
-                await initializeView(!statusCheck.value.state);
+                await initializeView();
             }
         }
     );
@@ -171,7 +170,7 @@
         () => aasRepoURL.value,
         async (newValue) => {
             if (newValue !== '') {
-                await initializeView(!statusCheck.value.state);
+                await initializeView();
             }
         }
     );
@@ -179,26 +178,7 @@
     watch(
         () => selectedAAS.value,
         async () => {
-            await initializeView(!statusCheck.value.state);
-        }
-    );
-
-    watch(
-        () => triggerStatusCheckChanged.value,
-        async (triggerVal) => {
-            if (triggerVal === true) {
-                window.clearInterval(statusCheckInterval.value); // clear old interval
-                if (statusCheck.value.state === true) {
-                    await updateStatusOfAas();
-
-                    // create new interval
-                    statusCheckInterval.value = window.setInterval(async () => {
-                        await updateStatusOfAas();
-                    }, statusCheck.value.interval);
-                } else {
-                    aasData.value.status = 'check disabled';
-                }
-            }
+            await initializeView();
         }
     );
 
@@ -215,6 +195,30 @@
                 }, autoSync.interval);
             } else {
                 window.clearInterval(autoSyncInterval.value); // clear interval
+            }
+        },
+        { deep: true }
+    );
+
+    watch(
+        () => statusCheck.value,
+        async (statusCheckValue) => {
+            window.clearInterval(statusCheckInterval.value); // clear old interval
+            if (statusCheckValue.state === true) {
+                aasData.value.status = 'status loading';
+
+                await updateStatusOfAas();
+
+                // create new interval
+                statusCheckInterval.value = window.setInterval(async () => {
+                    await updateStatusOfAas();
+                }, statusCheck.value.interval);
+            } else {
+                aasData.value.status = 'check disabled';
+
+                setTimeout(() => {
+                    aasData.value.status = '';
+                }, 2000);
             }
         },
         { deep: true }
@@ -241,7 +245,7 @@
             }, statusCheck.value.interval);
         }
 
-        await initializeView(!statusCheck.value.state);
+        await initializeView(true);
     });
 
     onBeforeUnmount(() => {
@@ -264,14 +268,14 @@
 
     async function updateStatusOfAas(init: boolean = false): Promise<void> {
         if (aasData.value && Object.keys(aasData.value).length > 0) {
-            if (!init) aasData.value.status = 'status loading';
+            if (statusCheck.value.state === true) aasData.value.status = 'status loading';
 
             await new Promise((resolve) => setTimeout(resolve, 600)); // Give the UI the chance to refresh status icons
             const aasIsAvailable = await isAvailableByIdInRepo(aasData.value.id);
             if (aasIsAvailable) {
-                aasData.value.status = init ? '' : statusCheck.value.state === true ? 'online' : 'check disabled';
+                aasData.value.status = statusCheck.value.state === true ? 'online' : init ? '' : 'check disabled';
             } else {
-                aasData.value.status = init ? '' : statusCheck.value.state === true ? 'offline' : 'check disabled';
+                aasData.value.status = statusCheck.value.state === true ? 'offline' : init ? '' : 'check disabled';
             }
         }
     }

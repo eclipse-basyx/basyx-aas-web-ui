@@ -322,14 +322,13 @@
     const editMode = computed(() => route.name === 'AASEditor'); // Check if the current Route is the AAS Editor
     const allowUploading = computed(() => envStore.getAllowUploading); // Check if the current environment config allows uploading shells
     const statusCheck = computed(() => navigationStore.getStatusCheck);
-    const triggerStatusCheckChanged = computed(() => navigationStore.getTriggerStatusCheckChanged);
 
     // Watchers
     watch(
         () => aasRegistryURL.value,
         async (newValue) => {
             if (newValue !== '') {
-                await loadAASListData(!statusCheck.value.state);
+                await loadAASListData();
             }
         }
     );
@@ -342,31 +341,40 @@
     );
 
     watch(
-        () => triggerStatusCheckChanged.value,
-        async (triggerVal) => {
-            if (triggerVal === true) {
-                window.clearInterval(statusCheckInterval.value); // clear old interval
-                if (statusCheck.value.state === true) {
-                    await updateStatusOfAasDescriptorList();
+        () => statusCheck.value,
+        async (statusCheckValue) => {
+            window.clearInterval(statusCheckInterval.value); // clear old interval
+            if (statusCheckValue.state === true) {
+                aasDescriptorList.value.forEach(async (aasDescriptor: any) => {
+                    aasDescriptor.status = 'status loading';
+                });
 
-                    // create new interval
-                    statusCheckInterval.value = window.setInterval(async () => {
-                        await updateStatusOfAasDescriptorList();
-                    }, statusCheck.value.interval);
-                } else {
+                await updateStatusOfAasDescriptorList();
+
+                // create new interval
+                statusCheckInterval.value = window.setInterval(async () => {
+                    await updateStatusOfAasDescriptorList();
+                }, statusCheck.value.interval);
+            } else {
+                aasDescriptorList.value.forEach(async (aasDescriptor: any) => {
+                    aasDescriptor.status = 'check disabled';
+                });
+
+                setTimeout(() => {
                     aasDescriptorList.value.forEach(async (aasDescriptor: any) => {
-                        aasDescriptor.status = 'check disabled';
+                        aasDescriptor.status = '';
                     });
-                }
+                }, 2000);
             }
-        }
+        },
+        { deep: true }
     );
 
     watch(
         () => triggerAASListReload.value,
         async (triggerVal) => {
             if (triggerVal === true) {
-                await loadAASListData(!statusCheck.value.state);
+                await loadAASListData();
             }
         }
     );
@@ -380,7 +388,7 @@
             }, statusCheck.value.interval);
         }
 
-        await loadAASListData(!statusCheck.value.state);
+        await loadAASListData(true);
     });
 
     onBeforeUnmount(() => {
@@ -419,21 +427,15 @@
         if (Array.isArray(aasDescriptorList.value) && aasDescriptorList.value.length > 0)
             aasDescriptorList.value.forEach(async (aasDescriptor: any) => {
                 if (aasDescriptor && Object.keys(aasDescriptor).length > 0) {
-                    if (!init) aasDescriptor.status = 'status loading';
+                    if (statusCheck.value.state === true) aasDescriptor.status = 'status loading';
 
-                    await new Promise((resolve) => setTimeout(resolve, 600)); // Give the UI the chance to refresh status icons // Give the UI the chance to refresh status icons
+                    await new Promise((resolve) => setTimeout(resolve, 600)); // Give the UI the chance to refresh status icons
                     if (await isAvailableByIdInRegistry(aasDescriptor.id)) {
-                        aasDescriptor.status = init
-                            ? ''
-                            : statusCheck.value.state === true
-                              ? 'online'
-                              : 'check disabled';
+                        aasDescriptor.status =
+                            statusCheck.value.state === true ? 'online' : init ? '' : 'check disabled';
                     } else {
-                        aasDescriptor.status = init
-                            ? ''
-                            : statusCheck.value.state === true
-                              ? 'offline'
-                              : 'check disabled';
+                        aasDescriptor.status =
+                            statusCheck.value.state === true ? 'offline' : init ? '' : 'check disabled';
                     }
                 }
             });
