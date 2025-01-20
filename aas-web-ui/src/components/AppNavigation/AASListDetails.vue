@@ -176,7 +176,7 @@
             }
         } else {
             if (singleAas.value) {
-                return 'calc(100vh - 64px - 64px - 48px - 40px - 35px)'; // Full height - header - title - collapse button - footer - details header (divider)
+                return 'calc(100vh - 64px - 48px - 40px - 35px)'; // Full height - header - collapse button - footer - details header (divider)
             } else {
                 return 'calc(50vh - 40px - 48px - 33px)'; // Half height - footer - collapse button - details header (divider)
             }

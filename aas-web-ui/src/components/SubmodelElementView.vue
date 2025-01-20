@@ -1,9 +1,15 @@
 <template>
     <v-container fluid class="pa-0">
         <v-card color="rgba(0,0,0,0)" elevation="0">
-            <v-card-title style="padding: 15px 16px 16px">Element Details</v-card-title>
-            <v-divider></v-divider>
-            <v-card-text style="overflow-y: auto; height: calc(100vh - 170px)">
+            <template v-if="!singleAas">
+                <!-- Title Bar in the Submodel Element View -->
+                <v-card-title style="padding: 15px 16px 16px">Element Details</v-card-title>
+                <v-divider></v-divider>
+            </template>
+            <v-card-text
+                style="overflow-y: auto"
+                :style="singleAas ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 170px)'">
+                <!-- Detailed View of the selected Submodel/SubmodelElement (e.g. Property, Operation, etc.) -->
                 <template
                     v-if="
                         selectedAAS &&
@@ -162,6 +168,7 @@
     import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
     import { useSMEHandling } from '@/composables/SMEHandling';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     // Vue Router
@@ -170,6 +177,7 @@
     // Stores
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
+    const envStore = useEnvStore();
 
     // Composables
     const { getConceptDescriptions } = useConceptDescriptionHandling();
@@ -187,6 +195,7 @@
     const selectedNode = computed(() => aasStore.getSelectedNode);
     const autoSync = computed(() => navigationStore.getAutoSync);
     const editMode = computed(() => route.name === 'AASEditor');
+    const singleAas = computed(() => envStore.getSingleAas);
 
     // Watchers
     // Resets the SubmodelElementView when the AAS Registry changes
