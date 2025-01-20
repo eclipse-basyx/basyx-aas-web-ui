@@ -34,11 +34,7 @@ const staticRoutes: Array<RouteRecordRaw> = [
     },
     { path: '/aaslist', name: 'AASList', component: AASList },
     { path: '/submodellist', name: 'SubmodelList', component: SubmodelList },
-    {
-        path: '/componentvisualization',
-        name: 'ComponentVisualization',
-        component: ComponentVisualization,
-    },
+    { path: '/componentvisualization', name: 'ComponentVisualization', component: ComponentVisualization },
     { path: '/visu', name: 'Visualization', component: ComponentVisualization, meta: { name: 'Visualization' } },
     {
         path: '/aaseditor',
