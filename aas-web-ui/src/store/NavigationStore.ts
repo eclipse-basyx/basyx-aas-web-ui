@@ -150,14 +150,14 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         }, 100);
     }
 
-    function dispatchTriggerStatusCheckChanged():void {
+    function dispatchTriggerStatusCheckChanged(): void {
         triggerStatusCheckChanged.value = !triggerStatusCheckChanged.value;
 
         setTimeout(() => {
             // Reset triggerStatusCheckChanged after 100 ms
             triggerStatusCheckChanged.value = false;
         }, 100);
-    },
+    }
 
     function dispatchTriggerAASListScroll(): void {
         triggerAASListScroll.value = !triggerAASListScroll.value;
@@ -324,6 +324,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         getPlugins,
         getTriggerAASListReload,
         getTriggerAASListScroll,
+        getTriggerStatusCheckChanged,
         getUrlQuery,
         getModuleRoutes,
         getBasyxComponents,
@@ -337,6 +338,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         dispatchIsMobile,
         dispatchPlatform,
         dispatchPlugins,
+        dispatchTriggerStatusCheckChanged,
         dispatchTriggerAASListReload,
         dispatchTriggerAASListScroll,
         dispatchUrlQuery,

@@ -65,8 +65,11 @@ export function useAASRepositoryClient() {
     async function fetchAasById(aasId: string): Promise<any> {
         const failResponse = {} as any;
 
-        if (!aasId || aasId.trim() === '') return failResponse;
+        if (!aasId) return failResponse;
+
         aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
 
         // TODO fetchAasById just with the repository (e.g. if registry is not available)
         const aasDescriptor = await fetchAasDescriptorById(aasId);
@@ -87,8 +90,11 @@ export function useAASRepositoryClient() {
     async function fetchAas(aasEndpoint: string): Promise<any> {
         const failResponse = {} as any;
 
-        if (!aasEndpoint || aasEndpoint.trim() === '') return failResponse;
+        if (!aasEndpoint) return failResponse;
+
         aasEndpoint = aasEndpoint.trim();
+
+        if (aasEndpoint === '') return failResponse;
 
         const aasRepoPath = aasEndpoint;
         const aasRepoContext = 'retrieving AAS';
@@ -119,8 +125,11 @@ export function useAASRepositoryClient() {
     async function isAvailableById(aasId: string): Promise<boolean> {
         const failResponse = false;
 
-        if (!aasId || aasId.trim() === '') return failResponse;
+        if (!aasId) return failResponse;
+
         aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
 
         // First check the registry
         if (await isAvailableByIdInRegistry(aasId)) return true;
@@ -139,8 +148,11 @@ export function useAASRepositoryClient() {
     async function isAvailableByIdInRepo(aasId: string): Promise<boolean> {
         const failResponse = false;
 
-        if (!aasId || aasId.trim() === '') return failResponse;
+        if (!aasId) return failResponse;
+
         aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
 
         const aas = await fetchAasById(aasId);
 
@@ -158,8 +170,11 @@ export function useAASRepositoryClient() {
     async function isAvailable(aasEndpoint: string): Promise<boolean> {
         const failResponse = false;
 
-        if (!aasEndpoint || aasEndpoint.trim() === '') return failResponse;
+        if (!aasEndpoint) return failResponse;
+
         aasEndpoint = aasEndpoint.trim();
+
+        if (aasEndpoint === '') return failResponse;
 
         const aasRepoPath = aasEndpoint;
         const aasRepoContext = 'evaluating AAS Status';
@@ -186,14 +201,19 @@ export function useAASRepositoryClient() {
     async function fetchAssetInformationById(aasId: string): Promise<any> {
         const failResponse = {} as any;
 
-        if (aasId.trim() === '') return failResponse;
+        if (!aasId) return failResponse;
+
+        aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
 
         const aasDescriptor = await fetchAasDescriptorById(aasId);
 
-        if (aasDescriptor && Object.keys(aasDescriptor).length > 0) {
-            const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0');
-            return fetchAssetInformation(aasEndpoint);
-        }
+        if (!aasDescriptor || Object.keys(aasDescriptor).length === 0) return failResponse;
+
+        const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0');
+
+        return fetchAssetInformation(aasEndpoint) || failResponse;
     }
 
     /**
@@ -205,7 +225,11 @@ export function useAASRepositoryClient() {
     async function fetchAssetInformation(aasEndpoint: string): Promise<any> {
         const failResponse = {} as any;
 
-        if (aasEndpoint.trim() === '') return failResponse;
+        if (!aasEndpoint) return failResponse;
+
+        aasEndpoint = aasEndpoint.trim();
+
+        if (aasEndpoint === '') return failResponse;
 
         const assetInformationEndpoint = aasEndpoint + '/asset-information';
 
@@ -310,8 +334,11 @@ export function useAASRepositoryClient() {
     }
 
     async function putThumbnail(thumbnail: File, aasId: string) {
-        if (!aasId || aasId.trim() === '') return;
+        if (!aasId) return;
+
         aasId = aasId.trim();
+
+        if (aasId === '') return;
 
         // Create formData
         const formData = new FormData();
@@ -336,24 +363,28 @@ export function useAASRepositoryClient() {
     async function getSubmodelRefsById(aasId: string): Promise<Array<any>> {
         const failResponse = [] as Array<any>;
 
-        if (!aasId || aasId.trim() === '') return failResponse;
+        if (!aasId) return failResponse;
+
         aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
 
         const aasDescriptor = await fetchAasDescriptorById(aasId);
 
-        if (aasDescriptor && Object.keys(aasDescriptor).length > 0) {
-            const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0');
-            return getSubmodelRefs(aasEndpoint);
-        }
+        if (!aasDescriptor || Object.keys(aasDescriptor).length === 0) return failResponse;
 
-        return failResponse;
+        const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0');
+        return getSubmodelRefs(aasEndpoint) || failResponse;
     }
 
     async function getSubmodelRefs(aasEndpoint: string): Promise<Array<any>> {
         const failResponse = [] as Array<any>;
 
-        if (!aasEndpoint || aasEndpoint.trim() === '') return failResponse;
+        if (!aasEndpoint) return failResponse;
+
         aasEndpoint = aasEndpoint.trim();
+
+        if (aasEndpoint === '') return failResponse;
 
         const aasRepoPath = aasEndpoint + '/submodel-refs';
         const aasRepoContext = 'retrieving Submodel References';
@@ -392,8 +423,11 @@ export function useAASRepositoryClient() {
 
         let aasId = aas.id;
 
-        if (!aasId || aasId.trim() === '') return;
+        if (!aasId) return;
+
         aasId = aasId.trim();
+
+        if (aasId === '') return;
 
         const submodelRefList = await getSubmodelRefsById(aasId);
 
@@ -435,20 +469,31 @@ export function useAASRepositoryClient() {
     }
 
     async function downloadAasxByEndpoint(aasEndpoint: string): Promise<void> {
-        if (!aasEndpoint || aasEndpoint.trim() === '') return;
+        if (!aasEndpoint) return;
+
         aasEndpoint = aasEndpoint.trim();
+
+        if (aasEndpoint === '') return;
 
         const aas = fetchAas(aasEndpoint);
 
-        if (aas && Object.keys(aas).length > 0) downloadAasx(aas);
+        if (!aas || Object.keys(aas).length === 0) return;
+
+        downloadAasx(aas);
     }
 
     async function downloadAasxById(aasId: any): Promise<void> {
-        if (!aasId || aasId.trim() === '') return;
+        if (!aasId) return;
+
+        aasId = aasId.trim();
+
+        if (aasId === '') return;
 
         const aas = fetchAasById(aasId);
 
-        if (aas && Object.keys(aas).length > 0) downloadAasx(aas);
+        if (!aas || Object.keys(aas).length === 0) return;
+
+        downloadAasx(aas);
     }
 
     return {

@@ -93,8 +93,11 @@ export function useSMRegistryClient() {
     async function isAvailableById(smId: string): Promise<boolean> {
         const failResponse = false;
 
-        if (!smId || smId.trim() === '') return failResponse;
+        if (!smId) return failResponse;
+
         smId = smId.trim();
+
+        if (smId === '') return failResponse;
 
         const smDescriptor = await fetchSmDescriptorById(smId);
 

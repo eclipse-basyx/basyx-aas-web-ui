@@ -55,8 +55,11 @@ export function useAASRegistryClient() {
     async function fetchAasDescriptorById(aasId: string): Promise<any> {
         const failResponse = {} as any;
 
-        if (!aasId || aasId.trim() === '') return failResponse;
+        if (!aasId) return failResponse;
+
         aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
 
         let aasRegUrl = aasRegistryUrl.value;
         if (aasRegUrl.trim() === '') return failResponse;
@@ -91,8 +94,11 @@ export function useAASRegistryClient() {
     async function isAvailableById(aasId: string): Promise<boolean> {
         const failResponse = false;
 
-        if (!aasId || aasId.trim() === '') return failResponse;
+        if (!aasId) return failResponse;
+
         aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
 
         const aasDescriptor = await fetchAasDescriptorById(aasId);
 

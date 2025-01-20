@@ -53,8 +53,11 @@ export function useSMRepositoryClient() {
     async function fetchSmById(smId: string): Promise<any> {
         const failResponse = {} as any;
 
-        if (!smId || smId.trim() === '') return failResponse;
+        if (!smId) return failResponse;
+
         smId = smId.trim();
+
+        if (smId === '') return failResponse;
 
         // TODO fetchSmById just with the repository (e.g. if registry is not available)
         const smDescriptor = await fetchSmDescriptorById(smId);
@@ -75,7 +78,11 @@ export function useSMRepositoryClient() {
     async function fetchSm(smEndpoint: string): Promise<any> {
         const failResponse = {} as any;
 
-        if (smEndpoint.trim() === '') return failResponse;
+        if (!smEndpoint) return failResponse;
+
+        smEndpoint = smEndpoint.trim();
+
+        if (smEndpoint === '') return failResponse;
 
         if (smEndpoint.includes('/submodel-elements/')) {
             // smEndoint seems to be an SME endpoint
@@ -110,8 +117,11 @@ export function useSMRepositoryClient() {
     async function fetchSme(smePath: string): Promise<any> {
         const failResponse = {} as any;
 
-        if (!smePath || smePath.trim() === '') return failResponse;
+        if (!smePath) return failResponse;
+
         smePath = smePath.trim();
+
+        if (smePath === '') return failResponse;
 
         if (!smePath.includes('/submodel-elements/')) {
             // No valid SME path, maybe just SM endpoint
@@ -143,8 +153,11 @@ export function useSMRepositoryClient() {
     async function isAvailableById(smId: string): Promise<boolean> {
         const failResponse = false;
 
-        if (!smId || smId.trim() === '') return failResponse;
+        if (!smId) return failResponse;
+
         smId = smId.trim();
+
+        if (smId === '') return failResponse;
 
         // First check the registry
         if (await isAvailableByIdInRegistry(smId)) return true;
@@ -163,8 +176,11 @@ export function useSMRepositoryClient() {
     async function isAvailableByIdInRepo(smId: string): Promise<boolean> {
         const failResponse = false;
 
-        if (!smId || smId.trim() === '') return failResponse;
+        if (!smId) return failResponse;
+
         smId = smId.trim();
+
+        if (smId === '') return failResponse;
 
         const sm = await fetchSmById(smId);
 
@@ -182,8 +198,11 @@ export function useSMRepositoryClient() {
     async function isAvailable(smEndpopint: string): Promise<boolean> {
         const failResponse = false;
 
-        if (!smEndpopint || smEndpopint.trim() === '') return failResponse;
+        if (!smEndpopint) return failResponse;
+
         smEndpopint = smEndpopint.trim();
+
+        if (smEndpopint === '') return failResponse;
 
         const smRepoPath = smEndpopint;
         const smRepoContext = 'evaluating SM Status';

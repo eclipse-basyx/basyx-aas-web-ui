@@ -13,6 +13,11 @@ export interface AutoSyncType {
     interval: number;
 }
 
+export interface StatusCheckType {
+    state: boolean;
+    interval: number;
+}
+
 export interface PlatformType {
     android: boolean;
     chrome: boolean;
