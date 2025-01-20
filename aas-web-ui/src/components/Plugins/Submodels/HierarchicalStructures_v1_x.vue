@@ -29,6 +29,7 @@
     </v-container>
 </template>
 
+// TODO Transfer to composition API
 <script lang="ts">
     import mermaid from 'mermaid';
     import { defineComponent } from 'vue';

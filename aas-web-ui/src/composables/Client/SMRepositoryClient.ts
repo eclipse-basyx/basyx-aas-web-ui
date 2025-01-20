@@ -1,11 +1,14 @@
+import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
 import { computed } from 'vue';
 import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
+import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
 export function useSMRepositoryClient() {
-    const { getRequest } = useRequestHandling();
+    const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
     const { fetchSmDescriptorById, isAvailableById: isAvailableByIdInRegistry } = useSMRegistryClient();
 
     const navigationStore = useNavigationStore();
@@ -198,6 +201,71 @@ export function useSMRepositoryClient() {
         return failResponse;
     }
 
+    async function postSubmodel(submodel: aasTypes.Submodel): Promise<void> {
+        // Convert Submodel to JSON
+        const jsonSubmodel = jsonization.toJsonable(submodel);
+        // console.log('postSubmodel()', jsonSubmodel);
+
+        const context = 'creating Submodel';
+        const disableMessage = false;
+        const path = submodelRepoUrl.value;
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const body = JSON.stringify(jsonSubmodel);
+
+        const response = await postRequest(path, body, headers, context, disableMessage);
+        if (response.success) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'success',
+                btnColor: 'buttonText',
+                text: 'Submodel successfully created',
+            }); // Show Success Snackbar
+        }
+    }
+
+    async function putSubmodel(submodel: aasTypes.Submodel): Promise<void> {
+        // Convert Submodel to JSON
+        const jsonSubmodel = jsonization.toJsonable(submodel);
+        // console.log('putSubmodel()', jsonSubmodel);
+
+        const context = 'updating Submodel';
+        const disableMessage = false;
+        const path = submodelRepoUrl.value + '/' + base64Encode(submodel.id);
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const body = JSON.stringify(jsonSubmodel);
+
+        const response = await putRequest(path, body, headers, context, disableMessage);
+        if (response.success) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'success',
+                btnColor: 'buttonText',
+                text: 'Submodel successfully updated',
+            }); // Show Success Snackbar
+        }
+    }
+
+    async function deleteSubmodel(submodelId: string): Promise<void> {
+        const context = 'deleting Submodel';
+        const disableMessage = false;
+        const path = submodelRepoUrl.value + '/' + base64Encode(submodelId);
+
+        const response = await deleteRequest(path, context, disableMessage);
+        if (response.success) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'success',
+                btnColor: 'buttonText',
+                text: 'Submodel successfully deleted',
+            }); // Show Success Snackbar
+        }
+    }
+
     function smNotFound(response: any, submodelId: string, path: string, text: string): any {
         // Check if response contains a "messages" array with a "403" or "401" code
         const messages = response.data?.messages || [];
@@ -253,6 +321,9 @@ export function useSMRepositoryClient() {
         isAvailableById,
         isAvailableByIdInRepo,
         isAvailable,
+        postSubmodel,
+        putSubmodel,
+        deleteSubmodel,
         smNotFound,
     };
 }

@@ -77,8 +77,9 @@
 </template>
 
 <script lang="ts" setup>
+    import type { AutoSyncType } from '@/types/Application';
     import { computed, onMounted } from 'vue';
-    import { AutoSyncType, useNavigationStore } from '@/store/NavigationStore';
+    import { useNavigationStore } from '@/store/NavigationStore';
 
     // Stores
     const navigationStore = useNavigationStore();

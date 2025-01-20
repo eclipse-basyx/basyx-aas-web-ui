@@ -18,11 +18,16 @@ export function useSMEHandling() {
      * @param {string} smePath - The path URL of the SME to fetch.
      */
     async function fetchAndDispatchSme(smePath: string, withConceptDescriptions: boolean = false): Promise<void> {
+        if (!smePath) return;
+
         smePath = smePath.trim();
 
         if (smePath === '') return;
 
         const smOrSme = await fetchSme(smePath, withConceptDescriptions);
+
+        if (!smOrSme || Object.keys(smOrSme).length === 0) return;
+
         smOrSme.isActive = true;
 
         aasStore.dispatchSelectedNode(smOrSme);
@@ -35,6 +40,8 @@ export function useSMEHandling() {
      */
     async function fetchSme(smePath: string, withConceptDescriptions: boolean = false): Promise<any> {
         const failResponse = {};
+
+        if (!smePath) return failResponse;
 
         smePath = smePath.trim();
 
@@ -53,7 +60,6 @@ export function useSMEHandling() {
 
         if (!smOrSme || Object.keys(smOrSme).length === 0) {
             console.warn('Fetched empty SME/SM');
-            aasStore.dispatchSelectedNode({});
             return failResponse;
         }
 

@@ -35,7 +35,15 @@
                 </div>
                 <!-- ID -->
                 <v-hover v-slot="{ isHovering, props }">
-                    <v-list-item v-if="identificationObject?.id" class="pa-0 mt-n2 mb-0">
+                    <v-list-item
+                        v-if="identificationObject?.id"
+                        class="pa-0 mt-n2"
+                        :class="
+                            identificationObject?.idShort &&
+                            (!identificationObject?.modelType || identificationObject.modelType !== 'Asset')
+                                ? 'mb-n4'
+                                : 'mb-n2'
+                        ">
                         <v-list-item-title>
                             <div>
                                 {{ identificationTitle + ':' }}
@@ -63,8 +71,7 @@
                             identificationObject?.idShort &&
                             (!identificationObject?.modelType || identificationObject.modelType !== 'Asset')
                         "
-                        class="pa-0 mb-0"
-                        :class="identificationObject?.id && identificationObject?.idShort ? 'mt-n3' : 'mt-n2'">
+                        class="pa-0 mb-0 mt-n2 mb-n2">
                         <v-list-item-title>
                             <div>{{ idShortTitle + ':' }}</div>
                         </v-list-item-title>
@@ -88,6 +95,7 @@
     </v-container>
 </template>
 
+// TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent, Ref, ref } from 'vue';
     import { useClipboardUtil } from '@/composables/ClipboardUtil';

@@ -81,7 +81,7 @@
                         :administrative-information-title="'Administrative Information'"
                         :small="false"
                         :background-color="'detailsCard'"></AdministrativeInformationElement>
-                    <v-divider v-if="aasData.displayName && aasData.displayName.length > 0"></v-divider>
+                    <v-divider v-if="aasData.displayName && aasData.displayName.length > 0" class="mt-2"></v-divider>
                     <!-- AAS DisplayName -->
                     <DisplayNameElement
                         v-if="aasData.displayName && aasData.displayName.length > 0"
@@ -147,7 +147,7 @@
             }
         } else {
             if (singleAas.value) {
-                return 'calc(100vh - 64px - 64px - 48px - 40px - 35px)'; // Full height - header - title - collapse button - footer - details header (divider)
+                return 'calc(100vh - 64px - 48px - 40px - 35px)'; // Full height - header - collapse button - footer - details header (divider)
             } else {
                 return 'calc(50vh - 40px - 48px - 33px)'; // Half height - footer - collapse button - details header (divider)
             }

@@ -7,6 +7,7 @@
     </v-container>
 </template>
 
+// TODO Transfer to composition API
 <script lang="ts">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';

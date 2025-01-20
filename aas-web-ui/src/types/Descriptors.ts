@@ -93,7 +93,7 @@ export class Endpoint {
 
 export class ProtocolInformation {
     href: string;
-    securityAttributes: SecurityAttributes;
+    securityAttributes?: SecurityAttributes | null;
     endpointProtocol?: string | null;
     endpointProtocolVersion?: Array<string> | null;
     subProtocol?: string | null;
@@ -102,7 +102,7 @@ export class ProtocolInformation {
 
     constructor(
         href: string,
-        securityAttributes: SecurityAttributes,
+        securityAttributes: SecurityAttributes | null,
         endpointProtocol?: string | null,
         endpointProtocolVersion?: Array<string> | null,
         subProtocol?: string | null,

@@ -1,8 +1,8 @@
+import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
 import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
-import { useAASRegistryClient } from './Client/AASRegistryClient';
 
 export function useAASHandling() {
     // Composables
@@ -22,6 +22,8 @@ export function useAASHandling() {
      * @param {string} aasEndpoint - The endpoint URL of the AAS to fetch.
      */
     async function fetchAndDispatchAas(aasEndpoint: string): Promise<void> {
+        if (!aasEndpoint) return;
+
         aasEndpoint = aasEndpoint.trim();
 
         if (aasEndpoint === '') return;
@@ -42,7 +44,11 @@ export function useAASHandling() {
      * @param {string} aasId - The ID of the AAS to fetch.
      */
     async function fetchAndDispatchAasById(aasId: string): Promise<void> {
-        if (aasId.trim() === '') return;
+        if (!aasId) return;
+
+        aasId = aasId.trim();
+
+        if (aasId === '') return;
 
         const aas = await fetchAasById(aasId);
 
@@ -82,6 +88,8 @@ export function useAASHandling() {
     async function fetchAasDescriptor(aasId: string): Promise<any> {
         const failResponse = {};
 
+        if (!aasId) return failResponse;
+
         aasId = aasId.trim();
 
         if (aasId === '') return failResponse;
@@ -95,7 +103,7 @@ export function useAASHandling() {
 
         aasDescriptor.timestamp = formatDate(new Date());
 
-        return aasDescriptor;
+        return aasDescriptor || failResponse;
     }
 
     /**
@@ -105,6 +113,8 @@ export function useAASHandling() {
      */
     async function fetchAas(aasEndpoint: string): Promise<any> {
         const failResponse = {};
+
+        if (!aasEndpoint) return failResponse;
 
         aasEndpoint = aasEndpoint.trim();
 
@@ -131,6 +141,8 @@ export function useAASHandling() {
     async function fetchAasById(aasId: string): Promise<any> {
         const failResponse = {};
 
+        if (!aasId) return failResponse;
+
         aasId = aasId.trim();
 
         if (aasId === '') return failResponse;
@@ -139,10 +151,11 @@ export function useAASHandling() {
 
         if (!aas || Object.keys(aas).length === 0) {
             console.warn('Fetched empty AAS');
+            aasStore.dispatchSelectedNode({});
             return failResponse;
         }
 
-        const aasEndpoint = extractEndpointHref(aas, 'SUBMODEL-3.0');
+        const aasEndpoint = getAasEndpoint(aas);
 
         aas.timestamp = formatDate(new Date());
         aas.path = aasEndpoint;
@@ -158,6 +171,8 @@ export function useAASHandling() {
     async function getAasEndpointById(aasId: string): Promise<string> {
         const failResponse = '';
 
+        if (!aasId) return failResponse;
+
         aasId = aasId.trim();
 
         if (aasId === '') return failResponse;
@@ -165,20 +180,29 @@ export function useAASHandling() {
         const aasDescriptor = await fetchAasDescriptorByIdFromRegistry(aasId);
         const aasEndpoint = getAasEndpoint(aasDescriptor);
 
-        return aasEndpoint;
+        return aasEndpoint || failResponse;
     }
 
     /**
-     * Retrieves the Asset Administration Shell (AAS) endpoint URL of an AAS object.
+     * Retrieves the Asset Administration Shell (AAS) endpoint URL of an AAS descriptor.
      *
-     * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
+     * @param {string} aasDescriptor - The AAS descriptor to retrieve the endpoint for.
      */
-    function getAasEndpoint(aas: any): string {
+    function getAasEndpoint(aasDescriptor: any): string {
+        // TODO Replace extractEndpointHref(aasDescriptor, 'AAS-3.0') by getAasEndpoint(aasDescriptor) in all components
         const failResponse = '';
 
-        if (!aas || Object.keys(aas).length === 0 || !aas.id || aas.id.trim() === '') return failResponse;
+        if (
+            !aasDescriptor ||
+            Object.keys(aasDescriptor).length === 0 ||
+            !aasDescriptor.id ||
+            aasDescriptor.id.trim() === ''
+        )
+            return failResponse;
 
-        return extractEndpointHref(aas, 'AAS-3.0');
+        const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0');
+
+        return aasEndpoint || failResponse;
     }
 
     return {

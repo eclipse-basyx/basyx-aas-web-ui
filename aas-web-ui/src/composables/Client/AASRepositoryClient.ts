@@ -10,7 +10,7 @@ import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { downloadFile } from '@/utils/generalUtils';
 
 export function useAASRepositoryClient() {
-    const { getRequest, postRequest, putRequest } = useRequestHandling();
+    const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
     const { fetchAasDescriptorById, isAvailableById: isAvailableByIdInRegistry } = useAASRegistryClient();
 
     // Composables
@@ -256,6 +256,8 @@ export function useAASRepositoryClient() {
             }); // Show Success Snackbar
             navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
         }
+
+        return response;
     }
 
     async function postAas(aas: aasTypes.AssetAdministrationShell) {
@@ -270,7 +272,6 @@ export function useAASRepositoryClient() {
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(jsonAas);
 
-        // Send Request to upload the file
         const response = await postRequest(path, body, headers, context, disableMessage);
         if (response.success) {
             navigationStore.dispatchSnackbar({
@@ -296,7 +297,6 @@ export function useAASRepositoryClient() {
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(jsonAas);
 
-        // Send Request to upload the file
         const response = await putRequest(path, body, headers, context, disableMessage);
         if (response.success) {
             navigationStore.dispatchSnackbar({
@@ -376,6 +376,15 @@ export function useAASRepositoryClient() {
         }
 
         return failResponse;
+    }
+
+    async function deleteSubmodelRef(aasPath: string, submodelId: string): Promise<void> {
+        if (aasPath.trim() === '' || submodelId.trim() === '') return;
+
+        const path = aasPath + '/submodel-refs/' + base64Encode(submodelId);
+        const context = 'deleting Submodel Reference';
+        const disableMessage = false;
+        await deleteRequest(path, context, disableMessage);
     }
 
     async function downloadAasx(aas: any): Promise<void> {
@@ -460,5 +469,6 @@ export function useAASRepositoryClient() {
         downloadAasxById,
         getSubmodelRefs,
         getSubmodelRefsById,
+        deleteSubmodelRef,
     };
 }

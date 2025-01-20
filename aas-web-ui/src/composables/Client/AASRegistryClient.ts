@@ -116,7 +116,6 @@ export function useAASRegistryClient() {
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(aasDescriptor);
 
-        // Send Request to upload the file
         const response = await postRequest(path, body, headers, context, disableMessage);
         if (response.success) {
             navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
@@ -136,7 +135,6 @@ export function useAASRegistryClient() {
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(aasDescriptor);
 
-        // Send Request to upload the file
         const response = await putRequest(path, body, headers, context, disableMessage);
         if (response.success) {
             navigationStore.dispatchTriggerAASListReload(); // Reload AAS List

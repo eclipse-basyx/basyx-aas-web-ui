@@ -6,6 +6,7 @@
     </v-container>
 </template>
 
+// TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent, ref } from 'vue';
     import { useTheme } from 'vuetify';

@@ -33,6 +33,7 @@
     </v-list-item>
 </template>
 
+// TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent } from 'vue';
     import RequestHandling from '@/mixins/RequestHandling';

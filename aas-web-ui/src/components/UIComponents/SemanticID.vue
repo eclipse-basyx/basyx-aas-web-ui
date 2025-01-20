@@ -10,11 +10,11 @@
             </v-tooltip>
             <!-- SemanticIId Title -->
             <template v-if="semanticTitle && semanticTitle.trim().length > 0" #title>
-                <div class="mt-2" :class="small ? 'text-caption' : 'text-subtitle-2 '">{{ semanticTitle + ':' }}</div>
+                <div class="mt-1" :class="small ? 'text-caption' : 'text-subtitle-2 '">{{ semanticTitle + ':' }}</div>
             </template>
             <!-- SemanticId List -->
             <v-list-item-subtitle v-for="(semanticId, i) in semanticIdObject.keys" :key="i">
-                <div :class="semanticTitle && semanticTitle.trim().length > 0 && !small ? 'pt-2' : 'pt-1'">
+                <div class="pt-2">
                     <v-chip label size="x-small" border class="mr-2">{{ semanticId.type }}</v-chip>
                     <span>{{ semanticId.value }}</span>
                 </div>
@@ -23,6 +23,7 @@
     </v-container>
 </template>
 
+// TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent } from 'vue';
 

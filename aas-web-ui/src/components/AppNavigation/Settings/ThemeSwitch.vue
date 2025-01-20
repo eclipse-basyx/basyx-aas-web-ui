@@ -1,24 +1,30 @@
 <template>
-    <v-list-item>
-        <v-list-item>
-            <v-list-item-title class="text-subtitle-2"> Theme </v-list-item-title>
+    <v-container class="px-2 pt-2 pb-0">
+        <v-list-subheader>Theme</v-list-subheader>
+        <v-list-item class="px-0 py-0">
+            <!-- Button toggle to switch theme -->
+            <v-btn-toggle
+                v-model="themeOption"
+                color="primary"
+                style="margin-top: -10px"
+                variant="outlined"
+                divided
+                class="mt-2">
+                <v-btn value="system" @click="toggleTheme">
+                    <span>System</span>
+                    <v-icon class="ml-2">mdi-desktop-tower-monitor</v-icon>
+                </v-btn>
+                <v-btn value="light" @click="toggleTheme">
+                    <span>Light</span>
+                    <v-icon class="ml-2">mdi-white-balance-sunny</v-icon>
+                </v-btn>
+                <v-btn value="dark" @click="toggleTheme">
+                    <span>Dark</span>
+                    <v-icon class="ml-2">mdi-weather-night</v-icon>
+                </v-btn>
+            </v-btn-toggle>
         </v-list-item>
-        <!-- Button toggle to switch theme -->
-        <v-btn-toggle v-model="themeOption" color="primary" style="margin-top: -10px" variant="outlined" divided>
-            <v-btn value="system" @click="toggleTheme">
-                <span>System</span>
-                <v-icon class="ml-2">mdi-desktop-tower-monitor</v-icon>
-            </v-btn>
-            <v-btn value="light" @click="toggleTheme">
-                <span>Light</span>
-                <v-icon class="ml-2">mdi-white-balance-sunny</v-icon>
-            </v-btn>
-            <v-btn value="dark" @click="toggleTheme">
-                <span>Dark</span>
-                <v-icon class="ml-2">mdi-weather-night</v-icon>
-            </v-btn>
-        </v-btn-toggle>
-    </v-list-item>
+    </v-container>
 </template>
 
 <script lang="ts" setup>

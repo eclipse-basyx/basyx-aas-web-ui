@@ -3,20 +3,17 @@
         <!-- Main App Bar -->
         <v-app-bar class="px-3" color="appBar">
             <v-row class="mx-0" align="center">
-                <v-card flat color="appBar" class="ml-2">
+                <v-card flat color="appBar" class="ml-2" style="display: flex; align-items: center">
                     <!-- Logo in the App Bar -->
                     <img :src="LogoPath" style="min-height: 42px; max-height: 42px" alt="Logo" />
                 </v-card>
+                <v-divider v-if="!isMobile" vertical inset class="ml-6"></v-divider>
                 <!-- Menu Toggle (Desktop) -->
-                <v-menu v-if="!isMobile" v-model="mainMenu" :close-on-content-click="false">
-                    <template #activator="{ props: menu }">
-                        <v-tooltip text="Main Menu" location="bottom" :open-delay="600">
-                            <template #activator="{ props: tooltip }">
-                                <v-app-bar-nav-icon
-                                    class="ml-3"
-                                    v-bind="mergeProps(menu, tooltip)"></v-app-bar-nav-icon>
-                            </template>
-                        </v-tooltip>
+                <v-menu v-if="!isMobile" v-model="mainMenu" :close-on-content-click="false" :offset="8">
+                    <template #activator="{ props }">
+                        <v-btn class="text-none ml-3" v-bind="props" append-icon="mdi-chevron-down" variant="text">
+                            {{ route.meta.name }}
+                        </v-btn>
                     </template>
                     <!-- Main Menu Component -->
                     <MainMenu @close-menu="mainMenu = false"></MainMenu>
@@ -44,15 +41,23 @@
                                 <v-btn icon="mdi-close" class="mr-3" @click="mainMenu = false"></v-btn>
                             </v-toolbar-items>
                         </v-toolbar>
-                        <!-- Auto-Sync and Theme Settings in Mobile View -->
-                        <v-row justify="center" style="max-height: 128px !important">
-                            <v-col cols="12" class="text-center">
+                        <!-- Settings in Mobile View -->
+                        <v-row justify="center" align="start" style="max-height: calc(100vh - 64px); overflow-y: auto">
+                            <v-col cols="12" class="text-center px-5">
                                 <ThemeSwitch></ThemeSwitch>
+                                <v-divider v-if="endpointConfigAvailable" class="mt-2"></v-divider>
+                                <!-- Backend Configuration -->
+                                <BackendConfig v-if="endpointConfigAvailable"></BackendConfig>
+                            </v-col>
+                            <v-col cols="12" class="text-center">
+                                <!-- Platform I 4.0 Logo -->
+                                <v-img
+                                    src="@/assets/I40.png"
+                                    max-width="260px"
+                                    class="mx-auto"
+                                    :style="{ filter: isDark ? 'invert(1)' : 'invert(0)' }" />
                             </v-col>
                         </v-row>
-                        <v-divider></v-divider>
-                        <!-- Main Menu Component -->
-                        <MainMenu @close-menu="mainMenu = false"></MainMenu>
                     </v-card>
                 </v-dialog>
                 <!-- Settings Menu -->
@@ -193,8 +198,7 @@
 </template>
 
 <script lang="ts" setup>
-    import type { BaSyxComponent, RepositoryKey } from '@/types/BaSyx';
-    import { computed, mergeProps, onMounted, reactive, ref, watch } from 'vue';
+    import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
     import { useDashboardHandling } from '@/composables/DashboardHandling';
@@ -216,46 +220,6 @@
     // Vuetify
     const theme = useTheme();
 
-    // Reactive BaSyx Components Configurations
-    const basyxComponents = reactive<Record<RepositoryKey, BaSyxComponent>>({
-        AASDiscovery: {
-            url: ref(navigationStore.getAASDiscoveryURL), // Ensure the getter is invoked
-            loading: ref(false),
-            connect: () => connectComponent('AASDiscovery'),
-            label: 'AAS Discovery URL',
-        },
-        AASRegistry: {
-            url: ref(navigationStore.getAASRegistryURL),
-            loading: ref(false),
-            connect: () => connectComponent('AASRegistry'),
-            label: 'AAS Registry URL',
-        },
-        SubmodelRegistry: {
-            url: ref(navigationStore.getSubmodelRegistryURL),
-            loading: ref(false),
-            connect: () => connectComponent('SubmodelRegistry'),
-            label: 'Submodel Registry URL',
-        },
-        AASRepo: {
-            url: ref(navigationStore.getAASRepoURL),
-            loading: ref(false),
-            connect: () => connectComponent('AASRepo'),
-            label: 'AAS Repository URL',
-        },
-        SubmodelRepo: {
-            url: ref(navigationStore.getSubmodelRepoURL),
-            loading: ref(false),
-            connect: () => connectComponent('SubmodelRepo'),
-            label: 'Submodel Repository URL',
-        },
-        ConceptDescriptionRepo: {
-            url: ref(navigationStore.getConceptDescriptionRepoURL),
-            loading: ref(false),
-            connect: () => connectComponent('ConceptDescriptionRepo'),
-            label: 'Concept Description Repository URL',
-        },
-    });
-
     // Data
     const mainMenu = ref(false); // Variable to show the Main Menu
     const mobileMenu = ref(false); // Variable to show the Mobile Menu
@@ -271,17 +235,11 @@
     const Snackbar = computed(() => navigationStore.getSnackbar);
     const showAASList = computed(() => ['AASViewer', 'AASEditor', 'SubmodelViewer'].includes(route.name as string));
     const drawerState = computed(() => navigationStore.getDrawerState);
-    const EnvAASDiscoveryPath = computed(() => envStore.getEnvAASDiscoveryPath);
-    const EnvAASRegistryPath = computed(() => envStore.getEnvAASRegistryPath);
-    const EnvSubmodelRegistryPath = computed(() => envStore.getEnvSubmodelRegistryPath);
-    const EnvAASRepoPath = computed(() => envStore.getEnvAASRepoPath);
-    const EnvSubmodelRepoPath = computed(() => envStore.getEnvSubmodelRepoPath);
-    const EnvConceptDescriptionRepoPath = computed(() => envStore.getEnvConceptDescriptionRepoPath);
     const LogoPath = computed(() => {
         if (isDark.value && envStore.getEnvLogoDarkPath.trim().length > 0) {
-            return 'Logo/' + envStore.getEnvLogoDarkPath;
+            return '/Logo/' + envStore.getEnvLogoDarkPath;
         } else {
-            return 'Logo/' + envStore.getEnvLogoLightPath;
+            return '/Logo/' + envStore.getEnvLogoLightPath;
         }
     });
     const showMobileMenu = computed(() => isMobile.value && !mainMenu.value);
@@ -321,47 +279,7 @@
         applyTheme();
 
         // Auto connect to BaSyx Components
-        Object.keys(basyxComponents).forEach((key) => {
-            const repoKey = key as RepositoryKey;
-            const storedURL = window.localStorage.getItem(repoKey);
-
-            // console.log('storedURL: ', storedURL, repoKey);
-
-            if (endpointConfigAvailable.value && storedURL) {
-                basyxComponents[repoKey].url = storedURL;
-                basyxComponents[repoKey].connect();
-            } else {
-                // Check environment path
-                let envPath = '';
-                switch (repoKey) {
-                    case 'AASDiscovery':
-                        envPath = EnvAASDiscoveryPath.value;
-                        break;
-                    case 'AASRegistry':
-                        envPath = EnvAASRegistryPath.value;
-                        break;
-                    case 'SubmodelRegistry':
-                        envPath = EnvSubmodelRegistryPath.value;
-                        break;
-                    case 'AASRepo':
-                        envPath = EnvAASRepoPath.value;
-                        break;
-                    case 'SubmodelRepo':
-                        envPath = EnvSubmodelRepoPath.value;
-                        break;
-                    case 'ConceptDescriptionRepo':
-                        envPath = EnvConceptDescriptionRepoPath.value;
-                        break;
-                    default:
-                        break;
-                }
-
-                if (!basyxComponents[repoKey].url && envPath && envPath.trim() !== '') {
-                    basyxComponents[repoKey].url = envPath;
-                    basyxComponents[repoKey].connect();
-                }
-            }
-        });
+        navigationStore.connectComponents();
 
         // Get auto-sync object from the lcoal storage, if not set use auto-sync default object
         var autoSyncToDispatch = JSON.parse(
@@ -403,10 +321,6 @@
                 theme.global.name.value = 'light';
             }
         }
-    }
-
-    function connectComponent(repoKey: keyof typeof basyxComponents) {
-        navigationStore.dispatchComponentURL(repoKey, basyxComponents[repoKey].url, false);
     }
 
     function extendSidebar() {

@@ -1,9 +1,9 @@
+import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
 import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
-import { useSMRegistryClient } from './Client/SMRegistryClient';
 
 export function useSMHandling() {
     // Composables
@@ -28,6 +28,8 @@ export function useSMHandling() {
      * @param {string} smEndpoint - The endpoint URL of the SM to fetch.
      */
     async function fetchAndDispatchSm(smEndpoint: string, withConceptDescriptions = false): Promise<void> {
+        if (!smEndpoint) return;
+
         smEndpoint = smEndpoint.trim();
 
         if (smEndpoint === '') return;
@@ -48,6 +50,8 @@ export function useSMHandling() {
      * @param {string} smId - The ID of the SM to fetch.
      */
     async function fetchAndDispatchSmById(smId: string, withConceptDescriptions = false): Promise<void> {
+        if (!smId) return;
+
         smId = smId.trim();
 
         if (smId === '') return;
@@ -92,7 +96,7 @@ export function useSMHandling() {
 
         smId = smId.trim();
 
-        if (smId === '') return failResponse;
+        if (smId === '') return;
 
         const smDescriptor = await fetchSmDescriptorByIdFromRegistry(smId);
 
@@ -113,6 +117,8 @@ export function useSMHandling() {
      */
     async function fetchSm(smEndpoint: string, withConceptDescriptions = false): Promise<any> {
         const failResponse = {};
+
+        if (!smEndpoint) return failResponse;
 
         smEndpoint = smEndpoint.trim();
 
@@ -154,6 +160,8 @@ export function useSMHandling() {
     async function fetchSmById(smId: string, withConceptDescriptions = false): Promise<any> {
         const failResponse = {};
 
+        if (!smId) return failResponse;
+
         smId = smId.trim();
 
         if (smId === '') return failResponse;
@@ -162,10 +170,11 @@ export function useSMHandling() {
 
         if (!sm || Object.keys(sm).length === 0) {
             console.warn('Fetched empty SM');
+            aasStore.dispatchSelectedNode({});
             return failResponse;
         }
 
-        const smEndpoint = extractEndpointHref(sm, 'SUBMODEL-3.0');
+        const smEndpoint = getSmEndpoint(sm);
 
         sm.timestamp = formatDate(new Date());
         sm.path = smEndpoint;
@@ -187,6 +196,8 @@ export function useSMHandling() {
     async function getSmEndpointById(smId: string): Promise<string> {
         const failResponse = '';
 
+        if (!smId) return failResponse;
+
         smId = smId.trim();
 
         if (smId === '') return failResponse;
@@ -194,20 +205,29 @@ export function useSMHandling() {
         const smDescriptor = await fetchSmDescriptorByIdFromRegistry(smId);
         const smEndpoint = getSmEndpoint(smDescriptor);
 
-        return smEndpoint;
+        return smEndpoint || failResponse;
     }
 
     /**
-     * Retrieves the Submodel (SM) endpoint URL of an SM object.
+     * Retrieves the Submodel (SM) endpoint URL of a SM descriptor.
      *
-     * @param {string} sm - The ID of the SM to retrieve the endpoint for.
+     * @param {string} sm - The SM descriptor to retrieve the endpoint for.
      */
-    function getSmEndpoint(sm: any): string {
+    function getSmEndpoint(smDescriptor: any): string {
+        // TODO Replace extractEndpointHref(smDescriptor), 'SUBMODEL-3.0') by getSmEndpoint(smDescriptor) in all components
         const failResponse = '';
 
-        if (!sm || Object.keys(sm).length === 0 || !sm.id || sm.id.trim() === '') return failResponse;
+        if (
+            !smDescriptor ||
+            Object.keys(smDescriptor).length === 0 ||
+            !smDescriptor.id ||
+            smDescriptor.id.trim() === ''
+        )
+            return failResponse;
 
-        return extractEndpointHref(sm, 'SUBMODEL-3.0');
+        const smEndpoint = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0');
+
+        return smEndpoint || failResponse;
     }
 
     return {

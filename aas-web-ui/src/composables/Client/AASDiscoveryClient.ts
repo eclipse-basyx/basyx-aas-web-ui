@@ -11,10 +11,13 @@ export function useAASDicoveryClient() {
     const aasDiscoveryUrl = computed(() => navigationStore.getAASDiscoveryURL);
 
     /**
-     * Retrieves the Asset Administration Shell (AAS) ID for a given global asset ID.
+     * Retrieves the Asset Administration Shell (AAS) ID corresponding to a given global asset ID.
      *
-     * @param {string} globalAssetId - The global asset ID.
-     * @returns {Promise<string>} A Promise that resolves to the AAS ID if found, or an empty string if not.
+     * This function sends an HTTP request to the AAS Discovery service to look up the AAS ID based on the provided global asset ID.
+     * If the global asset ID or the AAS Discovery URL is invalid or if the AAS ID cannot be retrieved, the function returns an empty string.
+     *
+     * @param {string} globalAssetId - The global asset ID for which to retrieve the AAS ID.
+     * @returns {Promise<string>} A promise that resolves to the AAS ID as a string if found; otherwise, an empty string.
      */
     async function getAasId(globalAssetId: string): Promise<string> {
         const failResponse = '';
@@ -33,7 +36,6 @@ export function useAASDicoveryClient() {
         const aasDiscoveryPath = `${aasDiscUrl}?assetIds=${base64Encode(assetIdObject)}`;
         const aasDiscoveryContext = 'retrieving AAS ID by AssetID';
         const disableMessage = true;
-
         try {
             const aasDiscoveryResponse = await getRequest(aasDiscoveryPath, aasDiscoveryContext, disableMessage);
             if (
@@ -45,6 +47,7 @@ export function useAASDicoveryClient() {
                 if (Array.isArray(aasIds) && aasIds.length > 0) return aasIds[0];
             }
         } catch {
+            // handle error
             return failResponse;
         }
 

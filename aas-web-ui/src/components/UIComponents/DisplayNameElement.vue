@@ -10,7 +10,7 @@
             </v-tooltip>
             <!-- DisplayName Title -->
             <template #title>
-                <div class="mt-2" :class="small ? 'text-caption' : 'text-subtitle-2 '">
+                <div class="mt-1" :class="small ? 'text-caption' : 'text-subtitle-2 '">
                     {{ displayNameTitle + ':' }}
                 </div>
             </template>
@@ -27,6 +27,7 @@
     </v-container>
 </template>
 
+// TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent } from 'vue';
 
