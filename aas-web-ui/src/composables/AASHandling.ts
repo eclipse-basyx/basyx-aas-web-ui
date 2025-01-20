@@ -99,7 +99,7 @@ export function useAASHandling() {
             return failResponse;
         }
 
-        const aasEndpoint = extractEndpointHref(aas, 'AAS-3.0');
+        const aasEndpoint = getAasEndpoint(aas);
 
         aas.timestamp = formatDate(new Date());
         aas.path = aasEndpoint;
@@ -125,20 +125,29 @@ export function useAASHandling() {
         const aasDescriptor = await fetchAasDescriptorByIdFromRegistry(aasId);
         const aasEndpoint = getAasEndpoint(aasDescriptor);
 
-        return aasEndpoint;
+        return aasEndpoint || failResponse;
     }
 
     /**
-     * Retrieves the Asset Administration Shell (AAS) endpoint URL of an AAS object.
+     * Retrieves the Asset Administration Shell (AAS) endpoint URL of an AAS descriptor.
      *
-     * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
+     * @param {string} aasDescriptor - The AAS descriptor to retrieve the endpoint for.
      */
-    function getAasEndpoint(aas: any): string {
+    function getAasEndpoint(aasDescriptor: any): string {
+        // TODO Replace extractEndpointHref(aasDescriptor, 'AAS-3.0') by getAasEndpoint(aasDescriptor) in all components
         const failResponse = '';
 
-        if (!aas || Object.keys(aas).length === 0 || !aas.id || aas.id.trim() === '') return failResponse;
+        if (
+            !aasDescriptor ||
+            Object.keys(aasDescriptor).length === 0 ||
+            !aasDescriptor.id ||
+            aasDescriptor.id.trim() === ''
+        )
+            return failResponse;
 
-        return extractEndpointHref(aas, 'AAS-3.0');
+        const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0');
+
+        return aasEndpoint || failResponse;
     }
 
     return { fetchAndDispatchAas, fetchAndDispatchAasById, fetchAas, fetchAasById, getAasEndpoint, getAasEndpointById };

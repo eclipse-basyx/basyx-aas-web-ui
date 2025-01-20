@@ -120,7 +120,7 @@ export function useSMHandling() {
             return failResponse;
         }
 
-        const smEndpoint = extractEndpointHref(sm, 'SUBMODEL-3.0');
+        const smEndpoint = getSmEndpoint(sm);
 
         sm.timestamp = formatDate(new Date());
         sm.path = smEndpoint;
@@ -152,20 +152,29 @@ export function useSMHandling() {
         const smDescriptor = await fetchSmDescriptorByIdFromRegistry(smId);
         const smEndpoint = getSmEndpoint(smDescriptor);
 
-        return smEndpoint;
+        return smEndpoint || failResponse;
     }
 
     /**
-     * Retrieves the Submodel (SM) endpoint URL of an SM object.
+     * Retrieves the Submodel (SM) endpoint URL of a SM descriptor.
      *
-     * @param {string} sm - The ID of the SM to retrieve the endpoint for.
+     * @param {string} sm - The SM descriptor to retrieve the endpoint for.
      */
-    function getSmEndpoint(sm: any): string {
+    function getSmEndpoint(smDescriptor: any): string {
+        // TODO Replace extractEndpointHref(smDescriptor), 'SUBMODEL-3.0') by getSmEndpoint(smDescriptor) in all components
         const failResponse = '';
 
-        if (!sm || Object.keys(sm).length === 0 || !sm.id || sm.id.trim() === '') return failResponse;
+        if (
+            !smDescriptor ||
+            Object.keys(smDescriptor).length === 0 ||
+            !smDescriptor.id ||
+            smDescriptor.id.trim() === ''
+        )
+            return failResponse;
 
-        return extractEndpointHref(sm, 'SUBMODEL-3.0');
+        const smEndpoint = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0');
+
+        return smEndpoint || failResponse;
     }
 
     return { fetchAndDispatchSm, fetchAndDispatchSmById, fetchSm, fetchSmById, getSmEndpoint, getSmEndpointById };
