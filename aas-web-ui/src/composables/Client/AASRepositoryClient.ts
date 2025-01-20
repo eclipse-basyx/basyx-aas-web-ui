@@ -163,6 +163,8 @@ export function useAASRepositoryClient() {
             }); // Show Success Snackbar
             navigationStore.dispatchTriggerAASListReload(true); // Reload AAS List
         }
+
+        return response;
     }
 
     async function postAas(aas: aasTypes.AssetAdministrationShell) {
