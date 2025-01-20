@@ -53,7 +53,7 @@
                         </v-list-item>
                     </v-col>
                     <!-- Custom Modules -->
-                    <v-col cols="12" sm="5" class="pl-3">
+                    <v-col v-if="moduleRoutes.length > 0" cols="12" sm="5" class="pl-3">
                         <v-sheet border rounded color="rgba(0, 0, 0, 0)" class="pt-2 px-3" height="100%">
                             <div class="d-flex align-center text-subtitle-1">
                                 <v-icon icon="mdi-view-module" size="x-small" color="primary" start />
@@ -91,7 +91,7 @@
 
                 <v-spacer></v-spacer>
 
-                <v-img src="@/assets/PoweredByBaSyx.svg" :height="42" style="margin-right: -36px"></v-img>
+                <v-img src="@/assets/PoweredByBaSyx.svg" :height="42" :max-width="126"></v-img>
             </template>
         </v-card>
     </v-container>
