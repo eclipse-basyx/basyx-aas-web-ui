@@ -7,7 +7,6 @@
         <v-card color="rgba(0,0,0,0)" elevation="0">
             <template v-if="!singleAas">
                 <!-- Title Bar in the AASTreeview -->
-                <!-- <v-card-title>: height: 64px; <v-divider>: height: 1px-->
                 <v-card-title style="padding: 15px 16px 16px">
                     <div v-if="!selectedAAS || Object.keys(selectedAAS).length === 0">AAS Treeview</div>
                     <div v-else class="d-flex align-center">

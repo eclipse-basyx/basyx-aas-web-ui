@@ -3,7 +3,6 @@
         <v-card color="rgba(0,0,0,0)" elevation="0">
             <template v-if="!singleAas">
                 <!-- Title Bar in the Submodel Element View -->
-                <!-- <v-card-title>: height: 64px; <v-divider>: height: 1px-->
                 <v-card-title style="padding: 15px 16px 16px">Element Details</v-card-title>
                 <v-divider></v-divider>
             </template>

@@ -3,7 +3,6 @@
         <v-card color="card" elevation="0">
             <template v-if="!singleAas || isMobile">
                 <!-- Title Bar in the Submodel Element View -->
-                <!-- <v-card-title>: height: 64px; <v-divider>: height: 1px-->
                 <v-card-title :style="{ padding: isMobile ? '' : '15px 16px 16px' }">
                     <div v-if="!isMobile">
                         <template v-if="routesToVisualization.includes(route.name)">
@@ -31,7 +30,7 @@
             </template>
             <v-card-text
                 style="overflow-y: auto"
-                :style="singleAas ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 170px)'">
+                :style="singleAas && !isMobile ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 170px)'">
                 <template
                     v-if="
                         selectedAAS &&

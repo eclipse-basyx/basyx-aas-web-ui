@@ -3,7 +3,6 @@
         <v-card color="card" elevation="0">
             <template v-if="!singleAas || isMobile">
                 <!-- Title Bar in the Submodel List -->
-                <!-- <v-card-title>: height: 64px; <v-divider>: height: 1px-->
                 <v-card-title :style="{ padding: isMobile ? '' : '15px 16px 16px' }">
                     <div v-if="!selectedAAS || Object.keys(selectedAAS).length === 0">Submodel List</div>
                     <div v-else class="d-flex align-center">
