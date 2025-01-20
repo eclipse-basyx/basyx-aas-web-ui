@@ -96,7 +96,6 @@
 
     // Updates the auto-sync object in the store and local storage
     function updateAutoSync() {
-        console.log(autoSync.value);
         localStorage.setItem('autoSync', JSON.stringify(autoSync.value));
         navigationStore.dispatchAutoSync(autoSync.value);
     }
