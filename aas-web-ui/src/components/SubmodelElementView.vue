@@ -9,7 +9,7 @@
             </template>
             <v-card-text
                 style="overflow-y: auto"
-                :style="singleAas ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 169px)'">
+                :style="singleAas ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 170px)'">
                 <!-- Detailed View of the selected Submodel/SubmodelElement (e.g. Property, Operation, etc.) -->
                 <template
                     v-if="

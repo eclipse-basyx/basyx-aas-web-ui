@@ -20,7 +20,9 @@
                 </v-card-title>
                 <v-divider></v-divider>
             </template>
-            <v-card-text style="overflow-y: auto; height: calc(100vh - 169px)">
+            <v-card-text
+                style="overflow-y: auto"
+                :style="singleAas ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 170px)'">
                 <div v-if="loading">
                     <v-list-item v-for="i in 6" :key="i" density="compact" nav class="pa-0">
                         <template #prepend>

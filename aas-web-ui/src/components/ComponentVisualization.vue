@@ -31,7 +31,7 @@
             </template>
             <v-card-text
                 style="overflow-y: auto"
-                :style="singleAas ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 169px)'">
+                :style="singleAas ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 170px)'">
                 <template
                     v-if="
                         selectedAAS &&

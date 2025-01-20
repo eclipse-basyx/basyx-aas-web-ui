@@ -1,10 +1,8 @@
 <template>
     <v-container fluid class="pa-0">
         <v-card color="card" elevation="0">
+            <!-- Title Bar in the AAS List -->
             <template v-if="!singleAas">
-                <!-- Title Bar in the AAS List -->
-                <!-- <v-card-title>: height: 64px; <v-divider>: height: 1px-->
-                <!-- <v-card-title v-if="singleAas && !isMobile" style="padding: 16px 16px 16px"> Asset & AAS </v-card-title> -->
                 <v-card-title>
                     <v-row align="center">
                         <v-col cols="auto" class="px-0">

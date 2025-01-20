@@ -22,10 +22,7 @@
                 </v-card-title>
                 <v-divider></v-divider>
             </template>
-            <v-card-text
-                class="py-2 px-2"
-                style="overflow-y: auto"
-                :style="singleAas ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 169px)'">
+            <v-card-text class="py-2 px-2" style="overflow-y: auto; height: calc(100svh - 170px)">
                 <div v-if="loading">
                     <v-skeleton-loader type="list-item@6"></v-skeleton-loader>
                 </div>
