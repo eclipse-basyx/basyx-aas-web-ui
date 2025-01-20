@@ -40,6 +40,7 @@
     </v-container>
 </template>
 
+// TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent, Ref, ref } from 'vue';
     import { useClipboardUtil } from '@/composables/ClipboardUtil';
