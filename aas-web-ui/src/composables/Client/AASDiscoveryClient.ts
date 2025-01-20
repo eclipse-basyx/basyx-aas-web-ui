@@ -10,7 +10,15 @@ export function useAASDicoveryClient() {
 
     const aasDiscoveryUrl = computed(() => navigationStore.getAASDiscoveryURL);
 
-    // Function to check if the assetId can be found in the AAS Discovery Service (and if it exists in the AAS Registry)
+    /**
+     * Retrieves the Asset Administration Shell (AAS) ID corresponding to a given global asset ID.
+     *
+     * This function sends an HTTP request to the AAS Discovery service to look up the AAS ID based on the provided global asset ID.
+     * If the global asset ID or the AAS Discovery URL is invalid or if the AAS ID cannot be retrieved, the function returns an empty string.
+     *
+     * @param {string} globalAssetId - The global asset ID for which to retrieve the AAS ID.
+     * @returns {Promise<string>} A promise that resolves to the AAS ID as a string if found; otherwise, an empty string.
+     */
     async function getAasId(globalAssetId: string): Promise<string> {
         const failResponse = '';
 
