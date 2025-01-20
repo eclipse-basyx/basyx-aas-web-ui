@@ -1,7 +1,19 @@
-import { createRouter, createWebHistory, Router, RouteRecordRaw } from 'vue-router';
+import {
+    createRouter,
+    createWebHistory,
+    LocationQuery,
+    NavigationGuardNext,
+    RouteLocationNormalizedGeneric,
+    Router,
+    RouteRecordRaw,
+} from 'vue-router';
 import AASList from '@/components/AppNavigation/AASList.vue';
 import ComponentVisualization from '@/components/ComponentVisualization.vue';
 import SubmodelList from '@/components/SubmodelList.vue';
+import { useAASHandling } from '@/composables/AASHandling';
+import { useAASDicoveryClient } from '@/composables/Client/AASDiscoveryClient';
+import { useSMEHandling } from '@/composables/SMEHandling';
+import { useSMHandling } from '@/composables/SMHandling';
 import AASEditor from '@/pages/AASEditor.vue';
 import AASViewer from '@/pages/AASViewer.vue';
 import About from '@/pages/About.vue';
@@ -10,8 +22,7 @@ import DashboardGroup from '@/pages/DashboardGroup.vue';
 import Page404 from '@/pages/Page404.vue';
 import SubmodelViewer from '@/pages/SubmodelViewer.vue';
 import { useNavigationStore } from '@/store/NavigationStore';
-import { useAASHandling } from './composables/AASHandling';
-import { useSMEHandling } from './composables/SMEHandling';
+import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
 // Static routes
 const staticRoutes: Array<RouteRecordRaw> = [
@@ -81,10 +92,24 @@ export async function createAppRouter(): Promise<Router> {
 
     // Stores
     const navigationStore = useNavigationStore();
+    // Connect to (BaSyx) components, otherwise IDs redirecting not possible
+    navigationStore.connectComponents();
 
     // Composables
-    const { fetchAndDispatchAas } = useAASHandling();
+    const { getAasId } = useAASDicoveryClient();
+    const { fetchAndDispatchAas, getAasEndpointById } = useAASHandling();
+    const { getSmEndpointById } = useSMHandling();
     const { fetchAndDispatchSme } = useSMEHandling();
+
+    // Data
+    const possibleGloBalAssetIdQueryParameter = ['globalAssetId', 'globalassedid'];
+    const possibleAasIdQueryParameter = ['aasId', 'aasid'];
+    const possibleSmIdQueryParameter = ['smId', 'smid'];
+    const possibleIdQueryParameter = [
+        ...possibleGloBalAssetIdQueryParameter,
+        ...possibleAasIdQueryParameter,
+        ...possibleSmIdQueryParameter,
+    ];
 
     // Save the generated routes in the navigation store
     navigationStore.dispatchModuleRoutes(moduleRoutes);
@@ -95,9 +120,10 @@ export async function createAppRouter(): Promise<Router> {
     });
 
     router.beforeEach(async (to, from, next) => {
-        // TODO Fetch and dispatching of AAS/SM/SME with respect to URL query parameter
-        // TODO Remove keep alive from App.vue
-        // TODO Move route handling (handleMobileView(), handleDesktopView()) from App.vue to this route guard
+        // Handle redirection of `globalAssetId`, `aasId` and `smId`
+        if (await idRedirectHandled(to, next)) return;
+
+        // TODO Move route handling (handleMobileView(), handleDesktopView()) from App.vue to this route guard: https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/225
 
         // Same route
         if (from.name && from.name === to.name) {
@@ -147,8 +173,121 @@ export async function createAppRouter(): Promise<Router> {
                 }
             }
         }
+
+        // TODO Fetch and dispatching of AAS/SM/SME with respect to URL query parameter
+        // TODO Remove keep alive from App.vue
+
         next();
     });
+
+    /**
+     * Handles the redirection of `globalAssetId`, `aasId` and `smId` query parameter from the given route location.
+     *
+     * @async
+     * @function idRedirectHandled
+     * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
+     * @param {NavigationGuardNext} next - A function that must be called to resolve the hook. The action depends on the arguments provided to `next`.
+     * @returns {Promise<boolean>} - Returns a promise that resolves to true if a redirection was performed, otherwise false.
+     */
+    async function idRedirectHandled(to: RouteLocationNormalizedGeneric, next: NavigationGuardNext): Promise<boolean> {
+        // Note: Query parameter are handled case sensitive!
+        if (possibleIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater))) {
+            if (await globalAssetIdRedirectHandled(to, next)) return true;
+            if (await aasIdSmIdRedirectHandled(to, next)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Handles the redirection of `globalAssetId` query parameter from the given route location.
+     * It resolves the `globalAssetId` to an `aasId` and finally to an `aasEndpoint`, and updates the route query.
+     *
+     * @async
+     * @function globalAssetIdRedirectHandled
+     * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
+     * @param {NavigationGuardNext} next - A function that must be called to resolve the hook. The action depends on the arguments provided to `next`.
+     * @returns {Promise<boolean>} - Returns a promise that resolves to true if a redirection was performed, otherwise false.
+     */
+    async function globalAssetIdRedirectHandled(
+        to: RouteLocationNormalizedGeneric,
+        next: NavigationGuardNext
+    ): Promise<boolean> {
+        if (possibleGloBalAssetIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater))) {
+            const globalAssetIdBase64Encoded = to.query[possibleGloBalAssetIdQueryParameter[0]]
+                ? (to.query[possibleGloBalAssetIdQueryParameter[0]] as string)
+                : (to.query[possibleGloBalAssetIdQueryParameter[1]] as string);
+            const globalAssetId = base64Decode(globalAssetIdBase64Encoded);
+            const aasId = await getAasId(globalAssetId);
+            const aasEndpoint = await getAasEndpointById(aasId);
+            const query = {} as LocationQuery;
+
+            if (aasEndpoint.trim() !== '') {
+                query.aas = aasEndpoint.trim();
+                const updatedRoute = Object.assign({}, to, {
+                    query: query,
+                });
+                next(updatedRoute);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Handles the redirection of `aasId` and `smId` query parameter from the given route location.
+     * It resolves the `aasId`to an `aasEndpoint`, the `smId`to an `smEndpoint` and updates the route query.
+     *
+     * @async
+     * @function aasIdSmIdRedirectHandled
+     * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
+     * @param {NavigationGuardNext} next - A function that must be called to resolve the hook. The action depends on the arguments provided to `next`.
+     * @returns {Promise<boolean>} - Returns a promise that resolves to true if a redirection was performed, otherwise false.
+     */
+    async function aasIdSmIdRedirectHandled(
+        to: RouteLocationNormalizedGeneric,
+        next: NavigationGuardNext
+    ): Promise<boolean> {
+        if (
+            possibleAasIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater)) ||
+            possibleSmIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater))
+        ) {
+            let aasEndpoint = '';
+            let smEndpoint = '';
+
+            if (to.query.aasId) {
+                const aasIdBase64Encoded = to.query[possibleAasIdQueryParameter[0]]
+                    ? (to.query[possibleAasIdQueryParameter[0]] as string)
+                    : (to.query[possibleAasIdQueryParameter[1]] as string);
+                const aasId = base64Decode(aasIdBase64Encoded);
+                aasEndpoint = await getAasEndpointById(aasId);
+            }
+            if (to.query.smId) {
+                const smIdBase64Encoded = to.query[possibleSmIdQueryParameter[0]]
+                    ? (to.query[possibleSmIdQueryParameter[0]] as string)
+                    : (to.query[possibleSmIdQueryParameter[1]] as string);
+                const smId = base64Decode(smIdBase64Encoded);
+                smEndpoint = await getSmEndpointById(smId);
+            }
+
+            aasEndpoint = aasEndpoint.trim();
+            smEndpoint = smEndpoint.trim();
+
+            if (aasEndpoint !== '' || smEndpoint !== '') {
+                const query = {} as LocationQuery;
+
+                if (aasEndpoint !== '') query.aas = aasEndpoint.trim();
+                if (smEndpoint !== '') query.path = smEndpoint.trim();
+
+                const updatedRoute = Object.assign({}, to, {
+                    query: query,
+                });
+
+                next(updatedRoute);
+                return true;
+            }
+        }
+        return false;
+    }
 
     return router;
 }
