@@ -1,6 +1,6 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-expansion-panels>
+        <v-expansion-panels class="mb-n2">
             <v-expansion-panel elevation="0" tile static :color="backgroundColor">
                 <v-expansion-panel-title class="px-2">
                     <span :class="small ? 'text-caption' : 'text-subtitle-2 '">

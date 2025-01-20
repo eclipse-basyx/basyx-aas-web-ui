@@ -1,11 +1,13 @@
+import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
+import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
-import { useSMRepositoryClient } from './Client/SMRepositoryClient';
-import { useConceptDescriptionHandling } from './ConceptDescriptionHandling';
 
 export function useSMHandling() {
     // Composables
+    const { fetchSmDescriptorById: fetchSmDescriptorByIdFromRegistry } = useSMRegistryClient();
     const {
         fetchSmById: fetchSmByIdFromRepo,
         fetchSm: fetchSmFromRepo,
@@ -16,8 +18,15 @@ export function useSMHandling() {
     // Stores
     const aasStore = useAASStore();
 
-    // Fetch and dispatch Submodel
+    /**
+     * Fetches a Submodel (SM) by the provided SM endpoint
+     * and dispatches it to the AAS store.
+     *
+     * @param {string} smEndpoint - The endpoint URL of the SM to fetch.
+     */
     async function fetchAndDispatchSm(smEndpoint: string, withConceptDescriptions = false): Promise<void> {
+        if (!smEndpoint) return;
+
         smEndpoint = smEndpoint.trim();
 
         if (smEndpoint === '') return;
@@ -27,24 +36,33 @@ export function useSMHandling() {
         aasStore.dispatchSelectedNode(smOrSme);
     }
 
-    // Fetch and dispatch SME
-    async function fetchAndDispatchSmById(smId: string, withConceptDescriptions = false): Promise<any> {
-        const failResponse = {};
+    /**
+     * Fetches a Submodel (SM) by the provided SM ID
+     * and dispatches it to the AAS store.
+     *
+     * @param {string} smId - The ID of the SM to fetch.
+     */
+    async function fetchAndDispatchSmById(smId: string, withConceptDescriptions = false): Promise<void> {
+        if (!smId) return;
 
         smId = smId.trim();
 
-        if (smId === '') return failResponse;
+        if (smId === '') return;
 
         const sm = await fetchSmById(smId, withConceptDescriptions);
 
-        aasStore.dispatchSelectedAAS(sm);
-
-        return sm;
+        aasStore.dispatchSelectedNode(sm);
     }
 
-    // Fetch SME
+    /**
+     * Fetches a Submodel (SM) by the provided SM endpoint.
+     *
+     * @param {string} smEndpoint - The endpoint URL of the SM to fetch.
+     */
     async function fetchSm(smEndpoint: string, withConceptDescriptions = false): Promise<any> {
         const failResponse = {};
+
+        if (!smEndpoint) return failResponse;
 
         smEndpoint = smEndpoint.trim();
 
@@ -80,9 +98,15 @@ export function useSMHandling() {
         return smOrSme;
     }
 
-    // Fetch SM
+    /**
+     * Fetches a Submodel (SM) by the provided SM ID.
+     *
+     * @param {string} smId - The ID of the SM to fetch.
+     */
     async function fetchSmById(smId: string, withConceptDescriptions = false): Promise<any> {
         const failResponse = {};
+
+        if (!smId) return failResponse;
 
         smId = smId.trim();
 
@@ -92,10 +116,11 @@ export function useSMHandling() {
 
         if (!sm || Object.keys(sm).length === 0) {
             console.warn('Fetched empty SM');
+            aasStore.dispatchSelectedNode({});
             return failResponse;
         }
 
-        const smEndpoint = extractEndpointHref(sm, 'SUBMODEL-3.0');
+        const smEndpoint = getSmEndpoint(sm);
 
         sm.timestamp = formatDate(new Date());
         sm.path = smEndpoint;
@@ -110,10 +135,47 @@ export function useSMHandling() {
         return sm;
     }
 
-    return {
-        fetchSm,
-        fetchSmById,
-        fetchAndDispatchSm,
-        fetchAndDispatchSmById,
-    };
+    /**
+     * Retrieves the Submodel (SM) endpoint URL by its ID.
+     *
+     * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
+     */
+    async function getSmEndpointById(smId: string): Promise<string> {
+        const failResponse = '';
+
+        if (!smId) return failResponse;
+
+        smId = smId.trim();
+
+        if (smId === '') return failResponse;
+
+        const smDescriptor = await fetchSmDescriptorByIdFromRegistry(smId);
+        const smEndpoint = getSmEndpoint(smDescriptor);
+
+        return smEndpoint || failResponse;
+    }
+
+    /**
+     * Retrieves the Submodel (SM) endpoint URL of a SM descriptor.
+     *
+     * @param {string} sm - The SM descriptor to retrieve the endpoint for.
+     */
+    function getSmEndpoint(smDescriptor: any): string {
+        // TODO Replace extractEndpointHref(smDescriptor), 'SUBMODEL-3.0') by getSmEndpoint(smDescriptor) in all components
+        const failResponse = '';
+
+        if (
+            !smDescriptor ||
+            Object.keys(smDescriptor).length === 0 ||
+            !smDescriptor.id ||
+            smDescriptor.id.trim() === ''
+        )
+            return failResponse;
+
+        const smEndpoint = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0');
+
+        return smEndpoint || failResponse;
+    }
+
+    return { fetchAndDispatchSm, fetchAndDispatchSmById, fetchSm, fetchSmById, getSmEndpoint, getSmEndpointById };
 }
