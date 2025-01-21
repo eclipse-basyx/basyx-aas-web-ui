@@ -360,6 +360,7 @@
                     aasDescriptor.status = 'check disabled';
                 });
 
+                // Reset status icon after 2 seconds
                 setTimeout(() => {
                     aasDescriptorList.value.forEach(async (aasDescriptor: any) => {
                         aasDescriptor.status = '';
@@ -382,6 +383,7 @@
     onMounted(async () => {
         if (statusCheck.value.state === true) {
             window.clearInterval(statusCheckInterval.value); // clear old interval
+
             // create new interval
             statusCheckInterval.value = window.setInterval(async () => {
                 await updateStatusOfAasDescriptorList();

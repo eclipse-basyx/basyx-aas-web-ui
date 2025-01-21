@@ -181,6 +181,7 @@
             window.clearInterval(autoSyncInterval.value); // clear old interval
             if (autoSync.value.state) {
                 if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
+                    // create new interval
                     autoSyncInterval.value = window.setInterval(async () => {
                         aasData.value = await fetchAas(selectedAAS.value.path); // update AAS data
                     }, autoSync.value.interval);
@@ -192,6 +193,7 @@
                 if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
                     await updateStatusOfAas();
 
+                    // create new interval
                     statusCheckInterval.value = window.setInterval(async () => {
                         await updateStatusOfAas();
                     }, statusCheck.value.interval);
@@ -210,6 +212,7 @@
                 if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
                     aasData.value = await fetchAas(selectedAAS.value.path); // update AAS data
 
+                    // create new interval
                     autoSyncInterval.value = window.setInterval(async () => {
                         aasData.value = await fetchAas(selectedAAS.value.path); // update AAS data
                     }, autoSyncValue.interval);
@@ -228,12 +231,14 @@
 
                 await updateStatusOfAas();
 
+                // create new interval
                 statusCheckInterval.value = window.setInterval(async () => {
                     await updateStatusOfAas();
                 }, statusCheck.value.interval);
             } else {
                 aasData.value.status = 'check disabled';
 
+                // Reset status icon after 2 seconds
                 setTimeout(() => {
                     aasData.value.status = '';
                 }, 2000);
@@ -244,6 +249,7 @@
 
     onMounted(async () => {
         if (autoSync.value.state) {
+            // create new interval
             autoSyncInterval.value = window.setInterval(async () => {
                 if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
                     aasData.value = await fetchAas(selectedAAS.value.path); // update AAS data
@@ -254,6 +260,7 @@
         if (statusCheck.value.state === true) {
             await updateStatusOfAas();
 
+            // create new interval
             statusCheckInterval.value = window.setInterval(async () => {
                 await updateStatusOfAas();
             }, statusCheck.value.interval);
