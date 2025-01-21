@@ -270,7 +270,7 @@
     // Composables
     const { isAvailableById: isAvailableByIdInRegistry } = useAASRegistryClient();
     const { downloadAasx } = useAASRepositoryClient();
-    const { fetchAndDispatchAasById, fetchAasDescriptorList } = useAASHandling();
+    const { getAasEndpoint, fetchAndDispatchAasById, fetchAasDescriptorList } = useAASHandling();
 
     // Stores
     const navigationStore = useNavigationStore();
@@ -481,6 +481,7 @@
                 scrollToAasAfterDispatch = true;
             }
 
+            router.push({ query: { aas: getAasEndpoint(aas) } });
             await fetchAndDispatchAasById(aas.id);
 
             if (scrollToAasAfterDispatch) scrollToSelectedAAS();

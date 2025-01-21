@@ -38,6 +38,8 @@ export function useAASHandling() {
 
         aas.isActive = true;
 
+        // TODO move router.push to AASDataStore
+        // router.push({ query: { aas: aasEndpoint } });
         aasStore.dispatchSelectedAAS(aas);
 
         return aas;
@@ -66,6 +68,8 @@ export function useAASHandling() {
 
         aas.isActive = true;
 
+        // TODO move router.push to AASDataStore
+        // router.push({ query: { aas: getAasEndpoint(aas) } });
         aasStore.dispatchSelectedAAS(aas);
 
         return aas;

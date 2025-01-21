@@ -45,6 +45,10 @@ export function useSMHandling() {
 
         smOrSme.isActive = true;
 
+        // TODO move router.push to AASDataStore
+        // const query = route.query;
+        // query.path = smEndpoint;
+        // router.push({ query: query });
         aasStore.dispatchSelectedNode(smOrSme);
 
         return smOrSme;
@@ -74,6 +78,10 @@ export function useSMHandling() {
 
         sm.isActive = true;
 
+        // TODO move router.push to AASDataStore
+        // const query = route.query;
+        // query.path = getSmEndpoint(sm);
+        // router.push({ query: query });
         aasStore.dispatchSelectedNode(sm);
 
         return sm;
