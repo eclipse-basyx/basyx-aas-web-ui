@@ -16,7 +16,7 @@
             <SpecificAssetIds
                 v-if="assetInformation.specificAssetIds"
                 :asset-object="assetInformation.specificAssetIds"></SpecificAssetIds>
-            <v-divider v-if="assetInformation.defaultThumbnail" class="mt-2"></v-divider>
+            <v-divider v-if="defaultThumbnailUrl" class="mt-2"></v-divider>
             <v-img
                 v-if="defaultThumbnailUrl"
                 :src="defaultThumbnailUrl"
@@ -24,6 +24,13 @@
                 :max-height="thumbnailMaxHeight"
                 contain
                 class="mt-2 mx-2"></v-img>
+            <v-chip
+                v-if="defaultThumbnailCaption !== ''"
+                size="x-small"
+                color="primary"
+                style="position: absolute; bottom: 12px; right: 16px; opacity: 1">
+                {{ defaultThumbnailCaption }}
+            </v-chip>
         </v-list>
     </v-container>
 </template>
@@ -50,6 +57,7 @@
     // Data
     const thumbnailMaxHeight = ref(0 as number);
     const defaultThumbnailUrl = ref('' as string);
+    const defaultThumbnailCaption = ref('' as string);
 
     // Computed
     const assetInfo = computed(() => {
@@ -85,6 +93,7 @@
     async function initialize(): Promise<void> {
         if (!props.assetInformation || Object.keys(props.assetInformation).length === 0) {
             defaultThumbnailUrl.value = '';
+            defaultThumbnailCaption.value = '';
             return;
         }
 
@@ -95,6 +104,7 @@
             props.assetInformation.defaultThumbnail?.path.trim() !== ''
         ) {
             defaultThumbnailUrl.value = props.assetInformation.defaultThumbnail.path.trim();
+            defaultThumbnailCaption.value = '';
         } else {
             const productImageUrlFromSmTechnicalData = await getProductImageUrlFromSmTechnicalData(
                 selectedAas.value.id
@@ -102,8 +112,10 @@
 
             if (productImageUrlFromSmTechnicalData && productImageUrlFromSmTechnicalData.trim() !== '') {
                 defaultThumbnailUrl.value = productImageUrlFromSmTechnicalData.trim();
+                defaultThumbnailCaption.value = 'Product Image of SM TechnicalData';
             } else {
                 defaultThumbnailUrl.value = '';
+                defaultThumbnailCaption.value = '';
             }
         }
     }
