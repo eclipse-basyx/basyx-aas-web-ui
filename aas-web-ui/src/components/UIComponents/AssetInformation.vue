@@ -23,7 +23,7 @@
                 max-width="100%"
                 :max-height="thumbnailMaxHeight"
                 contain
-                style="border-radius: 4px"></v-img>
+                class="mt-2 mx-2"></v-img>
         </v-list>
     </v-container>
 </template>
