@@ -12,140 +12,120 @@
                 <!-- Detailed View of the selected Submodel/SubmodelElement (e.g. Property, Operation, etc.) -->
                 <template
                     v-if="
-                        selectedAAS &&
-                        Object.keys(selectedAAS).length > 0 &&
-                        submodelElementData &&
-                        Object.keys(submodelElementData).length > 0
+                        selectedAAS && Object.keys(selectedAAS).length > 0 && smeData && Object.keys(smeData).length > 0
                     ">
                     <!-- Detailed View of the selected SubmodelElement (e.g. Property, Operation, etc.) -->
-                    <v-card :class="conceptDescriptions.length > 0 ? 'mb-3' : ''">
+                    <v-card :class="cdData.length > 0 ? 'mb-3' : ''">
                         <v-list nav>
                             <!-- SubmodelELement Identification -->
-                            <IdentificationElement :identification-object="submodelElementData"></IdentificationElement>
+                            <IdentificationElement :identification-object="smeData"></IdentificationElement>
                             <!-- Submodel Administrative Information-->
                             <v-divider
                                 v-if="
-                                    submodelElementData.administration &&
-                                    (submodelElementData.administration.revision != '' ||
-                                        submodelElementData.administration.version != '')
+                                    smeData.administration &&
+                                    (smeData.administration.revision != '' || smeData.administration.version != '')
                                 "
                                 class="mt-2"></v-divider>
                             <AdministrativeInformationElement
-                                v-if="submodelElementData.administration"
-                                :administrative-information-object="submodelElementData.administration"
+                                v-if="smeData.administration"
+                                :administrative-information-object="smeData.administration"
                                 :administrative-information-title="'Administrative Information'"
                                 :small="false"></AdministrativeInformationElement>
                             <v-divider
-                                v-if="submodelElementData.displayName && submodelElementData.displayName.length > 0"
+                                v-if="smeData.displayName && smeData.displayName.length > 0"
                                 class="mt-2"></v-divider>
                             <!-- SubmodelELement DisplayName -->
                             <DisplayNameElement
-                                v-if="submodelElementData.displayName && submodelElementData.displayName.length > 0"
-                                :display-name-object="submodelElementData.displayName"
+                                v-if="smeData.displayName && smeData.displayName.length > 0"
+                                :display-name-object="smeData.displayName"
                                 :display-name-title="'Display Name'"
                                 :small="false"></DisplayNameElement>
                             <v-divider
-                                v-if="submodelElementData.description && submodelElementData.description.length > 0"
+                                v-if="smeData.description && smeData.description.length > 0"
                                 class="mt-2"></v-divider>
                             <!-- SubmodelELement Description -->
                             <DescriptionElement
-                                v-if="submodelElementData.description && submodelElementData.description.length > 0"
-                                :description-object="submodelElementData.description"
+                                v-if="smeData.description && smeData.description.length > 0"
+                                :description-object="smeData.description"
                                 :description-title="'Description'"
                                 :small="false"></DescriptionElement>
                             <v-divider
                                 v-if="
-                                    submodelElementData.semanticId &&
-                                    submodelElementData.semanticId.keys &&
-                                    submodelElementData.semanticId.keys.length > 0
+                                    smeData.semanticId && smeData.semanticId.keys && smeData.semanticId.keys.length > 0
                                 "
                                 class="mt-2"></v-divider>
                             <!-- SubmodelELement SemanticID -->
                             <SemanticID
                                 v-if="
-                                    submodelElementData.semanticId &&
-                                    submodelElementData.semanticId.keys &&
-                                    submodelElementData.semanticId.keys.length > 0
+                                    smeData.semanticId && smeData.semanticId.keys && smeData.semanticId.keys.length > 0
                                 "
-                                :semantic-id-object="submodelElementData.semanticId"
+                                :semantic-id-object="smeData.semanticId"
                                 :semantic-title="'Semantic ID'"
                                 :small="false"></SemanticID>
                             <v-divider
-                                v-if="
-                                    submodelElementData.supplementalSemanticIds &&
-                                    submodelElementData.supplementalSemanticIds.length > 0
-                                "
+                                v-if="smeData.supplementalSemanticIds && smeData.supplementalSemanticIds.length > 0"
                                 class="mt-2"></v-divider>
                             <!-- SubmodelELement SupplementalSemanticID -->
                             <SupplementalSemanticID
-                                v-if="
-                                    submodelElementData.supplementalSemanticIds &&
-                                    submodelElementData.supplementalSemanticIds.length > 0
-                                "
-                                :supplemental-semantic-ids-array="submodelElementData.supplementalSemanticIds"
+                                v-if="smeData.supplementalSemanticIds && smeData.supplementalSemanticIds.length > 0"
+                                :supplemental-semantic-ids-array="smeData.supplementalSemanticIds"
                                 :supplemental-semantic-ids-title="'Supplemental Semantic ID'"></SupplementalSemanticID>
                         </v-list>
                         <v-divider></v-divider>
                         <v-list nav class="px-4 pt-0 pb-5">
                             <!-- SubmodelELement Representation for different modelTypes -->
-                            <Submodel
-                                v-if="submodelElementData.modelType === 'Submodel'"
-                                :submodel-object="submodelElementData"></Submodel>
+                            <Submodel v-if="smeData.modelType === 'Submodel'" :submodel-object="smeData"></Submodel>
                             <SubmodelElementCollection
-                                v-else-if="submodelElementData.modelType === 'SubmodelElementCollection'"
-                                :submodel-element-collection-object="submodelElementData"></SubmodelElementCollection>
+                                v-else-if="smeData.modelType === 'SubmodelElementCollection'"
+                                :submodel-element-collection-object="smeData"></SubmodelElementCollection>
                             <SubmodelElementList
-                                v-else-if="submodelElementData.modelType === 'SubmodelElementList'"
-                                :submodel-element-list-object="submodelElementData"></SubmodelElementList>
+                                v-else-if="smeData.modelType === 'SubmodelElementList'"
+                                :submodel-element-list-object="smeData"></SubmodelElementList>
                             <Property
-                                v-else-if="submodelElementData.modelType === 'Property'"
-                                :property-object="submodelElementData"
+                                v-else-if="smeData.modelType === 'Property'"
+                                :property-object="smeData"
                                 :is-editable="editMode"
                                 @update-value="initializeView()"></Property>
                             <MultiLanguageProperty
-                                v-else-if="submodelElementData.modelType === 'MultiLanguageProperty'"
-                                :multi-language-property-object="submodelElementData"
+                                v-else-if="smeData.modelType === 'MultiLanguageProperty'"
+                                :multi-language-property-object="smeData"
                                 :is-editable="editMode"></MultiLanguageProperty>
                             <Operation
-                                v-else-if="submodelElementData.modelType === 'Operation'"
-                                :operation-object="submodelElementData"
+                                v-else-if="smeData.modelType === 'Operation'"
+                                :operation-object="smeData"
                                 :is-editable="editMode"></Operation>
                             <File
-                                v-else-if="submodelElementData.modelType === 'File'"
-                                :file-object="submodelElementData"
+                                v-else-if="smeData.modelType === 'File'"
+                                :file-object="smeData"
                                 :is-editable="editMode"
                                 @update-path="initializeView()"></File>
                             <Blob
-                                v-else-if="submodelElementData.modelType === 'Blob'"
-                                :blob-object="submodelElementData"
+                                v-else-if="smeData.modelType === 'Blob'"
+                                :blob-object="smeData"
                                 :is-editable="editMode"
                                 @update-blob="initializeView"></Blob>
                             <ReferenceElement
-                                v-else-if="submodelElementData.modelType === 'ReferenceElement'"
-                                :reference-element-object="submodelElementData"
+                                v-else-if="smeData.modelType === 'ReferenceElement'"
+                                :reference-element-object="smeData"
                                 :is-editable="editMode"></ReferenceElement>
-                            <Range
-                                v-else-if="submodelElementData.modelType === 'Range'"
-                                :range-object="submodelElementData"></Range>
-                            <Entity
-                                v-else-if="submodelElementData.modelType === 'Entity'"
-                                :entity-object="submodelElementData"></Entity>
+                            <Range v-else-if="smeData.modelType === 'Range'" :range-object="smeData"></Range>
+                            <Entity v-else-if="smeData.modelType === 'Entity'" :entity-object="smeData"></Entity>
                             <RelationshipElement
-                                v-else-if="submodelElementData.modelType === 'RelationshipElement'"
-                                :relationship-element-object="submodelElementData"></RelationshipElement>
+                                v-else-if="smeData.modelType === 'RelationshipElement'"
+                                :relationship-element-object="smeData"></RelationshipElement>
                             <AnnotatedRelationshipElement
-                                v-else-if="submodelElementData.modelType === 'AnnotatedRelationshipElement'"
-                                :annotated-relationship-element-object="submodelElementData"
+                                v-else-if="smeData.modelType === 'AnnotatedRelationshipElement'"
+                                :annotated-relationship-element-object="smeData"
                                 :is-editable="editMode"></AnnotatedRelationshipElement>
-                            <InvalidElement v-else :invalid-element-object="submodelElementData"></InvalidElement>
+                            <InvalidElement v-else :invalid-element-object="smeData"></InvalidElement>
                         </v-list>
                         <!-- Last Sync -->
                         <v-divider></v-divider>
-                        <LastSync :timestamp="submodelElementData.timestamp"></LastSync>
+                        <LastSync :timestamp="smeData.timestamp"></LastSync>
                     </v-card>
-                    <template v-for="(conceptDescription, index) in conceptDescriptions" :key="conceptDescription.id">
+                    <template v-for="(conceptDescription, index) in cdData" :key="conceptDescription.id">
                         <ConceptDescription :concept-description-object="conceptDescription"></ConceptDescription>
-                        <v-divider v-if="index !== conceptDescriptions.length - 1" class="mt-2"></v-divider>
+                        <v-divider v-if="index !== cdData.length - 1" class="mt-2"></v-divider>
                     </template>
                 </template>
                 <v-empty-state
@@ -181,11 +161,11 @@
 
     // Composables
     const { getConceptDescriptions } = useConceptDescriptionHandling();
-    const { fetchAndDispatchSme } = useSMEHandling();
+    const { fetchSme } = useSMEHandling();
 
     // Data
-    const submodelElementData = ref({} as any);
-    const conceptDescriptions = ref([] as Array<any>);
+    const smeData = ref({} as any);
+    const cdData = ref([] as Array<any>);
     const autoSyncInterval = ref<number | undefined>(undefined); // interval to send requests to the AAS
 
     // Computed Properties
@@ -198,58 +178,73 @@
     const singleAas = computed(() => envStore.getSingleAas);
 
     // Watchers
-    // Resets the SubmodelElementView when the AAS Registry changes
     watch(
         () => aasRegistryServerURL.value,
         async () => {
             if (!aasRegistryServerURL.value) {
-                await initializeView(false);
+                await initializeView(true, true);
             }
         }
     );
 
-    // Resets the SubmodelElementView when the Submodel Registry changes
     watch(
         () => submodelRegistryServerURL.value,
         async () => {
             if (!submodelRegistryServerURL.value) {
-                await initializeView(false);
+                await initializeView(true, true);
             }
         }
     );
 
-    // Resets the SubmodelElementView when the AAS changes
     watch(
         () => selectedAAS.value,
         async () => {
-            await initializeView(false);
+            window.clearInterval(autoSyncInterval.value); // clear old interval
+            if (autoSync.value.state) {
+                if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
+                    // create new interval
+                    autoSyncInterval.value = window.setInterval(async () => {
+                        // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
+                        await updateLocalData(await fetchSme(selectedNode.value.path, true));
+                    }, autoSync.value.interval);
+                }
+            }
+
+            await initializeView(true, true);
         }
     );
 
-    // Watch for changes in the selected Node and (re-)initialize the Component
     watch(
         () => selectedNode.value,
         async () => {
-            await initializeView(true);
+            window.clearInterval(autoSyncInterval.value); // clear old interval
+            if (autoSync.value.state) {
+                if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
+                    // create new interval
+                    autoSyncInterval.value = window.setInterval(async () => {
+                        // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
+                        await updateLocalData(await fetchSme(selectedNode.value.path, true));
+                    }, autoSync.value.interval);
+                }
+            }
+
+            await initializeView(true, true);
         },
         { deep: true }
     );
 
-    // watch for changes in the autoSync state and create or clear the autoSyncInterval
     watch(
         () => autoSync.value,
         (autoSyncValue) => {
+            window.clearInterval(autoSyncInterval.value); // clear old interval
             if (autoSyncValue.state) {
-                window.clearInterval(autoSyncInterval.value); // clear old interval
-                // create new interval
-                autoSyncInterval.value = window.setInterval(async () => {
-                    if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
+                if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
+                    // create new interval
+                    autoSyncInterval.value = window.setInterval(async () => {
                         // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
-                        await fetchAndDispatchSme(selectedNode.value.path, false);
-                    }
-                }, autoSyncValue.interval);
-            } else {
-                window.clearInterval(autoSyncInterval.value);
+                        await updateLocalData(await fetchSme(selectedNode.value.path, true));
+                    }, autoSyncValue.interval);
+                }
             }
         },
         { deep: true }
@@ -257,47 +252,51 @@
 
     onMounted(async () => {
         if (autoSync.value.state) {
-            // create new interval
-            autoSyncInterval.value = window.setInterval(async () => {
-                if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
+            if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
+                // create new interval
+                autoSyncInterval.value = window.setInterval(async () => {
                     // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
-                    await fetchAndDispatchSme(selectedNode.value.path, false);
-                }
-            }, autoSync.value.interval);
+                    await updateLocalData(await fetchSme(selectedNode.value.path, true));
+                }, autoSync.value.interval);
+            }
         }
-        // await initializeView(true); // Not needed, cause this component does not stand alone
+
+        // await initializeView(true, true); // Not needed, cause this component does not stand alone
     });
 
     onBeforeUnmount(() => {
         window.clearInterval(autoSyncInterval.value); // clear old interval
     });
 
-    async function initializeView(withConceptDescriptions: boolean = false): Promise<void> {
+    async function initializeView(init: boolean = false, withConceptDescriptions: boolean = false): Promise<void> {
         if (!selectedNode.value || Object.keys(selectedNode.value).length === 0) {
-            submodelElementData.value = {};
-            conceptDescriptions.value = [];
+            smeData.value = {};
+            cdData.value = [];
             return;
         }
 
-        submodelElementData.value = { ...selectedNode.value }; // create local copy
-        conceptDescriptions.value = [];
+        await updateLocalData(selectedNode.value, withConceptDescriptions);
+    }
+
+    async function updateLocalData(updatedSMEData: any, withConceptDescriptions: boolean = false) {
+        smeData.value = { ...updatedSMEData }; // create local copy
 
         if (withConceptDescriptions) {
             if (
-                selectedNode.value?.conceptDescriptions &&
-                Array.isArray(selectedNode.value.conceptDescriptions) &&
-                selectedNode.value.conceptDescriptions.length > 0
+                smeData.value?.conceptDescriptions &&
+                Array.isArray(smeData.value.conceptDescriptions) &&
+                smeData.value.conceptDescriptions.length > 0
             ) {
-                conceptDescriptions.value = { ...selectedNode.value.conceptDescriptions };
+                cdData.value = { ...smeData.value.conceptDescriptions };
+                return;
             }
 
-            if (
-                !conceptDescriptions.value ||
-                !Array.isArray(conceptDescriptions.value) ||
-                conceptDescriptions.value.length === 0
-            ) {
-                conceptDescriptions.value = await getConceptDescriptions(submodelElementData.value);
+            if (!cdData.value || !Array.isArray(cdData.value) || cdData.value.length === 0) {
+                cdData.value = await getConceptDescriptions(smeData.value);
+                return;
             }
+
+            cdData.value = [];
         }
     }
 </script>
