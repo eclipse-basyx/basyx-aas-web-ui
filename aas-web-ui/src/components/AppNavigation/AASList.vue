@@ -64,7 +64,7 @@
                                         <!-- Open AAS edit dialog -->
                                         <v-tooltip open-delay="600" location="end">
                                             <template #activator="{ props }">
-                                                <v-list-item slim v-bind="props" @click="openAASEditDialog(true)">
+                                                <v-list-item slim v-bind="props" @click="openEditDialog(true)">
                                                     <template #prepend>
                                                         <v-icon size="small">mdi-plus</v-icon>
                                                     </template>
@@ -182,13 +182,13 @@
                                                 </template>
                                                 <v-list-item-subtitle>Download AAS</v-list-item-subtitle>
                                             </v-list-item>
-                                            <v-list-item @click="openAASEditDialog(false, item)">
+                                            <v-list-item @click="openEditDialog(false, item)">
                                                 <template #prepend>
                                                     <v-icon size="x-small">mdi-pencil</v-icon>
                                                 </template>
                                                 <v-list-item-subtitle>Edit AAS</v-list-item-subtitle>
                                             </v-list-item>
-                                            <v-list-item @click="showAASDeleteDialog(item)">
+                                            <v-list-item @click="showDeleteDialog(item)">
                                                 <template #prepend>
                                                     <v-icon size="x-small">mdi-delete</v-icon>
                                                 </template>
@@ -214,7 +214,7 @@
                                         variant="plain"
                                         color="listItemText"
                                         style="z-index: 9000; margin-left: -6px"
-                                        @click.stop="showAASDeleteDialog(item)"></v-btn>
+                                        @click.stop="showDeleteDialog(item)"></v-btn>
                                 </template>
                             </template>
                         </v-list-item>
@@ -318,7 +318,6 @@
             }
         }
     });
-
     const editMode = computed(() => route.name === 'AASEditor'); // Check if the current Route is the AAS Editor
     const allowUploading = computed(() => envStore.getAllowUploading); // Check if the current environment config allows uploading shells
     const statusCheck = computed(() => navigationStore.getStatusCheck);
@@ -492,8 +491,10 @@
         if (
             !selectedAAS.value ||
             Object.keys(selectedAAS.value).length === 0 ||
+            !selectedAAS.value.id ||
             !aas ||
-            Object.keys(aas).length === 0
+            Object.keys(aas).length === 0 ||
+            !aas.id
         ) {
             return false;
         }
@@ -519,12 +520,12 @@
         }
     }
 
-    function showAASDeleteDialog(aas: any): void {
+    function showDeleteDialog(AAS: any): void {
         deleteDialog.value = true;
-        aasToDelete.value = aas;
+        aasToDelete.value = AAS;
     }
 
-    function openAASEditDialog(createNew: boolean, aas?: any) {
+    function openEditDialog(createNew: boolean, aas?: any) {
         editDialog.value = true;
         newShell.value = createNew;
         if (createNew === false && aas) {

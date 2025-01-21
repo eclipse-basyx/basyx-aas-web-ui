@@ -280,13 +280,13 @@
         // Auto connect to BaSyx Components
         navigationStore.connectComponents();
 
-        // Get auto-sync object from the lcoal storage, if not set use auto-sync default object
+        // Get auto-sync object from the lcoal storage
         const autoSyncToDispatch = JSON.parse(localStorage.getItem('autoSync') || '{}') as AutoSyncType;
         if (autoSyncToDispatch && Object.keys(autoSyncToDispatch).length > 0) {
             navigationStore.dispatchAutoSync(autoSyncToDispatch);
         }
 
-        // Get status-check object from the lcoal storage, if not set use auto-status default object
+        // Get status-check object from the lcoal storage
         const statusCheckToDispatch = JSON.parse(localStorage.getItem('statusCheck') || '{}') as StatusCheckType;
         if (statusCheckToDispatch && Object.keys(statusCheckToDispatch).length > 0) {
             navigationStore.dispatchStatusCheck(statusCheckToDispatch);
