@@ -10,19 +10,25 @@
             <template
                 v-for="(supplementalSemanticId, supplementalSemanticIdIndex) in supplementalSemanticIdsArray"
                 :key="supplementalSemanticIdIndex">
-                <SemanticID
-                    v-if="
-                        supplementalSemanticId && supplementalSemanticId.keys && supplementalSemanticId.keys.length > 0
-                    "
-                    :semantic-id-object="supplementalSemanticId"></SemanticID>
+                <v-container fluid class="pa-0 my-n2">
+                    <SemanticID
+                        v-if="
+                            supplementalSemanticId &&
+                            supplementalSemanticId.keys &&
+                            supplementalSemanticId.keys.length > 0
+                        "
+                        :semantic-id-object="supplementalSemanticId"
+                        :small="false"></SemanticID>
+                </v-container>
                 <v-divider
                     v-if="supplementalSemanticIdIndex < supplementalSemanticIdsArray.length - 1"
-                    class="mt-2 mb-1"></v-divider>
+                    class="mt-2 mb-0"></v-divider>
             </template>
         </v-list-item>
     </v-container>
 </template>
 
+// TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent } from 'vue';
 

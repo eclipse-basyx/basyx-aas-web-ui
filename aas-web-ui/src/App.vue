@@ -51,6 +51,9 @@
     const currentRouteName = computed((): string => {
         return route.name as string;
     });
+    const currentRoutePath = computed((): string => {
+        return route.path;
+    });
 
     onMounted(async () => {
         // Check if the platform is a mobile device
@@ -77,7 +80,10 @@
 
         // Check if single AAS mode is on and no aas query is set to either redirect or show 404
         if (envStore.getSingleAas && (aasEndpoint === null || aasEndpoint === undefined || aasEndpoint.trim() === '')) {
-            if (!routesStayOnPages.includes(currentRouteName.value)) {
+            if (
+                !routesStayOnPages.includes(currentRouteName.value) &&
+                !currentRoutePath.value.startsWith('/modules/')
+            ) {
                 if (envStore.getSingleAasRedirect) {
                     window.location.replace(envStore.getSingleAasRedirect);
                     return;
@@ -100,7 +106,7 @@
         }
 
         if (aasEndpoint && submodelElementPath) {
-            await fetchAndDispatchSme(submodelElementPath);
+            await fetchAndDispatchSme(submodelElementPath, true);
         }
     });
 
@@ -141,7 +147,10 @@
         } else if (currentRouteName.value === 'SubmodelViewer') {
             // Stay on 'SubmodelViewer' but update query parameters
             router.push({ name: 'SubmodelViewer', query });
-        } else if (currentRouteName.value && routesStayOnPages.includes(currentRouteName.value)) {
+        } else if (
+            (currentRouteName.value && routesStayOnPages.includes(currentRouteName.value)) ||
+            currentRoutePath.value.startsWith('/modules/')
+        ) {
             // Stay on current page
             return;
         } else {

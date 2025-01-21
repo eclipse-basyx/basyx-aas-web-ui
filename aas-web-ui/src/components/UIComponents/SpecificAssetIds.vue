@@ -2,7 +2,7 @@
     <v-container fluid class="pa-0">
         <v-list-item v-if="Array.isArray(assetObject?.specificAssetIds) && assetObject?.specificAssetIds.length > 0">
             <template #title>
-                <div class="mt-2 mb-2 text-subtitle-2">
+                <div class="mt-1 mb-2 text-subtitle-2">
                     {{ 'Specific Asset IDs:' }}
                 </div>
             </template>
@@ -14,7 +14,9 @@
                                 v-bind="props"
                                 :class="isHovering ? 'cursor-pointer' : ''"
                                 class="text-caption"
-                                @click="copyToClipboard(specificAssetId.value, specificAssetId.name)">
+                                @click="
+                                    copyToClipboard(specificAssetId.value, specificAssetId.name, getCopyIconAsRef())
+                                ">
                                 <span class="text-subtitle-2">{{ specificAssetId.name + ': ' }}</span>
                                 <v-icon v-if="isHovering" color="subtitleText" size="x-small" class="mr-1"
                                     >mdi-clipboard-file-outline</v-icon
@@ -38,8 +40,10 @@
     </v-container>
 </template>
 
+// TODO Transfer to composition API
 <script lang="ts">
-    import { defineComponent } from 'vue';
+    import { defineComponent, Ref, ref } from 'vue';
+    import { useClipboardUtil } from '@/composables/ClipboardUtil';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
@@ -49,28 +53,20 @@
         setup() {
             const navigationStore = useNavigationStore();
 
+            const { copyToClipboard } = useClipboardUtil();
+
+            const copyIcon = ref<string>('mdi-clipboard-file-outline');
+
+            const getCopyIconAsRef = (): Ref => {
+                return copyIcon;
+            };
+
             return {
                 navigationStore, // NavigationStore Object
+                copyToClipboard,
+                copyIcon,
+                getCopyIconAsRef,
             };
-        },
-
-        methods: {
-            // Function to copy the id to the clipboard
-            copyToClipboard(value: string, name: string) {
-                if (!value || !value) return;
-                // console.log('Copy ID to Clipboard: ', this.identificationObject.id);
-                // copy the path to the clipboard
-
-                navigator.clipboard.writeText(value);
-                // open Snackbar to inform the user that the path was copied to the clipboard
-                this.navigationStore.dispatchSnackbar({
-                    status: true,
-                    timeout: 2000,
-                    color: 'success',
-                    btnColor: 'buttonText',
-                    text: (name ? name : value) + ' copied to Clipboard.',
-                });
-            },
         },
     });
 </script>

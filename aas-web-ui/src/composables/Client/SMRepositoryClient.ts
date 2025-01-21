@@ -1,20 +1,30 @@
+import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
 import { computed } from 'vue';
 import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
+import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
 export function useSMRepositoryClient() {
-    const { getRequest } = useRequestHandling();
-    const { fetchSmDescriptorById } = useSMRegistryClient();
+    const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
+    const { fetchSmDescriptorById, isAvailableById: isAvailableByIdInRegistry } = useSMRegistryClient();
 
     const navigationStore = useNavigationStore();
 
     const submodelRepoUrl = computed(() => navigationStore.getSubmodelRepoURL);
 
-    // Fetch List of all available SM
+    /**
+     * Fetches a list of all available Submodels (SMs).
+     *
+     * @returns {Promise<Array<any>>} - A promise that resolves to an array of SMs.
+     * An empty array is returned if the request fails or no SMs are found.
+     */
     async function fetchSmList(): Promise<Array<any>> {
         const failResponse = [] as Array<any>;
+
+        if (submodelRepoUrl.value.trim() === '') return failResponse;
 
         let smRepoUrl = submodelRepoUrl.value;
         if (smRepoUrl.trim() === '') return failResponse;
@@ -31,19 +41,28 @@ export function useSMRepositoryClient() {
                 return smRepoResponse.data.result;
             }
         } catch {
-            // handle error
             return failResponse;
         }
+
         return failResponse;
     }
 
-    // Fetch SM from SM Repo (with the help of the SM Registry)
+    /**
+     * Fetches a Submodel (SM) by the provided SM ID.
+     *
+     * @param {string} smId - The ID of the SM to fetch.
+     * @returns {Promise<any>} - A promise that resolves to a SM.
+     */
     async function fetchSmById(smId: string): Promise<any> {
-        // console.log('fetchAasById()', aasId);
         const failResponse = {} as any;
 
-        if (smId.trim() === '') return failResponse;
+        if (!smId) return failResponse;
 
+        smId = smId.trim();
+
+        if (smId === '') return failResponse;
+
+        // TODO fetchSmById just with the repository (e.g. if registry is not available)
         const smDescriptor = await fetchSmDescriptorById(smId);
 
         if (smDescriptor && Object.keys(smDescriptor).length > 0) {
@@ -54,12 +73,20 @@ export function useSMRepositoryClient() {
         return failResponse;
     }
 
-    // Fetch SM from (SM Repo) Endpoint
+    /**
+     * Fetches a Submodel (SM) by the provided SM endpoint.
+     *
+     * @param {string} smEndpoint - The endpoint URL of the SM to fetch.
+     * @returns {Promise<any>} - A promise that resolves to a SM.
+     */
     async function fetchSm(smEndpoint: string): Promise<any> {
-        // console.log('fetchSm()', aasEndpoint);
         const failResponse = {} as any;
 
-        if (smEndpoint.trim() === '') return failResponse;
+        if (!smEndpoint) return failResponse;
+
+        smEndpoint = smEndpoint.trim();
+
+        if (smEndpoint === '') return failResponse;
 
         if (smEndpoint.includes('/submodel-elements/')) {
             // smEndoint seems to be an SME endpoint
@@ -67,15 +94,14 @@ export function useSMRepositoryClient() {
         }
 
         const smRepoPath = smEndpoint;
-        const smRepoContext = 'retrieving SM Data';
+        const smRepoContext = 'retrieving SM';
         const disableMessage = true;
         try {
             const smRepoResponse = await getRequest(smRepoPath, smRepoContext, disableMessage);
             if (smRepoResponse?.success && smRepoResponse?.data && Object.keys(smRepoResponse?.data).length > 0) {
                 const sm = smRepoResponse.data;
-                // console.log('fetchSm()', smEndpoint, 'sm', sm);
 
-                // Add endpoint to AAS
+                // Add endpoint to SM
                 sm.endpoints = [{ protocolInformation: { href: smEndpoint }, interface: 'SUBMODEL-3.0' }];
 
                 return sm;
@@ -87,40 +113,181 @@ export function useSMRepositoryClient() {
         return failResponse;
     }
 
-    // Fetch SME from (SM Repo) Endpoint
-    async function fetchSme(submodelElementPath: string): Promise<any> {
-        // console.log('fetchSme()', submodelElementPath);
+    /**
+     * Fetches a Submodel Element (SME) by the provided SME path.
+     *
+     * @param {string} smePath - The path URL of the SME to fetch.
+     * @returns {Promise<any>} - A promise that resolves to a SM.
+     */
+    async function fetchSme(smePath: string): Promise<any> {
         const failResponse = {} as any;
 
-        if (submodelElementPath.trim() === '') return failResponse;
+        if (!smePath) return failResponse;
 
-        if (!submodelElementPath.includes('/submodel-elements/')) {
+        smePath = smePath.trim();
+
+        if (smePath === '') return failResponse;
+
+        if (!smePath.includes('/submodel-elements/')) {
             // No valid SME path, maybe just SM endpoint
-            return fetchSm(submodelElementPath);
+            return fetchSm(smePath);
         }
 
-        const smRepoPath = submodelElementPath;
-        const smRepoContext = 'retrieving SubmodelElement';
+        const smRepoPath = smePath;
+        const smRepoContext = 'retrieving SME';
         const disableMessage = true;
         try {
             const smRepoResponse = await getRequest(smRepoPath, smRepoContext, disableMessage);
             if (smRepoResponse?.success && smRepoResponse?.data && Object.keys(smRepoResponse?.data).length > 0) {
                 const sme = smRepoResponse.data;
-
                 return sme;
             }
         } catch {
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 60000,
-                color: 'error',
-                btnColor: 'buttonText',
-                text: 'No valid SubmodelElement under the given Path',
-            });
             return failResponse;
         }
 
         return failResponse;
+    }
+
+    /**
+     * Checks if Submodel with provided ID is available (in registry or repository).
+     *
+     * @param {string} smId - The ID of the SM to check.
+     * @returns {Promise<boolean>} - A promise that resolves to `true` if SM with provided ID is available, otherwise `false`.
+     */
+    async function isAvailableById(smId: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!smId) return failResponse;
+
+        smId = smId.trim();
+
+        if (smId === '') return failResponse;
+
+        // First check the registry
+        if (await isAvailableByIdInRegistry(smId)) return true;
+        // Second check the repository (e.g. if registry is no available)
+        if (await isAvailableByIdInRepo(smId)) return true;
+
+        return failResponse;
+    }
+
+    /**
+     * Checks if Submodel with provided ID is available (in repository)
+     *
+     * @param {string} smId - The ID of the SM to check.
+     * @returns {Promise<boolean>} - A promise that resolves to `true` if SM with provided ID is available, otherwise `false`.
+     */
+    async function isAvailableByIdInRepo(smId: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!smId) return failResponse;
+
+        smId = smId.trim();
+
+        if (smId === '') return failResponse;
+
+        const sm = await fetchSmById(smId);
+
+        if (sm && Object.keys(sm).length > 0) return true;
+
+        return failResponse;
+    }
+
+    /**
+     * Checks if Submodel (SM) is available (in repository) by the provided SM endpoint
+     *
+     * @param {string} smEndpopint - The endpoint URL of the SM to check.
+     * @returns {Promise<boolean>} - A promise that resolves to `true` if SM with provided ID is available, otherwise `false`.
+     */
+    async function isAvailable(smEndpopint: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!smEndpopint) return failResponse;
+
+        smEndpopint = smEndpopint.trim();
+
+        if (smEndpopint === '') return failResponse;
+
+        const smRepoPath = smEndpopint;
+        const smRepoContext = 'evaluating SM Status';
+        const disableMessage = true;
+
+        try {
+            const smRepoResponse = await getRequest(smRepoPath, smRepoContext, disableMessage);
+            if (smRepoResponse?.success && smRepoResponse?.data && Object.keys(smRepoResponse?.data).length > 0) {
+                return true;
+            }
+        } catch {
+            return failResponse;
+        }
+
+        return failResponse;
+    }
+
+    async function postSubmodel(submodel: aasTypes.Submodel): Promise<void> {
+        // Convert Submodel to JSON
+        const jsonSubmodel = jsonization.toJsonable(submodel);
+        // console.log('postSubmodel()', jsonSubmodel);
+
+        const context = 'creating Submodel';
+        const disableMessage = false;
+        const path = submodelRepoUrl.value;
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const body = JSON.stringify(jsonSubmodel);
+
+        const response = await postRequest(path, body, headers, context, disableMessage);
+        if (response.success) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'success',
+                btnColor: 'buttonText',
+                text: 'Submodel successfully created',
+            }); // Show Success Snackbar
+        }
+    }
+
+    async function putSubmodel(submodel: aasTypes.Submodel): Promise<void> {
+        // Convert Submodel to JSON
+        const jsonSubmodel = jsonization.toJsonable(submodel);
+        // console.log('putSubmodel()', jsonSubmodel);
+
+        const context = 'updating Submodel';
+        const disableMessage = false;
+        const path = submodelRepoUrl.value + '/' + base64Encode(submodel.id);
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const body = JSON.stringify(jsonSubmodel);
+
+        const response = await putRequest(path, body, headers, context, disableMessage);
+        if (response.success) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'success',
+                btnColor: 'buttonText',
+                text: 'Submodel successfully updated',
+            }); // Show Success Snackbar
+        }
+    }
+
+    async function deleteSubmodel(submodelId: string): Promise<void> {
+        const context = 'deleting Submodel';
+        const disableMessage = false;
+        const path = submodelRepoUrl.value + '/' + base64Encode(submodelId);
+
+        const response = await deleteRequest(path, context, disableMessage);
+        if (response.success) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'success',
+                btnColor: 'buttonText',
+                text: 'Submodel successfully deleted',
+            }); // Show Success Snackbar
+        }
     }
 
     function smNotFound(response: any, submodelId: string, path: string, text: string): any {
@@ -146,6 +313,7 @@ export function useSMRepositoryClient() {
         }
 
         if (text.trim().length > 0) {
+            // TODO should be moved to SMHandling/SMEHandling
             navigationStore.dispatchSnackbar({
                 status: true,
                 timeout: 60000,
@@ -174,6 +342,12 @@ export function useSMRepositoryClient() {
         fetchSmById,
         fetchSm,
         fetchSme,
+        isAvailableById,
+        isAvailableByIdInRepo,
+        isAvailable,
+        postSubmodel,
+        putSubmodel,
+        deleteSubmodel,
         smNotFound,
     };
 }

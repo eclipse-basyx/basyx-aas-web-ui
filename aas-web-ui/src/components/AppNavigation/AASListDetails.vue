@@ -2,12 +2,42 @@
     <v-container class="pa-0" fluid>
         <v-sheet>
             <v-divider v-if="!singleAas || !isMobile"></v-divider>
-            <v-card-title class="bg-detailsHeader pl-3">
-                <v-row align="center" class="pl-4" style="height: 40px">
+            <v-card-title class="bg-detailsHeader px-1">
+                <v-row align="center" style="height: 40px" class="mx-0">
                     <!-- AAS Status -->
-                    <div class="text-caption">{{ 'Status: ' }}</div>
-                    <div class="text-caption ml-1" :class="statusColor">
-                        {{ status }}
+                    <div
+                        v-if="
+                            !isMobile &&
+                            singleAas &&
+                            assetAdministrationShellData.status &&
+                            assetAdministrationShellData.status.trim() !== ''
+                        "
+                        class="text-caption px-1">
+                        <v-tooltip :text="'AAS status ' + assetAdministrationShellData.status">
+                            <template #activator="{ props }">
+                                <v-icon
+                                    size="small"
+                                    v-bind="props"
+                                    :class="statusTextClass(assetAdministrationShellData.status)">
+                                    {{
+                                        statusCloudIcon(assetAdministrationShellData.status) || 'mdi-cloud-off-outline'
+                                    }}
+                                </v-icon>
+                            </template>
+                        </v-tooltip>
+                    </div>
+                    <!-- Last Sync -->
+                    <div class="text-caption pl-1">
+                        <v-icon class="text-caption" size="small">mdi-autorenew</v-icon>
+                        <span
+                            class="text-caption ml-1"
+                            :class="
+                                assetAdministrationShellData?.timestamp === 'no sync'
+                                    ? 'text-error'
+                                    : 'text-subtitleText'
+                            ">
+                            {{ assetAdministrationShellData.timestamp }}
+                        </span>
                     </div>
                     <v-spacer v-if="isMobile || singleAas"></v-spacer>
                     <!-- Jump to Submodel List on mobile -->
@@ -34,7 +64,7 @@
                                 append-icon="mdi-download"
                                 class="text-none"
                                 text="Download"
-                                @click="downloadAasx(selectedAAS)" />
+                                @click="downloadAasx(assetAdministrationShellData)" />
                         </template>
                         <span>Download Asset Administration Shell as .aasx file</span>
                     </v-tooltip>
@@ -52,36 +82,49 @@
                     v-if="assetInformation?.assetKind && Object.keys(assetInformation).length > 1"
                     thickness="2"></v-divider>
                 <!-- AAS Details -->
-                <v-list v-if="selectedAAS" lines="one" nav class="bg-detailsCard">
+                <v-list v-if="assetAdministrationShellData" lines="one" nav class="bg-detailsCard">
                     <!-- AAS Identification -->
                     <IdentificationElement
-                        class="mb-2"
-                        :identification-object="selectedAAS"
-                        :model-type="'AAS'"
-                        :id-type="'Identification (ID)'"
-                        :name-type="'idShort'"></IdentificationElement>
+                        :identification-object="assetAdministrationShellData"
+                        :v-chip-content="
+                            getKeyTypeAbbreviation(assetAdministrationShellData.modelType)
+                        "></IdentificationElement>
                     <!-- AAS Administrative Information-->
-                    <v-divider v-if="selectedAAS?.administration" class="mt-2"></v-divider>
+                    <v-divider v-if="assetAdministrationShellData?.administration"></v-divider>
                     <AdministrativeInformationElement
-                        v-if="selectedAAS.administration"
-                        :administrative-information-object="selectedAAS.administration"
+                        v-if="assetAdministrationShellData.administration"
+                        :administrative-information-object="assetAdministrationShellData.administration"
                         :administrative-information-title="'Administrative Information'"
                         :small="false"
                         :background-color="'detailsCard'"></AdministrativeInformationElement>
-                    <v-divider v-if="selectedAAS.displayName && selectedAAS.displayName.length > 0"></v-divider>
+                    <v-divider
+                        v-if="
+                            assetAdministrationShellData.displayName &&
+                            assetAdministrationShellData.displayName.length > 0
+                        "
+                        class="mt-2"></v-divider>
                     <!-- AAS DisplayName -->
                     <DisplayNameElement
-                        v-if="selectedAAS.displayName && selectedAAS.displayName.length > 0"
-                        :display-name-object="selectedAAS.displayName"
+                        v-if="
+                            assetAdministrationShellData.displayName &&
+                            assetAdministrationShellData.displayName.length > 0
+                        "
+                        :display-name-object="assetAdministrationShellData.displayName"
                         :display-name-title="'DisplayName'"
                         :small="false"></DisplayNameElement>
                     <v-divider
-                        v-if="selectedAAS.description && selectedAAS.description.length > 0"
+                        v-if="
+                            assetAdministrationShellData.description &&
+                            assetAdministrationShellData.description.length > 0
+                        "
                         class="mt-2"></v-divider>
                     <!-- AAS Description -->
                     <DescriptionElement
-                        v-if="selectedAAS.description && selectedAAS.description.length > 0"
-                        :description-object="selectedAAS.description"
+                        v-if="
+                            assetAdministrationShellData.description &&
+                            assetAdministrationShellData.description.length > 0
+                        "
+                        :description-object="assetAdministrationShellData.description"
                         :description-title="'Description'"
                         :small="false"></DescriptionElement>
                 </v-list>
@@ -91,40 +134,42 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, onMounted, ref, watch } from 'vue';
+    import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
+    import { useAASHandling } from '@/composables/AASHandling';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
-    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
+    import { getKeyTypeAbbreviation } from '@/utils/KeyTypesUtil';
+    import { statusCloudIcon, statusTextClass } from '@/utils/StatusCheckUtils';
 
     // Vue Router
     const route = useRoute();
     const router = useRouter();
 
     // Composables
-    const { getRequest } = useRequestHandling();
-    const { downloadAasx } = useAASRepositoryClient();
+    const { downloadAasx, fetchAssetInformation, isAvailableById: isAvailableByIdInRepo } = useAASRepositoryClient();
+    const { fetchAas } = useAASHandling();
 
     // Stores
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
     const envStore = useEnvStore();
 
-    const props = defineProps({
-        status: {
-            type: String,
-            default: 'check disabled',
-        },
-    });
+    // Data
+    const assetAdministrationShellData = ref({} as any | null);
+    const assetInformation = ref({} as any | null);
+    const autoSyncInterval = ref<number | undefined>(undefined);
+    const statusCheckInterval = ref<number | undefined>(undefined);
 
-    const assetInformation = ref(null as any | null);
-
+    // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile);
-    const selectedAAS = computed(() => aasStore.getSelectedAAS);
     const singleAas = computed(() => envStore.getSingleAas);
+    const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
+    const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL); // Get AAS Registry URL from Store
+    const aasRepoURL = computed(() => navigationStore.getAASRepoURL); // Get the AAS Repository URL from the Store
     const detailsListHeight = computed(() => {
         if (isMobile.value) {
             if (singleAas.value) {
@@ -134,54 +179,169 @@
             }
         } else {
             if (singleAas.value) {
-                return 'calc(100vh - 64px - 64px - 48px - 40px - 35px)'; // Full height - header - title - collapse button - footer - details header (divider)
+                return 'calc(100vh - 64px - 48px - 40px - 35px)'; // Full height - header - collapse button - footer - details header (divider)
             } else {
                 return 'calc(50vh - 40px - 48px - 33px)'; // Half height - footer - collapse button - details header (divider)
             }
         }
     });
-    const statusColor = computed(() => {
-        if (props.status === 'online') {
-            return 'text-success';
-        } else if (props.status === 'check disabled') {
-            return 'text-warning';
-        } else {
-            return 'text-error';
-        }
-    });
+    const autoSync = computed(() => navigationStore.getAutoSync);
+    const statusCheck = computed(() => navigationStore.getStatusCheck);
 
-    watch(selectedAAS, () => {
-        fetchAssetDetails();
-    });
-
-    onMounted(() => {
-        fetchAssetDetails();
-    });
-
-    function fetchAssetDetails() {
-        const aasEndpopint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
-        const assetInformationEndpoint = aasEndpopint + '/asset-information';
-        const path = assetInformationEndpoint;
-        const context = 'retrieving asset information';
-        const disableMessage = false;
-        getRequest(path, context, disableMessage).then((response: any) => {
-            if (response.success) {
-                let fetchedAssetInformation = response.data;
-                if (
-                    fetchedAssetInformation.defaultThumbnail &&
-                    fetchedAssetInformation.defaultThumbnail.path &&
-                    !fetchedAssetInformation.defaultThumbnail.path.startsWith('http')
-                ) {
-                    // TODO: This does not work with active keycloak because there the thumbnail would have to be fetched with a token
-                    let assetInformationThumbnailEndpoint = assetInformationEndpoint + '/thumbnail';
-                    fetchedAssetInformation.defaultThumbnail.path = assetInformationThumbnailEndpoint;
-                }
-                assetInformation.value = fetchedAssetInformation;
+    // Watchers
+    watch(
+        () => aasRegistryURL.value,
+        async (newValue) => {
+            if (newValue !== '') {
+                await initializeView();
             }
-        });
+        }
+    );
+
+    watch(
+        () => aasRepoURL.value,
+        async (newValue) => {
+            if (newValue !== '') {
+                await initializeView();
+            }
+        }
+    );
+
+    watch(
+        () => selectedAAS.value,
+        async () => {
+            window.clearInterval(autoSyncInterval.value); // clear old interval
+            if (autoSync.value.state) {
+                if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
+                    // create new interval
+                    autoSyncInterval.value = window.setInterval(async () => {
+                        assetAdministrationShellData.value = await fetchAas(selectedAAS.value.path); // update AAS data
+                    }, autoSync.value.interval);
+                }
+            }
+
+            window.clearInterval(statusCheckInterval.value); // clear old interval
+            if (statusCheck.value.state === true) {
+                if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
+                    await updateStatusOfAas();
+
+                    // create new interval
+                    statusCheckInterval.value = window.setInterval(async () => {
+                        await updateStatusOfAas();
+                    }, statusCheck.value.interval);
+                }
+            }
+
+            await initializeView();
+        }
+    );
+
+    watch(
+        () => autoSync.value,
+        async (autoSyncValue) => {
+            window.clearInterval(autoSyncInterval.value); // clear old interval
+            if (autoSyncValue.state === true) {
+                if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
+                    assetAdministrationShellData.value = await fetchAas(selectedAAS.value.path); // update AAS data
+
+                    // create new interval
+                    autoSyncInterval.value = window.setInterval(async () => {
+                        assetAdministrationShellData.value = await fetchAas(selectedAAS.value.path); // update AAS data
+                    }, autoSyncValue.interval);
+                }
+            }
+        },
+        { deep: true }
+    );
+
+    watch(
+        () => statusCheck.value,
+        async (statusCheckValue) => {
+            window.clearInterval(statusCheckInterval.value); // clear old interval
+            if (statusCheckValue.state === true) {
+                assetAdministrationShellData.value.status = 'status loading';
+
+                await updateStatusOfAas();
+
+                // create new interval
+                statusCheckInterval.value = window.setInterval(async () => {
+                    await updateStatusOfAas();
+                }, statusCheck.value.interval);
+            } else {
+                assetAdministrationShellData.value.status = 'check disabled';
+
+                // Reset status icon after 2 seconds
+                setTimeout(() => {
+                    assetAdministrationShellData.value.status = '';
+                }, 2000);
+            }
+        },
+        { deep: true }
+    );
+
+    onMounted(async () => {
+        if (autoSync.value.state) {
+            // create new interval
+            autoSyncInterval.value = window.setInterval(async () => {
+                if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
+                    assetAdministrationShellData.value = await fetchAas(selectedAAS.value.path); // update AAS data
+                }
+            }, autoSync.value.interval);
+        }
+
+        if (statusCheck.value.state === true) {
+            await updateStatusOfAas();
+
+            // create new interval
+            statusCheckInterval.value = window.setInterval(async () => {
+                await updateStatusOfAas();
+            }, statusCheck.value.interval);
+        }
+
+        await initializeView(true);
+    });
+
+    onBeforeUnmount(() => {
+        window.clearInterval(autoSyncInterval.value);
+        window.clearInterval(statusCheckInterval.value);
+    });
+
+    async function initializeView(init: boolean = false): Promise<void> {
+        if (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0) {
+            assetAdministrationShellData.value = {};
+            assetInformation.value = {};
+            return;
+        }
+
+        assetAdministrationShellData.value = { ...selectedAAS.value }; // create local copy
+        updateAssetInformation();
+
+        updateStatusOfAas(init);
     }
 
-    function gotoSubmodelList() {
+    async function updateStatusOfAas(init: boolean = false): Promise<void> {
+        if (assetAdministrationShellData.value && Object.keys(assetAdministrationShellData.value).length > 0) {
+            if (statusCheck.value.state === true) assetAdministrationShellData.value.status = 'status loading';
+
+            await new Promise((resolve) => setTimeout(resolve, 600)); // Give the UI the chance to refresh status icons
+            const aasIsAvailable = await isAvailableByIdInRepo(assetAdministrationShellData.value.id);
+            if (aasIsAvailable) {
+                assetAdministrationShellData.value.status =
+                    statusCheck.value.state === true ? 'online' : init ? '' : 'check disabled';
+            } else {
+                assetAdministrationShellData.value.status =
+                    statusCheck.value.state === true ? 'offline' : init ? '' : 'check disabled';
+            }
+        }
+    }
+
+    async function updateAssetInformation(): Promise<void> {
+        assetInformation.value = await fetchAssetInformation(
+            extractEndpointHref(assetAdministrationShellData.value, 'AAS-3.0')
+        );
+    }
+
+    function gotoSubmodelList(): void {
         router.push({
             name: 'SubmodelList',
             query: { aas: route.query.aas },

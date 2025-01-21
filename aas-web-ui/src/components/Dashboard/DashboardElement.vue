@@ -60,6 +60,7 @@
     </v-dialog>
 </template>
 
+// TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent } from 'vue';
     import DashboardHandling from '@/mixins/DashboardHandling';

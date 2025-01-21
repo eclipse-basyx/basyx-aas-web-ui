@@ -4,14 +4,14 @@
             <IdentificationElement
                 id="assetInformationIdentification"
                 :identification-object="assetInfo"
-                :model-type="assetInformation.assetKind"
-                :id-type="'Global Asset ID'"
-                :name-type="'assetType'"></IdentificationElement>
+                :v-chip-content="assetObject.assetKind"
+                :identification-title="'Global Asset ID'"></IdentificationElement>
             <v-divider
                 v-if="
-                    Array.isArray(assetInformation?.specificAssetIds) && assetInformation?.specificAssetIds.length > 0
-                "
-                class="mt-2"></v-divider>
+                    assetObject?.specificAssetIds &&
+                    Array.isArray(assetObject?.specificAssetIds) &&
+                    assetObject?.specificAssetIds.length > 0
+                "></v-divider>
             <!-- Specific Asset IDs -->
             <SpecificAssetIds :asset-object="assetInformation"></SpecificAssetIds>
             <v-divider v-if="assetInformation.defaultThumbnail" class="mt-2"></v-divider>
@@ -52,8 +52,9 @@
     // Computed
     const assetInfo = computed(() => {
         return {
-            idShort: props.assetInformation.assetType,
+            idShort: props.assetInformation.assetType ? props.assetInformation.assetType : 'Asset',
             id: props.assetInformation.globalAssetId,
+            modelType: 'Asset',
         };
     });
     const selectedAas = computed(() => aasStore.getSelectedAAS);

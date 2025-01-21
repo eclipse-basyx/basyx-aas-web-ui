@@ -32,7 +32,7 @@
                         v-if="entityObject.globalAssetId"
                         v-bind="props"
                         :class="isHovering ? 'cursor-pointer' : ''"
-                        @click="copyToClipboard()">
+                        @click="copyToClipboard(entityObject.globalAssetId, 'Global Asset ID', getCopyIconAsRef())">
                         <v-icon v-if="isHovering" color="subtitleText" size="x-small" class="mr-1">{{
                             copyIcon
                         }}</v-icon>
@@ -75,9 +75,11 @@
     </v-container>
 </template>
 
+// TODO Transfer to composition API
 <script lang="ts">
-    import { defineComponent } from 'vue';
+    import { defineComponent, Ref, ref } from 'vue';
     import { useRouter } from 'vue-router';
+    import { useClipboardUtil } from '@/composables/ClipboardUtil';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
@@ -95,9 +97,20 @@
             const aasStore = useAASStore();
             const router = useRouter();
 
+            const { copyToClipboard } = useClipboardUtil();
+
+            const copyIcon = ref<string>('mdi-clipboard-file-outline');
+
+            const getCopyIconAsRef = (): Ref => {
+                return copyIcon;
+            };
+
             return {
                 aasStore, // AASStore Object
                 router, // Router Object
+                copyToClipboard,
+                copyIcon,
+                getCopyIconAsRef,
             };
         },
 
@@ -106,7 +119,6 @@
                 disabledStates: {} as any,
                 loadingStates: {} as any,
                 aasDescriptors: {} as any,
-                copyIcon: 'mdi-clipboard-file-outline',
             };
         },
 
@@ -157,28 +169,6 @@
                 // console.log('Jump to AAS with assetId: ', assetId);
                 let aasDescriptor = this.aasDescriptors[assetId];
                 this.jumpToAasByAasDescriptor(aasDescriptor);
-            },
-
-            // Function to copy the id to the clipboard
-            copyToClipboard() {
-                if (!this.entityObject || !this.entityObject.globalAssetId) return;
-                // console.log('Copy ID to Clipboard: ', this.identificationObject.id);
-                // set the icon to checkmark
-                this.copyIcon = 'mdi-check';
-                // copy the path to the clipboard
-                navigator.clipboard.writeText(this.entityObject.globalAssetId);
-                // set the clipboard tooltip to false after 1.5 seconds
-                setTimeout(() => {
-                    this.copyIcon = 'mdi-clipboard-file-outline';
-                }, 2000);
-                // open Snackbar to inform the user that the path was copied to the clipboard
-                this.navigationStore.dispatchSnackbar({
-                    status: true,
-                    timeout: 2000,
-                    color: 'success',
-                    btnColor: 'buttonText',
-                    text: 'ID copied to Clipboard.',
-                });
             },
         },
     });

@@ -2,98 +2,99 @@
     <v-container fluid class="pa-0">
         <v-card color="card" elevation="0">
             <!-- Title Bar in the AAS List -->
-            <v-card-title v-if="singleAas && !isMobile" style="padding: 16px 16px 16px"> Asset & AAS </v-card-title>
-            <v-card-title v-if="!singleAas">
-                <v-row align="center">
-                    <v-col cols="auto" class="px-0">
-                        <v-tooltip open-delay="600" location="bottom" :disabled="isMobile">
-                            <template #activator="{ props }">
-                                <v-btn
-                                    icon="mdi-reload"
-                                    variant="plain"
-                                    :loading="listLoading"
-                                    v-bind="props"
-                                    @click="loadAASListData()">
-                                    <template #loader>
-                                        <span class="custom-loader"><v-icon light>mdi-cached</v-icon></span>
-                                    </template>
-                                </v-btn>
-                            </template>
-                            <span>Refresh AAS List</span>
-                        </v-tooltip>
-                    </v-col>
-                    <!-- AAS Search Field -->
-                    <v-col class="pl-0" :class="editMode || allowUploading ? 'pr-0' : 'pr-2'">
-                        <v-text-field
-                            variant="outlined"
-                            density="compact"
-                            hide-details
-                            label="Search for AAS..."
-                            clearable
-                            @update:model-value="filterAASList"></v-text-field>
-                    </v-col>
-                    <!-- Add existing AAS -->
-                    <v-col cols="auto" class="px-0">
-                        <v-menu v-if="editMode">
-                            <template #activator="{ props }">
-                                <v-btn icon="mdi-dots-vertical" variant="plain" v-bind="props"></v-btn>
-                            </template>
-                            <v-sheet border>
-                                <v-list density="compact" class="py-0">
-                                    <!-- Open Upload Dialog -->
-                                    <v-tooltip
-                                        v-if="allowUploading"
-                                        open-delay="600"
-                                        :location="editMode ? 'end' : 'bottom'"
-                                        :disabled="isMobile">
-                                        <template #activator="{ props }">
-                                            <v-list-item
-                                                prepend-icon="mdi-upload"
-                                                slim
-                                                v-bind="props"
-                                                @click="uploadAASDialog = true">
-                                                <template #prepend>
-                                                    <v-icon size="small">mdi-upload</v-icon>
-                                                </template>
-                                                Upload AAS
-                                            </v-list-item>
+            <template v-if="!singleAas">
+                <v-card-title>
+                    <v-row align="center">
+                        <v-col cols="auto" class="px-0">
+                            <v-tooltip open-delay="600" location="bottom" :disabled="isMobile">
+                                <template #activator="{ props }">
+                                    <v-btn
+                                        icon="mdi-reload"
+                                        variant="plain"
+                                        :loading="listLoading"
+                                        v-bind="props"
+                                        @click="loadAASListData()">
+                                        <template #loader>
+                                            <span class="custom-loader"><v-icon light>mdi-cached</v-icon></span>
                                         </template>
-                                        <span>Upload AAS File to Environment</span>
-                                    </v-tooltip>
-                                    <v-divider v-if="allowUploading"></v-divider>
-                                    <!-- Open AAS edit dialog -->
-                                    <v-tooltip open-delay="600" location="end">
-                                        <template #activator="{ props }">
-                                            <v-list-item slim v-bind="props" @click="openEditDialog(true)">
-                                                <template #prepend>
-                                                    <v-icon size="small">mdi-plus</v-icon>
-                                                </template>
-                                                Create AAS
-                                            </v-list-item>
-                                        </template>
-                                        <span>Creat a new AAS</span>
-                                    </v-tooltip>
-                                </v-list>
-                            </v-sheet>
-                        </v-menu>
-                        <v-tooltip
-                            v-else-if="allowUploading"
-                            open-delay="600"
-                            :location="editMode ? 'end' : 'bottom'"
-                            :disabled="isMobile">
-                            <template #activator="{ props }">
-                                <v-btn
-                                    icon="mdi-upload"
-                                    variant="plain"
-                                    v-bind="props"
-                                    @click="uploadAASDialog = true"></v-btn>
-                            </template>
-                            <span>Upload AAS File to Environment</span>
-                        </v-tooltip>
-                    </v-col>
-                </v-row>
-            </v-card-title>
-            <v-divider v-if="!singleAas"></v-divider>
+                                    </v-btn>
+                                </template>
+                                <span>Refresh AAS List</span>
+                            </v-tooltip>
+                        </v-col>
+                        <!-- AAS Search Field -->
+                        <v-col class="pl-0" :class="editMode || allowUploading ? 'pr-0' : 'pr-2'">
+                            <v-text-field
+                                variant="outlined"
+                                density="compact"
+                                hide-details
+                                label="Search for AAS..."
+                                clearable
+                                @update:model-value="filterAasDescriptorList"></v-text-field>
+                        </v-col>
+                        <!-- Add existing AAS -->
+                        <v-col cols="auto" class="px-0">
+                            <v-menu v-if="editMode">
+                                <template #activator="{ props }">
+                                    <v-btn icon="mdi-dots-vertical" variant="plain" v-bind="props"></v-btn>
+                                </template>
+                                <v-sheet border>
+                                    <v-list density="compact" class="py-0">
+                                        <!-- Open Upload Dialog -->
+                                        <v-tooltip
+                                            v-if="allowUploading"
+                                            open-delay="600"
+                                            :location="editMode ? 'end' : 'bottom'"
+                                            :disabled="isMobile">
+                                            <template #activator="{ props }">
+                                                <v-list-item
+                                                    prepend-icon="mdi-upload"
+                                                    slim
+                                                    v-bind="props"
+                                                    @click="uploadAASDialog = true">
+                                                    <template #prepend>
+                                                        <v-icon size="small">mdi-upload</v-icon>
+                                                    </template>
+                                                    Upload AAS
+                                                </v-list-item>
+                                            </template>
+                                            <span>Upload AAS File to Environment</span>
+                                        </v-tooltip>
+                                        <v-divider v-if="allowUploading"></v-divider>
+                                        <!-- Open AAS edit dialog -->
+                                        <v-tooltip open-delay="600" location="end">
+                                            <template #activator="{ props }">
+                                                <v-list-item slim v-bind="props" @click="openEditDialog(true)">
+                                                    <template #prepend>
+                                                        <v-icon size="small">mdi-plus</v-icon>
+                                                    </template>
+                                                    Create AAS
+                                                </v-list-item>
+                                            </template>
+                                            <span>Creat a new AAS</span>
+                                        </v-tooltip>
+                                    </v-list>
+                                </v-sheet>
+                            </v-menu>
+                            <v-tooltip
+                                v-else-if="allowUploading"
+                                open-delay="600"
+                                :location="editMode ? 'end' : 'bottom'"
+                                :disabled="isMobile">
+                                <template #activator="{ props }">
+                                    <v-btn
+                                        icon="mdi-upload"
+                                        variant="plain"
+                                        v-bind="props"
+                                        @click="uploadAASDialog = true"></v-btn>
+                                </template>
+                                <span>Upload AAS File to Environment</span>
+                            </v-tooltip>
+                        </v-col>
+                    </v-row>
+                </v-card-title>
+                <v-divider></v-divider>
+            </template>
             <!-- AAS List -->
             <v-list
                 v-if="!singleAas"
@@ -105,10 +106,15 @@
                     'flex-direction': 'column',
                     height: listHeight,
                 }">
-                <v-virtual-scroll ref="virtualScrollRef" :items="AASData" :item-height="56" class="pb-2 bg-card">
+                <v-virtual-scroll
+                    ref="virtualScrollRef"
+                    :items="aasDescriptorList"
+                    :item-height="56"
+                    class="pb-2 bg-card">
                     <template #default="{ item }">
                         <!-- Single AAS -->
                         <v-list-item
+                            v-if="item && Object.keys(item).length > 0"
                             class="mt-2 mx-2"
                             :active="isSelected(item)"
                             color="primarySurface"
@@ -131,31 +137,33 @@
                                 transition="slide-x-transition"
                                 :disabled="isMobile">
                                 <div class="text-caption">
-                                    <span class="font-weight-bold">{{ 'idShort: ' }}</span
-                                    >{{ item['idShort'] }}
+                                    <span class="font-weight-bold"> {{ 'idShort: ' }}</span>
+                                    {{ item.idShort }}
                                 </div>
                                 <div class="text-caption">
-                                    <span class="font-weight-bold">{{ 'ID: ' }}</span
-                                    >{{ item['id'] }}
+                                    <span class="font-weight-bold">{{ 'ID: ' }}</span>
+                                    {{ item.id }}
                                 </div>
                             </v-tooltip>
-                            <!-- idShort of the AAS -->
-                            <template v-if="drawerState" #title>
-                                <div class="text-primary" style="z-index: 9999">{{ nameToDisplay(item) }}</div>
+                            <template v-if="!isMobile && item.status && item.status.trim() !== ''" #prepend>
+                                <v-tooltip :text="'AAS status ' + item.status" class="pr-n2 mr-n2">
+                                    <template #activator="{ props }">
+                                        <v-icon size="small" v-bind="props" :class="statusTextClass(item.status)">
+                                            {{ statusCloudIcon(item.status) || 'mdi-cloud-off-outline' }}
+                                        </v-icon>
+                                    </template>
+                                </v-tooltip>
                             </template>
-                            <!-- id of the AAS -->
-                            <template v-if="drawerState" #subtitle>
-                                <div class="text-listItemText">{{ item['id'] }}</div>
+                            <template #title>
+                                <div class="text-primary" style="z-index: 9999">
+                                    {{ nameToDisplay(item) }}
+                                </div>
+                            </template>
+                            <template #subtitle>
+                                <div class="text-listItemText">{{ item.id }}</div>
                             </template>
                             <!-- open Details Button (with Status Badge) -->
-                            <template v-if="drawerState" #append>
-                                <!-- Badge that show's the Status of the AAS -->
-                                <v-badge
-                                    :model-value="item['status'] && item['status'] == 'offline'"
-                                    icon="mdi-network-strength-4-alert"
-                                    color="error"
-                                    text-color="buttonText"
-                                    inline></v-badge>
+                            <template #append>
                                 <v-menu v-if="editMode">
                                     <template #activator="{ props }">
                                         <v-btn
@@ -214,7 +222,7 @@
                 </v-virtual-scroll>
             </v-list>
             <!-- AAS Details (only visible if the Information Button is pressed on an AAS) -->
-            <AASListDetails v-if="selectedAAS && Object.keys(selectedAAS).length > 0" :status="AASStatus" />
+            <AASListDetails v-if="selectedAAS && Object.keys(selectedAAS).length > 0" />
             <!-- Collapse/extend Sidebar Button -->
             <v-list v-if="!isMobile" nav style="width: 100%; z-index: 9000" class="bg-detailsCard pa-0">
                 <v-divider style="margin-left: -8px; margin-right: -8px"></v-divider>
@@ -229,7 +237,7 @@
         </v-card>
     </v-container>
     <!-- Dialog for creating/editing AAS -->
-    <AAS v-model="editDialog" :new-shell="newShell" :aas="aasToEdit"></AAS>
+    <AASForm v-model="editDialog" :new-shell="newShell" :aas="aasToEdit"></AASForm>
     <!-- Dialog for uploading AAS -->
     <UploadAAS v-model="uploadAASDialog"></UploadAAS>
     <!-- Dialog for deleting AAS -->
@@ -238,17 +246,17 @@
 
 <script lang="ts" setup>
     import type { ComponentPublicInstance } from 'vue';
-    import { computed, onActivated, onMounted, Ref, ref, watch } from 'vue';
+    import { computed, onActivated, onBeforeUnmount, onMounted, Ref, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
     import { useAASHandling } from '@/composables/AASHandling';
+    import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
-    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { extractEndpointHref } from '@/utils/DescriptorUtils';
-    import { nameToDisplay } from '@/utils/ReferableUtils';
+    import { descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
+    import { statusCloudIcon, statusTextClass } from '@/utils/StatusCheckUtils';
 
     // Extend the ComponentPublicInstance type to include scrollToIndex
     interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -260,9 +268,9 @@
     const router = useRouter();
 
     // Composables
-    const { getRequest } = useRequestHandling();
+    const { isAvailableById: isAvailableByIdInRegistry } = useAASRegistryClient();
     const { downloadAasx } = useAASRepositoryClient();
-    const { fetchAndDispatchAas } = useAASHandling();
+    const { fetchAndDispatchAasById, fetchAasDescriptorList } = useAASHandling();
 
     // Stores
     const navigationStore = useNavigationStore();
@@ -273,30 +281,27 @@
     const theme = useTheme();
 
     // Data
-    const AASData = ref([]); // Variable to store the AAS Data
-    const unfilteredAASData = ref([]); // Variable to store the AAS Data before filtering
+    const aasDescriptorList = ref([] as Array<any>) as Ref<Array<any>>; // Variable to store the AAS Data
+    const aasDescriptorListUnfiltered = ref([] as Array<any>) as Ref<Array<any>>; // Variable to store the AAS Data before filtering
     const listLoading = ref(false); // Variable to store if the AAS List is loading
     const deleteDialog = ref(false); // Variable to store if the Delete Dialog should be shown
     const aasToDelete = ref({}); // Variable to store the AAS to be deleted
     const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null); // Reference to the Virtual Scroll Component
-    const AASStatus = ref(''); // Variable to store the AAS Status
     const uploadAASDialog = ref(false); // Variable to store if the Upload AAS Dialog should be shown
     const editDialog = ref(false); // Variable to store if the Edit Dialog should be shown
     const newShell = ref(false); // Variable to store if a new Shell should be created
     const aasToEdit = ref<any | undefined>(undefined); // Variable to store the AAS to be edited
+    const statusCheckInterval = ref<number | undefined>(undefined);
 
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
     const isDark = computed(() => theme.global.current.value.dark); // Check if the current Theme is dark
-    const drawerState = computed(() => navigationStore.getDrawerState); // Get Drawer State from store (true -> collapsed, false -> extended)
     const aasRepoURL = computed(() => navigationStore.getAASRepoURL); // Get the AAS Repository URL from the Store
     const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL); // Get AAS Registry URL from Store
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
     const loading = computed(() => aasStore.getLoadingState); // Get the loading State from Store
     const primaryColor = computed(() => theme.current.value.colors.primary); // returns the primary color of the current theme
-    const statusCheck = computed(() => navigationStore.getStatusCheck); // Get the status-check state from the store
     const triggerAASListReload = computed(() => navigationStore.getTriggerAASListReload); // Get the trigger signal for AAS List reload from store
-    const triggerAASListScroll = computed(() => navigationStore.getTriggerAASListScroll); // Get the trigger signal for AAS List scroll from store
     const singleAas = computed(() => envStore.getSingleAas); // Get the single AAS state from the Store
     const listHeight = computed(() => {
         if (isMobile.value) {
@@ -315,161 +320,147 @@
     });
     const editMode = computed(() => route.name === 'AASEditor'); // Check if the current Route is the AAS Editor
     const allowUploading = computed(() => envStore.getAllowUploading); // Check if the current environment config allows uploading shells
+    const statusCheck = computed(() => navigationStore.getStatusCheck);
 
     // Watchers
-    // Watch the AAS Registry URL for changes and reload the AAS List if the URL changes
     watch(
         () => aasRegistryURL.value,
-        (newValue) => {
+        async (newValue) => {
             if (newValue !== '') {
-                loadAASListData();
-                if (statusCheck.value) {
-                    addConnectionInterval();
-                }
-            } else {
-                AASData.value = [];
+                await loadAASListData();
             }
         }
     );
 
-    // watch for changes in the status-check state and add/remove the connection interval
     watch(
-        () => statusCheck.value,
-        (newValue) => {
-            if (newValue) {
-                addConnectionInterval();
-            }
-        }
-    );
-
-    // watch for changes in the trigger for AAS List reload
-    watch(
-        () => triggerAASListReload.value,
-        (triggerVal) => {
-            if (triggerVal === true) {
-                loadAASListData();
-                navigationStore.dispatchTriggerAASListReload(false);
-            }
-        }
-    );
-
-    // watch for changes in the trigger for AAS List scroll
-    watch(
-        () => triggerAASListScroll.value,
-        () => {
+        () => selectedAAS.value,
+        async () => {
             scrollToSelectedAAS();
         }
     );
 
-    onMounted(() => {
-        // Load the AAS List on Startup if the AAS Registry URL is set
-        if (aasRegistryURL.value !== '' && !singleAas.value) {
-            loadAASListData();
+    watch(
+        () => statusCheck.value,
+        async (statusCheckValue) => {
+            window.clearInterval(statusCheckInterval.value); // clear old interval
+            if (statusCheckValue.state === true) {
+                aasDescriptorList.value.forEach(async (aasDescriptor: any) => {
+                    aasDescriptor.status = 'status loading';
+                });
+
+                await updateStatusOfAasDescriptorList();
+
+                // create new interval
+                statusCheckInterval.value = window.setInterval(async () => {
+                    await updateStatusOfAasDescriptorList();
+                }, statusCheck.value.interval);
+            } else {
+                aasDescriptorList.value.forEach(async (aasDescriptor: any) => {
+                    aasDescriptor.status = 'check disabled';
+                });
+
+                // Reset status icon after 2 seconds
+                setTimeout(() => {
+                    aasDescriptorList.value.forEach(async (aasDescriptor: any) => {
+                        aasDescriptor.status = '';
+                    });
+                }, 2000);
+            }
+        },
+        { deep: true }
+    );
+
+    watch(
+        () => triggerAASListReload.value,
+        async (triggerVal) => {
+            if (triggerVal === true) {
+                await loadAASListData();
+            }
+        }
+    );
+
+    onMounted(async () => {
+        if (statusCheck.value.state === true) {
+            window.clearInterval(statusCheckInterval.value); // clear old interval
+
+            // create new interval
+            statusCheckInterval.value = window.setInterval(async () => {
+                await updateStatusOfAasDescriptorList();
+            }, statusCheck.value.interval);
         }
 
-        // check if the status-check is set in the local storage and if so set the status-check state in the store
-        const statusCheck = localStorage.getItem('statusCheck');
-        if (statusCheck) {
-            navigationStore.dispatchUpdateStatusCheck(statusCheck === 'true');
-        }
+        await loadAASListData(true);
+    });
+
+    onBeforeUnmount(() => {
+        window.clearInterval(statusCheckInterval.value);
     });
 
     onActivated(() => {
         scrollToSelectedAAS();
     });
 
-    function collapseSidebar() {
+    function collapseSidebar(): void {
         navigationStore.dispatchDrawerState(false);
     }
 
     // Function to get the AAS Data from the Registry Server
-    function loadAASListData() {
+    async function loadAASListData(init: boolean = false): Promise<void> {
         listLoading.value = true;
 
-        // check if aasRegistryURL includes "/shell-descriptors" and add id if not (backward compatibility)
-        let aasRegURL = aasRegistryURL.value;
-        if (!aasRegistryURL.value.includes('/shell-descriptors')) {
-            aasRegURL += '/shell-descriptors';
-        }
+        const aasDescriptors = await fetchAasDescriptorList();
+        let aasDescriptorsSorted = aasDescriptors.sort((a: { [x: string]: number }, b: { [x: string]: number }) =>
+            a['id'] > b['id'] ? 1 : -1
+        );
 
-        const path = aasRegURL;
-        const context = 'retrieving AAS Data';
-        const disableMessage = false;
+        aasDescriptorList.value = aasDescriptorsSorted;
 
-        getRequest(path, context, disableMessage).then((response: any) => {
-            if (response.success) {
-                // execute if the AAS Registry is found
-                // sort data by identification id (ascending) and store it in the AASData variable
-                let registeredAAS = response.data.result;
-                let sortedData = registeredAAS.sort((a: { [x: string]: number }, b: { [x: string]: number }) =>
-                    a['id'] > b['id'] ? 1 : -1
-                );
+        await updateStatusOfAasDescriptorList(init);
 
-                // add status online to the AAS Data
-                sortedData.forEach((AAS: any) => {
-                    AAS['status'] = 'check disabled';
-                });
-                AASData.value = Object.freeze(sortedData); // store the sorted data in the AASData variable
-                unfilteredAASData.value = sortedData; // make a copy of the sorted data and store it in the unfilteredAASData variable
-                scrollToSelectedAAS(); // scroll to the selected AAS
-                if (statusCheck.value) checkAASStatus(); // check the AAS Status
-            }
-            listLoading.value = false;
-        });
+        aasDescriptorListUnfiltered.value = aasDescriptorList.value;
+
+        scrollToSelectedAAS();
+
+        listLoading.value = false;
     }
 
-    // Function which adds an Interval to check if the Shells in the AAS Registry are still available
-    function addConnectionInterval() {
-        // check if the AAS Registry URL is set
-        if (aasRegistryURL.value !== '') {
-            // add an Interval to check if the Shells in the AAS Registry are still available
-            setInterval(() => {
-                // Check if the AAS is online
-                checkAASStatus();
-            }, 30000); // check every 60 seconds
-        }
-    }
+    async function updateStatusOfAasDescriptorList(init: boolean = false): Promise<void> {
+        if (Array.isArray(aasDescriptorList.value) && aasDescriptorList.value.length > 0)
+            aasDescriptorList.value.forEach(async (aasDescriptor: any) => {
+                if (aasDescriptor && Object.keys(aasDescriptor).length > 0) {
+                    if (statusCheck.value.state === true) aasDescriptor.status = 'status loading';
 
-    // Function to check the AAS Status
-    function checkAASStatus() {
-        // console.log('Check AAS Status');
-        // iterate over all AAS in the AAS List
-        AASData.value.forEach((AAS: any) => {
-            const aasEndpopint = extractEndpointHref(AAS, 'AAS-3.0');
-            let path = aasEndpopint;
-            let context = 'evaluating AAS Status';
-            let disableMessage = true;
-            getRequest(path, context, disableMessage).then((response: any) => {
-                if (response.success) {
-                    // execute if the AAS Registry is found
-                    AAS.status = 'online';
-                } else {
-                    // execute if the AAS Registry is not found
-                    AAS.status = 'offline';
+                    await new Promise((resolve) => setTimeout(resolve, 600)); // Give the UI the chance to refresh status icons
+                    if (await isAvailableByIdInRegistry(aasDescriptor.id)) {
+                        aasDescriptor.status =
+                            statusCheck.value.state === true ? 'online' : init ? '' : 'check disabled';
+                    } else {
+                        aasDescriptor.status =
+                            statusCheck.value.state === true ? 'offline' : init ? '' : 'check disabled';
+                    }
                 }
             });
-        });
     }
 
-    // Function to filter the AAS List
-    function filterAASList(value: string) {
-        // console.log('Filter AAS List: ', value);
-        // if the Search Field is empty, show all AAS
-        if (value === '' || value === null) {
-            AASData.value = unfilteredAASData.value;
+    function filterAasDescriptorList(value: string): void {
+        if (!value || value.trim() === '') {
+            aasDescriptorList.value = aasDescriptorListUnfiltered.value;
         } else {
-            // filter the AAS List by the Search Field Value
-            let filteredAASData = unfilteredAASData.value.filter((AAS: { [x: string]: string }) =>
-                AAS['idShort'].toLowerCase().includes(value.toLowerCase())
+            // filter list of AAS Descriptors
+            let aasDescriptorListFiltered = aasDescriptorListUnfiltered.value.filter(
+                (aasDescriptor: any) =>
+                    aasDescriptor.id.toLowerCase().includes(value.toLowerCase()) ||
+                    aasDescriptor.idShort.toLowerCase().includes(value.toLowerCase()) ||
+                    nameToDisplay(aasDescriptor).toLowerCase().includes(value.toLowerCase()) ||
+                    descriptionToDisplay(aasDescriptor).toLowerCase().includes(value.toLowerCase())
             );
-            AASData.value = filteredAASData;
+            aasDescriptorList.value = aasDescriptorListFiltered;
         }
+        scrollToSelectedAAS();
     }
 
     // Function to select an AAS
-    async function selectAAS(AAS: any) {
-        // console.log('Select AAS: ', AAS);
-        // return if loading state is true -> prevents multiple requests
+    async function selectAAS(aas: any): Promise<void> {
         if (loading.value) {
             navigationStore.dispatchSnackbar({
                 status: true,
@@ -480,9 +471,8 @@
             });
             return;
         }
-        if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0 && selectedAAS.value.id === AAS.id) {
+        if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0 && selectedAAS.value.id === aas.id) {
             // Deselect AAS
-            AASStatus.value = '';
             router.push({ query: {} });
             aasStore.dispatchSelectedAAS({});
         } else {
@@ -491,39 +481,30 @@
                 scrollToAasAfterDispatch = true;
             }
 
-            // Select AAS
-            AASStatus.value = AAS.status;
-            const aasEndpoint = extractEndpointHref(AAS, 'AAS-3.0');
-
-            router.push({ query: { aas: aasEndpoint } });
-            await fetchAndDispatchAas(aasEndpoint);
+            await fetchAndDispatchAasById(aas.id);
 
             if (scrollToAasAfterDispatch) scrollToSelectedAAS();
         }
     }
 
-    // checks if the AAS is selected
-    function isSelected(AAS: any) {
+    function isSelected(aas: any): boolean {
         if (
-            selectedAAS.value === undefined ||
-            selectedAAS.value === null ||
-            Object.keys(selectedAAS.value).length === 0
+            !selectedAAS.value ||
+            Object.keys(selectedAAS.value).length === 0 ||
+            !selectedAAS.value.id ||
+            !aas ||
+            Object.keys(aas).length === 0 ||
+            !aas.id
         ) {
             return false;
         }
-        const aasEndpointFromList = extractEndpointHref(AAS, 'AAS-3.0');
-        const aasEndpointSelected = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
-        let isSelected = aasEndpointFromList === aasEndpointSelected;
-        if (isSelected) {
-            AASStatus.value = AAS.status;
-        }
-        return isSelected;
+        return selectedAAS.value.id === aas.id;
     }
 
     // Function to scroll to the selected AAS
-    async function scrollToSelectedAAS() {
+    async function scrollToSelectedAAS(): Promise<void> {
         // Find the index of the selected item
-        const index = AASData.value.findIndex((item: any) => isSelected(item));
+        const index = aasDescriptorList.value.findIndex((aasDescriptor: any) => isSelected(aasDescriptor));
 
         if (index !== -1) {
             const intervalId = setInterval(() => {
@@ -539,7 +520,7 @@
         }
     }
 
-    function showDeleteDialog(AAS: any) {
+    function showDeleteDialog(AAS: any): void {
         deleteDialog.value = true;
         aasToDelete.value = AAS;
     }

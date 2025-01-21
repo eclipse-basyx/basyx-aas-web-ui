@@ -203,6 +203,7 @@
     </v-container>
 </template>
 
+// TODO Transfer to composition API
 <script lang="ts">
     import 'leaflet/dist/leaflet.css';
     import { LMap, LMarker, LTileLayer } from '@vue-leaflet/vue-leaflet';

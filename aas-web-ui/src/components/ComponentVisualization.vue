@@ -1,31 +1,36 @@
 <template>
     <v-container fluid class="pa-0">
         <v-card color="card" elevation="0">
-            <v-card-title :style="{ padding: isMobile ? '' : '15px 16px 16px' }">
-                <div v-if="!isMobile">
-                    <template v-if="routesToVisualization.includes(route.name)">
-                        <v-btn class="ml-0" variant="plain" icon="mdi-chevron-left" @click="backToAASViewer()" />
+            <template v-if="!singleAas || isMobile">
+                <!-- Title Bar in the Submodel Element View -->
+                <v-card-title :style="{ padding: isMobile ? '' : '15px 16px 16px' }">
+                    <div v-if="!isMobile">
+                        <template v-if="routesToVisualization.includes(route.name)">
+                            <v-btn class="ml-0" variant="plain" icon="mdi-chevron-left" @click="backToAASViewer()" />
+                            <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
+                            <span class="text-truncate ml-2">
+                                {{ nameToDisplay(selectedAAS) }}
+                            </span>
+                            <template v-if="nameToDisplay(selectedNode)">
+                                <span class="text-truncate ml-2">|</span>
+                                <span class="text-truncate ml-2">{{ nameToDisplay(selectedNode) }}</span>
+                            </template>
+                        </template>
+                        <span v-else>Visualization</span>
+                    </div>
+                    <div v-else class="d-flex align-center">
+                        <v-btn class="ml-0" variant="plain" icon="mdi-chevron-left" @click="backToSubmodelList()" />
                         <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
                         <span class="text-truncate ml-2">
                             {{ nameToDisplay(selectedAAS) }}
                         </span>
-                        <template v-if="nameToDisplay(selectedNode)">
-                            <span class="text-truncate ml-2">|</span>
-                            <span class="text-truncate ml-2">{{ nameToDisplay(selectedNode) }}</span>
-                        </template>
-                    </template>
-                    <span v-else>Visualization</span>
-                </div>
-                <div v-else class="d-flex align-center">
-                    <v-btn class="ml-0" variant="plain" icon="mdi-chevron-left" @click="backToSubmodelList()" />
-                    <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
-                    <span class="text-truncate ml-2">
-                        {{ nameToDisplay(selectedAAS) }}
-                    </span>
-                </div>
-            </v-card-title>
-            <v-divider></v-divider>
-            <v-card-text style="overflow-y: auto; height: calc(100svh - 170px)">
+                    </div>
+                </v-card-title>
+                <v-divider></v-divider>
+            </template>
+            <v-card-text
+                style="overflow-y: auto"
+                :style="singleAas && !isMobile ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 170px)'">
                 <template
                     v-if="
                         selectedAAS &&
@@ -100,6 +105,7 @@
     import { computed, onMounted, ref, watch } from 'vue';
     import { RouteRecordNameGeneric, useRoute, useRouter } from 'vue-router';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { nameToDisplay } from '@/utils/ReferableUtils';
     import { checkSemanticId } from '@/utils/SemanticIdUtils';
@@ -111,6 +117,7 @@
     // Stores
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
+    const envStore = useEnvStore();
 
     // Data
     const submodelElementData = ref({} as any);
@@ -122,6 +129,7 @@
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
     const selectedNode = computed(() => aasStore.getSelectedNode);
     const isMobile = computed(() => navigationStore.getIsMobile);
+    const singleAas = computed(() => envStore.getSingleAas);
     const importedPlugins = computed(() => navigationStore.getPlugins);
     const filteredPlugins = computed(() => {
         let plugins = importedPlugins.value.filter((plugin: any) => {
@@ -181,31 +189,42 @@
     const viewerMode = computed(() => route.name === 'SubmodelViewer' || routesToVisualization.includes(route.name));
 
     // Watchers
-    // Resets the submodelElementData when the AAS Registry changes
-    watch(aasRegistryServerURL, () => {
-        if (!aasRegistryServerURL.value) {
-            submodelElementData.value = {};
+    // Resets the SubmodelElementView when the AAS Registry changes
+    watch(
+        () => aasRegistryServerURL.value,
+        () => {
+            if (!aasRegistryServerURL.value) {
+                initializeView();
+            }
         }
-    });
+    );
 
-    // Resets the submodelElementData when the Submodel Registry changes
-    watch(submodelRegistryServerURL, () => {
-        if (!submodelRegistryServerURL.value) {
-            submodelElementData.value = {};
+    // Resets the SubmodelElementView when the Submodel Registry changes
+    watch(
+        () => submodelRegistryServerURL.value,
+        () => {
+            if (!submodelRegistryServerURL.value) {
+                initializeView();
+            }
         }
-    });
+    );
 
-    // Resets the submodelElementData when the AAS changes
-    watch(selectedAAS, () => {
-        submodelElementData.value = {};
-    });
+    // Resets the SubmodelElementView when the AAS changes
+    watch(
+        () => selectedAAS.value,
+        () => {
+            initializeView();
+        }
+    );
 
-    // Watch for changes in the selectedNode and (re-)initialize the Component
-    watch(selectedNode, () => {
-        // clear old submodelElementData
-        submodelElementData.value = {};
-        initializeView(); // initialize list
-    });
+    // Watch for changes in the selected Node and (re-)initialize the Component
+    watch(
+        () => selectedNode.value,
+        () => {
+            initializeView();
+        },
+        { deep: true }
+    );
 
     onMounted(() => {
         initializeView();
