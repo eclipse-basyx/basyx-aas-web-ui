@@ -192,7 +192,7 @@ export async function createAppRouter(): Promise<Router> {
      * @function idRedirectHandled
      * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
      * @param {NavigationGuardNext} next - A function that must be called to resolve the hook. The action depends on the arguments provided to `next`.
-     * @returns {Promise<boolean>} - Returns a promise that resolves to true if a redirection was performed, otherwise false.
+     * @returns {Promise<boolean>} Returns a promise that resolves to true if a redirection was performed, otherwise false.
      */
     async function idRedirectHandled(to: RouteLocationNormalizedGeneric, next: NavigationGuardNext): Promise<boolean> {
         // Note: Query parameter are handled case sensitive!
@@ -211,7 +211,7 @@ export async function createAppRouter(): Promise<Router> {
      * @function globalAssetIdRedirectHandled
      * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
      * @param {NavigationGuardNext} next - A function that must be called to resolve the hook. The action depends on the arguments provided to `next`.
-     * @returns {Promise<boolean>} - Returns a promise that resolves to true if a redirection was performed, otherwise false.
+     * @returns {Promise<boolean>} Returns a promise that resolves to true if a redirection was performed, otherwise false.
      */
     async function globalAssetIdRedirectHandled(
         to: RouteLocationNormalizedGeneric,
@@ -246,7 +246,7 @@ export async function createAppRouter(): Promise<Router> {
      * @function aasIdSmIdRedirectHandled
      * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
      * @param {NavigationGuardNext} next - A function that must be called to resolve the hook. The action depends on the arguments provided to `next`.
-     * @returns {Promise<boolean>} - Returns a promise that resolves to true if a redirection was performed, otherwise false.
+     * @returns {Promise<boolean>} Returns a promise that resolves to true if a redirection was performed, otherwise false.
      */
     async function aasIdSmIdRedirectHandled(
         to: RouteLocationNormalizedGeneric,

@@ -19,8 +19,9 @@ export function useAASHandling() {
      * Fetches an Asset Administration Shell (AAS) by the provided AAS endpoint
      * and dispatches it to the AAS store.
      *
+     * @async
      * @param {string} aasEndpoint - The endpoint URL of the AAS to fetch.
-     * @returns {Promise<any>}-  A promise that resolves to an AAS.
+     * @returns {Promise<any>} A promise that resolves to an AAS.
      */
     async function fetchAndDispatchAas(aasEndpoint: string): Promise<any> {
         const failResponse = {};
@@ -37,6 +38,8 @@ export function useAASHandling() {
 
         aas.isActive = true;
 
+        // TODO move router.push to AASDataStore
+        // router.push({ query: { aas: aasEndpoint } });
         aasStore.dispatchSelectedAAS(aas);
 
         return aas;
@@ -46,8 +49,9 @@ export function useAASHandling() {
      * Fetches an Asset Administration Shell (AAS) by the provided AAS ID
      * and dispatches it to the AAS store.
      *
+     * @async
      * @param {string} aasId - The ID of the AAS to fetch.
-     * @returns {Promise<any>} - A promise that resolves to an AAS.
+     * @returns {Promise<any>} A promise that resolves to an AAS.
      */
     async function fetchAndDispatchAasById(aasId: string): Promise<any> {
         const failResponse = {};
@@ -64,6 +68,8 @@ export function useAASHandling() {
 
         aas.isActive = true;
 
+        // TODO move router.push to AASDataStore
+        // router.push({ query: { aas: getAasEndpoint(aas) } });
         aasStore.dispatchSelectedAAS(aas);
 
         return aas;
@@ -72,7 +78,8 @@ export function useAASHandling() {
     /**
      * Fetches a list of all available Asset Administration Shell (AAS) Descriptors.
      *
-     * @returns {Promise<Array<any>>} - A promise that resolves to an array of AAS Descriptors.
+     * @async
+     * @returns {Promise<Array<any>>} A promise that resolves to an array of AAS Descriptors.
      * An empty array is returned if the request fails or no AAS Descriptors are found.
      */
     async function fetchAasDescriptorList(): Promise<Array<any>> {
@@ -93,8 +100,9 @@ export function useAASHandling() {
     /**
      * Fetches an Asset Administration Shell (AAS) Descriptor by the provided AAS ID.
      *
+     * @async
      * @param {string} aasId - The ID of the AAS Descriptor to fetch.
-     * @returns {Promise<any>} - A promise that resolves to an AAS Descriptor.
+     * @returns {Promise<any>} A promise that resolves to an AAS Descriptor.
      */
     async function fetchAasDescriptor(aasId: string): Promise<any> {
         const failResponse = {};
@@ -120,8 +128,9 @@ export function useAASHandling() {
     /**
      * Fetches an Asset Administration Shell (AAS) by the provided AAS endpoint.
      *
+     * @async
      * @param {string} aasEndpoint - The endpoint URL of the AAS to fetch.
-     * @returns {Promise<any>} - A promise that resolves to an AAS.
+     * @returns {Promise<any>} A promise that resolves to an AAS.
      */
     async function fetchAas(aasEndpoint: string): Promise<any> {
         const failResponse = {};
@@ -148,8 +157,9 @@ export function useAASHandling() {
     /**
      * Fetches an Asset Administration Shell (AAS) by the provided AAS ID.
      *
+     * @async
      * @param {string} aasId - The ID of the AAS to fetch.
-     * @returns {Promise<any>} - A promise that resolves to an AAS.
+     * @returns {Promise<any>} A promise that resolves to an AAS.
      */
     async function fetchAasById(aasId: string): Promise<any> {
         const failResponse = {};
@@ -178,8 +188,9 @@ export function useAASHandling() {
     /**
      * Retrieves the Asset Administration Shell (AAS) endpoint URL by its ID.
      *
+     * @async
      * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
-     * @returns {Promise<string>} - A promise that resolves to an AAS endpoint.
+     * @returns {Promise<string>} A promise that resolves to an AAS endpoint.
      */
     async function getAasEndpointById(aasId: string): Promise<string> {
         const failResponse = '';
@@ -199,8 +210,9 @@ export function useAASHandling() {
     /**
      * Retrieves the Asset Administration Shell (AAS) endpoint URL of an AAS descriptor.
      *
+     * @async
      * @param {string} aasDescriptor - The AAS descriptor to retrieve the endpoint for.
-     * @returns {string} - A promise that resolves to an AAS endpoint.
+     * @returns {string} A promise that resolves to an AAS endpoint.
      */
     function getAasEndpoint(aasDescriptor: any): string {
         // TODO Replace extractEndpointHref(aasDescriptor, 'AAS-3.0') by getAasEndpoint(aasDescriptor) in all components

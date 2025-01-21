@@ -30,7 +30,8 @@ export function useAASRepositoryClient() {
     /**
      * Fetches a list of all available Asset Administration Shells (AAS).
      *
-     * @returns {Promise<Array<any>>} - A promise that resolves to an array of Asset Administration Shells.
+     * @async
+     * @returns {Promise<Array<any>>} A promise that resolves to an array of Asset Administration Shells.
      * An empty array is returned if the request fails or no AAS are found.
      */
     async function fetchAasList(): Promise<Array<any>> {
@@ -62,8 +63,9 @@ export function useAASRepositoryClient() {
     /**
      * Fetches a Asset Administration Shell (AAS) by the provided AAS ID.
      *
+     * @async
      * @param {string} aasId - The ID of the AAS to fetch.
-     * @returns {Promise<any>} - A promise that resolves to an AAS.
+     * @returns {Promise<any>} A promise that resolves to an AAS.
      */
     async function fetchAasById(aasId: string): Promise<any> {
         const failResponse = {} as any;
@@ -88,8 +90,9 @@ export function useAASRepositoryClient() {
     /**
      * Fetches a Asset Administration Shell (AAS) by the provided AAS endpoint.
      *
+     * @async
      * @param {string} aasEndpoint - The endpoint URL of the AAS to fetch.
-     * @returns {Promise<any>} - A promise that resolves to the AAS.
+     * @returns {Promise<any>} A promise that resolves to the AAS.
      */
     async function fetchAas(aasEndpoint: string): Promise<any> {
         const failResponse = {} as any;
@@ -123,8 +126,9 @@ export function useAASRepositoryClient() {
     /**
      * Checks if Asset Administration Shell (AAS) with provided ID is available (in registry or repository).
      *
+     * @async
      * @param {string} aasId - The ID of the AAS to check.
-     * @returns {Promise<boolean>} - A promise that resolves to `true` if AAS with provided ID is available, otherwise `false`.
+     * @returns {Promise<boolean>} A promise that resolves to `true` if AAS with provided ID is available, otherwise `false`.
      */
     async function isAvailableById(aasId: string): Promise<boolean> {
         const failResponse = false;
@@ -146,8 +150,9 @@ export function useAASRepositoryClient() {
     /**
      * Checks if Asset Administration Shell with provided ID is available (in repository)
      *
+     * @async
      * @param {string} aasId - The ID of the AAS to check.
-     * @returns {Promise<boolean>} - A promise that resolves to `true` if AAS with provided ID is available, otherwise `false`.
+     * @returns {Promise<boolean>} A promise that resolves to `true` if AAS with provided ID is available, otherwise `false`.
      */
     async function isAvailableByIdInRepo(aasId: string): Promise<boolean> {
         const failResponse = false;
@@ -168,8 +173,9 @@ export function useAASRepositoryClient() {
     /**
      * Checks if Asset Administration Shell (AAS) is available (in repository) by the provided AAS endpoint
      *
+     * @async
      * @param {string} aasEndpoint - The endpoint URL of the AAS to check.
-     * @returns {Promise<boolean>} - A promise that resolves to `true` if AAS with provided ID is available, otherwise `false`.
+     * @returns {Promise<boolean>} A promise that resolves to `true` if AAS with provided ID is available, otherwise `false`.
      */
     async function isAvailable(aasEndpoint: string): Promise<boolean> {
         const failResponse = false;
@@ -198,8 +204,9 @@ export function useAASRepositoryClient() {
     /**
      * Fetches asset information by Asset Administration Shell (AAS) ID.
      *
+     * @async
      * @param {string} aasId - The ID of the AAS to check.
-     * @returns {Promise<any>} - A promise that resolves to the asset information if found, otherwise an empty object.
+     * @returns {Promise<any>} A promise that resolves to the asset information if found, otherwise an empty object.
      */
     async function fetchAssetInformationById(aasId: string): Promise<any> {
         const failResponse = {} as any;
@@ -222,8 +229,9 @@ export function useAASRepositoryClient() {
     /**
      * Fetches asset information by Asset Administration Shell (AAS) endpoint URL.
      *
+     * @async
      * @param {string} aasEndpoint - The endpoint URL of the AAS.
-     * @returns {Promise<any>} - A promise that resolves to the asset information if found, otherwise an empty object.
+     * @returns {Promise<any>} A promise that resolves to the asset information if found, otherwise an empty object.
      */
     async function fetchAssetInformation(aasEndpoint: string): Promise<any> {
         const failResponse = {} as any;
