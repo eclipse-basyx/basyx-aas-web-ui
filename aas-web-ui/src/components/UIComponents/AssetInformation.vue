@@ -4,16 +4,18 @@
             <IdentificationElement
                 id="assetInformationIdentification"
                 :identification-object="assetInfo"
-                :v-chip-content="assetObject.assetKind"
+                :v-chip-content="assetInformation.assetKind"
                 :identification-title="'Global Asset ID'"></IdentificationElement>
             <v-divider
                 v-if="
-                    assetObject?.specificAssetIds &&
-                    Array.isArray(assetObject?.specificAssetIds) &&
-                    assetObject?.specificAssetIds.length > 0
+                    assetInformation?.specificAssetIds &&
+                    Array.isArray(assetInformation?.specificAssetIds) &&
+                    assetInformation?.specificAssetIds.length > 0
                 "></v-divider>
             <!-- Specific Asset IDs -->
-            <SpecificAssetIds :asset-object="assetInformation"></SpecificAssetIds>
+            <SpecificAssetIds
+                v-if="assetInformation.specificAssetIds"
+                :asset-object="assetInformation.specificAssetIds"></SpecificAssetIds>
             <v-divider v-if="assetInformation.defaultThumbnail" class="mt-2"></v-divider>
             <v-img
                 v-if="defaultThumbnailUrl"
