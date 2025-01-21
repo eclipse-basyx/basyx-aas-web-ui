@@ -16,27 +16,35 @@ export function useSMEHandling() {
      * and dispatches it to the AAS store.
      *
      * @param {string} smePath - The path URL of the SME to fetch.
+     * @param {boolean} withConceptDescriptions - Flag to specify if SME should be fetched with ConceptDescriptions (CDs)
+     * @returns {Promise<any>} A promise that resolves to a SME.
      */
-    async function fetchAndDispatchSme(smePath: string, withConceptDescriptions: boolean = false): Promise<void> {
-        if (!smePath) return;
+    async function fetchAndDispatchSme(smePath: string, withConceptDescriptions: boolean = false): Promise<any> {
+        const failResponse = {};
+
+        if (!smePath) return failResponse;
 
         smePath = smePath.trim();
 
-        if (smePath === '') return;
+        if (smePath === '') return failResponse;
 
         const smOrSme = await fetchSme(smePath, withConceptDescriptions);
 
-        if (!smOrSme || Object.keys(smOrSme).length === 0) return;
+        if (!smOrSme || Object.keys(smOrSme).length === 0) return failResponse;
 
         smOrSme.isActive = true;
 
         aasStore.dispatchSelectedNode(smOrSme);
+
+        return smOrSme;
     }
 
     /**
      * Fetches a Submodel Element (SME) by the provided SME path.
      *
      * @param {string} smePath - The path URL of the SME to fetch.
+     * @param {boolean} withConceptDescriptions - Flag to specify if SME should be fetched with ConceptDescriptions (CDs)
+     * @returns {Promise<any>} A promise that resolves to a SME.
      */
     async function fetchSme(smePath: string, withConceptDescriptions: boolean = false): Promise<any> {
         const failResponse = {};
