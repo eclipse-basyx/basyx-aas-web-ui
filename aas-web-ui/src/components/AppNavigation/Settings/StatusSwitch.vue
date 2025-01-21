@@ -1,4 +1,8 @@
 <template>
+    <!-- TODO Generalize StatusCheck Feature -->
+    <!-- TODO Add StatusCheck for SM in SM list/tree -->
+    <!-- TODO Add StatusCheck for SM in SMEView -->
+    <!-- TODO Add StatusCheck for CD in SMEView -->
     <v-list-item class="py-0">
         <v-switch
             v-model="statusCheck.state"

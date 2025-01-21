@@ -38,10 +38,12 @@
                 <!-- Hint -->
                 <v-list-item class="py-0 mt-n5">
                     <v-list-item-subtitle class="ml-1">
-                        {{ 'Selected AAS and SM/SME are auto-synced.' }}
+                        {{ 'Selected AAS & SM/SME (incl. CDs) are synced' }}
                     </v-list-item-subtitle>
                     <v-list-item-subtitle class="ml-1">
-                        {{ 'Submodel list/tree is not auto-synced!' }}
+                        <!-- TODO Auto-Sync feature for ComponentVisualization -->
+                        <!-- TODO Auto-Sync feature for Submodel list/tree -->
+                        {{ 'SM list/tree & Visualization are not synced!' }}
                     </v-list-item-subtitle>
                 </v-list-item>
                 <!-- Input Field to set the sync-interval -->
