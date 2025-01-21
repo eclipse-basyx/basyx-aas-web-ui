@@ -108,7 +108,7 @@ export function useAASHandling() {
         const aasDescriptor = await fetchAasDescriptorByIdFromRegistry(aasId);
 
         if (!aasDescriptor || Object.keys(aasDescriptor).length === 0) {
-            console.warn('Fetched empty AAS Descriptor');
+            console.warn("Fetching AAS Descriptor (id = '" + aasId + "') failed!");
             return failResponse;
         }
 
@@ -135,7 +135,7 @@ export function useAASHandling() {
         const aas = await fetchAasFromRepo(aasEndpoint);
 
         if (!aas || Object.keys(aas).length === 0) {
-            console.warn('Fetched empty AAS');
+            console.warn('Fetching AAS (' + aasEndpoint + ') failed!');
             return failResponse;
         }
 
@@ -163,8 +163,7 @@ export function useAASHandling() {
         const aas = await fetchAasByIdFromRepo(aasId);
 
         if (!aas || Object.keys(aas).length === 0) {
-            console.warn('Fetched empty AAS');
-            aasStore.dispatchSelectedNode({});
+            console.warn("Fetching AAS (id = '" + aasId + "') failed!");
             return failResponse;
         }
 

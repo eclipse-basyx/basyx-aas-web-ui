@@ -67,7 +67,7 @@ export function useSMEHandling() {
         }
 
         if (!smOrSme || Object.keys(smOrSme).length === 0) {
-            console.warn('Fetched empty SME/SM');
+            console.warn('Fetching SM/SME (' + smePath + ') failed!');
             return failResponse;
         }
 

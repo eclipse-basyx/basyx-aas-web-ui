@@ -114,7 +114,7 @@ export function useSMHandling() {
         const smDescriptor = await fetchSmDescriptorByIdFromRegistry(smId);
 
         if (!smDescriptor || Object.keys(smDescriptor).length === 0) {
-            console.warn('Fetched empty AAS Descriptor');
+            console.warn("Fetching SM Descriptor (id = '" + smId + "') failed!");
             return failResponse;
         }
 
@@ -151,7 +151,7 @@ export function useSMHandling() {
         }
 
         if (!smOrSme || Object.keys(smOrSme).length === 0) {
-            console.warn('Fetched empty SM/SME');
+            console.warn('Fetching SM/SME (' + smEndpoint + ') failed!');
             return failResponse;
         }
 
@@ -186,7 +186,7 @@ export function useSMHandling() {
         const sm = await fetchSmByIdFromRepo(smId);
 
         if (!sm || Object.keys(sm).length === 0) {
-            console.warn('Fetched empty SM');
+            console.warn("Fetching SM (id = '" + smId + "') failed!");
             return failResponse;
         }
 

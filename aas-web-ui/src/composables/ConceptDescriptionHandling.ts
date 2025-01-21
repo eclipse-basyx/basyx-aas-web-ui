@@ -75,7 +75,7 @@ export function useConceptDescriptionHandling() {
         const cd = await fetchCdByIdFromRepo(cdId);
 
         if (!cd || Object.keys(cd).length === 0) {
-            console.warn('Fetched empty CD');
+            console.warn("Fetching CD (id = '" + cdId + "') failed!");
             return failResponse;
         }
 
@@ -103,7 +103,7 @@ export function useConceptDescriptionHandling() {
         const cd = await fetchCdFromRepo(cdEndpoint);
 
         if (!cd || Object.keys(cd).length === 0) {
-            console.warn('Fetched empty CD');
+            console.warn('Fetching CD (' + cdEndpoint + ') failed!');
             return failResponse;
         }
 
