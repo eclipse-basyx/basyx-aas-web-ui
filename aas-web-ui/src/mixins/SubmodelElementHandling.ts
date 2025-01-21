@@ -63,11 +63,13 @@ export default defineComponent({
 
     methods: {
         // generate a unique ID (UUID)
+        // TODO Replace usage of this function with IDUtils.ts/UUID()
         UUID() {
             return uuidv4();
         },
 
         // generate a unique ID (UUID) from a given string
+        // TODO Replace usage of this function with IDUtils.ts/generateUUIDFromString()
         generateUUIDFromString(str: any): string {
             // create md5 hash from string
             const hash = md5(str);
@@ -91,6 +93,7 @@ export default defineComponent({
         },
 
         // convert js date object to string
+        // TODO Replace usage of this function with DateUtils.ts/formatDate()
         formatDate(date: Date) {
             return (
                 [date.getFullYear(), this.padTo2Digits(date.getMonth() + 1), this.padTo2Digits(date.getDate())].join(
@@ -106,11 +109,13 @@ export default defineComponent({
         },
 
         // Function to capitalize the first letter of a string
+        // TODO Replace usage of this function with generalUtils.ts/capitalizeFirstLetter()
         capitalizeFirstLetter(string: string) {
             return string.charAt(0).toUpperCase() + string.slice(1);
         },
 
         // Function to check if the idShort of a SubmodelElement matches the given idShort
+        // TODO Replace usage of this function with ReferableUtils.ts/checkIdShort()
         checkIdShort(referable: any, idShort: string, startsWith: boolean = false, strict: boolean = false): boolean {
             if (idShort.trim() === '') return false;
 
@@ -133,6 +138,7 @@ export default defineComponent({
         },
 
         // Function to check if the SemanticID of a SubmodelElement matches the given SemanticID
+        // TODO Replace usage of this function with SemanticId.ts/checkSemanticId()
         checkSemanticId(submodelElement: any, semanticId: string): boolean {
             // console.log('checkSemanticId', 'submodelElement', submodelElement, 'semanticId', semanticId);
             if (semanticId.trim() == '') return false;
@@ -158,6 +164,7 @@ export default defineComponent({
             return false;
         },
 
+        // TODO Replace usage of this function with SemanticId.ts/checkSemanticIdEclassIrdi()
         checkSemanticIdEclassIrdi(keyValue: string, semanticId: string): boolean {
             if (semanticId.trim() == '') return false;
 
@@ -202,6 +209,7 @@ export default defineComponent({
             return false;
         },
 
+        // TODO Replace usage of this function with SemanticId.ts/checkSemanticIdEclassIrdiUrl()
         checkSemanticIdEclassIrdiUrl(keyValue: string, semanticId: string): boolean {
             if (semanticId.trim() == '') return false;
 
@@ -221,6 +229,7 @@ export default defineComponent({
             );
         },
 
+        // TODO Replace usage of this function with SemanticId.ts/checkSemanticIdIecCdd()
         checkSemanticIdIecCdd(keyValue: string, semanticId: string): boolean {
             if (semanticId.trim() == '') return false;
 
@@ -239,6 +248,7 @@ export default defineComponent({
             return keyValue.startsWith(semanticId);
         },
 
+        // TODO Replace usage of this function with SemanticId.ts/checkSemanticIdIri()
         checkSemanticIdIri(keyValue: string, semanticId: string): boolean {
             // console.log('checkSemanticIdIri: ', 'keyValue', keyValue, 'semanticId', semanticId);
             if (semanticId.trim() == '') return false;
@@ -262,6 +272,7 @@ export default defineComponent({
             );
         },
 
+        // TODO Replace usage of this function with SemanticId.ts/getEquivalentEclassSemanticIds()
         getEquivalentEclassSemanticIds(semanticId: string): any[] {
             if (
                 semanticId.trim() === '' ||
@@ -304,6 +315,7 @@ export default defineComponent({
             return semanticIds;
         },
 
+        // TODO Replace usage of this function with SemanticId.ts/getEquivalentIriSemanticIds()
         getEquivalentIriSemanticIds(semanticId: string): any[] {
             if (semanticId.trim() === '' || !(semanticId.startsWith('http://') || semanticId.startsWith('https://')))
                 return [];
@@ -322,6 +334,7 @@ export default defineComponent({
         },
 
         // Function to check if the valueType is a number
+        // TODO Replace usage of this function with generalUtils.ts/isNumber()
         isNumber(valueType: any) {
             if (!valueType) return false;
             // List of all number types
@@ -355,6 +368,7 @@ export default defineComponent({
             }
         },
 
+        // TODO Replace usage of this function with generalutils.ts/downloadJson()
         // Function to download a JSON File
         downloadJson(obj: any, fileName: string) {
             const jsonStr = JSON.stringify(obj, null, 4);
@@ -370,6 +384,7 @@ export default defineComponent({
         },
 
         // Function to download a binary File
+        // TODO Replace usage of this function with generalutils.ts/downloadFile()
         downloadFile(filename: string, fileContent: Blob) {
             const link = document.createElement('a');
             link.href = window.URL.createObjectURL(fileContent);
@@ -380,6 +395,7 @@ export default defineComponent({
         },
 
         // Function to check if the referenced Element exists
+        // TODO Transfer to Util resp. Composable
         async checkReference(
             reference: any,
             currentAasDescriptor?: any
@@ -508,6 +524,7 @@ export default defineComponent({
         },
 
         // Function to check if AAS of Reference exists
+        // TODO Transfer to Util resp. Composable
         async checkAasReference(
             aasReference: any,
             aasDescriptorList?: Array<any>
@@ -537,6 +554,7 @@ export default defineComponent({
         },
 
         // Function to check if the referenced Submodel (+ SubmodelElement) exists (in aasDescriptor)
+        // TODO Transfer to Util resp. Composable
         async checkSmReference(
             smReference: any,
             aasDescriptorList: Array<any>,
@@ -639,6 +657,7 @@ export default defineComponent({
         },
 
         // Function to jump to a referenced Element
+        // TODO Transfer to Util resp. Composable
         jumpToReference(reference: any, aasDescriptor?: any, smRef?: any) {
             // console.log('jumpToReference', 'reference', reference, 'aasDescriptor', aasDescriptor, 'smRef', smRef);
             if (smRef && Object.keys(smRef).length > 0) {
@@ -660,6 +679,7 @@ export default defineComponent({
             }
         },
 
+        // TODO Transfer to Util resp. Composable
         jumpToSubmodelElement(reference: any, aasDescriptor: any, smRef: any) {
             // console.log(
             //     'jumpToSubmodelElement()',
@@ -831,6 +851,7 @@ export default defineComponent({
         ////////////////////////////////////////////////// AAS Stuff //////////////////////////////////////////////////
 
         // Fetch List of all available AAS Descriptors
+        // TODO Replace usage of this function with AASHandling/AASRegistryClient/AASRepoClient
         async fetchAasDescriptorList(): Promise<Array<any>> {
             // console.log('fetchAasDescriptorList()');
 
@@ -862,6 +883,7 @@ export default defineComponent({
         },
 
         // Fetch List of all available AAS
+        // TODO Replace usage of this function with AASHandling/AASRegistryClient/AASRepoClient
         async fetchAasList(): Promise<Array<any>> {
             // console.log('fetchAasList()');
 
@@ -888,6 +910,7 @@ export default defineComponent({
         },
 
         // Fetch AAS Descriptor by AAS ID with AAS Registry
+        // TODO Replace usage of this function with AASHandling/AASRegistryClient/AASRepoClient
         async fetchAasDescriptorById(aasId: string): Promise<any> {
             // console.log('fetchAasDescriptorById()', aasId);
 
@@ -918,6 +941,7 @@ export default defineComponent({
         },
 
         // Fetch AAS from AAS Repo (with the help of the AAS Registry)
+        // TODO Replace usage of this function with AASHandling/AASRegistryClient/AASRepoClient
         async fetchAasById(aasId: string): Promise<any> {
             // console.log('fetchAasById()', aasId);
             const failResponse = {} as any;
@@ -935,6 +959,7 @@ export default defineComponent({
         },
 
         // Fetch AAS from (AAS Repo) Endpoint
+        // TODO Replace usage of this function with AASHandling/AASRegistryClient/AASRepoClient
         async fetchAas(aasEndpoint: string): Promise<any> {
             // console.log('fetchAas()', aasEndpoint);
             const failResponse = {} as any;
@@ -967,6 +992,7 @@ export default defineComponent({
         },
 
         // Fetch and Dispatch AAS from (AAS Repo) Endpoint
+        // TODO Replace usage of this function with AASHandling/AASRegistryClient/AASRepoClient
         async fetchAndDispatchAas(aasEndpoint: string) {
             // console.log('fetchAndDispatchAas()', aasEndpoint);
             if (aasEndpoint.trim() === '') return;
@@ -982,6 +1008,7 @@ export default defineComponent({
         },
 
         // Checks weather an AAS is available
+        // TODO Replace usage of this function with AASHandling/AASRegistryClient/AASRepoClient
         // Checks availability in AAS Repo
         // Checks availability in AAS Registry and AAS Repo if AAS Registry is available
         async aasIsAvailableById(aasId: string): Promise<boolean> {
@@ -1020,6 +1047,7 @@ export default defineComponent({
         },
 
         // Checks weather AAS is available in AAS Repo
+        // TODO Replace usage of this function with AASHandling/AASRegistryClient/AASRepoClient
         async aasIsAvailable(aasEndpoint: string): Promise<boolean> {
             // console.log('aasIsAvailable()', aasEndpoint);
             const failResponse = false;
@@ -1035,6 +1063,7 @@ export default defineComponent({
         },
 
         // Checks weather referenced AAS is available
+        // TODO Replace usage of this function with AASHandling/AASRegistryClient/AASRepoClient
         async aasReferenceIsAvailable(aasReference: any): Promise<boolean> {
             // console.log('aasIsAvailable()', aasEndpoint);
             const failResponse = false;
@@ -1059,6 +1088,7 @@ export default defineComponent({
         },
 
         // Jumps to AAS by AAS Descriptor
+        // TODO Transfer to Util resp. Composable
         async jumpToAasByAasDescriptor(aasDescriptor: any) {
             // console.log('jumpToAasByAasDescriptor()', aasDescriptor);
             const aasEndpoint = this.extractEndpointHref(aasDescriptor, 'AAS-3.0');
@@ -1067,6 +1097,7 @@ export default defineComponent({
         },
 
         // Jumps to AAS by AAS ID
+        // TODO Transfer to Util resp. Composable
         async jumpToAasById(aasId: string) {
             if (!this.aasIsAvailableById(aasId)) return;
 
@@ -1077,6 +1108,7 @@ export default defineComponent({
         },
 
         // Jumps to AAS by AAS Endpoint
+        // TODO Transfer to Util resp. Composable
         async jumpToAas(aasEndpoint: string) {
             // console.log('jumpToAasBy()', aasEndpoint);
             if (aasEndpoint.trim() === '') return;
@@ -1092,6 +1124,7 @@ export default defineComponent({
         ////////////////////////////////////////////////// SM Stuff //////////////////////////////////////////////////
 
         // Fetch List of all available SM Descriptors
+        // TODO Replace usage of this function with SMHandling/SMRegistryClient/SMRepoClient
         async fetchSmDescriptorList(): Promise<Array<any>> {
             // console.log('fetchSmDescriptorList()');
 
@@ -1122,6 +1155,7 @@ export default defineComponent({
         },
 
         // Fetch List of all available SM
+        // TODO Replace usage of this function with SMHandling/SMRegistryClient/SMRepoClient
         async fetchSmList(): Promise<Array<any>> {
             // console.log('fetchAasList()');
 
@@ -1148,6 +1182,7 @@ export default defineComponent({
         },
 
         // Fetch SM Descriptor by SM ID with SM Registry
+        // TODO Replace usage of this function with SMHandling/SMRegistryClient/SMRepoClient
         async fetchSmDescriptorById(smId: string): Promise<any> {
             // console.log('fetchSmDescriptorById()', smId);
 
@@ -1178,6 +1213,7 @@ export default defineComponent({
         },
 
         // Fetch SM from SM Repo (with the help of the SM Registry)
+        // TODO Replace usage of this function with SMHandling/SMRegistryClient/SMRepoClient
         async fetchSmById(smId: string): Promise<any> {
             // console.log('fetchAasById()', aasId);
             const failResponse = {} as any;
@@ -1195,6 +1231,7 @@ export default defineComponent({
         },
 
         // Fetch SM from (SM Repo) Endpoint
+        // TODO Replace usage of this function with SMHandling/SMRegistryClient/SMRepoClient
         async fetchSm(smEndpoint: string): Promise<any> {
             // console.log('fetchSm()', aasEndpoint);
             const failResponse = {} as any;
@@ -1223,6 +1260,7 @@ export default defineComponent({
         },
 
         // Checks weather a SM is available
+        // TODO Replace usage of this function with SMHandling/SMRegistryClient/SMRepoClient
         // Checks availability in SM Repo
         // Checks availability in SM Registry and SM Repo if SM Registry is available
         async smIsAvailableById(smId: string): Promise<boolean> {
@@ -1261,6 +1299,7 @@ export default defineComponent({
         },
 
         // Checks weather SM is available in SM Repo
+        // TODO Replace usage of this function with SMHandling/SMRegistryClient/SMRepoClient
         async smIsAvailable(smEndpoint: string): Promise<boolean> {
             // console.log('aasIsAvailable()', smEndpoint);
             const failResponse = false;
@@ -1276,6 +1315,7 @@ export default defineComponent({
         },
 
         // Checks weather referenced SM is available
+        // TODO Replace usage of this function with SMHandling/SMRegistryClient/SMRepoClient
         async smReferenceIsAvailable(smReference: any): Promise<boolean> {
             // console.log('aasIsAvailable()', aasEndpoint);
             const failResponse = false;
@@ -1327,6 +1367,7 @@ export default defineComponent({
         ////////////////////////////////////////////////// OTHER STUFF //////////////////////////////////////////////////
 
         // Function to check if the assetId can be found in the AAS Discovery Service (and if it exists in the AAS Registry)
+        // TODO Replace usage of this function with AASDiscoveryClient.ts/getAasId()
         async checkAssetId(globalAssetId: string): Promise<{ success: boolean; aasDescriptor?: object }> {
             // console.log('checkAssetId', 'globalAssetId', globalAssetId);
             const failResponse = { success: false, aasDescriptor: {} }; // Define once for reuse
@@ -1378,6 +1419,7 @@ export default defineComponent({
         },
 
         // Get all ConceptDescriptions for the SubmodelElement from the ConceptDescription Repository
+        // TODO Replace usage of this function with ConceptDescriptionHandling.ts/fetchCds()
         async getConceptDescriptions(SelectedNode: any) {
             if (!this.conceptDescriptionRepoUrl || this.conceptDescriptionRepoUrl === '') {
                 return Promise.resolve([]); // Return an empty object wrapped in a resolved promise
@@ -1442,6 +1484,7 @@ export default defineComponent({
         },
 
         // calculate the pathes of the SubmodelElements in a provided Submodel/SubmodelElement
+        // TODO Transfer to Util resp. Composable
         async calculateSubmodelElementPathes(parent: any, startPath: string): Promise<any> {
             parent.path = startPath;
             parent.id = this.UUID();
@@ -1490,6 +1533,7 @@ export default defineComponent({
         },
 
         // Function to calculate the local path (used for files)
+        // TODO Transfer to Util resp. Composable
         getLocalPath(path: string, selectedNode: any): string {
             if (!path) return '';
             try {
@@ -1503,6 +1547,7 @@ export default defineComponent({
         },
 
         // Get the Unit from the EmbeddedDataSpecification of the ConceptDescription of the Property (if available)
+        // TODO Replace usage of this function with ConceptDescriptionHandling.ts/fetchCds()
         unitSuffix(prop: any) {
             if (!prop.conceptDescriptions) {
                 this.getConceptDescriptions(prop).then((conceptDescriptions) => {
@@ -1529,7 +1574,7 @@ export default defineComponent({
         },
 
         // Name to be displayed
-        // NOTE copied to ReferableUtils
+        // TODO Replace usage of this function with ReferableUtils.ts/nameToDisplay()
         nameToDisplay(referable: any, language = 'en', defaultNameToDisplay = '') {
             if (referable && referable?.displayName) {
                 const displayNameEn = referable.displayName.find((displayName: any) => {
@@ -1540,7 +1585,7 @@ export default defineComponent({
             return !defaultNameToDisplay && referable?.idShort ? referable.idShort : defaultNameToDisplay;
         },
 
-        // NOTE copied to ReferableUtils
+        // TODO Replace usage of this function with ReferableUtils.ts/descriptionToDisplay()
         descriptionToDisplay(referable: any, language = 'en', defaultNameToDisplay = '') {
             if (referable && referable?.description) {
                 const descriptionEn = referable.description.find(
@@ -1551,6 +1596,7 @@ export default defineComponent({
             return defaultNameToDisplay;
         },
 
+        // TODO Transfer to Util resp. Composable
         valueToDisplay(submodelElement: any) {
             if (submodelElement && submodelElement.modelType) {
                 switch (submodelElement.modelType) {
@@ -1601,6 +1647,7 @@ export default defineComponent({
         },
 
         // Extract the right endpoints href from a descriptor
+        // TODO Replace usage of this function with DescriptorUtils.ts/extractEndpointHref()
         extractEndpointHref(descriptor: any, interfaceShortName: string): string {
             const interfaceShortNames = [
                 'AAS',
@@ -1633,6 +1680,7 @@ export default defineComponent({
             return endpoint?.protocolInformation?.href ? endpoint.protocolInformation.href : '';
         },
 
+        // TODO Replace usage of this function with SMHandling/SMRegistryClient/SMRepoClient
         smNotFound(response: any, submodelId: string, path: string, text: string): any {
             // Check if response contains a "messages" array with a "403" or "401" code
             const messages = response.data?.messages || [];
