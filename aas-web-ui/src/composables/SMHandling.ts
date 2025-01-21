@@ -25,9 +25,10 @@ export function useSMHandling() {
      * Fetches a Submodel (SM) by the provided SM endpoint
      * and dispatches it to the AAS store.
      *
+     * @async
      * @param {string} smEndpoint - The endpoint URL of the SM to fetch.
      * @param {boolean} withConceptDescriptions - Flag to specify if SM should be fetched with ConceptDescriptions (CDs)
-     * @returns {Promise<any>} - A promise that resolves to a SM.
+     * @returns {Promise<any>} A promise that resolves to a SM.
      */
     async function fetchAndDispatchSm(smEndpoint: string, withConceptDescriptions = false): Promise<any> {
         const failResponse = {};
@@ -53,9 +54,10 @@ export function useSMHandling() {
      * Fetches a Submodel (SM) by the provided SM ID
      * and dispatches it to the AAS store.
      *
+     * @async
      * @param {string} smId - The ID of the SM to fetch.
      * @param {boolean} withConceptDescriptions - Flag to specify if SM should be fetched with ConceptDescriptions (CDs)
-     * @returns {Promise<any>} - A promise that resolves to a SM.
+     * @returns {Promise<any>} A promise that resolves to a SM.
      */
     async function fetchAndDispatchSmById(smId: string, withConceptDescriptions = false): Promise<any> {
         const failResponse = {};
@@ -80,7 +82,8 @@ export function useSMHandling() {
     /**
      * Fetches a list of all available Submodel (SM) Descriptors.
      *
-     * @returns {Promise<Array<any>>} - A promise that resolves to an array of SM Descriptors.
+     * @async
+     * @returns {Promise<Array<any>>} A promise that resolves to an array of SM Descriptors.
      * An empty array is returned if the request fails or no SM Descriptors are found.
      */
     async function fetchSmDescriptorList(): Promise<Array<any>> {
@@ -101,8 +104,9 @@ export function useSMHandling() {
     /**
      * Fetches an Submodel (SM) Descriptor by the provided SM ID.
      *
+     * @async
      * @param {string} smId - The ID of the SM Descriptor to fetch.
-     * @returns {Promise<any>} - A promise that resolves to a SM Descriptor.
+     * @returns {Promise<any>} A promise that resolves to a SM Descriptor.
      */
     async function fetchSmDescriptor(smId: string): Promise<any> {
         const failResponse = {};
@@ -126,9 +130,10 @@ export function useSMHandling() {
     /**
      * Fetches a Submodel (SM) by the provided SM endpoint.
      *
+     * @async
      * @param {string} smEndpoint - The endpoint URL of the SM to fetch.
      * @param {boolean} withConceptDescriptions - Flag to specify if SM should be fetched with ConceptDescriptions (CDs)
-     * @returns {Promise<any>} - A promise that resolves to a SM.
+     * @returns {Promise<any>} A promise that resolves to a SM.
      */
     async function fetchSm(smEndpoint: string, withConceptDescriptions = false): Promise<any> {
         const failResponse = {};
@@ -170,9 +175,10 @@ export function useSMHandling() {
     /**
      * Fetches a Submodel (SM) by the provided SM ID.
      *
+     * @async
      * @param {string} smId - The ID of the SM to fetch.
      * @param {boolean} withConceptDescriptions - Flag to specify if SM should be fetched with ConceptDescriptions (CDs)
-     * @returns {Promise<any>} - A promise that resolves to a SM.
+     * @returns {Promise<any>} A promise that resolves to a SM.
      */
     async function fetchSmById(smId: string, withConceptDescriptions = false): Promise<any> {
         const failResponse = {};
@@ -207,8 +213,9 @@ export function useSMHandling() {
     /**
      * Retrieves the Submodel (SM) endpoint URL by its ID.
      *
+     * @async
      * @param {string} smId - The ID of the SM to retrieve the endpoint for.
-     * @returns {Promise<string>} - A promise that resolves to a SM endpoint.
+     * @returns {Promise<string>} A promise that resolves to a SM endpoint.
      */
     async function getSmEndpointById(smId: string): Promise<string> {
         const failResponse = '';
@@ -229,7 +236,7 @@ export function useSMHandling() {
      * Retrieves the Submodel (SM) endpoint URL of a SM descriptor.
      *
      * @param {string} smDescriptor - The SM descriptor to retrieve the endpoint for.
-     * @returns {string} - A promise that resolves to a SM endpoint.
+     * @returns {string} A promise that resolves to a SM endpoint.
      */
     function getSmEndpoint(smDescriptor: any): string {
         // TODO Replace extractEndpointHref(smDescriptor), 'SUBMODEL-3.0') by getSmEndpoint(smDescriptor) in all components

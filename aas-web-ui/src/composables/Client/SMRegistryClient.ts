@@ -16,7 +16,8 @@ export function useSMRegistryClient() {
     /**
      * Fetches a list of all available Submodel (SM) Descriptors.
      *
-     * @returns {Promise<Array<any>>} - A promise that resolves to an array of SM Descriptors.
+     * @async
+     * @returns {Promise<Array<any>>} A promise that resolves to an array of SM Descriptors.
      * An empty array is returned if the request fails or no SM Descriptors are found.
      */
     async function fetchSmDescriptorList(): Promise<Array<any>> {
@@ -51,8 +52,9 @@ export function useSMRegistryClient() {
     /**
      * Fetches a Submodel (SM)  Descriptor by the provided SM ID.
      *
+     * @async
      * @param {string} smId - The ID of the SM Descriptor to fetch.
-     * * @returns {Promise<any>} - A promise that resolves to a SM Descriptor.
+     * @returns {Promise<any>} A promise that resolves to a SM Descriptor.
      */
     async function fetchSmDescriptorById(smId: string): Promise<any> {
         const failResponse = {} as any;
@@ -92,8 +94,9 @@ export function useSMRegistryClient() {
     /**
      * Checks if Submodel (SM) Descriptor with provided ID is available (in registry).
      *
+     * @async
      * @param {string} smId - The ID of the SM to check.
-     * @returns {Promise<boolean>} - A promise that resolves to `true` if SM with provided ID is available, otherwise `false`.
+     * @returns {Promise<boolean>} A promise that resolves to `true` if SM with provided ID is available, otherwise `false`.
      */
     async function isAvailableById(smId: string): Promise<boolean> {
         const failResponse = false;

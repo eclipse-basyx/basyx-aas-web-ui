@@ -34,7 +34,7 @@ export function useIDUtils() {
      * The generated IRI includes the given type and a custom ID.
      *
      * @param {string} type - The type to be included in the generated IRI.
-     * @returns {string} - The generated IRI as a string. If the type is invalid, it uses an empty string for the type.
+     * @returns {string} The generated IRI as a string. If the type is invalid, it uses an empty string for the type.
      *
      * @example
      * // Generates an IRI with type 'AssetAdministrationShell'

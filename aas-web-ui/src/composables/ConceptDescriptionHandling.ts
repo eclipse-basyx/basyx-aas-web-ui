@@ -13,9 +13,10 @@ export function useConceptDescriptionHandling() {
      * If not, it attempts to fetch them. Then, it looks through the concept descriptions
      * to find and return the first found unit specification from the embedded data specifications.
      *
+     * @async
      * @param {object} sme - The SME object containing concept descriptions.
      * @param {Array} [sme.conceptDescriptions] - Optional concept descriptions array.
-     * @returns {Promise<string>} - A promise that resolves to the unit suffix if found, otherwise an empty string.
+     * @returns {Promise<string>} A promise that resolves to the unit suffix if found, otherwise an empty string.
      */
     async function unitSuffix(sme: any): Promise<string> {
         const failResponse = '';
@@ -60,8 +61,9 @@ export function useConceptDescriptionHandling() {
     /**
      * Fetches a Concept Description (CD) by the provided CD ID.
      *
+     * @async
      * @param {string} cdId - The ID of the CD to fetch.
-     * @returns {Promise<any>} - A promise that resolves to a CD.
+     * @returns {Promise<any>} A promise that resolves to a CD.
      */
     async function fetchCdById(cdId: string): Promise<any> {
         const failResponse = {};
@@ -88,8 +90,9 @@ export function useConceptDescriptionHandling() {
     /**
      * Fetches a Concept Description (CD) by the provided CD endpoint.
      *
+     * @async
      * @param {string} cdEndpoint - The endpoint URL of the CD to fetch.
-     * @returns {Promise<any>} - A promise that resolves to a CD.
+     * @returns {Promise<any>} A promise that resolves to a CD.
      */
     async function fetchCd(cdEndpoint: string): Promise<any> {
         const failResponse = {};
@@ -116,9 +119,10 @@ export function useConceptDescriptionHandling() {
     /**
      * Fetches all Concept Descriptions (CDs) of an SubmodelElement (SME)
      *
+     * @async
      * @param {string} cdEndpoint - The endpoint URL of the CD to fetch.
      * @param {object} sme - The SME object to fetch all CDs
-     * @returns {Promise<Array<any>>} - A promise that resolves to an array of CDs.
+     * @returns {Promise<Array<any>>} A promise that resolves to an array of CDs.
      */
     async function fetchCds(sme: any): Promise<Array<any>> {
         const failResponse = [] as Array<any>;
@@ -149,29 +153,6 @@ export function useConceptDescriptionHandling() {
 
         const cdPromises = semanticIdsUniqueToFetch.map(async (semanticId: string) => {
             return await fetchCdById(semanticId);
-            // const path = conceptDescriptionRepoURL + '/' + base64Encode(semanticId);
-            // const context = 'retrieving ConceptDescriptions';
-            // const disableMessage = true;
-
-            // return getRequest(path, context, disableMessage).then((response: any) => {
-            //     if (response.success) {
-            //         // console.log('ConceptDescription Data: ', response.data);
-            //         const conceptDescription = response.data;
-            //         conceptDescription.path = path;
-            //         // Check if ConceptDescription has data to be displayed
-            //         if (
-            //             (conceptDescription.displayName && conceptDescription.displayName.length > 0) ||
-            //             (conceptDescription.description && conceptDescription.description.length > 0) ||
-            //             (conceptDescription.embeddedDataSpecifications &&
-            //                 conceptDescription.embeddedDataSpecifications.length > 0)
-            //         ) {
-            //             return conceptDescription;
-            //         }
-            //         return {};
-            //     } else {
-            //         return {};
-            //     }
-            // });
         });
 
         let conceptDescriptions = await Promise.all(cdPromises);
@@ -191,9 +172,10 @@ export function useConceptDescriptionHandling() {
      * If not, it attempts to fetch them. Then, it looks through the concept descriptions
      * to find and return the first found unit specification from the embedded data specifications.
      *
+     * @async
      * @param {object} sme - The SME object containing concept descriptions.
      * @param {Array} [sme.conceptDescriptions] - Optional concept descriptions array.
-     * @returns {Promise<string>} - A promise that resolves to the description if found, otherwise an empty string.
+     * @returns {Promise<string>} A promise that resolves to the description if found, otherwise an empty string.
      */
     async function cdDefinition(sme: any, language: string = 'en'): Promise<string> {
         const failResponse = '';
@@ -246,7 +228,7 @@ export function useConceptDescriptionHandling() {
      * Retrieves the Concept Description (CD) endpoint URL of a CD.
      *
      * @param {string} cd - The CD to retrieve the endpoint for.
-     * @returns {string} - A promise that resolves to a CD endpoint.
+     * @returns {string} A promise that resolves to a CD endpoint.
      */
     function getCdEndpoint(cd: any): string {
         const failResponse = '';

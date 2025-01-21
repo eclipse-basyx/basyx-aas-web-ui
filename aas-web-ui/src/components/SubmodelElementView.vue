@@ -295,7 +295,7 @@
 
     /**
      * Initializes local data
-     *
+     * @async
      * @param {boolean} withConceptDescriptions - Flag to specify if local data should be initialized with with ConceptDescriptions (CDs)
      */
     async function initialize(withConceptDescriptions: boolean = true): Promise<void> {
@@ -311,6 +311,7 @@
     /**
      * Updates local data
      *
+     * @async
      * @param {any} updatedSMEData - The new/updated data
      * @param {boolean} withConceptDescriptions - Flag to specify if local data should be updated with with ConceptDescriptions (CDs)
      */
