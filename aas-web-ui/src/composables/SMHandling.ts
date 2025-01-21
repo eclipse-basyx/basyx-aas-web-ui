@@ -16,7 +16,7 @@ export function useSMHandling() {
         fetchSm: fetchSmFromRepo,
         fetchSme: fetchSmeFromRepo,
     } = useSMRepositoryClient();
-    const { getConceptDescriptions } = useConceptDescriptionHandling();
+    const { fetchCds } = useConceptDescriptionHandling();
 
     // Stores
     const aasStore = useAASStore();
@@ -27,7 +27,7 @@ export function useSMHandling() {
      *
      * @param {string} smEndpoint - The endpoint URL of the SM to fetch.
      * @param {boolean} withConceptDescriptions - Flag to specify if SM should be fetched with ConceptDescriptions (CDs)
-     * @returns {Promise<any>} A promise that resolves to a SM.
+     * @returns {Promise<any>} - A promise that resolves to a SM.
      */
     async function fetchAndDispatchSm(smEndpoint: string, withConceptDescriptions = false): Promise<any> {
         const failResponse = {};
@@ -55,7 +55,7 @@ export function useSMHandling() {
      *
      * @param {string} smId - The ID of the SM to fetch.
      * @param {boolean} withConceptDescriptions - Flag to specify if SM should be fetched with ConceptDescriptions (CDs)
-     * @returns {Promise<any>} A promise that resolves to a SM.
+     * @returns {Promise<any>} - A promise that resolves to a SM.
      */
     async function fetchAndDispatchSmById(smId: string, withConceptDescriptions = false): Promise<any> {
         const failResponse = {};
@@ -80,7 +80,7 @@ export function useSMHandling() {
     /**
      * Fetches a list of all available Submodel (SM) Descriptors.
      *
-     * @returns {Promise<Array<any>>} A promise that resolves to an array of SM Descriptors.
+     * @returns {Promise<Array<any>>} - A promise that resolves to an array of SM Descriptors.
      * An empty array is returned if the request fails or no SM Descriptors are found.
      */
     async function fetchSmDescriptorList(): Promise<Array<any>> {
@@ -128,7 +128,7 @@ export function useSMHandling() {
      *
      * @param {string} smEndpoint - The endpoint URL of the SM to fetch.
      * @param {boolean} withConceptDescriptions - Flag to specify if SM should be fetched with ConceptDescriptions (CDs)
-     * @returns {Promise<any>} A promise that resolves to a SM.
+     * @returns {Promise<any>} - A promise that resolves to a SM.
      */
     async function fetchSm(smEndpoint: string, withConceptDescriptions = false): Promise<any> {
         const failResponse = {};
@@ -159,7 +159,7 @@ export function useSMHandling() {
         smOrSme.path = smEndpoint;
 
         if (withConceptDescriptions) {
-            smOrSme.conceptDescriptions = await getConceptDescriptions(smOrSme);
+            smOrSme.conceptDescriptions = await fetchCds(smOrSme);
         } else {
             smOrSme.conceptDescriptions = [];
         }
@@ -172,7 +172,7 @@ export function useSMHandling() {
      *
      * @param {string} smId - The ID of the SM to fetch.
      * @param {boolean} withConceptDescriptions - Flag to specify if SM should be fetched with ConceptDescriptions (CDs)
-     * @returns {Promise<any>} A promise that resolves to a SM.
+     * @returns {Promise<any>} - A promise that resolves to a SM.
      */
     async function fetchSmById(smId: string, withConceptDescriptions = false): Promise<any> {
         const failResponse = {};
@@ -187,7 +187,6 @@ export function useSMHandling() {
 
         if (!sm || Object.keys(sm).length === 0) {
             console.warn('Fetched empty SM');
-            aasStore.dispatchSelectedNode({});
             return failResponse;
         }
 
@@ -197,7 +196,7 @@ export function useSMHandling() {
         sm.path = smEndpoint;
 
         if (withConceptDescriptions) {
-            sm.conceptDescriptions = await getConceptDescriptions(sm);
+            sm.conceptDescriptions = await fetchCds(sm);
         } else {
             sm.conceptDescriptions = [];
         }
@@ -208,7 +207,7 @@ export function useSMHandling() {
     /**
      * Retrieves the Submodel (SM) endpoint URL by its ID.
      *
-     * @param {string} smId - The ID of the AAS to retrieve the endpoint for.
+     * @param {string} smId - The ID of the SM to retrieve the endpoint for.
      * @returns {Promise<string>} - A promise that resolves to a SM endpoint.
      */
     async function getSmEndpointById(smId: string): Promise<string> {

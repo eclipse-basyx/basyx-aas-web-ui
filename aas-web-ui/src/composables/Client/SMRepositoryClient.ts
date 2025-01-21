@@ -16,13 +16,15 @@ export function useSMRepositoryClient() {
     const submodelRepoUrl = computed(() => navigationStore.getSubmodelRepoURL);
 
     /**
-     * Fetches a list of all available Submodels (SM).
+     * Fetches a list of all available Submodels (SMs).
      *
-     * @returns {Promise<Array<any>>} A promise that resolves to an array of Submodels (SMs).
-     * An empty array is returned if the request fails or no Submodels are found.
+     * @returns {Promise<Array<any>>} - A promise that resolves to an array of SMs.
+     * An empty array is returned if the request fails or no SMs are found.
      */
     async function fetchSmList(): Promise<Array<any>> {
         const failResponse = [] as Array<any>;
+
+        if (submodelRepoUrl.value.trim() === '') return failResponse;
 
         let smRepoUrl = submodelRepoUrl.value;
         if (smRepoUrl.trim() === '') return failResponse;
@@ -49,6 +51,7 @@ export function useSMRepositoryClient() {
      * Fetches a Submodel (SM) by the provided SM ID.
      *
      * @param {string} smId - The ID of the SM to fetch.
+     * @returns {Promise<any>} - A promise that resolves to a SM.
      */
     async function fetchSmById(smId: string): Promise<any> {
         const failResponse = {} as any;
@@ -74,6 +77,7 @@ export function useSMRepositoryClient() {
      * Fetches a Submodel (SM) by the provided SM endpoint.
      *
      * @param {string} smEndpoint - The endpoint URL of the SM to fetch.
+     * @returns {Promise<any>} - A promise that resolves to a SM.
      */
     async function fetchSm(smEndpoint: string): Promise<any> {
         const failResponse = {} as any;
@@ -113,6 +117,7 @@ export function useSMRepositoryClient() {
      * Fetches a Submodel Element (SME) by the provided SME path.
      *
      * @param {string} smePath - The path URL of the SME to fetch.
+     * @returns {Promise<any>} - A promise that resolves to a SM.
      */
     async function fetchSme(smePath: string): Promise<any> {
         const failResponse = {} as any;
@@ -168,7 +173,7 @@ export function useSMRepositoryClient() {
     }
 
     /**
-     * Checks if Submodel with provided ID is available (in registry)
+     * Checks if Submodel with provided ID is available (in repository)
      *
      * @param {string} smId - The ID of the SM to check.
      * @returns {Promise<boolean>} - A promise that resolves to `true` if SM with provided ID is available, otherwise `false`.
@@ -190,7 +195,7 @@ export function useSMRepositoryClient() {
     }
 
     /**
-     * Checks if Submodel (SM) ius available (in repository) by the provided SM endpoint
+     * Checks if Submodel (SM) is available (in repository) by the provided SM endpoint
      *
      * @param {string} smEndpopint - The endpoint URL of the SM to check.
      * @returns {Promise<boolean>} - A promise that resolves to `true` if SM with provided ID is available, otherwise `false`.

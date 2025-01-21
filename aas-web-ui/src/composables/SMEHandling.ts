@@ -6,7 +6,7 @@ import { formatDate } from '@/utils/DateUtils';
 export function useSMEHandling() {
     // Composables
     const { fetchSm: fetchSmFromRepo, fetchSme: fetchSmeFromRepo } = useSMRepositoryClient();
-    const { getConceptDescriptions } = useConceptDescriptionHandling();
+    const { fetchCds } = useConceptDescriptionHandling();
 
     // Stores
     const aasStore = useAASStore();
@@ -17,7 +17,7 @@ export function useSMEHandling() {
      *
      * @param {string} smePath - The path URL of the SME to fetch.
      * @param {boolean} withConceptDescriptions - Flag to specify if SME should be fetched with ConceptDescriptions (CDs)
-     * @returns {Promise<any>} A promise that resolves to a SME.
+     * @returns {Promise<any>} - A promise that resolves to a SME.
      */
     async function fetchAndDispatchSme(smePath: string, withConceptDescriptions: boolean = false): Promise<any> {
         const failResponse = {};
@@ -44,7 +44,7 @@ export function useSMEHandling() {
      *
      * @param {string} smePath - The path URL of the SME to fetch.
      * @param {boolean} withConceptDescriptions - Flag to specify if SME should be fetched with ConceptDescriptions (CDs)
-     * @returns {Promise<any>} A promise that resolves to a SME.
+     * @returns {Promise<any>} - A promise that resolves to a SME.
      */
     async function fetchSme(smePath: string, withConceptDescriptions: boolean = false): Promise<any> {
         const failResponse = {};
@@ -75,7 +75,7 @@ export function useSMEHandling() {
         smOrSme.path = smePath;
 
         if (withConceptDescriptions) {
-            smOrSme.conceptDescriptions = await getConceptDescriptions(smOrSme);
+            smOrSme.conceptDescriptions = await fetchCds(smOrSme);
         } else {
             smOrSme.conceptDescriptions = [];
         }

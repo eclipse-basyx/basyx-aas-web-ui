@@ -16,11 +16,13 @@ export function useSMRegistryClient() {
     /**
      * Fetches a list of all available Submodel (SM) Descriptors.
      *
-     * @returns {Promise<Array<any>>} A promise that resolves to an array of SM Descriptors.
+     * @returns {Promise<Array<any>>} - A promise that resolves to an array of SM Descriptors.
      * An empty array is returned if the request fails or no SM Descriptors are found.
      */
     async function fetchSmDescriptorList(): Promise<Array<any>> {
         const failResponse = [] as Array<any>;
+
+        if (submodelRegistryUrl.value.trim() === '') return failResponse;
 
         let smRegistryUrl = submodelRegistryUrl.value;
         if (smRegistryUrl.trim() === '') return failResponse;
@@ -50,6 +52,7 @@ export function useSMRegistryClient() {
      * Fetches a Submodel (SM)  Descriptor by the provided SM ID.
      *
      * @param {string} smId - The ID of the SM Descriptor to fetch.
+     * * @returns {Promise<any>} - A promise that resolves to a SM Descriptor.
      */
     async function fetchSmDescriptorById(smId: string): Promise<any> {
         const failResponse = {} as any;
@@ -59,6 +62,8 @@ export function useSMRegistryClient() {
         smId = smId.trim();
 
         if (smId === '') return failResponse;
+
+        if (submodelRegistryUrl.value.trim() === '') return failResponse;
 
         let smRegistryUrl = submodelRegistryUrl.value;
         if (smRegistryUrl.trim() === '') return failResponse;

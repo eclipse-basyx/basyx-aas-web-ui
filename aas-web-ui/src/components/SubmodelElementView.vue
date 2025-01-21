@@ -12,10 +12,15 @@
                 <!-- Detailed View of the selected Submodel/SubmodelElement (e.g. Property, Operation, etc.) -->
                 <template
                     v-if="
-                        selectedAAS && Object.keys(selectedAAS).length > 0 && smeData && Object.keys(smeData).length > 0
+                        selectedAAS &&
+                        Object.keys(selectedAAS).length > 0 &&
+                        selectedNode &&
+                        Object.keys(selectedNode).length > 0 &&
+                        smeData &&
+                        Object.keys(smeData).length > 0
                     ">
                     <!-- Detailed View of the selected SubmodelElement (e.g. Property, Operation, etc.) -->
-                    <v-card :class="cdData.length > 0 ? 'mb-3' : ''">
+                    <v-card>
                         <v-list nav>
                             <!-- SubmodelELement Identification -->
                             <IdentificationElement :identification-object="smeData"></IdentificationElement>
@@ -123,10 +128,11 @@
                         <v-divider></v-divider>
                         <LastSync :timestamp="smeData.timestamp"></LastSync>
                     </v-card>
-                    <template v-for="(conceptDescription, index) in cdData" :key="conceptDescription.id">
-                        <ConceptDescription :concept-description-object="conceptDescription"></ConceptDescription>
-                        <v-divider v-if="index !== cdData.length - 1" class="mt-2"></v-divider>
-                    </template>
+                    <v-sheet v-if="Array.isArray(cdData) && cdData.length > 0">
+                        <template v-for="cd in cdData" :key="cd.id">
+                            <ConceptDescription :concept-description-object="cd" class="mt-4"></ConceptDescription>
+                        </template>
+                    </v-sheet>
                 </template>
                 <v-empty-state
                     v-else-if="!selectedAAS || Object.keys(selectedAAS).length === 0"
@@ -160,7 +166,7 @@
     const envStore = useEnvStore();
 
     // Composables
-    const { getConceptDescriptions } = useConceptDescriptionHandling();
+    const { fetchCds } = useConceptDescriptionHandling();
     const { fetchSme } = useSMEHandling();
 
     // Data
@@ -182,7 +188,7 @@
         () => aasRegistryServerURL.value,
         async () => {
             if (!aasRegistryServerURL.value) {
-                await initializeView(true, true);
+                await initializeView(true);
             }
         }
     );
@@ -191,7 +197,7 @@
         () => submodelRegistryServerURL.value,
         async () => {
             if (!submodelRegistryServerURL.value) {
-                await initializeView(true, true);
+                await initializeView(true);
             }
         }
     );
@@ -205,12 +211,12 @@
                     // create new interval
                     autoSyncInterval.value = window.setInterval(async () => {
                         // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
-                        await updateLocalData(await fetchSme(selectedNode.value.path, true));
+                        await updateLocalData(await fetchSme(selectedNode.value.path, true), true);
                     }, autoSync.value.interval);
                 }
             }
 
-            await initializeView(true, true);
+            await initializeView(true);
         }
     );
 
@@ -223,26 +229,28 @@
                     // create new interval
                     autoSyncInterval.value = window.setInterval(async () => {
                         // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
-                        await updateLocalData(await fetchSme(selectedNode.value.path, true));
+                        await updateLocalData(await fetchSme(selectedNode.value.path, true), true);
                     }, autoSync.value.interval);
                 }
             }
 
-            await initializeView(true, true);
+            await initializeView(true);
         },
         { deep: true }
     );
 
     watch(
         () => autoSync.value,
-        (autoSyncValue) => {
+        async (autoSyncValue) => {
             window.clearInterval(autoSyncInterval.value); // clear old interval
             if (autoSyncValue.state) {
                 if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
+                    await updateLocalData(await fetchSme(selectedNode.value.path, true), true);
+
                     // create new interval
                     autoSyncInterval.value = window.setInterval(async () => {
                         // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
-                        await updateLocalData(await fetchSme(selectedNode.value.path, true));
+                        await updateLocalData(await fetchSme(selectedNode.value.path, true), true);
                     }, autoSyncValue.interval);
                 }
             }
@@ -256,19 +264,19 @@
                 // create new interval
                 autoSyncInterval.value = window.setInterval(async () => {
                     // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
-                    await updateLocalData(await fetchSme(selectedNode.value.path, true));
+                    await updateLocalData(await fetchSme(selectedNode.value.path, true), true);
                 }, autoSync.value.interval);
             }
         }
 
-        // await initializeView(true, true); // Not needed, cause this component does not stand alone
+        // await initializeView(true); // Not needed, cause this component does not stand alone
     });
 
     onBeforeUnmount(() => {
         window.clearInterval(autoSyncInterval.value); // clear old interval
     });
 
-    async function initializeView(init: boolean = false, withConceptDescriptions: boolean = false): Promise<void> {
+    async function initializeView(withConceptDescriptions: boolean = true): Promise<void> {
         if (!selectedNode.value || Object.keys(selectedNode.value).length === 0) {
             smeData.value = {};
             cdData.value = [];
@@ -278,7 +286,7 @@
         await updateLocalData(selectedNode.value, withConceptDescriptions);
     }
 
-    async function updateLocalData(updatedSMEData: any, withConceptDescriptions: boolean = false) {
+    async function updateLocalData(updatedSMEData: any, withConceptDescriptions: boolean = true) {
         smeData.value = { ...updatedSMEData }; // create local copy
 
         if (withConceptDescriptions) {
@@ -287,12 +295,12 @@
                 Array.isArray(smeData.value.conceptDescriptions) &&
                 smeData.value.conceptDescriptions.length > 0
             ) {
-                cdData.value = { ...smeData.value.conceptDescriptions };
+                cdData.value = [...smeData.value.conceptDescriptions];
                 return;
             }
 
             if (!cdData.value || !Array.isArray(cdData.value) || cdData.value.length === 0) {
-                cdData.value = await getConceptDescriptions(smeData.value);
+                cdData.value = await fetchCds(smeData.value);
                 return;
             }
 

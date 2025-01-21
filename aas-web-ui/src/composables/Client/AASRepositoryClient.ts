@@ -30,11 +30,13 @@ export function useAASRepositoryClient() {
     /**
      * Fetches a list of all available Asset Administration Shells (AAS).
      *
-     * @returns {Promise<Array<any>>} A promise that resolves to an array of Asset Administration Shells.
-     * An empty array is returned if the request fails or no Asset Administration Shells are found.
+     * @returns {Promise<Array<any>>} - A promise that resolves to an array of Asset Administration Shells.
+     * An empty array is returned if the request fails or no AAS are found.
      */
     async function fetchAasList(): Promise<Array<any>> {
         const failResponse = [] as Array<any>;
+
+        if (aasRepositoryUrl.value.trim() === '') return failResponse;
 
         let aasRepoUrl = aasRepositoryUrl.value;
         if (aasRepoUrl.trim() === '') return failResponse;
@@ -61,6 +63,7 @@ export function useAASRepositoryClient() {
      * Fetches a Asset Administration Shell (AAS) by the provided AAS ID.
      *
      * @param {string} aasId - The ID of the AAS to fetch.
+     * @returns {Promise<any>} - A promise that resolves to an AAS.
      */
     async function fetchAasById(aasId: string): Promise<any> {
         const failResponse = {} as any;
@@ -86,6 +89,7 @@ export function useAASRepositoryClient() {
      * Fetches a Asset Administration Shell (AAS) by the provided AAS endpoint.
      *
      * @param {string} aasEndpoint - The endpoint URL of the AAS to fetch.
+     * @returns {Promise<any>} - A promise that resolves to the AAS.
      */
     async function fetchAas(aasEndpoint: string): Promise<any> {
         const failResponse = {} as any;
@@ -140,7 +144,7 @@ export function useAASRepositoryClient() {
     }
 
     /**
-     * Checks if Asset Administration Shell with provided ID is available (in registry)
+     * Checks if Asset Administration Shell with provided ID is available (in repository)
      *
      * @param {string} aasId - The ID of the AAS to check.
      * @returns {Promise<boolean>} - A promise that resolves to `true` if AAS with provided ID is available, otherwise `false`.
@@ -179,7 +183,6 @@ export function useAASRepositoryClient() {
         const aasRepoPath = aasEndpoint;
         const aasRepoContext = 'evaluating AAS Status';
         const disableMessage = true;
-
         try {
             const aasRepoResponse = await getRequest(aasRepoPath, aasRepoContext, disableMessage);
             if (aasRepoResponse?.success && aasRepoResponse?.data && Object.keys(aasRepoResponse?.data).length > 0) {

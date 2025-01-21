@@ -16,11 +16,13 @@ export function useAASRegistryClient() {
     /**
      * Fetches a list of all available Asset Administration Shell (AAS) Descriptors.
      *
-     * @returns {Promise<Array<any>>} A promise that resolves to an array of AAS Descriptors.
+     * @returns {Promise<Array<any>>} - A promise that resolves to an array of AAS Descriptors.
      * An empty array is returned if the request fails or no AAS Descriptors are found.
      */
     async function fetchAasDescriptorList(): Promise<Array<any>> {
         const failResponse = [] as Array<any>;
+
+        if (aasRegistryUrl.value.trim() === '') return failResponse;
 
         let aasRegUrl = aasRegistryUrl.value;
         if (aasRegUrl.trim() === '') return failResponse;
@@ -51,6 +53,7 @@ export function useAASRegistryClient() {
      * Fetches a Asset Administration Shell (AAS)  Descriptor by the provided AAS ID.
      *
      * @param {string} aasId - The ID of the AAS Descriptor to fetch.
+     * @returns {Promise<any>} - A promise that resolves to an AAS Descriptor.
      */
     async function fetchAasDescriptorById(aasId: string): Promise<any> {
         const failResponse = {} as any;
@@ -60,6 +63,8 @@ export function useAASRegistryClient() {
         aasId = aasId.trim();
 
         if (aasId === '') return failResponse;
+
+        if (aasRegistryUrl.value.trim() === '') return failResponse;
 
         let aasRegUrl = aasRegistryUrl.value;
         if (aasRegUrl.trim() === '') return failResponse;
