@@ -92,13 +92,13 @@ const generateModuleRoutes = async (): Promise<Array<RouteRecordRaw>> => {
     return moduleRoutes;
 };
 
-const moduleRoutes = await generateModuleRoutes();
-
-// Combine static routes with module routes
-const routes: Array<RouteRecordRaw> = [...staticRoutes, ...moduleRoutes];
-
 export async function createAppRouter(): Promise<Router> {
     const base = import.meta.env.BASE_URL;
+
+    const moduleRoutes = await generateModuleRoutes();
+
+    // Combine static routes with module routes
+    const routes: Array<RouteRecordRaw> = [...staticRoutes, ...moduleRoutes];
 
     // Stores
     const navigationStore = useNavigationStore();
