@@ -76,13 +76,24 @@ const generateModuleRoutes = async (): Promise<Array<RouteRecordRaw>> => {
         // Define the route path, e.g., '/modules/module-a' if needed
         const routePath = `/modules/${moduleName.toLowerCase()}`;
 
+        const isVisibleModule = moduleComponent.default?.isVisibleModule ?? true;
+        const isOnlyVisibleWithSelectedAas = moduleComponent.default?.isOnlyVisibleWithSelectedAas ?? false;
+        const isOnlyVisibleWithSelectedNode = moduleComponent.default?.isOnlyVisibleWithSelectedNode ?? false;
+        let preserveRouteQuery = moduleComponent.default?.preserveRouteQuery ?? false;
+
+        // Overwrite preserverRouteQuery
+        if (isOnlyVisibleWithSelectedAas || isOnlyVisibleWithSelectedNode) preserveRouteQuery = true;
+
         moduleRoutes.push({
             path: routePath,
             name: moduleName,
             meta: {
                 name: moduleName,
                 subtitle: 'Module',
-                isVisibleModule: moduleComponent.default?.isVisibleModule ?? true,
+                isVisibleModule: isVisibleModule,
+                isOnlyVisibleWithSelectedAas: isOnlyVisibleWithSelectedAas,
+                isOnlyVisibleWithSelectedNode: isOnlyVisibleWithSelectedNode,
+                preserveRouteQuery: preserveRouteQuery,
             },
             // Lazy-load the component
             component: moduleFileRecords[path] as () => Promise<unknown>,
