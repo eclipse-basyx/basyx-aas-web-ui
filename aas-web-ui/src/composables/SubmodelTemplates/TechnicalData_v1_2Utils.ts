@@ -14,16 +14,6 @@ export function useTechnicalData_v1_2Utils() {
 
     const semanticId = 'https://admin-shell.io/ZVEI/TechnicalData/Submodel/1/2';
 
-    // function getSmTechnicalData(aasEndpoint: string): any {
-    //     const failResponse = {};
-
-    //     if (!aasEndpoint || aasEndpoint.trim() === '') return failResponse;
-
-    //     aasEndpoint = aasEndpoint.trim();
-
-    //     return failResponse;
-    // }
-
     async function getSmTechnicalDataId(aasId: string): Promise<string> {
         const failResponse = '';
 
@@ -63,15 +53,6 @@ export function useTechnicalData_v1_2Utils() {
         aasId = aasId.trim();
 
         if (aasId === '') return failResponse;
-
-        // document.documentVersions = document.value.filter((element: any) => {
-        //     return (
-        //         element.semanticId &&
-        //         element.semanticId.keys &&
-        //         element.semanticId.keys.length > 0 &&
-        //         this.checkSemanticId(element, '0173-1#02-ABI503#001/0173-1#01-AHF582#001')
-        //     );
-        // });
 
         if (!aasId || aasId.trim() === '') return failResponse;
 
