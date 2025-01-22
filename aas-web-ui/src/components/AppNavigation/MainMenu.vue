@@ -68,7 +68,8 @@
                                 <v-virtual-scroll
                                     ref="virtualScrollRef"
                                     :items="filteredAndOrderedModuleRoutes"
-                                    :item-height="52">
+                                    :item-height="52"
+                                    class="bg-navigationMenu">
                                     <template #default="{ item }">
                                         <v-list-item
                                             class="my-1 mx-1"
