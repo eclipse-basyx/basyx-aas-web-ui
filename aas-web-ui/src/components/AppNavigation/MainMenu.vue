@@ -68,7 +68,8 @@
                                 <v-virtual-scroll
                                     ref="virtualScrollRef"
                                     :items="filteredAndOrderedModuleRoutes"
-                                    :item-height="52">
+                                    :item-height="52"
+                                    class="bg-navigationMenu">
                                     <template #default="{ item }">
                                         <v-list-item
                                             class="my-1 mx-1"
@@ -150,6 +151,7 @@
     // Computed Properties
     const currentRoute = computed(() => route.name); // get the current route name
     const currentRoutePath = computed(() => route.path); // get the current route path
+    const currentRouteQuery = computed(() => route.query); // get the current route query
     const allowEditing = computed(() => envStore.getAllowEditing); // Check if the current environment allows showing the AAS Editor
     const moduleRoutes = computed(() => navigationStore.getModuleRoutes); // get the module routes
     const selectedAas = computed(() => aasStore.getSelectedAAS); // get selected AAS from Store
@@ -179,9 +181,15 @@
         return filteredAndOrderedModuleRoutes;
     });
 
-    watch(currentRoute, () => {
-        aasStore.dispatchSelectedAAS({}); // reset selected AAS
-    });
+    // TODO move to route guard
+    watch(
+        () => currentRoute.value,
+        () => {
+            // Just reset dispatched AAS with aas query parameter is missing
+            if (!currentRouteQuery.value.aas || currentRouteQuery.value.aas.toString().trim() === '')
+                aasStore.dispatchSelectedAAS({});
+        }
+    );
 
     onMounted(async () => {
         dashboardAvailable.value = await checkDashboardAvailability();
