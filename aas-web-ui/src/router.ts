@@ -160,7 +160,7 @@ export async function createAppRouter(): Promise<Router> {
         // Switch from one route to another
         if (from.name && from.name !== to.name) {
             // Just for switching from a route to Save/Load Query
-            if (routeNamesToSaveAndLoadUrlQuery.includes(from.name as string)) {
+            if (routeNamesToSaveAndLoadUrlQuery.includes(from.name as string) || from.path.startsWith('/modules/')) {
                 // Save URL query
                 if (Object.keys(from.query).length > 0) {
                     const queryToDispatch = from.query;
