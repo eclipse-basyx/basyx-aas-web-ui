@@ -9,7 +9,7 @@
                             class="py-2"
                             :active="false"
                             nav
-                            :border="isActive('/')"
+                            :border="isActiveRoutePath('/')"
                             subtitle="Visualize Asset Administration Shells"
                             title="AAS Viewer"
                             to="/"
@@ -25,7 +25,7 @@
                             class="mt-3 py-2"
                             :active="false"
                             nav
-                            :border="isActive('/aaseditor')"
+                            :border="isActiveRoutePath('/aaseditor')"
                             subtitle="Edit Asset Administration Shells"
                             title="AAS Editor"
                             to="/aaseditor"
@@ -40,7 +40,7 @@
                             class="mt-3 py-2"
                             nav
                             :active="false"
-                            :border="isActive('/submodelviewer')"
+                            :border="isActiveRoutePath('/submodelviewer')"
                             subtitle="Visualize Submodels"
                             title="Submodel Viewer"
                             to="/submodelviewer"
@@ -54,24 +54,35 @@
                     </v-col>
                     <!-- Custom Modules -->
                     <v-col v-if="moduleRoutes.length > 0" cols="12" sm="5" class="pl-3">
-                        <v-sheet border rounded color="rgba(0, 0, 0, 0)" class="pt-2 px-3" height="100%">
+                        <v-sheet border rounded color="rgba(0, 0, 0, 0)" class="py-2 px-3">
                             <div class="d-flex align-center text-subtitle-1">
                                 <v-icon icon="mdi-view-module" size="x-small" color="primary" start />
                                 <strong>Modules</strong>
                             </div>
-                            <v-divider class="mt-3"></v-divider>
-                            <v-list-item
-                                v-for="module in moduleRoutes"
-                                :key="module.name"
-                                class="mt-3 py-2"
-                                :active="false"
-                                :border="isActive(module.path)"
-                                slim
+                            <v-divider class="mt-2 mb-2"></v-divider>
+                            <v-list
                                 nav
-                                :subtitle="module.path"
-                                :title="module.name?.toString()"
-                                :to="module.path"
-                                @click="closeMenu" />
+                                class="pa-0 overflow-y-auto"
+                                :max-height="52 * 5 + 'px'"
+                                style="display: flex; flex-direction: column">
+                                <v-virtual-scroll
+                                    ref="virtualScrollRef"
+                                    :items="filteredAndOrderedModuleRoutes"
+                                    :item-height="52">
+                                    <template #default="{ item }">
+                                        <v-list-item
+                                            class="my-1 mx-1"
+                                            :active="false"
+                                            :border="isActiveRoutePath(item.path)"
+                                            slim
+                                            nav
+                                            :subtitle="item.path"
+                                            :title="item.name?.toString()"
+                                            :to="item.path"
+                                            @click="closeMenu" />
+                                    </template>
+                                </v-virtual-scroll>
+                            </v-list>
                         </v-sheet>
                     </v-col>
                 </v-row>
@@ -98,12 +109,19 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, onMounted, ref, watch } from 'vue';
+    import type { ComponentPublicInstance } from 'vue';
+    import type { RouteRecordRaw } from 'vue-router';
+    import { computed, onMounted, Ref, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useDashboardHandling } from '@/composables/DashboardHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+
+    // Extend the ComponentPublicInstance type to include scrollToIndex
+    interface VirtualScrollInstance extends ComponentPublicInstance {
+        scrollToIndex: (index: number) => void;
+    }
 
     // Vue Router
     const route = useRoute();
@@ -121,7 +139,8 @@
         (e: 'closeMenu'): void;
     }>();
 
-    // Additional States
+    // Data
+    const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null); // Reference to the Virtual Scroll Component
     const dashboardAvailable = ref(false);
 
     // Computed Properties
@@ -129,6 +148,20 @@
     const currentRoutePath = computed(() => route.path); // get the current route path
     const allowEditing = computed(() => envStore.getAllowEditing); // Check if the current environment allows showing the AAS Editor
     const moduleRoutes = computed(() => navigationStore.getModuleRoutes); // get the module routes
+    const filteredAndOrderedModuleRoutes = computed(() => {
+        const filteredModuleRoutes = moduleRoutes.value.filter((moduleRoute: RouteRecordRaw) => {
+            return moduleRoute?.meta?.isVisibleModule === true || moduleRoute.path === route.path;
+        });
+        const filteredAndOrderedModuleRoutes = filteredModuleRoutes.sort(
+            (moduleRouteA: RouteRecordRaw, moduleRouteB: RouteRecordRaw) => {
+                let moduleNameA: string = moduleRouteA?.name?.toString() || '';
+                let moduleNameB: string = moduleRouteB?.name?.toString() || '';
+
+                return moduleNameA.localeCompare(moduleNameB);
+            }
+        );
+        return filteredAndOrderedModuleRoutes;
+    });
 
     watch(currentRoute, () => {
         aasStore.dispatchSelectedAAS({}); // reset selected AAS
@@ -136,13 +169,35 @@
 
     onMounted(async () => {
         dashboardAvailable.value = await checkDashboardAvailability();
+        scrollToSelectedModule();
     });
 
     function closeMenu(): void {
         emit('closeMenu');
     }
 
-    function isActive(route: string): boolean {
-        return currentRoutePath.value === route;
+    function isActiveRoutePath(routePath: string): boolean {
+        return currentRoutePath.value === routePath;
+    }
+
+    // Function to scroll to the active module
+    function scrollToSelectedModule(): void {
+        // Find the index of the selected item
+        const index = filteredAndOrderedModuleRoutes.value.findIndex((moduleRoute: RouteRecordRaw) =>
+            isActiveRoutePath(moduleRoute.path)
+        );
+
+        if (index !== -1) {
+            const intervalId = setInterval(() => {
+                if (
+                    virtualScrollRef.value &&
+                    virtualScrollRef.value?.$el.querySelector('.v-virtual-scroll__container').children.length > 0
+                ) {
+                    // Access the scrollable container
+                    virtualScrollRef.value.scrollToIndex(index);
+                    clearInterval(intervalId);
+                }
+            }, 50);
+        }
     }
 </script>

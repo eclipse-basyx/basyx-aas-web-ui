@@ -63,31 +63,36 @@ const staticRoutes: Array<RouteRecordRaw> = [
 const routeNamesToSaveAndLoadUrlQuery = ['AASList', 'AASEditor', 'AASViewer', 'SubmodelViewer'];
 
 // Function to generate routes from modules
-const generateModuleRoutes = (): Array<RouteRecordRaw> => {
-    const modules = import.meta.glob('@/pages/modules/*.vue');
+const generateModuleRoutes = async (): Promise<Array<RouteRecordRaw>> => {
+    const moduleFileRecords = import.meta.glob('@/pages/modules/*.vue');
 
     const moduleRoutes: Array<RouteRecordRaw> = [];
 
-    for (const path in modules) {
+    for (const path in moduleFileRecords) {
         // Extract the file name to use as the route name and path
-        const fileName = path.split('/').pop()?.replace('.vue', '') || 'UnnamedModule';
+        const moduleName = path.split('/').pop()?.replace('.vue', '') || 'UnnamedModule';
+        const moduleComponent: any = await moduleFileRecords[path]();
 
         // Define the route path, e.g., '/modules/module-a' if needed
-        const routePath = `/modules/${fileName.toLowerCase()}`;
+        const routePath = `/modules/${moduleName.toLowerCase()}`;
 
         moduleRoutes.push({
             path: routePath,
-            name: fileName,
-            meta: { name: fileName, subtitle: 'Module' },
+            name: moduleName,
+            meta: {
+                name: moduleName,
+                subtitle: 'Module',
+                isVisibleModule: moduleComponent.default?.isVisibleModule ?? true,
+            },
             // Lazy-load the component
-            component: modules[path] as () => Promise<unknown>,
+            component: moduleFileRecords[path] as () => Promise<unknown>,
         });
     }
 
     return moduleRoutes;
 };
 
-const moduleRoutes = generateModuleRoutes();
+const moduleRoutes = await generateModuleRoutes();
 
 // Combine static routes with module routes
 const routes: Array<RouteRecordRaw> = [...staticRoutes, ...moduleRoutes];
