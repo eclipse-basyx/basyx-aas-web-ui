@@ -1,21 +1,25 @@
-import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
 import { useSMEHandling } from '@/composables/SMEHandling';
 import { useSMHandling } from '@/composables/SMHandling';
 import { useSMEFile } from '@/composables/SubmodelElements/File';
-import { extractId as extractIdFromReference } from '@/utils/ReferenceUtils';
 import { checkSemanticId } from '@/utils/SemanticIdUtils';
 
 export function useTechnicalData_v1_2Utils() {
     // Composables
-    const { getSubmodelRefsById: getSubmodelRefsByIdFromRepo } = useAASRepositoryClient();
-    const { fetchSmDescriptor, fetchSmById, getSmEndpointById } = useSMHandling();
+    const { getSmIdOfAasIdBySemanticId, fetchSmById, getSmEndpointById } = useSMHandling();
     const { fetchSme } = useSMEHandling();
     const { valueUrl: smeFileValueUrl } = useSMEFile();
 
     const semanticId = 'https://admin-shell.io/ZVEI/TechnicalData/Submodel/1/2';
 
-    async function getSmTechnicalDataId(aasId: string): Promise<string> {
-        const failResponse = '';
+    /**
+     * Retrieves Technical Data Submodel (SM) of an Asset Administration Shell (AAS).
+     *
+     * @async
+     * @param {string} aasId - The ID of the AAS to retrieve its Technical Data SM.
+     * @returns {string} A promise that resolves to a Technical Data SM.
+     */
+    async function getSm(aasId: string): Promise<any> {
+        const failResponse = {};
 
         if (!aasId) return failResponse;
 
@@ -23,28 +27,21 @@ export function useTechnicalData_v1_2Utils() {
 
         if (aasId === '') return failResponse;
 
-        const submodelRefs = await getSubmodelRefsByIdFromRepo(aasId);
+        aasId = aasId.trim();
 
-        for (const submodelRef of submodelRefs) {
-            const smId = extractIdFromReference(submodelRef, 'Submodel');
-            const smDescriptor = await fetchSmDescriptor(smId);
-            if (
-                smDescriptor &&
-                Object.keys(smDescriptor).length > 0 &&
-                smDescriptor?.semanticId?.keys &&
-                Array.isArray(smDescriptor.semanticId.keys) &&
-                smDescriptor.semanticId.keys.length > 0
-            ) {
-                const semanticIds = smDescriptor.semanticId.keys.map((key: any) => key.value);
-                if (semanticIds.includes(semanticId)) {
-                    return smId;
-                }
-            }
-        }
+        const smTechnicalDataId = await getSmIdOfAasIdBySemanticId(aasId, semanticId);
+        const smTechnicalData = await fetchSmById(smTechnicalDataId);
 
-        return failResponse;
+        return smTechnicalData;
     }
 
+    /**
+     * Retrieves Product Image URL of Technical Data Submodel (SM) of an Asset Administration Shell (AAS).
+     *
+     * @async
+     * @param {string} aasId - The ID of the AAS to retrieve its Product Image URL.
+     * @returns {string} A promise that resolves to  URL of the Product Image.
+     */
     async function getProductImageUrl(aasId: string): Promise<string> {
         const failResponse = '';
 
@@ -54,14 +51,12 @@ export function useTechnicalData_v1_2Utils() {
 
         if (aasId === '') return failResponse;
 
-        if (!aasId || aasId.trim() === '') return failResponse;
-
         aasId = aasId.trim();
 
         // First attempt directly via smePath (smId => smEndpoint + SmePathSuffix (including idShorts))
         const fileProductImageSmePathSuffix = 'GeneralInformation.ProductImage';
 
-        const smTechnicalDataId = await getSmTechnicalDataId(aasId);
+        const smTechnicalDataId = await getSmIdOfAasIdBySemanticId(aasId, semanticId);
         const smTechnicalDataEndpoint = await getSmEndpointById(smTechnicalDataId);
         const fileProductImageSmePath = smTechnicalDataEndpoint + '/submodel-elements/' + fileProductImageSmePathSuffix;
         const fileProductImage = await fetchSme(fileProductImageSmePath);
@@ -93,5 +88,5 @@ export function useTechnicalData_v1_2Utils() {
         return failResponse;
     }
 
-    return { semanticId, getProductImageUrl };
+    return { semanticId, getProductImageUrl, getSm };
 }
