@@ -78,7 +78,11 @@
                                             nav
                                             :subtitle="item.path"
                                             :title="item.name?.toString()"
-                                            :to="item.path"
+                                            :to="
+                                                item?.meta?.preserveRouteQuery === true
+                                                    ? { path: item.path, query: route.query }
+                                                    : { path: item.path }
+                                            "
                                             @click="closeMenu" />
                                     </template>
                                 </v-virtual-scroll>
