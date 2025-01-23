@@ -76,11 +76,20 @@
 
         // Extract the aas and path Queries from the URL
         const searchParams = new URL(window.location.href).searchParams;
-        const aasEndpoint = searchParams.get('aas');
-        const submodelElementPath = searchParams.get('path');
+        const aasEndpoint = (searchParams.get('aas') || '').trim();
+        const submodelElementPath = (searchParams.get('path') || '').trim();
+
+        let aas = {} as any;
+        if (aasEndpoint) {
+            aas = await fetchAndDispatchAas(aasEndpoint);
+        }
+
+        if (aasEndpoint && submodelElementPath) {
+            await fetchAndDispatchSme(submodelElementPath, true);
+        }
 
         // Check if single AAS mode is on and no aas query is set to either redirect or show 404
-        if (envStore.getSingleAas && (aasEndpoint === null || aasEndpoint === undefined || aasEndpoint.trim() === '')) {
+        if (envStore.getSingleAas && (!aasEndpoint || aasEndpoint === '' || !aas || Object.keys(aas).length === 0)) {
             if (
                 !routesStayOnPages.includes(currentRouteName.value) &&
                 !currentRoutePath.value.startsWith('/modules/')
@@ -100,14 +109,6 @@
             handleMobileView(aasEndpoint, submodelElementPath);
         } else {
             handleDesktopView(aasEndpoint, submodelElementPath);
-        }
-
-        if (aasEndpoint) {
-            await fetchAndDispatchAas(aasEndpoint);
-        }
-
-        if (aasEndpoint && submodelElementPath) {
-            await fetchAndDispatchSme(submodelElementPath, true);
         }
     });
 

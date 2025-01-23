@@ -16,18 +16,30 @@ export function useAASHandling() {
      * Fetches an Asset Administration Shell (AAS) by the provided AAS endpoint
      * and dispatches it to the AAS store.
      *
+     * @async
      * @param {string} aasEndpoint - The endpoint URL of the AAS to fetch.
+     * @returns {Promise<any>} A promise that resolves to an AAS.
      */
-    async function fetchAndDispatchAas(aasEndpoint: string): Promise<void> {
-        if (!aasEndpoint) return;
+    async function fetchAndDispatchAas(aasEndpoint: string): Promise<any> {
+        const failResponse = {};
+
+        if (!aasEndpoint) return failResponse;
 
         aasEndpoint = aasEndpoint.trim();
 
-        if (aasEndpoint === '') return;
+        if (aasEndpoint === '') return failResponse;
 
         const aas = await fetchAas(aasEndpoint);
 
+        if (!aas || Object.keys(aas).length === 0) return failResponse;
+
+        aas.isActive = true;
+
+        // TODO move router.push to AASDataStore
+        // router.push({ query: { aas: aasEndpoint } });
         aasStore.dispatchSelectedAAS(aas);
+
+        return aas;
     }
 
     /**
