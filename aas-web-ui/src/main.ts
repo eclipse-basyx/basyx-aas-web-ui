@@ -48,33 +48,31 @@ async function loadPlugins() {
 
     await registerPlugins(app);
 
+    // Plugins aka Component Visualizations
     const pluginFileRecords = {
         ...import.meta.glob('./components/Plugins/Submodels/*.vue'),
         ...import.meta.glob('./components/Plugins/SubmodelElements/*.vue'),
         ...import.meta.glob('./UserPlugins/*.vue'),
     };
 
-    const pluginFiles = Object.keys(pluginFileRecords);
-
     const plugins = [] as Array<PluginType>;
 
-    await Promise.all(
-        pluginFiles.map(async (path) => {
-            const componentName = path
-                .replace('./components/Plugins/Submodels/', '')
-                .replace('./components/Plugins/SubmodelElements/', '')
-                .replace('./UserPlugins/', '')
-                .replace('.vue', '');
-            const component: any = await pluginFileRecords[path]();
-            if (component.default.semanticId) {
-                app.component(componentName, (component.default || component) as ReturnType<typeof defineComponent>);
-                plugins.push({ name: componentName, semanticId: component.default.semanticId });
-            }
-        })
-    );
+    for (const path in pluginFileRecords) {
+        const pluginName = path.split('/').pop()?.replace('.vue', '') || 'UnnamedPlugin';
+        const pluginComponent: any = await pluginFileRecords[path]();
+
+        if (pluginComponent.default.semanticId) {
+            app.component(
+                pluginName,
+                (pluginComponent.default || pluginComponent) as ReturnType<typeof defineComponent>
+            );
+            plugins.push({ name: pluginName, semanticId: pluginComponent.default.semanticId });
+        }
+    }
 
     const navigationStore = useNavigationStore();
     navigationStore.dispatchPlugins(plugins);
+
     app.mount('#app');
 }
 

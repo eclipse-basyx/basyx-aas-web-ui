@@ -63,37 +63,53 @@ const staticRoutes: Array<RouteRecordRaw> = [
 const routeNamesToSaveAndLoadUrlQuery = ['AASList', 'AASEditor', 'AASViewer', 'SubmodelViewer'];
 
 // Function to generate routes from modules
-const generateModuleRoutes = (): Array<RouteRecordRaw> => {
-    const modules = import.meta.glob('@/pages/modules/*.vue');
+const generateModuleRoutes = async (): Promise<Array<RouteRecordRaw>> => {
+    const moduleFileRecords = import.meta.glob('@/pages/modules/*.vue');
 
     const moduleRoutes: Array<RouteRecordRaw> = [];
 
-    for (const path in modules) {
+    for (const path in moduleFileRecords) {
         // Extract the file name to use as the route name and path
-        const fileName = path.split('/').pop()?.replace('.vue', '') || 'UnnamedModule';
+        const moduleName = path.split('/').pop()?.replace('.vue', '') || 'UnnamedModule';
+        const moduleComponent: any = await moduleFileRecords[path]();
 
         // Define the route path, e.g., '/modules/module-a' if needed
-        const routePath = `/modules/${fileName.toLowerCase()}`;
+        const routePath = `/modules/${moduleName.toLowerCase()}`;
+
+        const isVisibleModule = moduleComponent.default?.isVisibleModule ?? true;
+        const isOnlyVisibleWithSelectedAas = moduleComponent.default?.isOnlyVisibleWithSelectedAas ?? false;
+        const isOnlyVisibleWithSelectedNode = moduleComponent.default?.isOnlyVisibleWithSelectedNode ?? false;
+        let preserveRouteQuery = moduleComponent.default?.preserveRouteQuery ?? false;
+
+        // Overwrite preserveRouteQuery
+        if (isOnlyVisibleWithSelectedAas || isOnlyVisibleWithSelectedNode) preserveRouteQuery = true;
 
         moduleRoutes.push({
             path: routePath,
-            name: fileName,
-            meta: { name: fileName, subtitle: 'Module' },
+            name: moduleName,
+            meta: {
+                name: moduleName,
+                subtitle: 'Module',
+                isVisibleModule: isVisibleModule,
+                isOnlyVisibleWithSelectedAas: isOnlyVisibleWithSelectedAas,
+                isOnlyVisibleWithSelectedNode: isOnlyVisibleWithSelectedNode,
+                preserveRouteQuery: preserveRouteQuery,
+            },
             // Lazy-load the component
-            component: modules[path] as () => Promise<unknown>,
+            component: moduleFileRecords[path] as () => Promise<unknown>,
         });
     }
 
     return moduleRoutes;
 };
 
-const moduleRoutes = generateModuleRoutes();
-
-// Combine static routes with module routes
-const routes: Array<RouteRecordRaw> = [...staticRoutes, ...moduleRoutes];
-
 export async function createAppRouter(): Promise<Router> {
     const base = import.meta.env.BASE_URL;
+
+    const moduleRoutes = await generateModuleRoutes();
+
+    // Combine static routes with module routes
+    const routes: Array<RouteRecordRaw> = [...staticRoutes, ...moduleRoutes];
 
     // Stores
     const navigationStore = useNavigationStore();
@@ -144,7 +160,7 @@ export async function createAppRouter(): Promise<Router> {
         // Switch from one route to another
         if (from.name && from.name !== to.name) {
             // Just for switching from a route to Save/Load Query
-            if (routeNamesToSaveAndLoadUrlQuery.includes(from.name as string)) {
+            if (routeNamesToSaveAndLoadUrlQuery.includes(from.name as string) || from.path.startsWith('/modules/')) {
                 // Save URL query
                 if (Object.keys(from.query).length > 0) {
                     const queryToDispatch = from.query;
