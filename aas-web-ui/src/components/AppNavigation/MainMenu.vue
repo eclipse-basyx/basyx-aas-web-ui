@@ -79,7 +79,11 @@
                                             nav
                                             :subtitle="item.path"
                                             :title="item.name?.toString()"
-                                            :to="item.path"
+                                            :to="
+                                                item?.meta?.preserveRouteQuery === true
+                                                    ? { path: item.path, query: route.query }
+                                                    : { path: item.path }
+                                            "
                                             @click="closeMenu" />
                                     </template>
                                 </v-virtual-scroll>
@@ -150,8 +154,20 @@
     const currentRouteQuery = computed(() => route.query); // get the current route query
     const allowEditing = computed(() => envStore.getAllowEditing); // Check if the current environment allows showing the AAS Editor
     const moduleRoutes = computed(() => navigationStore.getModuleRoutes); // get the module routes
+    const selectedAas = computed(() => aasStore.getSelectedAAS); // get selected AAS from Store
+    const selectedNode = computed(() => aasStore.getSelectedNode); // get selected AAS from Store
     const filteredAndOrderedModuleRoutes = computed(() => {
         const filteredModuleRoutes = moduleRoutes.value.filter((moduleRoute: RouteRecordRaw) => {
+            if (
+                moduleRoute?.meta?.isOnlyVisibleWithSelectedAas &&
+                (!selectedAas.value || Object.keys(selectedAas.value).length === 0)
+            )
+                return false;
+            if (
+                moduleRoute?.meta?.isOnlyVisibleWithSelectedNode &&
+                (!selectedNode.value || Object.keys(selectedNode.value).length === 0)
+            )
+                return false;
             return moduleRoute?.meta?.isVisibleModule === true || moduleRoute.path === route.path;
         });
         const filteredAndOrderedModuleRoutes = filteredModuleRoutes.sort(

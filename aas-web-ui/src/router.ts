@@ -76,13 +76,24 @@ const generateModuleRoutes = async (): Promise<Array<RouteRecordRaw>> => {
         // Define the route path, e.g., '/modules/module-a' if needed
         const routePath = `/modules/${moduleName.toLowerCase()}`;
 
+        const isVisibleModule = moduleComponent.default?.isVisibleModule ?? true;
+        const isOnlyVisibleWithSelectedAas = moduleComponent.default?.isOnlyVisibleWithSelectedAas ?? false;
+        const isOnlyVisibleWithSelectedNode = moduleComponent.default?.isOnlyVisibleWithSelectedNode ?? false;
+        let preserveRouteQuery = moduleComponent.default?.preserveRouteQuery ?? false;
+
+        // Overwrite preserveRouteQuery
+        if (isOnlyVisibleWithSelectedAas || isOnlyVisibleWithSelectedNode) preserveRouteQuery = true;
+
         moduleRoutes.push({
             path: routePath,
             name: moduleName,
             meta: {
                 name: moduleName,
                 subtitle: 'Module',
-                isVisibleModule: moduleComponent.default?.isVisibleModule ?? true,
+                isVisibleModule: isVisibleModule,
+                isOnlyVisibleWithSelectedAas: isOnlyVisibleWithSelectedAas,
+                isOnlyVisibleWithSelectedNode: isOnlyVisibleWithSelectedNode,
+                preserveRouteQuery: preserveRouteQuery,
             },
             // Lazy-load the component
             component: moduleFileRecords[path] as () => Promise<unknown>,
@@ -149,7 +160,7 @@ export async function createAppRouter(): Promise<Router> {
         // Switch from one route to another
         if (from.name && from.name !== to.name) {
             // Just for switching from a route to Save/Load Query
-            if (routeNamesToSaveAndLoadUrlQuery.includes(from.name as string)) {
+            if (routeNamesToSaveAndLoadUrlQuery.includes(from.name as string) || from.path.startsWith('/modules/')) {
                 // Save URL query
                 if (Object.keys(from.query).length > 0) {
                     const queryToDispatch = from.query;
