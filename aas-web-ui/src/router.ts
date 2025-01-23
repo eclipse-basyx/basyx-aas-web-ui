@@ -1,12 +1,11 @@
-import {
-    createRouter,
-    createWebHistory,
+import type {
     LocationQuery,
     NavigationGuardNext,
     RouteLocationNormalizedGeneric,
     Router,
     RouteRecordRaw,
 } from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router';
 import AASList from '@/components/AppNavigation/AASList.vue';
 import ComponentVisualization from '@/components/ComponentVisualization.vue';
 import SubmodelList from '@/components/SubmodelList.vue';
