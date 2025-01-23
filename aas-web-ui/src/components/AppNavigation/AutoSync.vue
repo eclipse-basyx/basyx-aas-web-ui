@@ -12,11 +12,16 @@
     <!-- Desktop Autosync Menu -->
     <v-btn v-else class="multiline-button mr-6" variant="outlined">
         <div class="text-left">
-            <span class="mr-1">{{ 'Auto Sync:' }}</span>
-            <span class="text-primary">{{ autoSync.state ? 'On' : 'Off' }}</span>
-            <br />
-            <span class="mr-1">{{ 'Status Check:' }}</span>
-            <span class="text-primary">{{ statusCheck.state ? 'On' : 'Off' }}</span>
+            <p>
+                <span class="mr-1" :style="statusCheck.state ? 'font-size: 0.75em' : ''">{{ 'Auto Sync:' }}</span>
+                <span class="text-primary" :style="statusCheck.state ? 'font-size: 0.75em' : ''">{{
+                    autoSync.state ? 'On' : 'Off'
+                }}</span>
+            </p>
+            <p v-if="statusCheck.state" class="mt-n1">
+                <span class="mr-1" style="font-size: 0.75em">{{ 'Status Check:' }}</span>
+                <span class="text-primary" style="font-size: 0.75em">{{ statusCheck.state ? 'On' : 'Off' }}</span>
+            </p>
         </div>
         <v-icon :style="{ 'margin-left': autoSync.state ? '12.5px' : '6px' }">mdi-chevron-down</v-icon>
         <v-menu activator="parent" :close-on-content-click="false" width="300px">
