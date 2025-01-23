@@ -13,7 +13,8 @@
                             assetAdministrationShellData.status.trim() !== ''
                         "
                         class="text-caption px-1">
-                        <v-tooltip :text="'AAS status ' + assetAdministrationShellData.status">
+                        <!-- Feature "Full status check" - visualize all of the status 'online', 'offline', 'status-loading', 'check disabled and ''-->
+                        <!-- <v-tooltip :text="'AAS status ' + assetAdministrationShellData.status">
                             <template #activator="{ props }">
                                 <v-icon
                                     size="small"
@@ -24,10 +25,19 @@
                                     }}
                                 </v-icon>
                             </template>
+                        </v-tooltip> -->
+                        <v-tooltip
+                            v-if="
+                                assetAdministrationShellData.status && assetAdministrationShellData.status === 'offline'
+                            "
+                            :text="'AAS status ' + assetAdministrationShellData.status">
+                            <template #activator="{ props }">
+                                <v-icon size="small" v-bind="props" class="text-error"> mdi-cloud-off-outline </v-icon>
+                            </template>
                         </v-tooltip>
                     </div>
                     <!-- Last Sync -->
-                    <div class="text-caption pl-1">
+                    <div class="text-caption ml-1">
                         <v-icon class="text-caption" size="small">mdi-autorenew</v-icon>
                         <span
                             class="text-caption ml-1"
@@ -143,7 +153,7 @@
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
     import { getKeyTypeAbbreviation } from '@/utils/KeyTypesUtil';
-    import { statusCloudIcon, statusTextClass } from '@/utils/StatusCheckUtils';
+    // import { statusCloudIcon, statusTextClass } from '@/utils/StatusCheckUtils'; // Feature "Full status check"
 
     // Vue Router
     const route = useRoute();

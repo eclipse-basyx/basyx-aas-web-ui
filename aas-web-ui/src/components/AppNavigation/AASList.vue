@@ -146,13 +146,14 @@
                                 </div>
                             </v-tooltip>
                             <template v-if="!isMobile && item.status && item.status.trim() !== ''" #prepend>
-                                <v-tooltip :text="'AAS status ' + item.status" class="pr-n2 mr-n2">
+                                <!-- Feature "Full status check" - visualize all of the status 'online', 'offline', 'status-loading', 'check disabled and ''-->
+                                <!-- <v-tooltip :text="'AAS status ' + item.status" class="pr-n2 mr-n2">
                                     <template #activator="{ props }">
                                         <v-icon size="small" v-bind="props" :class="statusTextClass(item.status)">
                                             {{ statusCloudIcon(item.status) || 'mdi-cloud-off-outline' }}
                                         </v-icon>
                                     </template>
-                                </v-tooltip>
+                                </v-tooltip> -->
                             </template>
                             <template #title>
                                 <div class="text-primary" style="z-index: 9999">
@@ -164,6 +165,15 @@
                             </template>
                             <!-- open Details Button (with Status Badge) -->
                             <template #append>
+                                <v-btn
+                                    v-if="!isMobile && ((item.status && item.status === 'offline') || true)"
+                                    icon="mdi-cloud-off-outline"
+                                    size="x-small"
+                                    variant="plain"
+                                    color="error"
+                                    disabled
+                                    class="ml-n2"
+                                    style="z-index: 9000"></v-btn>
                                 <v-menu v-if="editMode">
                                     <template #activator="{ props }">
                                         <v-btn
@@ -205,7 +215,8 @@
                                         size="x-small"
                                         variant="plain"
                                         color="listItemText"
-                                        style="z-index: 9000; margin-left: -6px"
+                                        class="ml-n2"
+                                        style="z-index: 9000"
                                         @click.stop="downloadAasx(item)"></v-btn>
                                     <!-- Remove from AAS Registry Button -->
                                     <v-btn
@@ -213,7 +224,8 @@
                                         size="x-small"
                                         variant="plain"
                                         color="listItemText"
-                                        style="z-index: 9000; margin-left: -6px"
+                                        class="ml-n2"
+                                        style="z-index: 9000"
                                         @click.stop="showDeleteDialog(item)"></v-btn>
                                 </template>
                             </template>
@@ -256,7 +268,7 @@
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
-    import { statusCloudIcon, statusTextClass } from '@/utils/StatusCheckUtils';
+    // import { statusCloudIcon, statusTextClass } from '@/utils/StatusCheckUtils'; // Feature "Full status check"
 
     // Extend the ComponentPublicInstance type to include scrollToIndex
     interface VirtualScrollInstance extends ComponentPublicInstance {
