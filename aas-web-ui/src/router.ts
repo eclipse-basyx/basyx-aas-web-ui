@@ -81,7 +81,7 @@ const generateModuleRoutes = async (): Promise<Array<RouteRecordRaw>> => {
         const isOnlyVisibleWithSelectedNode = moduleComponent.default?.isOnlyVisibleWithSelectedNode ?? false;
         let preserveRouteQuery = moduleComponent.default?.preserveRouteQuery ?? false;
 
-        // Overwrite preserverRouteQuery
+        // Overwrite preserveRouteQuery
         if (isOnlyVisibleWithSelectedAas || isOnlyVisibleWithSelectedNode) preserveRouteQuery = true;
 
         moduleRoutes.push({
