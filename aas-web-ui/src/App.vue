@@ -14,8 +14,9 @@
 </template>
 
 <script lang="ts" setup>
+    import type { RouteRecordNameGeneric } from 'vue-router';
     import { computed, onMounted } from 'vue';
-    import { RouteRecordNameGeneric, useRoute, useRouter } from 'vue-router';
+    import { useRoute, useRouter } from 'vue-router';
     import { useDisplay } from 'vuetify';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
