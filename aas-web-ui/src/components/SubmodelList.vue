@@ -17,7 +17,7 @@
                             {{ nameToDisplay(selectedAAS) }}
                         </span>
                     </div>
-                    <!-- TODO: Add Searchfield https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/148 -->
+                    <!-- TODO: Add Searchfield - https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/148 -->
                 </v-card-title>
                 <v-divider></v-divider>
             </template>

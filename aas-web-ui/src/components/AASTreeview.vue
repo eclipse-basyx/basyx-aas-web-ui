@@ -15,7 +15,7 @@
                             {{ nameToDisplay(selectedAAS) }}
                         </span>
                     </div>
-                    <!-- TODO: Add Searchfield https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/148 -->
+                    <!-- TODO: Add Searchfield - https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/148 -->
                 </v-card-title>
                 <v-divider></v-divider>
             </template>
@@ -50,6 +50,7 @@
                         </template>
                         <template v-if="submodelData.length > 0">
                             <!-- TODO: Evaluate and Replace with Vuetify Treeview Component when it gets fully released in Q1 2025 -->
+                            <!-- BUG: If a deeply nested SME is selected (e.g. SM Nameplate - SMC ContactInformation - SME Street) and the SM Nameplate gets selected, the expanded tree of SMC ContactInformation gets closed -->
                             <VTreeview
                                 v-for="item in submodelData"
                                 :key="item.id"
