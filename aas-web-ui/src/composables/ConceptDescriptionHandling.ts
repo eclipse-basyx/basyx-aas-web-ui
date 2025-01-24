@@ -135,6 +135,8 @@ export function useConceptDescriptionHandling() {
             return key.value;
         });
 
+        // Push equivalent semanticIds (e.g. to take into account the possible spellings of an Eclass IRDI)
+        // IMPROVE This leads to multiple requests to the CD repo. Most of them get failed, which leads to a bad performance; Possible solution: Prefetched and stored list of all available CD IDs in the store + precheck which semanticId exist in the CD ID list
         semanticIdsToFetch.forEach((semanticId: string) => {
             if (
                 semanticId.startsWith('0173-1#') ||

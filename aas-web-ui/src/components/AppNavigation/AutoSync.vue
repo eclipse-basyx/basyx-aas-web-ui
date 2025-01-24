@@ -48,6 +48,7 @@
                     <v-list-item-subtitle class="ml-1">
                         <!-- TODO Auto-Sync feature for ComponentVisualization -->
                         <!-- TODO Auto-Sync feature for Submodel list/tree -->
+                        <!-- TODO Add checkboxes for AAS, SM/SME, CD to control which data should be auto-synced -->
                         {{ 'SM list/tree & Visualization are not synced!' }}
                     </v-list-item-subtitle>
                 </v-list-item>
