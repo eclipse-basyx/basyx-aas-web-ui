@@ -262,7 +262,6 @@
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
     import { useAASHandling } from '@/composables/AASHandling';
-    import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
@@ -280,8 +279,7 @@
     const router = useRouter();
 
     // Composables
-    const { isAvailableById: isAvailableByIdInRegistry } = useAASRegistryClient();
-    const { downloadAasx } = useAASRepositoryClient();
+    const { downloadAasx, isAvailableById: isAvailableByIdInRepo } = useAASRepositoryClient();
     const { getAasEndpoint, fetchAndDispatchAasById, fetchAasDescriptorList } = useAASHandling();
 
     // Stores
@@ -443,7 +441,8 @@
                     if (statusCheck.value.state === true) aasDescriptor.status = 'status loading';
 
                     await new Promise((resolve) => setTimeout(resolve, 600)); // Give the UI the chance to refresh status icons
-                    if (await isAvailableByIdInRegistry(aasDescriptor.id)) {
+                    const aasIsAvailable = await isAvailableByIdInRepo(aasDescriptor.id);
+                    if (aasIsAvailable) {
                         aasDescriptor.status =
                             statusCheck.value.state === true ? 'online' : init ? '' : 'check disabled';
                     } else {
