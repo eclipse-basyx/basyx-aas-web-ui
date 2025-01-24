@@ -166,13 +166,13 @@
                             <!-- open Details Button (with Status Badge) -->
                             <template #append>
                                 <v-btn
-                                    v-if="!isMobile && ((item.status && item.status === 'offline') || true)"
+                                    v-if="!isMobile && item.status && item.status === 'offline'"
                                     icon="mdi-cloud-off-outline"
                                     size="x-small"
                                     variant="plain"
                                     color="error"
                                     disabled
-                                    class="ml-n2"
+                                    class="ml-n1"
                                     style="z-index: 9000"></v-btn>
                                 <v-menu v-if="editMode">
                                     <template #activator="{ props }">
