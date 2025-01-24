@@ -80,12 +80,11 @@
         const submodelElementPath = (searchParams.get('path') || '').trim();
 
         let aas = {} as any;
-        if (aasEndpoint) {
+        if (aasEndpoint && aasEndpoint !== '') {
             aas = await fetchAndDispatchAas(aasEndpoint);
-        }
-
-        if (aasEndpoint && submodelElementPath) {
-            await fetchAndDispatchSme(submodelElementPath, true);
+            if (submodelElementPath && submodelElementPath !== '') {
+                await fetchAndDispatchSme(submodelElementPath, true);
+            }
         }
 
         // Check if single AAS mode is on and no aas query is set to either redirect or show 404
@@ -113,7 +112,7 @@
     });
 
     // Handle mobile view routing logic
-    function handleMobileView(aasEndpoint: string | null, submodelElementPath: string | null) {
+    function handleMobileView(aasEndpoint: string | null, submodelElementPath: string | null): void {
         if (currentRouteName.value && routesToAASList.includes(currentRouteName.value)) {
             // Redirect to 'AASList' with existing query parameters
             router.push({ name: 'AASList', query: route.query });
@@ -133,7 +132,7 @@
     }
 
     // Handle desktop view routing logic
-    function handleDesktopView(aasEndpoint: string | null, submodelElementPath: string | null) {
+    function handleDesktopView(aasEndpoint: string | null, submodelElementPath: string | null): void {
         const query: any = {};
         if (aasEndpoint) query.aas = aasEndpoint;
         if (submodelElementPath) query.path = submodelElementPath;
