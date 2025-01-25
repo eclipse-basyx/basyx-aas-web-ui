@@ -21,69 +21,41 @@
                     <v-card :class="conceptDescriptions.length > 0 ? 'mb-3' : ''">
                         <v-list nav>
                             <!-- SM/SME Identification -->
-                            <IdentificationElement :identification-object="submodelElementData"></IdentificationElement>
-                            <!-- SM/SME Administrative Information-->
-                            <template v-if="submodelElementData.administration">
-                                <v-divider class="mt-2"></v-divider>
-                                <AdministrativeInformationElement
-                                    v-if="submodelElementData.administration"
-                                    :administrative-information-object="submodelElementData.administration"
-                                    :administrative-information-title="'Administrative Information'" />
-                            </template>
-                            <!-- SM/SME DisplayName -->
-                            <template
-                                v-if="
-                                    submodelElementData.displayName &&
-                                    Array.isArray(submodelElementData.displayName) &&
-                                    submodelElementData.displayName.length > 0
-                                ">
-                                <v-divider class="mt-2"></v-divider>
-                                <DisplayNameElement
-                                    :display-name-array="submodelElementData.displayName"
-                                    :display-name-title="'Display Name'" />
-                            </template>
-                            <v-divider
-                                v-if="submodelElementData.description && submodelElementData.description.length > 0"
-                                class="mt-2"></v-divider>
-                            <!-- SubmodelELement Description -->
-                            <DescriptionElement
-                                v-if="submodelElementData.description && submodelElementData.description.length > 0"
-                                :description-array="submodelElementData.description"
-                                :description-title="'Description'"
-                                :small="false"></DescriptionElement>
-                            <v-divider
-                                v-if="
-                                    submodelElementData.semanticId &&
-                                    submodelElementData.semanticId.keys &&
-                                    submodelElementData.semanticId.keys.length > 0
-                                "
-                                class="mt-2"></v-divider>
-                            <!-- SubmodelELement SemanticID -->
-                            <SemanticID
-                                v-if="
-                                    submodelElementData.semanticId &&
-                                    submodelElementData.semanticId.keys &&
-                                    submodelElementData.semanticId.keys.length > 0
-                                "
-                                :semantic-id-object="submodelElementData.semanticId"
-                                :semantic-title="'Semantic ID'"
-                                :small="false"></SemanticID>
-                            <v-divider
-                                v-if="
-                                    submodelElementData.supplementalSemanticIds &&
-                                    submodelElementData.supplementalSemanticIds.length > 0
-                                "
-                                class="mt-2"></v-divider>
-                            <!-- SubmodelELement SupplementalSemanticID -->
-                            <SupplementalSemanticID
-                                v-if="
-                                    submodelElementData.supplementalSemanticIds &&
-                                    submodelElementData.supplementalSemanticIds.length > 0
-                                "
-                                :supplemental-semantic-ids-array="submodelElementData.supplementalSemanticIds"
-                                :supplemental-semantic-ids-title="'Supplemental Semantic ID'"></SupplementalSemanticID>
+                            <IdentificationElement :identification-object="submodelElementData" />
+                            <!-- SM/SME further information as expandable panels -->
+                            <v-expansion-panels v-model="openPanels" multiple class="mb-n2">
+                                <!-- SM/SME Administrative Information-->
+                                <template v-if="hasAdministrativeInformation">
+                                    <v-divider />
+                                    <AdministrativeInformationElement
+                                        :administrative-information-object="submodelElementData.administration" />
+                                </template>
+                                <!-- SM/SME DisplayName -->
+                                <template v-if="hasDisplayName">
+                                    <v-divider />
+                                    <DisplayNameElement :display-name-array="submodelElementData.displayName" />
+                                </template>
+                                <!-- SM/SME Description -->
+                                <template v-if="hasDescription">
+                                    <v-divider />
+                                    <DescriptionElement :description-array="submodelElementData.description" />
+                                </template>
+                                <!-- SM/SME SemanticId -->
+                                <template v-if="hasSemanticId">
+                                    <v-divider />
+                                    <SemanticIdElement :semantic-id-object="submodelElementData.semanticId" />
+                                </template>
+                                <!-- SM/SME SupplementalSemanticIds -->
+                                <template v-if="hasSupplementalSemanticIds">
+                                    <v-divider />
+                                    <SupplementalSemanticIDsElement
+                                        :supplemental-semantic-ids-array="
+                                            submodelElementData.supplementalSemanticIds
+                                        " />
+                                </template>
+                            </v-expansion-panels>
                         </v-list>
-                        <v-divider></v-divider>
+                        <v-divider />
                         <v-list nav class="px-4 pt-0 pb-5">
                             <!-- SubmodelELement Representation for different modelTypes -->
                             <Submodel
@@ -185,6 +157,7 @@
     const submodelElementData = ref({} as any);
     const conceptDescriptions = ref([] as Array<any>);
     const autoSyncInterval = ref<number | undefined>(undefined); // interval to send requests to the AAS
+    const openPanels = ref<number[]>([]);
 
     // Computed Properties
     const aasRegistryServerURL = computed(() => navigationStore.getAASRegistryURL);
@@ -194,6 +167,41 @@
     const autoSync = computed(() => navigationStore.getAutoSync);
     const editMode = computed(() => route.name === 'AASEditor');
     const singleAas = computed(() => envStore.getSingleAas);
+    const hasAdministrativeInformation = computed(() =>
+        submodelElementData.value?.administration && Object.keys(submodelElementData.value?.administration).length > 0
+            ? true
+            : false
+    );
+    const hasDisplayName = computed(() =>
+        submodelElementData.value.displayName &&
+        Array.isArray(submodelElementData.value.displayName) &&
+        submodelElementData.value.displayName.length > 0
+            ? true
+            : false
+    );
+    const hasDescription = computed(() =>
+        submodelElementData.value.description &&
+        Array.isArray(submodelElementData.value.description) &&
+        submodelElementData.value.description.length > 0
+            ? true
+            : false
+    );
+    const hasSemanticId = computed(
+        () =>
+            submodelElementData.value.semanticId &&
+            submodelElementData.value.semanticId.keys &&
+            Array.isArray(submodelElementData.value.semanticId.keys) &&
+            submodelElementData.value.semanticId.keys.length > 0
+    );
+    const hasSupplementalSemanticIds = computed(
+        () =>
+            submodelElementData.value.supplementalSemanticIds &&
+            Array.isArray(submodelElementData.value.supplementalSemanticIds) &&
+            submodelElementData.value.supplementalSemanticIds.length > 0
+    );
+    const openPanelNumber = computed(() =>
+        hasDescription.value ? 0 + (hasAdministrativeInformation.value ? 1 : 0) + (hasDisplayName.value ? 1 : 0) : null
+    );
 
     // Watchers
     // Resets the SubmodelElementView when the AAS Registry changes
@@ -229,6 +237,14 @@
         () => selectedNode.value,
         async () => {
             await initializeView(true);
+        },
+        { deep: true }
+    );
+
+    watch(
+        () => submodelElementData.value,
+        async () => {
+            openPanels.value = openPanelNumber.value === null ? [] : [openPanelNumber.value];
         },
         { deep: true }
     );

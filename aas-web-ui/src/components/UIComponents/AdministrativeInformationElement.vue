@@ -1,107 +1,85 @@
 <template>
-    <v-container fluid class="pa-0">
-        <v-expansion-panel elevation="0" tile static :class="'bg-' + backgroundColor">
+    <v-container
+        v-if="administrativeInformationObject && Object.keys(administrativeInformationObject).length > 0"
+        fluid
+        class="pa-0">
+        <v-expansion-panel elevation="0" tile static :class="backgroundColor ? 'bg-' + backgroundColor : ''">
             <v-expansion-panel-title class="px-2 py-0">
-                <span :class="small ? 'text-caption' : 'text-subtitle-2 '">
+                <span v-if="administrativeInformationTitle !== ''" :class="small ? 'text-caption' : 'text-subtitle-2 '">
                     {{ administrativeInformationTitle }}
                 </span>
             </v-expansion-panel-title>
-            <v-expansion-panel-text :class="'bg-' + backgroundColor">
-                <!-- AdministrativeInformation Creator -->
-                <template
-                    v-if="
-                        administrativeInformationObject?.creator?.keys &&
-                        Array.isArray(administrativeInformationObject?.creator?.keys) &&
-                        administrativeInformationObject?.creator?.keys.length > 0
-                    ">
-                    <v-list nav class="pa-0" :class="'bg-' + backgroundColor">
-                        <v-list-item
-                            v-if="
-                                Array.isArray(administrativeInformationObject?.creator?.keys) &&
-                                administrativeInformationObject?.creator?.keys.length > 0
-                            "
-                            class="ma-0">
+            <v-expansion-panel-text class="pa-0" :class="backgroundColor ? 'bg-' + backgroundColor : ''">
+                <v-list nav class="pa-0" :class="backgroundColor ? 'bg-' + backgroundColor : ''">
+                    <!-- AdministrativeInformation Creator -->
+                    <template v-if="hasCreator">
+                        <v-list-item class="px-1 my-1">
                             <v-tooltip activator="parent" open-delay="600" transition="slide-x-transition">
                                 <div
                                     v-for="(creator, i) in administrativeInformationObject.creator.keys"
                                     :key="i"
                                     class="text-caption">
-                                    <span v-if="creator?.type" class="font-weight-bold">{{
-                                        '(' + creator.type + ') '
-                                    }}</span
+                                    <span v-if="creator?.type" class="font-weight-bold">
+                                        {{ '(' + creator.type + ') ' }} </span
                                     >{{ creator.value }}
                                 </div>
                             </v-tooltip>
-                            <template #title>
-                                <span class="text-subtitle-2">
-                                    {{
-                                        administrativeInformationObject.creator.keys.length === 1
-                                            ? 'Creator:'
-                                            : 'Creators:'
-                                    }}
-                                </span>
+                            <v-list-item-title class="text-subtitle-2">
+                                {{ administrativeInformationObject.creator.keys.length === 1 ? 'Creator' : 'Creators' }}
+                            </v-list-item-title>
+                            <template v-for="(creator, i) in administrativeInformationObject.creator.keys" :key="i">
+                                <v-list-item-subtitle>
+                                    <v-hover v-slot="{ isHovering, props }">
+                                        <div
+                                            v-if="creator?.type"
+                                            v-bind="props"
+                                            :class="isHovering ? 'cursor-pointer' : ''"
+                                            class="text-caption pt-1"
+                                            @click="copyToClipboard(creator.value, creator.type, getCopyIconAsRef())">
+                                            <v-chip label size="x-small" border class="mr-2">{{ creator.type }}</v-chip>
+                                            <v-icon v-if="isHovering" color="subtitleText" size="x-small" class="mr-1">
+                                                mdi-clipboard-file-outline
+                                            </v-icon>
+                                            <span>{{ creator.value }}</span>
+                                        </div>
+                                    </v-hover>
+                                </v-list-item-subtitle>
                             </template>
-                            <v-list-item-subtitle
-                                v-for="(creator, i) in administrativeInformationObject.creator.keys"
-                                :key="i">
-                                <div v-if="creator?.type" class="pt-2">
-                                    <v-chip label size="x-small" border class="mr-2">{{ creator.type }}</v-chip>
-                                    <span>{{ creator.value }}</span>
-                                </div>
-                            </v-list-item-subtitle>
                         </v-list-item>
-                    </v-list>
-                </template>
-                <!-- AdministrativeInformation Version / Revision -->
-                <template v-if="administrativeInformationObject?.version || administrativeInformationObject?.revision">
-                    <v-divider
-                        v-if="
-                            Array.isArray(administrativeInformationObject?.creator?.keys) &&
-                            administrativeInformationObject?.creator?.keys.length > 0 &&
-                            (administrativeInformationObject?.version || administrativeInformationObject?.revision)
-                        "
-                        class="mt-2"
-                        opacity="0.05"></v-divider>
-                    <!-- Version and Revision -->
-                    <v-list-item class="ma-0" :class="'bg-' + backgroundColor">
-                        <v-list-item-title>
-                            <template v-if="administrativeInformationObject?.version">
-                                <span class="text-subtitle-2 mt-2 mr-2">{{ 'Version:' }}</span
-                                ><v-chip label size="x-small" border class="mr-5">{{
-                                    administrativeInformationObject.version
-                                }}</v-chip>
-                            </template>
-                            <template v-if="administrativeInformationObject?.revision">
-                                <span class="text-subtitle-2 mt-2 mr-2">{{ 'Revision:' }}</span
-                                ><v-chip label size="x-small" border class="mr-5">{{
-                                    administrativeInformationObject.revision
-                                }}</v-chip>
-                            </template>
-                        </v-list-item-title>
-                    </v-list-item>
-                </template>
-                <!-- AdministrativeInformation TemplateId -->
-                <template v-if="administrativeInformationObject?.templateId">
-                    <v-divider
-                        v-if="
-                            ((Array.isArray(administrativeInformationObject?.creator?.keys) &&
-                                administrativeInformationObject?.creator?.keys.length > 0) ||
-                                administrativeInformationObject?.version ||
-                                administrativeInformationObject?.revision) &&
-                            administrativeInformationObject?.templateId
-                        "
-                        opacity="0.05"></v-divider>
-                    <v-list nav class="pa-0" :class="'bg-' + backgroundColor">
-                        <v-hover v-slot="{ isHovering, props }">
-                            <v-list-item class="ma-0">
-                                <template #title>
-                                    <span class="text-subtitle-2">
-                                        {{ 'Template ID:' }}
-                                    </span>
+                    </template>
+                    <!-- AdministrativeInformation Version / Revision -->
+                    <template v-if="hasVersion || hasRevision">
+                        <v-divider v-if="hasCreator" opacity="0.05" />
+                        <!-- Version and Revision -->
+                        <v-list-item class="px-1 my-0">
+                            <v-list-item-title>
+                                <template v-if="hasVersion">
+                                    <span class="text-subtitle-2 mr-2">{{ 'Version:' }}</span>
+                                    <v-chip label size="x-small" border class="mr-5">
+                                        {{ administrativeInformationObject.version }}
+                                    </v-chip>
                                 </template>
-                                <template #subtitle>
+                                <template v-if="hasRevision">
+                                    <span class="text-subtitle-2 mr-2">{{ 'Revision:' }}</span>
+                                    <v-chip label size="x-small" border class="mr-5">
+                                        {{ administrativeInformationObject.revision }}
+                                    </v-chip>
+                                </template>
+                            </v-list-item-title>
+                        </v-list-item>
+                    </template>
+                    <!-- AdministrativeInformation TemplateId -->
+                    <template v-if="hasTemplateId">
+                        <v-divider v-if="hasCreator || hasVersion || hasRevision" opacity="0.05" />
+                        <v-list-item class="px-1 my-1">
+                            <v-list-item-title>
+                                <span class="text-subtitle-2">
+                                    {{ 'Template ID:' }}
+                                </span>
+                            </v-list-item-title>
+                            <v-list-item-subtitle>
+                                <v-hover v-slot="{ isHovering, props }">
                                     <div
-                                        v-if="administrativeInformationObject.templateId"
                                         v-bind="props"
                                         :class="isHovering ? 'cursor-pointer' : ''"
                                         @click="
@@ -111,35 +89,21 @@
                                                 getCopyIconAsRef()
                                             )
                                         ">
-                                        <v-icon v-if="isHovering" color="subtitleText" size="x-small" class="mr-1">{{
-                                            copyIcon
-                                        }}</v-icon>
+                                        <v-icon v-if="isHovering" color="subtitleText" size="x-small" class="mr-1">
+                                            {{ copyIcon }}
+                                        </v-icon>
                                         <span>{{ administrativeInformationObject.templateId }}</span>
                                     </div>
-                                </template>
-                            </v-list-item>
-                        </v-hover>
-                    </v-list>
-                </template>
-                <!-- AdministrativeInformation EmbeddedDataSpecifications -->
-                <template
-                    v-if="
-                        administrativeInformationObject?.embeddedDataSpecifications &&
-                        Array.isArray(administrativeInformationObject?.embeddedDataSpecifications) &&
-                        administrativeInformationObject?.embeddedDataSpecifications.length > 0
-                    ">
-                    <v-divider
-                        v-if="
-                            ((Array.isArray(administrativeInformationObject?.creator?.keys) &&
-                                administrativeInformationObject?.creator?.keys.length > 0) ||
-                                administrativeInformationObject?.version ||
-                                administrativeInformationObject?.revision ||
-                                administrativeInformationObject?.templateId) &&
-                            Array.isArray(administrativeInformationObject?.embeddedDataSpecifications) &&
-                            administrativeInformationObject?.embeddedDataSpecifications.length > 0
-                        "
-                        opacity="0.05"></v-divider>
-                    <v-list nav class="pa-0" :class="'bg-' + backgroundColor">
+                                </v-hover>
+                            </v-list-item-subtitle>
+                        </v-list-item>
+                    </template>
+                    <!-- AdministrativeInformation EmbeddedDataSpecifications -->
+                    <template v-if="hasEmbeddedDataSpecifications">
+                        <!-- TODO to Test-->
+                        <!-- <v-divider
+                            v-if="hasCreator || hasVersion || hasRevision || hasTemplateId"
+                            opacity="0.05"></v-divider>
                         <v-card
                             v-for="(
                                 embeddedDataSpecification, i
@@ -148,83 +112,77 @@
                             color="elevatedCard"
                             class="mt-2">
                             <v-list nav class="bg-elevatedCard pt-0">
-                                <!-- hasDataSpecification -->
-                                <SemanticID
+                                <SemanticIdElement
                                     v-if="
                                         Array.isArray(embeddedDataSpecification?.dataSpecification?.keys) &&
                                         embeddedDataSpecification?.dataSpecification?.keys.length > 0
                                     "
                                     :semantic-id-object="embeddedDataSpecification.dataSpecification"
                                     :semantic-title="'Data Specification'"
-                                    class="mb-2"></SemanticID>
-                                <v-divider v-if="embeddedDataSpecification?.dataSpecificationContent"></v-divider>
-                                <!-- dataSpecificationContent -->
+                                    class="mb-2" />
+                                <v-divider v-if="embeddedDataSpecification?.dataSpecificationContent" />
                                 <DataSpecificationContent
                                     v-if="embeddedDataSpecification?.dataSpecificationContent"
-                                    :data-specification-object="
-                                        embeddedDataSpecification?.dataSpecificationContent
-                                    "></DataSpecificationContent>
+                                    :data-specification-object="embeddedDataSpecification?.dataSpecificationContent" />
                             </v-list>
-                        </v-card>
-                    </v-list>
-                </template>
+                        </v-card> -->
+                    </template>
+                </v-list>
             </v-expansion-panel-text>
         </v-expansion-panel>
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent, Ref, ref } from 'vue';
+<script lang="ts" setup>
+    import { computed, Ref, ref } from 'vue';
     import { useClipboardUtil } from '@/composables/ClipboardUtil';
-    import { useNavigationStore } from '@/store/NavigationStore';
-    import DataSpecificationContent from './DataSpecificationContent.vue';
-    import SemanticID from './SemanticID.vue';
 
-    export default defineComponent({
-        name: 'AdministrativeInformationElement',
-        components: {
-            SemanticID,
-            DataSpecificationContent,
+    // Composables
+    const { copyToClipboard } = useClipboardUtil();
+
+    const props = defineProps({
+        administrativeInformationObject: {
+            type: Object as any,
+            default: {} as any,
         },
-        props: {
-            administrativeInformationObject: {
-                type: Object,
-                default: () => ({}),
-            },
-            administrativeInformationTitle: {
-                type: String,
-                default: 'Administrative Information',
-            },
-            small: {
-                type: Boolean,
-                default: false,
-            },
-            backgroundColor: {
-                type: String,
-                default: '',
-            },
+        administrativeInformationTitle: {
+            type: String,
+            default: 'Administrative Information',
         },
-
-        setup() {
-            const navigationStore = useNavigationStore();
-
-            const { copyToClipboard } = useClipboardUtil();
-
-            const copyIcon = ref<string>('mdi-clipboard-file-outline');
-
-            const getCopyIconAsRef = (): Ref => {
-                return copyIcon;
-            };
-
-            return {
-                navigationStore, // NavigationStore Object
-                copyToClipboard,
-                copyIcon,
-                getCopyIconAsRef,
-            };
+        small: {
+            type: Boolean,
+            default: false,
+        },
+        backgroundColor: {
+            type: String,
+            default: '',
         },
     });
+
+    // Data
+    const copyIcon = ref<string>('mdi-clipboard-file-outline');
+    const getCopyIconAsRef = (): Ref => {
+        return copyIcon;
+    };
+
+    // Computed Properties
+    const hasCreator = computed(() =>
+        props.administrativeInformationObject?.creator?.keys &&
+        Array.isArray(props.administrativeInformationObject?.creator?.keys) &&
+        props.administrativeInformationObject?.creator?.keys.length > 0
+            ? true
+            : false
+    );
+    const hasVersion = computed(() => (props.administrativeInformationObject?.version ? true : false));
+    const hasRevision = computed(() => (props.administrativeInformationObject?.revision ? true : false));
+    const hasTemplateId = computed(() => (props.administrativeInformationObject?.templateId ? true : false));
+    const hasEmbeddedDataSpecifications = computed(() =>
+        props.administrativeInformationObject?.embeddedDataSpecifications &&
+        Array.isArray(props.administrativeInformationObject?.embeddedDataSpecifications) &&
+        props.administrativeInformationObject?.embeddedDataSpecifications.length > 0
+            ? true
+            : false
+    );
 </script>
 
 <style lang="css" scoped>
@@ -232,6 +190,6 @@
         padding-left: 8px !important;
         padding-right: 8px !important;
         padding-top: 0px !important;
-        padding-bottom: 12px !important;
+        padding-bottom: 0px !important;
     }
 </style>

@@ -69,38 +69,37 @@
                 <!-- Asset Information -->
                 <!-- 1) AssetInformation is mandatory for an AssetAdministrationShell -->
                 <!-- 2) Minimal (empty) AssetInformation (generated with aas4j) will be { assetKind: null } -->
-                <AssetInformation
-                    v-if="assetInformation?.assetKind && Object.keys(assetInformation).length > 1"
-                    :asset-object="assetInformation"></AssetInformation>
-                <v-divider
-                    v-if="assetInformation?.assetKind && Object.keys(assetInformation).length > 1"
-                    thickness="2"></v-divider>
-                <!-- AAS Details -->
+                <template v-if="assetInformation?.assetKind && Object.keys(assetInformation).length > 1">
+                    <AssetInformation :asset-information-object="assetInformation"></AssetInformation>
+                    <v-divider thickness="2"></v-divider>
+                </template>
+                <!-- AAS -->
                 <v-list v-if="assetAdministrationShellData" lines="one" nav class="bg-detailsCard">
                     <!-- AAS Identification -->
                     <IdentificationElement
                         :identification-object="assetAdministrationShellData"
                         :v-chip-content="getKeyTypeAbbreviation(assetAdministrationShellData.modelType)" />
+                    <!-- AAS further information as expandable panels -->
                     <v-expansion-panels v-model="openPanels" multiple class="mb-n2">
                         <!-- AAS Administrative Information-->
                         <template v-if="hasAdministrativeInformation">
                             <v-divider />
                             <AdministrativeInformationElement
-                                :administrative-information-object="assetAdministrationShellData.administration"
+                                :administrative-information-object="assetAdministrationShellData?.administration"
                                 :background-color="'detailsCard'" />
                         </template>
                         <!-- AAS DisplayName -->
                         <template v-if="hasDisplayName">
                             <v-divider />
                             <DisplayNameElement
-                                :display-name-array="assetAdministrationShellData.displayName"
+                                :display-name-array="assetAdministrationShellData?.displayName"
                                 :background-color="'detailsCard'" />
                         </template>
                         <!-- AAS Description -->
                         <template v-if="hasDescription">
                             <v-divider />
                             <DescriptionElement
-                                :description-array="assetAdministrationShellData.description"
+                                :description-array="assetAdministrationShellData?.description"
                                 :background-color="'detailsCard'" />
                         </template>
                     </v-expansion-panels>
@@ -145,6 +144,7 @@
     const assetAdministrationShellData = ref({} as any | null);
     const assetInformation = ref({} as any | null);
     const autoSyncInterval = ref<number | undefined>(undefined);
+    const openPanels = ref<number[]>([]);
 
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile);
@@ -176,7 +176,10 @@
     });
     const autoSync = computed(() => navigationStore.getAutoSync);
     const hasAdministrativeInformation = computed(() =>
-        assetAdministrationShellData.value?.administration ? true : false
+        assetAdministrationShellData.value?.administration &&
+        Object.keys(assetAdministrationShellData.value?.administration).length > 0
+            ? true
+            : false
     );
     const hasDisplayName = computed(() =>
         assetAdministrationShellData.value.displayName &&
@@ -195,7 +198,6 @@
     const openPanelNumber = computed(() =>
         hasDescription.value ? 0 + (hasAdministrativeInformation.value ? 1 : 0) + (hasDisplayName.value ? 1 : 0) : null
     );
-    const openPanels = ref<number[]>([]);
 
     // Watchers
     // watch for changes in the autoSync state and create or clear the autoSyncInterval
@@ -226,9 +228,10 @@
 
     watch(
         () => assetAdministrationShellData.value,
-        async () => {
+        () => {
             openPanels.value = openPanelNumber.value === null ? [] : [openPanelNumber.value];
-        }
+        },
+        { deep: true }
     );
 
     onMounted(async () => {
