@@ -1,22 +1,20 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-expansion-panels class="mb-n2">
-            <v-expansion-panel elevation="0" tile static :color="backgroundColor">
-                <v-expansion-panel-title class="px-2">
-                    <span :class="small ? 'text-caption' : 'text-subtitle-2 '">
-                        {{ administrativeInformationTitle }}
-                    </span>
-                </v-expansion-panel-title>
-                <v-expansion-panel-text :class="'bg-' + backgroundColor">
-                    <v-divider
-                        v-if="
-                            Array.isArray(administrativeInformationObject?.creator?.keys) &&
-                            administrativeInformationObject?.creator?.keys.length > 0
-                        "
-                        class="mb-1"
-                        opacity="0.05"></v-divider>
-                    <v-list nav class="pa-0">
-                        <!-- Creator -->
+        <v-expansion-panel elevation="0" tile static :class="'bg-' + backgroundColor">
+            <v-expansion-panel-title class="px-2 py-0">
+                <span :class="small ? 'text-caption' : 'text-subtitle-2 '">
+                    {{ administrativeInformationTitle }}
+                </span>
+            </v-expansion-panel-title>
+            <v-expansion-panel-text :class="'bg-' + backgroundColor">
+                <!-- AdministrativeInformation Creator -->
+                <template
+                    v-if="
+                        administrativeInformationObject?.creator?.keys &&
+                        Array.isArray(administrativeInformationObject?.creator?.keys) &&
+                        administrativeInformationObject?.creator?.keys.length > 0
+                    ">
+                    <v-list nav class="pa-0" :class="'bg-' + backgroundColor">
                         <v-list-item
                             v-if="
                                 Array.isArray(administrativeInformationObject?.creator?.keys) &&
@@ -52,34 +50,38 @@
                                 </div>
                             </v-list-item-subtitle>
                         </v-list-item>
-                        <v-divider
-                            v-if="
-                                Array.isArray(administrativeInformationObject?.creator?.keys) &&
-                                administrativeInformationObject?.creator?.keys.length > 0 &&
-                                (administrativeInformationObject?.version || administrativeInformationObject?.revision)
-                            "
-                            class="mt-2"
-                            opacity="0.05"></v-divider>
-                        <!-- Version and Revision -->
-                        <v-list-item
-                            v-if="administrativeInformationObject?.version || administrativeInformationObject?.revision"
-                            class="ma-0">
-                            <v-list-item-title>
-                                <template v-if="administrativeInformationObject?.version">
-                                    <span class="text-subtitle-2 mt-2 mr-2">{{ 'Version:' }}</span
-                                    ><v-chip label size="x-small" border class="mr-5">{{
-                                        administrativeInformationObject.version
-                                    }}</v-chip>
-                                </template>
-                                <template v-if="administrativeInformationObject?.revision">
-                                    <span class="text-subtitle-2 mt-2 mr-2">{{ 'Revision:' }}</span
-                                    ><v-chip label size="x-small" border class="mr-5">{{
-                                        administrativeInformationObject.revision
-                                    }}</v-chip>
-                                </template>
-                            </v-list-item-title>
-                        </v-list-item>
                     </v-list>
+                </template>
+                <!-- AdministrativeInformation Version / Revision -->
+                <template v-if="administrativeInformationObject?.version || administrativeInformationObject?.revision">
+                    <v-divider
+                        v-if="
+                            Array.isArray(administrativeInformationObject?.creator?.keys) &&
+                            administrativeInformationObject?.creator?.keys.length > 0 &&
+                            (administrativeInformationObject?.version || administrativeInformationObject?.revision)
+                        "
+                        class="mt-2"
+                        opacity="0.05"></v-divider>
+                    <!-- Version and Revision -->
+                    <v-list-item class="ma-0" :class="'bg-' + backgroundColor">
+                        <v-list-item-title>
+                            <template v-if="administrativeInformationObject?.version">
+                                <span class="text-subtitle-2 mt-2 mr-2">{{ 'Version:' }}</span
+                                ><v-chip label size="x-small" border class="mr-5">{{
+                                    administrativeInformationObject.version
+                                }}</v-chip>
+                            </template>
+                            <template v-if="administrativeInformationObject?.revision">
+                                <span class="text-subtitle-2 mt-2 mr-2">{{ 'Revision:' }}</span
+                                ><v-chip label size="x-small" border class="mr-5">{{
+                                    administrativeInformationObject.revision
+                                }}</v-chip>
+                            </template>
+                        </v-list-item-title>
+                    </v-list-item>
+                </template>
+                <!-- AdministrativeInformation TemplateId -->
+                <template v-if="administrativeInformationObject?.templateId">
                     <v-divider
                         v-if="
                             ((Array.isArray(administrativeInformationObject?.creator?.keys) &&
@@ -89,9 +91,9 @@
                             administrativeInformationObject?.templateId
                         "
                         opacity="0.05"></v-divider>
-                    <v-list nav class="pa-0">
+                    <v-list nav class="pa-0" :class="'bg-' + backgroundColor">
                         <v-hover v-slot="{ isHovering, props }">
-                            <v-list-item v-if="administrativeInformationObject?.templateId" class="ma-0">
+                            <v-list-item class="ma-0">
                                 <template #title>
                                     <span class="text-subtitle-2">
                                         {{ 'Template ID:' }}
@@ -118,6 +120,14 @@
                             </v-list-item>
                         </v-hover>
                     </v-list>
+                </template>
+                <!-- AdministrativeInformation EmbeddedDataSpecifications -->
+                <template
+                    v-if="
+                        administrativeInformationObject?.embeddedDataSpecifications &&
+                        Array.isArray(administrativeInformationObject?.embeddedDataSpecifications) &&
+                        administrativeInformationObject?.embeddedDataSpecifications.length > 0
+                    ">
                     <v-divider
                         v-if="
                             ((Array.isArray(administrativeInformationObject?.creator?.keys) &&
@@ -129,14 +139,7 @@
                             administrativeInformationObject?.embeddedDataSpecifications.length > 0
                         "
                         opacity="0.05"></v-divider>
-                    <!-- Embedded Data Specifications -->
-                    <v-list
-                        v-if="
-                            Array.isArray(administrativeInformationObject?.embeddedDataSpecifications) &&
-                            administrativeInformationObject?.embeddedDataSpecifications.length > 0
-                        "
-                        nav
-                        class="pa-0">
+                    <v-list nav class="pa-0" :class="'bg-' + backgroundColor">
                         <v-card
                             v-for="(
                                 embeddedDataSpecification, i
@@ -164,9 +167,9 @@
                             </v-list>
                         </v-card>
                     </v-list>
-                </v-expansion-panel-text>
-            </v-expansion-panel>
-        </v-expansion-panels>
+                </template>
+            </v-expansion-panel-text>
+        </v-expansion-panel>
     </v-container>
 </template>
 
@@ -184,7 +187,6 @@
             SemanticID,
             DataSpecificationContent,
         },
-        // props: ['administrativeInformationObject', 'administrativeInformationTitle', 'small', 'backgroundColor'],
         props: {
             administrativeInformationObject: {
                 type: Object,
@@ -192,11 +194,11 @@
             },
             administrativeInformationTitle: {
                 type: String,
-                default: '',
+                default: 'Administrative Information',
             },
             small: {
                 type: Boolean,
-                default: true,
+                default: false,
             },
             backgroundColor: {
                 type: String,

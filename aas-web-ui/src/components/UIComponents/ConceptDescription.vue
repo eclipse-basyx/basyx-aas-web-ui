@@ -4,24 +4,34 @@
             <v-list nav>
                 <!-- ConceptDescription Identification -->
                 <IdentificationElement :identification-object="conceptDescriptionObject"></IdentificationElement>
-                <v-divider
-                    v-if="conceptDescriptionObject.displayName && conceptDescriptionObject.displayName.length > 0"
-                    class="mt-2"></v-divider>
-                <!-- ConceptDescription DisplayName -->
-                <DisplayNameElement
-                    v-if="conceptDescriptionObject.displayName && conceptDescriptionObject.displayName.length > 0"
-                    :display-name-object="conceptDescriptionObject.displayName"
-                    :display-name-title="'Display Name'"
-                    :small="false"></DisplayNameElement>
-                <v-divider
-                    v-if="conceptDescriptionObject.description && conceptDescriptionObject.description.length > 0"
-                    class="mt-2"></v-divider>
-                <!-- ConceptDescription Description -->
-                <DescriptionElement
-                    v-if="conceptDescriptionObject.description && conceptDescriptionObject.description.length > 0"
-                    :description-object="conceptDescriptionObject.description"
-                    :description-title="'Description'"
-                    :small="false"></DescriptionElement>
+                <v-expansion-panels class="mb-n2">
+                    <!-- ConceptDescription DisplayName -->
+                    <template
+                        v-if="
+                            conceptDescriptionObject.displayName &&
+                            Array.isArray(conceptDescriptionObject.displayName) &&
+                            conceptDescriptionObject.displayName.length > 0
+                        ">
+                        <v-divider class="mt-2"></v-divider>
+                        <DisplayNameElement
+                            :display-name-array="conceptDescriptionObject.displayName"
+                            :display-name-title="'Display Name'"
+                            :small="false" />
+                    </template>
+                    <template
+                        v-if="
+                            conceptDescriptionObject.description &&
+                            Array.isArray(conceptDescriptionObject.description) &&
+                            conceptDescriptionObject.description.length > 0
+                        ">
+                        <v-divider class="mt-2"></v-divider>
+                        <!-- ConceptDescription Description -->
+                        <DescriptionElement
+                            :description-array="conceptDescriptionObject.description"
+                            :description-title="'Description'"
+                            :small="false"></DescriptionElement>
+                    </template>
+                </v-expansion-panels>
             </v-list>
             <v-divider
                 v-if="

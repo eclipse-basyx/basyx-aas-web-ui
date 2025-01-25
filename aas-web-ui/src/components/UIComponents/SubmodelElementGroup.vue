@@ -84,7 +84,7 @@
                             <!-- MultiLanguageProperty -->
                             <DescriptionElement
                                 v-else-if="SubmodelElement.modelType == 'MultiLanguageProperty'"
-                                :description-object="SubmodelElement.value"
+                                :description-array="SubmodelElement.value"
                                 :description-title="nameToDisplay(SubmodelElement)"
                                 :small="false"
                                 style="margin-top: -12px"></DescriptionElement>

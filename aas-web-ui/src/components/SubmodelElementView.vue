@@ -20,37 +20,35 @@
                     <!-- Detailed View of the selected SubmodelElement (e.g. Property, Operation, etc.) -->
                     <v-card :class="conceptDescriptions.length > 0 ? 'mb-3' : ''">
                         <v-list nav>
-                            <!-- SubmodelELement Identification -->
+                            <!-- SM/SME Identification -->
                             <IdentificationElement :identification-object="submodelElementData"></IdentificationElement>
-                            <!-- Submodel Administrative Information-->
-                            <v-divider
+                            <!-- SM/SME Administrative Information-->
+                            <template v-if="submodelElementData.administration">
+                                <v-divider class="mt-2"></v-divider>
+                                <AdministrativeInformationElement
+                                    v-if="submodelElementData.administration"
+                                    :administrative-information-object="submodelElementData.administration"
+                                    :administrative-information-title="'Administrative Information'" />
+                            </template>
+                            <!-- SM/SME DisplayName -->
+                            <template
                                 v-if="
-                                    submodelElementData.administration &&
-                                    (submodelElementData.administration.revision != '' ||
-                                        submodelElementData.administration.version != '')
-                                "
-                                class="mt-2"></v-divider>
-                            <AdministrativeInformationElement
-                                v-if="submodelElementData.administration"
-                                :administrative-information-object="submodelElementData.administration"
-                                :administrative-information-title="'Administrative Information'"
-                                :small="false"></AdministrativeInformationElement>
-                            <v-divider
-                                v-if="submodelElementData.displayName && submodelElementData.displayName.length > 0"
-                                class="mt-2"></v-divider>
-                            <!-- SubmodelELement DisplayName -->
-                            <DisplayNameElement
-                                v-if="submodelElementData.displayName && submodelElementData.displayName.length > 0"
-                                :display-name-object="submodelElementData.displayName"
-                                :display-name-title="'Display Name'"
-                                :small="false"></DisplayNameElement>
+                                    submodelElementData.displayName &&
+                                    Array.isArray(submodelElementData.displayName) &&
+                                    submodelElementData.displayName.length > 0
+                                ">
+                                <v-divider class="mt-2"></v-divider>
+                                <DisplayNameElement
+                                    :display-name-array="submodelElementData.displayName"
+                                    :display-name-title="'Display Name'" />
+                            </template>
                             <v-divider
                                 v-if="submodelElementData.description && submodelElementData.description.length > 0"
                                 class="mt-2"></v-divider>
                             <!-- SubmodelELement Description -->
                             <DescriptionElement
                                 v-if="submodelElementData.description && submodelElementData.description.length > 0"
-                                :description-object="submodelElementData.description"
+                                :description-array="submodelElementData.description"
                                 :description-title="'Description'"
                                 :small="false"></DescriptionElement>
                             <v-divider

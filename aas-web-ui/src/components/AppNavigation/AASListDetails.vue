@@ -80,47 +80,30 @@
                     <!-- AAS Identification -->
                     <IdentificationElement
                         :identification-object="assetAdministrationShellData"
-                        :v-chip-content="
-                            getKeyTypeAbbreviation(assetAdministrationShellData.modelType)
-                        "></IdentificationElement>
-                    <!-- AAS Administrative Information-->
-                    <v-divider v-if="assetAdministrationShellData?.administration" class="mt-2"></v-divider>
-                    <AdministrativeInformationElement
-                        v-if="assetAdministrationShellData.administration"
-                        :administrative-information-object="assetAdministrationShellData.administration"
-                        :administrative-information-title="'Administrative Information'"
-                        :small="false"
-                        :background-color="'detailsCard'"></AdministrativeInformationElement>
-                    <v-divider
-                        v-if="
-                            assetAdministrationShellData.displayName &&
-                            assetAdministrationShellData.displayName.length > 0
-                        "
-                        class="mt-2"></v-divider>
-                    <!-- AAS DisplayName -->
-                    <DisplayNameElement
-                        v-if="
-                            assetAdministrationShellData.displayName &&
-                            assetAdministrationShellData.displayName.length > 0
-                        "
-                        :display-name-object="assetAdministrationShellData.displayName"
-                        :display-name-title="'DisplayName'"
-                        :small="false"></DisplayNameElement>
-                    <v-divider
-                        v-if="
-                            assetAdministrationShellData.description &&
-                            assetAdministrationShellData.description.length > 0
-                        "
-                        class="mt-2"></v-divider>
-                    <!-- AAS Description -->
-                    <DescriptionElement
-                        v-if="
-                            assetAdministrationShellData.description &&
-                            assetAdministrationShellData.description.length > 0
-                        "
-                        :description-object="assetAdministrationShellData.description"
-                        :description-title="'Description'"
-                        :small="false"></DescriptionElement>
+                        :v-chip-content="getKeyTypeAbbreviation(assetAdministrationShellData.modelType)" />
+                    <v-expansion-panels v-model="openPanels" multiple class="mb-n2">
+                        <!-- AAS Administrative Information-->
+                        <template v-if="hasAdministrativeInformation">
+                            <v-divider />
+                            <AdministrativeInformationElement
+                                :administrative-information-object="assetAdministrationShellData.administration"
+                                :background-color="'detailsCard'" />
+                        </template>
+                        <!-- AAS DisplayName -->
+                        <template v-if="hasDisplayName">
+                            <v-divider />
+                            <DisplayNameElement
+                                :display-name-array="assetAdministrationShellData.displayName"
+                                :background-color="'detailsCard'" />
+                        </template>
+                        <!-- AAS Description -->
+                        <template v-if="hasDescription">
+                            <v-divider />
+                            <DescriptionElement
+                                :description-array="assetAdministrationShellData.description"
+                                :background-color="'detailsCard'" />
+                        </template>
+                    </v-expansion-panels>
                 </v-list>
             </v-card-text>
         </v-sheet>
@@ -192,6 +175,27 @@
         }
     });
     const autoSync = computed(() => navigationStore.getAutoSync);
+    const hasAdministrativeInformation = computed(() =>
+        assetAdministrationShellData.value?.administration ? true : false
+    );
+    const hasDisplayName = computed(() =>
+        assetAdministrationShellData.value.displayName &&
+        Array.isArray(assetAdministrationShellData.value.displayName) &&
+        assetAdministrationShellData.value.displayName.length > 0
+            ? true
+            : false
+    );
+    const hasDescription = computed(() =>
+        assetAdministrationShellData.value.description &&
+        Array.isArray(assetAdministrationShellData.value.description) &&
+        assetAdministrationShellData.value.description.length > 0
+            ? true
+            : false
+    );
+    const openPanelNumber = computed(() =>
+        hasDescription.value ? 0 + (hasAdministrativeInformation.value ? 1 : 0) + (hasDisplayName.value ? 1 : 0) : null
+    );
+    const openPanels = ref<number[]>([]);
 
     // Watchers
     // watch for changes in the autoSync state and create or clear the autoSyncInterval
@@ -213,11 +217,17 @@
         { deep: true }
     );
 
-    // Resets the SubmodelElementView when the AAS changes
     watch(
         () => selectedAAS.value,
         async () => {
             await initializeView();
+        }
+    );
+
+    watch(
+        () => assetAdministrationShellData.value,
+        async () => {
+            openPanels.value = openPanelNumber.value === null ? [] : [openPanelNumber.value];
         }
     );
 
