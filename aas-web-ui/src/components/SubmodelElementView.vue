@@ -145,11 +145,11 @@
                         <v-divider></v-divider>
                         <LastSync :timestamp="submodelElementData.timestamp"></LastSync>
                     </v-card>
-                    <v-sheet v-if="Array.isArray(conceptDescriptions) && conceptDescriptions.length > 0">
+                    <template v-if="Array.isArray(conceptDescriptions) && conceptDescriptions.length > 0">
                         <template v-for="cd in conceptDescriptions" :key="cd.id">
                             <ConceptDescription :concept-description-object="cd" class="mt-4"></ConceptDescription>
                         </template>
-                    </v-sheet>
+                    </template>
                 </template>
                 <v-empty-state
                     v-else-if="!selectedAAS || Object.keys(selectedAAS).length === 0"
