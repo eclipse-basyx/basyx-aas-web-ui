@@ -279,7 +279,7 @@
     const router = useRouter();
 
     // Composables
-    const { downloadAasx, isAvailableById: isAvailableByIdInRepo } = useAASRepositoryClient();
+    const { downloadAasx, isAvailableByIdInRepo } = useAASRepositoryClient();
     const { getAasEndpoint, fetchAndDispatchAasById, fetchAasDescriptorList } = useAASHandling();
 
     // Stores
