@@ -179,20 +179,10 @@ export function useConceptDescriptionHandling() {
      * @param {Array} [sme.conceptDescriptions] - Optional concept descriptions array.
      * @returns {Promise<string>} A promise that resolves to the description if found, otherwise an empty string.
      */
-    async function cdDefinition(sme: any, language: string = 'en'): Promise<string> {
+    function cdDefinition(sme: any, language: string = 'en'): string {
         const failResponse = '';
 
         if (!sme || Object.keys(sme).length === 0) return failResponse;
-
-        // Fetch CDs if not available
-        if (
-            !sme.conceptDescriptions ||
-            !Array.isArray(sme.conceptDescriptions) ||
-            sme.conceptDescriptions.length === 0
-        ) {
-            const cds = await fetchCds(sme);
-            if (cds && Array.isArray(cds) && cds.length > 0) sme.conceptDescriptions = cds;
-        }
 
         if (
             !sme.conceptDescriptions ||
