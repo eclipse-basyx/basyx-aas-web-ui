@@ -167,13 +167,20 @@
                             <template #append>
                                 <v-btn
                                     v-if="!isMobile && item.status && item.status === 'offline'"
-                                    icon="mdi-cloud-off-outline"
+                                    icon="mdi-cloud-off"
                                     size="x-small"
                                     variant="plain"
                                     color="error"
+                                    text-color="buttonText"
                                     disabled
                                     class="ml-n1"
                                     style="z-index: 9000"></v-btn>
+                                <!-- <v-badge
+                                    :model-value="!isMobile && item.status && item.status === 'offline'"
+                                    icon="mdi-network-strength-4-alert"
+                                    color="error"
+                                    text-color="buttonText"
+                                    inline></v-badge> -->
                                 <v-menu v-if="editMode">
                                     <template #activator="{ props }">
                                         <v-btn
