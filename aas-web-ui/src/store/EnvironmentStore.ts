@@ -4,7 +4,7 @@ import { computed, ref } from 'vue';
 const isProduction = import.meta.env.MODE === 'production';
 
 export const useEnvStore = defineStore('envStore', () => {
-    // States
+    // State Variables
     const basePath = ref(import.meta.env.VITE_BASE_PATH || (isProduction ? '/__BASE_PATH_PLACEHOLDER__/' : ''));
     const logoLightPath = ref(
         import.meta.env.VITE_LOGO_LIGHT_PATH || (isProduction ? '/__LOGO_LIGHT_PATH_PLACEHOLDER__/' : '')
@@ -130,7 +130,7 @@ export const useEnvStore = defineStore('envStore', () => {
     });
 
     return {
-        singleAas,
+        // Getters
         getEnvBasePath,
         getEnvLogoLightPath,
         getEnvLogoDarkPath,

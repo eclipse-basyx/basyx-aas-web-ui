@@ -25,17 +25,20 @@ import { useNavigationStore } from './store/NavigationStore';
 const app = createApp(App);
 
 const pinia = createPinia();
+app.use(pinia);
 
-async function loadPlugins() {
-    app.use(pinia);
+const router = await createAppRouter();
+app.use(router);
 
-    const router = await createAppRouter();
-    app.use(router);
+app.use(VueApexCharts);
 
-    app.use(VueApexCharts);
+// Stores
+const envStore = useEnvStore();
+const navigationStore = useNavigationStore();
 
-    const envStore = useEnvStore(); // Get the store instance
+await initialize();
 
+async function initialize() {
     // create keycloak instance
     if (envStore.getKeycloakActive) {
         try {
@@ -46,6 +49,12 @@ async function loadPlugins() {
         }
     }
 
+    await loadPlugins();
+
+    app.mount('#app');
+}
+
+async function loadPlugins() {
     await registerPlugins(app);
 
     // Plugins aka Component Visualizations
@@ -70,10 +79,7 @@ async function loadPlugins() {
         }
     }
 
-    const navigationStore = useNavigationStore();
     navigationStore.dispatchPlugins(plugins);
-
-    app.mount('#app');
 }
 
 async function initKeycloak(keycloakUrl: string, keycloakRealm: string, keycloakClientId: string) {
@@ -109,8 +115,8 @@ async function initKeycloak(keycloakUrl: string, keycloakRealm: string, keycloak
                     // console.info("Authenticated");
                     resolve();
                     const authStore = useAuthStore();
-                    authStore.setToken(keycloak.token);
-                    authStore.setRefreshToken(keycloak.refreshToken);
+                    authStore.setToken(keycloak.token ? keycloak.token : '');
+                    authStore.setRefreshToken(keycloak.refreshToken ? keycloak.refreshToken : '');
                     authStore.setAuthStatus(true);
                     setInterval(() => {
                         keycloak
@@ -118,8 +124,8 @@ async function initKeycloak(keycloakUrl: string, keycloakRealm: string, keycloak
                             .then((refreshed: boolean) => {
                                 if (refreshed) {
                                     // console.log('Token refreshed');
-                                    authStore.setToken(keycloak.token);
-                                    authStore.setRefreshToken(keycloak.refreshToken);
+                                    authStore.setToken(keycloak.token ? keycloak.token : '');
+                                    authStore.setRefreshToken(keycloak.refreshToken ? keycloak.refreshToken : '');
                                 }
                                 authStore.setAuthStatus(true);
                             })
@@ -138,5 +144,3 @@ async function initKeycloak(keycloakUrl: string, keycloakRealm: string, keycloak
             });
     });
 }
-
-loadPlugins();
