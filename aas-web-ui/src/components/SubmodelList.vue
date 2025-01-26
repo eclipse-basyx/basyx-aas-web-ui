@@ -91,14 +91,14 @@
     const route = useRoute();
     const router = useRouter();
 
+    // Stores
+    const envStore = useEnvStore();
+    const aasStore = useAASStore();
+    const navigationStore = useNavigationStore();
+
     // Composables
     const { getRequest } = useRequestHandling();
     const { smNotFound } = useSMRepositoryClient();
-
-    // Stores
-    const navigationStore = useNavigationStore();
-    const aasStore = useAASStore();
-    const envStore = useEnvStore();
 
     // Vuetify
     const theme = useTheme();

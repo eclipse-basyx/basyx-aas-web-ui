@@ -12,8 +12,10 @@
     import { ref } from 'vue';
     import { useNavigationStore } from '@/store/NavigationStore';
 
+    // Stores
     const navigationStore = useNavigationStore();
 
+    // Data
     const statusCheckStatus = ref(navigationStore.getStatusCheck);
 
     function updateStatusCheck() {

@@ -48,5 +48,6 @@
 <script lang="ts" setup>
     import { useDisplay } from 'vuetify';
 
+    // Vuetify
     const { mdAndDown } = useDisplay();
 </script>

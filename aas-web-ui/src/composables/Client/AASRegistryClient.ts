@@ -7,10 +7,13 @@ import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { removeNullValues } from '@/utils/generalUtils';
 
 export function useAASRegistryClient() {
-    const { getRequest, postRequest, putRequest } = useRequestHandling();
-
+    // Stores
     const navigationStore = useNavigationStore();
 
+    // Composables
+    const { getRequest, postRequest, putRequest } = useRequestHandling();
+
+    // Computed Properties
     const aasRegistryUrl = computed(() => navigationStore.getAASRegistryURL);
 
     // Fetch List of all available AAS Descriptors

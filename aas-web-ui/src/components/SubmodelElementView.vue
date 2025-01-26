@@ -21,69 +21,59 @@
                     <v-card :class="conceptDescriptions.length > 0 ? 'mb-3' : ''">
                         <v-list nav>
                             <!-- SubmodelELement Identification -->
-                            <IdentificationElement :identification-object="submodelElementData"></IdentificationElement>
+                            <IdentificationElement :identification-object="submodelElementData" />
                             <!-- Submodel Administrative Information-->
-                            <v-divider
+                            <template
                                 v-if="
                                     submodelElementData.administration &&
-                                    (submodelElementData.administration.revision != '' ||
-                                        submodelElementData.administration.version != '')
-                                "
-                                class="mt-2"></v-divider>
-                            <AdministrativeInformationElement
-                                v-if="submodelElementData.administration"
-                                :administrative-information-object="submodelElementData.administration"
-                                :administrative-information-title="'Administrative Information'"
-                                :small="false"></AdministrativeInformationElement>
-                            <v-divider
-                                v-if="submodelElementData.displayName && submodelElementData.displayName.length > 0"
-                                class="mt-2"></v-divider>
+                                    Object.keys(submodelElementData.administration).length > 0
+                                ">
+                                <v-divider class="mt-2" />
+                                <AdministrativeInformationElement
+                                    :administrative-information-object="submodelElementData.administration" />
+                            </template>
                             <!-- SubmodelELement DisplayName -->
-                            <DisplayNameElement
-                                v-if="submodelElementData.displayName && submodelElementData.displayName.length > 0"
-                                :display-name-object="submodelElementData.displayName"
-                                :display-name-title="'Display Name'"
-                                :small="false"></DisplayNameElement>
-                            <v-divider
-                                v-if="submodelElementData.description && submodelElementData.description.length > 0"
-                                class="mt-2"></v-divider>
+                            <template
+                                v-if="
+                                    submodelElementData.displayName &&
+                                    Array.isArray(submodelElementData.displayName) &&
+                                    submodelElementData.displayName.length > 0
+                                ">
+                                <v-divider class="mt-2" />
+                                <DisplayNameElement :display-names="submodelElementData.displayName" />
+                            </template>
                             <!-- SubmodelELement Description -->
-                            <DescriptionElement
-                                v-if="submodelElementData.description && submodelElementData.description.length > 0"
-                                :description-object="submodelElementData.description"
-                                :description-title="'Description'"
-                                :small="false"></DescriptionElement>
-                            <v-divider
+                            <template
                                 v-if="
-                                    submodelElementData.semanticId &&
-                                    submodelElementData.semanticId.keys &&
-                                    submodelElementData.semanticId.keys.length > 0
-                                "
-                                class="mt-2"></v-divider>
+                                    submodelElementData.description &&
+                                    Array.isArray(submodelElementData.description) &&
+                                    submodelElementData.description.length > 0
+                                ">
+                                <v-divider class="mt-2"></v-divider>
+                                <DescriptionElement :descriptions="submodelElementData.description" />
+                            </template>
                             <!-- SubmodelELement SemanticID -->
-                            <SemanticID
+                            <template
                                 v-if="
                                     submodelElementData.semanticId &&
                                     submodelElementData.semanticId.keys &&
+                                    Array.isArray(submodelElementData.semanticId.keys) &&
                                     submodelElementData.semanticId.keys.length > 0
-                                "
-                                :semantic-id-object="submodelElementData.semanticId"
-                                :semantic-title="'Semantic ID'"
-                                :small="false"></SemanticID>
-                            <v-divider
-                                v-if="
-                                    submodelElementData.supplementalSemanticIds &&
-                                    submodelElementData.supplementalSemanticIds.length > 0
-                                "
-                                class="mt-2"></v-divider>
+                                ">
+                                <v-divider class="mt-2" />
+                                <SemanticIdElement :semantic-id-object="submodelElementData.semanticId" />
+                            </template>
                             <!-- SubmodelELement SupplementalSemanticID -->
-                            <SupplementalSemanticID
+                            <template
                                 v-if="
                                     submodelElementData.supplementalSemanticIds &&
+                                    Array.isArray(submodelElementData.supplementalSemanticIds) &&
                                     submodelElementData.supplementalSemanticIds.length > 0
-                                "
-                                :supplemental-semantic-ids-array="submodelElementData.supplementalSemanticIds"
-                                :supplemental-semantic-ids-title="'Supplemental Semantic ID'"></SupplementalSemanticID>
+                                ">
+                                <v-divider class="mt-2" />
+                                <SupplementalSemanticIdsElement
+                                    :supplemental-semantic-ids="submodelElementData.supplementalSemanticIds" />
+                            </template>
                         </v-list>
                         <v-divider></v-divider>
                         <v-list nav class="px-4 pt-0 pb-5">
@@ -141,10 +131,10 @@
                         </v-list>
                         <!-- Last Sync -->
                         <v-divider></v-divider>
-                        <LastSync :timestamp="submodelElementData.timestamp"></LastSync>
+                        <LastSyncElement :timestamp="submodelElementData.timestamp" />
                     </v-card>
                     <template v-for="(conceptDescription, index) in conceptDescriptions" :key="conceptDescription.id">
-                        <ConceptDescription :concept-description-object="conceptDescription"></ConceptDescription>
+                        <ConceptDescription :concept-description-object="conceptDescription" />
                         <v-divider v-if="index !== conceptDescriptions.length - 1" class="mt-2"></v-divider>
                     </template>
                 </template>
@@ -175,13 +165,13 @@
     const route = useRoute();
 
     // Stores
-    const navigationStore = useNavigationStore();
-    const aasStore = useAASStore();
     const envStore = useEnvStore();
+    const aasStore = useAASStore();
+    const navigationStore = useNavigationStore();
 
     // Composables
-    const { getConceptDescriptions } = useConceptDescriptionHandling();
     const { fetchAndDispatchSme } = useSMEHandling();
+    const { getConceptDescriptions } = useConceptDescriptionHandling();
 
     // Data
     const submodelElementData = ref({} as any);

@@ -1,27 +1,35 @@
 <template>
     <v-container class="pa-0" fluid>
-        <v-list lines="one" nav class="bg-detailsCard">
+        <v-list
+            v-if="assetObject && Object.keys(assetObject).length > 1 && assetObject.assetKind"
+            lines="one"
+            nav
+            class="bg-detailsCard">
             <IdentificationElement
                 id="assetInformationIdentification"
                 :identification-object="assetInfo"
                 :v-chip-content="assetObject.assetKind"
-                :identification-title="'Global Asset ID'"></IdentificationElement>
-            <v-divider
+                :identification-title="'Global Asset ID'" />
+            <!-- Specific Asset IDs -->
+            <template
                 v-if="
                     assetObject?.specificAssetIds &&
                     Array.isArray(assetObject?.specificAssetIds) &&
                     assetObject?.specificAssetIds.length > 0
-                "></v-divider>
-            <!-- Specific Asset IDs -->
-            <SpecificAssetIds :asset-object="assetObject"></SpecificAssetIds>
-            <v-divider v-if="assetObject.defaultThumbnail" class="mt-2"></v-divider>
-            <v-img
-                v-if="assetObject.defaultThumbnail"
-                :src="assetObject.defaultThumbnail.path"
-                max-width="100%"
-                :max-height="thumbnailMaxHeight"
-                contain
-                style="border-radius: 4px"></v-img>
+                ">
+                <v-divider />
+                <SpecificAssetIdsElement :specific-asset-ids="assetObject.specificAssetIds" />
+            </template>
+            <template v-if="assetObject.defaultThumbnail">
+                <v-divider class="mt-2"></v-divider>
+                <v-img
+                    v-if="assetObject.defaultThumbnail"
+                    :src="assetObject.defaultThumbnail.path"
+                    max-width="100%"
+                    :max-height="thumbnailMaxHeight"
+                    contain
+                    style="border-radius: 4px"></v-img>
+            </template>
         </v-list>
     </v-container>
 </template>

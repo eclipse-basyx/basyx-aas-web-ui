@@ -4,12 +4,12 @@ import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';
 
 export function useSMEHandling() {
+    // Stores
+    const aasStore = useAASStore();
+
     // Composables
     const { fetchSm: fetchSmFromRepo, fetchSme: fetchSmeFromRepo } = useSMRepositoryClient();
     const { getConceptDescriptions } = useConceptDescriptionHandling();
-
-    // Stores
-    const aasStore = useAASStore();
 
     /**
      * Fetches a Submodel Element (SME) by the provided SME path.

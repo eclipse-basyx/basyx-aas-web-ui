@@ -79,9 +79,9 @@
         mixins: [DashboardHandling],
 
         setup() {
-            const navigationStore = useNavigationStore();
-            const envStore = useEnvStore();
             const router = useRouter();
+            const envStore = useEnvStore();
+            const navigationStore = useNavigationStore();
 
             return {
                 navigationStore, // NavigationStore Object

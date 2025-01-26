@@ -10,8 +10,6 @@
             v-for="SubmodelElement in annotatedRelationshipElementObject.annotations"
             :key="SubmodelElement.idShort"
             class="mb-3">
-            <!-- Display SubmodelElement -->
-            <!-- <SubmodelElementWrapper :SubmodelElementObject="SubmodelElement" :cardStyle="'outlined'"></SubmodelElementWrapper> -->
             <component
                 :is="SubmodelElementWrapper"
                 v-if="SubmodelElementWrapper"

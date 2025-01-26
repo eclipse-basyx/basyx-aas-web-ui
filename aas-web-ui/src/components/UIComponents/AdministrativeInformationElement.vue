@@ -1,13 +1,15 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-expansion-panels class="mb-n2">
-            <v-expansion-panel elevation="0" tile static :color="backgroundColor">
+        <v-expansion-panels
+            v-if="administrativeInformationObject && Object.keys(administrativeInformationObject).length > 0"
+            class="mb-n2">
+            <v-expansion-panel elevation="0" tile static :color="backgroundColor !== '' ? backgroundColor : ''">
                 <v-expansion-panel-title class="px-2">
                     <span :class="small ? 'text-caption' : 'text-subtitle-2 '">
                         {{ administrativeInformationTitle }}
                     </span>
                 </v-expansion-panel-title>
-                <v-expansion-panel-text :class="'bg-' + backgroundColor">
+                <v-expansion-panel-text :class="backgroundColor !== '' ? 'bg-' + backgroundColor : ''">
                     <v-divider
                         v-if="
                             Array.isArray(administrativeInformationObject?.creator?.keys) &&
@@ -146,21 +148,30 @@
                             class="mt-2">
                             <v-list nav class="bg-elevatedCard pt-0">
                                 <!-- hasDataSpecification -->
-                                <SemanticID
+                                <template
                                     v-if="
-                                        Array.isArray(embeddedDataSpecification?.dataSpecification?.keys) &&
+                                        embeddedDataSpecification.dataSpecification &&
+                                        embeddedDataSpecification.dataSpecification.keys &&
+                                        Array.isArray(embeddedDataSpecification.dataSpecification.keys) &&
                                         embeddedDataSpecification?.dataSpecification?.keys.length > 0
-                                    "
-                                    :semantic-id-object="embeddedDataSpecification.dataSpecification"
-                                    :semantic-title="'Data Specification'"
-                                    class="mb-2"></SemanticID>
-                                <v-divider v-if="embeddedDataSpecification?.dataSpecificationContent"></v-divider>
-                                <!-- dataSpecificationContent -->
-                                <DataSpecificationContent
-                                    v-if="embeddedDataSpecification?.dataSpecificationContent"
-                                    :data-specification-object="
-                                        embeddedDataSpecification?.dataSpecificationContent
-                                    "></DataSpecificationContent>
+                                    ">
+                                    <SemanticIdElement
+                                        :semantic-id-object="embeddedDataSpecification.dataSpecification"
+                                        :semantic-title="'Data Specification'"
+                                        class="mb-2" />
+                                </template>
+                                <template
+                                    v-if="
+                                        embeddedDataSpecification.dataSpecificationContent &&
+                                        Object.keys(embeddedDataSpecification.dataSpecificationContent).length > 0
+                                    ">
+                                    <v-divider />
+                                    <!-- dataSpecificationContent -->
+                                    <DataSpecificationContent
+                                        :data-specification-object="
+                                            embeddedDataSpecification.dataSpecificationContent
+                                        " />
+                                </template>
                             </v-list>
                         </v-card>
                     </v-list>
@@ -170,59 +181,38 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent, Ref, ref } from 'vue';
+<script lang="ts" setup>
+    import { Ref, ref } from 'vue';
     import { useClipboardUtil } from '@/composables/ClipboardUtil';
-    import { useNavigationStore } from '@/store/NavigationStore';
-    import DataSpecificationContent from './DataSpecificationContent.vue';
-    import SemanticID from './SemanticID.vue';
 
-    export default defineComponent({
-        name: 'AdministrativeInformationElement',
-        components: {
-            SemanticID,
-            DataSpecificationContent,
+    // Composables
+    const { copyToClipboard } = useClipboardUtil();
+
+    // Properties
+    defineProps({
+        administrativeInformationObject: {
+            type: Object as any,
+            default: {} as any,
         },
-        // props: ['administrativeInformationObject', 'administrativeInformationTitle', 'small', 'backgroundColor'],
-        props: {
-            administrativeInformationObject: {
-                type: Object,
-                default: () => ({}),
-            },
-            administrativeInformationTitle: {
-                type: String,
-                default: '',
-            },
-            small: {
-                type: Boolean,
-                default: true,
-            },
-            backgroundColor: {
-                type: String,
-                default: '',
-            },
+        administrativeInformationTitle: {
+            type: String,
+            default: 'Administrative Information',
         },
-
-        setup() {
-            const navigationStore = useNavigationStore();
-
-            const { copyToClipboard } = useClipboardUtil();
-
-            const copyIcon = ref<string>('mdi-clipboard-file-outline');
-
-            const getCopyIconAsRef = (): Ref => {
-                return copyIcon;
-            };
-
-            return {
-                navigationStore, // NavigationStore Object
-                copyToClipboard,
-                copyIcon,
-                getCopyIconAsRef,
-            };
+        small: {
+            type: Boolean,
+            default: false,
+        },
+        backgroundColor: {
+            type: String,
+            default: '',
         },
     });
+
+    // Data
+    const copyIcon = ref<string>('mdi-clipboard-file-outline');
+    const getCopyIconAsRef = (): Ref => {
+        return copyIcon;
+    };
 </script>
 
 <style lang="css" scoped>

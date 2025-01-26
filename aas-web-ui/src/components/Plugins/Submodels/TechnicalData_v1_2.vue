@@ -165,10 +165,7 @@
                 </v-expansion-panel-title>
                 <v-divider v-if="panel.includes(2)"></v-divider>
                 <v-expansion-panel-text>
-                    <GenericDataVisu
-                        v-if="!tableView"
-                        class="mt-3"
-                        :submodel-element-data="technicalProperties"></GenericDataVisu>
+                    <GenericDataView v-if="!tableView" class="mt-3" :submodel-element-data="technicalProperties" />
                     <template v-else>
                         <v-card border class="mt-3">
                             <v-table density="comfortable" hover>

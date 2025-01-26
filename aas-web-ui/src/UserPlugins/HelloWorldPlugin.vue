@@ -9,9 +9,7 @@
         <!-- Iterate over all SubmodelElements of the HelloWorld-Plugin -->
         <div v-for="SubmodelElement in pluginData" :key="SubmodelElement.idShort" class="mb-3">
             <!-- Display SubmodelElement -->
-            <SubmodelElementWrapper
-                :SubmodelElementObject="SubmodelElement"
-                @update-value="updatePluginValue"></SubmodelElementWrapper>
+            <SubmodelElementWrapper :submodel-element-object="SubmodelElement" @update-value="updatePluginValue" />
         </div>
     </v-container>
 </template>

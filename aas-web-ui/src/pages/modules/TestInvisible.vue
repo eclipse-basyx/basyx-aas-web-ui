@@ -19,5 +19,6 @@
         isVisibleModule: false,
     });
 
+    // Data
     const moduleName = ref('TestInvisible');
 </script>

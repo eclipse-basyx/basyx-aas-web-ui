@@ -63,9 +63,9 @@
         mixins: [DashboardHandling],
 
         setup() {
-            const envStore = useEnvStore();
             const route = useRoute();
             const router = useRouter();
+            const envStore = useEnvStore();
 
             return {
                 envStore, // EnvironmentStore Object

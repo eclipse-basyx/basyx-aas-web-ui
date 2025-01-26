@@ -4,10 +4,13 @@ import { useNavigationStore } from '@/store/NavigationStore';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
 export function useAASDicoveryClient() {
-    const { getRequest } = useRequestHandling();
-
+    // Stores
     const navigationStore = useNavigationStore();
 
+    // Composables
+    const { getRequest } = useRequestHandling();
+
+    // Computed Properties
     const aasDiscoveryUrl = computed(() => navigationStore.getAASDiscoveryURL);
 
     /**

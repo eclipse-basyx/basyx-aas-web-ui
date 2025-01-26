@@ -74,6 +74,7 @@
         (event: 'update:fileThumbnail', value: File | undefined): void;
     }>();
 
+    // Data
     const resourceValue = ref<aasTypes.Resource | null>(props.modelValue);
     const toggle = ref<string>('none');
     const errorLoadingImage = ref<boolean>(false);
@@ -92,6 +93,22 @@
         'image/heif',
     ]);
 
+    // Computed Properties
+    const thumbnailPreviewPath = computed(() => {
+        if (resourceValue.value === null) {
+            return '';
+        }
+        if (resourceValue.value.path.startsWith('http')) {
+            return resourceValue.value.path;
+        } else if (props.aas) {
+            // TODO: This does not work with active keycloak because there the thumbnail would have to be fetched with a token
+            return extractEndpointHref(props.aas, 'AAS-3.0') + '/asset-information/thumbnail';
+        } else {
+            return '';
+        }
+    });
+
+    // Watchers
     watch(resourceValue, (newValue) => {
         if (toggle.value === 'none') {
             emit('update:modelValue', null);
@@ -124,20 +141,6 @@
         }
         if (props.modelValue === null) {
             resourceValue.value = new aasTypes.Resource('', '');
-        }
-    });
-
-    const thumbnailPreviewPath = computed(() => {
-        if (resourceValue.value === null) {
-            return '';
-        }
-        if (resourceValue.value.path.startsWith('http')) {
-            return resourceValue.value.path;
-        } else if (props.aas) {
-            // TODO: This does not work with active keycloak because there the thumbnail would have to be fetched with a token
-            return extractEndpointHref(props.aas, 'AAS-3.0') + '/asset-information/thumbnail';
-        } else {
-            return '';
         }
     });
 </script>

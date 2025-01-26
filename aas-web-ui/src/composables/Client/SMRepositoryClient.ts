@@ -8,11 +8,14 @@ import { extractEndpointHref } from '@/utils/DescriptorUtils';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
 export function useSMRepositoryClient() {
+    // Stores
+    const navigationStore = useNavigationStore();
+
+    // Composables
     const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
     const { fetchSmDescriptorById } = useSMRegistryClient();
 
-    const navigationStore = useNavigationStore();
-
+    // Computed Properties
     const submodelRepoUrl = computed(() => navigationStore.getSubmodelRepoURL);
 
     // Fetch List of all available SM

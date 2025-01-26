@@ -8,17 +8,19 @@
                 </v-expansion-panel-title>
                 <v-expansion-panel-text>
                     <DescriptionElement
-                        v-if="submodelElement.description && submodelElement.description.length > 0"
-                        :description-object="submodelElement.description"
-                        :description-title="'Description'"
-                        :small="false"></DescriptionElement>
-                    <GenericDataVisu
+                        v-if="
+                            submodelElement.description &&
+                            Array.isArray(submodelElement.description) &&
+                            submodelElement.description.length > 0
+                        "
+                        :descriptions="submodelElement.description" />
+                    <GenericDataView
                         v-if="
                             Array.isArray(submodelElement.value) &&
                             submodelElement.value.length > 0 &&
                             submodelElement.modelType !== 'MultiLanguageProperty'
                         "
-                        :submodel-element-data="submodelElement.value"></GenericDataVisu>
+                        :submodel-element-data="submodelElement.value" />
                     <v-list v-else nav class="px-4 pt-0 pb-0">
                         <!-- SubmodelELement Representation for different modelTypes -->
                         <Property
@@ -66,63 +68,40 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-    import { useTheme } from 'vuetify';
-    import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-    import { useAASStore } from '@/store/AASDataStore';
+<script lang="ts" setup>
+    import { onMounted, ref, watch } from 'vue';
+    import { nameToDisplay } from '@/utils/ReferableUtils';
 
-    export default defineComponent({
-        name: 'GenericDataVisu',
-        mixins: [RequestHandling, SubmodelElementHandling],
-        props: ['submodelElementData'],
-
-        setup() {
-            const theme = useTheme();
-            const aasStore = useAASStore();
-
-            return {
-                theme, // Theme Object
-                aasStore, // AASStore Object
-            };
-        },
-
-        data() {
-            return {
-                localSubmodelElementData: [] as Array<any>, // SubmodelElement Data
-                // conceptDescriptions: {}, // Data of Concept Descriptions
-            };
-        },
-
-        watch: {
-            submodelElementData: {
-                handler() {
-                    this.initializeSubmodelElementData();
-                },
-                deep: true,
-            },
-        },
-
-        mounted() {
-            this.initializeSubmodelElementData();
-        },
-
-        methods: {
-            // Initialize the SubmodelElement Data
-            initializeSubmodelElementData() {
-                if (!this.submodelElementData) return;
-
-                // console.log('SubmodelElementData: ', this.submodelElementData)
-                if (Object.keys(this.submodelElementData).length === 0) {
-                    this.localSubmodelElementData = []; // Reset the SubmodelElement Data when no Node is selected
-                    return;
-                }
-                let submodelElementData = [...this.submodelElementData];
-                // console.log('SubmodelElementData: ', submodelElementData);
-                this.localSubmodelElementData = submodelElementData;
-            },
+    // Properties
+    const props = defineProps({
+        submodelElementData: {
+            type: Array<any>,
+            default: [] as Array<any>,
         },
     });
+
+    // Data
+    const localSubmodelElementData = ref([] as Array<any>);
+
+    // Watchers
+    watch(
+        () => props.submodelElementData,
+        () => {
+            initialize();
+        },
+        { deep: true }
+    );
+
+    onMounted(async () => {
+        initialize();
+    });
+
+    function initialize(): void {
+        if (!props.submodelElementData || Object.keys(props.submodelElementData).length === 0) {
+            localSubmodelElementData.value = [];
+            return;
+        }
+
+        localSubmodelElementData.value = [...props.submodelElementData];
+    }
 </script>

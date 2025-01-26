@@ -1,7 +1,7 @@
 import { useNavigationStore } from '@/store/NavigationStore';
 
 export function useClipboardUtil() {
-    // Store
+    // Stores
     const navigationStore = useNavigationStore();
 
     function copyToClipboard(value: string, valueName: string, iconReference: { value: string }): void {

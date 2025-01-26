@@ -14,6 +14,7 @@ import { loadFonts } from './webfontloader';
 export async function registerPlugins(app: App) {
     loadFonts();
 
+    // Stores
     const envStore = useEnvStore();
 
     const primaryLightColor = envStore.getEnvPrimaryLightColor;

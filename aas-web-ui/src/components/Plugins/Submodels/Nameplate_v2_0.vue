@@ -197,7 +197,7 @@
                 <div class="text-subtitle-1">{{ 'Asset Specific Properties' }}</div>
             </v-card-title>
             <v-card-text>
-                <GenericDataVisu :submodel-element-data="assetSpecificProperties"></GenericDataVisu>
+                <GenericDataView :submodel-element-data="assetSpecificProperties" />
             </v-card-text>
         </v-card>
     </v-container>

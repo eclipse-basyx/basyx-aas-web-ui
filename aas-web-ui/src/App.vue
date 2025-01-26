@@ -23,24 +23,20 @@
     import { useAASHandling } from './composables/AASHandling';
     import { useSMEHandling } from './composables/SMEHandling';
 
-    // Stores
-    const navigationStore = useNavigationStore();
-    const envStore = useEnvStore();
-
     // Vue Router
     const route = useRoute();
     const router = useRouter();
+
+    // Stores
+    const envStore = useEnvStore();
+    const navigationStore = useNavigationStore();
 
     // Composables
     const { fetchAndDispatchAas } = useAASHandling();
     const { fetchAndDispatchSme } = useSMEHandling();
 
     // Vuetify
-    const { mobile } = useDisplay();
-    const { platform } = useDisplay();
-
-    // Computed Properties
-    const allowEditing = computed(() => envStore.getAllowEditing); // Check if the current environment allows showing the AAS Editor
+    const { mobile, platform } = useDisplay();
 
     // Data
     const routesStayOnPages = ['About', 'NotFound404'] as Array<string>;
@@ -49,6 +45,7 @@
     const routesToVisualization: Array<RouteRecordNameGeneric> = ['ComponentVisualization', 'Visualization'];
 
     // Computed Properties
+    const allowEditing = computed(() => envStore.getAllowEditing); // Check if the current environment allows showing the AAS Editor
     const currentRouteName = computed((): string => {
         return route.name as string;
     });

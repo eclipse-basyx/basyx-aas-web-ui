@@ -3,25 +3,27 @@
         <v-card v-if="conceptDescriptionObject && Object.keys(conceptDescriptionObject).length > 0">
             <v-list nav>
                 <!-- ConceptDescription Identification -->
-                <IdentificationElement :identification-object="conceptDescriptionObject"></IdentificationElement>
-                <v-divider
-                    v-if="conceptDescriptionObject.displayName && conceptDescriptionObject.displayName.length > 0"
-                    class="mt-2"></v-divider>
+                <IdentificationElement :identification-object="conceptDescriptionObject" />
                 <!-- ConceptDescription DisplayName -->
-                <DisplayNameElement
-                    v-if="conceptDescriptionObject.displayName && conceptDescriptionObject.displayName.length > 0"
-                    :display-name-object="conceptDescriptionObject.displayName"
-                    :display-name-title="'Display Name'"
-                    :small="false"></DisplayNameElement>
-                <v-divider
-                    v-if="conceptDescriptionObject.description && conceptDescriptionObject.description.length > 0"
-                    class="mt-2"></v-divider>
+                <template
+                    v-if="
+                        conceptDescriptionObject.displayName &&
+                        Array.isArray(conceptDescriptionObject.displayName) &&
+                        conceptDescriptionObject.displayName.length > 0
+                    ">
+                    <v-divider class="mt-2" />
+                    <DisplayNameElement :display-names="conceptDescriptionObject.displayName" />
+                </template>
                 <!-- ConceptDescription Description -->
-                <DescriptionElement
-                    v-if="conceptDescriptionObject.description && conceptDescriptionObject.description.length > 0"
-                    :description-object="conceptDescriptionObject.description"
-                    :description-title="'Description'"
-                    :small="false"></DescriptionElement>
+                <template
+                    v-if="
+                        conceptDescriptionObject.description &&
+                        Array.isArray(conceptDescriptionObject.description) &&
+                        conceptDescriptionObject.description.length > 0
+                    ">
+                    <v-divider class="mt-2"></v-divider>
+                    <DescriptionElement :descriptions="conceptDescriptionObject.description" />
+                </template>
             </v-list>
             <v-divider
                 v-if="
@@ -42,34 +44,40 @@
                     class="mt-2">
                     <v-list nav class="bg-elevatedCard pt-0">
                         <!-- hasDataSpecification -->
-                        <SemanticID
+                        <template
                             v-if="
                                 embeddedDataSpecification.dataSpecification &&
                                 embeddedDataSpecification.dataSpecification.keys &&
+                                Array.isArray(embeddedDataSpecification.dataSpecification.keys) &&
                                 embeddedDataSpecification.dataSpecification.keys.length > 0
-                            "
-                            :semantic-id-object="embeddedDataSpecification.dataSpecification"
-                            :semantic-title="'Data Specification'"
-                            :small="false"
-                            class="mb-2"></SemanticID>
-                        <v-divider v-if="embeddedDataSpecification.dataSpecificationContent" class="mt-2"></v-divider>
-                        <!-- dataSpecificationContent -->
-                        <DataSpecificationContent
-                            v-if="embeddedDataSpecification.dataSpecificationContent"
-                            :data-specification-object="
-                                embeddedDataSpecification.dataSpecificationContent
-                            "></DataSpecificationContent>
+                            ">
+                            <SemanticIdElement
+                                :semantic-id-object="embeddedDataSpecification.dataSpecification"
+                                :semantic-title="'Data Specification'"
+                                class="mb-2" />
+                        </template>
+                        <template
+                            v-if="
+                                embeddedDataSpecification.dataSpecificationContent &&
+                                Object.keys(embeddedDataSpecification.dataSpecificationContent).length > 0
+                            ">
+                            <v-divider class="mt-2" />
+                            <!-- dataSpecificationContent -->
+                            <DataSpecificationContent
+                                :data-specification-object="embeddedDataSpecification.dataSpecificationContent" />
+                        </template>
                     </v-list>
                 </v-card>
             </v-list>
             <!-- Last Sync -->
             <v-divider></v-divider>
-            <LastSync :timestamp="conceptDescriptionObject.timestamp"></LastSync>
+            <LastSyncElement :timestamp="conceptDescriptionObject.timestamp" />
         </v-card>
     </v-container>
 </template>
 
 <script lang="ts" setup>
+    // Properties
     defineProps({
         small: {
             type: Boolean,

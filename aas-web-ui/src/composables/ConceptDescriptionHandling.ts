@@ -5,10 +5,13 @@ import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { getEquivalentEclassSemanticIds, getEquivalentIriSemanticIds } from '@/utils/SemanticIdUtils';
 
 export function useConceptDescriptionHandling() {
-    const { getRequest } = useRequestHandling();
-
+    // Stores
     const navigationStore = useNavigationStore();
 
+    // Composables
+    const { getRequest } = useRequestHandling();
+
+    // Computed Properties
     const CDRepoURL = computed(() => {
         return navigationStore.getConceptDescriptionRepoURL;
     });

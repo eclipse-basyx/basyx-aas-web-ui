@@ -96,15 +96,15 @@
     // Vue Router
     const route = useRoute();
 
-    // Composables
-    const { smNotFound } = useSMRepositoryClient();
-    const { getRequest } = useRequestHandling();
-    const { UUID } = useIDUtils();
-
     // Stores
-    const navigationStore = useNavigationStore();
-    const aasStore = useAASStore();
     const envStore = useEnvStore();
+    const aasStore = useAASStore();
+    const navigationStore = useNavigationStore();
+
+    // Composables
+    const { getRequest } = useRequestHandling();
+    const { smNotFound } = useSMRepositoryClient();
+    const { UUID } = useIDUtils();
 
     // Data
     const submodelData = ref([] as Array<any>); // Treeview Data

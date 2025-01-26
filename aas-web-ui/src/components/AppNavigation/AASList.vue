@@ -260,15 +260,15 @@
     const route = useRoute();
     const router = useRouter();
 
+    // Stores
+    const envStore = useEnvStore();
+    const aasStore = useAASStore();
+    const navigationStore = useNavigationStore();
+
     // Composables
     const { getRequest } = useRequestHandling();
     const { downloadAasx } = useAASRepositoryClient();
     const { fetchAndDispatchAas } = useAASHandling();
-
-    // Stores
-    const navigationStore = useNavigationStore();
-    const aasStore = useAASStore();
-    const envStore = useEnvStore();
 
     // Vuetify
     const theme = useTheme();

@@ -35,8 +35,8 @@
 
         setup() {
             const theme = useTheme();
-            const navigationStore = useNavigationStore();
             const aasStore = useAASStore();
+            const navigationStore = useNavigationStore();
 
             return {
                 theme, // Theme Object

@@ -71,9 +71,11 @@
         (event: 'update:modelValue', value: ValueType<typeof props.type> | null): void;
     }>();
 
+    // Data
     const langStringValue = ref<ValueType<typeof props.type> | null>(props.modelValue);
     const filter = ref(<string | null>null);
 
+    // Computed Properties
     const languageOptions = computed(() => {
         let languages = ISO6391.getLanguages(ISO6391.getAllCodes());
         if (filter.value !== null && filter.value !== '') {
@@ -83,6 +85,7 @@
         return languages;
     });
 
+    // Watchers
     watch(langStringValue, (newValue) => {
         emit('update:modelValue', newValue);
     });

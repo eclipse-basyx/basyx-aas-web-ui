@@ -172,9 +172,13 @@
     import Zielstorff from '@/assets/Contributors/Zielstorff.jpg';
     import { useNavigationStore } from '@/store/NavigationStore';
 
+    // Stores
     const navigationStore = useNavigationStore();
+
+    // Vuetify
     const theme = useTheme();
 
+    // Computed Properties
     const isDark = computed(() => theme.global.current.value.dark);
     const isMobile = computed(() => navigationStore.getIsMobile);
 
