@@ -321,13 +321,15 @@ describe("ReferableUtils.ts; Tests for 'nameToDisplay()'", () => {
         const defaultNameToDisplay = nameToDisplayTestDataset.defaultNameToDisplay;
         const result = nameToDisplayTestDataset.result;
 
-        it(`${nameToDisplayTestDataset.testId}: nameToDisplay(${referable}, 'en', ${("'" + defaultNameToDisplay + "'").padEnd(30, ' ')})`, () => {
+        it(`${nameToDisplayTestDataset.testId}: nameToDisplay(${referable}, ${("'" + defaultNameToDisplay + "'").padEnd(30, ' ')}')`, () => {
             // Perform the assertion
             expect(nameToDisplay(referable, 'en', defaultNameToDisplay)).toStrictEqual(result);
         });
     });
+});
 
-    // Define test data for nameToDisplay()
+describe("ReferableUtils.ts; Tests for 'descriptionToDisplay()'", () => {
+    // Define test data for descriptionToDisplay()
     const descriptionToDisplayTestData = [
         {
             testId: 'ea837130-188c-461b-91ce-b670b15557ad',
@@ -422,12 +424,14 @@ describe("ReferableUtils.ts; Tests for 'nameToDisplay()'", () => {
         const defaultDescriptionToDisplay = descriptionToDisplayTestDataset.defaultDescriptionToDisplay;
         const result = descriptionToDisplayTestDataset.result;
 
-        it(`${descriptionToDisplayTestDataset.testId}: descriptionToDisplay(${referable})`, () => {
+        it(`${descriptionToDisplayTestDataset.testId}: descriptionToDisplay(${referable}, 'en', ${("'" + defaultDescriptionToDisplay + "'").padEnd(35, ' ')})`, () => {
             // Perform the assertion
             expect(descriptionToDisplay(referable, 'en', defaultDescriptionToDisplay)).toStrictEqual(result);
         });
     });
+});
 
+describe("ReferableUtils.ts; Tests for 'checkIdShort()'", () => {
     // Define test data for checkIdShort()
     const checkIdShortTestData = [
         {
@@ -1151,7 +1155,7 @@ describe("ReferableUtils.ts; Tests for 'nameToDisplay()'", () => {
         const strict = checkIdShortTestDataset.strict;
         const result = checkIdShortTestDataset.result;
 
-        it(`${checkIdShortTestDataset.testId}: checkIdShort(${referable})`, () => {
+        it(`${checkIdShortTestDataset.testId}: checkIdShort(${referable}, ${("'" + idShort + "'").padEnd(15, ' ')}, startsWith = ${startsWith.toString().padEnd(5, ' ')}, strict = ${strict.toString().padEnd(5, ' ')})`, () => {
             // Perform the assertion
             expect(checkIdShort(referable, idShort, startsWith, strict)).toStrictEqual(result);
         });
