@@ -74,7 +74,7 @@ export function descriptionToDisplay(referable: any, language = 'en', defaultDes
  * @param {string} idShort - The `idShort` string to compare against the Referable's `idShort`.
  * @param {boolean} [startsWith=false] - If true, checks if the Referable's `idShort` starts with the given `idShort`.
  * @param {boolean} [strict=false] - If true, the check will be case-sensitive.
- * @returns {boolean} Returns true if there is a match, false otherwise.
+ * @returns {boolean} Returns true if a matching `idShort` is found, false otherwise.
  */
 export function checkIdShort(
     referable: any,
