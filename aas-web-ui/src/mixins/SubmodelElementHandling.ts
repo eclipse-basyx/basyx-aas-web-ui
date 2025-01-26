@@ -104,11 +104,6 @@ export default defineComponent({
             );
         },
 
-        // Function to capitalize the first letter of a string
-        capitalizeFirstLetter(string: string) {
-            return string.charAt(0).toUpperCase() + string.slice(1);
-        },
-
         // Function to check if the idShort of a SubmodelElement matches the given idShort
         checkIdShort(referable: any, idShort: string, startsWith: boolean = false, strict: boolean = false): boolean {
             if (idShort.trim() === '') return false;
