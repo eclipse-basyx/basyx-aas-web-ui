@@ -30,6 +30,7 @@
 // TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent } from 'vue';
+    import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -46,9 +47,11 @@
 
         setup() {
             const aasStore = useAASStore();
+            const { unitSuffix } = useConceptDescriptionHandling();
 
             return {
                 aasStore, // AASStore Object
+                unitSuffix,
             };
         },
 

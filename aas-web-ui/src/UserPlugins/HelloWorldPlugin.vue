@@ -20,9 +20,11 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
+    import { useIDUtils } from '@/composables/IDUtils';
     import RequestHandling from '@/mixins/RequestHandling'; // Mixin to handle the requests to the AAS
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling'; // Mixin to handle typical SubmodelElement-Actions
     import { useAASStore } from '@/store/AASDataStore';
+    import { nameToDisplay } from '@/utils/ReferableUtils';
 
     export default defineComponent({
         name: 'HelloWorldPlugin',
@@ -34,10 +36,13 @@
         setup() {
             const theme = useTheme();
             const aasStore = useAASStore();
+            const { generateUUID } = useIDUtils();
 
             return {
                 theme, // Theme Object
                 aasStore, // AASStore Object
+                generateUUID,
+                nameToDisplay,
             };
         },
 
@@ -80,7 +85,7 @@
             // Function to prepare the Plugin Data
             preparePluginData(pluginSubmodelElements: Array<any>, path: string = ''): Array<any> {
                 pluginSubmodelElements.forEach((submodelElement: any) => {
-                    submodelElement.id = this.UUID(); // add a unique id to the SubmodelElement
+                    submodelElement.id = this.generateUUID(); // add a unique id to the SubmodelElement
                     submodelElement.path = path + '/' + submodelElement.idShort; // add the path to the SubmodelElement
                     // the next Step is not needed for the HelloWorld-Plugin, but it is still displayed as an Example for more complex Situations using SubmodelElementCollections
                     if (submodelElement.modelType == 'SubmodelElementCollection') {

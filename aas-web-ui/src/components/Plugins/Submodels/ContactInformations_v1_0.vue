@@ -90,9 +90,11 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
+    import { useSMHandling } from '@/composables/SMHandling';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
+    import { checkIdShort, descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
 
     export default defineComponent({
         name: 'ContactInformation',
@@ -103,10 +105,15 @@
         setup() {
             const theme = useTheme();
             const aasStore = useAASStore();
+            const { calculateSMEPathes } = useSMHandling();
 
             return {
                 theme, // Theme Object
                 aasStore, // AASStore Object
+                checkIdShort,
+                descriptionToDisplay,
+                nameToDisplay,
+                calculateSMEPathes,
             };
         },
 
@@ -141,7 +148,7 @@
                 }
 
                 let submodelElementData = { ...this.submodelElementData };
-                this.contactInformationData = await this.calculateSubmodelElementPathes(
+                this.contactInformationData = await this.calculateSMEPathes(
                     submodelElementData,
                     this.SelectedNode.path
                 );

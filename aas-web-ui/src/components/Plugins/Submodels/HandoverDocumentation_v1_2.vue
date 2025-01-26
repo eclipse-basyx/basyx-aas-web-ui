@@ -272,9 +272,12 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
+    import { useSMHandling } from '@/composables/SMHandling';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
+    import { checkIdShort, descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
+    import { checkSemanticId } from '@/utils/SemanticIdUtils';
 
     export default defineComponent({
         name: 'HandoverDocumentation',
@@ -285,10 +288,16 @@
         setup() {
             const theme = useTheme();
             const aasStore = useAASStore();
+            const { calculateSMEPathes } = useSMHandling();
 
             return {
                 theme, // Theme Object
                 aasStore, // AASStore Object
+                checkIdShort,
+                descriptionToDisplay,
+                nameToDisplay,
+                checkSemanticId,
+                calculateSMEPathes,
             };
         },
 
@@ -322,10 +331,7 @@
                     return;
                 }
                 let submodelElementData = { ...this.submodelElementData };
-                this.handoverDocuData = await this.calculateSubmodelElementPathes(
-                    submodelElementData,
-                    this.SelectedNode.path
-                );
+                this.handoverDocuData = await this.calculateSMEPathes(submodelElementData, this.SelectedNode.path);
 
                 // create array of documents
                 let documents = this.handoverDocuData.submodelElements.filter((element: any) => {
