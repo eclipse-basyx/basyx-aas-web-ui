@@ -592,6 +592,7 @@ export default defineComponent({
                 });
         },
 
+        // TODO Move to AASHandling/AASRegistryClient/AASRepoClient
         ////////////////////////////////////////////////// AAS Stuff //////////////////////////////////////////////////
 
         // Fetch List of all available AAS Descriptors
@@ -853,6 +854,7 @@ export default defineComponent({
             this.navigationStore.dispatchTriggerAASListScroll();
         },
 
+        // TODO Move to SMHandling/SMEHandling/SMRegistryClient/SMRepoClient
         ////////////////////////////////////////////////// SM Stuff //////////////////////////////////////////////////
 
         // Fetch List of all available SM Descriptors
