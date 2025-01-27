@@ -83,11 +83,10 @@
                             </v-text-field>
                             <!-- MultiLanguageProperty -->
                             <DescriptionElement
-                                v-else-if="SubmodelElement.modelType == 'MultiLanguageProperty'"
-                                :description-object="SubmodelElement.value"
-                                :description-title="nameToDisplay(SubmodelElement)"
-                                :small="false"
-                                style="margin-top: -12px"></DescriptionElement>
+                                v-else-if="SubmodelElement.modelType == '   '"
+                                :descriptions="SubmodelElement.value"
+                                :descriptions-title="nameToDisplay(SubmodelElement)"
+                                style="margin-top: -12px" />
                             <!-- Operation -->
                             <v-alert
                                 v-else-if="SubmodelElement.modelType == 'Operation'"

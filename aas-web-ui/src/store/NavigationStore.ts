@@ -8,9 +8,9 @@ import { useAASStore } from '@/store/AASDataStore';
 import { useEnvStore } from '@/store/EnvironmentStore';
 
 export const useNavigationStore = defineStore('navigationStore', () => {
-    // Initialize Dependent Stores
-    const aasStore = useAASStore();
+    // Stores
     const envStore = useEnvStore();
+    const aasStore = useAASStore();
 
     // Composables
     const { getRequest } = useRequestHandling();

@@ -30,11 +30,13 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
 
+    // Stores
     const aasStore = useAASStore();
 
+    // Composables
     const { deleteRequest } = useRequestHandling();
-    const { fetchSmDescriptorById } = useSMRegistryClient();
     const { deleteSubmodelRef } = useAASRepositoryClient();
+    const { fetchSmDescriptorById } = useSMRegistryClient();
 
     const props = defineProps<{
         modelValue: boolean;
@@ -45,11 +47,14 @@
         (event: 'update:modelValue', value: boolean): void;
     }>();
 
+    // Data
     const deleteDialog = ref(false); // Variable to store if the delete dialog is open
     const deleteLoading = ref(false); // Variable to store if the AAS is being deleted
 
+    // Computed Properties
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // get selected AAS from Store
 
+    // Watchers
     watch(
         () => props.modelValue,
         (value) => {

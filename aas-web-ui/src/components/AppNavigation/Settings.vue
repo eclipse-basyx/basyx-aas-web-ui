@@ -23,10 +23,13 @@
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
+    // Stores
     const envStore = useEnvStore();
     const navigationStore = useNavigationStore();
 
+    // Data
     const endpointConfigAvailable = ref(envStore.getEndpointConfigAvailable);
 
+    // Computed properties
     const isMobile = computed(() => navigationStore.getIsMobile);
 </script>

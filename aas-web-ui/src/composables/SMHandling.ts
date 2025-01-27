@@ -6,6 +6,9 @@ import { formatDate } from '@/utils/DateUtils';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
 
 export function useSMHandling() {
+    // Stores
+    const aasStore = useAASStore();
+
     // Composables
     const { fetchSmDescriptorById: fetchSmDescriptorByIdFromRegistry } = useSMRegistryClient();
     const {
@@ -14,9 +17,6 @@ export function useSMHandling() {
         fetchSme: fetchSmeFromRepo,
     } = useSMRepositoryClient();
     const { getConceptDescriptions } = useConceptDescriptionHandling();
-
-    // Stores
-    const aasStore = useAASStore();
 
     /**
      * Fetches a Submodel (SM) by the provided SM endpoint

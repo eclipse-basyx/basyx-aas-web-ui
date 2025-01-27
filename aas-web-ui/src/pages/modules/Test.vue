@@ -14,5 +14,6 @@
 <script lang="ts" setup>
     import { ref } from 'vue';
 
+    // Data
     const moduleName = ref('Test');
 </script>

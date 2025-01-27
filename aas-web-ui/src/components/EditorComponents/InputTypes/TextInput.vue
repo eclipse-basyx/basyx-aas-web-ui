@@ -33,8 +33,10 @@
         (event: 'update:modelValue', value: string | null): void;
     }>();
 
+    // Data
     const textValue = ref<string | null>(props.modelValue);
 
+    // Watchers
     watch(textValue, (newValue) => {
         if (newValue === '') {
             emit('update:modelValue', null);

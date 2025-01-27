@@ -48,14 +48,12 @@
 
     // Stores
     const navigationStore = useNavigationStore();
-    const aasRepositoryUrl = computed(() => navigationStore.getAASRepoURL);
-    const smRepositoryUrl = computed(() => navigationStore.getSubmodelRepoURL);
 
     // Composables
-    const { fetchAas, uploadAas } = useAASRepositoryClient();
-    const { fetchSm } = useSMRepositoryClient();
     const { postAasDescriptor, createDescriptorFromAAS } = useAASRegistryClient();
+    const { fetchAas, uploadAas } = useAASRepositoryClient();
     const { postSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient();
+    const { fetchSm } = useSMRepositoryClient();
 
     const props = defineProps<{
         modelValue: boolean;
@@ -65,11 +63,17 @@
         (event: 'update:modelValue', value: boolean): void;
     }>();
 
+    // Data
     const uploadAASDialog = ref(false);
     const aasFile = ref(null as File | null);
     const loadingUpload = ref(false);
     const registerAAS = ref(false);
 
+    // Computed Properties
+    const aasRepositoryUrl = computed(() => navigationStore.getAASRepoURL);
+    const smRepositoryUrl = computed(() => navigationStore.getSubmodelRepoURL);
+
+    // Watchers
     watch(
         () => props.modelValue,
         (value) => {

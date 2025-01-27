@@ -3,9 +3,10 @@ import { useEnvStore } from '@/store/EnvironmentStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 
 export function useRequestHandling() {
+    // Stores
+    const envStore = useEnvStore();
     const authStore = useAuthStore();
     const navigationStore = useNavigationStore();
-    const envStore = useEnvStore();
 
     function getRequest(path: string, context: string, disableMessage: boolean, headers: Headers = new Headers()): any {
         headers = addAuthorizationHeader(headers); // Add the Authorization header

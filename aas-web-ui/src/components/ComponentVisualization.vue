@@ -77,9 +77,9 @@
                             </component>
                         </template>
                         <template v-else>
-                            <GenericDataVisu
+                            <GenericDataView
                                 v-if="viewerMode"
-                                :submodel-element-data="submodelElementData.submodelElements"></GenericDataVisu>
+                                :submodel-element-data="submodelElementData.submodelElements" />
                             <v-empty-state
                                 v-else
                                 title="No available visualization"
@@ -116,9 +116,9 @@
     const router = useRouter();
 
     // Stores
-    const navigationStore = useNavigationStore();
-    const aasStore = useAASStore();
     const envStore = useEnvStore();
+    const aasStore = useAASStore();
+    const navigationStore = useNavigationStore();
 
     // Data
     const submodelElementData = ref({} as any);

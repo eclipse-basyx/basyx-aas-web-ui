@@ -20,5 +20,6 @@
         isOnlyVisibleWithSelectedNode: true,
     });
 
+    // Data
     const moduleName = ref('TestVisibleWithSelectedNode');
 </script>

@@ -1,6 +1,6 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-list-item>
+        <v-list-item v-if="dataSpecificationObject && Object.keys(dataSpecificationObject).length > 0">
             <!-- Title -->
             <template #title>
                 <div class="text-subtitle-2 mt-2">{{ 'Data Specification Content:' }}</div>
@@ -11,15 +11,16 @@
                 <span class="text-caption">DataType: </span>
                 <span class="text-primary">{{ dataSpecificationObject.dataType }}</span>
             </v-list-item-title>
-            <v-divider
-                v-if="dataSpecificationObject.definition && dataSpecificationObject.definition.length > 0"
-                class="mt-2"></v-divider>
             <!-- definition -->
-            <DescriptionElement
-                v-if="dataSpecificationObject.definition && dataSpecificationObject.definition.length > 0"
-                :description-object="dataSpecificationObject.definition"
-                :description-title="'Definition'"
-                :small="true"></DescriptionElement>
+            <template
+                v-if="
+                    dataSpecificationObject.definition &&
+                    Array.isArray(dataSpecificationObject.definition) &&
+                    dataSpecificationObject.definition.length > 0
+                ">
+                <v-divider class="mt-2"></v-divider>
+                <DescriptionElement :descriptions="dataSpecificationObject.definition" :small="true" />
+            </template>
             <v-divider
                 v-if="dataSpecificationObject.levelTypes && dataSpecificationObject.levelTypes.length > 0"
                 class="mt-2"></v-divider>
@@ -33,24 +34,32 @@
                     levelType
                 }}</span>
             </v-list-item-title>
-            <v-divider
-                v-if="dataSpecificationObject.preferredName && dataSpecificationObject.preferredName.length > 0"
-                class="mt-2"></v-divider>
             <!-- preferredName -->
-            <DescriptionElement
-                v-if="dataSpecificationObject.preferredName && dataSpecificationObject.preferredName.length > 0"
-                :description-object="dataSpecificationObject.preferredName"
-                :description-title="'Preferred Name'"
-                :small="true"></DescriptionElement>
-            <v-divider
-                v-if="dataSpecificationObject.shortName && dataSpecificationObject.shortName.length > 0"
-                class="mt-2"></v-divider>
+            <template
+                v-if="
+                    dataSpecificationObject.preferredName &&
+                    Array.isArray(dataSpecificationObject.preferredName) &&
+                    dataSpecificationObject.preferredName.length > 0
+                ">
+                <v-divider class="mt-2"></v-divider>
+                <DescriptionElement
+                    :descriptions="dataSpecificationObject.preferredName"
+                    :descriptions-title="'Preferred Names'"
+                    :small="true" />
+            </template>
             <!-- shortName -->
-            <DescriptionElement
-                v-if="dataSpecificationObject.shortName && dataSpecificationObject.shortName.length > 0"
-                :description-object="dataSpecificationObject.shortName"
-                :description-title="'Short Name'"
-                :small="true"></DescriptionElement>
+            <template
+                v-if="
+                    dataSpecificationObject.shortName &&
+                    Array.isArray(dataSpecificationObject.shortName) &&
+                    dataSpecificationObject.shortName.length > 0
+                ">
+                <v-divider class="mt-2"></v-divider>
+                <DescriptionElement
+                    :descriptions="dataSpecificationObject.shortName"
+                    :descriptions-title="'Short Names'"
+                    :small="true" />
+            </template>
             <v-divider v-if="dataSpecificationObject.unit" class="mt-2"></v-divider>
             <!-- unit -->
             <v-list-item-title v-if="dataSpecificationObject.unit" class="pt-2 pl-2">
@@ -93,28 +102,12 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-    import DescriptionElement from './DescriptionElement.vue';
-
-    export default defineComponent({
-        name: 'DataSpecificationContent',
-        components: {
-            DescriptionElement,
+<script lang="ts" setup>
+    // Properties
+    defineProps({
+        dataSpecificationObject: {
+            type: Object as any,
+            default: {} as any,
         },
-        props: ['dataSpecificationObject'],
-
-        data() {
-            return {};
-        },
-
-        computed: {},
-
-        watch: {},
-
-        mounted() {},
-
-        methods: {},
     });
 </script>

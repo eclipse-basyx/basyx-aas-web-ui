@@ -1,6 +1,7 @@
 import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
 
 export function useChartHandling() {
+    // Composables
     const { unitSuffix } = useConceptDescriptionHandling();
 
     function prepareYValueTooltip(chartData: any, yVariables: any) {

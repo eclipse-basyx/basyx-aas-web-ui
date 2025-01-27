@@ -37,8 +37,10 @@
         (event: 'update:modelValue', value: ValueType<typeof props.type> | null): void;
     }>();
 
+    // Data
     const selectedValue = ref<ValueType<typeof props.type> | null>(props.modelValue);
 
+    // Computed Properties
     const selectOptions = computed(() => {
         switch (props.type) {
             case 'category':
@@ -63,6 +65,7 @@
         }
     });
 
+    // Watchers
     watch(selectedValue, (newValue) => {
         emit('update:modelValue', newValue);
     });

@@ -7,10 +7,13 @@ import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { removeNullValues } from '@/utils/generalUtils';
 
 export function useSMRegistryClient() {
-    const { getRequest, postRequest, putRequest } = useRequestHandling();
-
+    // Stores
     const navigationStore = useNavigationStore();
 
+    // Composables
+    const { getRequest, postRequest, putRequest } = useRequestHandling();
+
+    // Computed Properties
     const submodelRegistryUrl = computed(() => navigationStore.getSubmodelRegistryURL);
 
     // Fetch List of all available SM Descriptors

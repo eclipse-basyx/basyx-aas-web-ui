@@ -10,16 +10,16 @@ import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { downloadFile } from '@/utils/generalUtils';
 
 export function useAASRepositoryClient() {
-    const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
-    const { fetchAasDescriptorById } = useAASRegistryClient();
-
-    // Composables
-    const { generateUUIDFromString } = useIDUtils();
-
+    // Stores
     const navigationStore = useNavigationStore();
 
-    const aasRepositoryUrl = computed(() => navigationStore.getAASRepoURL);
+    // Composables
+    const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
+    const { fetchAasDescriptorById } = useAASRegistryClient();
+    const { generateUUIDFromString } = useIDUtils();
 
+    // Computed Properties
+    const aasRepositoryUrl = computed(() => navigationStore.getAASRepoURL);
     const uploadURL = computed(() => {
         const aasRepoURL = navigationStore.getAASRepoURL;
         // remove '/shells' AAS Repository URL and add '/upload' to construct the upload URL

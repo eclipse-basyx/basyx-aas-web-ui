@@ -43,36 +43,23 @@
     </template>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-    import { useTheme } from 'vuetify';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+<script lang="ts" setup>
+    import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
+    import { descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
+    import { valueToDisplay } from '@/utils/SubmodelElements/SubmodelElementUtils';
 
-    export default defineComponent({
-        name: 'GenericDataTableView',
-        mixins: [SubmodelElementHandling],
-        inheritAttrs: false,
-        props: {
-            submodelElementData: {
-                type: Object,
-                default() {
-                    return {};
-                },
-                required: true,
-            },
-            level: {
-                type: Number,
-                default: 0,
-            },
+    // Composables
+    const { cdDefinition } = useConceptDescriptionHandling();
+
+    // Properties
+    defineProps({
+        submodelElementData: {
+            type: Object as any,
+            default: {} as any,
         },
-
-        setup() {
-            const theme = useTheme();
-
-            return {
-                theme, // Theme Object
-            };
+        level: {
+            type: Number,
+            default: 0,
         },
     });
 </script>

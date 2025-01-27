@@ -73,6 +73,7 @@
     import { computed, onMounted } from 'vue';
     import { useNavigationStore } from '@/store/NavigationStore';
 
+    //Stores
     const navigationStore = useNavigationStore();
 
     // Data

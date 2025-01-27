@@ -209,13 +209,13 @@
     // Vue Router
     const route = useRoute();
 
-    // Composables
-    const { checkDashboardAvailability } = useDashboardHandling();
-
     // Stores
-    const navigationStore = useNavigationStore();
     const envStore = useEnvStore();
     const authStore = useAuthStore();
+    const navigationStore = useNavigationStore();
+
+    // Composables
+    const { checkDashboardAvailability } = useDashboardHandling();
 
     // Vuetify
     const theme = useTheme();
@@ -255,6 +255,7 @@
     const authStatus = computed(() => (authStore.getAuthStatus ? 'Authenticated' : 'Not Authenticated'));
     const isAuthEnabled = computed(() => authStore.getAuthEnabled);
 
+    // Watchers
     // Watch for changes in the Snackbar Object and close it after the Timeout
     watch(
         () => Snackbar.value,

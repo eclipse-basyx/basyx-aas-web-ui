@@ -19,5 +19,6 @@
         preserveRouteQuery: true,
     });
 
+    // Data
     const moduleName = ref('TestPreserverUrlQuery');
 </script>

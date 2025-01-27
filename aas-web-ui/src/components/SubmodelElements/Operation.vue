@@ -23,12 +23,16 @@
                         <!-- List with the Fields belonging to the Variable Type -->
                         <v-card v-for="(variable, i) in localOperationObject[variableType.type]" :key="i" class="mb-3">
                             <!-- Variable Description -->
-                            <DescriptionElement
-                                v-if="variable.value && variable.value.description"
-                                :description-object="variable.value.description"
-                                :description-title="'Description'"
-                                :small="true"></DescriptionElement>
-                            <v-divider v-if="variable.value && variable.value.description" class="mt-1"></v-divider>
+                            <template
+                                v-if="
+                                    variable.value &&
+                                    variable.value.description &&
+                                    Array.isArray(variable.value.description) &&
+                                    variable.value.description.length > 0
+                                ">
+                                <DescriptionElement :descriptions="variable.value.description" :small="true" />
+                                <v-divider class="mt-1"></v-divider>
+                            </template>
                             <!-- Variable Value -->
                             <v-list-item class="px-0 pb-0">
                                 <v-list-item-title class="pt-1">
@@ -130,8 +134,8 @@
         },
 
         setup() {
-            const navigationStore = useNavigationStore();
             const aasStore = useAASStore();
+            const navigationStore = useNavigationStore();
 
             return {
                 navigationStore, // NavigationStore Object

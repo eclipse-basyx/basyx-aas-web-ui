@@ -69,58 +69,48 @@
                 <!-- Asset Information -->
                 <!-- 1) AssetInformation is mandatory for an AssetAdministrationShell -->
                 <!-- 2) Minimal (empty) AssetInformation (generated with aas4j) will be { assetKind: null } -->
-                <AssetInformation
-                    v-if="assetInformation?.assetKind && Object.keys(assetInformation).length > 1"
-                    :asset-object="assetInformation"></AssetInformation>
-                <v-divider
-                    v-if="assetInformation?.assetKind && Object.keys(assetInformation).length > 1"
-                    thickness="2"></v-divider>
+                <template
+                    v-if="assetInformation && Object.keys(assetInformation).length > 1 && assetInformation.assetKind">
+                    <AssetInformation :asset-object="assetInformation" />
+                    <v-divider thickness="2"></v-divider>
+                </template>
                 <!-- AAS Details -->
                 <v-list v-if="assetAdministrationShellData" lines="one" nav class="bg-detailsCard">
                     <!-- AAS Identification -->
                     <IdentificationElement
                         :identification-object="assetAdministrationShellData"
-                        :v-chip-content="
-                            getKeyTypeAbbreviation(assetAdministrationShellData.modelType)
-                        "></IdentificationElement>
+                        :v-chip-content="getKeyTypeAbbreviation(assetAdministrationShellData.modelType)" />
                     <!-- AAS Administrative Information-->
-                    <v-divider v-if="assetAdministrationShellData?.administration" class="mt-2"></v-divider>
-                    <AdministrativeInformationElement
-                        v-if="assetAdministrationShellData.administration"
-                        :administrative-information-object="assetAdministrationShellData.administration"
-                        :administrative-information-title="'Administrative Information'"
-                        :small="false"
-                        :background-color="'detailsCard'"></AdministrativeInformationElement>
-                    <v-divider
+                    <template
                         v-if="
-                            assetAdministrationShellData.displayName &&
-                            assetAdministrationShellData.displayName.length > 0
-                        "
-                        class="mt-2"></v-divider>
+                            assetAdministrationShellData.administration &&
+                            Object.keys(assetAdministrationShellData.administration).length > 0
+                        ">
+                        <v-divider class="mt-2"></v-divider>
+                        <AdministrativeInformationElement
+                            :administrative-information-object="assetAdministrationShellData.administration"
+                            :background-color="'detailsCard'"></AdministrativeInformationElement>
+                    </template>
                     <!-- AAS DisplayName -->
-                    <DisplayNameElement
+                    <template
                         v-if="
                             assetAdministrationShellData.displayName &&
+                            Array.isArray(assetAdministrationShellData.displayName) &&
                             assetAdministrationShellData.displayName.length > 0
-                        "
-                        :display-name-object="assetAdministrationShellData.displayName"
-                        :display-name-title="'DisplayName'"
-                        :small="false"></DisplayNameElement>
-                    <v-divider
-                        v-if="
-                            assetAdministrationShellData.description &&
-                            assetAdministrationShellData.description.length > 0
-                        "
-                        class="mt-2"></v-divider>
+                        ">
+                        <v-divider class="mt-2" />
+                        <DisplayNameElement :displayNames="assetAdministrationShellData.displayName" />
+                    </template>
                     <!-- AAS Description -->
-                    <DescriptionElement
+                    <template
                         v-if="
                             assetAdministrationShellData.description &&
+                            Array.isArray(assetAdministrationShellData.description) &&
                             assetAdministrationShellData.description.length > 0
-                        "
-                        :description-object="assetAdministrationShellData.description"
-                        :description-title="'Description'"
-                        :small="false"></DescriptionElement>
+                        ">
+                        <v-divider class="mt-2"></v-divider>
+                        <DescriptionElement :descriptions="assetAdministrationShellData.description" />
+                    </template>
                 </v-list>
             </v-card-text>
         </v-sheet>
@@ -142,15 +132,16 @@
     const route = useRoute();
     const router = useRouter();
 
+    // Stores
+    const envStore = useEnvStore();
+    const aasStore = useAASStore();
+    const navigationStore = useNavigationStore();
+
     // Composables
     const { downloadAasx, fetchAssetInformation } = useAASRepositoryClient();
     const { fetchAas } = useAASHandling();
 
-    // Stores
-    const navigationStore = useNavigationStore();
-    const aasStore = useAASStore();
-    const envStore = useEnvStore();
-
+    // Properties
     const props = defineProps({
         status: {
             type: String,

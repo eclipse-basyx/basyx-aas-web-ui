@@ -41,8 +41,10 @@
         (event: 'update:modelValue', value: aasTypes.Reference | null): void;
     }>();
 
+    // Data
     const referenceValue = ref<aasTypes.Reference | null>(props.modelValue);
 
+    // Watchers
     watch(referenceValue, (newValue) => {
         emit('update:modelValue', newValue);
     });

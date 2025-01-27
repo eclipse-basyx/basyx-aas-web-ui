@@ -20,5 +20,6 @@
         isOnlyVisibleWithSelectedAas: true,
     });
 
+    // Data
     const moduleName = ref('TestVisibleWithSelectedAas');
 </script>

@@ -89,23 +89,23 @@
     // Vue Router
     const router = useRouter();
 
-    // Composables
-    const { UUID } = useIDUtils();
-    const { fetchAndDispatchSme } = useSMEHandling();
-    const { fetchAndDispatchSmById } = useSMHandling();
-
     // Stores
     const aasStore = useAASStore();
     const navigationStore = useNavigationStore();
+
+    // Composables
+    const { putAas } = useAASRepositoryClient();
+    const { putSubmodelDescriptor, createDescriptorFromSubmodel, fetchSmDescriptorById } = useSMRegistryClient();
+    const { fetchSmById, postSubmodel, putSubmodel } = useSMRepositoryClient();
+    const { fetchAndDispatchSmById } = useSMHandling();
+    const { fetchAndDispatchSme } = useSMEHandling();
+    const { UUID } = useIDUtils();
 
     const emit = defineEmits<{
         (event: 'update:modelValue', value: boolean): void;
     }>();
 
-    const { fetchSmById, postSubmodel, putSubmodel } = useSMRepositoryClient();
-    const { putSubmodelDescriptor, createDescriptorFromSubmodel, fetchSmDescriptorById } = useSMRegistryClient();
-    const { putAas } = useAASRepositoryClient();
-
+    // Data
     const editSMDialog = ref(false);
     const submodelObject = ref<aasTypes.Submodel | undefined>(undefined);
     const openPanels = ref<number[]>([0]);
@@ -161,6 +161,7 @@
         return border;
     });
 
+    // Watchers
     watch(
         () => props.modelValue,
         (value) => {

@@ -7,21 +7,20 @@ import { extractEndpointHref } from '@/utils/DescriptorUtils';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
 export function useDashboardHandling() {
-    const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
-
-    // Composables
-    const { UUID } = useIDUtils();
-
+    // Stores
     const aasStore = useAASStore();
 
+    // Composables
+    const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
+    const { UUID } = useIDUtils();
+
+    // Computed Properties
     const SelectedNode = computed(() => {
         return aasStore.getSelectedNode;
     });
-
     const SelectedAAS = computed(() => {
         return aasStore.getSelectedAAS;
     });
-
     const dashboardServicePath = computed(() => {
         return useEnvStore().getEnvDashboardServicePath;
     });

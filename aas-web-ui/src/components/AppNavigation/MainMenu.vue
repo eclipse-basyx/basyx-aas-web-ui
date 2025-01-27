@@ -131,13 +131,13 @@
     // Vue Router
     const route = useRoute();
 
+    // Stores
+    const envStore = useEnvStore();
+    const aasStore = useAASStore();
+    const navigationStore = useNavigationStore();
+
     // Composables
     const { checkDashboardAvailability } = useDashboardHandling();
-
-    // Stores
-    const aasStore = useAASStore();
-    const envStore = useEnvStore();
-    const navigationStore = useNavigationStore();
 
     // Emit
     const emit = defineEmits<{
@@ -181,6 +181,7 @@
         return filteredAndOrderedModuleRoutes;
     });
 
+    // Watchers
     // TODO move to route guard
     watch(
         () => currentRoute.value,

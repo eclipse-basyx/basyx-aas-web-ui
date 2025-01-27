@@ -6,6 +6,7 @@ import { useIDUtils } from '@/composables/IDUtils';
 const pinia = createPinia();
 setActivePinia(pinia); // Activate Pinia for the test environment
 
+// Composables
 const { customIdRegex, generateCustomId, generateIri } = useIDUtils();
 
 describe("IDUtils.ts; Tests for 'generateIri()'", () => {

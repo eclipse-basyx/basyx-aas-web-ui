@@ -23,12 +23,20 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-
-    export default defineComponent({
-        name: 'SemanticID',
-        props: ['semanticIdObject', 'semanticTitle', 'small'],
+<script lang="ts" setup>
+    // Properties
+    defineProps({
+        semanticIdObject: {
+            type: Object as any,
+            default: {} as any,
+        },
+        semanticTitle: {
+            type: String,
+            default: 'Semantic ID',
+        },
+        small: {
+            type: Boolean,
+            default: false,
+        },
     });
 </script>

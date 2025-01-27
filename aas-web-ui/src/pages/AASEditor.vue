@@ -34,8 +34,10 @@
     import { computed, onBeforeUnmount, onMounted } from 'vue';
     import { useTheme } from 'vuetify';
 
+    // Vuetify
     const theme = useTheme();
 
+    // Computed Properties
     const primaryColor = computed(() => theme.current.value.colors.primary);
 
     onMounted(() => {

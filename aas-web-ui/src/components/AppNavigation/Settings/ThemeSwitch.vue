@@ -31,11 +31,14 @@
     import { computed, onMounted, ref } from 'vue';
     import { useTheme } from 'vuetify';
 
+    // Vuetify
     const theme = useTheme();
 
+    // Data
     const themeOption = ref('system'); // Variable to store the current Theme option: 'system', 'light' or 'dark
     const dark = ref(false); // Variable reflecting the current Theme
 
+    // Computed Properties
     const isDark = computed(() => theme.global.current.value.dark);
 
     onMounted(() => {

@@ -30,11 +30,14 @@
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
     import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
+    // Vue Router
     const router = useRouter();
 
+    // Stores
     const aasStore = useAASStore();
     const navigationStore = useNavigationStore();
 
+    // Composables
     const { getRequest, deleteRequest } = useRequestHandling();
 
     const props = defineProps<{
@@ -47,12 +50,15 @@
         (event: 'update:modelValue', value: boolean): void;
     }>();
 
+    // Data
     const deleteDialog = ref(false); // Variable to store if the delete dialog is open
     const deleteLoading = ref(false); // Variable to store if the AAS is being deleted
     const deleteSubmodels = ref(false); // Variable to store if the Submodels should be deleted
 
+    // Computed Properties
     const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL); // Get Submodel Registry URL from Store
 
+    // Watchers
     watch(
         () => props.modelValue,
         (value) => {

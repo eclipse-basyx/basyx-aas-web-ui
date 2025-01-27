@@ -19,6 +19,7 @@
 </template>
 
 <script lang="ts" setup>
+    // Properties
     defineProps({
         timestamp: {
             type: String,

@@ -87,20 +87,20 @@
         aas?: any;
     }>();
 
-    // Composables
-    const { UUID } = useIDUtils();
-    const { fetchAndDispatchAasById } = useAASHandling();
-
     // Stores
     const aasStore = useAASStore();
+
+    // Composables
+    const { putAasDescriptor, createDescriptorFromAAS } = useAASRegistryClient();
+    const { fetchAasById, postAas, putAas, putThumbnail } = useAASRepositoryClient();
+    const { fetchAndDispatchAasById } = useAASHandling();
+    const { UUID } = useIDUtils();
 
     const emit = defineEmits<{
         (event: 'update:modelValue', value: boolean): void;
     }>();
 
-    const { fetchAasById, postAas, putAas, putThumbnail } = useAASRepositoryClient();
-    const { putAasDescriptor, createDescriptorFromAAS } = useAASRegistryClient();
-
+    // Data
     const editAASDialog = ref(false);
     const AASObject = ref<aasTypes.AssetAdministrationShell | undefined>(undefined);
     const openPanels = ref<number[]>([0, 3]);
@@ -158,6 +158,7 @@
         return border;
     });
 
+    // Watchers
     watch(
         () => props.modelValue,
         (value) => {

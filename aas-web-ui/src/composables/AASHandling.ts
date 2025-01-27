@@ -5,12 +5,12 @@ import { formatDate } from '@/utils/DateUtils';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
 
 export function useAASHandling() {
+    // Stores
+    const aasStore = useAASStore();
+
     // Composables
     const { fetchAasDescriptorById: fetchAasDescriptorByIdFromRegistry } = useAASRegistryClient();
     const { fetchAas: fetchAasFromRepo, fetchAasById: fetchAasByIdFromRepo } = useAASRepositoryClient();
-
-    // Stores
-    const aasStore = useAASStore();
 
     /**
      * Fetches an Asset Administration Shell (AAS) by the provided AAS endpoint
