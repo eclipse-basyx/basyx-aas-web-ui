@@ -4,16 +4,22 @@ import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionH
 import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
+import { extractId as extractIdFromReference } from '@/utils/ReferenceUtils';
+import { useAASRepositoryClient } from './Client/AASRepositoryClient';
 
 export function useSMHandling() {
     // Composables
-    const { fetchSmDescriptorById: fetchSmDescriptorByIdFromRegistry } = useSMRegistryClient();
+    const { getSubmodelRefsById: getSubmodelRefsByIdFromRepo } = useAASRepositoryClient();
+    const {
+        fetchSmDescriptorById: fetchSmDescriptorByIdFromRegistry,
+        fetchSmDescriptorList: fetchSmDescriptorListFromRegistry,
+    } = useSMRegistryClient();
     const {
         fetchSmById: fetchSmByIdFromRepo,
         fetchSm: fetchSmFromRepo,
         fetchSme: fetchSmeFromRepo,
     } = useSMRepositoryClient();
-    const { getConceptDescriptions } = useConceptDescriptionHandling();
+    const { fetchCds } = useConceptDescriptionHandling();
 
     // Stores
     const aasStore = useAASStore();
@@ -22,42 +28,123 @@ export function useSMHandling() {
      * Fetches a Submodel (SM) by the provided SM endpoint
      * and dispatches it to the AAS store.
      *
+     * @async
      * @param {string} smEndpoint - The endpoint URL of the SM to fetch.
+     * @param {boolean} withConceptDescriptions - Flag to specify if SM should be fetched with ConceptDescriptions (CDs)
+     * @returns {Promise<any>} A promise that resolves to a SM.
      */
-    async function fetchAndDispatchSm(smEndpoint: string, withConceptDescriptions = false): Promise<void> {
-        if (!smEndpoint) return;
+    async function fetchAndDispatchSm(smEndpoint: string, withConceptDescriptions = false): Promise<any> {
+        const failResponse = {};
+
+        if (!smEndpoint) return failResponse;
 
         smEndpoint = smEndpoint.trim();
 
-        if (smEndpoint === '') return;
+        if (smEndpoint === '') return failResponse;
 
         const smOrSme = await fetchSm(smEndpoint, withConceptDescriptions);
 
+        if (!smOrSme || Object.keys(smOrSme).length === 0) return failResponse;
+
+        smOrSme.isActive = true;
+
+        // TODO move router.push to AASDataStore
+        // const query = route.query;
+        // query.path = smEndpoint;
+        // router.push({ query: query });
         aasStore.dispatchSelectedNode(smOrSme);
+
+        return smOrSme;
     }
 
     /**
      * Fetches a Submodel (SM) by the provided SM ID
      * and dispatches it to the AAS store.
      *
+     * @async
      * @param {string} smId - The ID of the SM to fetch.
+     * @param {boolean} withConceptDescriptions - Flag to specify if SM should be fetched with ConceptDescriptions (CDs)
+     * @returns {Promise<any>} A promise that resolves to a SM.
      */
-    async function fetchAndDispatchSmById(smId: string, withConceptDescriptions = false): Promise<void> {
-        if (!smId) return;
+    async function fetchAndDispatchSmById(smId: string, withConceptDescriptions = false): Promise<any> {
+        const failResponse = {};
+
+        if (!smId) return failResponse;
+
+        smId = smId.trim();
+
+        if (smId === '') return failResponse;
+
+        const sm = await fetchSmById(smId, withConceptDescriptions);
+
+        if (!sm || Object.keys(sm).length === 0) return failResponse;
+
+        sm.isActive = true;
+
+        // TODO move router.push to AASDataStore
+        // const query = route.query;
+        // query.path = getSmEndpoint(sm);
+        // router.push({ query: query });
+        aasStore.dispatchSelectedNode(sm);
+
+        return sm;
+    }
+
+    /**
+     * Fetches a list of all available Submodel (SM) Descriptors.
+     *
+     * @async
+     * @returns {Promise<Array<any>>} A promise that resolves to an array of SM Descriptors.
+     * An empty array is returned if the request fails or no SM Descriptors are found.
+     */
+    async function fetchSmDescriptorList(): Promise<Array<any>> {
+        const failResponse = [] as Array<any>;
+
+        let smDescriptors = await fetchSmDescriptorListFromRegistry();
+
+        if (!smDescriptors || !Array.isArray(smDescriptors) || smDescriptors.length === 0) return failResponse;
+
+        smDescriptors = smDescriptors.map((smDescriptor: any) => {
+            smDescriptor.timestamp = formatDate(new Date());
+            return smDescriptor;
+        });
+
+        return smDescriptors;
+    }
+
+    /**
+     * Fetches an Submodel (SM) Descriptor by the provided SM ID.
+     *
+     * @async
+     * @param {string} smId - The ID of the SM Descriptor to fetch.
+     * @returns {Promise<any>} A promise that resolves to a SM Descriptor.
+     */
+    async function fetchSmDescriptor(smId: string): Promise<any> {
+        const failResponse = {};
 
         smId = smId.trim();
 
         if (smId === '') return;
 
-        const sm = await fetchSmById(smId, withConceptDescriptions);
+        const smDescriptor = await fetchSmDescriptorByIdFromRegistry(smId);
 
-        aasStore.dispatchSelectedNode(sm);
+        if (!smDescriptor || Object.keys(smDescriptor).length === 0) {
+            console.warn("Fetching SM Descriptor (id = '" + smId + "') failed!");
+            return failResponse;
+        }
+
+        smDescriptor.timestamp = formatDate(new Date());
+
+        return smDescriptor;
     }
 
     /**
      * Fetches a Submodel (SM) by the provided SM endpoint.
      *
+     * @async
      * @param {string} smEndpoint - The endpoint URL of the SM to fetch.
+     * @param {boolean} withConceptDescriptions - Flag to specify if SM should be fetched with ConceptDescriptions (CDs)
+     * @returns {Promise<any>} A promise that resolves to a SM.
      */
     async function fetchSm(smEndpoint: string, withConceptDescriptions = false): Promise<any> {
         const failResponse = {};
@@ -73,24 +160,22 @@ export function useSMHandling() {
             // smEndoint seems to be an SME endpoint
             smOrSme = await fetchSmeFromRepo(smEndpoint);
 
-            // Note usage of fetchAndDispatchSme() (SMHandling) not possible
+            // Note usage of fetchSme() (SMHandling) not possible
             // Reciprocal import of SMHandling/SMEHandling leads to error "Maximum call stack size exceeded"
         } else {
             smOrSme = await fetchSmFromRepo(smEndpoint);
         }
 
         if (!smOrSme || Object.keys(smOrSme).length === 0) {
-            console.warn('Fetched empty SM/SME');
-            aasStore.dispatchSelectedNode({});
+            console.warn('Fetching SM/SME (' + smEndpoint + ') failed!');
             return failResponse;
         }
 
         smOrSme.timestamp = formatDate(new Date());
         smOrSme.path = smEndpoint;
-        smOrSme.isActive = true;
 
         if (withConceptDescriptions) {
-            smOrSme.conceptDescriptions = await getConceptDescriptions(smOrSme);
+            smOrSme.conceptDescriptions = await fetchCds(smOrSme);
         } else {
             smOrSme.conceptDescriptions = [];
         }
@@ -101,7 +186,10 @@ export function useSMHandling() {
     /**
      * Fetches a Submodel (SM) by the provided SM ID.
      *
+     * @async
      * @param {string} smId - The ID of the SM to fetch.
+     * @param {boolean} withConceptDescriptions - Flag to specify if SM should be fetched with ConceptDescriptions (CDs)
+     * @returns {Promise<any>} A promise that resolves to a SM.
      */
     async function fetchSmById(smId: string, withConceptDescriptions = false): Promise<any> {
         const failResponse = {};
@@ -115,8 +203,7 @@ export function useSMHandling() {
         const sm = await fetchSmByIdFromRepo(smId);
 
         if (!sm || Object.keys(sm).length === 0) {
-            console.warn('Fetched empty SM');
-            aasStore.dispatchSelectedNode({});
+            console.warn("Fetching SM (id = '" + smId + "') failed!");
             return failResponse;
         }
 
@@ -124,10 +211,9 @@ export function useSMHandling() {
 
         sm.timestamp = formatDate(new Date());
         sm.path = smEndpoint;
-        sm.isActive = true;
 
         if (withConceptDescriptions) {
-            sm.conceptDescriptions = await getConceptDescriptions(sm);
+            sm.conceptDescriptions = await fetchCds(sm);
         } else {
             sm.conceptDescriptions = [];
         }
@@ -138,7 +224,9 @@ export function useSMHandling() {
     /**
      * Retrieves the Submodel (SM) endpoint URL by its ID.
      *
-     * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
+     * @async
+     * @param {string} smId - The ID of the SM to retrieve the endpoint for.
+     * @returns {Promise<string>} A promise that resolves to a SM endpoint.
      */
     async function getSmEndpointById(smId: string): Promise<string> {
         const failResponse = '';
@@ -158,7 +246,8 @@ export function useSMHandling() {
     /**
      * Retrieves the Submodel (SM) endpoint URL of a SM descriptor.
      *
-     * @param {string} sm - The SM descriptor to retrieve the endpoint for.
+     * @param {string} smDescriptor - The SM descriptor to retrieve the endpoint for.
+     * @returns {string} A promise that resolves to a SM endpoint.
      */
     function getSmEndpoint(smDescriptor: any): string {
         // TODO Replace extractEndpointHref(smDescriptor), 'SUBMODEL-3.0') by getSmEndpoint(smDescriptor) in all components
@@ -177,5 +266,55 @@ export function useSMHandling() {
         return smEndpoint || failResponse;
     }
 
-    return { fetchAndDispatchSm, fetchAndDispatchSmById, fetchSm, fetchSmById, getSmEndpoint, getSmEndpointById };
+    /**
+     * Retrieves a Submodel (SM) of an Asset Administration Shell (AAS) descriptor.
+     *
+     * @async
+     * @param {string} aasId - The ID of the AAS to retrieve its SM.
+     * @param {string} semanticId - The semantic ID of the SM.
+     * @returns {string} A promise that resolves to a SM.
+     */
+    async function getSmIdOfAasIdBySemanticId(aasId: string, semanticId: string): Promise<string> {
+        const failResponse = '';
+
+        if (!aasId || !semanticId) return failResponse;
+
+        aasId = aasId.trim();
+        semanticId = semanticId.trim();
+
+        if (aasId === '' || semanticId === '') return failResponse;
+
+        const submodelRefs = await getSubmodelRefsByIdFromRepo(aasId);
+
+        for (const submodelRef of submodelRefs) {
+            const smId = extractIdFromReference(submodelRef, 'Submodel');
+            const smDescriptor = await fetchSmDescriptor(smId);
+            if (
+                smDescriptor &&
+                Object.keys(smDescriptor).length > 0 &&
+                smDescriptor?.semanticId?.keys &&
+                Array.isArray(smDescriptor.semanticId.keys) &&
+                smDescriptor.semanticId.keys.length > 0
+            ) {
+                const semanticIds = smDescriptor.semanticId.keys.map((key: any) => key.value);
+                if (semanticIds.includes(semanticId)) {
+                    return smId;
+                }
+            }
+        }
+
+        return failResponse;
+    }
+
+    return {
+        fetchAndDispatchSm,
+        fetchAndDispatchSmById,
+        fetchSmDescriptorList,
+        fetchSmDescriptor,
+        fetchSm,
+        fetchSmById,
+        getSmEndpoint,
+        getSmEndpointById,
+        getSmIdOfAasIdBySemanticId,
+    };
 }

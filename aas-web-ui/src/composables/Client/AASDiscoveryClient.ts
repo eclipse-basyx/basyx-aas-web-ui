@@ -16,6 +16,7 @@ export function useAASDicoveryClient() {
      * This function sends an HTTP request to the AAS Discovery service to look up the AAS ID based on the provided global asset ID.
      * If the global asset ID or the AAS Discovery URL is invalid or if the AAS ID cannot be retrieved, the function returns an empty string.
      *
+     * @async
      * @param {string} globalAssetId - The global asset ID for which to retrieve the AAS ID.
      * @returns {Promise<string>} A promise that resolves to the AAS ID as a string if found; otherwise, an empty string.
      */

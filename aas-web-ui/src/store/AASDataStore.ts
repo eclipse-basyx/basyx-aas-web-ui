@@ -24,7 +24,7 @@ export const useAASStore = defineStore({
                 Object.keys(aasData).length > 0 &&
                 aasData?.id
             ) {
-                // if existing AAS is replaced by another one, clear selectedNode
+                // If existing AAS is replaced by another one, clear selectedNode
                 if (this.aasObject?.id !== aasData?.id) this.selectedNode = {};
             }
 
@@ -33,7 +33,7 @@ export const useAASStore = defineStore({
                 this.selectedNode = {};
             }
 
-            // If the same AAS is dispatch, nothing happened with the selectedNode
+            // If the same AAS is dispatched, nothing happened with the selectedNode
 
             this.aasObject = aasData;
         },

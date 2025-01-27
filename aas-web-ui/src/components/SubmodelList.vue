@@ -190,6 +190,7 @@
             let path = smRegistryURL + '/' + base64Encode(submodelId);
             let context = 'retrieving Submodel Endpoint';
             let disableMessage = false;
+            // TODO Replace by using SMHandling
             return getRequest(path, context, disableMessage).then((response: any) => {
                 if (response.success) {
                     if (response.data?.id) {

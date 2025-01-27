@@ -111,7 +111,7 @@
                 //remove query from URL
                 router.push({ query: {} });
                 aasStore.dispatchSelectedAAS({});
-                navigationStore.dispatchTriggerAASListReload(true); // Reload AAS List
+                navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
             }
             deleteLoading.value = false;
         }
@@ -138,7 +138,7 @@
         const response = await deleteRequest(path, context, disableMessage);
         if (response.success) {
             if (reload) {
-                navigationStore.dispatchTriggerAASListReload(true); // Reload AAS List
+                navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
             }
         }
     }

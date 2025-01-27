@@ -4,11 +4,11 @@ export function useChartHandling() {
     const { unitSuffix } = useConceptDescriptionHandling();
 
     function prepareYValueTooltip(chartData: any, yVariables: any) {
-        return chartData.map((_series: any, index: number) => {
+        return chartData.map(async (_series: any, index: number) => {
             // Use optional chaining and nullish coalescing to simplify the retrieval of the unit
             let unit = '';
             if (yVariables[index]) {
-                unit = unitSuffix(yVariables[index]);
+                unit = await unitSuffix(yVariables[index]);
             }
             return {
                 formatter: (value: any) => `${value} ${unit}`,
