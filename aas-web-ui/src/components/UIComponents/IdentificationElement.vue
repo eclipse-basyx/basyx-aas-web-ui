@@ -1,6 +1,6 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-list-item v-if="identificationObject">
+        <v-list-item v-if="identificationObject" class="mb-2">
             <!-- Tooltip with ID and idShort -->
             <div>
                 <div class="d-flex justify-space-between align-center">
