@@ -48,6 +48,7 @@
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
 
     export default defineComponent({
         name: 'GenericDataTableView',
@@ -72,6 +73,8 @@
 
             return {
                 theme, // Theme Object
+                descriptionToDisplay,
+                nameToDisplay,
             };
         },
     });

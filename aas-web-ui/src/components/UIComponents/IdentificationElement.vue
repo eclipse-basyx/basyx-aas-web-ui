@@ -101,6 +101,7 @@
     import { useClipboardUtil } from '@/composables/ClipboardUtil';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { nameToDisplay } from '@/utils/ReferableUtils';
 
     export default defineComponent({
         name: 'IdentificationElement',
@@ -140,6 +141,7 @@
                 copyToClipboard,
                 copyIcon,
                 getCopyIconAsRef,
+                nameToDisplay,
             };
         },
     });

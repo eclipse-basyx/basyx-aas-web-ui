@@ -69,6 +69,7 @@
     import { useRouter } from 'vue-router';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
+    import { capitalizeFirstLetter } from '@/utils/StringUtils';
 
     export default defineComponent({
         name: 'RelationshipElement',
@@ -87,6 +88,7 @@
             return {
                 aasStore, // AASStore Object
                 router, // Router Object
+                capitalizeFirstLetter,
             };
         },
 

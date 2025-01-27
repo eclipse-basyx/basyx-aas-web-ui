@@ -170,7 +170,7 @@ export default defineComponent({
                 if (response && response.success) {
                     return response.data;
                 }
-                return { idShort: 'new Group', id: this.UUID() };
+                return { idShort: 'new Group', id: this.generateUUID() };
             }
         },
     },

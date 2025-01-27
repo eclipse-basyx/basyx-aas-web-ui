@@ -204,6 +204,7 @@
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
+    import { checkIdShort, descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
 
     export default defineComponent({
         name: 'TimeSeriesData',
@@ -223,6 +224,9 @@
                 aasStore, // AASStore Object
                 envStore, // EnvironmentStore Object
                 route, // Route Object
+                descriptionToDisplay,
+                nameToDisplay,
+                checkIdShort,
             };
         },
 

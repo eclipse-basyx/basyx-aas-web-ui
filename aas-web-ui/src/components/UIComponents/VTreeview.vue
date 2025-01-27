@@ -133,6 +133,8 @@
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { extractEndpointHref } from '@/utils/DescriptorUtils';
+    import { nameToDisplay } from '@/utils/ReferableUtils';
 
     export default defineComponent({
         name: 'VTreeview',
@@ -152,6 +154,8 @@
                 aasStore, // AASStore Object
                 route, // Route Object
                 router, // Router Object
+                nameToDisplay,
+                extractEndpointHref,
             };
         },
 

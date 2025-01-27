@@ -1,6 +1,14 @@
-// Function to check if the SemanticID of a SubmodelElement matches the given SemanticID
+/**
+ * Checks if the `semanticId` of a SubmodelElement (SME) matches the given `semanticId`.
+ * The function verifies that the `semanticId` is non-empty and that the SubmodelElement
+ * contains a valid array of semantic ID keys. It also determines the matching strategy
+ * based on the prefix of the keys in the SubmodelElement's semantic ID.
+ *
+ * @param {any} submodelElement - The SubmodelElement object containing semantic ID keys.
+ * @param {string} semanticId - The `semanticId` string to compare against the SME's `semanticId`.
+ * @returns {boolean} Returns true if a matching `semanticId` is found, false otherwise.
+ */
 export function checkSemanticId(submodelElement: any, semanticId: string): boolean {
-    // console.log('checkSemanticId', 'submodelElement', submodelElement, 'semanticId', semanticId);
     if (semanticId.trim() == '') return false;
 
     if (!Array.isArray(submodelElement?.semanticId?.keys) || submodelElement.semanticId.keys.length == 0) return false;
@@ -23,6 +31,16 @@ export function checkSemanticId(submodelElement: any, semanticId: string): boole
     return false;
 }
 
+/**
+ * Checks whether a given EClass IRDI semantic ID matches an equivalent key value.
+ * The function validates that both `keyValue` and `semanticId` are non-empty. It verifies that the `keyValue`
+ * starts with either "0173-1#" or "0173/1///" and compares the two IDs based on specific criteria for
+ * versioned and non-versioned IDs.
+ *
+ * @param {string} keyValue - The key value representing the original EClass IRDI ID to compare against.
+ * @param {string} semanticId - The EClass semantic ID to be checked for equivalence.
+ * @returns {boolean} Returns true if the `semanticId` matches the `keyValue`, false otherwise.
+ */
 export function checkSemanticIdEclassIrdi(keyValue: string, semanticId: string): boolean {
     if (semanticId.trim() == '') return false;
 
@@ -61,6 +79,16 @@ export function checkSemanticIdEclassIrdi(keyValue: string, semanticId: string):
     return false;
 }
 
+/**
+ * Checks whether a given EClass IRDI URL semantic ID matches an equivalent key value.
+ * The function validates that both `keyValue` and `semanticId` are non-empty and that the `keyValue`
+ * starts with the specified base URL. It then checks if the `semanticId` has a version and
+ * compares it accordingly.
+ *
+ * @param {string} keyValue - The key value representing the original EClass IRDI URL to compare against.
+ * @param {string} semanticId - The EClass semantic ID to be checked for equivalence.
+ * @returns {boolean} Returns true if the `semanticId` matches the `keyValue`, false otherwise.
+ */
 export function checkSemanticIdEclassIrdiUrl(keyValue: string, semanticId: string): boolean {
     if (semanticId.trim() == '') return false;
 
@@ -80,6 +108,15 @@ export function checkSemanticIdEclassIrdiUrl(keyValue: string, semanticId: strin
     );
 }
 
+/**
+ * Checks whether a given IEC CDD semantic ID matches the equivalent key value.
+ * The function validates that both `keyValue` and `semanticId` are non-empty and start with "0112/".
+ * It then determines if the two values are equivalent based on specific criteria for versioned and non-versioned IDs.
+ *
+ * @param {string} keyValue - The key value representing the original IEC CDD semantic ID to compare against.
+ * @param {string} semanticId - The IEC CDD semantic ID to be checked for equivalence.
+ * @returns {boolean} Returns true if the `semanticId` matches the `keyValue`, false otherwise.
+ */
 export function checkSemanticIdIecCdd(keyValue: string, semanticId: string): boolean {
     if (semanticId.trim() == '') return false;
 
@@ -98,8 +135,20 @@ export function checkSemanticIdIecCdd(keyValue: string, semanticId: string): boo
     return keyValue.startsWith(semanticId);
 }
 
+/**
+ * Checks whether a given semantic ID matches the equivalent IRI derived from a key value.
+ * The function verifies both the validity of the semantic ID and key value, and compares them.
+ *
+ * It considers:
+ * - Validity checks for the `semanticId` and `keyValue` (they must be non-empty and start with http/https).
+ * - Normalization of the `keyValue` and `semanticId` by removing any trailing slashes.
+ * - Different comparison strategies depending on whether the `semanticId` indicates a versioned or non-versioned IRI.
+ *
+ * @param {string} keyValue - The key value representing the original IRI to compare against.
+ * @param {string} semanticId - The semantic ID IRI to be checked for equivalence.
+ * @returns {boolean} Returns true if the `semanticId` matches the equivalent IRI derived from `keyValue`, false otherwise.
+ */
 export function checkSemanticIdIri(keyValue: string, semanticId: string): boolean {
-    // console.log('checkSemanticIdIri: ', 'keyValue', keyValue, 'semanticId', semanticId);
     if (semanticId.trim() == '') return false;
 
     if (!semanticId.startsWith('http://') && !semanticId.startsWith('https://')) return false;
@@ -108,19 +157,41 @@ export function checkSemanticIdIri(keyValue: string, semanticId: string): boolea
     if (keyValue.endsWith('/')) keyValue = keyValue.substring(0, keyValue.length - 1);
     if (semanticId.endsWith('/')) semanticId = semanticId.substring(0, semanticId.length - 1);
 
-    if (new RegExp(/\/\d{1,}\/\d{1,}$/).test(semanticId)) {
-        // IRI with version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/0/9/
-        return getEquivalentIriSemanticIds(semanticId).includes(keyValue);
+    if (new RegExp(/\/\d{1,}\/\d{1,}\/{0,1}$/).test(semanticId) || new RegExp(/\/\d{1,}\/\d{1,}\//).test(semanticId)) {
+        // IRI with version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/0/9
+        // IRI with version like https://admin-shell.io/zvei/nameplate/1/0/ContactInformations
+        return (
+            getEquivalentIriSemanticIds(keyValue).findIndex((equivalentSemanticId) => {
+                return equivalentSemanticId.toLowerCase() === semanticId.toLowerCase();
+            }, semanticId) != -1
+        );
     }
 
     // IRI without version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/
     return (
         getEquivalentIriSemanticIds(keyValue).findIndex((equivalentSemanticId) => {
-            return equivalentSemanticId.startsWith(semanticId);
+            return equivalentSemanticId.toLowerCase().startsWith(semanticId.toLowerCase());
         }, semanticId) != -1
     );
 }
 
+/**
+ * Generates an array of equivalent EClass semantic IDs based on the provided `semanticId`.
+ * The function checks if the input `semanticId` is valid before generating its equivalents.
+ * Valid formats are:
+ * - "0173-1#..."
+ * - "0173/1///..."
+ * - "https://api.eclass-cdp.com/0173-1..."
+ *
+ * Returns the original `semanticId` and its variations based on specific rules depending on its format:
+ * - Converts "0173-1#" to "0173/1///" and an API URL format.
+ * - Converts "0173/1///" to "0173-1#" and the corresponding API URL format.
+ * - Converts the API URL format back to "0173-1#" and "0173/1///".
+ *
+ * @param {string} semanticId - The EClass semantic ID to evaluate and convert.
+ * @returns {any[]} An array of the original `semanticId` and its equivalent variations,
+ *                  or an empty array if the input is invalid.
+ */
 export function getEquivalentEclassSemanticIds(semanticId: string): any[] {
     if (
         semanticId.trim() === '' ||
@@ -158,10 +229,21 @@ export function getEquivalentEclassSemanticIds(semanticId: string): any[] {
         );
     }
 
-    // console.log('getEquivalentEclassSemanticIds', 'semanticId', semanticId, 'semanticIds', semanticIds);
     return semanticIds;
 }
 
+/**
+ * Generates an array of equivalent IRI (Internationalized Resource Identifier) semantic IDs
+ * based on the given `semanticId`.
+ *
+ * The function checks if the `semanticId` is a valid IRI (i.e., it starts with "http://" or "https://").
+ * It will return an empty array if the `semanticId` is invalid. If the `semanticId` is valid,
+ * it will also include variations with a trailing slash or without one in the resultant array.
+ *
+ * @param {string} semanticId - The semantic ID to evaluate.
+ * @returns {any[]} An array containing the original `semanticId` and its equivalent variations,
+ *                  or an empty array if the input is invalid.
+ */
 export function getEquivalentIriSemanticIds(semanticId: string): any[] {
     if (semanticId.trim() === '' || !(semanticId.startsWith('http://') || semanticId.startsWith('https://'))) return [];
 
@@ -174,6 +256,93 @@ export function getEquivalentIriSemanticIds(semanticId: string): any[] {
         semanticIds.push(semanticId + '/');
     }
 
-    // console.log('getEquivalentIriSemanticIds', 'semanticId', semanticId, 'semanticIds', semanticIds);
     return semanticIds;
+}
+
+/**
+ * Retrieves a SubmodelElement (SME) by its `semanticId` from a given Submodel (SM) or SubmodelElement (SME).
+ * If the `semanticId` is not found or if the input is invalid, an empty object is returned.
+ *
+ * The function supports the following types of elements:
+ * - **Submodel (SM)**: Searches through `submodelElements`.
+ * - **SubmodelElementCollection (SMC)** and **SubmodelElementList (SML)**: Searches through their `value` arrays.
+ *
+ * @param {string} semanticId - The `semanticId` of the SME to search for.
+ * @param {any} submodelElement - The parent SM/SME to search within.
+ * @returns {any} The found SME or an empty object if not found or input is invalid.
+ */
+export function getSubmodelElementBySemanticId(semanticId: string, submodelElement: any): any {
+    const failResponse = {} as any;
+
+    if (semanticId.trim() == '') return failResponse;
+
+    if (!submodelElement?.modelType || submodelElement?.modelType.trim() === '') return failResponse;
+
+    switch (submodelElement.modelType) {
+        case 'Submodel':
+            if (
+                submodelElement?.submodelElements &&
+                Array.isArray(submodelElement.submodelElements) &&
+                submodelElement.submodelElements.length > 0
+            ) {
+                return submodelElement.submodelElements.find((sme: any) => {
+                    return checkSemanticId(sme, semanticId);
+                });
+            }
+            break;
+        case 'SubmodelElementCollection':
+        case 'SubmodelElementList':
+            if (submodelElement?.value && Array.isArray(submodelElement.value) && submodelElement.value.length > 0) {
+                return submodelElement.value.find((sme: any) => {
+                    return checkSemanticId(sme, semanticId);
+                });
+            }
+            break;
+    }
+
+    return failResponse;
+}
+
+/**
+ * Retrieves an array of SubmodelElements (SMEs) by their `semanticId` from a given Submodel (SM) or SubmodelElement (SME).
+ * If the `semanticId` is not found or if the input is invalid, an empty array is returned.
+ *
+ * The function supports the following types of elements:
+ * - **Submodel (SM)**: Filters through `submodelElements`.
+ * - **SubmodelElementCollection (SMC)** and **SubmodelElementList (SML)**: Filters through their `value` arrays.
+ *
+ * @param {string} semanticId - The `semanticId` of the SMEs to search for.
+ * @param {any} submodelElement - The parent SM/SME to search within.
+ * @returns {any[]} An array of found SMEs matching the `idShort`, or an empty array if not found or input is invalid.
+ */
+export function getSubmodelElementsBySemanticId(semanticId: string, submodelElement: any): any[] {
+    const failResponse = [] as any[];
+
+    if (semanticId.trim() == '') return failResponse;
+
+    if (!submodelElement?.modelType || submodelElement?.modelType.trim() === '') return failResponse;
+
+    switch (submodelElement.modelType) {
+        case 'Submodel':
+            if (
+                submodelElement?.submodelElements &&
+                Array.isArray(submodelElement.submodelElements) &&
+                submodelElement.submodelElements.length > 0
+            ) {
+                return submodelElement.submodelElements.filter((sme: any) => {
+                    return checkSemanticId(sme, semanticId);
+                });
+            }
+            break;
+        case 'SubmodelElementCollection':
+        case 'SubmodelElementList':
+            if (submodelElement?.value && Array.isArray(submodelElement.value) && submodelElement.value.length > 0) {
+                return submodelElement.value.filter((sme: any) => {
+                    return checkSemanticId(sme, semanticId);
+                });
+            }
+            break;
+    }
+
+    return failResponse;
 }
