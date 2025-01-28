@@ -10,9 +10,19 @@
         <v-btn icon="mdi-autorenew"></v-btn>
     </v-badge>
     <!-- Desktop Autosync Menu -->
-    <v-btn v-else class="mr-6" variant="outlined">
-        <span class="mr-1">{{ 'Auto Sync:' }}</span>
-        <span class="text-primary">{{ autoSync.state ? 'On' : 'Off' }}</span>
+    <v-btn v-else class="multiline-button mr-6" variant="outlined">
+        <div class="text-left">
+            <p>
+                <span class="mr-1" :style="statusCheck.state ? 'font-size: 0.75em' : ''">{{ 'Auto Sync:' }}</span>
+                <span class="text-primary" :style="statusCheck.state ? 'font-size: 0.75em' : ''">{{
+                    autoSync.state ? 'On' : 'Off'
+                }}</span>
+            </p>
+            <p v-if="statusCheck.state" class="mt-n1">
+                <span class="mr-1" style="font-size: 0.75em">{{ 'Status Check:' }}</span>
+                <span class="text-primary" style="font-size: 0.75em">{{ statusCheck.state ? 'On' : 'Off' }}</span>
+            </p>
+        </div>
         <v-icon :style="{ 'margin-left': autoSync.state ? '12.5px' : '6px' }">mdi-chevron-down</v-icon>
         <v-menu activator="parent" :close-on-content-click="false" width="300px">
             <v-list nav class="py-0 bg-navigationMenu" style="border-style: solid; border-width: 1px">
@@ -31,16 +41,19 @@
                     </v-switch>
                 </v-list-item>
                 <!-- Hint -->
-                <v-list-item class="py-0" style="margin-top: -10px">
+                <v-list-item class="py-0 mt-n5">
                     <v-list-item-subtitle class="ml-1">
-                        {{ 'Selected AAS and SM/SME are auto-synced.' }}
+                        {{ 'Selected AAS & SM/SME (incl. CDs) are synced' }}
                     </v-list-item-subtitle>
                     <v-list-item-subtitle class="ml-1">
-                        {{ 'Submodel list/tree is not auto-synced!' }}
+                        <!-- TODO Auto-Sync feature for ComponentVisualization -->
+                        <!-- TODO Auto-Sync feature for Submodel list/tree -->
+                        <!-- TODO Add checkboxes for AAS, SM/SME, CD to control which data should be auto-synced -->
+                        {{ 'SM list/tree & Visualization are not synced!' }}
                     </v-list-item-subtitle>
                 </v-list-item>
                 <!-- Input Field to set the sync-interval -->
-                <v-list-item class="py-0">
+                <v-list-item class="py-0 mt-n2">
                     <v-text-field
                         v-model="autoSync.interval"
                         density="compact"
@@ -48,13 +61,16 @@
                         type="number"
                         hide-details
                         @update:focused="checkMin">
+                        <template #prepend-inner>
+                            <v-icon>mdi-timer</v-icon>
+                        </template>
                         <template #append-inner>
                             <span>ms</span>
                         </template>
                     </v-text-field>
                 </v-list-item>
                 <!-- Hint -->
-                <v-list-item class="py-0" style="margin-top: -10px">
+                <v-list-item class="py-0 mt-n2">
                     <v-list-item-subtitle class="ml-1">{{ 'Be careful decreasing the time!' }}</v-list-item-subtitle>
                     <v-list-item-subtitle class="ml-1">{{
                         'A smaller time means more requests.'
@@ -69,26 +85,16 @@
 </template>
 
 <script lang="ts" setup>
-    import type { AutoSyncType } from '@/types/Application';
-    import { computed, onMounted } from 'vue';
+    import { computed } from 'vue';
     import { useNavigationStore } from '@/store/NavigationStore';
 
+    // Stores
     const navigationStore = useNavigationStore();
-
-    // Data
-    const autoSyncDefault = { state: false, interval: 3000 } as AutoSyncType;
 
     // Computed properties
     const isMobile = computed(() => navigationStore.getIsMobile);
     const autoSync = computed(() => navigationStore.getAutoSync);
-
-    onMounted(async () => {
-        // Get auto-sync object from the lcoal storage, if not set use auto-sync default object
-        var autoSyncToDispatch = JSON.parse(
-            localStorage.getItem('autoSync') || JSON.stringify(autoSyncDefault)
-        ) as AutoSyncType;
-        navigationStore.dispatchUpdateAutoSync(autoSyncToDispatch);
-    });
+    const statusCheck = computed(() => navigationStore.getStatusCheck);
 
     // Checks if the input is smaller than 100ms and sets it to 100ms if it is
     function checkMin(e: boolean) {
@@ -99,7 +105,7 @@
     // Updates the auto-sync object in the store and local storage
     function updateAutoSync() {
         localStorage.setItem('autoSync', JSON.stringify(autoSync.value));
-        navigationStore.dispatchUpdateAutoSync(autoSync.value);
+        navigationStore.dispatchAutoSync(autoSync.value);
     }
 
     function toggleAutoSync() {

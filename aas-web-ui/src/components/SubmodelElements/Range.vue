@@ -20,7 +20,7 @@
                     <v-text-field v-model="range[1]" hide-details single-line variant="outlined" style="width: 90px" density="compact" readonly></v-text-field>
                 </template> -->
                 <template #thumb-label="{ modelValue }">
-                    {{ modelValue + unitSuffix(rangeObject) }}
+                    {{ modelValue + unitSuffixValue }}
                 </template>
             </v-range-slider>
         </v-card>
@@ -30,6 +30,7 @@
 // TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent } from 'vue';
+    import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -46,14 +47,22 @@
 
         setup() {
             const aasStore = useAASStore();
+            const { unitSuffix } = useConceptDescriptionHandling();
 
             return {
                 aasStore, // AASStore Object
+                unitSuffix,
             };
         },
 
         data() {
-            return {};
+            return {
+                unitSuffixValue: '',
+            };
+        },
+
+        async created() {
+            await this.localUnitSuffix();
         },
 
         computed: {
@@ -90,6 +99,13 @@
                     );
                 }
                 return 0;
+            },
+        },
+
+        methods: {
+            // get the unit suffix of the range
+            async localUnitSuffix() {
+                this.unitSuffixValue = await this.unitSuffix(this.rangeObject);
             },
         },
     });

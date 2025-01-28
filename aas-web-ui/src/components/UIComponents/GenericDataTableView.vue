@@ -47,7 +47,9 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
+    import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
 
     export default defineComponent({
         name: 'GenericDataTableView',
@@ -69,9 +71,13 @@
 
         setup() {
             const theme = useTheme();
+            const { cdDefinition } = useConceptDescriptionHandling();
 
             return {
                 theme, // Theme Object
+                cdDefinition,
+                nameToDisplay,
+                descriptionToDisplay,
             };
         },
     });

@@ -1,11 +1,13 @@
-import md5 from 'md5';
 import { v4 as uuidv4 } from 'uuid';
 import { defineComponent } from 'vue';
 import { useRouter } from 'vue-router';
 import RequestHandling from '@/mixins/RequestHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useNavigationStore } from '@/store/NavigationStore';
+import { formatDate } from '@/utils/DateUtils';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
+import { checkIdShort } from '@/utils/ReferableUtils';
+import { getEquivalentEclassSemanticIds, getEquivalentIriSemanticIds } from '@/utils/SemanticIdUtils';
 
 export default defineComponent({
     name: 'SubmodelElementHandling',
@@ -61,35 +63,12 @@ export default defineComponent({
     },
 
     methods: {
-        // generate a unique ID (UUID)
-        UUID() {
+        // TODO REMOVE if not used anymore in this mixin
+        generateUUID(): string {
             return uuidv4();
         },
 
-        // generate a unique ID (UUID) from a given string
-        generateUUIDFromString(str: any): string {
-            // create md5 hash from string
-            const hash = md5(str);
-            // create UUID from hash
-            const guid =
-                hash.substring(0, 8) +
-                '-' +
-                hash.substring(8, 12) +
-                '-' +
-                hash.substring(12, 16) +
-                '-' +
-                hash.substring(16, 20) +
-                '-' +
-                hash.substring(20, 32);
-            return guid;
-        },
-
-        // convert date element to digits
-        padTo2Digits(num: number) {
-            return num.toString().padStart(2, '0');
-        },
-
-        // convert js date object to string
+        // TODO REMOVE if not used anymore in this mixin
         formatDate(date: Date) {
             return (
                 [date.getFullYear(), this.padTo2Digits(date.getMonth() + 1), this.padTo2Digits(date.getDate())].join(
@@ -104,281 +83,67 @@ export default defineComponent({
             );
         },
 
-        // Function to capitalize the first letter of a string
-        capitalizeFirstLetter(string: string) {
-            return string.charAt(0).toUpperCase() + string.slice(1);
+        // TODO REMOVE if not used anymore in this mixin
+        padTo2Digits(num: number) {
+            return num.toString().padStart(2, '0');
         },
 
-        // Function to check if the idShort of a SubmodelElement matches the given idShort
-        checkIdShort(referable: any, idShort: string, startsWith: boolean = false, strict: boolean = false): boolean {
-            if (idShort.trim() === '') return false;
-
-            if (!referable || !referable.idShort || referable.idShort.length === 0) return false;
-
-            if (startsWith) {
-                // For matching e.g. ProductImage{00} with idShort ProductImage
-                if (strict) {
-                    return referable.idShort.startsWith(idShort);
-                } else {
-                    return referable.idShort.toLowerCase().startsWith(idShort.toLowerCase());
-                }
-            } else {
-                if (strict) {
-                    return referable.idShort === idShort;
-                } else {
-                    return referable.idShort.toLowerCase() === idShort.toLowerCase();
-                }
-            }
-        },
-
-        // Function to check if the SemanticID of a SubmodelElement matches the given SemanticID
-        checkSemanticId(submodelElement: any, semanticId: string): boolean {
-            // console.log('checkSemanticId', 'submodelElement', submodelElement, 'semanticId', semanticId);
-            if (semanticId.trim() == '') return false;
-
-            if (!Array.isArray(submodelElement?.semanticId?.keys) || submodelElement.semanticId.keys.length == 0)
-                return false;
-
-            for (const key of submodelElement.semanticId.keys) {
-                // console.log('checkSemanticId: ', 'key of submodelElement', key.value, 'semanticId', semanticId);
-                if (key.value.startsWith('0112/')) {
-                    return this.checkSemanticIdIecCdd(key.value, semanticId);
-                } else if (key.value.startsWith('0173-1#') || key.value.startsWith('0173/1///')) {
-                    return this.checkSemanticIdEclassIrdi(key.value, semanticId);
-                } else if (key.value.startsWith('https://api.eclass-cdp.com/0173-1')) {
-                    return this.checkSemanticIdEclassIrdiUrl(key.value, semanticId);
-                } else if (key.value.startsWith('http://') || key.value.startsWith('https://')) {
-                    return this.checkSemanticIdIri(key.value, semanticId);
-                } else {
-                    if (key.value === semanticId) return true;
-                }
-            }
-
-            return false;
-        },
-
-        checkSemanticIdEclassIrdi(keyValue: string, semanticId: string): boolean {
-            if (semanticId.trim() == '') return false;
-
-            if (!keyValue.startsWith('0173-1#') && !keyValue.startsWith('0173/1///')) return false;
-
-            if (keyValue.startsWith('0173-1#')) {
-                // Eclass IRDI like 0173-1#01-AHF578#001
-                if (new RegExp(/\*\d{2}$/).test(keyValue)) {
-                    keyValue = keyValue.slice(0, -3);
-                    semanticId = semanticId.slice(0, -3);
-                }
-                if (
-                    new RegExp(/[#-]{1}\d{3}$/).test(semanticId) ||
-                    new RegExp(/[#-]{1}\d{3}\*\d{1,}$/).test(semanticId)
-                ) {
-                    return this.getEquivalentEclassSemanticIds(keyValue).includes(semanticId);
-                }
-
-                // Eclass IRDI without version; like 0173-1#01-AHF578
-                return (
-                    this.getEquivalentEclassSemanticIds(keyValue).findIndex((equivalentSemanticId) => {
-                        return equivalentSemanticId.startsWith(semanticId);
-                    }, semanticId) != -1
-                );
-            } else if (keyValue.startsWith('0173/1///')) {
-                if (
-                    new RegExp(/[#-]{1}\d{3}$/).test(semanticId) ||
-                    new RegExp(/[#-]{1}\d{3}\*\d{1,}$/).test(semanticId)
-                ) {
-                    // Eclass IRDI with version; like 0173/1///01#AHF578#001
-                    return this.getEquivalentEclassSemanticIds(keyValue).includes(semanticId);
-                }
-
-                // Eclass IRDI without version; like 0173/1///01#AHF578
-                return (
-                    this.getEquivalentEclassSemanticIds(keyValue).findIndex((equivalentSemanticId) => {
-                        return equivalentSemanticId.startsWith(semanticId);
-                    }, semanticId) != -1
-                );
-            }
-
-            return false;
-        },
-
-        checkSemanticIdEclassIrdiUrl(keyValue: string, semanticId: string): boolean {
-            if (semanticId.trim() == '') return false;
-
-            if (!keyValue.startsWith('https://api.eclass-cdp.com/0173-1')) return false;
-
-            // Eclass URL like https://api.eclass-cdp.com/0173-1-01-AHF578-001
-            if (new RegExp(/[#-]{1}\d{3}$/).test(semanticId) || new RegExp(/[#-]{1}\d{3}~\d{1,}$/).test(semanticId)) {
-                // Eclass URL with version (like https://api.eclass-cdp.com/0173-1-01-AHF578-001)
-                return this.getEquivalentEclassSemanticIds(semanticId).includes(keyValue);
-            }
-
-            // Eclass URL without version (like https://api.eclass-cdp.com/0173-1-01-AHF578)
-            return (
-                this.getEquivalentEclassSemanticIds(keyValue).findIndex((equivalentSemanticId) => {
-                    return equivalentSemanticId.startsWith(semanticId);
-                }, semanticId) != -1
-            );
-        },
-
-        checkSemanticIdIecCdd(keyValue: string, semanticId: string): boolean {
-            if (semanticId.trim() == '') return false;
-
-            if (!semanticId.startsWith('0112/')) return false;
-            if (!keyValue.startsWith('0112/')) return false;
-
-            // IEC CDD like 0112/2///61987#ABN590#002
-            if (new RegExp(/[#-]{1}\d{3}$/).test(semanticId)) {
-                // IEC CDD with version; like 0112/2///61987#ABN590#002
-                if (keyValue === semanticId) {
-                    return true;
-                }
-            }
-
-            // IEC CDD without version; like 0112/2///61987#ABN590
-            return keyValue.startsWith(semanticId);
-        },
-
-        checkSemanticIdIri(keyValue: string, semanticId: string): boolean {
-            // console.log('checkSemanticIdIri: ', 'keyValue', keyValue, 'semanticId', semanticId);
-            if (semanticId.trim() == '') return false;
-
-            if (!semanticId.startsWith('http://') && !semanticId.startsWith('https://')) return false;
-            if (!keyValue.startsWith('http://') && !keyValue.startsWith('https://')) return false;
-
-            if (keyValue.endsWith('/')) keyValue = keyValue.substring(0, keyValue.length - 1);
-            if (semanticId.endsWith('/')) semanticId = semanticId.substring(0, semanticId.length - 1);
-
-            if (new RegExp(/\/\d{1,}\/\d{1,}$/).test(semanticId)) {
-                // IRI with version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/0/9/
-                return this.getEquivalentIriSemanticIds(semanticId).includes(keyValue);
-            }
-
-            // IRI without version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/
-            return (
-                this.getEquivalentIriSemanticIds(keyValue).findIndex((equivalentSemanticId) => {
-                    return equivalentSemanticId.startsWith(semanticId);
-                }, semanticId) != -1
-            );
-        },
-
-        getEquivalentEclassSemanticIds(semanticId: string): any[] {
-            if (
-                semanticId.trim() === '' ||
-                (!semanticId.startsWith('0173-1#') &&
-                    !semanticId.startsWith('0173/1///') &&
-                    !semanticId.startsWith('https://api.eclass-cdp.com/0173-1'))
-            )
-                return [];
-
-            const semanticIds: any[] = [semanticId];
-
-            if (semanticId.startsWith('0173-1#')) {
-                // e.g. 0173-1#01-AHF578#001
-                semanticIds.push(semanticId.replace(/-1#(\d{2})-/, '/1///$1#')); // 0173-1#01-AHF578#001 --> 0173/1///01#AHF578#001
-                semanticIds.push('https://api.eclass-cdp.com/' + semanticId.replaceAll('#', '-')); // 0173-1#01-AHF578#001 --> https://api.eclass-cdp.com/0173-1-01-AHF578-001
-            } else if (semanticId.startsWith('0173/1///')) {
-                // e.g. 0173/1///01#AHF578#001
-                semanticIds.push(semanticId.replace(/\/1\/\/\/(\d{2})#/, '-1#$1-')); // 0173/1///01#AHF578#001 --> 0173-1#01-AHF578#001
-                semanticIds.push(
-                    'https://api.eclass-cdp.com/' +
-                        semanticId.replace(/\/1\/\/\/(\d{2})#/, '-1-$1-').replaceAll('#', '-') // 0173/1///01#AHF578#001 --> https://api.eclass-cdp.com/0173-1-01-AHF578-001
-                );
-            } else if (semanticId.startsWith('https://api.eclass-cdp.com/0173-1')) {
-                // e.g. https://api.eclass-cdp.com/0173-1-01-AHF578-001
-                semanticIds.push(
-                    semanticId
-                        .replaceAll('https://api.eclass-cdp.com/', '')
-                        .replace(/-1-(\d{2})-/, '-1#$1-')
-                        .replace(/-(\d{3})$/, '#$1') // https://api.eclass-cdp.com/0173-1-01-AHF578-001 --> 0173-1#01-AHF578#001
-                );
-                semanticIds.push(
-                    semanticId
-                        .replaceAll('https://api.eclass-cdp.com/', '')
-                        .replace(/-1-(\d{2})-/, '/1///$1#')
-                        .replace(/-(\d{3})$/, '#$1') // https://api.eclass-cdp.com/0173-1-01-AHF578-001 --> 0173/1///01#AHF578#001
-                );
-            }
-
-            // console.log('getEquivalentEclassSemanticIds', 'semanticId', semanticId, 'semanticIds', semanticIds);
-            return semanticIds;
-        },
-
-        getEquivalentIriSemanticIds(semanticId: string): any[] {
-            if (semanticId.trim() === '' || !(semanticId.startsWith('http://') || semanticId.startsWith('https://')))
-                return [];
-
-            const semanticIds: any[] = [semanticId];
-
-            // e.g. IRI
-            if (semanticId.endsWith('/')) {
-                semanticIds.push(semanticId.substring(0, semanticId.length - 1));
-            } else {
-                semanticIds.push(semanticId + '/');
-            }
-
-            // console.log('getEquivalentIriSemanticIds', 'semanticId', semanticId, 'semanticIds', semanticIds);
-            return semanticIds;
-        },
-
-        // Function to check if the valueType is a number
-        isNumber(valueType: any) {
-            if (!valueType) return false;
-            // List of all number types
-            const numberTypes = [
-                'double',
-                'float',
-                'integer',
-                'int',
-                'nonNegativeInteger',
-                'positiveInteger',
-                'unsignedLong',
-                'unsignedInt',
-                'unsignedShort',
-                'unsignedByte',
-                'nonPositiveInteger',
-                'negativeInteger',
-                'long',
-                'short',
-                'decimal',
-                'byte',
+        // TODO REMOVE if not used anymore in this mixin
+        extractEndpointHref(descriptor: any, interfaceShortName: string): string {
+            const interfaceShortNames = [
+                'AAS',
+                'SUBMODEL',
+                'SERIALIZE',
+                'DESCRIPTION',
+                'AASX-FILE',
+                'AAS-REGISTRY',
+                'SUBMODEL-REGISTRY',
+                'AAS-REPOSITORY',
+                'SUBMODEL-REPOSITORY',
+                'CD-REPOSITORY',
+                'AAS-DISCOVERY',
             ];
-            // strip xs: from the property if it exists
-            if (valueType.includes('xs:')) {
-                valueType = valueType.replace('xs:', '');
+            if (!interfaceShortNames.some((iShortName) => interfaceShortName.startsWith(`${iShortName}-`))) {
+                return '';
             }
-            // check if the property is a number
-            if (numberTypes.includes(valueType)) {
-                return true;
-            } else {
-                return false;
+            if (
+                !Array.isArray(descriptor?.endpoints) ||
+                descriptor?.endpoints.length === 0 ||
+                interfaceShortName === ''
+            ) {
+                return '';
             }
+            const endpoints = descriptor.endpoints;
+            // find the right endpoint based on the interfaceShortName (has to match endpoint.interface)
+            const endpoint = endpoints.find((endpoint: any) => {
+                return endpoint?.interface === interfaceShortName;
+            });
+            return endpoint?.protocolInformation?.href ? endpoint.protocolInformation.href : '';
         },
 
-        // Function to download a JSON File
-        downloadJson(obj: any, fileName: string) {
-            const jsonStr = JSON.stringify(obj, null, 4);
-            const blob = new Blob([jsonStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        },
-
-        // Function to download a binary File
-        downloadFile(filename: string, fileContent: Blob) {
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(fileContent);
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+        // TODO REMOVE if not used anymore in this mixin
+        unitSuffix(prop: any) {
+            if (!prop.conceptDescriptions || prop.conceptDescriptions.length == 0) {
+                return '';
+            }
+            for (const conceptDescription of prop.conceptDescriptions) {
+                if (!conceptDescription.embeddedDataSpecifications) {
+                    continue;
+                }
+                for (const embeddedDataSpecification of conceptDescription.embeddedDataSpecifications) {
+                    if (
+                        embeddedDataSpecification.dataSpecificationContent &&
+                        embeddedDataSpecification.dataSpecificationContent.unit
+                    ) {
+                        return embeddedDataSpecification.dataSpecificationContent.unit;
+                    }
+                }
+            }
+            return '';
         },
 
         // Function to check if the referenced Element exists
+        // TODO Transfer to Util resp. Composable
         async checkReference(
             reference: any,
             currentAasDescriptor?: any
@@ -491,7 +256,6 @@ export default defineComponent({
                                 }
                                 return failResponse;
                             } catch {
-                                // handle error
                                 return failResponse;
                             }
                         }
@@ -508,6 +272,7 @@ export default defineComponent({
         },
 
         // Function to check if AAS of Reference exists
+        // TODO Transfer to Util resp. Composable
         async checkAasReference(
             aasReference: any,
             aasDescriptorList?: Array<any>
@@ -537,6 +302,7 @@ export default defineComponent({
         },
 
         // Function to check if the referenced Submodel (+ SubmodelElement) exists (in aasDescriptor)
+        // TODO Transfer to Util resp. Composable
         async checkSmReference(
             smReference: any,
             aasDescriptorList: Array<any>,
@@ -639,6 +405,7 @@ export default defineComponent({
         },
 
         // Function to jump to a referenced Element
+        // TODO Transfer to Util resp. Composable
         jumpToReference(reference: any, aasDescriptor?: any, smRef?: any) {
             // console.log('jumpToReference', 'reference', reference, 'aasDescriptor', aasDescriptor, 'smRef', smRef);
             if (smRef && Object.keys(smRef).length > 0) {
@@ -660,6 +427,7 @@ export default defineComponent({
             }
         },
 
+        // TODO Transfer to Util resp. Composable
         jumpToSubmodelElement(reference: any, aasDescriptor: any, smRef: any) {
             // console.log(
             //     'jumpToSubmodelElement()',
@@ -726,7 +494,7 @@ export default defineComponent({
                                     ) {
                                         const sml = smRepoResponse.data;
                                         const index = sml.value.findIndex((sme: any) =>
-                                            this.checkIdShort(sme, smeKey.value, false, true)
+                                            checkIdShort(sme, smeKey.value, false, true)
                                         );
                                         if (index !== -1) {
                                             smRepoUrl += encodeURIComponent('[') + index + encodeURIComponent(']');
@@ -754,7 +522,7 @@ export default defineComponent({
                                     ) {
                                         const smc = smRepoResponse.data;
                                         const sme = smc.value.find((sme: any) =>
-                                            this.checkIdShort(sme, smeKey.value, false, true)
+                                            checkIdShort(sme, smeKey.value, false, true)
                                         );
                                         if (sme && Object.keys(sme).length > 0) {
                                             smRepoUrl += '.' + smeKey.value;
@@ -794,7 +562,6 @@ export default defineComponent({
                     }
                     // dispatch the AAS set by the ReferenceElement to the store
                     await this.fetchAndDispatchAas(aasEndpoint);
-                    this.navigationStore.dispatchTriggerAASListScroll();
                     // Request the referenced SubmodelElement
                     const elementPath = smRepoUrl;
                     const context = 'retrieving SubmodelElement';
@@ -829,9 +596,11 @@ export default defineComponent({
                 });
         },
 
+        // TODO Move to AASHandling/AASRegistryClient/AASRepoClient
         ////////////////////////////////////////////////// AAS Stuff //////////////////////////////////////////////////
 
         // Fetch List of all available AAS Descriptors
+        // TODO Replace usage of this function with AASHandling/AASRegistryClient/AASRepoClient
         async fetchAasDescriptorList(): Promise<Array<any>> {
             // console.log('fetchAasDescriptorList()');
 
@@ -856,7 +625,6 @@ export default defineComponent({
                     return aasRegistryResponse.data.result;
                 }
             } catch {
-                // handle error
                 return failResponse;
             }
 
@@ -864,6 +632,7 @@ export default defineComponent({
         },
 
         // Fetch List of all available AAS
+        // TODO Replace usage of this function with AASHandling/AASRegistryClient/AASRepoClient
         async fetchAasList(): Promise<Array<any>> {
             // console.log('fetchAasList()');
 
@@ -884,13 +653,13 @@ export default defineComponent({
                     return aasRepoResponse.data.result;
                 }
             } catch {
-                // handle error
                 return failResponse;
             }
             return failResponse;
         },
 
         // Fetch AAS Descriptor by AAS ID with AAS Registry
+        // TODO Replace usage of this function with AASHandling/AASRegistryClient/AASRepoClient
         async fetchAasDescriptorById(aasId: string): Promise<any> {
             // console.log('fetchAasDescriptorById()', aasId);
 
@@ -915,13 +684,13 @@ export default defineComponent({
                     return aasRegistryResponse.data;
                 }
             } catch {
-                // handle error
                 return failResponse;
             }
             return failResponse;
         },
 
         // Fetch AAS from AAS Repo (with the help of the AAS Registry)
+        // TODO Replace usage of this function with AASHandling/AASRegistryClient/AASRepoClient
         async fetchAasById(aasId: string): Promise<any> {
             // console.log('fetchAasById()', aasId);
             const failResponse = {} as any;
@@ -939,6 +708,7 @@ export default defineComponent({
         },
 
         // Fetch AAS from (AAS Repo) Endpoint
+        // TODO Replace usage of this function with AASHandling/AASRegistryClient/AASRepoClient
         async fetchAas(aasEndpoint: string): Promise<any> {
             // console.log('fetchAas()', aasEndpoint);
             const failResponse = {} as any;
@@ -971,6 +741,7 @@ export default defineComponent({
         },
 
         // Fetch and Dispatch AAS from (AAS Repo) Endpoint
+        // TODO Replace usage of this function with AASHandling/AASRegistryClient/AASRepoClient
         async fetchAndDispatchAas(aasEndpoint: string) {
             // console.log('fetchAndDispatchAas()', aasEndpoint);
             if (aasEndpoint.trim() === '') return;
@@ -978,10 +749,15 @@ export default defineComponent({
             const aas = await this.fetchAas(aasEndpoint);
             // console.log('fetchAndDispatchAas()', aasEndpoint, 'aas', aas);
 
+            aas.timestamp = formatDate(new Date());
+            aas.path = aasEndpoint;
+            aas.isActive = true;
+
             this.aasStore.dispatchSelectedAAS(aas);
         },
 
         // Checks weather an AAS is available
+        // TODO Replace usage of this function with AASHandling/AASRegistryClient/AASRepoClient
         // Checks availability in AAS Repo
         // Checks availability in AAS Registry and AAS Repo if AAS Registry is available
         async aasIsAvailableById(aasId: string): Promise<boolean> {
@@ -1020,6 +796,7 @@ export default defineComponent({
         },
 
         // Checks weather AAS is available in AAS Repo
+        // TODO Replace usage of this function with AASHandling/AASRegistryClient/AASRepoClient
         async aasIsAvailable(aasEndpoint: string): Promise<boolean> {
             // console.log('aasIsAvailable()', aasEndpoint);
             const failResponse = false;
@@ -1035,6 +812,7 @@ export default defineComponent({
         },
 
         // Checks weather referenced AAS is available
+        // TODO Replace usage of this function with AASHandling/AASRegistryClient/AASRepoClient
         async aasReferenceIsAvailable(aasReference: any): Promise<boolean> {
             // console.log('aasIsAvailable()', aasEndpoint);
             const failResponse = false;
@@ -1059,6 +837,7 @@ export default defineComponent({
         },
 
         // Jumps to AAS by AAS Descriptor
+        // TODO Transfer to Util resp. Composable
         async jumpToAasByAasDescriptor(aasDescriptor: any) {
             // console.log('jumpToAasByAasDescriptor()', aasDescriptor);
             const aasEndpoint = this.extractEndpointHref(aasDescriptor, 'AAS-3.0');
@@ -1067,6 +846,7 @@ export default defineComponent({
         },
 
         // Jumps to AAS by AAS ID
+        // TODO Transfer to Util resp. Composable
         async jumpToAasById(aasId: string) {
             if (!this.aasIsAvailableById(aasId)) return;
 
@@ -1077,6 +857,7 @@ export default defineComponent({
         },
 
         // Jumps to AAS by AAS Endpoint
+        // TODO Transfer to Util resp. Composable
         async jumpToAas(aasEndpoint: string) {
             // console.log('jumpToAasBy()', aasEndpoint);
             if (aasEndpoint.trim() === '') return;
@@ -1087,12 +868,13 @@ export default defineComponent({
                 this.router.push({ query: { aas: aasEndpoint } });
             }
             await this.fetchAndDispatchAas(aasEndpoint);
-            this.navigationStore.dispatchTriggerAASListScroll();
         },
 
+        // TODO Move to SMHandling/SMEHandling/SMRegistryClient/SMRepoClient
         ////////////////////////////////////////////////// SM Stuff //////////////////////////////////////////////////
 
         // Fetch List of all available SM Descriptors
+        // TODO Replace usage of this function with SMHandling/SMRegistryClient/SMRepoClient
         async fetchSmDescriptorList(): Promise<Array<any>> {
             // console.log('fetchSmDescriptorList()');
 
@@ -1117,13 +899,13 @@ export default defineComponent({
                     return smRegistryResponse.data.result;
                 }
             } catch {
-                // handle error
                 return failResponse;
             }
             return failResponse;
         },
 
         // Fetch List of all available SM
+        // TODO Replace usage of this function with SMHandling/SMRegistryClient/SMRepoClient
         async fetchSmList(): Promise<Array<any>> {
             // console.log('fetchAasList()');
 
@@ -1144,13 +926,13 @@ export default defineComponent({
                     return smRepoResponse.data.result;
                 }
             } catch {
-                // handle error
                 return failResponse;
             }
             return failResponse;
         },
 
         // Fetch SM Descriptor by SM ID with SM Registry
+        // TODO Replace usage of this function with SMHandling/SMRegistryClient/SMRepoClient
         async fetchSmDescriptorById(smId: string): Promise<any> {
             // console.log('fetchSmDescriptorById()', smId);
 
@@ -1175,13 +957,13 @@ export default defineComponent({
                     return smRegistryResponse.data;
                 }
             } catch {
-                // handle error
                 return failResponse;
             }
             return failResponse;
         },
 
         // Fetch SM from SM Repo (with the help of the SM Registry)
+        // TODO Replace usage of this function with SMHandling/SMRegistryClient/SMRepoClient
         async fetchSmById(smId: string): Promise<any> {
             // console.log('fetchAasById()', aasId);
             const failResponse = {} as any;
@@ -1199,6 +981,7 @@ export default defineComponent({
         },
 
         // Fetch SM from (SM Repo) Endpoint
+        // TODO Replace usage of this function with SMHandling/SMRegistryClient/SMRepoClient
         async fetchSm(smEndpoint: string): Promise<any> {
             // console.log('fetchSm()', aasEndpoint);
             const failResponse = {} as any;
@@ -1227,6 +1010,7 @@ export default defineComponent({
         },
 
         // Checks weather a SM is available
+        // TODO Replace usage of this function with SMHandling/SMRegistryClient/SMRepoClient
         // Checks availability in SM Repo
         // Checks availability in SM Registry and SM Repo if SM Registry is available
         async smIsAvailableById(smId: string): Promise<boolean> {
@@ -1265,6 +1049,7 @@ export default defineComponent({
         },
 
         // Checks weather SM is available in SM Repo
+        // TODO Replace usage of this function with SMHandling/SMRegistryClient/SMRepoClient
         async smIsAvailable(smEndpoint: string): Promise<boolean> {
             // console.log('aasIsAvailable()', smEndpoint);
             const failResponse = false;
@@ -1280,6 +1065,7 @@ export default defineComponent({
         },
 
         // Checks weather referenced SM is available
+        // TODO Replace usage of this function with SMHandling/SMRegistryClient/SMRepoClient
         async smReferenceIsAvailable(smReference: any): Promise<boolean> {
             // console.log('aasIsAvailable()', aasEndpoint);
             const failResponse = false;
@@ -1331,6 +1117,7 @@ export default defineComponent({
         ////////////////////////////////////////////////// OTHER STUFF //////////////////////////////////////////////////
 
         // Function to check if the assetId can be found in the AAS Discovery Service (and if it exists in the AAS Registry)
+        // TODO Replace usage of this function with AASDiscoveryClient.ts/getAasId()
         async checkAssetId(globalAssetId: string): Promise<{ success: boolean; aasDescriptor?: object }> {
             // console.log('checkAssetId', 'globalAssetId', globalAssetId);
             const failResponse = { success: false, aasDescriptor: {} }; // Define once for reuse
@@ -1382,6 +1169,7 @@ export default defineComponent({
         },
 
         // Get all ConceptDescriptions for the SubmodelElement from the ConceptDescription Repository
+        // TODO Replace usage of this function with ConceptDescriptionHandling.ts/fetchCds()
         async getConceptDescriptions(SelectedNode: any) {
             if (!this.conceptDescriptionRepoUrl || this.conceptDescriptionRepoUrl === '') {
                 return Promise.resolve([]); // Return an empty object wrapped in a resolved promise
@@ -1402,9 +1190,9 @@ export default defineComponent({
                     semanticId.startsWith('0173/1///') ||
                     semanticId.startsWith('https://api.eclass-cdp.com/0173-1')
                 ) {
-                    semanticIdsToFetch.push(...this.getEquivalentEclassSemanticIds(semanticId));
+                    semanticIdsToFetch.push(...getEquivalentEclassSemanticIds(semanticId));
                 } else if (semanticId.startsWith('http://') || semanticId.startsWith('https://')) {
-                    semanticIdsToFetch.push(...this.getEquivalentIriSemanticIds(semanticId));
+                    semanticIdsToFetch.push(...getEquivalentIriSemanticIds(semanticId));
                 }
             });
 
@@ -1445,55 +1233,8 @@ export default defineComponent({
             return conceptDescriptions;
         },
 
-        // calculate the pathes of the SubmodelElements in a provided Submodel/SubmodelElement
-        async calculateSubmodelElementPathes(parent: any, startPath: string): Promise<any> {
-            parent.path = startPath;
-            parent.id = this.UUID();
-            // parent.conceptDescriptions = await this.getConceptDescriptions(parent);
-
-            if (parent.submodelElements && parent.submodelElements.length > 0) {
-                for (const element of parent.submodelElements) {
-                    await this.calculateSubmodelElementPathes(
-                        element,
-                        startPath + '/submodel-elements/' + element.idShort
-                    );
-                }
-            } else if (
-                parent.value &&
-                Array.isArray(parent.value) &&
-                parent.value.length > 0 &&
-                parent.modelType == 'SubmodelElementCollection'
-            ) {
-                for (const element of parent.value) {
-                    await this.calculateSubmodelElementPathes(element, startPath + '.' + element.idShort);
-                }
-            } else if (
-                parent.value &&
-                Array.isArray(parent.value) &&
-                parent.value.length > 0 &&
-                parent.modelType == 'SubmodelElementList'
-            ) {
-                for (const [index, element] of parent.value.entries()) {
-                    await this.calculateSubmodelElementPathes(
-                        element,
-                        startPath + encodeURIComponent('[') + index + encodeURIComponent(']')
-                    );
-                }
-            } else if (
-                parent.statements &&
-                Array.isArray(parent.statements) &&
-                parent.statements.length > 0 &&
-                parent.modelType == 'Entity'
-            ) {
-                for (const element of parent.value) {
-                    await this.calculateSubmodelElementPathes(element, startPath + '.' + element.idShort);
-                }
-            }
-
-            return parent;
-        },
-
         // Function to calculate the local path (used for files)
+        // TODO Transfer to Util resp. Composable
         getLocalPath(path: string, selectedNode: any): string {
             if (!path) return '';
             try {
@@ -1504,32 +1245,6 @@ export default defineComponent({
                 // If error is thrown, path is not a valid URL
                 return `${selectedNode.path}/attachment`;
             }
-        },
-
-        // Get the Unit from the EmbeddedDataSpecification of the ConceptDescription of the Property (if available)
-        unitSuffix(prop: any) {
-            if (!prop.conceptDescriptions) {
-                this.getConceptDescriptions(prop).then((conceptDescriptions) => {
-                    prop.conceptDescriptions = conceptDescriptions;
-                });
-            }
-            if (!prop.conceptDescriptions || prop.conceptDescriptions.length == 0) {
-                return '';
-            }
-            for (const conceptDescription of prop.conceptDescriptions) {
-                if (!conceptDescription.embeddedDataSpecifications) {
-                    continue;
-                }
-                for (const embeddedDataSpecification of conceptDescription.embeddedDataSpecifications) {
-                    if (
-                        embeddedDataSpecification.dataSpecificationContent &&
-                        embeddedDataSpecification.dataSpecificationContent.unit
-                    ) {
-                        return embeddedDataSpecification.dataSpecificationContent.unit;
-                    }
-                }
-            }
-            return '';
         },
 
         // Get the Definition from the EmbeddedDataSpecification of the ConceptDescription of the Property (if available)
@@ -1568,7 +1283,7 @@ export default defineComponent({
         },
 
         // Name to be displayed
-        // NOTE copied to ReferableUtils
+        // TODO Replace usage of this function with ReferableUtils.ts/nameToDisplay()
         nameToDisplay(referable: any, language = 'en', defaultNameToDisplay = '') {
             if (referable && referable?.displayName) {
                 const displayNameEn = referable.displayName.find((displayName: any) => {
@@ -1579,7 +1294,7 @@ export default defineComponent({
             return !defaultNameToDisplay && referable?.idShort ? referable.idShort : defaultNameToDisplay;
         },
 
-        // NOTE copied to ReferableUtils
+        // TODO Replace usage of this function with ReferableUtils.ts/descriptionToDisplay()
         descriptionToDisplay(referable: any, language = 'en', defaultNameToDisplay = '') {
             if (referable && referable?.description) {
                 const descriptionEn = referable.description.find(
@@ -1590,6 +1305,7 @@ export default defineComponent({
             return defaultNameToDisplay;
         },
 
+        // TODO Transfer to Util resp. Composable
         valueToDisplay(submodelElement: any) {
             if (submodelElement && submodelElement.modelType) {
                 switch (submodelElement.modelType) {
@@ -1639,39 +1355,7 @@ export default defineComponent({
             return '';
         },
 
-        // Extract the right endpoints href from a descriptor
-        extractEndpointHref(descriptor: any, interfaceShortName: string): string {
-            const interfaceShortNames = [
-                'AAS',
-                'SUBMODEL',
-                'SERIALIZE',
-                'DESCRIPTION',
-                'AASX-FILE',
-                'AAS-REGISTRY',
-                'SUBMODEL-REGISTRY',
-                'AAS-REPOSITORY',
-                'SUBMODEL-REPOSITORY',
-                'CD-REPOSITORY',
-                'AAS-DISCOVERY',
-            ];
-            if (!interfaceShortNames.some((iShortName) => interfaceShortName.startsWith(`${iShortName}-`))) {
-                return '';
-            }
-            if (
-                !Array.isArray(descriptor?.endpoints) ||
-                descriptor?.endpoints.length === 0 ||
-                interfaceShortName === ''
-            ) {
-                return '';
-            }
-            const endpoints = descriptor.endpoints;
-            // find the right endpoint based on the interfaceShortName (has to match endpoint.interface)
-            const endpoint = endpoints.find((endpoint: any) => {
-                return endpoint?.interface === interfaceShortName;
-            });
-            return endpoint?.protocolInformation?.href ? endpoint.protocolInformation.href : '';
-        },
-
+        // TODO Replace usage of this function with SMHandling/SMRegistryClient/SMRepoClient
         smNotFound(response: any, submodelId: string, path: string, text: string): any {
             // Check if response contains a "messages" array with a "403" or "401" code
             const messages = response.data?.messages || [];

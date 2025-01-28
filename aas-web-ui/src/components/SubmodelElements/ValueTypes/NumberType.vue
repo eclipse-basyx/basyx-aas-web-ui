@@ -34,7 +34,7 @@
                 </template>
                 <!-- Update Value Button -->
                 <template #append-inner>
-                    <span class="text-subtitleText">{{ unitSuffix(numberValue) }}</span>
+                    <span class="text-subtitleText">{{ unitSuffixValue }}</span>
                     <v-btn
                         v-if="isFocused && !IsOperationVariable && isEditable"
                         size="small"
@@ -54,6 +54,7 @@
 // TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent } from 'vue';
+    import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -82,9 +83,11 @@
 
         setup() {
             const aasStore = useAASStore();
+            const { unitSuffix } = useConceptDescriptionHandling();
 
             return {
                 aasStore, // AASStore Object
+                unitSuffix,
             };
         },
 
@@ -92,7 +95,12 @@
             return {
                 newNumberValue: '', // new value of the property
                 isFocused: false, // boolean to check if the input field is focused
+                unitSuffixValue: '',
             };
+        },
+
+        async created() {
+            await this.localUnitSuffix();
         },
 
         computed: {
@@ -183,6 +191,10 @@
                 }
                 this.isFocused = e;
                 if (!e) this.newNumberValue = this.numberValue.value; // set input to current value in the AAS if the input field is not focused
+            },
+
+            async localUnitSuffix() {
+                this.unitSuffixValue = await this.unitSuffix(this.numberValue);
             },
         },
     });

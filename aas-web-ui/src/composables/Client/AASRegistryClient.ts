@@ -13,9 +13,17 @@ export function useAASRegistryClient() {
 
     const aasRegistryUrl = computed(() => navigationStore.getAASRegistryURL);
 
-    // Fetch List of all available AAS Descriptors
+    /**
+     * Fetches a list of all available Asset Administration Shell (AAS) Descriptors.
+     *
+     * @async
+     * @returns {Promise<Array<any>>} A promise that resolves to an array of AAS Descriptors.
+     * An empty array is returned if the request fails or no AAS Descriptors are found.
+     */
     async function fetchAasDescriptorList(): Promise<Array<any>> {
         const failResponse = [] as Array<any>;
+
+        if (aasRegistryUrl.value.trim() === '') return failResponse;
 
         let aasRegUrl = aasRegistryUrl.value;
         if (aasRegUrl.trim() === '') return failResponse;
@@ -33,19 +41,32 @@ export function useAASRegistryClient() {
                 aasRegistryResponse.data.result &&
                 aasRegistryResponse.data.result.length > 0
             ) {
-                return aasRegistryResponse.data.result;
+                const aasDescriptors = aasRegistryResponse.data.result;
+                return aasDescriptors;
             }
         } catch {
-            // handle error
             return failResponse;
         }
-
         return failResponse;
     }
 
-    // Fetch AAS Descriptor by AAS ID with AAS Registry
+    /**
+     * Fetches a Asset Administration Shell (AAS)  Descriptor by the provided AAS ID.
+     *
+     * @async
+     * @param {string} aasId - The ID of the AAS Descriptor to fetch.
+     * @returns {Promise<any>} A promise that resolves to an AAS Descriptor.
+     */
     async function fetchAasDescriptorById(aasId: string): Promise<any> {
         const failResponse = {} as any;
+
+        if (!aasId) return failResponse;
+
+        aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
+
+        if (aasRegistryUrl.value.trim() === '') return failResponse;
 
         let aasRegUrl = aasRegistryUrl.value;
         if (aasRegUrl.trim() === '') return failResponse;
@@ -66,9 +87,33 @@ export function useAASRegistryClient() {
                 return aasRegistryResponse.data;
             }
         } catch {
-            // handle error
             return failResponse;
         }
+        return failResponse;
+    }
+
+    /**
+     * Checks if Asset Administration Shell (AAS) Descriptor with provided ID is available (in registry).
+     *
+     * @async
+     * @param {string} aasId - The ID of the AAS to check.
+     * @returns {Promise<boolean>} A promise that resolves to `true` if AAS with provided ID is available, otherwise `false`.
+     */
+    async function isAvailableById(aasId: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!aasId) return failResponse;
+
+        aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
+
+        const aasDescriptor = await fetchAasDescriptorById(aasId);
+
+        if (aasDescriptor && Object.keys(aasDescriptor).length > 0) {
+            return true;
+        }
+
         return failResponse;
     }
 
@@ -87,7 +132,7 @@ export function useAASRegistryClient() {
 
         const response = await postRequest(path, body, headers, context, disableMessage);
         if (response.success) {
-            navigationStore.dispatchTriggerAASListReload(true); // Reload AAS List
+            navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
         }
     }
 
@@ -106,7 +151,7 @@ export function useAASRegistryClient() {
 
         const response = await putRequest(path, body, headers, context, disableMessage);
         if (response.success) {
-            navigationStore.dispatchTriggerAASListReload(true); // Reload AAS List
+            navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
         }
     }
 
@@ -136,6 +181,7 @@ export function useAASRegistryClient() {
     return {
         fetchAasDescriptorList,
         fetchAasDescriptorById,
+        isAvailableById,
         putAasDescriptor,
         postAasDescriptor,
         createDescriptorFromAAS,

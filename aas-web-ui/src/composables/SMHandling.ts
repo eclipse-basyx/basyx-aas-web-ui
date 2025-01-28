@@ -4,16 +4,21 @@ import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionH
 import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
+import { useIDUtils } from './IDUtils';
 
 export function useSMHandling() {
     // Composables
-    const { fetchSmDescriptorById: fetchSmDescriptorByIdFromRegistry } = useSMRegistryClient();
+    const {
+        fetchSmDescriptorById: fetchSmDescriptorByIdFromRegistry,
+        fetchSmDescriptorList: fetchSmDescriptorListFromRegistry,
+    } = useSMRegistryClient();
     const {
         fetchSmById: fetchSmByIdFromRepo,
         fetchSm: fetchSmFromRepo,
         fetchSme: fetchSmeFromRepo,
     } = useSMRepositoryClient();
-    const { getConceptDescriptions } = useConceptDescriptionHandling();
+    const { fetchCds } = useConceptDescriptionHandling();
+    const { generateUUID } = useIDUtils();
 
     // Stores
     const aasStore = useAASStore();
@@ -22,42 +27,123 @@ export function useSMHandling() {
      * Fetches a Submodel (SM) by the provided SM endpoint
      * and dispatches it to the AAS store.
      *
+     * @async
      * @param {string} smEndpoint - The endpoint URL of the SM to fetch.
+     * @param {boolean} withConceptDescriptions - Flag to specify if SM should be fetched with ConceptDescriptions (CDs)
+     * @returns {Promise<any>} A promise that resolves to a SM.
      */
-    async function fetchAndDispatchSm(smEndpoint: string, withConceptDescriptions = false): Promise<void> {
-        if (!smEndpoint) return;
+    async function fetchAndDispatchSm(smEndpoint: string, withConceptDescriptions = false): Promise<any> {
+        const failResponse = {};
+
+        if (!smEndpoint) return failResponse;
 
         smEndpoint = smEndpoint.trim();
 
-        if (smEndpoint === '') return;
+        if (smEndpoint === '') return failResponse;
 
         const smOrSme = await fetchSm(smEndpoint, withConceptDescriptions);
 
+        if (!smOrSme || Object.keys(smOrSme).length === 0) return failResponse;
+
+        smOrSme.isActive = true;
+
+        // TODO move router.push to AASDataStore
+        // const query = route.query;
+        // query.path = smEndpoint;
+        // router.push({ query: query });
         aasStore.dispatchSelectedNode(smOrSme);
+
+        return smOrSme;
     }
 
     /**
      * Fetches a Submodel (SM) by the provided SM ID
      * and dispatches it to the AAS store.
      *
+     * @async
      * @param {string} smId - The ID of the SM to fetch.
+     * @param {boolean} withConceptDescriptions - Flag to specify if SM should be fetched with ConceptDescriptions (CDs)
+     * @returns {Promise<any>} A promise that resolves to a SM.
      */
-    async function fetchAndDispatchSmById(smId: string, withConceptDescriptions = false): Promise<void> {
-        if (!smId) return;
+    async function fetchAndDispatchSmById(smId: string, withConceptDescriptions = false): Promise<any> {
+        const failResponse = {};
+
+        if (!smId) return failResponse;
+
+        smId = smId.trim();
+
+        if (smId === '') return failResponse;
+
+        const sm = await fetchSmById(smId, withConceptDescriptions);
+
+        if (!sm || Object.keys(sm).length === 0) return failResponse;
+
+        sm.isActive = true;
+
+        // TODO move router.push to AASDataStore
+        // const query = route.query;
+        // query.path = getSmEndpoint(sm);
+        // router.push({ query: query });
+        aasStore.dispatchSelectedNode(sm);
+
+        return sm;
+    }
+
+    /**
+     * Fetches a list of all available Submodel (SM) Descriptors.
+     *
+     * @async
+     * @returns {Promise<Array<any>>} A promise that resolves to an array of SM Descriptors.
+     * An empty array is returned if the request fails or no SM Descriptors are found.
+     */
+    async function fetchSmDescriptorList(): Promise<Array<any>> {
+        const failResponse = [] as Array<any>;
+
+        let smDescriptors = await fetchSmDescriptorListFromRegistry();
+
+        if (!smDescriptors || !Array.isArray(smDescriptors) || smDescriptors.length === 0) return failResponse;
+
+        smDescriptors = smDescriptors.map((smDescriptor: any) => {
+            smDescriptor.timestamp = formatDate(new Date());
+            return smDescriptor;
+        });
+
+        return smDescriptors;
+    }
+
+    /**
+     * Fetches an Submodel (SM) Descriptor by the provided SM ID.
+     *
+     * @async
+     * @param {string} smId - The ID of the SM Descriptor to fetch.
+     * @returns {Promise<any>} A promise that resolves to a SM Descriptor.
+     */
+    async function fetchSmDescriptor(smId: string): Promise<any> {
+        const failResponse = {};
 
         smId = smId.trim();
 
         if (smId === '') return;
 
-        const sm = await fetchSmById(smId, withConceptDescriptions);
+        const smDescriptor = await fetchSmDescriptorByIdFromRegistry(smId);
 
-        aasStore.dispatchSelectedNode(sm);
+        if (!smDescriptor || Object.keys(smDescriptor).length === 0) {
+            console.warn("Fetching SM Descriptor (id = '" + smId + "') failed!");
+            return failResponse;
+        }
+
+        smDescriptor.timestamp = formatDate(new Date());
+
+        return smDescriptor;
     }
 
     /**
      * Fetches a Submodel (SM) by the provided SM endpoint.
      *
+     * @async
      * @param {string} smEndpoint - The endpoint URL of the SM to fetch.
+     * @param {boolean} withConceptDescriptions - Flag to specify if SM should be fetched with ConceptDescriptions (CDs)
+     * @returns {Promise<any>} A promise that resolves to a SM.
      */
     async function fetchSm(smEndpoint: string, withConceptDescriptions = false): Promise<any> {
         const failResponse = {};
@@ -73,24 +159,22 @@ export function useSMHandling() {
             // smEndoint seems to be an SME endpoint
             smOrSme = await fetchSmeFromRepo(smEndpoint);
 
-            // Note usage of fetchAndDispatchSme() (SMHandling) not possible
+            // Note usage of fetchSme() (SMHandling) not possible
             // Reciprocal import of SMHandling/SMEHandling leads to error "Maximum call stack size exceeded"
         } else {
             smOrSme = await fetchSmFromRepo(smEndpoint);
         }
 
         if (!smOrSme || Object.keys(smOrSme).length === 0) {
-            console.warn('Fetched empty SM/SME');
-            aasStore.dispatchSelectedNode({});
+            console.warn('Fetching SM/SME (' + smEndpoint + ') failed!');
             return failResponse;
         }
 
         smOrSme.timestamp = formatDate(new Date());
         smOrSme.path = smEndpoint;
-        smOrSme.isActive = true;
 
         if (withConceptDescriptions) {
-            smOrSme.conceptDescriptions = await getConceptDescriptions(smOrSme);
+            smOrSme.conceptDescriptions = await fetchCds(smOrSme);
         } else {
             smOrSme.conceptDescriptions = [];
         }
@@ -101,7 +185,10 @@ export function useSMHandling() {
     /**
      * Fetches a Submodel (SM) by the provided SM ID.
      *
+     * @async
      * @param {string} smId - The ID of the SM to fetch.
+     * @param {boolean} withConceptDescriptions - Flag to specify if SM should be fetched with ConceptDescriptions (CDs)
+     * @returns {Promise<any>} A promise that resolves to a SM.
      */
     async function fetchSmById(smId: string, withConceptDescriptions = false): Promise<any> {
         const failResponse = {};
@@ -115,8 +202,7 @@ export function useSMHandling() {
         const sm = await fetchSmByIdFromRepo(smId);
 
         if (!sm || Object.keys(sm).length === 0) {
-            console.warn('Fetched empty SM');
-            aasStore.dispatchSelectedNode({});
+            console.warn("Fetching SM (id = '" + smId + "') failed!");
             return failResponse;
         }
 
@@ -124,10 +210,9 @@ export function useSMHandling() {
 
         sm.timestamp = formatDate(new Date());
         sm.path = smEndpoint;
-        sm.isActive = true;
 
         if (withConceptDescriptions) {
-            sm.conceptDescriptions = await getConceptDescriptions(sm);
+            sm.conceptDescriptions = await fetchCds(sm);
         } else {
             sm.conceptDescriptions = [];
         }
@@ -138,7 +223,9 @@ export function useSMHandling() {
     /**
      * Retrieves the Submodel (SM) endpoint URL by its ID.
      *
-     * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
+     * @async
+     * @param {string} smId - The ID of the SM to retrieve the endpoint for.
+     * @returns {Promise<string>} A promise that resolves to a SM endpoint.
      */
     async function getSmEndpointById(smId: string): Promise<string> {
         const failResponse = '';
@@ -158,7 +245,8 @@ export function useSMHandling() {
     /**
      * Retrieves the Submodel (SM) endpoint URL of a SM descriptor.
      *
-     * @param {string} sm - The SM descriptor to retrieve the endpoint for.
+     * @param {string} smDescriptor - The SM descriptor to retrieve the endpoint for.
+     * @returns {string} A promise that resolves to a SM endpoint.
      */
     function getSmEndpoint(smDescriptor: any): string {
         // TODO Replace extractEndpointHref(smDescriptor), 'SUBMODEL-3.0') by getSmEndpoint(smDescriptor) in all components
@@ -177,5 +265,75 @@ export function useSMHandling() {
         return smEndpoint || failResponse;
     }
 
-    return { fetchAndDispatchSm, fetchAndDispatchSmById, fetchSm, fetchSmById, getSmEndpoint, getSmEndpointById };
+    /**
+     * Recursively calculates and sets the paths of SubmodelElements (SMEs) within a given Submodel (SM) or SubmodelElement (SME).
+     * The function modifies the `parent` object by:
+     * - Setting the `path` property to the constructed string based on the `startPath`.
+     * - Assigning a unique `id` to the `parent` using `generateUUID()`.
+     *
+     * The function handles different types of parent structures:
+     * - For **Submodel**, it iterates over `submodelElements` and appends their `idShort` to the path.
+     * - For **SubmodelElementCollection**, it processes the items in its `value` array.
+     * - For **SubmodelElementList**, it uses array index notation (`[index]`).
+     * - For **Entity**, it processes `statements` similarly.
+     *
+     * @param {any} parent - The parent Submodel or SubmodelElement object to process, which will have its `path` set and potentially modified.
+     * @param {string} startPath - The base path string to build upon recursively.
+     * @returns {Promise<any>} A promise that resolves with the modified `parent` object, including calculated paths.
+     */
+    async function calculateSMEPathes(parent: any, startPath: string): Promise<any> {
+        parent.path = startPath;
+        parent.id = generateUUID();
+        // parent.conceptDescriptions = await this.getConceptDescriptions(parent);
+
+        if (parent.submodelElements && parent.submodelElements.length > 0) {
+            for (const element of parent.submodelElements) {
+                await calculateSMEPathes(element, startPath + '/submodel-elements/' + element.idShort);
+            }
+        } else if (
+            parent.value &&
+            Array.isArray(parent.value) &&
+            parent.value.length > 0 &&
+            parent.modelType == 'SubmodelElementCollection'
+        ) {
+            for (const element of parent.value) {
+                await calculateSMEPathes(element, startPath + '.' + element.idShort);
+            }
+        } else if (
+            parent.value &&
+            Array.isArray(parent.value) &&
+            parent.value.length > 0 &&
+            parent.modelType == 'SubmodelElementList'
+        ) {
+            for (const [index, element] of parent.value.entries()) {
+                await calculateSMEPathes(
+                    element,
+                    startPath + encodeURIComponent('[') + index + encodeURIComponent(']')
+                );
+            }
+        } else if (
+            parent.statements &&
+            Array.isArray(parent.statements) &&
+            parent.statements.length > 0 &&
+            parent.modelType == 'Entity'
+        ) {
+            for (const element of parent.value) {
+                await calculateSMEPathes(element, startPath + '.' + element.idShort);
+            }
+        }
+
+        return parent;
+    }
+
+    return {
+        fetchAndDispatchSm,
+        fetchAndDispatchSmById,
+        fetchSm,
+        fetchSmById,
+        getSmEndpoint,
+        getSmEndpointById,
+        fetchSmDescriptorList,
+        fetchSmDescriptor,
+        calculateSMEPathes,
+    };
 }

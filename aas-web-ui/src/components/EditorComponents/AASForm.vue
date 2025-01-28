@@ -88,7 +88,7 @@
     }>();
 
     // Composables
-    const { UUID } = useIDUtils();
+    const { generateUUID } = useIDUtils();
     const { fetchAndDispatchAasById } = useAASHandling();
 
     // Stores
@@ -105,7 +105,7 @@
     const AASObject = ref<aasTypes.AssetAdministrationShell | undefined>(undefined);
     const openPanels = ref<number[]>([0, 3]);
 
-    const AASId = ref<string | null>(UUID());
+    const AASId = ref<string | null>(generateUUID());
     const AASIdShort = ref<string | null>(null);
     const displayName = ref<Array<aasTypes.LangStringNameType> | null>(null);
     const description = ref<Array<aasTypes.LangStringTextType> | null>(null);
@@ -336,7 +336,7 @@
 
     function clearForm() {
         // Reset all values
-        AASId.value = UUID();
+        AASId.value = generateUUID();
         AASIdShort.value = null;
         displayName.value = null;
         description.value = null;

@@ -100,7 +100,7 @@
     // Composables
     const { smNotFound } = useSMRepositoryClient();
     const { getRequest } = useRequestHandling();
-    const { UUID } = useIDUtils();
+    const { generateUUID } = useIDUtils();
 
     // Stores
     const navigationStore = useNavigationStore();
@@ -206,6 +206,7 @@
             let path = smRegistryURL + '/' + base64Encode(submodelId);
             let context = 'retrieving Submodel Endpoint';
             let disableMessage = false;
+            // TODO Replace by using SMHandling
             return getRequest(path, context, disableMessage).then((response: any) => {
                 if (response.success) {
                     // execute if the Request was successful
@@ -269,7 +270,7 @@
         // iterate over all elements in the current level of the tree (SubmodelElements [e.g. SubmodelElementCollections, SubmodelElementLists, Entities, Properties, ...])
         SubmodelElements.forEach((element: any, index: number) => {
             // give the Element a unique ID
-            element.id = UUID();
+            element.id = generateUUID();
             // set the active State of each Element
             element.isActive = false;
             // set the Parent of each Element
