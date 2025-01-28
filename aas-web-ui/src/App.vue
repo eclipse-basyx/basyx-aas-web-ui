@@ -112,6 +112,7 @@
     });
 
     // Handle mobile view routing logic
+    // TODO Move to route guard - https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/225
     function handleMobileView(aasEndpoint: string | null, submodelElementPath: string | null): void {
         if (currentRouteName.value && routesToAASList.includes(currentRouteName.value)) {
             // Redirect to 'AASList' with existing query parameters
@@ -132,6 +133,7 @@
     }
 
     // Handle desktop view routing logic
+    // TODO Move to route guard - https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/225
     function handleDesktopView(aasEndpoint: string | null, submodelElementPath: string | null): void {
         const query: any = {};
         if (aasEndpoint) query.aas = aasEndpoint;
