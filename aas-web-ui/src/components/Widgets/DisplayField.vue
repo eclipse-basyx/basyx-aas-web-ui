@@ -26,12 +26,21 @@
 // TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
+    // import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
 
     export default defineComponent({
         name: 'DisplayField',
-        mixins: [SubmodelElementHandling],
+        // mixins: [SubmodelElementHandling],
         props: ['chartData', 'timeVariable', 'yVariables'],
+
+        setup() {
+            const { unitSuffix } = useConceptDescriptionHandling();
+
+            return {
+                unitSuffix,
+            };
+        },
 
         data() {
             return {
