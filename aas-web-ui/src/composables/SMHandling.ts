@@ -4,6 +4,7 @@ import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionH
 import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
+import { useIDUtils } from './IDUtils';
 
 export function useSMHandling() {
     // Composables
@@ -17,6 +18,7 @@ export function useSMHandling() {
         fetchSme: fetchSmeFromRepo,
     } = useSMRepositoryClient();
     const { fetchCds } = useConceptDescriptionHandling();
+    const { generateUUID } = useIDUtils();
 
     // Stores
     const aasStore = useAASStore();
@@ -263,14 +265,75 @@ export function useSMHandling() {
         return smEndpoint || failResponse;
     }
 
+    /**
+     * Recursively calculates and sets the paths of SubmodelElements (SMEs) within a given Submodel (SM) or SubmodelElement (SME).
+     * The function modifies the `parent` object by:
+     * - Setting the `path` property to the constructed string based on the `startPath`.
+     * - Assigning a unique `id` to the `parent` using `generateUUID()`.
+     *
+     * The function handles different types of parent structures:
+     * - For **Submodel**, it iterates over `submodelElements` and appends their `idShort` to the path.
+     * - For **SubmodelElementCollection**, it processes the items in its `value` array.
+     * - For **SubmodelElementList**, it uses array index notation (`[index]`).
+     * - For **Entity**, it processes `statements` similarly.
+     *
+     * @param {any} parent - The parent Submodel or SubmodelElement object to process, which will have its `path` set and potentially modified.
+     * @param {string} startPath - The base path string to build upon recursively.
+     * @returns {Promise<any>} A promise that resolves with the modified `parent` object, including calculated paths.
+     */
+    async function calculateSMEPathes(parent: any, startPath: string): Promise<any> {
+        parent.path = startPath;
+        parent.id = generateUUID();
+        // parent.conceptDescriptions = await this.getConceptDescriptions(parent);
+
+        if (parent.submodelElements && parent.submodelElements.length > 0) {
+            for (const element of parent.submodelElements) {
+                await calculateSMEPathes(element, startPath + '/submodel-elements/' + element.idShort);
+            }
+        } else if (
+            parent.value &&
+            Array.isArray(parent.value) &&
+            parent.value.length > 0 &&
+            parent.modelType == 'SubmodelElementCollection'
+        ) {
+            for (const element of parent.value) {
+                await calculateSMEPathes(element, startPath + '.' + element.idShort);
+            }
+        } else if (
+            parent.value &&
+            Array.isArray(parent.value) &&
+            parent.value.length > 0 &&
+            parent.modelType == 'SubmodelElementList'
+        ) {
+            for (const [index, element] of parent.value.entries()) {
+                await calculateSMEPathes(
+                    element,
+                    startPath + encodeURIComponent('[') + index + encodeURIComponent(']')
+                );
+            }
+        } else if (
+            parent.statements &&
+            Array.isArray(parent.statements) &&
+            parent.statements.length > 0 &&
+            parent.modelType == 'Entity'
+        ) {
+            for (const element of parent.value) {
+                await calculateSMEPathes(element, startPath + '.' + element.idShort);
+            }
+        }
+
+        return parent;
+    }
+
     return {
         fetchAndDispatchSm,
         fetchAndDispatchSmById,
-        fetchSmDescriptorList,
-        fetchSmDescriptor,
         fetchSm,
         fetchSmById,
         getSmEndpoint,
         getSmEndpointById,
+        fetchSmDescriptorList,
+        fetchSmDescriptor,
+        calculateSMEPathes,
     };
 }

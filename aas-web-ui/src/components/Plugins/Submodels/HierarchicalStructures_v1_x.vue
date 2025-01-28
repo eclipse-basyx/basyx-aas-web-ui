@@ -38,7 +38,7 @@
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
-    import { nameToDisplay } from '@/utils/ReferableUtils';
+    import { descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
 
     declare global {
         interface Window {
@@ -64,6 +64,8 @@
                 theme, // Theme Object
                 aasStore, // AASStore Object
                 router, // Router Object
+                descriptionToDisplay,
+                nameToDisplay,
             };
         },
 

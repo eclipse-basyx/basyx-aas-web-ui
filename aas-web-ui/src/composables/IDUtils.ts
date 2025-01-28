@@ -6,7 +6,7 @@ export function useIDUtils() {
     // Stores
     const envStore = useEnvStore();
 
-    function UUID(): string {
+    function generateUUID(): string {
         return uuidv4();
     }
 
@@ -93,5 +93,5 @@ export function useIDUtils() {
         return `${segment()}_${segment()}_${segment()}_${segment()}`;
     }
 
-    return { UUID, generateUUIDFromString, generateIri, customIdRegex, generateCustomId };
+    return { generateUUID, generateUUIDFromString, generateIri, customIdRegex, generateCustomId };
 }

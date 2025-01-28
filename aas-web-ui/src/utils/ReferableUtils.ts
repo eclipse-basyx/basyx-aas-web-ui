@@ -1,5 +1,5 @@
 /**
- * Extracts the display name from a referable object based on the specified language.
+ * Extracts the display name from a Referable object based on the specified language.
  *
  * The function follows these steps to determine the display name:
  *  1. If a `displayName` entry with the specified language is found, it returns its text.
@@ -8,7 +8,7 @@
  *  4. If `id` is available and not an empty string, it returns `id`.
  *  5. If none of the above conditions are met, it returns an empty string.
  *
- * @param {Object} referable - The referable object to extract the display name from.
+ * @param {Object} referable - The Referable object to extract the display name from.
  * @param {string} [language='en'] - The language code for the desired display name text. Defaults to 'en'.
  * @param {string} [defaultNameToDisplay=''] - The default name to return if no display name is found. Defaults to an empty string.
  * @returns {string} The determined display name or an appropriate fallback value.
@@ -37,14 +37,19 @@ export function nameToDisplay(referable: any, language: string = 'en', defaultNa
     return defaultNameToDisplay.trim() || '';
 }
 
-// Function to extract the english description from a referable
+/**
+ * Extracts the description from a Referable object based on the specified language.
+ * If no suitable description is found, it returns a default description.
+ *
+ * The function checks if the Referable object has a non-empty `description` array,
+ * and then it attempts to find a description in the specified language (default is English).
+ *
+ * @param {any} referable - The Referable object containing descriptions.
+ * @param {string} [language='en'] - The language code indicating the desired description language.
+ * @param {string} [defaultDescriptionToDisplay=''] - The default description to return if no matching description is found.
+ * @returns {string} The text of the found description in the specified language or the default description if not found.
+ */
 export function descriptionToDisplay(referable: any, language = 'en', defaultDescriptionToDisplay = '') {
-    // console.log(
-    //     'descriptionToDisplay()',
-    //     'referable:',
-    //     referable,
-    // );
-
     if (
         referable &&
         Object.keys(referable).length > 0 &&
@@ -59,24 +64,24 @@ export function descriptionToDisplay(referable: any, language = 'en', defaultDes
     return defaultDescriptionToDisplay;
 }
 
-// Function to check if the idShort of a referable matches the given idShort
-// startsWith: idShort of referable starts with given idShort
-// strict: consider lower and upper case
+/**
+ * Checks if the `idShort` of a Referable object matches the given `idShort`.
+ * The comparison can be performed in two modes:
+ * - **startsWith**: checks if the `idShort` of the Referable object starts with the given `idShort`.
+ * - **strict**: indicates whether the comparison should consider case sensitivity.
+ *
+ * @param {any} referable - The Referable object containing the `idShort` to check.
+ * @param {string} idShort - The `idShort` string to compare against the Referable's `idShort`.
+ * @param {boolean} [startsWith=false] - If true, checks if the Referable's `idShort` starts with the given `idShort`.
+ * @param {boolean} [strict=false] - If true, the check will be case-sensitive.
+ * @returns {boolean} Returns true if a matching `idShort` is found, false otherwise.
+ */
 export function checkIdShort(
     referable: any,
     idShort: string,
     startsWith: boolean = false,
     strict: boolean = false
 ): boolean {
-    // console.log(
-    //     'checkIdShort()',
-    //     'referable:',
-    //     referable,
-    //     'idShort:',
-    //     idShort,
-    //     startsWith ? 'startsWith' : '',
-    //     strict ? 'strict' : ''
-    // );
     if (idShort.trim() === '') return false;
 
     if (!referable || Object.keys(referable).length === 0 || !referable?.idShort || referable?.idShort.trim() === '')
@@ -105,4 +110,91 @@ export function checkIdShort(
             return referable.idShort.toLowerCase() === idShort.toLowerCase();
         }
     }
+}
+
+/**
+ * Retrieves a SubmodelElement (SME) by its `idShort` from a given Submodel (SM) or SubmodelElement (SME).
+ * If the `idShort` is not found or if the input is invalid, an empty object is returned.
+ *
+ * The function supports the following types of elements:
+ * - **Submodel (SM)**: Searches through `submodelElements`.
+ * - **SubmodelElementCollection (SMC)** and **SubmodelElementList (SML)**: Searches through their `value` arrays.
+ *
+ * @param {string} idShort - The `idShort` of the SME to search for.
+ * @param {any} submodelElement - The parent SM/SME to search within.
+ * @returns {any} The found SME or an empty object if not found or input is invalid.
+ */
+export function getSubmodelElementByIdShort(idShort: string, submodelElement: any): any {
+    const failResponse = {} as any;
+
+    if (idShort.trim() == '') return failResponse;
+
+    if (!submodelElement?.modelType || submodelElement?.modelType.trim() === '') return failResponse;
+
+    switch (submodelElement.modelType) {
+        case 'Submodel':
+            if (
+                submodelElement?.submodelElements &&
+                Array.isArray(submodelElement.submodelElements) &&
+                submodelElement.submodelElements.length > 0
+            ) {
+                return submodelElement.submodelElements.find((sme: any) => {
+                    return checkIdShort(sme, idShort);
+                });
+            }
+            break;
+        case 'SubmodelElementCollection':
+        case 'SubmodelElementList':
+            if (submodelElement?.value && Array.isArray(submodelElement.value) && submodelElement.value.length > 0) {
+                return submodelElement.value.find((sme: any) => {
+                    return checkIdShort(sme, idShort);
+                });
+            }
+            break;
+    }
+
+    return failResponse;
+}
+/**
+ * Retrieves an array of SubmodelElements (SMEs) by their `idShort` from a given Submodel (SM) or SubmodelElement (SME).
+ * If the `idShort` is not found or if the input is invalid, an empty array is returned.
+ *
+ * The function supports the following types of elements:
+ * - **Submodel (SM)**: Filters through `submodelElements`.
+ * - **SubmodelElementCollection (SMC)** and **SubmodelElementList (SML)**: Filters through their `value` arrays.
+ *
+ * @param {string} idShort - The `idShort` of the SMEs to search for.
+ * @param {any} submodelElement - The parent SM/SME to search within.
+ * @returns {any[]} An array of found SMEs matching the `idShort`, or an empty array if not found or input is invalid.
+ */
+export function getSubmodelElementsByIdShort(idShort: string, submodelElement: any): any[] {
+    const failResponse = [] as any[];
+
+    if (idShort.trim() == '') return failResponse;
+
+    if (!submodelElement?.modelType || submodelElement?.modelType.trim() === '') return failResponse;
+
+    switch (submodelElement.modelType) {
+        case 'Submodel':
+            if (
+                submodelElement?.submodelElements &&
+                Array.isArray(submodelElement.submodelElements) &&
+                submodelElement.submodelElements.length > 0
+            ) {
+                return submodelElement.submodelElements.filter((sme: any) => {
+                    return checkIdShort(sme, idShort);
+                });
+            }
+            break;
+        case 'SubmodelElementCollection':
+        case 'SubmodelElementList':
+            if (submodelElement?.value && Array.isArray(submodelElement.value) && submodelElement.value.length > 0) {
+                return submodelElement.value.filter((sme: any) => {
+                    return checkIdShort(sme, idShort);
+                });
+            }
+            break;
+    }
+
+    return failResponse;
 }

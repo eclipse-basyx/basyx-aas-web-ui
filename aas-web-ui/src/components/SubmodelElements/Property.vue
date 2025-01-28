@@ -80,6 +80,7 @@
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
+    import { isNumber } from '@/utils/generalUtils';
     import BooleanType from './ValueTypes/BooleanType.vue';
     import DateTimeStampType from './ValueTypes/DateTimeStampType.vue';
     import NumberType from './ValueTypes/NumberType.vue';
@@ -119,6 +120,7 @@
 
             return {
                 aasStore, // AASStore Object
+                isNumber,
             };
         },
 

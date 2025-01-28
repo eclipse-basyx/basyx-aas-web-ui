@@ -73,6 +73,7 @@
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
+    import { nameToDisplay } from '@/utils/ReferableUtils';
 
     export default defineComponent({
         name: 'GenericDataVisu',
@@ -86,6 +87,7 @@
             return {
                 theme, // Theme Object
                 aasStore, // AASStore Object
+                nameToDisplay,
             };
         },
 

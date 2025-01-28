@@ -88,9 +88,11 @@
 // TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent } from 'vue';
+    import { useIDUtils } from '@/composables/IDUtils';
     import DashboardHandling from '@/mixins/DashboardHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useEnvStore } from '@/store/EnvironmentStore';
+    import { checkSemanticId } from '@/utils/SemanticIdUtils';
 
     export default defineComponent({
         name: 'DashboardEditElement',
@@ -99,9 +101,12 @@
 
         setup() {
             const envStore = useEnvStore();
+            const { generateUUID } = useIDUtils();
 
             return {
                 envStore, // EnvironmentStore Object
+                checkSemanticId,
+                generateUUID,
             };
         },
 
@@ -152,7 +157,7 @@
             createGroup(event: string) {
                 // console.log('Create Group: ', event);
                 const newGroupName = event;
-                const newGroupId = this.UUID();
+                const newGroupId = this.generateUUID();
                 this.groups.push({ groupName: newGroupName, groupId: newGroupId });
                 this.elementGroup = { groupName: newGroupName, groupId: newGroupId };
             },

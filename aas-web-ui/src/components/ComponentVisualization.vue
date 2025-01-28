@@ -102,8 +102,9 @@
 </template>
 
 <script lang="ts" setup>
+    import type { RouteRecordNameGeneric } from 'vue-router';
     import { computed, onMounted, ref, watch } from 'vue';
-    import { RouteRecordNameGeneric, useRoute, useRouter } from 'vue-router';
+    import { useRoute, useRouter } from 'vue-router';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';

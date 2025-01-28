@@ -6,100 +6,58 @@
                 <div class="text-subtitle-1">{{ nameToDisplay(submodelElementData) }}</div>
             </v-card-title>
         </v-card>
-        <!-- Iterate over all SubmodelElements of the HelloWorld-Plugin -->
-        <div v-for="SubmodelElement in pluginData" :key="SubmodelElement.idShort" class="mb-3">
-            <!-- Display SubmodelElement -->
-            <SubmodelElementWrapper
-                :SubmodelElementObject="SubmodelElement"
-                @update-value="updatePluginValue"></SubmodelElementWrapper>
-        </div>
+        <v-card>
+            <v-card-text class="pt-1">
+                <GenericDataVisu :submodel-element-data="submodelElementData.submodelElements"></GenericDataVisu>
+            </v-card-text>
+        </v-card>
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-    import { useTheme } from 'vuetify';
-    import RequestHandling from '@/mixins/RequestHandling'; // Mixin to handle the requests to the AAS
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling'; // Mixin to handle typical SubmodelElement-Actions
+<script lang="ts" setup>
+    import { computed, defineOptions, onMounted, ref } from 'vue';
+    import { useSMHandling } from '@/composables/SMHandling';
     import { useAASStore } from '@/store/AASDataStore';
+    import { nameToDisplay } from '@/utils/ReferableUtils';
 
-    export default defineComponent({
+    defineOptions({
         name: 'HelloWorldPlugin',
-        // semanticId: 'http://hello.world.de/plugin_submodel', // semanticId of the HelloWorld-Plugin as string
-        semanticId: ['http://hello.world.de/plugin_submodel', 'http://hello.world.de/plugin_property'], // semanticId of the HelloWorld-Plugin as array to use multiple semanticIds
-        mixins: [RequestHandling, SubmodelElementHandling],
-        props: ['submodelElementData'],
+        semanticId: 'http://hello.world.de/plugin_submodel',
+    });
 
-        setup() {
-            const theme = useTheme();
-            const aasStore = useAASStore();
+    // Stores
+    const aasStore = useAASStore();
 
-            return {
-                theme, // Theme Object
-                aasStore, // AASStore Object
-            };
-        },
+    // Composables
+    const { calculateSMEPathes } = useSMHandling();
 
-        data() {
-            return {
-                pluginData: {} as any, // Data of the HelloWorld-Plugin
-            };
-        },
-
-        computed: {
-            // Get the selected Treeview Node (SubmodelElement) from the store
-            SelectedNode() {
-                return this.aasStore.getSelectedNode;
-            },
-        },
-
-        mounted() {
-            // console.log('HelloWorldPlugin mounted');
-            this.initializePlugin(); // Initialize the HelloWorld-Plugin when the component is mounted
-        },
-
-        methods: {
-            // Function to initialize the HelloWorld-Plugin
-            initializePlugin() {
-                if (Object.keys(this.submodelElementData).length === 0) {
-                    this.pluginData = {}; // Reset the Plugin Data when no Node is selected
-                    return;
-                }
-
-                let pluginData = { ...this.submodelElementData }; // Get the SubmodelElement from the AAS
-                let pluginSubmodelElements = pluginData.submodelElements;
-                // add pathes and id's to the SubmodelElements
-                this.pluginData = this.preparePluginData(
-                    pluginSubmodelElements,
-                    this.SelectedNode.path + '/submodelElements'
-                );
-                // console.log('pluginData: ', this.pluginData)
-            },
-
-            // Function to prepare the Plugin Data
-            preparePluginData(pluginSubmodelElements: Array<any>, path: string = ''): Array<any> {
-                pluginSubmodelElements.forEach((submodelElement: any) => {
-                    submodelElement.id = this.UUID(); // add a unique id to the SubmodelElement
-                    submodelElement.path = path + '/' + submodelElement.idShort; // add the path to the SubmodelElement
-                    // the next Step is not needed for the HelloWorld-Plugin, but it is still displayed as an Example for more complex Situations using SubmodelElementCollections
-                    if (submodelElement.modelType == 'SubmodelElementCollection') {
-                        // Method calls itself to add the pathes and id's to the SubmodelElements in the SubmodelElementCollection
-                        submodelElement.children = this.preparePluginData(submodelElement.value, submodelElement.path);
-                    }
-                });
-                return pluginSubmodelElements;
-            },
-
-            // Function to update the value of a property
-            updatePluginValue(submodelElement: any) {
-                // find the SubmodelElement in the Plugin Data and replace it with the updated SubmodelElement
-                this.pluginData.forEach((element: any, index: number) => {
-                    if (element.id == submodelElement.id) {
-                        this.pluginData[index] = submodelElement;
-                    }
-                });
-            },
+    const props = defineProps({
+        submodelElementData: {
+            type: Object as any,
+            default: {} as any,
         },
     });
+
+    // Data
+    const submodelData = ref<any>({});
+
+    // Computed Properties
+    const selectedNode = computed(() => aasStore.getSelectedNode);
+
+    onMounted(() => {
+        initializePlugin();
+    });
+
+    async function initializePlugin(): Promise<void> {
+        // Check ig the prop has been passed
+        if (!props.submodelElementData || Object.keys(props.submodelElementData).length === 0) {
+            return; // Return if no data is available
+        }
+
+        // Extract the Submodel data as a copy from the prop and save it in a local variable
+        const copiedSubmodelData = { ...props.submodelElementData };
+
+        // Calculate the pathes of the child elements and save the data in the mySubmodelData variable
+        submodelData.value = await calculateSMEPathes(copiedSubmodelData, selectedNode.value.path);
+    }
 </script>

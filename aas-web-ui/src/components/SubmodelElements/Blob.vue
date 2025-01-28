@@ -97,6 +97,7 @@
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
+    import { extractEndpointHref } from '@/utils/DescriptorUtils';
 
     export default defineComponent({
         name: 'Blob',
@@ -117,6 +118,7 @@
 
             return {
                 aasStore, // AASStore Object
+                extractEndpointHref,
             };
         },
 

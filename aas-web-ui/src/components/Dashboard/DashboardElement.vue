@@ -66,6 +66,8 @@
     import DashboardHandling from '@/mixins/DashboardHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useEnvStore } from '@/store/EnvironmentStore';
+    import { nameToDisplay } from '@/utils/ReferableUtils';
+    import { checkSemanticId } from '@/utils/SemanticIdUtils';
 
     export default defineComponent({
         name: 'DashboardElement',
@@ -78,6 +80,8 @@
 
             return {
                 envStore, // EnvironmentStore Object
+                checkSemanticId,
+                nameToDisplay,
             };
         },
 

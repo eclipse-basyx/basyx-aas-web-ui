@@ -1,4 +1,3 @@
-import md5 from 'md5';
 import { v4 as uuidv4 } from 'uuid';
 import { defineComponent } from 'vue';
 import { useRouter } from 'vue-router';
@@ -7,6 +6,8 @@ import { useAASStore } from '@/store/AASDataStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { formatDate } from '@/utils/DateUtils';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
+import { checkIdShort } from '@/utils/ReferableUtils';
+import { getEquivalentEclassSemanticIds, getEquivalentIriSemanticIds } from '@/utils/SemanticIdUtils';
 
 export default defineComponent({
     name: 'SubmodelElementHandling',
@@ -62,38 +63,12 @@ export default defineComponent({
     },
 
     methods: {
-        // generate a unique ID (UUID)
-        // TODO Replace usage of this function with IDUtils.ts/UUID()
-        UUID() {
+        // TODO REMOVE if not used anymore in this mixin
+        generateUUID(): string {
             return uuidv4();
         },
 
-        // generate a unique ID (UUID) from a given string
-        // TODO Replace usage of this function with IDUtils.ts/generateUUIDFromString()
-        generateUUIDFromString(str: any): string {
-            // create md5 hash from string
-            const hash = md5(str);
-            // create UUID from hash
-            const guid =
-                hash.substring(0, 8) +
-                '-' +
-                hash.substring(8, 12) +
-                '-' +
-                hash.substring(12, 16) +
-                '-' +
-                hash.substring(16, 20) +
-                '-' +
-                hash.substring(20, 32);
-            return guid;
-        },
-
-        // convert date element to digits
-        padTo2Digits(num: number) {
-            return num.toString().padStart(2, '0');
-        },
-
-        // convert js date object to string
-        // TODO Replace usage of this function with DateUtils.ts/formatDate()
+        // TODO REMOVE if not used anymore in this mixin
         formatDate(date: Date) {
             return (
                 [date.getFullYear(), this.padTo2Digits(date.getMonth() + 1), this.padTo2Digits(date.getDate())].join(
@@ -108,290 +83,63 @@ export default defineComponent({
             );
         },
 
-        // Function to capitalize the first letter of a string
-        // TODO Replace usage of this function with generalUtils.ts/capitalizeFirstLetter()
-        capitalizeFirstLetter(string: string) {
-            return string.charAt(0).toUpperCase() + string.slice(1);
+        // TODO REMOVE if not used anymore in this mixin
+        padTo2Digits(num: number) {
+            return num.toString().padStart(2, '0');
         },
 
-        // Function to check if the idShort of a SubmodelElement matches the given idShort
-        // TODO Replace usage of this function with ReferableUtils.ts/checkIdShort()
-        checkIdShort(referable: any, idShort: string, startsWith: boolean = false, strict: boolean = false): boolean {
-            if (idShort.trim() === '') return false;
-
-            if (!referable || !referable.idShort || referable.idShort.length === 0) return false;
-
-            if (startsWith) {
-                // For matching e.g. ProductImage{00} with idShort ProductImage
-                if (strict) {
-                    return referable.idShort.startsWith(idShort);
-                } else {
-                    return referable.idShort.toLowerCase().startsWith(idShort.toLowerCase());
-                }
-            } else {
-                if (strict) {
-                    return referable.idShort === idShort;
-                } else {
-                    return referable.idShort.toLowerCase() === idShort.toLowerCase();
-                }
-            }
-        },
-
-        // Function to check if the SemanticID of a SubmodelElement matches the given SemanticID
-        // TODO Replace usage of this function with SemanticId.ts/checkSemanticId()
-        checkSemanticId(submodelElement: any, semanticId: string): boolean {
-            // console.log('checkSemanticId', 'submodelElement', submodelElement, 'semanticId', semanticId);
-            if (semanticId.trim() == '') return false;
-
-            if (!Array.isArray(submodelElement?.semanticId?.keys) || submodelElement.semanticId.keys.length == 0)
-                return false;
-
-            for (const key of submodelElement.semanticId.keys) {
-                // console.log('checkSemanticId: ', 'key of submodelElement', key.value, 'semanticId', semanticId);
-                if (key.value.startsWith('0112/')) {
-                    return this.checkSemanticIdIecCdd(key.value, semanticId);
-                } else if (key.value.startsWith('0173-1#') || key.value.startsWith('0173/1///')) {
-                    return this.checkSemanticIdEclassIrdi(key.value, semanticId);
-                } else if (key.value.startsWith('https://api.eclass-cdp.com/0173-1')) {
-                    return this.checkSemanticIdEclassIrdiUrl(key.value, semanticId);
-                } else if (key.value.startsWith('http://') || key.value.startsWith('https://')) {
-                    return this.checkSemanticIdIri(key.value, semanticId);
-                } else {
-                    if (key.value === semanticId) return true;
-                }
-            }
-
-            return false;
-        },
-
-        // TODO Replace usage of this function with SemanticId.ts/checkSemanticIdEclassIrdi()
-        checkSemanticIdEclassIrdi(keyValue: string, semanticId: string): boolean {
-            if (semanticId.trim() == '') return false;
-
-            if (!keyValue.startsWith('0173-1#') && !keyValue.startsWith('0173/1///')) return false;
-
-            if (keyValue.startsWith('0173-1#')) {
-                // Eclass IRDI like 0173-1#01-AHF578#001
-                if (new RegExp(/\*\d{2}$/).test(keyValue)) {
-                    keyValue = keyValue.slice(0, -3);
-                    semanticId = semanticId.slice(0, -3);
-                }
-                if (
-                    new RegExp(/[#-]{1}\d{3}$/).test(semanticId) ||
-                    new RegExp(/[#-]{1}\d{3}\*\d{1,}$/).test(semanticId)
-                ) {
-                    return this.getEquivalentEclassSemanticIds(keyValue).includes(semanticId);
-                }
-
-                // Eclass IRDI without version; like 0173-1#01-AHF578
-                return (
-                    this.getEquivalentEclassSemanticIds(keyValue).findIndex((equivalentSemanticId) => {
-                        return equivalentSemanticId.startsWith(semanticId);
-                    }, semanticId) != -1
-                );
-            } else if (keyValue.startsWith('0173/1///')) {
-                if (
-                    new RegExp(/[#-]{1}\d{3}$/).test(semanticId) ||
-                    new RegExp(/[#-]{1}\d{3}\*\d{1,}$/).test(semanticId)
-                ) {
-                    // Eclass IRDI with version; like 0173/1///01#AHF578#001
-                    return this.getEquivalentEclassSemanticIds(keyValue).includes(semanticId);
-                }
-
-                // Eclass IRDI without version; like 0173/1///01#AHF578
-                return (
-                    this.getEquivalentEclassSemanticIds(keyValue).findIndex((equivalentSemanticId) => {
-                        return equivalentSemanticId.startsWith(semanticId);
-                    }, semanticId) != -1
-                );
-            }
-
-            return false;
-        },
-
-        // TODO Replace usage of this function with SemanticId.ts/checkSemanticIdEclassIrdiUrl()
-        checkSemanticIdEclassIrdiUrl(keyValue: string, semanticId: string): boolean {
-            if (semanticId.trim() == '') return false;
-
-            if (!keyValue.startsWith('https://api.eclass-cdp.com/0173-1')) return false;
-
-            // Eclass URL like https://api.eclass-cdp.com/0173-1-01-AHF578-001
-            if (new RegExp(/[#-]{1}\d{3}$/).test(semanticId) || new RegExp(/[#-]{1}\d{3}~\d{1,}$/).test(semanticId)) {
-                // Eclass URL with version (like https://api.eclass-cdp.com/0173-1-01-AHF578-001)
-                return this.getEquivalentEclassSemanticIds(semanticId).includes(keyValue);
-            }
-
-            // Eclass URL without version (like https://api.eclass-cdp.com/0173-1-01-AHF578)
-            return (
-                this.getEquivalentEclassSemanticIds(keyValue).findIndex((equivalentSemanticId) => {
-                    return equivalentSemanticId.startsWith(semanticId);
-                }, semanticId) != -1
-            );
-        },
-
-        // TODO Replace usage of this function with SemanticId.ts/checkSemanticIdIecCdd()
-        checkSemanticIdIecCdd(keyValue: string, semanticId: string): boolean {
-            if (semanticId.trim() == '') return false;
-
-            if (!semanticId.startsWith('0112/')) return false;
-            if (!keyValue.startsWith('0112/')) return false;
-
-            // IEC CDD like 0112/2///61987#ABN590#002
-            if (new RegExp(/[#-]{1}\d{3}$/).test(semanticId)) {
-                // IEC CDD with version; like 0112/2///61987#ABN590#002
-                if (keyValue === semanticId) {
-                    return true;
-                }
-            }
-
-            // IEC CDD without version; like 0112/2///61987#ABN590
-            return keyValue.startsWith(semanticId);
-        },
-
-        // TODO Replace usage of this function with SemanticId.ts/checkSemanticIdIri()
-        checkSemanticIdIri(keyValue: string, semanticId: string): boolean {
-            // console.log('checkSemanticIdIri: ', 'keyValue', keyValue, 'semanticId', semanticId);
-            if (semanticId.trim() == '') return false;
-
-            if (!semanticId.startsWith('http://') && !semanticId.startsWith('https://')) return false;
-            if (!keyValue.startsWith('http://') && !keyValue.startsWith('https://')) return false;
-
-            if (keyValue.endsWith('/')) keyValue = keyValue.substring(0, keyValue.length - 1);
-            if (semanticId.endsWith('/')) semanticId = semanticId.substring(0, semanticId.length - 1);
-
-            if (new RegExp(/\/\d{1,}\/\d{1,}$/).test(semanticId)) {
-                // IRI with version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/0/9/
-                return this.getEquivalentIriSemanticIds(semanticId).includes(keyValue);
-            }
-
-            // IRI without version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/
-            return (
-                this.getEquivalentIriSemanticIds(keyValue).findIndex((equivalentSemanticId) => {
-                    return equivalentSemanticId.startsWith(semanticId);
-                }, semanticId) != -1
-            );
-        },
-
-        // TODO Replace usage of this function with SemanticId.ts/getEquivalentEclassSemanticIds()
-        getEquivalentEclassSemanticIds(semanticId: string): any[] {
-            if (
-                semanticId.trim() === '' ||
-                (!semanticId.startsWith('0173-1#') &&
-                    !semanticId.startsWith('0173/1///') &&
-                    !semanticId.startsWith('https://api.eclass-cdp.com/0173-1'))
-            )
-                return [];
-
-            const semanticIds: any[] = [semanticId];
-
-            if (semanticId.startsWith('0173-1#')) {
-                // e.g. 0173-1#01-AHF578#001
-                semanticIds.push(semanticId.replace(/-1#(\d{2})-/, '/1///$1#')); // 0173-1#01-AHF578#001 --> 0173/1///01#AHF578#001
-                semanticIds.push('https://api.eclass-cdp.com/' + semanticId.replaceAll('#', '-')); // 0173-1#01-AHF578#001 --> https://api.eclass-cdp.com/0173-1-01-AHF578-001
-            } else if (semanticId.startsWith('0173/1///')) {
-                // e.g. 0173/1///01#AHF578#001
-                semanticIds.push(semanticId.replace(/\/1\/\/\/(\d{2})#/, '-1#$1-')); // 0173/1///01#AHF578#001 --> 0173-1#01-AHF578#001
-                semanticIds.push(
-                    'https://api.eclass-cdp.com/' +
-                        semanticId.replace(/\/1\/\/\/(\d{2})#/, '-1-$1-').replaceAll('#', '-') // 0173/1///01#AHF578#001 --> https://api.eclass-cdp.com/0173-1-01-AHF578-001
-                );
-            } else if (semanticId.startsWith('https://api.eclass-cdp.com/0173-1')) {
-                // e.g. https://api.eclass-cdp.com/0173-1-01-AHF578-001
-                semanticIds.push(
-                    semanticId
-                        .replaceAll('https://api.eclass-cdp.com/', '')
-                        .replace(/-1-(\d{2})-/, '-1#$1-')
-                        .replace(/-(\d{3})$/, '#$1') // https://api.eclass-cdp.com/0173-1-01-AHF578-001 --> 0173-1#01-AHF578#001
-                );
-                semanticIds.push(
-                    semanticId
-                        .replaceAll('https://api.eclass-cdp.com/', '')
-                        .replace(/-1-(\d{2})-/, '/1///$1#')
-                        .replace(/-(\d{3})$/, '#$1') // https://api.eclass-cdp.com/0173-1-01-AHF578-001 --> 0173/1///01#AHF578#001
-                );
-            }
-
-            // console.log('getEquivalentEclassSemanticIds', 'semanticId', semanticId, 'semanticIds', semanticIds);
-            return semanticIds;
-        },
-
-        // TODO Replace usage of this function with SemanticId.ts/getEquivalentIriSemanticIds()
-        getEquivalentIriSemanticIds(semanticId: string): any[] {
-            if (semanticId.trim() === '' || !(semanticId.startsWith('http://') || semanticId.startsWith('https://')))
-                return [];
-
-            const semanticIds: any[] = [semanticId];
-
-            // e.g. IRI
-            if (semanticId.endsWith('/')) {
-                semanticIds.push(semanticId.substring(0, semanticId.length - 1));
-            } else {
-                semanticIds.push(semanticId + '/');
-            }
-
-            // console.log('getEquivalentIriSemanticIds', 'semanticId', semanticId, 'semanticIds', semanticIds);
-            return semanticIds;
-        },
-
-        // Function to check if the valueType is a number
-        // TODO Replace usage of this function with generalUtils.ts/isNumber()
-        isNumber(valueType: any) {
-            if (!valueType) return false;
-            // List of all number types
-            const numberTypes = [
-                'double',
-                'float',
-                'integer',
-                'int',
-                'nonNegativeInteger',
-                'positiveInteger',
-                'unsignedLong',
-                'unsignedInt',
-                'unsignedShort',
-                'unsignedByte',
-                'nonPositiveInteger',
-                'negativeInteger',
-                'long',
-                'short',
-                'decimal',
-                'byte',
+        // TODO REMOVE if not used anymore in this mixin
+        extractEndpointHref(descriptor: any, interfaceShortName: string): string {
+            const interfaceShortNames = [
+                'AAS',
+                'SUBMODEL',
+                'SERIALIZE',
+                'DESCRIPTION',
+                'AASX-FILE',
+                'AAS-REGISTRY',
+                'SUBMODEL-REGISTRY',
+                'AAS-REPOSITORY',
+                'SUBMODEL-REPOSITORY',
+                'CD-REPOSITORY',
+                'AAS-DISCOVERY',
             ];
-            // strip xs: from the property if it exists
-            if (valueType.includes('xs:')) {
-                valueType = valueType.replace('xs:', '');
+            if (!interfaceShortNames.some((iShortName) => interfaceShortName.startsWith(`${iShortName}-`))) {
+                return '';
             }
-            // check if the property is a number
-            if (numberTypes.includes(valueType)) {
-                return true;
-            } else {
-                return false;
+            if (
+                !Array.isArray(descriptor?.endpoints) ||
+                descriptor?.endpoints.length === 0 ||
+                interfaceShortName === ''
+            ) {
+                return '';
             }
+            const endpoints = descriptor.endpoints;
+            // find the right endpoint based on the interfaceShortName (has to match endpoint.interface)
+            const endpoint = endpoints.find((endpoint: any) => {
+                return endpoint?.interface === interfaceShortName;
+            });
+            return endpoint?.protocolInformation?.href ? endpoint.protocolInformation.href : '';
         },
 
-        // TODO Replace usage of this function with generalutils.ts/downloadJson()
-        // Function to download a JSON File
-        downloadJson(obj: any, fileName: string) {
-            const jsonStr = JSON.stringify(obj, null, 4);
-            const blob = new Blob([jsonStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        },
-
-        // Function to download a binary File
-        // TODO Replace usage of this function with generalutils.ts/downloadFile()
-        downloadFile(filename: string, fileContent: Blob) {
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(fileContent);
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+        // TODO REMOVE if not used anymore in this mixin
+        unitSuffix(prop: any) {
+            if (!prop.conceptDescriptions || prop.conceptDescriptions.length == 0) {
+                return '';
+            }
+            for (const conceptDescription of prop.conceptDescriptions) {
+                if (!conceptDescription.embeddedDataSpecifications) {
+                    continue;
+                }
+                for (const embeddedDataSpecification of conceptDescription.embeddedDataSpecifications) {
+                    if (
+                        embeddedDataSpecification.dataSpecificationContent &&
+                        embeddedDataSpecification.dataSpecificationContent.unit
+                    ) {
+                        return embeddedDataSpecification.dataSpecificationContent.unit;
+                    }
+                }
+            }
+            return '';
         },
 
         // Function to check if the referenced Element exists
@@ -746,7 +494,7 @@ export default defineComponent({
                                     ) {
                                         const sml = smRepoResponse.data;
                                         const index = sml.value.findIndex((sme: any) =>
-                                            this.checkIdShort(sme, smeKey.value, false, true)
+                                            checkIdShort(sme, smeKey.value, false, true)
                                         );
                                         if (index !== -1) {
                                             smRepoUrl += encodeURIComponent('[') + index + encodeURIComponent(']');
@@ -774,7 +522,7 @@ export default defineComponent({
                                     ) {
                                         const smc = smRepoResponse.data;
                                         const sme = smc.value.find((sme: any) =>
-                                            this.checkIdShort(sme, smeKey.value, false, true)
+                                            checkIdShort(sme, smeKey.value, false, true)
                                         );
                                         if (sme && Object.keys(sme).length > 0) {
                                             smRepoUrl += '.' + smeKey.value;
@@ -848,6 +596,7 @@ export default defineComponent({
                 });
         },
 
+        // TODO Move to AASHandling/AASRegistryClient/AASRepoClient
         ////////////////////////////////////////////////// AAS Stuff //////////////////////////////////////////////////
 
         // Fetch List of all available AAS Descriptors
@@ -1121,6 +870,7 @@ export default defineComponent({
             await this.fetchAndDispatchAas(aasEndpoint);
         },
 
+        // TODO Move to SMHandling/SMEHandling/SMRegistryClient/SMRepoClient
         ////////////////////////////////////////////////// SM Stuff //////////////////////////////////////////////////
 
         // Fetch List of all available SM Descriptors
@@ -1440,9 +1190,9 @@ export default defineComponent({
                     semanticId.startsWith('0173/1///') ||
                     semanticId.startsWith('https://api.eclass-cdp.com/0173-1')
                 ) {
-                    semanticIdsToFetch.push(...this.getEquivalentEclassSemanticIds(semanticId));
+                    semanticIdsToFetch.push(...getEquivalentEclassSemanticIds(semanticId));
                 } else if (semanticId.startsWith('http://') || semanticId.startsWith('https://')) {
-                    semanticIdsToFetch.push(...this.getEquivalentIriSemanticIds(semanticId));
+                    semanticIdsToFetch.push(...getEquivalentIriSemanticIds(semanticId));
                 }
             });
 
@@ -1483,55 +1233,6 @@ export default defineComponent({
             return conceptDescriptions;
         },
 
-        // calculate the pathes of the SubmodelElements in a provided Submodel/SubmodelElement
-        // TODO Transfer to Util resp. Composable
-        async calculateSubmodelElementPathes(parent: any, startPath: string): Promise<any> {
-            parent.path = startPath;
-            parent.id = this.UUID();
-            // parent.conceptDescriptions = await this.getConceptDescriptions(parent);
-
-            if (parent.submodelElements && parent.submodelElements.length > 0) {
-                for (const element of parent.submodelElements) {
-                    await this.calculateSubmodelElementPathes(
-                        element,
-                        startPath + '/submodel-elements/' + element.idShort
-                    );
-                }
-            } else if (
-                parent.value &&
-                Array.isArray(parent.value) &&
-                parent.value.length > 0 &&
-                parent.modelType == 'SubmodelElementCollection'
-            ) {
-                for (const element of parent.value) {
-                    await this.calculateSubmodelElementPathes(element, startPath + '.' + element.idShort);
-                }
-            } else if (
-                parent.value &&
-                Array.isArray(parent.value) &&
-                parent.value.length > 0 &&
-                parent.modelType == 'SubmodelElementList'
-            ) {
-                for (const [index, element] of parent.value.entries()) {
-                    await this.calculateSubmodelElementPathes(
-                        element,
-                        startPath + encodeURIComponent('[') + index + encodeURIComponent(']')
-                    );
-                }
-            } else if (
-                parent.statements &&
-                Array.isArray(parent.statements) &&
-                parent.statements.length > 0 &&
-                parent.modelType == 'Entity'
-            ) {
-                for (const element of parent.value) {
-                    await this.calculateSubmodelElementPathes(element, startPath + '.' + element.idShort);
-                }
-            }
-
-            return parent;
-        },
-
         // Function to calculate the local path (used for files)
         // TODO Transfer to Util resp. Composable
         getLocalPath(path: string, selectedNode: any): string {
@@ -1546,9 +1247,8 @@ export default defineComponent({
             }
         },
 
-        // Get the Unit from the EmbeddedDataSpecification of the ConceptDescription of the Property (if available)
-        // TODO Replace usage of this function with ConceptDescriptionHandling.ts/fetchCds()
-        unitSuffix(prop: any) {
+        // Get the Definition from the EmbeddedDataSpecification of the ConceptDescription of the Property (if available)
+        cdDefinition(prop: any) {
             if (!prop.conceptDescriptions) {
                 this.getConceptDescriptions(prop).then((conceptDescriptions) => {
                     prop.conceptDescriptions = conceptDescriptions;
@@ -1564,9 +1264,18 @@ export default defineComponent({
                 for (const embeddedDataSpecification of conceptDescription.embeddedDataSpecifications) {
                     if (
                         embeddedDataSpecification.dataSpecificationContent &&
-                        embeddedDataSpecification.dataSpecificationContent.unit
+                        embeddedDataSpecification.dataSpecificationContent.definition
                     ) {
-                        return embeddedDataSpecification.dataSpecificationContent.unit;
+                        const definitionEn = embeddedDataSpecification.dataSpecificationContent.definition.find(
+                            (definition: any) => {
+                                return definition.language === 'en' && definition.text !== '';
+                            }
+                        );
+                        if (definitionEn && definitionEn.text) {
+                            return definitionEn.text;
+                        }
+                    } else {
+                        return '';
                     }
                 }
             }
@@ -1644,40 +1353,6 @@ export default defineComponent({
                 }
             }
             return '';
-        },
-
-        // Extract the right endpoints href from a descriptor
-        // TODO Replace usage of this function with DescriptorUtils.ts/extractEndpointHref()
-        extractEndpointHref(descriptor: any, interfaceShortName: string): string {
-            const interfaceShortNames = [
-                'AAS',
-                'SUBMODEL',
-                'SERIALIZE',
-                'DESCRIPTION',
-                'AASX-FILE',
-                'AAS-REGISTRY',
-                'SUBMODEL-REGISTRY',
-                'AAS-REPOSITORY',
-                'SUBMODEL-REPOSITORY',
-                'CD-REPOSITORY',
-                'AAS-DISCOVERY',
-            ];
-            if (!interfaceShortNames.some((iShortName) => interfaceShortName.startsWith(`${iShortName}-`))) {
-                return '';
-            }
-            if (
-                !Array.isArray(descriptor?.endpoints) ||
-                descriptor?.endpoints.length === 0 ||
-                interfaceShortName === ''
-            ) {
-                return '';
-            }
-            const endpoints = descriptor.endpoints;
-            // find the right endpoint based on the interfaceShortName (has to match endpoint.interface)
-            const endpoint = endpoints.find((endpoint: any) => {
-                return endpoint?.interface === interfaceShortName;
-            });
-            return endpoint?.protocolInformation?.href ? endpoint.protocolInformation.href : '';
         },
 
         // TODO Replace usage of this function with SMHandling/SMRegistryClient/SMRepoClient
