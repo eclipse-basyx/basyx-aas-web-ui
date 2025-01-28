@@ -1,6 +1,6 @@
-// import { useIDUtils } from '@/composables/IDUtils';
+import { useIDUtils } from '@/composables/IDUtils';
 
-// const { uuidV4Regex } = useIDUtils();
+const { uuidV4Regex } = useIDUtils(); // NOT WORKING "getActivePinia()" was called but there was no active Pinia. Are you trying to use a store before calling "app.use(pinia)"?
 
 /**
  * Extracts the display name from a Referable object based on the specified language.
@@ -37,18 +37,19 @@ export function nameToDisplay(referable: any, language: string = 'en', defaultNa
         if (referable?.id && referable?.id.trim() !== '') {
             // Note: Constraint AASd-120: idShort of submodel elements being a direct child of a SubmodelElementList shall not be specified.
             // This condition avoids the output of an UUID v4
-            // if (
-            //     (referable?.parent &&
-            //         Object.keys(referable.parent).length > 0 &&
-            //         referable.parent?.modelType === 'SubmodelElementList') ||
-            //     referable.id.match(new RegExp(uuidV4Regex))
-            // ) {
             if (
+                // NOT WORKING
                 (referable?.parent &&
                     Object.keys(referable.parent).length > 0 &&
                     referable.parent?.modelType === 'SubmodelElementList') ||
-                referable.id.match(new RegExp(/^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/))
+                referable.id.match(new RegExp(uuidV4Regex))
             ) {
+                // if (
+                //     (referable?.parent &&
+                //         Object.keys(referable.parent).length > 0 &&
+                //         referable.parent?.modelType === 'SubmodelElementList') ||
+                //     referable.id.match(new RegExp(/^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/))
+                // ) {
                 return defaultNameToDisplay.trim() || '';
             }
 
