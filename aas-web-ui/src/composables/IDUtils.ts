@@ -6,10 +6,25 @@ export function useIDUtils() {
     // Stores
     const envStore = useEnvStore();
 
-    function generateUUID(): string {
+    const uuidV4Regex = /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/;
+    /**
+     * Generates an UUID v4.
+     *
+     * The return value matches the regular expression: /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/
+     *
+     * @returns {string} An UUID v4.
+     */
+    function generateUUIDV4(): string {
         return uuidv4();
     }
 
+    /**
+     * Generates UUID v4 based to a specified string.
+     *
+     * The return value matches the regular expression: /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/
+     *
+     * @returns {string} An UUID v4.
+     */
     function generateUUIDFromString(str: any): string {
         // create md5 hash from string
         const hash = md5(str);
@@ -34,7 +49,7 @@ export function useIDUtils() {
      * The generated IRI includes the given type and a custom ID.
      *
      * @param {string} type - The type to be included in the generated IRI.
-     * @returns {string} - The generated IRI as a string. If the type is invalid, it uses an empty string for the type.
+     * @returns {string} The generated IRI as a string. If the type is invalid, it uses an empty string for the type.
      *
      * @example
      * // Generates an IRI with type 'AssetAdministrationShell'
@@ -82,7 +97,7 @@ export function useIDUtils() {
      * The return value matches the regular expression: /^((1000|[1-9][0-9]{3})_){3}(1000|[1-9][0-9]{3})$/
      *
      * @returns {string} A custom ID in the format of "xxxx_xxxx_xxxx_xxxx" where each "xxxx" is a random number
-     * between 1000 and 9999 (regex: ).
+     * between 1000 and 9999.
      */
     function generateCustomId(): string {
         // Random number between 1000 and 9999
@@ -93,5 +108,5 @@ export function useIDUtils() {
         return `${segment()}_${segment()}_${segment()}_${segment()}`;
     }
 
-    return { generateUUID, generateUUIDFromString, generateIri, customIdRegex, generateCustomId };
+    return { uuidV4Regex, generateUUIDV4, generateUUIDFromString, generateIri, customIdRegex, generateCustomId };
 }

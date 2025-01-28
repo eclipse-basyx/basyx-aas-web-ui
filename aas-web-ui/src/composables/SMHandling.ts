@@ -15,7 +15,7 @@ export function useSMHandling() {
         fetchSme: fetchSmeFromRepo,
     } = useSMRepositoryClient();
     const { getConceptDescriptions } = useConceptDescriptionHandling();
-    const { generateUUID } = useIDUtils();
+    const { generateUUIDV4 } = useIDUtils();
 
     // Stores
     const aasStore = useAASStore();
@@ -183,7 +183,7 @@ export function useSMHandling() {
      * Recursively calculates and sets the paths of SubmodelElements (SMEs) within a given Submodel (SM) or SubmodelElement (SME).
      * The function modifies the `parent` object by:
      * - Setting the `path` property to the constructed string based on the `startPath`.
-     * - Assigning a unique `id` to the `parent` using `generateUUID()`.
+     * - Assigning a unique `id` to the `parent` using `generateUUIDV4()`.
      *
      * The function handles different types of parent structures:
      * - For **Submodel**, it iterates over `submodelElements` and appends their `idShort` to the path.
@@ -197,7 +197,7 @@ export function useSMHandling() {
      */
     async function calculateSMEPathes(parent: any, startPath: string): Promise<any> {
         parent.path = startPath;
-        parent.id = generateUUID();
+        parent.id = generateUUIDV4();
         // parent.conceptDescriptions = await this.getConceptDescriptions(parent);
 
         if (parent.submodelElements && parent.submodelElements.length > 0) {
