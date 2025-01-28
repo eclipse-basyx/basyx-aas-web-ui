@@ -10,7 +10,7 @@ export function useDashboardHandling() {
     const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
 
     // Composables
-    const { generateUUID } = useIDUtils();
+    const { generateUUIDV4 } = useIDUtils();
 
     const aasStore = useAASStore();
 
@@ -163,7 +163,7 @@ export function useDashboardHandling() {
             if (response && response.success) {
                 return response.data;
             }
-            return { idShort: 'new Group', id: generateUUID() };
+            return { idShort: 'new Group', id: generateUUIDV4() };
         }
     }
 

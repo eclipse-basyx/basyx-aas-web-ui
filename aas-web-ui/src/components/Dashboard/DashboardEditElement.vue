@@ -101,12 +101,12 @@
 
         setup() {
             const envStore = useEnvStore();
-            const { generateUUID } = useIDUtils();
+            const { generateUUIDV4 } = useIDUtils();
 
             return {
                 envStore, // EnvironmentStore Object
                 checkSemanticId,
-                generateUUID,
+                generateUUIDV4,
             };
         },
 
@@ -157,7 +157,7 @@
             createGroup(event: string) {
                 // console.log('Create Group: ', event);
                 const newGroupName = event;
-                const newGroupId = this.generateUUID();
+                const newGroupId = this.generateUUIDV4();
                 this.groups.push({ groupName: newGroupName, groupId: newGroupId });
                 this.elementGroup = { groupName: newGroupName, groupId: newGroupId };
             },

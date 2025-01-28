@@ -90,7 +90,7 @@
     const router = useRouter();
 
     // Composables
-    const { generateUUID } = useIDUtils();
+    const { generateUUIDV4 } = useIDUtils();
     const { fetchAndDispatchSme } = useSMEHandling();
     const { fetchAndDispatchSmById } = useSMHandling();
 
@@ -110,7 +110,7 @@
     const submodelObject = ref<aasTypes.Submodel | undefined>(undefined);
     const openPanels = ref<number[]>([0]);
 
-    const submodelId = ref<string | null>(generateUUID());
+    const submodelId = ref<string | null>(generateUUIDV4());
     const submodelIdShort = ref<string | null>(null);
     const submodelKind = ref<aasTypes.ModellingKind | null>(aasTypes.ModellingKind.Instance);
     const displayName = ref<Array<aasTypes.LangStringNameType> | null>(null);
@@ -346,7 +346,7 @@
 
     function clearForm(): void {
         // Reset all values
-        submodelId.value = generateUUID();
+        submodelId.value = generateUUIDV4();
         submodelIdShort.value = null;
         displayName.value = null;
         description.value = null;
