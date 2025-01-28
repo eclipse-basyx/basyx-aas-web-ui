@@ -1,6 +1,7 @@
 import { useSMEHandling } from '@/composables/SMEHandling';
 import { useSMHandling } from '@/composables/SMHandling';
 import { useSMEFile } from '@/composables/SubmodelElements/File';
+import { checkIdShort } from '@/utils/ReferableUtils';
 import { checkSemanticId } from '@/utils/SemanticIdUtils';
 
 export function useTechnicalData_v1_2Utils() {
@@ -9,7 +10,11 @@ export function useTechnicalData_v1_2Utils() {
     const { fetchSme } = useSMEHandling();
     const { valueUrl: smeFileValueUrl } = useSMEFile();
 
-    const semanticId = 'https://admin-shell.io/ZVEI/TechnicalData/Submodel/1/2';
+    const smSemanticId = 'https://admin-shell.io/ZVEI/TechnicalData/Submodel/1/2';
+    const smIdShort = 'TechnicalData';
+
+    const smcGeneralInformationSemanticId = 'https://admin-shell.io/ZVEI/TechnicalData/GeneralInformation/1/1';
+    const fileProductImageSemanticId = 'https://admin-shell.io/ZVEI/TechnicalData/ProductImage/1/1';
 
     /**
      * Retrieves Technical Data Submodel (SM) of an Asset Administration Shell (AAS).
@@ -29,7 +34,7 @@ export function useTechnicalData_v1_2Utils() {
 
         aasId = aasId.trim();
 
-        const smTechnicalDataId = await getSmIdOfAasIdBySemanticId(aasId, semanticId);
+        const smTechnicalDataId = await getSmIdOfAasIdBySemanticId(aasId, smSemanticId);
         const smTechnicalData = await fetchSmById(smTechnicalDataId);
 
         return smTechnicalData;
@@ -42,7 +47,7 @@ export function useTechnicalData_v1_2Utils() {
      * @param {string} aasId - The ID of the AAS to retrieve its Product Image URL.
      * @returns {string} A promise that resolves to  URL of the Product Image.
      */
-    async function getProductImageUrl(aasId: string): Promise<string> {
+    async function getProductImageUrlByAasId(aasId: string): Promise<string> {
         const failResponse = '';
 
         if (!aasId) return failResponse;
@@ -56,7 +61,7 @@ export function useTechnicalData_v1_2Utils() {
         // First attempt directly via smePath (smId => smEndpoint + SmePathSuffix (including idShorts))
         const fileProductImageSmePathSuffix = 'GeneralInformation.ProductImage';
 
-        const smTechnicalDataId = await getSmIdOfAasIdBySemanticId(aasId, semanticId);
+        const smTechnicalDataId = await getSmIdOfAasIdBySemanticId(aasId, smSemanticId);
         const smTechnicalDataEndpoint = await getSmEndpointById(smTechnicalDataId);
         const fileProductImageSmePath = smTechnicalDataEndpoint + '/submodel-elements/' + fileProductImageSmePathSuffix;
         const fileProductImage = await fetchSme(fileProductImageSmePath);
@@ -65,28 +70,35 @@ export function useTechnicalData_v1_2Utils() {
             return smeFileValueUrl(fileProductImage);
         } else {
             // Second attempt via semanticIds
-            const smcGeneralInformationSemanticId = 'https://admin-shell.io/ZVEI/TechnicalData/GeneralInformation/1/1';
-            const fileProductImageSemanticId = 'https://admin-shell.io/ZVEI/TechnicalData/ProductImage/1/1';
-
             const smTechnicalData = await fetchSmById(smTechnicalDataId);
 
-            if (smTechnicalData && Object.keys(smTechnicalData).length > 0) {
-                const smcGeneralInformation = smTechnicalData.submodelElements.find((sme: any) => {
-                    return checkSemanticId(sme, smcGeneralInformationSemanticId);
-                });
-                if (smcGeneralInformation && Object.keys(smcGeneralInformation).length > 0) {
-                    const fileProductImage = smcGeneralInformation.value.find((sme: any) => {
-                        return checkSemanticId(sme, fileProductImageSemanticId);
-                    });
-                    if (fileProductImage && Object.keys(fileProductImage).length > 0) {
-                        return smeFileValueUrl(fileProductImage);
-                    }
-                }
-            }
+            return getProductImageURL(smTechnicalData);
         }
 
         return failResponse;
     }
 
-    return { semanticId, getProductImageUrl, getSm };
+    function getProductImageURL(smTechnicalData: any): string {
+        if (
+            smTechnicalData &&
+            Object.keys(smTechnicalData).length > 0 &&
+            (checkSemanticId(smTechnicalData, smSemanticId) || checkIdShort(smTechnicalData, smIdShort))
+        ) {
+            const smcGeneralInformation = smTechnicalData.submodelElements.find((sme: any) => {
+                return checkSemanticId(sme, smcGeneralInformationSemanticId);
+            });
+            if (smcGeneralInformation && Object.keys(smcGeneralInformation).length > 0) {
+                const fileProductImage = smcGeneralInformation.value.find((sme: any) => {
+                    return checkSemanticId(sme, fileProductImageSemanticId);
+                });
+                if (fileProductImage && Object.keys(fileProductImage).length > 0) {
+                    return smeFileValueUrl(fileProductImage);
+                }
+            }
+        }
+
+        return '';
+    }
+
+    return { smSemanticId, smIdShort, getSm, getProductImageUrlByAasId, getProductImageURL };
 }

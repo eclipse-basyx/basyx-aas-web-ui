@@ -41,7 +41,7 @@
     import { useAASStore } from '@/store/AASDataStore';
 
     // Composables
-    const { getProductImageUrl: getProductImageUrlFromSmTechnicalData } = useTechnicalData_v1_2Utils();
+    const { getProductImageUrlByAasId: getProductImageUrlByAasIdFromSmTechnicalData } = useTechnicalData_v1_2Utils();
 
     // Props
     const props = defineProps({
@@ -106,7 +106,7 @@
             defaultThumbnailUrl.value = props.assetInformation.defaultThumbnail.path.trim();
             defaultThumbnailCaption.value = '';
         } else {
-            const productImageUrlFromSmTechnicalData = await getProductImageUrlFromSmTechnicalData(
+            const productImageUrlFromSmTechnicalData = await getProductImageUrlByAasIdFromSmTechnicalData(
                 selectedAas.value.id
             );
 
