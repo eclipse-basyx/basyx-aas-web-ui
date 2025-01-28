@@ -11,7 +11,7 @@
  * @param {Object} referable - The Referable object to extract the display name from.
  * @param {string} [language='en'] - The language code for the desired display name text. Defaults to 'en'.
  * @param {string} [defaultNameToDisplay=''] - The default name to return if no display name is found. Defaults to an empty string.
- * @returns {string} - The determined display name or an appropriate fallback value.
+ * @returns {string} The determined display name or an appropriate fallback value.
  */
 export function nameToDisplay(referable: any, language: string = 'en', defaultNameToDisplay: string = ''): string {
     if (referable && Object.keys(referable).length > 0) {

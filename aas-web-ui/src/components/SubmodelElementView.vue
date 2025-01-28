@@ -14,11 +14,13 @@
                     v-if="
                         selectedAAS &&
                         Object.keys(selectedAAS).length > 0 &&
+                        selectedNode &&
+                        Object.keys(selectedNode).length > 0 &&
                         submodelElementData &&
                         Object.keys(submodelElementData).length > 0
                     ">
                     <!-- Detailed View of the selected SubmodelElement (e.g. Property, Operation, etc.) -->
-                    <v-card :class="conceptDescriptions.length > 0 ? 'mb-3' : ''">
+                    <v-card>
                         <v-list nav>
                             <!-- SubmodelELement Identification -->
                             <IdentificationElement :identification-object="submodelElementData"></IdentificationElement>
@@ -101,7 +103,7 @@
                                 v-else-if="submodelElementData.modelType === 'Property'"
                                 :property-object="submodelElementData"
                                 :is-editable="editMode"
-                                @update-value="initializeView()"></Property>
+                                @update-value="initialize()"></Property>
                             <MultiLanguageProperty
                                 v-else-if="submodelElementData.modelType === 'MultiLanguageProperty'"
                                 :multi-language-property-object="submodelElementData"
@@ -114,12 +116,12 @@
                                 v-else-if="submodelElementData.modelType === 'File'"
                                 :file-object="submodelElementData"
                                 :is-editable="editMode"
-                                @update-path="initializeView()"></File>
+                                @update-path="initialize()"></File>
                             <Blob
                                 v-else-if="submodelElementData.modelType === 'Blob'"
                                 :blob-object="submodelElementData"
                                 :is-editable="editMode"
-                                @update-blob="initializeView"></Blob>
+                                @update-blob="initialize"></Blob>
                             <ReferenceElement
                                 v-else-if="submodelElementData.modelType === 'ReferenceElement'"
                                 :reference-element-object="submodelElementData"
@@ -143,9 +145,10 @@
                         <v-divider></v-divider>
                         <LastSync :timestamp="submodelElementData.timestamp"></LastSync>
                     </v-card>
-                    <template v-for="(conceptDescription, index) in conceptDescriptions" :key="conceptDescription.id">
-                        <ConceptDescription :concept-description-object="conceptDescription"></ConceptDescription>
-                        <v-divider v-if="index !== conceptDescriptions.length - 1" class="mt-2"></v-divider>
+                    <template v-if="Array.isArray(conceptDescriptions) && conceptDescriptions.length > 0">
+                        <template v-for="cd in conceptDescriptions" :key="cd.id">
+                            <ConceptDescription :concept-description-object="cd" class="mt-4"></ConceptDescription>
+                        </template>
                     </template>
                 </template>
                 <v-empty-state
@@ -180,8 +183,8 @@
     const envStore = useEnvStore();
 
     // Composables
-    const { getConceptDescriptions } = useConceptDescriptionHandling();
-    const { fetchAndDispatchSme } = useSMEHandling();
+    const { fetchCds } = useConceptDescriptionHandling();
+    const { fetchSme } = useSMEHandling();
 
     // Data
     const submodelElementData = ref({} as any);
@@ -198,58 +201,75 @@
     const singleAas = computed(() => envStore.getSingleAas);
 
     // Watchers
-    // Resets the SubmodelElementView when the AAS Registry changes
     watch(
         () => aasRegistryServerURL.value,
         async () => {
             if (!aasRegistryServerURL.value) {
-                await initializeView();
+                await initialize();
             }
         }
     );
 
-    // Resets the SubmodelElementView when the Submodel Registry changes
     watch(
         () => submodelRegistryServerURL.value,
         async () => {
             if (!submodelRegistryServerURL.value) {
-                await initializeView();
+                await initialize();
             }
         }
     );
 
-    // Resets the SubmodelElementView when the AAS changes
     watch(
         () => selectedAAS.value,
         async () => {
-            await initializeView();
+            window.clearInterval(autoSyncInterval.value); // clear old interval
+            if (autoSync.value.state) {
+                if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
+                    // create new interval
+                    autoSyncInterval.value = window.setInterval(async () => {
+                        // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
+                        await updateLocalData(await fetchSme(selectedNode.value.path, true));
+                    }, autoSync.value.interval);
+                }
+            }
+
+            await initialize();
         }
     );
 
-    // Watch for changes in the selected Node and (re-)initialize the Component
     watch(
         () => selectedNode.value,
         async () => {
-            await initializeView(true);
+            window.clearInterval(autoSyncInterval.value); // clear old interval
+            if (autoSync.value.state) {
+                if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
+                    // create new interval
+                    autoSyncInterval.value = window.setInterval(async () => {
+                        // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
+                        await updateLocalData(await fetchSme(selectedNode.value.path, true));
+                    }, autoSync.value.interval);
+                }
+            }
+
+            await initialize();
         },
         { deep: true }
     );
 
-    // watch for changes in the autoSync state and create or clear the autoSyncInterval
     watch(
         () => autoSync.value,
-        (autoSyncValue) => {
+        async (autoSyncValue) => {
+            window.clearInterval(autoSyncInterval.value); // clear old interval
             if (autoSyncValue.state) {
-                window.clearInterval(autoSyncInterval.value); // clear old interval
-                // create new interval
-                autoSyncInterval.value = window.setInterval(async () => {
-                    if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
+                if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
+                    await updateLocalData(await fetchSme(selectedNode.value.path, true));
+
+                    // create new interval
+                    autoSyncInterval.value = window.setInterval(async () => {
                         // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
-                        await fetchAndDispatchSme(selectedNode.value.path, false);
-                    }
-                }, autoSyncValue.interval);
-            } else {
-                window.clearInterval(autoSyncInterval.value);
+                        await updateLocalData(await fetchSme(selectedNode.value.path, true));
+                    }, autoSyncValue.interval);
+                }
             }
         },
         { deep: true }
@@ -257,38 +277,55 @@
 
     onMounted(async () => {
         if (autoSync.value.state) {
-            // create new interval
-            autoSyncInterval.value = window.setInterval(async () => {
-                if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
+            if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
+                // create new interval
+                autoSyncInterval.value = window.setInterval(async () => {
                     // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
-                    await fetchAndDispatchSme(selectedNode.value.path, false);
-                }
-            }, autoSync.value.interval);
+                    await updateLocalData(await fetchSme(selectedNode.value.path, true));
+                }, autoSync.value.interval);
+            }
         }
-        await initializeView(true);
+
+        // await initialize(); // Not needed, cause this component does not stand alone
     });
 
     onBeforeUnmount(() => {
         window.clearInterval(autoSyncInterval.value); // clear old interval
     });
 
-    async function initializeView(withConceptDescriptions: boolean = false): Promise<void> {
+    /**
+     * Initializes local data
+     * @async
+     * @param {boolean} withConceptDescriptions - Flag to specify if local data should be initialized with with ConceptDescriptions (CDs)
+     */
+    async function initialize(withConceptDescriptions: boolean = true): Promise<void> {
         if (!selectedNode.value || Object.keys(selectedNode.value).length === 0) {
             submodelElementData.value = {};
             conceptDescriptions.value = [];
             return;
         }
 
-        submodelElementData.value = { ...selectedNode.value }; // create local copy
-        conceptDescriptions.value = [];
+        await updateLocalData(selectedNode.value, withConceptDescriptions);
+    }
+
+    /**
+     * Updates local data
+     *
+     * @async
+     * @param {any} updatedSMEData - The new/updated data
+     * @param {boolean} withConceptDescriptions - Flag to specify if local data should be updated with with ConceptDescriptions (CDs)
+     */
+    async function updateLocalData(updatedSMEData: any, withConceptDescriptions: boolean = true): Promise<void> {
+        submodelElementData.value = { ...updatedSMEData }; // create local copy
 
         if (withConceptDescriptions) {
             if (
-                selectedNode.value?.conceptDescriptions &&
-                Array.isArray(selectedNode.value.conceptDescriptions) &&
-                selectedNode.value.conceptDescriptions.length > 0
+                submodelElementData.value?.conceptDescriptions &&
+                Array.isArray(submodelElementData.value.conceptDescriptions) &&
+                submodelElementData.value.conceptDescriptions.length > 0
             ) {
-                conceptDescriptions.value = { ...selectedNode.value.conceptDescriptions };
+                conceptDescriptions.value = [...submodelElementData.value.conceptDescriptions];
+                return;
             }
 
             if (
@@ -296,8 +333,11 @@
                 !Array.isArray(conceptDescriptions.value) ||
                 conceptDescriptions.value.length === 0
             ) {
-                conceptDescriptions.value = await getConceptDescriptions(submodelElementData.value);
+                conceptDescriptions.value = await fetchCds(submodelElementData.value);
+                return;
             }
+
+            conceptDescriptions.value = [];
         }
     }
 </script>
