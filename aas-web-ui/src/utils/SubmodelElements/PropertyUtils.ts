@@ -1,3 +1,7 @@
+import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
+
+const { unitSuffix } = useConceptDescriptionHandling();
+
 /**
  * Checks if the given property object is a valid Property model with respect to AAS metamodel specs.
  *
@@ -40,7 +44,8 @@ export function hasValue(property: any): boolean {
  */
 export function valueToDisplay(property: any, defaultValueToDisplay: string = ''): string {
     if (isProperty(property) && hasValue(property)) {
-        return property.value;
+        const unit = unitSuffix(property).trim();
+        return property.value + (unit !== '' ? ' ' + unit : '');
     }
     return defaultValueToDisplay;
 }
