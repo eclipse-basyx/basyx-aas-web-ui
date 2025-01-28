@@ -13,19 +13,6 @@
                             assetAdministrationShellData.status.trim() !== ''
                         "
                         class="text-caption px-1">
-                        <!-- Feature "Full status check" - visualize all of the status 'online', 'offline', 'status-loading', 'check disabled and ''-->
-                        <!-- <v-tooltip :text="'AAS status ' + assetAdministrationShellData.status">
-                            <template #activator="{ props }">
-                                <v-icon
-                                    size="small"
-                                    v-bind="props"
-                                    :class="statusTextClass(assetAdministrationShellData.status)">
-                                    {{
-                                        statusCloudIcon(assetAdministrationShellData.status) || 'mdi-cloud-off-outline'
-                                    }}
-                                </v-icon>
-                            </template>
-                        </v-tooltip> -->
                         <v-tooltip
                             v-if="
                                 assetAdministrationShellData.status && assetAdministrationShellData.status === 'offline'
@@ -153,7 +140,6 @@
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
     import { getKeyTypeAbbreviation } from '@/utils/KeyTypesUtil';
-    // import { statusCloudIcon, statusTextClass } from '@/utils/StatusCheckUtils'; // Feature "Full status check"
 
     // Vue Router
     const route = useRoute();
@@ -331,10 +317,10 @@
 
     async function updateStatusOfAas(init: boolean = false): Promise<void> {
         if (assetAdministrationShellData.value && Object.keys(assetAdministrationShellData.value).length > 0) {
-            if (statusCheck.value.state === true) assetAdministrationShellData.value.status = 'status loading';
-
             await new Promise((resolve) => setTimeout(resolve, 600)); // Give the UI the chance to refresh status icons
+
             const aasIsAvailable = await isAvailableByIdInRepo(assetAdministrationShellData.value.id);
+
             if (aasIsAvailable) {
                 assetAdministrationShellData.value.status =
                     statusCheck.value.state === true ? 'online' : init ? '' : 'check disabled';

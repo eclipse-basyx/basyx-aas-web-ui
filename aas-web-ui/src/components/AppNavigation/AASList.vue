@@ -145,16 +145,6 @@
                                     {{ item.id }}
                                 </div>
                             </v-tooltip>
-                            <template v-if="!isMobile && item.status && item.status.trim() !== ''" #prepend>
-                                <!-- Feature "Full status check" - visualize all of the status 'online', 'offline', 'status-loading', 'check disabled and ''-->
-                                <!-- <v-tooltip :text="'AAS status ' + item.status" class="pr-n2 mr-n2">
-                                    <template #activator="{ props }">
-                                        <v-icon size="small" v-bind="props" :class="statusTextClass(item.status)">
-                                            {{ statusCloudIcon(item.status) || 'mdi-cloud-off-outline' }}
-                                        </v-icon>
-                                    </template>
-                                </v-tooltip> -->
-                            </template>
                             <template #title>
                                 <div class="text-primary" style="z-index: 9999">
                                     {{ nameToDisplay(item) }}
@@ -165,22 +155,16 @@
                             </template>
                             <!-- open Details Button (with Status Badge) -->
                             <template #append>
-                                <v-btn
-                                    v-if="!isMobile && item.status && item.status === 'offline'"
-                                    icon="mdi-cloud-off"
-                                    size="x-small"
-                                    variant="plain"
-                                    color="error"
-                                    text-color="buttonText"
-                                    disabled
-                                    class="ml-n1"
-                                    style="z-index: 9000"></v-btn>
-                                <!-- <v-badge
-                                    :model-value="!isMobile && item.status && item.status === 'offline'"
+                                <v-badge
+                                    :model-value="
+                                        item.status && item.status.trim() !== '' && item.status === 'offline'
+                                            ? true
+                                            : false
+                                    "
                                     icon="mdi-network-strength-4-alert"
                                     color="error"
                                     text-color="buttonText"
-                                    inline></v-badge> -->
+                                    inline></v-badge>
                                 <v-menu v-if="editMode">
                                     <template #activator="{ props }">
                                         <v-btn
@@ -274,7 +258,6 @@
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
-    // import { statusCloudIcon, statusTextClass } from '@/utils/StatusCheckUtils'; // Feature "Full status check"
 
     // Extend the ComponentPublicInstance type to include scrollToIndex
     interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -361,10 +344,6 @@
         async (statusCheckValue) => {
             window.clearInterval(statusCheckInterval.value); // clear old interval
             if (statusCheckValue.state === true) {
-                aasDescriptorList.value.forEach(async (aasDescriptor: any) => {
-                    aasDescriptor.status = 'status loading';
-                });
-
                 await updateStatusOfAasDescriptorList();
 
                 // create new interval
@@ -445,10 +424,10 @@
         if (Array.isArray(aasDescriptorList.value) && aasDescriptorList.value.length > 0)
             aasDescriptorList.value.forEach(async (aasDescriptor: any) => {
                 if (aasDescriptor && Object.keys(aasDescriptor).length > 0) {
-                    if (statusCheck.value.state === true) aasDescriptor.status = 'status loading';
-
                     await new Promise((resolve) => setTimeout(resolve, 600)); // Give the UI the chance to refresh status icons
+
                     const aasIsAvailable = await isAvailableByIdInRepo(aasDescriptor.id);
+
                     if (aasIsAvailable) {
                         aasDescriptor.status =
                             statusCheck.value.state === true ? 'online' : init ? '' : 'check disabled';
