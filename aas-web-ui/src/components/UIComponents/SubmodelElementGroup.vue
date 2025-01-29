@@ -258,7 +258,7 @@
 // TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import { useReferable } from '@/composables/AAS/Referable';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -275,7 +275,7 @@
         setup() {
             const aasStore = useAASStore();
             const { unitSuffix } = useConceptDescriptionHandling();
-            const { nameToDisplay } = useReferable();
+            const { nameToDisplay } = useReferableUtils();
 
             return {
                 aasStore, // AASStore Object

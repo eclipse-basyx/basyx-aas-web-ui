@@ -252,7 +252,7 @@
     import { computed, onActivated, onBeforeUnmount, onMounted, Ref, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
-    import { useReferable } from '@/composables/AAS/Referable';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useAASHandling } from '@/composables/AASHandling';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useAASStore } from '@/store/AASDataStore';
@@ -271,7 +271,7 @@
     // Composables
     const { downloadAasx, isAvailableByIdInRepo } = useAASRepositoryClient();
     const { getAasEndpoint, fetchAndDispatchAasById, fetchAasDescriptorList } = useAASHandling();
-    const { nameToDisplay, descriptionToDisplay } = useReferable();
+    const { nameToDisplay, descriptionToDisplay } = useReferableUtils();
 
     // Stores
     const navigationStore = useNavigationStore();

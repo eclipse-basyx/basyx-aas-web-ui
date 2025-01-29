@@ -16,7 +16,7 @@
 
 <script lang="ts" setup>
     import { computed, defineOptions, onMounted, ref } from 'vue';
-    import { useReferable } from '@/composables/AAS/Referable';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/SMHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
@@ -30,7 +30,7 @@
 
     // Composables
     const { calculateSMEPathes } = useSMHandling();
-    const { nameToDisplay } = useReferable();
+    const { nameToDisplay } = useReferableUtils();
 
     const props = defineProps({
         submodelElementData: {

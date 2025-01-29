@@ -35,7 +35,7 @@
     import { defineComponent } from 'vue';
     import { useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
-    import { useReferable } from '@/composables/AAS/Referable';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -59,7 +59,7 @@
             const theme = useTheme();
             const aasStore = useAASStore();
             const router = useRouter();
-            const { descriptionToDisplay, nameToDisplay } = useReferable();
+            const { descriptionToDisplay, nameToDisplay } = useReferableUtils();
 
             return {
                 theme, // Theme Object

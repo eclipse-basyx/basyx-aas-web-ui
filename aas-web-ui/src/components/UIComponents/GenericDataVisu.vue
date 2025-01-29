@@ -70,7 +70,7 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import { useReferable } from '@/composables/AAS/Referable';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -83,7 +83,7 @@
         setup() {
             const theme = useTheme();
             const aasStore = useAASStore();
-            const { nameToDisplay } = useReferable();
+            const { nameToDisplay } = useReferableUtils();
 
             return {
                 theme, // Theme Object

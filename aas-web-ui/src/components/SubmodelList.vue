@@ -77,7 +77,7 @@
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
-    import { useReferable } from '@/composables/AAS/Referable';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -94,7 +94,7 @@
     // Composables
     const { getRequest } = useRequestHandling();
     const { smNotFound } = useSMRepositoryClient();
-    const { nameToDisplay } = useReferable();
+    const { nameToDisplay } = useReferableUtils();
 
     // Stores
     const navigationStore = useNavigationStore();

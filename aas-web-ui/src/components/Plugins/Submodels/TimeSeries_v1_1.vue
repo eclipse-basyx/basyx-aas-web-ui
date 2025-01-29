@@ -199,7 +199,7 @@
     import { defineComponent } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
-    import { useReferable } from '@/composables/AAS/Referable';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import DashboardHandling from '@/mixins/DashboardHandling';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
@@ -218,7 +218,7 @@
             const aasStore = useAASStore();
             const envStore = useEnvStore();
             const route = useRoute();
-            const { checkIdShort, descriptionToDisplay, nameToDisplay } = useReferable();
+            const { checkIdShort, descriptionToDisplay, nameToDisplay } = useReferableUtils();
 
             return {
                 theme, // Theme Object

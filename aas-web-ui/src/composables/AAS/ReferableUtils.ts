@@ -1,6 +1,6 @@
 import { useIDUtils } from '@/composables/IDUtils';
 
-export function useReferable() {
+export function useReferableUtils() {
     const { uuidV4Regex } = useIDUtils(); // NOT WORKING "getActivePinia()" was called but there was no active Pinia. Are you trying to use a store before calling "app.use(pinia)"?
 
     /**

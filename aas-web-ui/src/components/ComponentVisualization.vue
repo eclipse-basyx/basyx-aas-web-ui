@@ -105,7 +105,7 @@
     import type { RouteRecordNameGeneric } from 'vue-router';
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
-    import { useReferable } from '@/composables/AAS/Referable';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -121,7 +121,7 @@
     const envStore = useEnvStore();
 
     // Composables
-    const { nameToDisplay } = useReferable();
+    const { nameToDisplay } = useReferableUtils();
 
     // Data
     const submodelElementData = ref({} as any);

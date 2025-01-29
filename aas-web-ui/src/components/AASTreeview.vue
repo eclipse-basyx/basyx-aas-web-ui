@@ -83,7 +83,7 @@
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
-    import { useReferable } from '@/composables/AAS/Referable';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useIDUtils } from '@/composables/IDUtils';
     import { useRequestHandling } from '@/composables/RequestHandling';
@@ -100,7 +100,7 @@
     // Composables
     const { getRequest } = useRequestHandling();
     const { smNotFound } = useSMRepositoryClient();
-    const { nameToDisplay } = useReferable();
+    const { nameToDisplay } = useReferableUtils();
     const { generateUUID } = useIDUtils();
 
     // Stores

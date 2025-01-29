@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { defineComponent } from 'vue';
 import { useRouter } from 'vue-router';
-import { useReferable } from '@/composables/AAS/Referable';
+import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
 import RequestHandling from '@/mixins/RequestHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useNavigationStore } from '@/store/NavigationStore';
@@ -17,7 +17,7 @@ export default defineComponent({
         const aasStore = useAASStore();
         const navigationStore = useNavigationStore();
         const router = useRouter();
-        const { checkIdShort } = useReferable();
+        const { checkIdShort } = useReferableUtils();
 
         return {
             aasStore, // AASStore Object

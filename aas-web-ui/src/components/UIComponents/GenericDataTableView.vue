@@ -47,7 +47,7 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import { useReferable } from '@/composables/AAS/Referable';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
 
@@ -72,7 +72,7 @@
         setup() {
             const theme = useTheme();
             const { cdDefinition } = useConceptDescriptionHandling();
-            const { descriptionToDisplay, nameToDisplay } = useReferable();
+            const { descriptionToDisplay, nameToDisplay } = useReferableUtils();
 
             return {
                 theme, // Theme Object

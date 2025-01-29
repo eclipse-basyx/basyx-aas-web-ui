@@ -130,7 +130,7 @@
     import { defineComponent } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
-    import { useReferable } from '@/composables/AAS/Referable';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -147,7 +147,7 @@
             const aasStore = useAASStore();
             const route = useRoute();
             const router = useRouter();
-            const { nameToDisplay } = useReferable();
+            const { nameToDisplay } = useReferableUtils();
 
             return {
                 theme, // Theme Object

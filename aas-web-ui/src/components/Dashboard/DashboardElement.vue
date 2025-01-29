@@ -63,7 +63,7 @@
 // TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import { useReferable } from '@/composables/AAS/Referable';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import DashboardHandling from '@/mixins/DashboardHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useEnvStore } from '@/store/EnvironmentStore';
@@ -77,7 +77,7 @@
 
         setup() {
             const envStore = useEnvStore();
-            const { nameToDisplay } = useReferable();
+            const { nameToDisplay } = useReferableUtils();
 
             return {
                 envStore, // EnvironmentStore Object
