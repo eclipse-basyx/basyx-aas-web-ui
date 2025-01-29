@@ -34,7 +34,7 @@
                 </template>
                 <!-- Update Value Button -->
                 <template #append-inner>
-                    <span class="text-subtitleText">{{ unitSuffixValue }}</span>
+                    <span class="text-subtitleText">{{ unitSuffix(numberValue) }}</span>
                     <v-btn
                         v-if="isFocused && !IsOperationVariable && isEditable"
                         size="small"
@@ -95,12 +95,7 @@
             return {
                 newNumberValue: '', // new value of the property
                 isFocused: false, // boolean to check if the input field is focused
-                unitSuffixValue: '',
             };
-        },
-
-        async created() {
-            await this.localUnitSuffix();
         },
 
         computed: {
@@ -191,10 +186,6 @@
                 }
                 this.isFocused = e;
                 if (!e) this.newNumberValue = this.numberValue.value; // set input to current value in the AAS if the input field is not focused
-            },
-
-            async localUnitSuffix() {
-                this.unitSuffixValue = await this.unitSuffix(this.numberValue);
             },
         },
     });
