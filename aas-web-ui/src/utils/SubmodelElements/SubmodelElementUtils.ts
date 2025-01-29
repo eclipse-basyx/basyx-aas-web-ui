@@ -1,5 +1,5 @@
 import { useIDUtils } from '@/composables/IDUtils';
-import { hasValue as fileHasValue, valueToDisplay as fileValueToDisplay } from '@/utils/SubmodelElements/FileUtils';
+import { useFileUtils } from '@/composables/SubmodelElements/FileUtils';
 import {
     hasValue as mlpHasValue,
     valueToDisplay as mlpValueToDisplay,
@@ -8,6 +8,7 @@ import { hasValue as propHasValue, valueToDisplay as propValueToDisplay } from '
 
 // Composables
 const { generateUUID } = useIDUtils();
+const { hasValue: fileHasValue, valueToDisplay: fileValueToDisplay } = useFileUtils();
 
 /**
  * Checks if the given Submodel Element (SME) has a valid value based on its type.

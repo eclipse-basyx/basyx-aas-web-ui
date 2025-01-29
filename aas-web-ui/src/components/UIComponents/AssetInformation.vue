@@ -8,93 +8,136 @@
                 :identification-title="'Global Asset ID'"></IdentificationElement>
             <v-divider
                 v-if="
-                    assetObject?.specificAssetIds &&
-                    Array.isArray(assetObject?.specificAssetIds) &&
-                    assetObject?.specificAssetIds.length > 0
+                    assetObject.specificAssetIds &&
+                    Array.isArray(assetObject.specificAssetIds) &&
+                    assetObject.specificAssetIds.length > 0
                 "></v-divider>
             <!-- Specific Asset IDs -->
             <SpecificAssetIds :asset-object="assetObject"></SpecificAssetIds>
-            <v-divider v-if="assetObject.defaultThumbnail" class="mt-2"></v-divider>
+            <v-divider v-if="defaultThumbnailUrl" class="mt-2"></v-divider>
             <v-img
-                v-if="assetObject.defaultThumbnail"
-                :src="assetObject.defaultThumbnail.path"
+                v-if="defaultThumbnailUrl"
+                :src="defaultThumbnailUrl"
                 max-width="100%"
                 :max-height="thumbnailMaxHeight"
                 contain
-                style="border-radius: 4px"></v-img>
+                class="mt-2 mx-2"></v-img>
+            <v-chip
+                v-if="defaultThumbnailCaption !== ''"
+                size="x-small"
+                color="primary"
+                style="position: absolute; bottom: 12px; right: 16px; opacity: 1">
+                {{ defaultThumbnailCaption }}
+            </v-chip>
         </v-list>
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
+<script lang="ts" setup>
+    import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+    import { useTechnicalData_v1_2Utils } from '@/composables/SubmodelTemplates/TechnicalData_v1_2Utils';
+    import { useAASStore } from '@/store/AASDataStore';
 
-    export default defineComponent({
-        name: 'AssetInformation',
-        props: ['assetObject'],
+    // Composables
+    const { getProductImageUrlByAasId: getProductImageUrlByAasIdFromSmTechnicalData } = useTechnicalData_v1_2Utils();
 
-        data() {
-            return {
-                thumbnailMaxHeight: 0,
-            };
-        },
-
-        computed: {
-            assetInfo() {
-                let assetInfo = {
-                    idShort: this.assetObject?.assetType ? this.assetObject?.assetType : 'Asset',
-                    id: this.assetObject.globalAssetId,
-                    modelType: 'Asset',
-                };
-                return assetInfo;
-            },
-
-            screenHeight() {
-                return document.documentElement.clientHeight;
-            },
-        },
-
-        mounted() {
-            window.addEventListener('resize', this.handleResize);
-            this.handleResize();
-        },
-
-        beforeUnmount() {
-            window.removeEventListener('resize', this.handleResize);
-        },
-
-        methods: {
-            handleResize() {
-                this.calcThumbnailMaxHeight();
-            },
-
-            calcThumbnailMaxHeight() {
-                const toolbarHeight = document.getElementsByClassName('v-toolbar')[0]?.clientHeight as number;
-                const footerHeight = document.getElementsByClassName('v-footer')[0]?.clientHeight as number;
-                const closeSidebarHeight = document.getElementById('closeAasList')?.clientHeight as number;
-                const titleAasListHeight = document.getElementById('titleAasList')?.clientHeight as number;
-                const assetInformationIdentificationHeight = document.getElementById('assetInformationIdentification')
-                    ?.clientHeight as number;
-
-                const availableHeight = (this.screenHeight -
-                    (toolbarHeight ? toolbarHeight : 0) -
-                    (titleAasListHeight ? titleAasListHeight : 0) -
-                    (assetInformationIdentificationHeight ? assetInformationIdentificationHeight : 0) -
-                    (closeSidebarHeight ? closeSidebarHeight : 0) -
-                    (footerHeight ? footerHeight : 0)) as number;
-
-                if (this.screenHeight < 600) {
-                    // xs display
-                    this.thumbnailMaxHeight = 1 * availableHeight;
-                } else if (this.screenHeight >= 600 && this.screenHeight < 1280) {
-                    // sm & md display
-                    this.thumbnailMaxHeight = 0.5 * availableHeight;
-                } else if (this.screenHeight >= 1280) {
-                    // lg & xl & xxl display
-                    this.thumbnailMaxHeight = 0.4 * availableHeight;
-                }
-            },
+    // Props
+    const props = defineProps({
+        assetObject: {
+            type: Object as any,
+            default: {} as any,
         },
     });
+
+    // Stores
+    const aasStore = useAASStore();
+
+    // Data
+    const thumbnailMaxHeight = ref(0 as number);
+    const defaultThumbnailUrl = ref('' as string);
+    const defaultThumbnailCaption = ref('' as string);
+
+    // Computed
+    const assetInfo = computed(() => {
+        return {
+            idShort: props.assetObject.assetType ? props.assetObject.assetType : 'Asset',
+            id: props.assetObject.globalAssetId,
+            modelType: 'Asset',
+        };
+    });
+    const selectedAas = computed(() => aasStore.getSelectedAAS);
+    const screenHeight = computed(() => {
+        return document.documentElement.clientHeight;
+    });
+
+    // Watcher
+    watch(
+        () => props.assetObject,
+        () => {
+            initialize();
+        }
+    );
+    onMounted(() => {
+        window.addEventListener('resize', handleResize);
+        initialize();
+        handleResize();
+    });
+    onBeforeUnmount(() => {
+        window.removeEventListener('resize', handleResize);
+    });
+
+    async function initialize(): Promise<void> {
+        if (!props.assetObject || Object.keys(props.assetObject).length === 0) {
+            defaultThumbnailUrl.value = '';
+            defaultThumbnailCaption.value = '';
+            return;
+        }
+        if (
+            props.assetObject.defaultThumbnail &&
+            Object.keys(props.assetObject.defaultThumbnail).length > 0 &&
+            props.assetObject.defaultThumbnail?.path &&
+            props.assetObject.defaultThumbnail?.path.trim() !== ''
+        ) {
+            defaultThumbnailUrl.value = props.assetObject.defaultThumbnail.path.trim();
+            defaultThumbnailCaption.value = '';
+        } else {
+            const productImageUrlFromSmTechnicalData = await getProductImageUrlByAasIdFromSmTechnicalData(
+                selectedAas.value.id
+            );
+            if (productImageUrlFromSmTechnicalData && productImageUrlFromSmTechnicalData.trim() !== '') {
+                defaultThumbnailUrl.value = productImageUrlFromSmTechnicalData.trim();
+                defaultThumbnailCaption.value = 'Product Image of SM TechnicalData';
+            } else {
+                defaultThumbnailUrl.value = '';
+                defaultThumbnailCaption.value = '';
+            }
+        }
+    }
+    function handleResize(): void {
+        calcThumbnailMaxHeight();
+    }
+    function calcThumbnailMaxHeight(): void {
+        const toolbarHeight = document.getElementsByClassName('v-toolbar')[0]?.clientHeight as number;
+        const footerHeight = document.getElementsByClassName('v-footer')[0]?.clientHeight as number;
+        const closeSidebarHeight = document.getElementById('closeAasList')?.clientHeight as number;
+        const titleAasListHeight = document.getElementById('titleAasList')?.clientHeight as number;
+        const assetInformationIdentificationHeight = document.getElementById('assetInformationIdentification')
+            ?.clientHeight as number;
+        const availableHeight = (screenHeight.value -
+            (toolbarHeight ? toolbarHeight : 0) -
+            (titleAasListHeight ? titleAasListHeight : 0) -
+            (assetInformationIdentificationHeight ? assetInformationIdentificationHeight : 0) -
+            (closeSidebarHeight ? closeSidebarHeight : 0) -
+            (footerHeight ? footerHeight : 0)) as number;
+        if (screenHeight.value < 600) {
+            // xs display
+            thumbnailMaxHeight.value = 1 * availableHeight;
+        } else if (screenHeight.value >= 600 && screenHeight.value < 1280) {
+            // sm & md display
+            thumbnailMaxHeight.value = 0.5 * availableHeight;
+        } else if (screenHeight.value >= 1280) {
+            // lg & xl & xxl display
+            thumbnailMaxHeight.value = 0.4 * availableHeight;
+        }
+    }
 </script>

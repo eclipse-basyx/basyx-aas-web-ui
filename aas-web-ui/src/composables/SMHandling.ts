@@ -4,10 +4,13 @@ import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionH
 import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
+import { extractId as extractIdFromReference } from '@/utils/ReferenceUtils';
+import { useAASRepositoryClient } from './Client/AASRepositoryClient';
 import { useIDUtils } from './IDUtils';
 
 export function useSMHandling() {
     // Composables
+    const { getSubmodelRefsById: getSubmodelRefsByIdFromRepo } = useAASRepositoryClient();
     const {
         fetchSmDescriptorById: fetchSmDescriptorByIdFromRegistry,
         fetchSmDescriptorList: fetchSmDescriptorListFromRegistry,
@@ -325,6 +328,46 @@ export function useSMHandling() {
         return parent;
     }
 
+    /**
+     * Retrieves a Submodel (SM) of an Asset Administration Shell (AAS) descriptor.
+     *
+     * @async
+     * @param {string} aasId - The ID of the AAS to retrieve its SM.
+     * @param {string} semanticId - The semantic ID of the SM.
+     * @returns {string} A promise that resolves to a SM.
+     */
+    async function getSmIdOfAasIdBySemanticId(aasId: string, semanticId: string): Promise<string> {
+        const failResponse = '';
+
+        if (!aasId || !semanticId) return failResponse;
+
+        aasId = aasId.trim();
+        semanticId = semanticId.trim();
+
+        if (aasId === '' || semanticId === '') return failResponse;
+
+        const submodelRefs = await getSubmodelRefsByIdFromRepo(aasId);
+
+        for (const submodelRef of submodelRefs) {
+            const smId = extractIdFromReference(submodelRef, 'Submodel');
+            const smDescriptor = await fetchSmDescriptor(smId);
+            if (
+                smDescriptor &&
+                Object.keys(smDescriptor).length > 0 &&
+                smDescriptor?.semanticId?.keys &&
+                Array.isArray(smDescriptor.semanticId.keys) &&
+                smDescriptor.semanticId.keys.length > 0
+            ) {
+                const semanticIds = smDescriptor.semanticId.keys.map((key: any) => key.value);
+                if (semanticIds.includes(semanticId)) {
+                    return smId;
+                }
+            }
+        }
+
+        return failResponse;
+    }
+
     return {
         fetchAndDispatchSm,
         fetchAndDispatchSmById,
@@ -335,5 +378,6 @@ export function useSMHandling() {
         fetchSmDescriptorList,
         fetchSmDescriptor,
         calculateSMEPathes,
+        getSmIdOfAasIdBySemanticId,
     };
 }
