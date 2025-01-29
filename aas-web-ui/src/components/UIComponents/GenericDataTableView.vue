@@ -47,6 +47,7 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
+    import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
 
@@ -70,11 +71,13 @@
 
         setup() {
             const theme = useTheme();
+            const { cdDefinition } = useConceptDescriptionHandling();
 
             return {
                 theme, // Theme Object
-                descriptionToDisplay,
+                cdDefinition,
                 nameToDisplay,
+                descriptionToDisplay,
             };
         },
     });

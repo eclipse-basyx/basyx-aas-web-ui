@@ -17,7 +17,7 @@
                             {{ nameToDisplay(selectedAAS) }}
                         </span>
                     </div>
-                    <!-- TODO: Add Searchfield https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/148 -->
+                    <!-- TODO: Add Searchfield - https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/148 -->
                 </v-card-title>
                 <v-divider></v-divider>
             </template>
@@ -190,6 +190,7 @@
             let path = smRegistryURL + '/' + base64Encode(submodelId);
             let context = 'retrieving Submodel Endpoint';
             let disableMessage = false;
+            // TODO Replace by using SMHandling
             return getRequest(path, context, disableMessage).then((response: any) => {
                 if (response.success) {
                     if (response.data?.id) {

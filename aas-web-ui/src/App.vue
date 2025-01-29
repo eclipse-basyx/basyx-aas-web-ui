@@ -76,11 +76,19 @@
 
         // Extract the aas and path Queries from the URL
         const searchParams = new URL(window.location.href).searchParams;
-        const aasEndpoint = searchParams.get('aas');
-        const submodelElementPath = searchParams.get('path');
+        const aasEndpoint = (searchParams.get('aas') || '').trim();
+        const submodelElementPath = (searchParams.get('path') || '').trim();
+
+        let aas = {} as any;
+        if (aasEndpoint && aasEndpoint !== '') {
+            aas = await fetchAndDispatchAas(aasEndpoint);
+            if (submodelElementPath && submodelElementPath !== '') {
+                await fetchAndDispatchSme(submodelElementPath, true);
+            }
+        }
 
         // Check if single AAS mode is on and no aas query is set to either redirect or show 404
-        if (envStore.getSingleAas && (aasEndpoint === null || aasEndpoint === undefined || aasEndpoint.trim() === '')) {
+        if (envStore.getSingleAas && (!aasEndpoint || aasEndpoint === '' || !aas || Object.keys(aas).length === 0)) {
             if (
                 !routesStayOnPages.includes(currentRouteName.value) &&
                 !currentRoutePath.value.startsWith('/modules/')
@@ -101,18 +109,11 @@
         } else {
             handleDesktopView(aasEndpoint, submodelElementPath);
         }
-
-        if (aasEndpoint) {
-            await fetchAndDispatchAas(aasEndpoint);
-        }
-
-        if (aasEndpoint && submodelElementPath) {
-            await fetchAndDispatchSme(submodelElementPath, true);
-        }
     });
 
     // Handle mobile view routing logic
-    function handleMobileView(aasEndpoint: string | null, submodelElementPath: string | null) {
+    // TODO Move to route guard - https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/225
+    function handleMobileView(aasEndpoint: string | null, submodelElementPath: string | null): void {
         if (currentRouteName.value && routesToAASList.includes(currentRouteName.value)) {
             // Redirect to 'AASList' with existing query parameters
             router.push({ name: 'AASList', query: route.query });
@@ -132,7 +133,8 @@
     }
 
     // Handle desktop view routing logic
-    function handleDesktopView(aasEndpoint: string | null, submodelElementPath: string | null) {
+    // TODO Move to route guard - https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/225
+    function handleDesktopView(aasEndpoint: string | null, submodelElementPath: string | null): void {
         const query: any = {};
         if (aasEndpoint) query.aas = aasEndpoint;
         if (submodelElementPath) query.path = submodelElementPath;
