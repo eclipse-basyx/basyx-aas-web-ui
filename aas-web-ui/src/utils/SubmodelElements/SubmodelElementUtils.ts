@@ -7,7 +7,7 @@ import {
 import { hasValue as propHasValue, valueToDisplay as propValueToDisplay } from '@/utils/SubmodelElements/PropertyUtils';
 
 // Composables
-const { generateUUIDV4 } = useIDUtils();
+const { generateUUID } = useIDUtils();
 
 /**
  * Checks if the given Submodel Element (SME) has a valid value based on its type.
@@ -114,7 +114,7 @@ export async function calculateSubmodelElementPaths(parent: any, startPath: stri
     parent.path = startPath;
     // Just set if it is not available (e.g. for a Submodel it is available!)
     if (!parent?.id) {
-        parent.id = generateUUIDV4();
+        parent.id = generateUUID();
     }
 
     if (Array.isArray(parent?.submodelElements) && parent?.submodelElements.length > 0) {

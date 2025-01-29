@@ -1,6 +1,5 @@
 import md5 from 'md5';
 import { v4 as uuidv4 } from 'uuid';
-// TODO Separate IDUtils and IDComposable
 import { useEnvStore } from '@/store/EnvironmentStore';
 
 export function useIDUtils() {
@@ -15,7 +14,7 @@ export function useIDUtils() {
      *
      * @returns {string} An UUID v4.
      */
-    function generateUUIDV4(): string {
+    function generateUUID(): string {
         return uuidv4();
     }
 
@@ -109,5 +108,5 @@ export function useIDUtils() {
         return `${segment()}_${segment()}_${segment()}_${segment()}`;
     }
 
-    return { uuidV4Regex, generateUUIDV4, generateUUIDFromString, generateIri, customIdRegex, generateCustomId };
+    return { uuidV4Regex, generateUUID, generateUUIDFromString, generateIri, customIdRegex, generateCustomId };
 }
