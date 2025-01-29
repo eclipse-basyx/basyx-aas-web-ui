@@ -35,10 +35,10 @@
     import { defineComponent } from 'vue';
     import { useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
+    import { useReferable } from '@/composables/AAS/Referable';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
-    import { descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
 
     declare global {
         interface Window {
@@ -59,6 +59,7 @@
             const theme = useTheme();
             const aasStore = useAASStore();
             const router = useRouter();
+            const { descriptionToDisplay, nameToDisplay } = useReferable();
 
             return {
                 theme, // Theme Object
@@ -272,13 +273,13 @@
                     graphDefinition +=
                         parentNode.idShort +
                         '(' +
-                        nameToDisplay(parentNode) +
+                        this.nameToDisplay(parentNode) +
                         ') -->|' +
                         relationship +
                         '| ' +
                         child.idShort +
                         '(' +
-                        nameToDisplay(child) +
+                        this.nameToDisplay(child) +
                         ')\n'; // add the relationship to the graphDefinition
                     callBacks += 'click ' + child.idShort + ' call callback(' + child.globalAssetId + ')\n'; // add the callback to the callBacks
                     if (child.statements) {

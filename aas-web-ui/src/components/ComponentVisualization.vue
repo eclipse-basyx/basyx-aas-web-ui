@@ -105,10 +105,10 @@
     import type { RouteRecordNameGeneric } from 'vue-router';
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
+    import { useReferable } from '@/composables/AAS/Referable';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { nameToDisplay } from '@/utils/ReferableUtils';
     import { checkSemanticId } from '@/utils/SemanticIdUtils';
 
     // Vue Router
@@ -119,6 +119,9 @@
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
     const envStore = useEnvStore();
+
+    // Composables
+    const { nameToDisplay } = useReferable();
 
     // Data
     const submodelElementData = ref({} as any);

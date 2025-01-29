@@ -1113,11 +1113,11 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
+    import { useReferable } from '@/composables/AAS/Referable';
     import { useIDUtils } from '@/composables/IDUtils';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { checkIdShort } from '@/utils/ReferableUtils';
 
     export default defineComponent({
         name: 'HTWFuehrungskomponente',
@@ -1129,6 +1129,7 @@
             const theme = useTheme();
             const navigationStore = useNavigationStore();
             const { generateUUIDFromString } = useIDUtils();
+            const { checkIdShort } = useReferable();
 
             return {
                 theme, // Theme Object

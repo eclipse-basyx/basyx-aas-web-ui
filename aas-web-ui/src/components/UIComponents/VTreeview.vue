@@ -130,11 +130,11 @@
     import { defineComponent } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
+    import { useReferable } from '@/composables/AAS/Referable';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
-    import { nameToDisplay } from '@/utils/ReferableUtils';
 
     export default defineComponent({
         name: 'VTreeview',
@@ -147,6 +147,7 @@
             const aasStore = useAASStore();
             const route = useRoute();
             const router = useRouter();
+            const { nameToDisplay } = useReferable();
 
             return {
                 theme, // Theme Object

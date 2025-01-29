@@ -98,10 +98,10 @@
 // TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent, Ref, ref } from 'vue';
+    import { useReferable } from '@/composables/AAS/Referable';
     import { useClipboardUtil } from '@/composables/ClipboardUtil';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { nameToDisplay } from '@/utils/ReferableUtils';
 
     export default defineComponent({
         name: 'IdentificationElement',
@@ -127,6 +127,7 @@
 
         setup() {
             const navigationStore = useNavigationStore();
+            const { nameToDisplay } = useReferable();
 
             const { copyToClipboard } = useClipboardUtil();
 

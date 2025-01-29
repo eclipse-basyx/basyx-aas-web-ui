@@ -1,12 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
 import { defineComponent } from 'vue';
 import { useRouter } from 'vue-router';
+import { useReferable } from '@/composables/AAS/Referable';
 import RequestHandling from '@/mixins/RequestHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { formatDate } from '@/utils/DateUtils';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
-import { checkIdShort } from '@/utils/ReferableUtils';
 import { getEquivalentEclassSemanticIds, getEquivalentIriSemanticIds } from '@/utils/SemanticIdUtils';
 
 export default defineComponent({
@@ -17,11 +17,13 @@ export default defineComponent({
         const aasStore = useAASStore();
         const navigationStore = useNavigationStore();
         const router = useRouter();
+        const { checkIdShort } = useReferable();
 
         return {
             aasStore, // AASStore Object
             navigationStore, // NavigationStore Object
             router, // Router Object
+            checkIdShort,
         };
     },
 
@@ -494,7 +496,7 @@ export default defineComponent({
                                     ) {
                                         const sml = smRepoResponse.data;
                                         const index = sml.value.findIndex((sme: any) =>
-                                            checkIdShort(sme, smeKey.value, false, true)
+                                            this.checkIdShort(sme, smeKey.value, false, true)
                                         );
                                         if (index !== -1) {
                                             smRepoUrl += encodeURIComponent('[') + index + encodeURIComponent(']');
@@ -522,7 +524,7 @@ export default defineComponent({
                                     ) {
                                         const smc = smRepoResponse.data;
                                         const sme = smc.value.find((sme: any) =>
-                                            checkIdShort(sme, smeKey.value, false, true)
+                                            this.checkIdShort(sme, smeKey.value, false, true)
                                         );
                                         if (sme && Object.keys(sme).length > 0) {
                                             smRepoUrl += '.' + smeKey.value;

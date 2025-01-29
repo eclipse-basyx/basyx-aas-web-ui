@@ -16,9 +16,9 @@
 
 <script lang="ts" setup>
     import { computed, defineOptions, onMounted, ref } from 'vue';
+    import { useReferable } from '@/composables/AAS/Referable';
     import { useSMHandling } from '@/composables/SMHandling';
     import { useAASStore } from '@/store/AASDataStore';
-    import { nameToDisplay } from '@/utils/ReferableUtils';
 
     defineOptions({
         name: 'HelloWorldPlugin',
@@ -30,6 +30,7 @@
 
     // Composables
     const { calculateSMEPathes } = useSMHandling();
+    const { nameToDisplay } = useReferable();
 
     const props = defineProps({
         submodelElementData: {

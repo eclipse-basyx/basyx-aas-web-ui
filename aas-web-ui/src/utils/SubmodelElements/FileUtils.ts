@@ -4,7 +4,7 @@ import { useRequestHandling } from '@/composables/RequestHandling';
 
 // Composables
 const { getRequest } = useRequestHandling();
-const { generateUUID } = useIDUtils();
+const { generateUUIDV4 } = useIDUtils();
 
 /**
  * Checks if the given file object is a valid File model with respect to AAS metamodel specs.
@@ -145,7 +145,7 @@ export function downloadFile(file: any) {
 
                 // Fallback for filename
                 if ((!filename || filename.trim() === '' || filename.startsWith('.')) && response.type) {
-                    filename = generateUUID() + mime.getExtension(response.type);
+                    filename = generateUUIDV4() + mime.getExtension(response.type);
                 }
 
                 const Base64File = URL.createObjectURL(response.data as Blob);
