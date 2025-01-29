@@ -13,25 +13,25 @@ export function useConceptDescriptionHandling() {
      * If not, it attempts to fetch them. Then, it looks through the concept descriptions
      * to find and return the first found unit specification from the embedded data specifications.
      *
-     * @async
      * @param {object} sme - The SME object containing concept descriptions.
      * @param {Array} [sme.conceptDescriptions] - Optional concept descriptions array.
      * @returns {Promise<string>} A promise that resolves to the unit suffix if found, otherwise an empty string.
      */
-    async function unitSuffix(sme: any): Promise<string> {
+    function unitSuffix(sme: any): string {
         const failResponse = '';
 
         if (!sme || Object.keys(sme).length === 0) return failResponse;
 
         // Fetch CDs if not available
-        if (
-            !sme.conceptDescriptions ||
-            !Array.isArray(sme.conceptDescriptions) ||
-            sme.conceptDescriptions.length === 0
-        ) {
-            const cds = await fetchCds(sme);
-            if (cds && Array.isArray(cds) && cds.length > 0) sme.conceptDescriptions = cds;
-        }
+        // Note This leads to an async unitSuffix function. This has a strong influence on the usage
+        // if (
+        //     !sme.conceptDescriptions ||
+        //     !Array.isArray(sme.conceptDescriptions) ||
+        //     sme.conceptDescriptions.length === 0
+        // ) {
+        //     const cds = await fetchCds(sme);
+        //     if (cds && Array.isArray(cds) && cds.length > 0) sme.conceptDescriptions = cds;
+        // }
 
         if (
             !sme.conceptDescriptions ||
