@@ -83,6 +83,7 @@
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useIDUtils } from '@/composables/IDUtils';
     import { useRequestHandling } from '@/composables/RequestHandling';
@@ -92,7 +93,6 @@
     import { formatDate } from '@/utils/DateUtils';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
     import { base64Encode } from '@/utils/EncodeDecodeUtils';
-    import { nameToDisplay } from '@/utils/ReferableUtils';
 
     // Vue Router
     const route = useRoute();
@@ -100,6 +100,7 @@
     // Composables
     const { smNotFound } = useSMRepositoryClient();
     const { getRequest } = useRequestHandling();
+    const { nameToDisplay } = useReferableUtils();
     const { generateUUID } = useIDUtils();
 
     // Stores

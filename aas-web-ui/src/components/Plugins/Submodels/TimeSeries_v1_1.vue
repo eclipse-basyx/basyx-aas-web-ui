@@ -199,12 +199,12 @@
     import { defineComponent } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import DashboardHandling from '@/mixins/DashboardHandling';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
-    import { checkIdShort, descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
 
     export default defineComponent({
         name: 'TimeSeriesData',
@@ -218,6 +218,7 @@
             const aasStore = useAASStore();
             const envStore = useEnvStore();
             const route = useRoute();
+            const { checkIdShort, descriptionToDisplay, nameToDisplay } = useReferableUtils();
 
             return {
                 theme, // Theme Object

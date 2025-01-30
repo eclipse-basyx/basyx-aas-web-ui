@@ -1,5 +1,11 @@
+import { createPinia, setActivePinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
-import { checkIdShort, descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
+import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
+
+const pinia = createPinia();
+setActivePinia(pinia); // Activate Pinia for the test environment
+
+const { checkIdShort, descriptionToDisplay, nameToDisplay } = useReferableUtils();
 
 describe("ReferableUtils.ts; Tests for 'nameToDisplay()'", () => {
     // Define test data for nameToDisplay()

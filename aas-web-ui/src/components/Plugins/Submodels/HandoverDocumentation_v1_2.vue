@@ -272,11 +272,11 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/SMHandling';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
-    import { checkIdShort, descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
     import { checkSemanticId } from '@/utils/SemanticIdUtils';
 
     export default defineComponent({
@@ -289,6 +289,7 @@
             const theme = useTheme();
             const aasStore = useAASStore();
             const { calculateSMEPathes } = useSMHandling();
+            const { checkIdShort, descriptionToDisplay, nameToDisplay } = useReferableUtils();
 
             return {
                 theme, // Theme Object
@@ -331,7 +332,11 @@
                     return;
                 }
                 let submodelElementData = { ...this.submodelElementData };
-                this.handoverDocuData = await this.calculateSMEPathes(submodelElementData, this.SelectedNode.path);
+                this.handoverDocuData = await this.calculateSMEPathes(
+                    submodelElementData,
+                    this.SelectedNode.path,
+                    true
+                );
 
                 // create array of documents
                 let documents = this.handoverDocuData.submodelElements.filter((element: any) => {

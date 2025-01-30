@@ -210,11 +210,11 @@
     import { latLng } from 'leaflet';
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/SMHandling';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
-    import { checkIdShort, descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
 
     export default defineComponent({
         name: 'DigitalNameplate',
@@ -232,6 +232,7 @@
             const theme = useTheme();
             const aasStore = useAASStore();
             const { calculateSMEPathes } = useSMHandling();
+            const { checkIdShort, descriptionToDisplay, nameToDisplay } = useReferableUtils();
 
             return {
                 theme, // Theme Object
@@ -284,7 +285,11 @@
                 }
 
                 let digitalNameplateData = { ...this.submodelElementData }; // create local copy of the Nameplate Object
-                this.digitalNameplateData = await this.calculateSMEPathes(digitalNameplateData, this.SelectedNode.path);
+                this.digitalNameplateData = await this.calculateSMEPathes(
+                    digitalNameplateData,
+                    this.SelectedNode.path,
+                    true
+                );
 
                 // console.log('Digital Nameplate Data:', this.digitalNameplateData);
                 this.extractProductProperties(digitalNameplateData); // Extract the Product Properties

@@ -63,10 +63,10 @@
 // TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent } from 'vue';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import DashboardHandling from '@/mixins/DashboardHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useEnvStore } from '@/store/EnvironmentStore';
-    import { nameToDisplay } from '@/utils/ReferableUtils';
     import { checkSemanticId } from '@/utils/SemanticIdUtils';
 
     export default defineComponent({
@@ -77,6 +77,7 @@
 
         setup() {
             const envStore = useEnvStore();
+            const { nameToDisplay } = useReferableUtils();
 
             return {
                 envStore, // EnvironmentStore Object

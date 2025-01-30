@@ -77,6 +77,7 @@
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -85,7 +86,6 @@
     import { formatDate } from '@/utils/DateUtils';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
     import { base64Encode } from '@/utils/EncodeDecodeUtils';
-    import { nameToDisplay } from '@/utils/ReferableUtils';
 
     // Vue Router
     const route = useRoute();
@@ -94,6 +94,7 @@
     // Composables
     const { getRequest } = useRequestHandling();
     const { smNotFound } = useSMRepositoryClient();
+    const { nameToDisplay } = useReferableUtils();
 
     // Stores
     const navigationStore = useNavigationStore();

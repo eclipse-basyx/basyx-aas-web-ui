@@ -20,7 +20,7 @@
                     <v-text-field v-model="range[1]" hide-details single-line variant="outlined" style="width: 90px" density="compact" readonly></v-text-field>
                 </template> -->
                 <template #thumb-label="{ modelValue }">
-                    {{ modelValue + unitSuffixValue }}
+                    <span style="white-space: nowrap">{{ modelValue + ' ' + unitSuffix(rangeObject) }}</span>
                 </template>
             </v-range-slider>
         </v-card>
@@ -53,16 +53,6 @@
                 aasStore, // AASStore Object
                 unitSuffix,
             };
-        },
-
-        data() {
-            return {
-                unitSuffixValue: '',
-            };
-        },
-
-        async created() {
-            await this.localUnitSuffix();
         },
 
         computed: {
@@ -99,13 +89,6 @@
                     );
                 }
                 return 0;
-            },
-        },
-
-        methods: {
-            // get the unit suffix of the range
-            async localUnitSuffix() {
-                this.unitSuffixValue = await this.unitSuffix(this.rangeObject);
             },
         },
     });
