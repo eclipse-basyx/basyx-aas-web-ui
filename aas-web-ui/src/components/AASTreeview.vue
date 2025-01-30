@@ -98,8 +98,8 @@
     const route = useRoute();
 
     // Composables
-    const { getRequest } = useRequestHandling();
     const { smNotFound } = useSMRepositoryClient();
+    const { getRequest } = useRequestHandling();
     const { nameToDisplay } = useReferableUtils();
     const { generateUUID } = useIDUtils();
 

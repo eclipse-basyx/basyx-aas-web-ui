@@ -285,7 +285,11 @@
                 }
 
                 let digitalNameplateData = { ...this.submodelElementData }; // create local copy of the Nameplate Object
-                this.digitalNameplateData = await this.calculateSMEPathes(digitalNameplateData, this.SelectedNode.path);
+                this.digitalNameplateData = await this.calculateSMEPathes(
+                    digitalNameplateData,
+                    this.SelectedNode.path,
+                    true
+                );
 
                 // console.log('Digital Nameplate Data:', this.digitalNameplateData);
                 this.extractProductProperties(digitalNameplateData); // Extract the Product Properties

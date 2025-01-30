@@ -151,7 +151,8 @@
                 let submodelElementData = { ...this.submodelElementData };
                 this.contactInformationData = await this.calculateSMEPathes(
                     submodelElementData,
-                    this.SelectedNode.path
+                    this.SelectedNode.path,
+                    true
                 );
 
                 // create array of contacts

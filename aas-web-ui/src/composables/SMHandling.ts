@@ -270,6 +270,7 @@ export function useSMHandling() {
      * The function modifies the `parent` object by:
      * - Setting the `path` property to the constructed string based on the `startPath`.
      * - Assigning a unique `id` to the `parent` using `generateUUID()`.
+     * - Setting the `conceptDescriptions` property array by fetching Concept Descriptions (CDs) from repository
      *
      * The function handles different types of parent structures:
      * - For **Submodel**, it iterates over `submodelElements` and appends their `idShort` to the path.
@@ -279,16 +280,33 @@ export function useSMHandling() {
      *
      * @param {any} parent - The parent Submodel or SubmodelElement object to process, which will have its `path` set and potentially modified.
      * @param {string} startPath - The base path string to build upon recursively.
+     * @param {boolean} withConceptDescriptions - Flag to specify if `conceptDescriptions` property array should be set with fetched CDs
      * @returns {Promise<any>} A promise that resolves with the modified `parent` object, including calculated paths.
      */
-    async function calculateSMEPathes(parent: any, startPath: string): Promise<any> {
+    async function calculateSMEPathes(
+        parent: any,
+        startPath: string,
+        withConceptDescriptions: boolean = false
+    ): Promise<any> {
         parent.path = startPath;
         parent.id = generateUUID();
-        // parent.conceptDescriptions = await this.getConceptDescriptions(parent);
+
+        if (
+            withConceptDescriptions &&
+            (!parent.conceptDescriptions ||
+                !Array.isArray(parent.conceptDescriptions) ||
+                parent.conceptDescriptions.length === 1)
+        ) {
+            parent.conceptDescriptions = await fetchCds(parent);
+        }
 
         if (parent.submodelElements && parent.submodelElements.length > 0) {
             for (const element of parent.submodelElements) {
-                await calculateSMEPathes(element, startPath + '/submodel-elements/' + element.idShort);
+                await calculateSMEPathes(
+                    element,
+                    startPath + '/submodel-elements/' + element.idShort,
+                    withConceptDescriptions
+                );
             }
         } else if (
             parent.value &&
@@ -297,7 +315,7 @@ export function useSMHandling() {
             parent.modelType == 'SubmodelElementCollection'
         ) {
             for (const element of parent.value) {
-                await calculateSMEPathes(element, startPath + '.' + element.idShort);
+                await calculateSMEPathes(element, startPath + '.' + element.idShort, withConceptDescriptions);
             }
         } else if (
             parent.value &&
@@ -308,7 +326,8 @@ export function useSMHandling() {
             for (const [index, element] of parent.value.entries()) {
                 await calculateSMEPathes(
                     element,
-                    startPath + encodeURIComponent('[') + index + encodeURIComponent(']')
+                    startPath + encodeURIComponent('[') + index + encodeURIComponent(']'),
+                    withConceptDescriptions
                 );
             }
         } else if (
@@ -318,7 +337,7 @@ export function useSMHandling() {
             parent.modelType == 'Entity'
         ) {
             for (const element of parent.value) {
-                await calculateSMEPathes(element, startPath + '.' + element.idShort);
+                await calculateSMEPathes(element, startPath + '.' + element.idShort, withConceptDescriptions);
             }
         }
 

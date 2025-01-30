@@ -332,7 +332,11 @@
                     return;
                 }
                 let submodelElementData = { ...this.submodelElementData };
-                this.handoverDocuData = await this.calculateSMEPathes(submodelElementData, this.SelectedNode.path);
+                this.handoverDocuData = await this.calculateSMEPathes(
+                    submodelElementData,
+                    this.SelectedNode.path,
+                    true
+                );
 
                 // create array of documents
                 let documents = this.handoverDocuData.submodelElements.filter((element: any) => {

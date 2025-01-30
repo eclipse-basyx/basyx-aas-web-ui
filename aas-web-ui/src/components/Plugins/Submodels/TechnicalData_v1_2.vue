@@ -319,7 +319,7 @@
                 }
 
                 let technicalData = { ...this.submodelElementData }; // create local copy of the Nameplate Object
-                this.technicalData = await this.calculateSMEPathes(technicalData, this.SelectedNode.path); // Set the DigitalNameplate Data
+                this.technicalData = await this.calculateSMEPathes(technicalData, this.SelectedNode.path, true); // Set the DigitalNameplate Data
                 this.extractGeneralProperties(technicalData);
                 this.extractProductClassifications(technicalData);
                 this.extractTechnicalProperties(technicalData);

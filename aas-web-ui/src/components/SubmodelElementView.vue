@@ -205,7 +205,7 @@
         () => aasRegistryServerURL.value,
         async () => {
             if (!aasRegistryServerURL.value) {
-                await initialize();
+                initialize();
             }
         }
     );
@@ -214,7 +214,7 @@
         () => submodelRegistryServerURL.value,
         async () => {
             if (!submodelRegistryServerURL.value) {
-                await initialize();
+                initialize();
             }
         }
     );
@@ -233,7 +233,7 @@
                 }
             }
 
-            await initialize();
+            initialize(true);
         }
     );
 
@@ -251,7 +251,7 @@
                 }
             }
 
-            await initialize();
+            initialize(true);
         },
         { deep: true }
     );
@@ -262,12 +262,12 @@
             window.clearInterval(autoSyncInterval.value); // clear old interval
             if (autoSyncValue.state) {
                 if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
-                    await updateLocalData(await fetchSme(selectedNode.value.path, true));
+                    updateLocalData(await fetchSme(selectedNode.value.path, true));
 
                     // create new interval
                     autoSyncInterval.value = window.setInterval(async () => {
                         // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
-                        await updateLocalData(await fetchSme(selectedNode.value.path, true));
+                        updateLocalData(await fetchSme(selectedNode.value.path, true));
                     }, autoSyncValue.interval);
                 }
             }
@@ -281,12 +281,12 @@
                 // create new interval
                 autoSyncInterval.value = window.setInterval(async () => {
                     // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
-                    await updateLocalData(await fetchSme(selectedNode.value.path, true));
+                    updateLocalData(await fetchSme(selectedNode.value.path, true));
                 }, autoSync.value.interval);
             }
         }
 
-        // await initialize(); // Not needed, cause this component does not stand alone
+        initialize(true); // Not needed, cause this component does not stand alone
     });
 
     onBeforeUnmount(() => {
@@ -305,7 +305,7 @@
             return;
         }
 
-        await updateLocalData(selectedNode.value, withConceptDescriptions);
+        updateLocalData(selectedNode.value, withConceptDescriptions);
     }
 
     /**
@@ -333,7 +333,9 @@
                 !Array.isArray(conceptDescriptions.value) ||
                 conceptDescriptions.value.length === 0
             ) {
-                conceptDescriptions.value = await fetchCds(submodelElementData.value);
+                const fetchedConceptDescriptions = await fetchCds(submodelElementData.value);
+                submodelElementData.value.conceptDescriptions = [...fetchedConceptDescriptions];
+                conceptDescriptions.value = [...fetchedConceptDescriptions];
                 return;
             }
 

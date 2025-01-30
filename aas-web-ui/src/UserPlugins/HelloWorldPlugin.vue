@@ -59,6 +59,7 @@
         const copiedSubmodelData = { ...props.submodelElementData };
 
         // Calculate the pathes of the child elements and save the data in the mySubmodelData variable
-        submodelData.value = await calculateSMEPathes(copiedSubmodelData, selectedNode.value.path);
+        // Set last parameter `withConceptDescriptions` to true, if Concept Descriptions are needed in the plugin
+        submodelData.value = await calculateSMEPathes(copiedSubmodelData, selectedNode.value.path, false);
     }
 </script>
