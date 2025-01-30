@@ -6,6 +6,8 @@ import type {
     RouteRecordRaw,
 } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
+import { useDisplay } from 'vuetify';
+// import { createRouter, createWebHistory, RouteRecordNameGeneric } from 'vue-router';
 import AASList from '@/components/AppNavigation/AASList.vue';
 import ComponentVisualization from '@/components/ComponentVisualization.vue';
 import SubmodelList from '@/components/SubmodelList.vue';
@@ -20,6 +22,7 @@ import Dashboard from '@/pages/Dashboard.vue';
 import DashboardGroup from '@/pages/DashboardGroup.vue';
 import Page404 from '@/pages/Page404.vue';
 import SubmodelViewer from '@/pages/SubmodelViewer.vue';
+// import { useEnvStore } from '@/store/EnvironmentStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
@@ -76,6 +79,7 @@ const generateModuleRoutes = async (): Promise<Array<RouteRecordRaw>> => {
         const routePath = `/modules/${moduleName.toLowerCase()}`;
 
         const isVisibleModule = moduleComponent.default?.isVisibleModule ?? true;
+        const isMobileModule = moduleComponent.default?.isMobileModule ?? false;
         const isOnlyVisibleWithSelectedAas = moduleComponent.default?.isOnlyVisibleWithSelectedAas ?? false;
         const isOnlyVisibleWithSelectedNode = moduleComponent.default?.isOnlyVisibleWithSelectedNode ?? false;
         let preserveRouteQuery = moduleComponent.default?.preserveRouteQuery ?? false;
@@ -89,6 +93,7 @@ const generateModuleRoutes = async (): Promise<Array<RouteRecordRaw>> => {
             meta: {
                 name: moduleName,
                 subtitle: 'Module',
+                isMobileModule: isMobileModule,
                 isVisibleModule: isVisibleModule,
                 isOnlyVisibleWithSelectedAas: isOnlyVisibleWithSelectedAas,
                 isOnlyVisibleWithSelectedNode: isOnlyVisibleWithSelectedNode,
@@ -112,6 +117,8 @@ export async function createAppRouter(): Promise<Router> {
 
     // Stores
     const navigationStore = useNavigationStore();
+    // const envStore = useEnvStore();
+
     // Connect to (BaSyx) components, otherwise IDs redirecting not possible
     navigationStore.connectComponents();
 
@@ -121,7 +128,21 @@ export async function createAppRouter(): Promise<Router> {
     const { getSmEndpointById } = useSMHandling();
     const { fetchAndDispatchSme } = useSMEHandling();
 
+    // Vuetify
+    const { mobile, platform } = useDisplay();
+
     // Data
+    // const routesForMobile: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList', 'Visualization'];
+    // const routesForDesktop: Array<RouteRecordNameGeneric> = [
+    //     'AASViewer',
+    //     'SubmodelViewer',
+    //     'AASEditor',
+    //     'Visualization',
+    // ];
+    // const routesStayOnPages: Array<RouteRecordNameGeneric> = ['About', 'NotFound404'];
+    // const routesDesktopToAASViewer: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList'];
+    // const routesMobileToAASList: Array<RouteRecordNameGeneric> = ['AASViewer', 'AASEditor', 'SubmodelViewer'];
+    // const routesToVisualization: Array<RouteRecordNameGeneric> = ['ComponentVisualization'];
     const possibleGloBalAssetIdQueryParameter = ['globalAssetId', 'globalassedid'];
     const possibleAasIdQueryParameter = ['aasId', 'aasid'];
     const possibleSmIdQueryParameter = ['smId', 'smid'];
@@ -130,6 +151,26 @@ export async function createAppRouter(): Promise<Router> {
         ...possibleAasIdQueryParameter,
         ...possibleSmIdQueryParameter,
     ];
+
+    // Computed Properties
+    // const allowEditing = computed(() => envStore.getAllowEditing); // Check if the current environment allows showing the AAS Editor
+    const showMobileVersion = computed(() => {
+        return (
+            mobile.value ||
+            // include IPad as mobile device
+            (platform.value.mac && platform.value.touch) ||
+            // IOS and Android are mobile platforms
+            platform.value.ios ||
+            platform.value.android
+        );
+    });
+    const searchParams = computed(() => new URL(window.location.href).searchParams);
+    const aasEndpoint = computed(() => (searchParams.value.get('aas') || '').trim());
+    const smePath = computed(() => (searchParams.value.get('path') || '').trim());
+
+    // Dispatch the mobile status to the store
+    navigationStore.dispatchIsMobile(showMobileVersion.value);
+    navigationStore.dispatchPlatform(platform.value);
 
     // Save the generated routes in the navigation store
     navigationStore.dispatchModuleRoutes(moduleRoutes);
@@ -140,10 +181,10 @@ export async function createAppRouter(): Promise<Router> {
     });
 
     router.beforeEach(async (to, from, next) => {
+        console.warn('from', from);
+        console.warn('to', to);
         // Handle redirection of `globalAssetId`, `aasId` and `smId`
         if (await idRedirectHandled(to, next)) return;
-
-        // TODO Move route handling (handleMobileView(), handleDesktopView()) from App.vue to this route guard - https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/225
 
         // Same route
         if (from.name && from.name === to.name) {
@@ -192,9 +233,66 @@ export async function createAppRouter(): Promise<Router> {
                     }
                 }
             }
+
+            // // Check if single AAS mode is on and no aas query is set to either redirect or show 404
+            // if (envStore.getSingleAas && aasEndpoint.value.trim() === '') {
+            //     if (!routesStayOnPages.includes(to.name as string) && !to.path.startsWith('/modules/')) {
+            //         if (envStore.getSingleAasRedirect) {
+            //             window.location.replace(envStore.getSingleAasRedirect);
+            //             return;
+            //         } else if (to.name !== 'NotFound404') {
+            //             next({ name: 'NotFound404' });
+            //             return;
+            //         }
+            //     }
+            // }
+
+            // // Check which platform is used and handle the view
+            // if (showMobileVersion) {
+            //     // Handle mobile view
+            //     if (routesForMobile.includes(to.name) || routesStayOnPages.includes(to.name)) {
+            //         // Do nothing
+            //     } else if (routesMobileToAASList.includes(to.name)) {
+            //         // Redirect to 'AASList' with existing query parameters
+            //         next({ name: 'AASList', query: to.query });
+            //         return;
+            //     } else if (routesToVisualization.includes(to.name)) {
+            //         // Redirect to 'Visualization' with existing query parameters
+            //         next({ name: 'Visualization', query: to.query });
+            //         return;
+            //     } else {
+            //         // Default redirect to 'AASList' without query parameters
+            //         next({ name: 'AASList' });
+            //         return;
+            //     }
+            //     // Noting todo for to.name === 'SubmodelList'
+            // } else {
+            //     // Handle desktop view
+            //     if (routesForDesktop.includes(to.name) || routesStayOnPages.includes(to.name)) {
+            //         // Do nothing
+            //     } else if (
+            //         routesDesktopToAASViewer.includes(to.name) ||
+            //         (to.name === 'AASEditor' && allowEditing.value)
+            //     ) {
+            //         // Redirect to 'AASViewer' with existing query parameters
+            //         next({ name: 'AASViewer', query: to.query });
+            //         return;
+            //     } else if (routesToVisualization.includes(to.name)) {
+            //         // Redirect to 'Visualization' with existing query parameters
+            //         next({ name: 'Visualization', query: to.query });
+            //         return;
+            //     }
+            // }
         }
 
-        // TODO Fetch and dispatching of AAS/SM/SME with respect to URL query parameter
+        // Fetch and dispatch with respect to URL query parameter (aas, path)
+        if (aasEndpoint.value && aasEndpoint.value !== '') {
+            await fetchAndDispatchAas(aasEndpoint.value);
+            if (smePath.value && smePath.value !== '') {
+                await fetchAndDispatchSme(smePath.value, true);
+            }
+        }
+
         // TODO Remove keep alive from App.vue
 
         next();
