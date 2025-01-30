@@ -1,6 +1,6 @@
 <template>
     <v-list-item class="pt-0">
-        <v-list-item-title :class="IsOperationVariable ? 'pt-2' : ''">
+        <v-list-item-title :class="isOperationVariable ? 'pt-2' : ''">
             <v-text-field
                 v-model="newDateTimeStampValue"
                 type="text"
@@ -9,9 +9,9 @@
                 :clearable="isEditable"
                 :readonly="!isEditable"
                 :color="dateTimeStampValue.value == newDateTimeStampValue ? '' : 'warning'"
-                :persistent-hint="!IsOperationVariable"
+                :persistent-hint="!isOperationVariable"
                 :hint="dateTimeStampValue.value == newDateTimeStampValue ? '' : 'Current Value not yet saved.'"
-                :hide-details="IsOperationVariable ? true : false"
+                :hide-details="isOperationVariable ? true : false"
                 @keydown.enter="updateValue()"
                 @click:clear="clearDateTimeStamp"
                 @update:focused="setFocus">
@@ -19,7 +19,7 @@
                 <template #append-inner>
                     <span class="text-subtitleText">{{ unitSuffix(dateTimeStampValue) }}</span>
                     <v-btn
-                        v-if="!IsOperationVariable && isEditable"
+                        v-if="!isOperationVariable && isEditable"
                         size="small"
                         variant="elevated"
                         color="primary"
@@ -31,7 +31,7 @@
                 </template>
             </v-text-field>
         </v-list-item-title>
-        <v-row v-if="!IsOutputVariable" class="mt-0">
+        <v-row v-if="!isOutputVariable" class="mt-0">
             <!-- Date Picker -->
             <v-col cols="auto">
                 <v-date-picker color="primary" elevation="1" @update:model-value="applyDate"></v-date-picker>
@@ -87,10 +87,10 @@
 
     // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode);
-    const IsOperationVariable = computed(() => {
+    const isOperationVariable = computed(() => {
         return props.isOperationVariable != undefined ? props.isOperationVariable : false;
     });
-    const IsOutputVariable = computed(() => {
+    const isOutputVariable = computed(() => {
         return props.isOperationVariable != undefined ? props.variableType == 'outputVariables' : false;
     });
 
@@ -127,7 +127,7 @@
 
     // Methods
     function updateValue(): void {
-        if (IsOperationVariable.value) {
+        if (isOperationVariable.value) {
             emit('updateValue', newDateTimeStampValue.value);
             return;
         }
@@ -211,7 +211,7 @@
 
         newDateTimeStampValue.value = dateString + 'T' + tempDateTimeStampValue;
 
-        if (IsOperationVariable.value) {
+        if (isOperationVariable.value) {
             updateValue();
         }
     }
@@ -228,7 +228,7 @@
             newDateTimeStampValue.value = tempDateTimeStampValue + 'T' + time.value + '.' + tempStampEnd;
         }
 
-        if (IsOperationVariable.value) {
+        if (isOperationVariable.value) {
             updateValue();
         }
     }
@@ -241,7 +241,7 @@
 
     // Function to set the focus on the input field
     function setFocus(e: boolean): void {
-        if (IsOperationVariable.value && !e) {
+        if (isOperationVariable.value && !e) {
             updateValue();
         }
     }
