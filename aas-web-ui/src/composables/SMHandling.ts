@@ -4,10 +4,13 @@ import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionH
 import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
+import { extractId as extractIdFromReference } from '@/utils/ReferenceUtils';
+import { useAASRepositoryClient } from './Client/AASRepositoryClient';
 import { useIDUtils } from './IDUtils';
 
 export function useSMHandling() {
     // Composables
+    const { getSubmodelRefsById: getSubmodelRefsByIdFromRepo } = useAASRepositoryClient();
     const {
         fetchSmDescriptorById: fetchSmDescriptorByIdFromRegistry,
         fetchSmDescriptorList: fetchSmDescriptorListFromRegistry,
@@ -266,6 +269,46 @@ export function useSMHandling() {
     }
 
     /**
+     * Retrieves a Submodel (SM) of an Asset Administration Shell (AAS) SM descriptor.
+     *
+     * @async
+     * @param {string} aasId - The ID of the AAS to retrieve its SM.
+     * @param {string} semanticId - The semantic ID of the SM.
+     * @returns {string} A promise that resolves to a SM.
+     */
+    async function getSmIdOfAasIdBySemanticId(aasId: string, semanticId: string): Promise<string> {
+        const failResponse = '';
+
+        if (!aasId || !semanticId) return failResponse;
+
+        aasId = aasId.trim();
+        semanticId = semanticId.trim();
+
+        if (aasId === '' || semanticId === '') return failResponse;
+
+        const submodelRefs = await getSubmodelRefsByIdFromRepo(aasId);
+
+        for (const submodelRef of submodelRefs) {
+            const smId = extractIdFromReference(submodelRef, 'Submodel');
+            const smDescriptor = await fetchSmDescriptor(smId);
+            if (
+                smDescriptor &&
+                Object.keys(smDescriptor).length > 0 &&
+                smDescriptor?.semanticId?.keys &&
+                Array.isArray(smDescriptor.semanticId.keys) &&
+                smDescriptor.semanticId.keys.length > 0
+            ) {
+                const semanticIds = smDescriptor.semanticId.keys.map((key: any) => key.value);
+                if (semanticIds.includes(semanticId)) {
+                    return smId;
+                }
+            }
+        }
+
+        return failResponse;
+    }
+
+    /**
      * Recursively calculates and sets the paths of SubmodelElements (SMEs) within a given Submodel (SM) or SubmodelElement (SME).
      * The function modifies the `parent` object by:
      * - Setting the `path` property to the constructed string based on the `startPath`.
@@ -288,8 +331,13 @@ export function useSMHandling() {
         startPath: string,
         withConceptDescriptions: boolean = false
     ): Promise<any> {
+        if (!parent || Object.keys(parent).length === 0) return;
+
         parent.path = startPath;
-        parent.id = generateUUID();
+        // Just set if it is not available (e.g. for a Submodel it is available!)
+        if (!parent?.id) {
+            parent.id = generateUUID();
+        }
 
         if (
             withConceptDescriptions &&
@@ -300,7 +348,8 @@ export function useSMHandling() {
             parent.conceptDescriptions = await fetchCds(parent);
         }
 
-        if (parent.submodelElements && parent.submodelElements.length > 0) {
+        if (parent.submodelElements && Array.isArray(parent.submodelElements) && parent.submodelElements.length > 0) {
+            // Submodel
             for (const element of parent.submodelElements) {
                 await calculateSMEPathes(
                     element,
@@ -308,27 +357,24 @@ export function useSMHandling() {
                     withConceptDescriptions
                 );
             }
-        } else if (
-            parent.value &&
-            Array.isArray(parent.value) &&
-            parent.value.length > 0 &&
-            parent.modelType == 'SubmodelElementCollection'
-        ) {
-            for (const element of parent.value) {
-                await calculateSMEPathes(element, startPath + '.' + element.idShort, withConceptDescriptions);
-            }
-        } else if (
-            parent.value &&
-            Array.isArray(parent.value) &&
-            parent.value.length > 0 &&
-            parent.modelType == 'SubmodelElementList'
-        ) {
-            for (const [index, element] of parent.value.entries()) {
-                await calculateSMEPathes(
-                    element,
-                    startPath + encodeURIComponent('[') + index + encodeURIComponent(']'),
-                    withConceptDescriptions
-                );
+        } else if (parent.value && Array.isArray(parent.value) && parent.value.length > 0) {
+            switch (parent.modelType) {
+                // SubmodelElementCollection
+                case 'SubmodelElementCollection':
+                    for (const element of parent.value) {
+                        await calculateSMEPathes(element, startPath + '.' + element.idShort, withConceptDescriptions);
+                    }
+                    break;
+                // SubmodelElementList
+                case 'SubmodelElementList':
+                    for (const [index, element] of parent.value.entries()) {
+                        await calculateSMEPathes(
+                            element,
+                            startPath + encodeURIComponent('[') + index + encodeURIComponent(']'),
+                            withConceptDescriptions
+                        );
+                    }
+                    break;
             }
         } else if (
             parent.statements &&
@@ -336,6 +382,7 @@ export function useSMHandling() {
             parent.statements.length > 0 &&
             parent.modelType == 'Entity'
         ) {
+            // Entitiy
             for (const element of parent.value) {
                 await calculateSMEPathes(element, startPath + '.' + element.idShort, withConceptDescriptions);
             }
@@ -347,6 +394,7 @@ export function useSMHandling() {
     return {
         fetchAndDispatchSm,
         fetchAndDispatchSmById,
+        getSmIdOfAasIdBySemanticId,
         fetchSm,
         fetchSmById,
         getSmEndpoint,

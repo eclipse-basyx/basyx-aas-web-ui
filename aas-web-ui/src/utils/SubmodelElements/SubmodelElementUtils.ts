@@ -1,13 +1,9 @@
-import { useIDUtils } from '@/composables/IDUtils';
 import { hasValue as fileHasValue, valueToDisplay as fileValueToDisplay } from '@/utils/SubmodelElements/FileUtils';
 import {
     hasValue as mlpHasValue,
     valueToDisplay as mlpValueToDisplay,
 } from '@/utils/SubmodelElements/MultiLanguagePropertyUtils';
 import { hasValue as propHasValue, valueToDisplay as propValueToDisplay } from '@/utils/SubmodelElements/PropertyUtils';
-
-// Composables
-const { generateUUID } = useIDUtils();
 
 /**
  * Checks if the given Submodel Element (SME) has a valid value based on its type.
@@ -88,64 +84,4 @@ export function valueToDisplay(sme: any, language: string = 'en', defaultValueTo
         }
     }
     return defaultValueToDisplay;
-}
-
-/**
- * Recursively calculates and sets the paths of SubmodelElements in a provided Submodel (SM) or SubmodelElement (SME).
- * The paths are constructed based on the specified starting path and the structure of the Submodel.
- *
- * This function modifies the `parent` object by:
- * - Setting the `path` property to the constructed string based on the starting path and `idShort`.
- * - Assigning a unique `id` if it does not have one.
- *
- * It handles different types of parent structures:
- * - For **SubmodelElements**, it iterates over `submodelElements`.
- * - For **SubmodelElementCollection**, it iterates over the `value` array.
- * - For **SubmodelElementList**, it uses array index notation (`[index]`).
- * - For **Entity**, it processes `statements`.
- *
- * @param {any} parent - The parent Submodel or SubmodelElement object to process.
- * @param {string} startPath - The starting path for the calculation, which will be updated recursively.
- * @returns {Promise<any>} A promise that resolves with the modified parent object, including calculated paths.
- */
-export async function calculateSubmodelElementPaths(parent: any, startPath: string): Promise<any> {
-    if (!parent || Object.keys(parent).length === 0) return;
-
-    parent.path = startPath;
-    // Just set if it is not available (e.g. for a Submodel it is available!)
-    if (!parent?.id) {
-        parent.id = generateUUID();
-    }
-
-    if (Array.isArray(parent?.submodelElements) && parent?.submodelElements.length > 0) {
-        // Submodel
-        for (const element of parent.submodelElements) {
-            await calculateSubmodelElementPaths(element, startPath + '/submodel-elements/' + element.idShort);
-        }
-    } else if (Array.isArray(parent?.value) && parent?.value.length > 0) {
-        switch (parent.modelType) {
-            // SubmodelElementCollection
-            case 'SubmodelElementCollection':
-                for (const element of parent.value) {
-                    await calculateSubmodelElementPaths(element, startPath + '.' + element.idShort);
-                }
-                break;
-            // SubmodelElementList
-            case 'SubmodelElementList':
-                for (const [index, element] of parent.value.entries()) {
-                    await calculateSubmodelElementPaths(
-                        element,
-                        startPath + encodeURIComponent('[') + index + encodeURIComponent(']')
-                    );
-                }
-                break;
-        }
-    } else if (Array.isArray(parent?.statements) && parent?.statements.length > 0 && parent.modelType == 'Entity') {
-        // Entity
-        for (const element of parent.statements) {
-            await calculateSubmodelElementPaths(element, startPath + '.' + element.idShort);
-        }
-    }
-
-    return parent;
 }

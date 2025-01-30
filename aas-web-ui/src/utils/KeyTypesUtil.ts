@@ -1,6 +1,6 @@
 // Enumeration of KeyTypes, cp. IDTA 01001-3-0-1, page 82
 // abbreviations according to different IDTA SMT specs (see appendix)
-const keyTypes = [
+export const keyTypes = [
     { name: 'AnnotationRelationshipElement', abbreviation: 'RelA' },
     { name: 'AssetAdministrationShell', abbreviation: 'AAS' },
     { name: 'BasicEventElement', abbreviation: '' },
