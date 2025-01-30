@@ -33,146 +33,106 @@
     </v-list-item>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-    import RequestHandling from '@/mixins/RequestHandling';
+<script lang="ts" setup>
+    import { computed, onMounted, ref, watch } from 'vue';
+    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
-    export default defineComponent({
-        name: 'BooleanType',
-        mixins: [RequestHandling],
-        props: {
-            booleanValue: {
-                type: Object,
-                default: () => ({}),
-            },
-            isOperationVariable: {
-                type: Boolean,
-                default: false,
-            },
-            variableType: {
-                type: String,
-                default: 'number',
-            },
-            isEditable: {
-                type: Boolean,
-                default: true,
-            },
+    // Stores
+    const aasStore = useAASStore();
+
+    // Composables
+    const { patchRequest } = useRequestHandling();
+
+    const props = defineProps({
+        booleanValue: {
+            type: Object,
+            default: () => ({}),
         },
-
-        setup() {
-            const aasStore = useAASStore();
-
-            return {
-                aasStore, // AASStore Object
-            };
+        isOperationVariable: {
+            type: Boolean,
+            default: false,
         },
-
-        data() {
-            return {
-                newBooleanValue: false as boolean, // new value of the property
-            };
+        variableType: {
+            type: String,
+            default: 'number',
         },
-
-        computed: {
-            // get selected AAS from Store
-            SelectedAAS() {
-                return this.aasStore.getSelectedAAS;
-            },
-
-            // Get the selected Treeview Node (SubmodelElement) from the store
-            SelectedNode() {
-                return this.aasStore.getSelectedNode;
-            },
-
-            // Check if the Property is an Operation Variable
-            IsOperationVariable() {
-                // check if isOperationVariable is not undefined
-                if (this.isOperationVariable != undefined) {
-                    return this.isOperationVariable;
-                } else {
-                    return false;
-                }
-            },
-
-            // Check if the Property is an Output Operation Variable
-            IsOutputVariable() {
-                // check if isOperationVariable is not undefined
-                if (this.isOperationVariable != undefined) {
-                    return this.variableType == 'outputVariables';
-                } else {
-                    return false;
-                }
-            },
-        },
-
-        watch: {
-            // Watch for changes in the selected Node and reset input
-            SelectedNode: {
-                deep: true,
-                handler() {
-                    this.newBooleanValue = false;
-                },
-            },
-
-            // Watch for changes in the booleanValue and update the newBooleanValue if the input field is not focused
-            booleanValue: {
-                deep: true,
-                handler() {
-                    // check if this.booleanValue.value is of type string
-                    if (typeof this.booleanValue.value === 'string') {
-                        // convert string to boolean
-                        const convertedValue = this.booleanValue.value === 'true';
-                        this.newBooleanValue = convertedValue;
-                    } else {
-                        this.newBooleanValue = this.booleanValue.value;
-                    }
-                },
-            },
-        },
-
-        mounted() {
-            // check if this.booleanValue.value is of type string
-            if (typeof this.booleanValue.value === 'string') {
-                // convert string to boolean
-                const convertedValue = this.booleanValue.value === 'true';
-                this.newBooleanValue = convertedValue;
-            } else {
-                this.newBooleanValue = this.booleanValue.value;
-            }
-        },
-
-        methods: {
-            // Function to update the value of the property
-            updateValue() {
-                if (this.IsOperationVariable) {
-                    this.$emit('updateValue', this.newBooleanValue);
-                    return;
-                }
-                // console.log("Update Value: ", this.newBooleanValue);
-                let path = this.booleanValue.path + '/$value';
-                let content = JSON.stringify(this.newBooleanValue.toString());
-                let headers = new Headers();
-                headers.append('Content-Type', 'application/json');
-                let context = 'updating ' + this.booleanValue.modelType + ' "' + this.booleanValue.idShort + '"';
-                let disableMessage = false;
-                // Send Request to update the value of the property
-                this.patchRequest(path, content, headers, context, disableMessage).then((response: any) => {
-                    if (response.success) {
-                        // this.newPropertyValue = ''; // reset input
-                        let updatedBooleanValue = { ...this.booleanValue }; // copy the booleanValue
-                        updatedBooleanValue.value = content.toString().replace(/'/g, ''); // update the value of the booleanValue
-                        this.$emit('updateValue', updatedBooleanValue); // emit event to update the value in the parent component
-                    }
-                });
-            },
-
-            changeState() {
-                if (this.IsOperationVariable) {
-                    this.updateValue();
-                }
-            },
+        isEditable: {
+            type: Boolean,
+            default: true,
         },
     });
+
+    const emit = defineEmits<{
+        (event: 'updateValue', updatedBooleanValue: any): void;
+    }>();
+
+    // Data
+    const newBooleanValue = ref<boolean>(false);
+
+    // Computed Properties
+    const selectedNode = computed(() => aasStore.getSelectedNode);
+    const IsOperationVariable = computed(() => {
+        return props.isOperationVariable != undefined ? props.isOperationVariable : false;
+    });
+    const IsOutputVariable = computed(() => {
+        return props.isOperationVariable != undefined ? props.variableType == 'outputVariables' : false;
+    });
+
+    // Watchers
+    watch(
+        selectedNode,
+        () => {
+            newBooleanValue.value = false;
+        },
+        { deep: true }
+    );
+    watch(
+        () => props.booleanValue,
+        () => {
+            setBooleanValue();
+        },
+        { deep: true }
+    );
+
+    onMounted(() => {
+        setBooleanValue();
+    });
+
+    // Methods
+    function setBooleanValue(): void {
+        if (typeof props.booleanValue.value === 'string') {
+            const convertedValue = props.booleanValue.value === 'true';
+            newBooleanValue.value = convertedValue;
+        } else {
+            newBooleanValue.value = props.booleanValue.value;
+        }
+    }
+
+    function updateValue(): void {
+        if (IsOperationVariable.value) {
+            emit('updateValue', newBooleanValue.value);
+            return;
+        }
+
+        const path = `${props.booleanValue.path}/$value`;
+        const content = JSON.stringify(newBooleanValue.value.toString());
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const context = `updating ${props.booleanValue.modelType} "${props.booleanValue.idShort}"`;
+        const disableMessage = false;
+        patchRequest(path, content, headers, context, disableMessage).then((response: any) => {
+            if (response.success) {
+                const updatedBooleanValue = { ...props.booleanValue };
+                updatedBooleanValue.value = content.toString().replace(/'/g, '');
+                emit('updateValue', updatedBooleanValue);
+            }
+        });
+    }
+
+    function changeState(): void {
+        if (IsOperationVariable.value) {
+            updateValue();
+        }
+    }
 </script>
