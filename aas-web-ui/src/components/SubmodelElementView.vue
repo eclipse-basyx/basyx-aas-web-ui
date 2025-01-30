@@ -205,6 +205,7 @@
         () => aasRegistryServerURL.value,
         async () => {
             if (!aasRegistryServerURL.value) {
+                resetLocalData();
                 initialize();
             }
         }
@@ -214,6 +215,7 @@
         () => submodelRegistryServerURL.value,
         async () => {
             if (!submodelRegistryServerURL.value) {
+                resetLocalData();
                 initialize();
             }
         }
@@ -233,6 +235,7 @@
                 }
             }
 
+            resetLocalData();
             initialize(true);
         }
     );
@@ -251,6 +254,7 @@
                 }
             }
 
+            resetLocalData();
             initialize(true);
         },
         { deep: true }
@@ -300,12 +304,16 @@
      */
     async function initialize(withConceptDescriptions: boolean = true): Promise<void> {
         if (!selectedNode.value || Object.keys(selectedNode.value).length === 0) {
-            submodelElementData.value = {};
-            conceptDescriptions.value = [];
+            resetLocalData();
             return;
         }
 
         updateLocalData(selectedNode.value, withConceptDescriptions);
+    }
+
+    function resetLocalData(): void {
+        submodelElementData.value = {};
+        conceptDescriptions.value = [];
     }
 
     /**

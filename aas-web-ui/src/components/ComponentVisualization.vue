@@ -198,6 +198,7 @@
         () => aasRegistryServerURL.value,
         () => {
             if (!aasRegistryServerURL.value) {
+                resetLocalData();
                 initializeView();
             }
         }
@@ -208,6 +209,7 @@
         () => submodelRegistryServerURL.value,
         () => {
             if (!submodelRegistryServerURL.value) {
+                resetLocalData();
                 initializeView();
             }
         }
@@ -217,6 +219,7 @@
     watch(
         () => selectedAAS.value,
         () => {
+            resetLocalData();
             initializeView();
         }
     );
@@ -225,6 +228,7 @@
     watch(
         () => selectedNode.value,
         () => {
+            resetLocalData();
             initializeView();
         },
         { deep: true }
@@ -234,22 +238,23 @@
         initializeView();
     });
 
-    function initializeView() {
-        // console.log('Selected Node: ', this.realTimeObject);
-        // Check if a Node is selected
+    function initializeView(): void {
         if (Object.keys(selectedNode.value).length === 0) {
-            submodelElementData.value = {}; // Reset the SubmodelElement Data when no Node is selected
+            resetLocalData();
             return;
         }
         submodelElementData.value = { ...selectedNode.value }; // create local copy of the SubmodelElement Object
-        // console.log('SubmodelElement Data (ComponentVisualization): ', this.submodelElementData);
     }
 
-    function backToSubmodelList() {
+    function resetLocalData(): void {
+        submodelElementData.value = {};
+    }
+
+    function backToSubmodelList(): void {
         router.push({ name: 'SubmodelList', query: route.query });
     }
 
-    function backToAASViewer() {
+    function backToAASViewer(): void {
         router.push({ name: 'AASViewer', query: route.query });
     }
 </script>
