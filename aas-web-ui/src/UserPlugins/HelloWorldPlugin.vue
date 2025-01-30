@@ -15,7 +15,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, defineOptions, onMounted, ref } from 'vue';
+    import { computed, onMounted, ref } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/SMHandling';
     import { useAASStore } from '@/store/AASDataStore';
