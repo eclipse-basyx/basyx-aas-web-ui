@@ -34,6 +34,7 @@ declare module 'vue' {
     DeleteAAS: typeof import('./components/AppNavigation/DeleteAAS.vue')['default']
     DeleteDialog: typeof import('./components/EditorComponents/DeleteDialog.vue')['default']
     DescriptionElement: typeof import('./components/UIComponents/DescriptionElement.vue')['default']
+    DescriptionTooltip: typeof import('./components/UIComponents/DescriptionTooltip.vue')['default']
     DisplayField: typeof import('./components/Widgets/DisplayField.vue')['default']
     DisplayNameElement: typeof import('./components/UIComponents/DisplayNameElement.vue')['default']
     DonutChart: typeof import('./components/Widgets/DonutChart.vue')['default']
@@ -92,6 +93,7 @@ declare module 'vue' {
     ThemeSwitch: typeof import('./components/AppNavigation/Settings/ThemeSwitch.vue')['default']
     TimeSeries_v1_1: typeof import('./components/Plugins/Submodels/TimeSeries_v1_1.vue')['default']
     UploadAAS: typeof import('./components/AppNavigation/UploadAAS.vue')['default']
+    VisualizationHeader: typeof import('./components/UIComponents/VisualizationHeader.vue')['default']
     VTreeview: typeof import('./components/UIComponents/VTreeview.vue')['default']
   }
 }
