@@ -239,7 +239,17 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         const basyxComponent = basyxComponents[componentKey];
         if (basyxComponent.url && basyxComponent.url.trim() !== '') {
             basyxComponent.loading = true;
-            const path = basyxComponent.url;
+            let path = basyxComponent.url;
+
+            path = path.replace('/lookup/shells', '');
+            path = path.replace('/shell-descriptors', '');
+            path = path.replace('/submodel-descriptors', '');
+            path = path.replace('/shells', '');
+            path = path.replace('/submodels', '');
+            path = path.replace('/concept-descriptions', '');
+
+            if (!path.endsWith('/')) path += '/';
+            path += 'description';
 
             const context = `connecting to ${basyxComponent.label}`;
             const disableMessage = false;
