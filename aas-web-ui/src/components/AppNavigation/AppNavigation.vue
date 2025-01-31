@@ -277,9 +277,6 @@
         dashboardAvailable.value = await checkDashboardAvailability();
         applyTheme();
 
-        // Auto connect to BaSyx Components
-        navigationStore.connectComponents();
-
         // Get auto-sync object from the lcoal storage
         const autoSyncToDispatch = JSON.parse(localStorage.getItem('autoSync') || '{}') as AutoSyncType;
         if (autoSyncToDispatch && Object.keys(autoSyncToDispatch).length > 0) {
