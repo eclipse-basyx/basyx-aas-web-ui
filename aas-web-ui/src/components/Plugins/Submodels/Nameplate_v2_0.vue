@@ -296,7 +296,6 @@
     import { LMap, LMarker, LTileLayer } from '@vue-leaflet/vue-leaflet';
     import { latLng } from 'leaflet';
     import { computed, onMounted, ref } from 'vue';
-    import DescriptionTooltip from '@/components/UIComponents/DescriptionTooltip.vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/SMHandling';
     import { useContactInformation_v1_0Utils } from '@/composables/SubmodelTemplates/ContactInformation_v1_0Utils';
