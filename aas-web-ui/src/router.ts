@@ -10,7 +10,7 @@ import AASList from '@/components/AppNavigation/AASList.vue';
 import ComponentVisualization from '@/components/ComponentVisualization.vue';
 import SubmodelList from '@/components/SubmodelList.vue';
 import { useAASHandling } from '@/composables/AASHandling';
-import { useAASDicoveryClient } from '@/composables/Client/AASDiscoveryClient';
+import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
 import { useSMEHandling } from '@/composables/SMEHandling';
 import { useSMHandling } from '@/composables/SMHandling';
 import AASEditor from '@/pages/AASEditor.vue';
@@ -112,11 +112,12 @@ export async function createAppRouter(): Promise<Router> {
 
     // Stores
     const navigationStore = useNavigationStore();
+
     // Connect to (BaSyx) components, otherwise IDs redirecting not possible
     navigationStore.connectComponents();
 
     // Composables
-    const { getAasId } = useAASDicoveryClient();
+    const { getAasId } = useAASDiscoveryClient();
     const { fetchAndDispatchAas, getAasEndpointById } = useAASHandling();
     const { getSmEndpointById } = useSMHandling();
     const { fetchAndDispatchSme } = useSMEHandling();

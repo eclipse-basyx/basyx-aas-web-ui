@@ -6,13 +6,19 @@ import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
+import { stripLastCharacter } from '@/utils/StringUtils';
 
 export function useSMRepositoryClient() {
+    // Stores
+    const navigationStore = useNavigationStore();
+
+    // Composables
     const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
     const { fetchSmDescriptorById, isAvailableById: isAvailableByIdInRegistry } = useSMRegistryClient();
 
-    const navigationStore = useNavigationStore();
+    const endpointPath = '/submodels';
 
+    // Computed Properties
     const submodelRepoUrl = computed(() => navigationStore.getSubmodelRepoURL);
 
     /**
@@ -29,9 +35,8 @@ export function useSMRepositoryClient() {
 
         let smRepoUrl = submodelRepoUrl.value;
         if (smRepoUrl.trim() === '') return failResponse;
-        if (!smRepoUrl.includes('/submodels')) {
-            smRepoUrl += '/submodels';
-        }
+        if (smRepoUrl.endsWith('/')) smRepoUrl = stripLastCharacter(smRepoUrl);
+        if (!smRepoUrl.endsWith(endpointPath)) smRepoUrl += endpointPath;
 
         const smRepoPath = smRepoUrl;
         const smRepoContext = 'retrieving all SMs';
@@ -233,13 +238,20 @@ export function useSMRepositoryClient() {
     }
 
     async function postSubmodel(submodel: aasTypes.Submodel): Promise<void> {
+        if (submodelRepoUrl.value.trim() === '') return;
+
+        let smRepoUrl = submodelRepoUrl.value;
+        if (smRepoUrl.trim() === '') return;
+        if (smRepoUrl.endsWith('/')) smRepoUrl = stripLastCharacter(smRepoUrl);
+        if (!smRepoUrl.endsWith(endpointPath)) smRepoUrl += endpointPath;
+
         // Convert Submodel to JSON
         const jsonSubmodel = jsonization.toJsonable(submodel);
         // console.log('postSubmodel()', jsonSubmodel);
 
         const context = 'creating Submodel';
         const disableMessage = false;
-        const path = submodelRepoUrl.value;
+        const path = smRepoUrl;
         const headers = new Headers();
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(jsonSubmodel);
@@ -257,13 +269,20 @@ export function useSMRepositoryClient() {
     }
 
     async function putSubmodel(submodel: aasTypes.Submodel): Promise<void> {
+        if (submodelRepoUrl.value.trim() === '') return;
+
+        let smRepoUrl = submodelRepoUrl.value;
+        if (smRepoUrl.trim() === '') return;
+        if (smRepoUrl.endsWith('/')) smRepoUrl = stripLastCharacter(smRepoUrl);
+        if (!smRepoUrl.endsWith(endpointPath)) smRepoUrl += endpointPath;
+
         // Convert Submodel to JSON
         const jsonSubmodel = jsonization.toJsonable(submodel);
         // console.log('putSubmodel()', jsonSubmodel);
 
         const context = 'updating Submodel';
         const disableMessage = false;
-        const path = submodelRepoUrl.value + '/' + base64Encode(submodel.id);
+        const path = smRepoUrl + '/' + base64Encode(submodel.id);
         const headers = new Headers();
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(jsonSubmodel);
@@ -281,9 +300,16 @@ export function useSMRepositoryClient() {
     }
 
     async function deleteSubmodel(submodelId: string): Promise<void> {
+        if (submodelRepoUrl.value.trim() === '') return;
+
+        let smRepoUrl = submodelRepoUrl.value;
+        if (smRepoUrl.trim() === '') return;
+        if (smRepoUrl.endsWith('/')) smRepoUrl = stripLastCharacter(smRepoUrl);
+        if (!smRepoUrl.endsWith(endpointPath)) smRepoUrl += endpointPath;
+
         const context = 'deleting Submodel';
         const disableMessage = false;
-        const path = submodelRepoUrl.value + '/' + base64Encode(submodelId);
+        const path = smRepoUrl + '/' + base64Encode(submodelId);
 
         const response = await deleteRequest(path, context, disableMessage);
         if (response.success) {
@@ -345,6 +371,7 @@ export function useSMRepositoryClient() {
     }
 
     return {
+        endpointPath,
         fetchSmList,
         fetchSmById,
         fetchSm,

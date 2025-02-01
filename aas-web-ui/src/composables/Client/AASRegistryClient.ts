@@ -5,12 +5,18 @@ import { useNavigationStore } from '@/store/NavigationStore';
 import * as descriptorTypes from '@/types/Descriptors';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { removeNullValues } from '@/utils/generalUtils';
+import { stripLastCharacter } from '@/utils/StringUtils';
 
 export function useAASRegistryClient() {
-    const { getRequest, postRequest, putRequest } = useRequestHandling();
-
+    // Stores
     const navigationStore = useNavigationStore();
 
+    //Composables
+    const { getRequest, postRequest, putRequest } = useRequestHandling();
+
+    const endpointPath = '/shell-descriptors';
+
+    // Computed Properties
     const aasRegistryUrl = computed(() => navigationStore.getAASRegistryURL);
 
     /**
@@ -27,9 +33,8 @@ export function useAASRegistryClient() {
 
         let aasRegUrl = aasRegistryUrl.value;
         if (aasRegUrl.trim() === '') return failResponse;
-        if (!aasRegUrl.includes('/shell-descriptors')) {
-            aasRegUrl += '/shell-descriptors';
-        }
+        if (aasRegUrl.endsWith('/')) aasRegUrl = stripLastCharacter(aasRegUrl);
+        if (!aasRegUrl.endsWith(endpointPath)) aasRegUrl += endpointPath;
 
         const aasRegistryPath = aasRegUrl;
         const aasRegistryContext = 'retrieving all AAS Descriptors';
@@ -70,9 +75,8 @@ export function useAASRegistryClient() {
 
         let aasRegUrl = aasRegistryUrl.value;
         if (aasRegUrl.trim() === '') return failResponse;
-        if (!aasRegUrl.includes('/shell-descriptors')) {
-            aasRegUrl += '/shell-descriptors';
-        }
+        if (aasRegUrl.endsWith('/')) aasRegUrl = stripLastCharacter(aasRegUrl);
+        if (!aasRegUrl.endsWith(endpointPath)) aasRegUrl += endpointPath;
 
         const aasRegistryPath = aasRegUrl + '/' + base64Encode(aasId);
         const aasRegistryContext = 'retrieving AAS Descriptor';
@@ -118,10 +122,12 @@ export function useAASRegistryClient() {
     }
 
     async function postAasDescriptor(aasDescriptor: descriptorTypes.AASDescriptor): Promise<void> {
+        if (aasRegistryUrl.value.trim() === '') return;
+
         let aasRegUrl = aasRegistryUrl.value;
-        if (!aasRegUrl.includes('/shell-descriptors')) {
-            aasRegUrl += '/shell-descriptors';
-        }
+        if (aasRegUrl.trim() === '') return;
+        if (aasRegUrl.endsWith('/')) aasRegUrl = stripLastCharacter(aasRegUrl);
+        if (!aasRegUrl.endsWith(endpointPath)) aasRegUrl += endpointPath;
 
         const context = 'updating AAS Descriptor';
         const disableMessage = false;
@@ -137,10 +143,12 @@ export function useAASRegistryClient() {
     }
 
     async function putAasDescriptor(aasDescriptor: descriptorTypes.AASDescriptor): Promise<void> {
+        if (aasRegistryUrl.value.trim() === '') return;
+
         let aasRegUrl = aasRegistryUrl.value;
-        if (!aasRegUrl.includes('/shell-descriptors')) {
-            aasRegUrl += '/shell-descriptors';
-        }
+        if (aasRegUrl.trim() === '') return;
+        if (aasRegUrl.endsWith('/')) aasRegUrl = stripLastCharacter(aasRegUrl);
+        if (!aasRegUrl.endsWith(endpointPath)) aasRegUrl += endpointPath;
 
         const context = 'updating AAS Descriptor';
         const disableMessage = false;
@@ -179,6 +187,7 @@ export function useAASRegistryClient() {
     }
 
     return {
+        endpointPath,
         fetchAasDescriptorList,
         fetchAasDescriptorById,
         isAvailableById,

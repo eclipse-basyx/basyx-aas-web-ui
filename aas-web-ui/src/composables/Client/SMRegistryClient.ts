@@ -5,12 +5,18 @@ import { useNavigationStore } from '@/store/NavigationStore';
 import * as descriptorTypes from '@/types/Descriptors';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { removeNullValues } from '@/utils/generalUtils';
+import { stripLastCharacter } from '@/utils/StringUtils';
 
 export function useSMRegistryClient() {
-    const { getRequest, postRequest, putRequest } = useRequestHandling();
-
+    // Stores
     const navigationStore = useNavigationStore();
 
+    // Composables
+    const { getRequest, postRequest, putRequest } = useRequestHandling();
+
+    const endpointPath = '/submodel-descriptors';
+
+    // Computed Properties
     const submodelRegistryUrl = computed(() => navigationStore.getSubmodelRegistryURL);
 
     /**
@@ -27,9 +33,8 @@ export function useSMRegistryClient() {
 
         let smRegistryUrl = submodelRegistryUrl.value;
         if (smRegistryUrl.trim() === '') return failResponse;
-        if (!smRegistryUrl.includes('/submodel-descriptors')) {
-            smRegistryUrl += '/submodel-descriptors';
-        }
+        if (smRegistryUrl.endsWith('/')) smRegistryUrl = stripLastCharacter(smRegistryUrl);
+        if (!smRegistryUrl.endsWith(endpointPath)) smRegistryUrl += endpointPath;
 
         const smRegistryPath = smRegistryUrl;
         const smRegistryContext = 'retrieving all SM Descriptors';
@@ -69,9 +74,8 @@ export function useSMRegistryClient() {
 
         let smRegistryUrl = submodelRegistryUrl.value;
         if (smRegistryUrl.trim() === '') return failResponse;
-        if (!smRegistryUrl.includes('/submodel-descriptors')) {
-            smRegistryUrl += '/submodel-descriptors';
-        }
+        if (smRegistryUrl.endsWith('/')) smRegistryUrl = stripLastCharacter(smRegistryUrl);
+        if (!smRegistryUrl.endsWith(endpointPath)) smRegistryUrl += endpointPath;
 
         const smRegistryPath = smRegistryUrl + '/' + base64Encode(smId);
         const smRegistryContext = 'retrieving SM Descriptor';
@@ -117,14 +121,16 @@ export function useSMRegistryClient() {
     }
 
     async function postSubmodelDescriptor(submodelDescriptor: descriptorTypes.SubmodelDescriptor): Promise<void> {
-        let submodelRegUrl = submodelRegistryUrl.value;
-        if (!submodelRegUrl.includes('/submodel-descriptors')) {
-            submodelRegUrl += '/submodel-descriptors';
-        }
+        if (submodelRegistryUrl.value.trim() === '') return;
+
+        let smRegistryUrl = submodelRegistryUrl.value;
+        if (smRegistryUrl.trim() === '') return;
+        if (smRegistryUrl.endsWith('/')) smRegistryUrl = stripLastCharacter(smRegistryUrl);
+        if (!smRegistryUrl.endsWith(endpointPath)) smRegistryUrl += endpointPath;
 
         const context = 'updating Submodel Descriptor';
         const disableMessage = false;
-        const path = submodelRegUrl;
+        const path = smRegistryUrl;
         const headers = new Headers();
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(submodelDescriptor);
@@ -133,14 +139,16 @@ export function useSMRegistryClient() {
     }
 
     async function putSubmodelDescriptor(submodelDescriptor: descriptorTypes.SubmodelDescriptor): Promise<void> {
-        let submodelRegUrl = submodelRegistryUrl.value;
-        if (!submodelRegUrl.includes('/submodel-descriptors')) {
-            submodelRegUrl += '/submodel-descriptors';
-        }
+        if (submodelRegistryUrl.value.trim() === '') return;
+
+        let smRegistryUrl = submodelRegistryUrl.value;
+        if (smRegistryUrl.trim() === '') return;
+        if (smRegistryUrl.endsWith('/')) smRegistryUrl = stripLastCharacter(smRegistryUrl);
+        if (!smRegistryUrl.endsWith(endpointPath)) smRegistryUrl += endpointPath;
 
         const context = 'updating Submodel Descriptor';
         const disableMessage = false;
-        const path = submodelRegUrl + '/' + base64Encode(submodelDescriptor.id);
+        const path = smRegistryUrl + '/' + base64Encode(submodelDescriptor.id);
         const headers = new Headers();
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(submodelDescriptor);
@@ -168,6 +176,7 @@ export function useSMRegistryClient() {
     }
 
     return {
+        endpointPath,
         fetchSmDescriptorList,
         fetchSmDescriptorById,
         isAvailableById,
