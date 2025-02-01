@@ -6,6 +6,7 @@ export interface BaSyxComponent {
     connected: Ref<boolean | null>;
     connect: () => void;
     label: string;
+    identification: string;
     pathCheck?: string;
     additionalParams?: (type?: string) => string;
 }
