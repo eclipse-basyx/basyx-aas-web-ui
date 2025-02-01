@@ -8,23 +8,31 @@ import { useNavigationStore } from '@/store/NavigationStore';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { downloadFile } from '@/utils/generalUtils';
+import { stripLastCharacter } from '@/utils/StringUtils';
 
 export function useAASRepositoryClient() {
-    const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
-    const { fetchAasDescriptorById, isAvailableById: isAvailableByIdInRegistry } = useAASRegistryClient();
-
-    // Composables
-    const { generateUUIDFromString } = useIDUtils();
-
+    // Stores
     const navigationStore = useNavigationStore();
 
-    const aasRepositoryUrl = computed(() => navigationStore.getAASRepoURL);
+    // Composables
+    const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
+    const { fetchAasDescriptorById, isAvailableById: isAvailableByIdInRegistry } = useAASRegistryClient();
+    const { generateUUIDFromString } = useIDUtils();
 
+    const endpointPath = '/shells';
+
+    // Computed Properties
+    const aasRepositoryUrl = computed(() => navigationStore.getAASRepoURL);
     const uploadURL = computed(() => {
-        const aasRepoURL = navigationStore.getAASRepoURL;
+        if (aasRepositoryUrl.value.trim() === '') return '';
+
+        let aasRepoUrl = aasRepositoryUrl.value;
+        if (aasRepoUrl.trim() === '') return '';
+        if (aasRepoUrl.endsWith('/')) aasRepoUrl = stripLastCharacter(aasRepoUrl);
+
         // remove '/shells' AAS Repository URL and add '/upload' to construct the upload URL
         // TODO: This is a workaround, as the AAS Repository does not provide an upload endpoint but rather the AAS Environment. This should be changed in the future.
-        return aasRepoURL.replace('/shells', '') + '/upload';
+        return aasRepoUrl.replace(endpointPath, '') + '/upload';
     });
 
     /**
@@ -41,9 +49,8 @@ export function useAASRepositoryClient() {
 
         let aasRepoUrl = aasRepositoryUrl.value;
         if (aasRepoUrl.trim() === '') return failResponse;
-        if (!aasRepoUrl.includes('/shells')) {
-            aasRepoUrl += '/shells';
-        }
+        if (aasRepoUrl.endsWith('/')) aasRepoUrl = stripLastCharacter(aasRepoUrl);
+        if (!aasRepoUrl.endsWith(endpointPath)) aasRepoUrl += endpointPath;
 
         const aasRepoPath = aasRepoUrl;
         const aasRepoContext = 'retrieving all AAS';
@@ -296,13 +303,20 @@ export function useAASRepositoryClient() {
     }
 
     async function postAas(aas: aasTypes.AssetAdministrationShell) {
+        if (aasRepositoryUrl.value.trim() === '') return;
+
+        let aasRepoUrl = aasRepositoryUrl.value;
+        if (aasRepoUrl.trim() === '') return;
+        if (aasRepoUrl.endsWith('/')) aasRepoUrl = stripLastCharacter(aasRepoUrl);
+        if (!aasRepoUrl.endsWith(endpointPath)) aasRepoUrl += endpointPath;
+
         // Convert AAS to JSON
         const jsonAas = jsonization.toJsonable(aas);
         // console.log('postAas()', jsonAas);
 
         const context = 'creating AAS';
         const disableMessage = false;
-        const path = aasRepositoryUrl.value;
+        const path = aasRepoUrl;
         const headers = new Headers();
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(jsonAas);
@@ -321,13 +335,20 @@ export function useAASRepositoryClient() {
     }
 
     async function putAas(aas: aasTypes.AssetAdministrationShell) {
+        if (aasRepositoryUrl.value.trim() === '') return;
+
+        let aasRepoUrl = aasRepositoryUrl.value;
+        if (aasRepoUrl.trim() === '') return;
+        if (aasRepoUrl.endsWith('/')) aasRepoUrl = stripLastCharacter(aasRepoUrl);
+        if (!aasRepoUrl.endsWith(endpointPath)) aasRepoUrl += endpointPath;
+
         // Convert AAS to JSON
         const jsonAas = jsonization.toJsonable(aas);
         // console.log('putAas()', jsonAas);
 
         const context = 'updating AAS';
         const disableMessage = false;
-        const path = aasRepositoryUrl.value + '/' + base64Encode(aas.id);
+        const path = aasRepoUrl + '/' + base64Encode(aas.id);
         const headers = new Headers();
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(jsonAas);
@@ -351,6 +372,13 @@ export function useAASRepositoryClient() {
 
         if (aasId === '') return;
 
+        if (aasRepositoryUrl.value.trim() === '') return;
+
+        let aasRepoUrl = aasRepositoryUrl.value;
+        if (aasRepoUrl.trim() === '') return;
+        if (aasRepoUrl.endsWith('/')) aasRepoUrl = stripLastCharacter(aasRepoUrl);
+        if (!aasRepoUrl.endsWith(endpointPath)) aasRepoUrl += endpointPath;
+
         // Create formData
         const formData = new FormData();
         formData.append('file', thumbnail);
@@ -358,12 +386,7 @@ export function useAASRepositoryClient() {
         const context = 'uploading thumbnail';
         const disableMessage = false;
         const path =
-            aasRepositoryUrl.value +
-            '/' +
-            base64Encode(aasId) +
-            '/asset-information/thumbnail' +
-            '?fileName=' +
-            thumbnail.name;
+            aasRepoUrl + '/' + base64Encode(aasId) + '/asset-information/thumbnail' + '?fileName=' + thumbnail.name;
         const headers = new Headers();
         const body = formData;
 
@@ -440,12 +463,18 @@ export function useAASRepositoryClient() {
 
         if (aasId === '') return;
 
+        if (aasRepositoryUrl.value.trim() === '') return;
+
+        let aasRepoUrl = aasRepositoryUrl.value;
+        if (aasRepoUrl.trim() === '') return;
+        if (aasRepoUrl.endsWith('/')) aasRepoUrl = stripLastCharacter(aasRepoUrl);
+
         const submodelRefList = await getSubmodelRefsById(aasId);
 
         if (Array.isArray(submodelRefList) && submodelRefList.length > 0) {
             const submodelIds = submodelRefList.map((submodelRef: any) => submodelRef?.keys[0]?.value);
 
-            let aasSerializationPath = aasRepositoryUrl.value.substring(0, aasRepositoryUrl.value.lastIndexOf('/')); // strips everything after the last slash from aasRepositoryUrl (http://localhost:8081/shells -> http://localhost:8081)
+            let aasSerializationPath = aasRepoUrl.substring(0, aasRepoUrl.lastIndexOf('/')); // strips everything after the last slash (http://localhost:8081/shells -> http://localhost:8081)
 
             // e.g. http://localhost:8081/serialization?aasIds=abc&submodelIds=def&submodelIds=ghi&includeConceptDescriptions=true)
             aasSerializationPath +=
@@ -508,6 +537,7 @@ export function useAASRepositoryClient() {
     }
 
     return {
+        endpointPath,
         fetchAasList,
         fetchAasById,
         fetchAas,

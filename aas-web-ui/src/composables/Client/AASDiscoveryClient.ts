@@ -2,12 +2,18 @@ import { computed } from 'vue';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
+import { stripLastCharacter } from '@/utils/StringUtils';
 
-export function useAASDicoveryClient() {
-    const { getRequest } = useRequestHandling();
-
+export function useAASDiscoveryClient() {
+    // Stores
     const navigationStore = useNavigationStore();
 
+    // Composables
+    const { getRequest } = useRequestHandling();
+
+    const endpointPath = '/lookup/shells';
+
+    // Computed Properties
     const aasDiscoveryUrl = computed(() => navigationStore.getAASDiscoveryURL);
 
     /**
@@ -29,9 +35,8 @@ export function useAASDicoveryClient() {
 
         let aasDiscUrl = aasDiscoveryUrl.value;
         if (aasDiscUrl.trim() === '') return failResponse;
-        if (!aasDiscUrl.includes('/lookup/shells')) {
-            aasDiscUrl += '/lookup/shells';
-        }
+        if (aasDiscUrl.endsWith('/')) aasDiscUrl = stripLastCharacter(aasDiscUrl);
+        if (!aasDiscUrl.endsWith(endpointPath)) aasDiscUrl += endpointPath;
 
         const assetIdObject = JSON.stringify({ name: 'globalAssetId', value: globalAssetId });
         const aasDiscoveryPath = `${aasDiscUrl}?assetIds=${base64Encode(assetIdObject)}`;
@@ -56,6 +61,7 @@ export function useAASDicoveryClient() {
     }
 
     return {
+        endpointPath,
         getAasId,
     };
 }

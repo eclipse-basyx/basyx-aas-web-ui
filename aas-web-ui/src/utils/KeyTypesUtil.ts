@@ -1,6 +1,16 @@
-// Enumeration of KeyTypes, cp. IDTA 01001-3-0-1, page 82
-// abbreviations according to different IDTA SMT specs (see appendix)
-const keyTypes = [
+/**
+ * @constant {Array<Object>} keyTypes
+ * @description Enumeration of Key Types as specified in IDTA 01001-3-0-1, page 82.
+ * Each key type has a name and an abbreviation according to different IDTA SMT specifications (see appendix).
+ *
+ * @property {string} name - The name of the key type.
+ * @property {string} abbreviation - The abbreviation of the key type.
+ *
+ * @example
+ * // Example of a key type
+ * const aasKeyType = keyTypes[1]; // { name: 'AssetAdministrationShell', abbreviation: 'AAS' }
+ */
+export const keyTypes = [
     { name: 'AnnotationRelationshipElement', abbreviation: 'RelA' },
     { name: 'AssetAdministrationShell', abbreviation: 'AAS' },
     { name: 'BasicEventElement', abbreviation: '' },
@@ -27,6 +37,12 @@ const keyTypes = [
     { name: 'SubmodelElementList', abbreviation: 'SML' },
 ];
 
+/**
+ * Retrieves the abbreviation for a given Key Type name.
+ *
+ * @param {string} keyTypeName - The name of the key type to look up.
+ * @returns {string} The abbreviation for the specified key type name, or an empty string if not found or if the input is invalid.
+ */
 export function getKeyTypeAbbreviation(keyTypeName: string): string {
     const failResponse = '';
 

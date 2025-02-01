@@ -1,15 +1,15 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-list-item v-if="!IsOperationVariable" class="px-1 pb-1 pt-0">
+        <v-list-item v-if="!isOperationVariable" class="px-1 pb-1 pt-0">
             <v-list-item-title class="text-subtitle-2 mt-2">{{ 'Value: ' }}</v-list-item-title>
         </v-list-item>
         <v-card v-if="propertyObject" color="elevatedCard">
             <!-- Value of the Property -->
-            <v-list nav class="pt-0" :class="IsOperationVariable ? '' : 'bg-elevatedCard'">
+            <v-list nav class="pt-0" :class="isOperationVariable ? '' : 'bg-elevatedCard'">
                 <!-- valueId -->
                 <v-list-item
                     v-if="
-                        !IsOperationVariable &&
+                        !isOperationVariable &&
                         propertyObject.valueId &&
                         propertyObject.valueId.keys &&
                         propertyObject.valueId.keys.length > 0
@@ -34,7 +34,7 @@
                     </template>
                 </v-list-item>
                 <!-- valueType -->
-                <v-list-item v-if="!IsOperationVariable" class="pb-0">
+                <v-list-item v-if="!isOperationVariable" class="pb-0">
                     <v-list-item-title>
                         <span class="text-caption">{{ 'Value Type: ' }}</span>
                         <v-chip label size="x-small" border color="primary">{{ propertyObject.valueType }}</v-chip>
@@ -74,82 +74,38 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-    import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-    import { useAASStore } from '@/store/AASDataStore';
+<script lang="ts" setup>
+    import { computed } from 'vue';
     import { isNumber } from '@/utils/generalUtils';
-    import BooleanType from './ValueTypes/BooleanType.vue';
-    import DateTimeStampType from './ValueTypes/DateTimeStampType.vue';
-    import NumberType from './ValueTypes/NumberType.vue';
-    import StringType from './ValueTypes/StringType.vue';
 
-    export default defineComponent({
-        name: 'Property',
-        components: {
-            // Value Types
-            StringType,
-            NumberType,
-            BooleanType,
-            DateTimeStampType,
+    const props = defineProps({
+        propertyObject: {
+            type: Object,
+            default: () => ({}),
         },
-        mixins: [RequestHandling, SubmodelElementHandling],
-        props: {
-            propertyObject: {
-                type: Object,
-                default: () => ({}),
-            },
-            isOperationVariable: {
-                type: Boolean,
-                default: false,
-            },
-            variableType: {
-                type: String,
-                default: 'string',
-            },
-            isEditable: {
-                type: Boolean,
-                default: true,
-            },
+        isOperationVariable: {
+            type: Boolean,
+            default: false,
         },
-
-        setup() {
-            const aasStore = useAASStore();
-
-            return {
-                aasStore, // AASStore Object
-                isNumber,
-            };
+        variableType: {
+            type: String,
+            default: 'string',
         },
-
-        data() {
-            return {};
-        },
-
-        computed: {
-            // get selected AAS from Store
-            SelectedAAS() {
-                return this.aasStore.getSelectedAAS;
-            },
-
-            // Check if the Property is an Operation Variable
-            IsOperationVariable() {
-                // check if isOperationVariable is not undefined
-                if (this.isOperationVariable != undefined) {
-                    return this.isOperationVariable;
-                } else {
-                    return false;
-                }
-            },
-        },
-
-        methods: {
-            // Function to update the value of the property
-            updateValue(updatedPropertyObject: any) {
-                this.$emit('updateValue', updatedPropertyObject); // emit event to update the value in the parent component
-            },
+        isEditable: {
+            type: Boolean,
+            default: true,
         },
     });
+
+    const emit = defineEmits<{
+        (e: 'updateValue', updatedPropertyObject: any): void;
+    }>();
+
+    const isOperationVariable = computed(() => {
+        return props.isOperationVariable != undefined ? props.isOperationVariable : false;
+    });
+
+    function updateValue(updatedPropertyObject: any): void {
+        emit('updateValue', updatedPropertyObject);
+    }
 </script>
