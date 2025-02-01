@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { capitalizeFirstLetter, firstLetterToLowerCase } from '@/utils/StringUtils';
+import { capitalizeFirstLetter, firstLetterToLowerCase, stripLastCharacter } from '@/utils/StringUtils';
 
 describe("StringUtils.ts; Tests for 'capitalizeFirstLetter()'", () => {
     // Define test data for capitalizeFirstLetter()
@@ -83,6 +83,44 @@ describe("StringUtils.ts; Tests for 'firstLetterToLowerCase()'", () => {
         it(`${firstLetterToLowerCaseTestCombination.testId}: firstLetterToLowerCase('${input}') should be '${output}'`, () => {
             // Perform the assertion
             expect(firstLetterToLowerCase(input)).toBe(output);
+        });
+    });
+});
+
+describe("StringUtils.ts; Tests for 'stripLastCharacter()'", () => {
+    // Define test data for stripLastCharacter()
+    const stripLastCharacterTestCombinations = [
+        {
+            testId: 'f51201a3-419a-42f3-8148-daf293680867',
+            input: '',
+            output: '',
+        },
+        {
+            testId: '9acb235d-8f7e-4483-ac00-1df5b9a194b2',
+            input: 'f',
+            output: '',
+        },
+        {
+            testId: 'd9df02e0-e0fd-4b8c-a0bc-6737983a4c2a',
+            input: 'fo',
+            output: 'f',
+        },
+        {
+            testId: 'd639f219-2606-4180-b164-364338b95382',
+            input: 'fooBar',
+            output: 'fooBa',
+        },
+    ];
+
+    // Tests for capitalizeFirstLetter()
+    stripLastCharacterTestCombinations.forEach(function (stripLastCharacterTestCombination) {
+        // Define test data
+        const input = stripLastCharacterTestCombination.input;
+        const output = stripLastCharacterTestCombination.output;
+
+        it(`${stripLastCharacterTestCombination.testId}: stripLastCharacter('${input}') should be '${output}'`, () => {
+            // Perform the assertion
+            expect(stripLastCharacter(input)).toBe(output);
         });
     });
 });
