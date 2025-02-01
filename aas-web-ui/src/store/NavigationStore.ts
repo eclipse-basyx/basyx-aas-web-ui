@@ -327,6 +327,8 @@ export const useNavigationStore = defineStore('navigationStore', () => {
                             break;
                     }
 
+                    path += '?limit=1';
+
                     disableMessage = false;
                     const response = await getRequest(path, context, disableMessage);
                     basyxComponent.loading = false;
