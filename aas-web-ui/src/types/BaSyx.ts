@@ -7,7 +7,7 @@ export interface BaSyxComponent {
     connect: () => void;
     label: string;
     pathCheck?: string;
-    additionalParams?: (type?: string) => string;
+    additionalParams?: string;
 }
 
 export type BaSyxComponentKey =
