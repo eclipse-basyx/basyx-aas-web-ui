@@ -59,52 +59,52 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     // Reactive BaSyx Components Configurations
     const basyxComponents = reactive<Record<BaSyxComponentKey, BaSyxComponent>>({
         AASDiscovery: {
-            identification: 'aas-discovery',
             url: AASDiscoveryURL,
             loading: ref(false),
             connected: ref(null),
             connect: () => connectComponent('AASDiscovery'),
             label: 'AAS Discovery URL',
+            pathCheck: aasDiscoveryEndpointPath,
         },
         AASRegistry: {
-            identification: 'aas-registry',
             url: AASRegistryURL,
             loading: ref(false),
             connected: ref(null),
             connect: () => connectComponent('AASRegistry'),
             label: 'AAS Registry URL',
+            pathCheck: aasRegistryEndpointPath,
         },
         SubmodelRegistry: {
-            identification: 'sm-registry',
             url: SubmodelRegistryURL,
             loading: ref(false),
             connected: ref(null),
             connect: () => connectComponent('SubmodelRegistry'),
             label: 'Submodel Registry URL',
+            pathCheck: smRegistryEndpointPath,
         },
         AASRepo: {
-            identification: 'aas-repo',
             url: AASRepoURL,
             loading: ref(false),
             connected: ref(null),
             connect: () => connectComponent('AASRepo'),
             label: 'AAS Repository URL',
+            pathCheck: aasRepoEndpointPath,
         },
         SubmodelRepo: {
-            identification: 'sm-repo',
             url: SubmodelRepoURL,
             loading: ref(false),
             connected: ref(null),
             connect: () => connectComponent('SubmodelRepo'),
             label: 'Submodel Repository URL',
+            pathCheck: smRepoEndpointPath,
         },
         ConceptDescriptionRepo: {
-            identification: 'cd-repo',
             url: ConceptDescriptionRepoURL,
             loading: ref(false),
             connected: ref(null),
             connect: () => connectComponent('ConceptDescriptionRepo'),
             label: 'Concept Description Repository URL',
+            pathCheck: cdRepoEndpointPath,
         },
     });
 
@@ -269,12 +269,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
                 let path = basyxComponentURL;
                 if (path.endsWith('/')) path = stripLastCharacter(path); // Strip ending slash
 
-                path = path.replace(aasDiscoveryEndpointPath, '');
-                path = path.replace(aasRegistryEndpointPath, '');
-                path = path.replace(smRegistryEndpointPath, '');
-                path = path.replace(aasRepoEndpointPath, '');
-                path = path.replace(smRepoEndpointPath, '');
-                path = path.replace(cdRepoEndpointPath, '');
+                if (basyxComponent.pathCheck) path = path.replace(basyxComponent.pathCheck, '');
 
                 if (path.endsWith('/')) path = stripLastCharacter(path); // Strip ending slash
                 path += '/description';
@@ -306,26 +301,8 @@ export const useNavigationStore = defineStore('navigationStore', () => {
                     );
                     if (path.endsWith('/')) path = stripLastCharacter(path); // Strip ending slash
 
-                    switch (basyxComponent.identification) {
-                        case 'aas-discovery':
-                            if (!path.endsWith(aasDiscoveryEndpointPath)) path += aasDiscoveryEndpointPath;
-                            break;
-                        case 'aas-registry':
-                            if (!path.endsWith(aasRegistryEndpointPath)) path += aasRegistryEndpointPath;
-                            break;
-                        case 'sm-registry':
-                            if (!path.endsWith(smRegistryEndpointPath)) path += smRegistryEndpointPath;
-                            break;
-                        case 'aas-repo':
-                            if (!path.endsWith(aasRepoEndpointPath)) path += aasRepoEndpointPath;
-                            break;
-                        case 'sm-repo':
-                            if (!path.endsWith(smRepoEndpointPath)) path += smRepoEndpointPath;
-                            break;
-                        case 'cd-repo':
-                            if (!path.endsWith(cdRepoEndpointPath)) path += cdRepoEndpointPath;
-                            break;
-                    }
+                    if (basyxComponent.pathCheck && !path.endsWith(basyxComponent.pathCheck))
+                        path += basyxComponent.pathCheck;
 
                     path += '?limit=1';
 
