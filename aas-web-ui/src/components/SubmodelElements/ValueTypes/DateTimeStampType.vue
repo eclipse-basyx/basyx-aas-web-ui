@@ -49,6 +49,7 @@
     import { computed, onMounted, ref, watch } from 'vue';
     import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
     import { useRequestHandling } from '@/composables/RequestHandling';
+    import { useSMEHandling } from '@/composables/SMEHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
     // Stores
@@ -56,6 +57,7 @@
 
     // Composables
     const { patchRequest } = useRequestHandling();
+    const { fetchAndDispatchSme } = useSMEHandling();
     const { unitSuffix } = useConceptDescriptionHandling();
 
     const props = defineProps({
@@ -76,10 +78,6 @@
             default: true,
         },
     });
-
-    const emit = defineEmits<{
-        (event: 'updateValue', updatedDateTimeStampValue: any): void;
-    }>();
 
     // Data
     const newDateTimeStampValue = ref<string>('');
@@ -128,7 +126,6 @@
     // Methods
     function updateValue(): void {
         if (isOperationVariable.value) {
-            emit('updateValue', newDateTimeStampValue.value);
             return;
         }
 
@@ -140,9 +137,8 @@
         const disableMessage = false;
         patchRequest(path, content, headers, context, disableMessage).then((response: any) => {
             if (response.success) {
-                let updatedDateTimeStampValue = { ...props.dateTimeStampValue };
-                updatedDateTimeStampValue.value = content.toString().replace(/'/g, '');
-                emit('updateValue', updatedDateTimeStampValue);
+                // After successful patch request fetch and dispatch updated SME
+                fetchAndDispatchSme(selectedNode.value.path, false);
             }
         });
     }

@@ -4,12 +4,12 @@ import type { LocationQuery, RouteRecordRaw } from 'vue-router';
 import { defineStore } from 'pinia';
 import { computed, reactive, ref } from 'vue';
 import { useRequestHandling } from '@/composables/RequestHandling';
-import { useAASStore } from '@/store/AASDataStore';
+// import { useAASStore } from '@/store/AASDataStore';
 import { useEnvStore } from '@/store/EnvironmentStore';
 
 export const useNavigationStore = defineStore('navigationStore', () => {
     // Initialize Dependent Stores
-    const aasStore = useAASStore();
+    // const aasStore = useAASStore();
     const envStore = useEnvStore();
 
     // Composables
@@ -161,8 +161,8 @@ export const useNavigationStore = defineStore('navigationStore', () => {
 
     function dispatchComponentURL(
         componentKey: BaSyxComponentKey,
-        url: string,
-        clearSelectedNode: boolean = true
+        url: string
+        // clearSelectedNode: boolean = true
     ): void {
         switch (componentKey) {
             case 'AASDiscovery':
@@ -170,11 +170,11 @@ export const useNavigationStore = defineStore('navigationStore', () => {
                 break;
             case 'AASRegistry':
                 AASRegistryURL.value = url;
-                if (clearSelectedNode) aasStore.dispatchSelectedNode({});
+                // if (clearSelectedNode) aasStore.dispatchSelectedNode({});
                 break;
             case 'SubmodelRegistry':
                 SubmodelRegistryURL.value = url;
-                if (clearSelectedNode) aasStore.dispatchSelectedNode({});
+                // if (clearSelectedNode) aasStore.dispatchSelectedNode({});
                 break;
             case 'AASRepo':
                 AASRepoURL.value = url;

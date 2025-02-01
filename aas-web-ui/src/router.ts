@@ -22,6 +22,7 @@ import Page404 from '@/pages/Page404.vue';
 import SubmodelViewer from '@/pages/SubmodelViewer.vue';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { base64Decode } from '@/utils/EncodeDecodeUtils';
+import { useAASStore } from './store/AASDataStore';
 
 // Static routes
 const staticRoutes: Array<RouteRecordRaw> = [
@@ -112,6 +113,8 @@ export async function createAppRouter(): Promise<Router> {
 
     // Stores
     const navigationStore = useNavigationStore();
+    const aasStore = useAASStore();
+
     // Connect to (BaSyx) components, otherwise IDs redirecting not possible
     navigationStore.connectComponents();
 
@@ -186,8 +189,8 @@ export async function createAppRouter(): Promise<Router> {
                     if (queryLoaded && Object.keys(queryLoaded).length > 0 && updatedRoute !== to) {
                         next(updatedRoute);
                         // Dispatch AAS/SM/SME with respect to URL query parameter
-                        if (queryLoaded.aas) await fetchAndDispatchAas(queryLoaded.aas as string);
-                        if (queryLoaded.path) await fetchAndDispatchSme(queryLoaded.path as string, true);
+                        // if (queryLoaded.aas) await fetchAndDispatchAas(queryLoaded.aas as string);
+                        // if (queryLoaded.path) await fetchAndDispatchSme(queryLoaded.path as string, true);
                         return;
                     }
                 }
@@ -196,6 +199,34 @@ export async function createAppRouter(): Promise<Router> {
 
         // TODO Fetch and dispatching of AAS/SM/SME with respect to URL query parameter
         // TODO Remove keep alive from App.vue
+
+        if (to.query.aas && to.query.aas !== '' && from.query.aas !== to.query.aas) {
+            const aas = await fetchAndDispatchAas(to.query.aas as string);
+            if (!aas || Object.keys(aas).length === 0) {
+                // Remove aas query for not available AAS endpoint
+                const updatedRoute = Object.assign({}, to, {
+                    query: {},
+                });
+                next(updatedRoute);
+                return;
+            }
+        } else if (!to.query.aas || to.query.aas === '') {
+            aasStore.dispatchSelectedAAS({});
+        }
+
+        if (to.query.path && to.query.path !== '' && from.query.path !== to.query.path) {
+            const sme = await fetchAndDispatchSme(to.query.path as string, true);
+            if (!sme || Object.keys(sme).length === 0) {
+                // Remove path query for not available SME path
+                const updatedRoute = Object.assign({}, to, {
+                    query: { aas: to.query.aas },
+                });
+                next(updatedRoute);
+                return;
+            }
+        } else if (!to.query.path || to.query.path === '') {
+            aasStore.dispatchSelectedNode({});
+        }
 
         next();
     });

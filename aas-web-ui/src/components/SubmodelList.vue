@@ -13,7 +13,18 @@
                             icon="mdi-chevron-left"
                             @click="backToAASList()" />
                         <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
-                        <span class="text-truncate ml-2">
+                        <template v-if="submodelList.length > 10">
+                            <v-col class="ml-2">
+                                <v-text-field
+                                    variant="outlined"
+                                    density="compact"
+                                    hide-details
+                                    label="Search for Submodel ..."
+                                    clearable
+                                    @update:model-value="filterSubmodelList"></v-text-field>
+                            </v-col>
+                        </template>
+                        <span v-else class="text-truncate ml-2">
                             {{ nameToDisplay(selectedAAS) }}
                         </span>
                     </div>
@@ -22,39 +33,47 @@
                 <v-divider></v-divider>
             </template>
             <v-card-text class="py-2 px-2" style="overflow-y: auto; height: calc(100svh - 170px)">
-                <div v-if="loading">
+                <div v-if="listLoading">
                     <v-skeleton-loader type="list-item@6"></v-skeleton-loader>
                 </div>
                 <template v-else>
                     <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
-                        <template v-if="submodelData.length > 0">
-                            <!-- List of Submodels -->
-                            <v-list-item
-                                v-for="submodel in submodelData"
-                                :key="submodel.id"
-                                :active="submodel.isActive"
-                                color="primarySurface"
-                                base-color="listItem"
-                                variant="tonal"
-                                nav
-                                class="mb-2"
-                                style="border-width: 1px"
-                                :style="{
-                                    'border-color': submodel.isActive
-                                        ? primaryColor + ' !important'
-                                        : isDark
-                                          ? '#686868 !important'
-                                          : '#ABABAB !important',
-                                }"
-                                @click="toggleNode(submodel)">
-                                <template #prepend>
-                                    <v-chip label border color="primary" size="x-small" class="mr-3">SM</v-chip>
+                        <!-- List of Submodels -->
+                        <v-list v-if="submodelList.length > 0" class="pa-0">
+                            <v-virtual-scroll
+                                ref="virtualScrollRef"
+                                :items="submodelList"
+                                :item-height="56"
+                                class="pb-2 bg-card">
+                                <template #default="{ item }">
+                                    <v-list-item
+                                        :key="item.id"
+                                        :active="isSelected(item)"
+                                        color="primarySurface"
+                                        base-color="listItem"
+                                        variant="tonal"
+                                        nav
+                                        class="mb-2"
+                                        style="border-width: 1px"
+                                        :style="{
+                                            'border-color': isSelected(item)
+                                                ? primaryColor + ' !important'
+                                                : isDark
+                                                  ? '#686868 !important'
+                                                  : '#ABABAB !important',
+                                        }"
+                                        @click="selectSM(item)">
+                                        <template #prepend>
+                                            <v-chip label border color="primary" size="x-small" class="mr-3">SM</v-chip>
+                                        </template>
+                                        <v-list-item-title
+                                            :class="isSelected(item) ? 'text-primary' : 'text-listItemText'"
+                                            >{{ item.idShort }}</v-list-item-title
+                                        >
+                                    </v-list-item>
                                 </template>
-                                <v-list-item-title :class="submodel.isActive ? 'text-primary' : 'text-listItemText'">{{
-                                    submodel.idShort
-                                }}</v-list-item-title>
-                            </v-list-item>
-                        </template>
+                            </v-virtual-scroll>
+                        </v-list>
                         <v-empty-state
                             v-else
                             title="No existing Submodels"
@@ -74,27 +93,28 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, onMounted, ref, watch } from 'vue';
+    import type { ComponentPublicInstance } from 'vue';
+    import { computed, onActivated, onMounted, Ref, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
-    import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
-    import { useRequestHandling } from '@/composables/RequestHandling';
+    import { useAASHandling } from '@/composables/AASHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { formatDate } from '@/utils/DateUtils';
-    import { extractEndpointHref } from '@/utils/DescriptorUtils';
-    import { base64Encode } from '@/utils/EncodeDecodeUtils';
+
+    // Extend the ComponentPublicInstance type to include scrollToIndex
+    interface VirtualScrollInstance extends ComponentPublicInstance {
+        scrollToIndex: (index: number) => void;
+    }
 
     // Vue Router
     const route = useRoute();
     const router = useRouter();
 
     // Composables
-    const { getRequest } = useRequestHandling();
-    const { smNotFound } = useSMRepositoryClient();
-    const { nameToDisplay } = useReferableUtils();
+    const { fetchAasSmListById } = useAASHandling();
+    const { nameToDisplay, descriptionToDisplay } = useReferableUtils();
 
     // Stores
     const navigationStore = useNavigationStore();
@@ -105,210 +125,166 @@
     const theme = useTheme();
 
     // Data
-    const submodelData = ref([] as Array<any>);
-    const initialUpdate = ref(false);
-    const initialNode = ref({} as any);
+    const submodelList = ref([] as Array<any>) as Ref<Array<any>>; // Variable to store the SM Data
+    const submodelListUnfiltered = ref([] as Array<any>) as Ref<Array<any>>; // Variable to store the S; Data before filtering
+    const listLoading = ref(false); // Variable to store if the AAS List is loading
+    const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null); // Reference to the Virtual Scroll Component
 
     // Computed Properties
     const isDark = computed(() => theme.global.current.value.dark);
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
-    const loading = computed(() => aasStore.getLoadingState);
-    const aasRegistryServerURL = computed(() => navigationStore.getAASRegistryURL);
+    const selectedNode = computed(() => aasStore.getSelectedNode);
+    const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL);
     const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL);
     const isMobile = computed(() => navigationStore.getIsMobile);
     const primaryColor = computed(() => theme.current.value.colors.primary);
     const singleAas = computed(() => envStore.getSingleAas); // Get the single AAS state from the Store
 
     // Watchers
-    // initialize Submodel List when AAS gets selected or changes
-    watch(selectedAAS, () => {
-        initSubmodelList();
-    });
-
-    // Resets the Submodel List when the AAS Registry changes
-    watch(aasRegistryServerURL, () => {
-        if (!aasRegistryServerURL.value) {
-            submodelData.value = [];
+    watch(
+        () => aasRegistryURL.value,
+        () => {
+            // Resets the Submodel List when the AAS Registry changes
+            submodelList.value = [];
         }
-    });
+    );
 
-    // Resets the Submodel List when the Submodel Registry changes
-    watch(submodelRegistryURL, () => {
-        if (!submodelRegistryURL.value) {
-            submodelData.value = [];
+    watch(
+        () => submodelRegistryURL.value,
+        () => {
+            // Resets the Submodel List when the Submodel Registry changes
+            submodelList.value = [];
         }
-    });
+    );
+
+    watch(
+        () => selectedAAS.value,
+        () => {
+            submodelList.value = [];
+            initialize();
+        }
+    );
+
+    watch(
+        () => selectedNode.value,
+        () => {
+            scrollToSelectedSubmodel();
+        }
+    );
 
     onMounted(() => {
-        initSubmodelListWithRouteParameters();
+        initialize();
     });
 
-    async function initSubmodelList() {
-        // console.log('Initialize SubmodelList', this.SelectedAAS, this.initialUpdate, this.initialNode);
-        // return if no endpoints are available
+    onActivated(() => {
+        scrollToSelectedSubmodel();
+    });
+
+    function initialize(): void {
         if (!selectedAAS.value || !selectedAAS.value.endpoints || selectedAAS.value.endpoints.length === 0) {
-            // this.navigationStore.dispatchSnackbar({ status: true, timeout: 4000, color: 'error', btnColor: 'buttonText', text: 'AAS with no (valid) Endpoint selected!' });
-            submodelData.value = [];
+            submodelList.value = [];
             return;
         }
-        if (loading.value && !initialUpdate.value) return; // return if loading state is true -> prevents multiple requests
-        aasStore.dispatchLoadingState(true); // set loading state to true
-        if (selectedAAS.value.submodels) {
-            let fetchedSubmodelData = await requestSubmodels(selectedAAS.value.submodels);
-            // set the isActive prop of the initialNode if it exists and the initialUpdate flag is set
-            if (initialUpdate.value && initialNode.value) {
-                fetchedSubmodelData.forEach((submodel: any) => {
-                    if (submodel.path === initialNode.value.path) {
-                        submodel.isActive = true;
-                        submodel.timestamp = formatDate(new Date());
-                        aasStore.dispatchSelectedNode(submodel);
-                    }
-                });
-                initialUpdate.value = false;
-                initialNode.value = {};
-                submodelData.value = fetchedSubmodelData;
-            } else {
-                submodelData.value = fetchedSubmodelData;
-            }
-        } else {
-            submodelData.value = [];
-        }
-        aasStore.dispatchLoadingState(false);
+
+        listLoading.value = true;
+
+        fetchAasSmListById(selectedAAS.value.id).then((submodels: Array<any>) => {
+            let submodelsSorted = submodels.sort((a: { [x: string]: number }, b: { [x: string]: number }) =>
+                a['id'] > b['id'] ? 1 : -1
+            );
+
+            submodelList.value = [...submodelsSorted];
+
+            submodelListUnfiltered.value = [...submodelsSorted];
+
+            scrollToSelectedSubmodel();
+
+            listLoading.value = false;
+        });
     }
 
-    // Function to request all Submodels for the selected AAS
-    async function requestSubmodels(submodelRefs: any) {
-        // console.log('SubmodelRefs: ', submodelRefs);
-        let submodelPromises = submodelRefs.map((submodelRef: any) => {
-            // retrieve endpoint for submodel from submodel registry
-            // console.log('SubmodelRef: ', submodelRef, ' Submodel Registry: ', this.submodelRegistryURL);
-            // check if submodelRegistryURL includes "/submodel-descriptors" and add id if not (backward compatibility)
-            let smRegistryURL = submodelRegistryURL.value;
-            if (!smRegistryURL.includes('/submodel-descriptors')) {
-                smRegistryURL += '/submodel-descriptors';
-            }
-            const submodelId = submodelRef.keys[0].value;
-            let path = smRegistryURL + '/' + base64Encode(submodelId);
-            let context = 'retrieving Submodel Endpoint';
-            let disableMessage = false;
-            // TODO Replace by using SMHandling
-            return getRequest(path, context, disableMessage).then((response: any) => {
-                if (response.success) {
-                    if (response.data?.id) {
-                        // execute if the Request was successful
-                        const fetchedSubmodel = response.data;
-                        // console.log('SubmodelEndpoint: ', submodelEndpoint);
-                        const submodelHref = extractEndpointHref(fetchedSubmodel, 'SUBMODEL-3.0');
-                        let path = submodelHref;
-                        let context = 'retrieving Submodel Data';
-                        let disableMessage = true;
-                        return getRequest(path, context, disableMessage).then((response: any) => {
-                            if (response.success && response?.data?.id) {
-                                // execute if the Request was successful
-                                let submodel = response.data;
-                                // set the active State of the Submodel
-                                submodel.isActive = false;
-                                // set the Path of the Submodel
-                                submodel.path = path;
-                                return submodel;
-                            } else {
-                                return smNotFound(
-                                    response,
-                                    submodelId,
-                                    path,
-                                    "Submodel '" + submodelId + "' not found in SubmodelRepository"
-                                );
-                            }
-                        });
-                    } else {
-                        return smNotFound(
-                            response,
-                            submodelId,
-                            path,
-                            "Submodel '" + submodelId + "' not found in SubmodelRegistry"
-                        );
-                    }
-                }
-            });
-        });
-        try {
-            const submodels = await Promise.all(submodelPromises);
-            return submodels;
-        } finally {
-            aasStore.dispatchLoadingState(false);
+    function filterSubmodelList(value: string): void {
+        if (!value || value.trim() === '') {
+            submodelList.value = submodelListUnfiltered.value;
+        } else {
+            // filter list of SMs
+            let submodelListFiltered = submodelListUnfiltered.value.filter(
+                (sm: any) =>
+                    sm.id.toLowerCase().includes(value.toLowerCase()) ||
+                    sm.idShort.toLowerCase().includes(value.toLowerCase()) ||
+                    nameToDisplay(sm).toLowerCase().includes(value.toLowerCase()) ||
+                    descriptionToDisplay(sm).toLowerCase().includes(value.toLowerCase())
+            );
+            submodelList.value = submodelListFiltered;
         }
+        scrollToSelectedSubmodel();
     }
 
-    // Function to toggle a Node
-    function toggleNode(submodel: any) {
-        // console.log('Selected Submodel: ', submodel);
-        // dublicate the selected Node Object
-        let localSubmodel = { ...submodel };
-        localSubmodel.isActive = true;
-        // set the isActive Property of all other Submodels to false
-        submodelData.value.forEach((submodel: any) => {
-            if (submodel.id !== localSubmodel.id) {
-                submodel.isActive = false;
-            } else {
-                submodel.isActive = true;
-            }
-        });
-        // Add path of the selected Node to the URL as Router Query
-        if (localSubmodel.isActive) {
-            const aasEndpopint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
-            if (isMobile.value) {
-                // Change to SubmodelElementView on Mobile and add the path to the URL
-                router.push({
-                    name: 'Visualization',
-                    query: {
-                        aas: aasEndpopint,
-                        path: localSubmodel.path,
-                    },
-                });
-            } else {
-                // just add the path to the URL
-                router.push({
-                    query: {
-                        aas: aasEndpopint,
-                        path: localSubmodel.path,
-                    },
-                });
-            }
-            aasStore.dispatchSelectedNode(localSubmodel);
-        } else {
-            // remove the path query from the Route entirely
+    function selectSM(submodel: any): void {
+        if (isSelected(submodel)) {
+            // Deselect submodel: remove the path query
             let query = { ...route.query };
             delete query.path;
             router.push({ query: query });
-            aasStore.dispatchSelectedNode({});
+        } else {
+            // Select submodel: add smePath to path query
+            let scrollToSubmodel = false;
+            if (!selectedNode.value || Object.keys(selectedNode.value).length === 0) {
+                scrollToSubmodel = true;
+            }
+
+            let query = { ...route.query };
+            query.path = submodel.path;
+            if (isMobile.value) {
+                // Go to Visualization
+                router.push({
+                    name: 'Visualization',
+                    query: query,
+                });
+            } else {
+                router.push({
+                    query: query,
+                });
+            }
+
+            if (scrollToSubmodel) scrollToSelectedSubmodel();
         }
     }
 
-    // Function to initialize the Submodel List with the Route Parameters
-    function initSubmodelListWithRouteParameters() {
-        // check if the selectedAAS is already set in the Store and initialize the Submodel List if so
-        if (selectedAAS.value && selectedAAS.value.endpoints && selectedAAS.value.endpoints.length > 0) {
-            // console.log('init Tree from Route Params: ', this.selectedAAS);
-            initSubmodelList();
+    function isSelected(submodel: any): boolean {
+        if (
+            !selectedNode.value ||
+            Object.keys(selectedNode.value).length === 0 ||
+            !selectedNode.value.id ||
+            !submodel ||
+            Object.keys(submodel).length === 0 ||
+            !submodel.id
+        ) {
+            return false;
         }
+        return selectedNode.value.id === submodel.id;
+    }
 
-        // check if the aas Query and the path Query are set in the URL and if so load the Submodel/Submodelelement
-        const searchParams = new URL(window.location.href).searchParams;
-        const aasEndpoint = searchParams.get('aas');
-        const path = searchParams.get('path');
+    // Function to scroll to the selected AAS
+    function scrollToSelectedSubmodel(): void {
+        // Find the index of the selected item
+        const index = submodelList.value.findIndex((sm: any) => isSelected(sm));
 
-        if (aasEndpoint && path) {
-            // console.log('AAS and Path Queris are set: ', aasEndpoint, path);
-            let node = {} as any;
-            node.path = path;
-            node.isActive = true;
-            // set the isActive prop of the node in submodelData to true
-            initialUpdate.value = true;
-            initialNode.value = node;
+        if (index !== -1) {
+            const intervalId = setInterval(() => {
+                if (
+                    virtualScrollRef.value &&
+                    virtualScrollRef.value?.$el.querySelector('.v-virtual-scroll__container').children.length > 0
+                ) {
+                    // Access the scrollable container
+                    virtualScrollRef.value.scrollToIndex(index);
+                    clearInterval(intervalId);
+                }
+            }, 50);
         }
     }
 
-    function backToAASList() {
+    function backToAASList(): void {
         router.push({ name: 'AASList', query: route.query });
     }
 </script>

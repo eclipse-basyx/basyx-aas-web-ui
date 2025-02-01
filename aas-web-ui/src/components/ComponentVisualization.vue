@@ -128,7 +128,7 @@
     const routesToVisualization: Array<RouteRecordNameGeneric> = ['ComponentVisualization', 'Visualization'];
 
     // Computed Properties
-    const aasRegistryServerURL = computed(() => navigationStore.getAASRegistryURL);
+    const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL);
     const submodelRegistryServerURL = computed(() => navigationStore.getSubmodelRegistryURL);
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
     const selectedNode = computed(() => aasStore.getSelectedNode);
@@ -193,25 +193,17 @@
     const viewerMode = computed(() => route.name === 'SubmodelViewer' || routesToVisualization.includes(route.name));
 
     // Watchers
-    // Resets the SubmodelElementView when the AAS Registry changes
     watch(
-        () => aasRegistryServerURL.value,
+        () => aasRegistryURL.value,
         () => {
-            if (!aasRegistryServerURL.value) {
-                resetLocalData();
-                initializeView();
-            }
+            resetLocalData();
         }
     );
 
-    // Resets the SubmodelElementView when the Submodel Registry changes
     watch(
         () => submodelRegistryServerURL.value,
         () => {
-            if (!submodelRegistryServerURL.value) {
-                resetLocalData();
-                initializeView();
-            }
+            resetLocalData();
         }
     );
 
@@ -220,7 +212,7 @@
         () => selectedAAS.value,
         () => {
             resetLocalData();
-            initializeView();
+            initialize();
         }
     );
 
@@ -229,21 +221,21 @@
         () => selectedNode.value,
         () => {
             resetLocalData();
-            initializeView();
+            initialize();
         },
         { deep: true }
     );
 
     onMounted(() => {
-        initializeView();
+        initialize();
     });
 
-    function initializeView(): void {
+    function initialize(): void {
         if (Object.keys(selectedNode.value).length === 0) {
             resetLocalData();
             return;
         }
-        submodelElementData.value = { ...selectedNode.value }; // create local copy of the SubmodelElement Object
+        submodelElementData.value = { ...selectedNode.value };
     }
 
     function resetLocalData(): void {

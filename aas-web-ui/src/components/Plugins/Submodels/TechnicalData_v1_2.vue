@@ -269,7 +269,7 @@
         setup() {
             const theme = useTheme();
             const aasStore = useAASStore();
-            const { calculateSMEPathes } = useSMHandling();
+            const { setData } = useSMHandling();
             const { checkIdShort, descriptionToDisplay, nameToDisplay } = useReferableUtils();
 
             return {
@@ -278,7 +278,7 @@
                 checkIdShort,
                 descriptionToDisplay,
                 nameToDisplay,
-                calculateSMEPathes,
+                setData,
             };
         },
 
@@ -318,12 +318,16 @@
                     return;
                 }
 
-                let technicalData = { ...this.submodelElementData }; // create local copy of the Nameplate Object
-                this.technicalData = await this.calculateSMEPathes(technicalData, this.SelectedNode.path, true); // Set the DigitalNameplate Data
-                this.extractGeneralProperties(technicalData);
-                this.extractProductClassifications(technicalData);
-                this.extractTechnicalProperties(technicalData);
-                this.extractFurtherInformation(technicalData);
+                this.technicalData = await this.setData(
+                    { ...this.submodelElementData },
+                    this.submodelElementData.path,
+                    true,
+                    this.submodelElementData.timestamp
+                ); // Set the DigitalNameplate Data
+                this.extractGeneralProperties(this.technicalData);
+                this.extractProductClassifications(this.technicalData);
+                this.extractTechnicalProperties(this.technicalData);
+                this.extractFurtherInformation(this.technicalData);
                 this.loading = false;
             },
 

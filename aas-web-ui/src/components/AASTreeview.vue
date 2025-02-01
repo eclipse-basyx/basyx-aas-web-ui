@@ -22,7 +22,7 @@
             <v-card-text
                 style="overflow-y: auto"
                 :style="singleAas ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 170px)'">
-                <div v-if="loading">
+                <div v-if="treeLoading">
                     <v-list-item v-for="i in 6" :key="i" density="compact" nav class="pa-0">
                         <template #prepend>
                             <v-skeleton-loader type="list-item" :width="50"></v-skeleton-loader>
@@ -38,7 +38,7 @@
                 <template v-else>
                     <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
                         <!-- Button to add a new Submodel -->
-                        <template v-if="editMode && submodelData.length > 0">
+                        <template v-if="editMode && submodelTree.length > 0">
                             <v-row justify="center">
                                 <v-col cols="auto" class="pt-1 pb-5">
                                     <v-btn
@@ -48,11 +48,10 @@
                                 </v-col>
                             </v-row>
                         </template>
-                        <template v-if="submodelData.length > 0">
+                        <template v-if="submodelTree.length > 0">
                             <!-- TODO: Evaluate and Replace with Vuetify Treeview Component when it gets fully released in Q1 2025 -->
-                            <!-- BUG: If a deeply nested SME is selected (e.g. SM Nameplate - SMC ContactInformation - SME Street) and the SM Nameplate gets selected, the expanded tree of SMC ContactInformation gets closed -->
                             <VTreeview
-                                v-for="item in submodelData"
+                                v-for="item in submodelTree"
                                 :key="item.id"
                                 class="root"
                                 :item="item"
@@ -84,24 +83,17 @@
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
-    import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
-    import { useIDUtils } from '@/composables/IDUtils';
-    import { useRequestHandling } from '@/composables/RequestHandling';
+    import { useAASHandling } from '@/composables/AASHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { formatDate } from '@/utils/DateUtils';
-    import { extractEndpointHref } from '@/utils/DescriptorUtils';
-    import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
     // Vue Router
     const route = useRoute();
 
     // Composables
-    const { smNotFound } = useSMRepositoryClient();
-    const { getRequest } = useRequestHandling();
+    const { fetchAasSmListById } = useAASHandling();
     const { nameToDisplay } = useReferableUtils();
-    const { generateUUID } = useIDUtils();
 
     // Stores
     const navigationStore = useNavigationStore();
@@ -109,9 +101,8 @@
     const envStore = useEnvStore();
 
     // Data
-    const submodelData = ref([] as Array<any>); // Treeview Data
-    const initialUpdate = ref(false); // Flag to check if the initial update of the Treeview is needed and/or done
-    const initialNode = ref({} as any); // Initial Node to set the Treeview to
+    const submodelTree = ref([] as Array<any>); // Treeview Data
+    const treeLoading = ref(false); // Variable to store if the AAS List is loading
     const editDialog = ref(false); // // Variable to store if the Edit Dialog should be shown
     const newSubmodel = ref(false); // Variable to store if a new Submodel should be created
     const submodelToEdit = ref<any | undefined>(undefined); // Variable to store the Submodel to be edited
@@ -120,310 +111,138 @@
 
     // Computed Properties
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // get selected AAS from Store
-    const loading = computed(() => aasStore.getLoadingState); // gets loading State from Store
-    const aasRegistryServerURL = computed(() => navigationStore.getAASRegistryURL); // get AAS Registry URL from Store
+    const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL); // get AAS Registry URL from Store
     const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL); // get Submodel Registry URL from Store
     const selectedNode = computed(() => aasStore.getSelectedNode); // get the updated Treeview Node from Store
     const singleAas = computed(() => envStore.getSingleAas); // Get the single AAS state from the Store
-    const initTree = computed(() => aasStore.getInitTreeByReferenceElement); // get the init treeview flag from Store
     const editMode = computed(() => route.name === 'AASEditor'); // Check if the current Route is the AAS Editor
 
     // Watchers
-    watch(selectedAAS, () => {
-        initializeTree();
-    });
-
-    // Resets the Treeview when the AAS Registry changes
-    watch(aasRegistryServerURL, () => {
-        if (!aasRegistryServerURL.value) {
-            submodelData.value = [];
+    watch(
+        () => aasRegistryURL.value,
+        () => {
+            // Resets the Submodel Tree when the AAS Registry changes
+            submodelTree.value = [];
         }
-    });
+    );
 
-    // Resets the Treeview when the Submodel Registry changes
-    watch(submodelRegistryURL, () => {
-        if (!submodelRegistryURL.value) {
-            submodelData.value = [];
+    watch(
+        () => submodelRegistryURL.value,
+        () => {
+            // Resets the Submodel Tree when the Submodel Registry changes
+            submodelTree.value = [];
         }
-    });
+    );
 
-    // change the submodelData Object when the updated Node changes
-    watch(selectedNode, () => {
-        updateNode(selectedNode.value);
-    });
-
-    // initialize Treeview when the initTree flag changes
-    watch(initTree, () => {
-        if (initTree.value) {
-            initTreeWithRouteParams();
-            aasStore.dispatchInitTreeByReferenceElement(false); // reset the initTree flag
+    watch(
+        () => selectedAAS.value,
+        () => {
+            submodelTree.value = [];
+            initialize();
         }
-    });
+    );
 
     onMounted(() => {
-        initTreeWithRouteParams();
+        initialize();
     });
 
-    async function initializeTree() {
-        // console.log('Initialize Treeview', selectedAAS.value, initialUpdate.value, initialNode.value);
-        // return if no endpoints are available
+    async function initialize(): Promise<void> {
         if (!selectedAAS.value || !selectedAAS.value.endpoints || selectedAAS.value.endpoints.length === 0) {
-            // this.navigationStore.dispatchSnackbar({ status: true, timeout: 4000, color: 'error', btnColor: 'buttonText', text: 'AAS with no (valid) Endpoint selected!' });
-            submodelData.value = [];
+            submodelTree.value = [];
             return;
         }
-        if (loading.value && !initialUpdate.value) return; // return if loading state is true -> prevents multiple requests
-        aasStore.dispatchLoadingState(true); // set loading state to true
-        if (selectedAAS.value.submodels) {
-            let fetchedSubmodelData = await requestSubmodels(selectedAAS.value.submodels);
-            // set the isActive prop of the initialNode if it exists and the initialUpdate flag is set
-            if (initialUpdate.value && initialNode.value) {
-                let expandedSubmodelData = expandTree(fetchedSubmodelData, initialNode.value); // Update the Treeview to expand until the initially set node is reached
-                // this.updateNode(this.initialNode); // set the isActive prop of the initialNode to true
-                initialUpdate.value = false;
-                initialNode.value = {};
-                submodelData.value = expandedSubmodelData;
-            } else {
-                submodelData.value = fetchedSubmodelData;
-            }
-        } else {
-            submodelData.value = [];
-        }
-        aasStore.dispatchLoadingState(false);
-    }
 
-    // Function to request all Submodels for the selected AAS
-    async function requestSubmodels(submodelRefs: any) {
-        // console.log('SubmodelRefs: ', submodelRefs);
-        let submodelPromises = submodelRefs.map((submodelRef: any) => {
-            // retrieve endpoint for submodel from submodel registry
-            // console.log('SubmodelRef: ', submodelRef, ' Submodel Registry: ', this.submodelRegistryServerURL);
-            // check if submodelRegistryURL includes "/submodel-descriptors" and add id if not (backward compatibility)
-            let smRegistryURL = submodelRegistryURL.value;
-            if (!smRegistryURL.includes('/submodel-descriptors')) {
-                smRegistryURL += '/submodel-descriptors';
-            }
-            const submodelId = submodelRef.keys[0].value;
-            let path = smRegistryURL + '/' + base64Encode(submodelId);
-            let context = 'retrieving Submodel Endpoint';
-            let disableMessage = false;
-            // TODO Replace by using SMHandling
-            return getRequest(path, context, disableMessage).then((response: any) => {
-                if (response.success) {
-                    // execute if the Request was successful
-                    if (response.data?.id) {
-                        const fetchedSubmodel = response.data;
-                        // console.log('SubmodelEndpoint: ', submodelEndpoint);
-                        const submodelHref = extractEndpointHref(fetchedSubmodel, 'SUBMODEL-3.0');
-                        let path = submodelHref;
-                        let context = 'retrieving Submodel Data';
-                        let disableMessage = true;
-                        return getRequest(path, context, disableMessage).then((response: any) => {
-                            if (response.success && response?.data?.id) {
-                                // execute if the Request was successful
-                                let submodel = response.data;
-                                // set the active State of the Submodel
-                                submodel.isActive = false;
-                                // set the Path of the Submodel
-                                submodel.path = path;
-                                submodel.timestamp = formatDate(new Date());
-                                // check if submodel has SubmodelElements
-                                if (submodel.submodelElements && submodel.submodelElements.length > 0) {
-                                    // recursively create treestructure for contained submodelElements
-                                    let submodelElements = prepareTreeviewData(submodel.submodelElements, submodel);
-                                    // add the SubmodelElements to the Submodel
-                                    submodel.children = submodelElements;
-                                    // set showChildren to false (for the Treeview Component)
-                                    submodel.showChildren = false;
-                                }
-                                return submodel;
-                            } else {
-                                return smNotFound(
-                                    response,
-                                    submodelId,
-                                    path,
-                                    "Submodel '" + submodelId + "' not found in SubmodelRepository"
-                                );
-                            }
-                        });
-                    } else {
-                        return smNotFound(
-                            response,
-                            submodelId,
-                            path,
-                            "Submodel '" + submodelId + "' not found in SubmodelRegistry"
-                        );
-                    }
-                }
+        treeLoading.value = true;
+
+        fetchAasSmListById(selectedAAS.value.id).then((submodels: Array<any>) => {
+            let submodelsSorted = submodels.sort((a: { [x: string]: number }, b: { [x: string]: number }) =>
+                a['id'] > b['id'] ? 1 : -1
+            );
+
+            submodelTree.value = [...submodelsSorted].map((submodel: any) => {
+                submodel.showChildren =
+                    selectedNode.value &&
+                    Object.keys(selectedNode).length > 0 &&
+                    selectedNode.value.path &&
+                    selectedNode.value.path.trim() !== '' &&
+                    selectedNode.value.path.includes(submodel.path)
+                        ? true
+                        : false;
+                submodel.children = prepareForTree(submodel.submodelElements, submodel);
+                return submodel;
             });
+
+            treeLoading.value = false;
         });
-        try {
-            const submodels = await Promise.all(submodelPromises);
-            return submodels;
-        } finally {
-            aasStore.dispatchLoadingState(false);
-        }
     }
 
-    // Function to prepare the Datastructure for the Treeview
-    function prepareTreeviewData(SubmodelElements: any, parent: any) {
-        // console.log('SubmodeElements: ', SubmodelElements);
-        // iterate over all elements in the current level of the tree (SubmodelElements [e.g. SubmodelElementCollections, SubmodelElementLists, Entities, Properties, ...])
-        SubmodelElements.forEach((element: any, index: number) => {
-            // give the Element a unique ID
-            element.id = generateUUID();
-            // set the active State of each Element
-            element.isActive = false;
-            // set the Parent of each Element
-            element.timestamp = formatDate(new Date());
-            element.parent = parent;
-            // set the Path of each Element
-            if (element.parent.modelType == 'Submodel') {
-                element.path = element.parent.path + '/submodel-elements/' + element.idShort;
-            } else if (element.parent.modelType == 'SubmodelElementList') {
-                element.path = element.parent.path + encodeURIComponent('[') + index + encodeURIComponent(']');
+    // // Function to prepare the data structure for the Tree
+    function prepareForTree(submodelElements: Array<any>, parent: any): Array<any> {
+        const children = submodelElements.map((sme: any, index: number) => {
+            sme.parent = parent;
+
+            // Set path
+            if (sme.parent.modelType == 'Submodel') {
+                sme.path = sme.parent.path + '/submodel-elements/' + sme.idShort;
+            } else if (sme.parent.modelType == 'SubmodelElementList') {
+                sme.path = sme.parent.path + encodeURIComponent('[') + index + encodeURIComponent(']');
             } else {
-                element.path = element.parent.path + '.' + element.idShort;
+                sme.path = sme.parent.path + '.' + sme.idShort;
             }
-            // check if the Element has Children
-            if (element.submodelElements && element.submodelElements.length > 0) {
-                // check for SubmodelElements
-                // if the Element has Children, call the Function again with the Children as Data
-                element.children = prepareTreeviewData(element.submodelElements, element);
-                element.showChildren = false; // set showChildren to false (for the Treeview Component)
-            } else if (
-                element.value &&
-                Array.isArray(element.value) &&
-                element.value.length > 0 &&
-                (element.modelType == 'SubmodelElementCollection' || element.modelType == 'SubmodelElementList')
+
+            if (
+                sme.modelType == 'Submodel' &&
+                sme.submodelElements &&
+                Array.isArray(sme.submodelElements) &&
+                sme.submodelElements.length > 0
             ) {
-                // check for Values (SubmodelElementCollections or SubmodelElementLists)
-                // if the Element has Children, call the Function again with the Children as Data
-                element.children = prepareTreeviewData(element.value, element);
-                element.showChildren = false; // set showChildren to false (for the Treeview Component)
+                // Submodel
+                sme.children = prepareForTree(sme.submodelElements, sme);
+                sme.showChildren =
+                    selectedNode.value &&
+                    Object.keys(selectedNode).length > 0 &&
+                    selectedNode.value.path &&
+                    selectedNode.value.path.trim() !== '' &&
+                    selectedNode.value.path.includes(sme.path)
+                        ? true
+                        : false;
             } else if (
-                element.statements &&
-                Array.isArray(element.statements) &&
-                element.statements.length > 0 &&
-                element.modelType == 'Entity'
+                ['SubmodelElementCollection', 'SubmodelElementList'].includes(sme.modelType) &&
+                sme.value &&
+                Array.isArray(sme.value) &&
+                sme.value.length > 0
             ) {
-                // check for Statements (Entities)
-                // if the Element has Children, call the Function again with the Children as Data
-                element.children = prepareTreeviewData(element.statements, element);
-                element.showChildren = false; // set showChildren to false (for the Treeview Component
+                // SubmodelElementCollection or SubmodelElementList
+                sme.children = prepareForTree(sme.value, sme);
+                sme.showChildren =
+                    selectedNode.value &&
+                    Object.keys(selectedNode).length > 0 &&
+                    selectedNode.value.path &&
+                    selectedNode.value.path.trim() !== '' &&
+                    selectedNode.value.path.includes(sme.path)
+                        ? true
+                        : false;
+            } else if (
+                sme.modelType == 'Entity' &&
+                sme.statements &&
+                Array.isArray(sme.statements) &&
+                sme.statements.length > 0
+            ) {
+                // Entity
+                sme.children = prepareForTree(sme.statements, sme);
+                sme.showChildren =
+                    selectedNode.value &&
+                    Object.keys(selectedNode).length > 0 &&
+                    selectedNode.value.path &&
+                    selectedNode.value.path.trim() !== '' &&
+                    selectedNode.value.path.includes(sme.path)
+                        ? true
+                        : false;
             }
+            return sme;
         });
-        return SubmodelElements;
-    }
 
-    // Function to select a Property
-    function updateNode(updatedNode: any) {
-        // console.log('Updated Node: ', updatedNode);
-        // change the isActive State of the selected Node in the Treeview Data (submodelData)
-        submodelData.value = changeActiveState(submodelData.value, updatedNode);
-    }
-
-    // Function to change the isActive State of a Node in the Treeview Data (submodelData)
-    function changeActiveState(data: any, updatedNode: any) {
-        // iterate over all elements in the current level of the tree (Submodels, SubmodelElements [e.g. SubmodelElementCollections, Properties])
-        data.forEach((element: any) => {
-            // check if the Element has Children
-            if (element.children && element.children.length > 0) {
-                // check for SubmodelElements
-                // if the Element has Children, call the Function again with the Children as Data
-                element.children = changeActiveState(element.children, updatedNode);
-            }
-            // check if the Element is the updated Node
-            if (element.path === updatedNode.path) {
-                // set isActive State of the updated node
-                element.isActive = updatedNode.isActive;
-            } else {
-                // set isActive State of all other nodes to false
-                element.isActive = false;
-            }
-        });
-        return data;
-    }
-
-    // Function to expand the Treeview until the selected Node is visible
-    function expandTree(submodelData: any, updatedNode: any) {
-        // console.log('Updated Node: ', updatedNode);
-        // iterate over submodelData to find the updated Node
-        let expandedSubmodelData = findNodeByPath(submodelData, updatedNode.path);
-        // console.log('Treeview Data: ', expandedSubmodelData);
-        return expandedSubmodelData;
-    }
-
-    // Function to find a Node in the Treeview Data (submodelData) by its path
-    function findNodeByPath(data: any, path: string) {
-        // iterate over all elements in the current level of the tree (Submodels, SubmodelElements [e.g. SubmodelElementCollections, Properties])
-        let foundNode = false;
-        data.forEach((element: any) => {
-            // check if the Element is the updated Node
-            if (element.path == path) {
-                // if node is found, recurse up the tree to set showChildren to true
-                // console.log('Found Node: ', element);
-                // set isActive State of the updated node
-                if (!foundNode) {
-                    foundNode = true;
-                    element.isActive = true;
-                }
-                // if prop showChildren exists, set it to true
-                if ('showChildren' in element) {
-                    element.showChildren = true;
-                }
-                // set showChildren of the parent of the updated node to true, if a parent exists
-                if (element.parent) {
-                    element.parent = updateParent(element.parent);
-                }
-            } else {
-                // recurse down the tree until node is found
-                // check if the Element has Children
-                if (element.children && element.children.length > 0) {
-                    // check for SubmodelElements
-                    // if the Element has Children, call the Function again with the Children as Data
-                    findNodeByPath(element.children, path);
-                }
-            }
-        });
-        return data;
-    }
-
-    // Function to set showChildren of the parent of the updated node to true, if a parent exists
-    function updateParent(parent: any) {
-        // if prop showChildren exists, set it to true
-        if ('showChildren' in parent) {
-            parent.showChildren = true;
-        }
-        // set showChildren of the parent of the updated node to true, if a parent exists
-        if (parent.parent) {
-            parent.parent = updateParent(parent.parent);
-        }
-        return parent;
-    }
-
-    // Function to initialize the treeview with route params
-    function initTreeWithRouteParams() {
-        // check if the selectedAAS is already set in the Store and initialize the Treeview if so
-        if (selectedAAS.value && selectedAAS.value.endpoints && selectedAAS.value.endpoints.length > 0) {
-            // console.log('init Tree from Route Params: ', this.selectedAAS);
-            initializeTree();
-        }
-
-        // check if the aas Query and the path Query are set in the URL and if so load the Submodel/Submodelelement
-        const searchParams = new URL(window.location.href).searchParams;
-        const aasEndpoint = searchParams.get('aas');
-        const path = searchParams.get('path');
-
-        if (aasEndpoint && path) {
-            // console.log('AAS and Path Queris are set: ', aasEndpoint, path);
-            let node = {} as any;
-            node.path = path;
-            node.isActive = true;
-            // set the isActive prop of the node in submodelData to true
-            initialUpdate.value = true;
-            initialNode.value = node;
-        }
+        return children;
     }
 
     function openEditDialog(createNew: boolean, submodel?: any): void {

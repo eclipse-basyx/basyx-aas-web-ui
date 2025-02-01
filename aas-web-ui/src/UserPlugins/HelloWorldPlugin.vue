@@ -29,7 +29,7 @@
     const aasStore = useAASStore();
 
     // Composables
-    const { calculateSMEPathes } = useSMHandling();
+    const { setData } = useSMHandling();
     const { nameToDisplay } = useReferableUtils();
 
     const props = defineProps({
@@ -60,6 +60,11 @@
 
         // Calculate the pathes of the child elements and save the data in the mySubmodelData variable
         // Set last parameter `withConceptDescriptions` to true, if Concept Descriptions are needed in the plugin
-        submodelData.value = await calculateSMEPathes(copiedSubmodelData, selectedNode.value.path, false);
+        submodelData.value = await setData(
+            copiedSubmodelData,
+            selectedNode.value.path,
+            false,
+            selectedNode.value.timestamp
+        );
     }
 </script>

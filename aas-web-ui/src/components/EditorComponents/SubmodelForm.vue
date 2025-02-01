@@ -292,9 +292,9 @@
             const path = submodelRepoUrl.value + '/' + base64Encode(submodelObject.value.id);
             const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
             router.push({ query: { aas: aasEndpoint, path: path } });
-            await fetchAndDispatchSme(path);
-            aasStore.dispatchSelectedNode(submodelObject.value);
-            await fetchAndDispatchSmById(submodelObject.value.id);
+            // await fetchAndDispatchSme(path);
+            // aasStore.dispatchSelectedNode(submodelObject.value);
+            // await fetchAndDispatchSmById(submodelObject.value.id);
         } else {
             // Update existing Submodel
             await putSubmodel(submodelObject.value);

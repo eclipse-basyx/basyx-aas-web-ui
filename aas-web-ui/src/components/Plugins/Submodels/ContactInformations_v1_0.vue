@@ -203,7 +203,7 @@
                             </v-table>
                         </v-sheet>
                         <v-card-actions
-                            v-if="contactInformation?.vCard && contactInformation.vCard.trim() !== ''"
+                            v-if="contactInformation.vCard && contactInformation.vCard.trim() !== ''"
                             class="pt-4 pb-0 pr-0">
                             <v-spacer></v-spacer>
                             <v-btn
@@ -246,7 +246,7 @@
     });
 
     // Composables
-    const { calculateSMEPathes } = useSMHandling();
+    const { setData } = useSMHandling();
     const { checkIdShort, getSubmodelElementByIdShort, nameToDisplay } = useReferableUtils();
     const {
         semanticIdSMCContactInformation,
@@ -286,9 +286,11 @@
             return;
         }
 
-        let submodelElementData = await calculateSMEPathes(
+        let submodelElementData = await setData(
             { ...props.submodelElementData },
-            props.submodelElementData.path
+            props.submodelElementData.path,
+            false,
+            props.submodelElementData.timestamp
         );
 
         // Determine ContactInformation SMCs

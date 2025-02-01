@@ -102,8 +102,7 @@
                             <Property
                                 v-else-if="submodelElementData.modelType === 'Property'"
                                 :property-object="submodelElementData"
-                                :is-editable="editMode"
-                                @update-value="initialize()"></Property>
+                                :is-editable="editMode"></Property>
                             <MultiLanguageProperty
                                 v-else-if="submodelElementData.modelType === 'MultiLanguageProperty'"
                                 :multi-language-property-object="submodelElementData"
@@ -115,13 +114,11 @@
                             <File
                                 v-else-if="submodelElementData.modelType === 'File'"
                                 :file-object="submodelElementData"
-                                :is-editable="editMode"
-                                @update-path="initialize()"></File>
+                                :is-editable="editMode"></File>
                             <Blob
                                 v-else-if="submodelElementData.modelType === 'Blob'"
                                 :blob-object="submodelElementData"
-                                :is-editable="editMode"
-                                @update-blob="initialize"></Blob>
+                                :is-editable="editMode"></Blob>
                             <ReferenceElement
                                 v-else-if="submodelElementData.modelType === 'ReferenceElement'"
                                 :reference-element-object="submodelElementData"
@@ -192,6 +189,9 @@
     const autoSyncInterval = ref<number | undefined>(undefined); // interval to send requests to the AAS
 
     // Computed Properties
+    const searchParams = computed(() => new URL(window.location.href).searchParams);
+    const aasEndpoint = computed(() => (searchParams.value.get('aas') || '').trim());
+    const smePath = computed(() => (searchParams.value.get('path') || '').trim());
     const aasRegistryServerURL = computed(() => navigationStore.getAASRegistryURL);
     const submodelRegistryServerURL = computed(() => navigationStore.getSubmodelRegistryURL);
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
@@ -203,21 +203,37 @@
     // Watchers
     watch(
         () => aasRegistryServerURL.value,
-        async () => {
+        () => {
             if (!aasRegistryServerURL.value) {
                 resetLocalData();
-                initialize();
+                initialize(selectedNode.value, true);
             }
         }
     );
 
     watch(
         () => submodelRegistryServerURL.value,
-        async () => {
+        () => {
             if (!submodelRegistryServerURL.value) {
                 resetLocalData();
-                initialize();
+                initialize(selectedNode.value, true);
             }
+        }
+    );
+
+    watch(
+        () => aasEndpoint.value,
+        () => {
+            resetLocalData();
+            initialize(selectedNode.value, true);
+        }
+    );
+
+    watch(
+        () => smePath.value,
+        () => {
+            resetLocalData();
+            initialize(selectedNode.value, true);
         }
     );
 
@@ -230,32 +246,37 @@
                     // create new interval
                     autoSyncInterval.value = window.setInterval(async () => {
                         // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
-                        await updateLocalData(await fetchSme(selectedNode.value.path, true));
+                        await initialize(await fetchSme(selectedNode.value.path, true));
                     }, autoSync.value.interval);
                 }
             }
 
             resetLocalData();
-            initialize(true);
+            initialize(selectedNode.value, true);
         }
     );
 
     watch(
         () => selectedNode.value,
-        async () => {
+        async (selectedNodeValue) => {
             window.clearInterval(autoSyncInterval.value); // clear old interval
             if (autoSync.value.state) {
-                if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
+                if (selectedNodeValue && Object.keys(selectedNodeValue).length > 0) {
                     // create new interval
                     autoSyncInterval.value = window.setInterval(async () => {
                         // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
-                        await updateLocalData(await fetchSme(selectedNode.value.path, true));
+                        await initialize(await fetchSme(selectedNodeValue.path, true));
                     }, autoSync.value.interval);
                 }
             }
 
-            resetLocalData();
-            initialize(true);
+            if (selectedNode.value.path === submodelElementData.value.path) {
+                // If updated selected node is the same, no need for update concept description
+                initialize(selectedNodeValue, false);
+            } else {
+                resetLocalData();
+                initialize(selectedNodeValue, true);
+            }
         },
         { deep: true }
     );
@@ -266,12 +287,12 @@
             window.clearInterval(autoSyncInterval.value); // clear old interval
             if (autoSyncValue.state) {
                 if (selectedNode.value && Object.keys(selectedNode.value).length > 0) {
-                    updateLocalData(await fetchSme(selectedNode.value.path, true));
+                    initialize(await fetchSme(selectedNode.value.path, true));
 
                     // create new interval
                     autoSyncInterval.value = window.setInterval(async () => {
                         // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
-                        updateLocalData(await fetchSme(selectedNode.value.path, true));
+                        initialize(await fetchSme(selectedNode.value.path, true));
                     }, autoSyncValue.interval);
                 }
             }
@@ -285,12 +306,12 @@
                 // create new interval
                 autoSyncInterval.value = window.setInterval(async () => {
                     // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
-                    updateLocalData(await fetchSme(selectedNode.value.path, true));
+                    initialize(await fetchSme(selectedNode.value.path, true));
                 }, autoSync.value.interval);
             }
         }
 
-        initialize(true); // Not needed, cause this component does not stand alone
+        initialize(selectedNode.value, true);
     });
 
     onBeforeUnmount(() => {
@@ -299,32 +320,18 @@
 
     /**
      * Initializes local data
+     *
      * @async
-     * @param {boolean} withConceptDescriptions - Flag to specify if local data should be initialized with with ConceptDescriptions (CDs)
+     * @param {any} smeData - The submodel element (SME) data
+     * @param {boolean} withConceptDescriptions - Flag to specify if local data should be updated with with ConceptDescriptions (CDs)
      */
-    async function initialize(withConceptDescriptions: boolean = true): Promise<void> {
-        if (!selectedNode.value || Object.keys(selectedNode.value).length === 0) {
+    async function initialize(smeData: any, withConceptDescriptions: boolean = true): Promise<void> {
+        if (!smeData || Object.keys(smeData).length === 0) {
             resetLocalData();
             return;
         }
 
-        updateLocalData(selectedNode.value, withConceptDescriptions);
-    }
-
-    function resetLocalData(): void {
-        submodelElementData.value = {};
-        conceptDescriptions.value = [];
-    }
-
-    /**
-     * Updates local data
-     *
-     * @async
-     * @param {any} updatedSMEData - The new/updated data
-     * @param {boolean} withConceptDescriptions - Flag to specify if local data should be updated with with ConceptDescriptions (CDs)
-     */
-    async function updateLocalData(updatedSMEData: any, withConceptDescriptions: boolean = true): Promise<void> {
-        submodelElementData.value = { ...updatedSMEData }; // create local copy
+        submodelElementData.value = { ...smeData }; // create local copy
 
         if (withConceptDescriptions) {
             if (
@@ -349,5 +356,13 @@
 
             conceptDescriptions.value = [];
         }
+    }
+
+    /**
+     * Resets local data
+     */
+    function resetLocalData(): void {
+        submodelElementData.value = {};
+        conceptDescriptions.value = [];
     }
 </script>

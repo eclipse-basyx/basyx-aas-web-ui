@@ -46,7 +46,7 @@ async function loadPlugins() {
         }
     }
 
-    await registerPlugins(app);
+    registerPlugins(app);
 
     // Plugins aka Component Visualizations
     const pluginFileRecords = {

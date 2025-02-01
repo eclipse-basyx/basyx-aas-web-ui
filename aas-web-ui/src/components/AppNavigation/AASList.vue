@@ -13,7 +13,7 @@
                                         variant="plain"
                                         :loading="listLoading"
                                         v-bind="props"
-                                        @click="loadAASListData()">
+                                        @click="initialize()">
                                         <template #loader>
                                             <span class="custom-loader"><v-icon light>mdi-cached</v-icon></span>
                                         </template>
@@ -244,7 +244,7 @@
     <!-- Dialog for uploading AAS -->
     <UploadAAS v-model="uploadAASDialog"></UploadAAS>
     <!-- Dialog for deleting AAS -->
-    <DeleteAAS v-model="deleteDialog" :aas="aasToDelete" :list-loading-state="loading"></DeleteAAS>
+    <DeleteAAS v-model="deleteDialog" :aas="aasToDelete" :list-loading-state="listLoading"></DeleteAAS>
 </template>
 
 <script lang="ts" setup>
@@ -270,7 +270,7 @@
 
     // Composables
     const { downloadAasx, isAvailableByIdInRepo } = useAASRepositoryClient();
-    const { getAasEndpoint, fetchAndDispatchAasById, fetchAasDescriptorList } = useAASHandling();
+    const { getAasEndpoint, fetchAasDescriptorList } = useAASHandling();
     const { nameToDisplay, descriptionToDisplay } = useReferableUtils();
 
     // Stores
@@ -300,7 +300,6 @@
     const aasRepoURL = computed(() => navigationStore.getAASRepoURL); // Get the AAS Repository URL from the Store
     const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL); // Get AAS Registry URL from Store
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
-    const loading = computed(() => aasStore.getLoadingState); // Get the loading State from Store
     const primaryColor = computed(() => theme.current.value.colors.primary); // returns the primary color of the current theme
     const triggerAASListReload = computed(() => navigationStore.getTriggerAASListReload); // Get the trigger signal for AAS List reload from store
     const singleAas = computed(() => envStore.getSingleAas); // Get the single AAS state from the Store
@@ -326,39 +325,39 @@
     // Watchers
     watch(
         () => aasRegistryURL.value,
-        async (newValue) => {
+        (newValue) => {
             if (newValue !== '') {
-                await loadAASListData();
+                initialize();
             }
         }
     );
 
     watch(
         () => selectedAAS.value,
-        async () => {
+        () => {
             scrollToSelectedAAS();
         }
     );
 
     watch(
         () => statusCheck.value,
-        async (statusCheckValue) => {
+        (statusCheckValue) => {
             window.clearInterval(statusCheckInterval.value); // clear old interval
             if (statusCheckValue.state === true) {
-                await updateStatusOfAasDescriptorList();
+                updateStatus();
 
                 // create new interval
-                statusCheckInterval.value = window.setInterval(async () => {
-                    await updateStatusOfAasDescriptorList();
+                statusCheckInterval.value = window.setInterval(() => {
+                    updateStatus();
                 }, statusCheck.value.interval);
             } else {
-                aasDescriptorList.value.forEach(async (aasDescriptor: any) => {
+                aasDescriptorList.value.forEach((aasDescriptor: any) => {
                     aasDescriptor.status = 'check disabled';
                 });
 
                 // Reset status icon after 2 seconds
                 setTimeout(() => {
-                    aasDescriptorList.value.forEach(async (aasDescriptor: any) => {
+                    aasDescriptorList.value.forEach((aasDescriptor: any) => {
                         aasDescriptor.status = '';
                     });
                 }, 2000);
@@ -369,24 +368,24 @@
 
     watch(
         () => triggerAASListReload.value,
-        async (triggerVal) => {
+        (triggerVal) => {
             if (triggerVal === true) {
-                await loadAASListData();
+                initialize();
             }
         }
     );
 
-    onMounted(async () => {
+    onMounted(() => {
         if (statusCheck.value.state === true) {
             window.clearInterval(statusCheckInterval.value); // clear old interval
 
             // create new interval
-            statusCheckInterval.value = window.setInterval(async () => {
-                await updateStatusOfAasDescriptorList();
+            statusCheckInterval.value = window.setInterval(() => {
+                updateStatus();
             }, statusCheck.value.interval);
         }
 
-        await loadAASListData(true);
+        initialize(true);
     });
 
     onBeforeUnmount(() => {
@@ -402,26 +401,38 @@
     }
 
     // Function to get the AAS Data from the Registry Server
-    async function loadAASListData(init: boolean = false): Promise<void> {
+    function initialize(init: boolean = false): void {
         listLoading.value = true;
 
-        const aasDescriptors = await fetchAasDescriptorList();
-        let aasDescriptorsSorted = aasDescriptors.sort((a: { [x: string]: number }, b: { [x: string]: number }) =>
-            a['id'] > b['id'] ? 1 : -1
-        );
+        fetchAasDescriptorList().then(async (aasDescriptors: Array<any>) => {
+            let aasDescriptorsSorted = aasDescriptors.sort((a: { [x: string]: number }, b: { [x: string]: number }) =>
+                a['id'] > b['id'] ? 1 : -1
+            );
 
-        aasDescriptorList.value = aasDescriptorsSorted;
+            aasDescriptorList.value = [...aasDescriptorsSorted];
 
-        await updateStatusOfAasDescriptorList(init);
+            await updateStatus(init);
 
-        aasDescriptorListUnfiltered.value = aasDescriptorList.value;
+            aasDescriptorListUnfiltered.value = [...aasDescriptorsSorted];
 
-        scrollToSelectedAAS();
+            scrollToSelectedAAS();
 
-        listLoading.value = false;
+            listLoading.value = false;
+        });
     }
 
-    async function updateStatusOfAasDescriptorList(init: boolean = false): Promise<void> {
+    /**
+     * Updates the status of each AAS descriptor in the descriptor list.
+     *
+     * This function checks the availability of the AAS in the repository
+     * updates its status based on the result.
+     *
+     * @param {boolean} [init=false] - Indicates whether to initialize the status
+     *                                  of descriptors. If true, sets status to
+     *                                  an empty string; if false, sets it
+     *                                  based on availability checks.
+     */
+    function updateStatus(init: boolean = false): void {
         if (Array.isArray(aasDescriptorList.value) && aasDescriptorList.value.length > 0)
             aasDescriptorList.value.forEach(async (aasDescriptor: any) => {
                 if (aasDescriptor && Object.keys(aasDescriptor).length > 0) {
@@ -458,8 +469,8 @@
     }
 
     // Function to select an AAS
-    async function selectAAS(aas: any): Promise<void> {
-        if (loading.value) {
+    function selectAAS(aas: any): void {
+        if (listLoading.value) {
             navigationStore.dispatchSnackbar({
                 status: true,
                 timeout: 4000,
@@ -469,20 +480,19 @@
             });
             return;
         }
-        if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0 && selectedAAS.value.id === aas.id) {
-            // Deselect AAS
+        if (isSelected(aas)) {
+            // Deselect AAS: remove entire query
             router.push({ query: {} });
-            aasStore.dispatchSelectedAAS({});
         } else {
-            let scrollToAasAfterDispatch = false;
+            // Select AAS: Add aasEndpoint to aas query
+            let scrollToAas = false;
             if (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0) {
-                scrollToAasAfterDispatch = true;
+                scrollToAas = true;
             }
 
             router.push({ query: { aas: getAasEndpoint(aas) } });
-            await fetchAndDispatchAasById(aas.id);
 
-            if (scrollToAasAfterDispatch) scrollToSelectedAAS();
+            if (scrollToAas) scrollToSelectedAAS();
         }
     }
 
@@ -501,7 +511,7 @@
     }
 
     // Function to scroll to the selected AAS
-    async function scrollToSelectedAAS(): Promise<void> {
+    function scrollToSelectedAAS(): void {
         // Find the index of the selected item
         const index = aasDescriptorList.value.findIndex((aasDescriptor: any) => isSelected(aasDescriptor));
 
@@ -524,7 +534,7 @@
         aasToDelete.value = AAS;
     }
 
-    function openEditDialog(createNew: boolean, aas?: any) {
+    function openEditDialog(createNew: boolean, aas?: any): void {
         editDialog.value = true;
         newShell.value = createNew;
         if (createNew === false && aas) {

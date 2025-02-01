@@ -44,7 +44,6 @@
                                 size="small"
                                 class="text-buttonText"
                                 color="primary"
-                                :loading="getLoadingState[referenceKey as 'first' | 'second']"
                                 :disabled="getDisabledState[referenceKey as 'first' | 'second']"
                                 @click="
                                     jumpToReference(

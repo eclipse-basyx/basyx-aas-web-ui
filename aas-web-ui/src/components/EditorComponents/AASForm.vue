@@ -75,6 +75,7 @@
     import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
     import { computed, ref, watch } from 'vue';
+    import { useRouter } from 'vue-router';
     import { useAASHandling } from '@/composables/AASHandling';
     import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
@@ -87,9 +88,12 @@
         aas?: any;
     }>();
 
+    // Vue Router
+    const router = useRouter();
+
     // Composables
     const { generateUUID } = useIDUtils();
-    const { fetchAndDispatchAasById } = useAASHandling();
+    const { getAasEndpointById } = useAASHandling();
 
     // Stores
     const aasStore = useAASStore();
@@ -309,7 +313,8 @@
             if (fileThumbnail.value !== undefined) {
                 await putThumbnail(fileThumbnail.value, AASObject.value.id);
             }
-            await fetchAndDispatchAasById(AASObject.value.id);
+            router.push({ query: { aas: getAasEndpointById(AASObject.value.id) } });
+            // await fetchAndDispatchAasById(AASObject.value.id);
         } else {
             // Update existing AAS
             await putAas(AASObject.value);
@@ -322,7 +327,8 @@
                 await putThumbnail(fileThumbnail.value, AASObject.value.id);
             }
             if (AASObject.value.id === selectedAAS.value.id) {
-                await fetchAndDispatchAasById(AASObject.value.id);
+                router.push({ query: { aas: getAasEndpointById(AASObject.value.id) } });
+                // await fetchAndDispatchAasById(AASObject.value.id);
             }
         }
         clearForm();

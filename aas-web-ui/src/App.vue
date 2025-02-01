@@ -20,20 +20,16 @@
     import { useDisplay } from 'vuetify';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { useAASHandling } from './composables/AASHandling';
-    import { useSMEHandling } from './composables/SMEHandling';
+    import { useAASStore } from './store/AASDataStore';
 
     // Stores
     const navigationStore = useNavigationStore();
+    const aasStore = useAASStore();
     const envStore = useEnvStore();
 
     // Vue Router
     const route = useRoute();
     const router = useRouter();
-
-    // Composables
-    const { fetchAndDispatchAas } = useAASHandling();
-    const { fetchAndDispatchSme } = useSMEHandling();
 
     // Vuetify
     const { mobile } = useDisplay();
@@ -41,6 +37,7 @@
 
     // Computed Properties
     const allowEditing = computed(() => envStore.getAllowEditing); // Check if the current environment allows showing the AAS Editor
+    const selectedAAS = computed(() => aasStore.getSelectedAAS);
 
     // Data
     const routesStayOnPages = ['About', 'NotFound404'] as Array<string>;
@@ -55,6 +52,9 @@
     const currentRoutePath = computed((): string => {
         return route.path;
     });
+    const searchParams = new URL(window.location.href).searchParams;
+    const aasEndpoint = (searchParams.get('aas') || '').trim();
+    const smePath = (searchParams.get('path') || '').trim();
 
     onMounted(async () => {
         // Check if the platform is a mobile device
@@ -74,21 +74,8 @@
         navigationStore.dispatchIsMobile(showMobileVersion);
         navigationStore.dispatchPlatform(platform.value);
 
-        // Extract the aas and path Queries from the URL
-        const searchParams = new URL(window.location.href).searchParams;
-        const aasEndpoint = (searchParams.get('aas') || '').trim();
-        const submodelElementPath = (searchParams.get('path') || '').trim();
-
-        let aas = {} as any;
-        if (aasEndpoint && aasEndpoint !== '') {
-            aas = await fetchAndDispatchAas(aasEndpoint);
-            if (submodelElementPath && submodelElementPath !== '') {
-                await fetchAndDispatchSme(submodelElementPath, true);
-            }
-        }
-
         // Check if single AAS mode is on and no aas query is set to either redirect or show 404
-        if (envStore.getSingleAas && (!aasEndpoint || aasEndpoint === '' || !aas || Object.keys(aas).length === 0)) {
+        if (envStore.getSingleAas && (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0)) {
             if (
                 !routesStayOnPages.includes(currentRouteName.value) &&
                 !currentRoutePath.value.startsWith('/modules/')
@@ -105,15 +92,15 @@
 
         // Check which platform is used and change the fitting view
         if (showMobileVersion) {
-            handleMobileView(aasEndpoint, submodelElementPath);
+            handleMobileView();
         } else {
-            handleDesktopView(aasEndpoint, submodelElementPath);
+            handleDesktopView();
         }
     });
 
     // Handle mobile view routing logic
     // TODO Move to route guard - https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/225
-    function handleMobileView(aasEndpoint: string | null, submodelElementPath: string | null): void {
+    function handleMobileView(): void {
         if (currentRouteName.value && routesToAASList.includes(currentRouteName.value)) {
             // Redirect to 'AASList' with existing query parameters
             router.push({ name: 'AASList', query: route.query });
@@ -122,7 +109,7 @@
             router.push({ name: 'SubmodelList', query: { aas: aasEndpoint } });
         } else if (currentRouteName.value && routesToVisualization.includes(currentRouteName.value)) {
             // Redirect to 'Visualization' with 'aas' and 'path' parameters
-            router.push({ name: 'Visualization', query: { aas: aasEndpoint, path: submodelElementPath } });
+            router.push({ name: 'Visualization', query: { aas: aasEndpoint, path: smePath } });
         } else if (currentRouteName.value && routesStayOnPages.includes(currentRouteName.value)) {
             // Stay on current page
             return;
@@ -134,10 +121,10 @@
 
     // Handle desktop view routing logic
     // TODO Move to route guard - https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/225
-    function handleDesktopView(aasEndpoint: string | null, submodelElementPath: string | null): void {
+    function handleDesktopView(): void {
         const query: any = {};
         if (aasEndpoint) query.aas = aasEndpoint;
-        if (submodelElementPath) query.path = submodelElementPath;
+        if (smePath) query.path = smePath;
         if (currentRouteName.value && routesToAASViewer.includes(currentRouteName.value)) {
             // Redirect to 'AASViewer' with appropriate query parameters
             router.push({ name: 'AASViewer', query });

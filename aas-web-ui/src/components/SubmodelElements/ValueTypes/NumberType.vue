@@ -55,6 +55,7 @@
     import { computed, onMounted, ref, watch } from 'vue';
     import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
     import { useRequestHandling } from '@/composables/RequestHandling';
+    import { useSMEHandling } from '@/composables/SMEHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
     // Stores
@@ -62,6 +63,7 @@
 
     // Composables
     const { patchRequest } = useRequestHandling();
+    const { fetchAndDispatchSme } = useSMEHandling();
     const { unitSuffix } = useConceptDescriptionHandling();
 
     const props = defineProps({
@@ -82,10 +84,6 @@
             default: true,
         },
     });
-
-    const emit = defineEmits<{
-        (event: 'updateValue', updatedNumberValue: any): void;
-    }>();
 
     // Data
     const newNumberValue = ref<string>('');
@@ -125,7 +123,6 @@
     // Methods
     function updateValue(): void {
         if (isOperationVariable.value) {
-            emit('updateValue', newNumberValue.value);
             return;
         }
 
@@ -137,9 +134,8 @@
         let disableMessage = false;
         patchRequest(path, content, headers, context, disableMessage).then((response: any) => {
             if (response.success) {
-                let updatedNumberValue = { ...props.numberValue };
-                updatedNumberValue.value = content.toString().replace(/'/g, '');
-                emit('updateValue', updatedNumberValue);
+                // After successful patch request fetch and dispatch updated SME
+                fetchAndDispatchSme(selectedNode.value.path, false);
             }
         });
     }

@@ -288,7 +288,7 @@
         setup() {
             const theme = useTheme();
             const aasStore = useAASStore();
-            const { calculateSMEPathes } = useSMHandling();
+            const { setData } = useSMHandling();
             const { checkIdShort, descriptionToDisplay, nameToDisplay } = useReferableUtils();
 
             return {
@@ -298,7 +298,7 @@
                 descriptionToDisplay,
                 nameToDisplay,
                 checkSemanticId,
-                calculateSMEPathes,
+                setData,
             };
         },
 
@@ -331,11 +331,11 @@
                     this.loading = false;
                     return;
                 }
-                let submodelElementData = { ...this.submodelElementData };
-                this.handoverDocuData = await this.calculateSMEPathes(
-                    submodelElementData,
-                    this.SelectedNode.path,
-                    true
+                this.handoverDocuData = await this.setData(
+                    { ...this.submodelElementData },
+                    this.submodelElementData.path,
+                    true,
+                    this.submodelElementData.timestamp
                 );
 
                 // create array of documents

@@ -231,7 +231,7 @@
         setup() {
             const theme = useTheme();
             const aasStore = useAASStore();
-            const { calculateSMEPathes } = useSMHandling();
+            const { setData } = useSMHandling();
             const { checkIdShort, descriptionToDisplay, nameToDisplay } = useReferableUtils();
 
             return {
@@ -240,7 +240,7 @@
                 checkIdShort,
                 descriptionToDisplay,
                 nameToDisplay,
-                calculateSMEPathes,
+                setData,
             };
         },
 
@@ -284,18 +284,18 @@
                     return;
                 }
 
-                let digitalNameplateData = { ...this.submodelElementData }; // create local copy of the Nameplate Object
-                this.digitalNameplateData = await this.calculateSMEPathes(
-                    digitalNameplateData,
-                    this.SelectedNode.path,
-                    true
+                this.digitalNameplateData = await this.setData(
+                    { ...this.submodelElementData },
+                    this.submodelElementData.path,
+                    true,
+                    this.submodelElementData.timestamp
                 );
 
                 // console.log('Digital Nameplate Data:', this.digitalNameplateData);
-                this.extractProductProperties(digitalNameplateData); // Extract the Product Properties
-                this.extractManufacturerProperties(digitalNameplateData); // Extract the Manufacturer Properties
-                this.extractMarkings(digitalNameplateData); // Extract the Markings
-                this.extractAssetSpecificProperties(digitalNameplateData); // Extract the Asset Specific Properties
+                this.extractProductProperties(this.digitalNameplateData); // Extract the Product Properties
+                this.extractManufacturerProperties(this.digitalNameplateData); // Extract the Manufacturer Properties
+                this.extractMarkings(this.digitalNameplateData); // Extract the Markings
+                this.extractAssetSpecificProperties(this.digitalNameplateData); // Extract the Asset Specific Properties
                 this.vCard = this.generateVCard(this.manufacturerProperties);
                 this.loading = false;
             },

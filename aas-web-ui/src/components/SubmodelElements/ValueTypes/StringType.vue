@@ -33,6 +33,7 @@
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRequestHandling } from '@/composables/RequestHandling';
+    import { useSMEHandling } from '@/composables/SMEHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
     // Stores
@@ -40,6 +41,7 @@
 
     // Composables
     const { patchRequest } = useRequestHandling();
+    const { fetchAndDispatchSme } = useSMEHandling();
 
     const props = defineProps({
         stringValue: {
@@ -59,10 +61,6 @@
             default: true,
         },
     });
-
-    const emit = defineEmits<{
-        (event: 'updateValue', updatedStringValue: any): void;
-    }>();
 
     // Data
     const newStringValue = ref('');
@@ -99,7 +97,6 @@
     // Methods
     function updateValue(): void {
         if (isOperationVariable.value) {
-            emit('updateValue', newStringValue.value);
             return;
         }
         const path = `${props.stringValue.path}/$value`;
@@ -110,9 +107,8 @@
         requestHeaders.append('Content-Type', 'application/json');
         patchRequest(path, content, requestHeaders, context, disableMessage).then((response: any) => {
             if (response.success) {
-                let updatedStringValue = { ...props.stringValue };
-                updatedStringValue.value = content.toString().replace(/'/g, '');
-                emit('updateValue', updatedStringValue);
+                // After successful patch request fetch and dispatch updated SME
+                fetchAndDispatchSme(selectedNode.value.path, false);
             }
         });
     }

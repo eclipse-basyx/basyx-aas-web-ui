@@ -36,6 +36,7 @@
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRequestHandling } from '@/composables/RequestHandling';
+    import { useSMEHandling } from '@/composables/SMEHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
     // Stores
@@ -43,6 +44,7 @@
 
     // Composables
     const { patchRequest } = useRequestHandling();
+    const { fetchAndDispatchSme } = useSMEHandling();
 
     const props = defineProps({
         booleanValue: {
@@ -62,10 +64,6 @@
             default: true,
         },
     });
-
-    const emit = defineEmits<{
-        (event: 'updateValue', updatedBooleanValue: any): void;
-    }>();
 
     // Data
     const newBooleanValue = ref<boolean>(false);
@@ -111,7 +109,6 @@
 
     function updateValue(): void {
         if (IsOperationVariable.value) {
-            emit('updateValue', newBooleanValue.value);
             return;
         }
 
@@ -123,9 +120,8 @@
         const disableMessage = false;
         patchRequest(path, content, headers, context, disableMessage).then((response: any) => {
             if (response.success) {
-                const updatedBooleanValue = { ...props.booleanValue };
-                updatedBooleanValue.value = content.toString().replace(/'/g, '');
-                emit('updateValue', updatedBooleanValue);
+                // After successful patch request fetch and dispatch updated SME
+                fetchAndDispatchSme(selectedNode.value.path, false);
             }
         });
     }

@@ -33,12 +33,6 @@ export function useSMEHandling() {
 
         if (!smOrSme || Object.keys(smOrSme).length === 0) return failResponse;
 
-        smOrSme.isActive = true;
-
-        // TODO move router.push to AASDataStore
-        // const query = route.query;
-        // query.path = smePath;
-        // router.push({ query: query });
         aasStore.dispatchSelectedNode(smOrSme);
 
         return smOrSme;
