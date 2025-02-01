@@ -112,6 +112,7 @@ export async function createAppRouter(): Promise<Router> {
 
     // Stores
     const navigationStore = useNavigationStore();
+
     // Connect to (BaSyx) components, otherwise IDs redirecting not possible
     navigationStore.connectComponents();
 
