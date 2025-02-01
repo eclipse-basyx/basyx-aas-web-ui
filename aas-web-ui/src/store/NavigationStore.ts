@@ -65,7 +65,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
             connect: () => connectComponent('AASDiscovery'),
             label: 'AAS Discovery URL',
             pathCheck: aasDiscoveryEndpointPath,
-            additionalParams: () => `?limit=1`,
+            additionalParams: '?limit=1',
         },
         AASRegistry: {
             url: AASRegistryURL,
@@ -74,7 +74,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
             connect: () => connectComponent('AASRegistry'),
             label: 'AAS Registry URL',
             pathCheck: aasRegistryEndpointPath,
-            additionalParams: () => `?limit=1`,
+            additionalParams: '?limit=1',
         },
         SubmodelRegistry: {
             url: SubmodelRegistryURL,
@@ -83,7 +83,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
             connect: () => connectComponent('SubmodelRegistry'),
             label: 'Submodel Registry URL',
             pathCheck: smRegistryEndpointPath,
-            additionalParams: () => `?limit=1`,
+            additionalParams: '?limit=1',
         },
         AASRepo: {
             url: AASRepoURL,
@@ -92,7 +92,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
             connect: () => connectComponent('AASRepo'),
             label: 'AAS Repository URL',
             pathCheck: aasRepoEndpointPath,
-            additionalParams: () => `?limit=1`,
+            additionalParams: '?limit=1',
         },
         SubmodelRepo: {
             url: SubmodelRepoURL,
@@ -101,7 +101,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
             connect: () => connectComponent('SubmodelRepo'),
             label: 'Submodel Repository URL',
             pathCheck: smRepoEndpointPath,
-            additionalParams: () => `?limit=1&level=core`,
+            additionalParams: '?limit=1&level=core',
         },
         ConceptDescriptionRepo: {
             url: ConceptDescriptionRepoURL,
@@ -110,7 +110,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
             connect: () => connectComponent('ConceptDescriptionRepo'),
             label: 'Concept Description Repository URL',
             pathCheck: cdRepoEndpointPath,
-            additionalParams: () => `?limit=1`,
+            additionalParams: '?limit=1',
         },
     });
 
@@ -314,7 +314,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
 
                     // Append additional parameters if any
                     if (basyxComponent.additionalParams) {
-                        path += basyxComponent.additionalParams();
+                        path += basyxComponent.additionalParams;
                     }
 
                     disableMessage = false;
