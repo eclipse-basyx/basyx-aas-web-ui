@@ -7,13 +7,13 @@
                 density="compact"
                 :readonly="IsOutputVariable || !isEditable"
                 color="primary"
-                :messages="
-                    isOperationVariable ? '' : 'greyed out value on the right shows the current value in the AAS'
-                "
+                :messages="isOperationVariable ? '' : 'greyed out text on the right shows the current value in the AAS'"
                 :hide-details="IsOperationVariable ? true : false"
                 @update:model-value="changeState">
                 <template #label>
-                    <span style="display: inline; white-space: nowrap">{{ booleanValue.value }}</span>
+                    <span style="display: inline; white-space: nowrap" class="text-subtitleText">
+                        {{ booleanValue.value }}
+                    </span>
                 </template>
             </v-switch>
         </template>
@@ -79,31 +79,30 @@
 
     // Watchers
     watch(
-        selectedNode,
+        () => selectedNode.value,
         () => {
-            newBooleanValue.value = false;
+            initialize(props.booleanValue.value);
         },
         { deep: true }
     );
+
     watch(
         () => props.booleanValue,
-        () => {
-            setBooleanValue();
+        (propsBooleanValue) => {
+            initialize(propsBooleanValue.value);
         },
         { deep: true }
     );
 
     onMounted(() => {
-        setBooleanValue();
+        initialize(props.booleanValue.value);
     });
 
-    // Methods
-    function setBooleanValue(): void {
-        if (typeof props.booleanValue.value === 'string') {
-            const convertedValue = props.booleanValue.value === 'true';
-            newBooleanValue.value = convertedValue;
+    function initialize(booleanValue: string | boolean): void {
+        if (typeof booleanValue === 'string') {
+            newBooleanValue.value = booleanValue === 'true';
         } else {
-            newBooleanValue.value = props.booleanValue.value;
+            newBooleanValue.value = booleanValue;
         }
     }
 

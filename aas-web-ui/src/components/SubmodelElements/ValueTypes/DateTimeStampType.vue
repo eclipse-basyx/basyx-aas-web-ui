@@ -17,7 +17,6 @@
                 @update:focused="setFocus">
                 <!-- Update Value Button -->
                 <template #append-inner>
-                    <span class="text-subtitleText">{{ unitSuffix(dateTimeStampValue) }}</span>
                     <v-btn
                         v-if="!isOperationVariable && isEditable"
                         size="small"
@@ -34,11 +33,17 @@
         <v-row v-if="!isOutputVariable" class="mt-0">
             <!-- Date Picker -->
             <v-col cols="auto">
-                <v-date-picker color="primary" elevation="1" @update:model-value="applyDate"></v-date-picker>
+                <v-date-picker
+                    v-model="newDate"
+                    :disabled="!isEditable"
+                    color="primary"
+                    elevation="1"
+                    show-adjacent-months
+                    @update:model-value="applyDate"></v-date-picker>
             </v-col>
             <!-- Time Picker -->
             <v-col cols="auto">
-                <v-text-field v-model="time" type="time" variant="solo" @change="applyTime"></v-text-field>
+                <v-text-field v-model="newTime" type="time" variant="solo" @change="applyTime"></v-text-field>
             </v-col>
             <!-- Timezone Picker -->
         </v-row>
@@ -47,7 +52,6 @@
 
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
-    import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useSMEHandling } from '@/composables/SMEHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -58,7 +62,6 @@
     // Composables
     const { patchRequest } = useRequestHandling();
     const { fetchAndDispatchSme } = useSMEHandling();
-    const { unitSuffix } = useConceptDescriptionHandling();
 
     const props = defineProps({
         dateTimeStampValue: {
@@ -80,8 +83,11 @@
     });
 
     // Data
+    const dateTimeStampRegex =
+        /^(\d{4})-([1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:Z|[+-](?:0[0-9]|1[0-3]):[0-5][0-9])$/;
     const newDateTimeStampValue = ref<string>('');
-    const time = ref<string>('');
+    const newDate = ref<any>(new Date());
+    const newTime = ref<string>('');
 
     // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode);
@@ -94,9 +100,13 @@
 
     // Watchers
     watch(
-        selectedNode,
-        () => {
-            newDateTimeStampValue.value = '';
+        () => selectedNode.value,
+        (selectedNodeValue) => {
+            if (selectedNodeValue && Object.keys(selectedNodeValue)) {
+                newDateTimeStampValue.value = props.dateTimeStampValue.value;
+            } else {
+                newDateTimeStampValue.value = '';
+            }
         },
         { deep: true }
     );
@@ -113,17 +123,47 @@
         { deep: true }
     );
 
+    watch(
+        () => props.dateTimeStampValue,
+        (propsDateTimeStampValue) => {
+            initialize(propsDateTimeStampValue.value);
+        },
+        { deep: true }
+    );
+
     onMounted(() => {
-        if (!props.dateTimeStampValue.value || props.dateTimeStampValue.value == '') {
-            newDateTimeStampValue.value = '';
-        } else {
-            newDateTimeStampValue.value = props.dateTimeStampValue.value;
-        }
-        const date = createDateObject(newDateTimeStampValue.value); // create a new Date Object from the given string
-        time.value = getTimeFromDate(date); // get the time from the date
+        initialize(props.dateTimeStampValue.value);
     });
 
-    // Methods
+    function initialize(dateTimeStampValue: string): void {
+        // if (!props.dateTimeStampValue.value || props.dateTimeStampValue.value == '') {
+        // newDateTimeStampValue.value = '';
+        // } else {
+        // newDateTimeStampValue.value = props.dateTimeStampValue.value;
+        // }
+        // const date = createDateObject(newDateTimeStampValue.value); // create a new Date Object from the given string
+        // newTime.value = getTimeFromDate(date); // get the time from the date
+
+        if (dateTimeStampValue && dateTimeStampValue.trim() !== '') {
+            const dateTimeStampString = dateTimeStampValue.trim();
+            const matches = dateTimeStampString.match(new RegExp(dateTimeStampRegex));
+            if (matches) {
+                newDateTimeStampValue.value = dateTimeStampString;
+                console.log(matches);
+                // const numbers = matches ? matches.map(Number) : [];
+
+                // const year: number = numbers[1];
+                // const month: number = numbers[2];
+                // const day: number = numbers[3];
+                // newDate.value = new Date(year, month - 1, day);
+                return;
+            }
+        }
+        newDateTimeStampValue.value = '';
+        newDate.value = new Date();
+        newTime.value = '00:00';
+    }
+
     function updateValue(): void {
         if (isOperationVariable.value) {
             return;
@@ -202,7 +242,7 @@
         if (!tempDateTimeStampValue) {
             const timeString = createXSDDateString().split('T')[1];
             tempDateTimeStampValue = timeString;
-            time.value = timeString.split('.')[0];
+            newTime.value = timeString.split('.')[0];
         }
 
         newDateTimeStampValue.value = dateString + 'T' + tempDateTimeStampValue;
@@ -219,9 +259,9 @@
         const tempStampEnd = newDateTimeStampValue.value.split('.')[1];
 
         if (!tempStampEnd) {
-            newDateTimeStampValue.value = tempDateTimeStampValue + 'T' + time.value + 'Z';
+            newDateTimeStampValue.value = tempDateTimeStampValue + 'T' + newTime.value + 'Z';
         } else {
-            newDateTimeStampValue.value = tempDateTimeStampValue + 'T' + time.value + '.' + tempStampEnd;
+            newDateTimeStampValue.value = tempDateTimeStampValue + 'T' + newTime.value + '.' + tempStampEnd;
         }
 
         if (isOperationVariable.value) {
@@ -232,7 +272,7 @@
     // Function to clear the DateTimeStamp
     function clearDateTimeStamp(): void {
         newDateTimeStampValue.value = '';
-        time.value = '';
+        newTime.value = '';
     }
 
     // Function to set the focus on the input field

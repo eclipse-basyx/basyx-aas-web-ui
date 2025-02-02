@@ -213,7 +213,8 @@
         () => {
             resetLocalData();
             initialize();
-        }
+        },
+        { deep: true }
     );
 
     // Watch for changes in the selected Node and (re-)initialize the Component

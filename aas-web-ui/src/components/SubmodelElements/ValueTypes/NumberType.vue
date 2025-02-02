@@ -6,17 +6,19 @@
                 type="number"
                 variant="outlined"
                 density="compact"
-                :clearable="isEditable"
+                :clearable="(isFocused || numberValue.value != newNumberValue) && !isOperationVariable && isEditable"
                 :readonly="isOutputVariable || !isEditable"
                 :hint="isOperationVariable ? '' : 'greyed out value on the left shows the current value in the AAS'"
                 :label="isOperationVariable ? numberValue.idShort : ''"
                 :hide-details="isOperationVariable ? true : false"
+                :focused="isFocused"
                 @keydown.enter="updateValue()"
-                @update:focused="setFocus">
+                @update:focused="setFocus(!isFocused)"
+                @update:model-value="setFocus(true)">
                 <!-- Current Value -->
                 <template #prepend-inner>
                     <v-chip
-                        v-if="(isFocused || numberValue.value != newNumberValue) && !isOperationVariable"
+                        v-if="(isFocused || numberValue.value != newNumberValue) && !isOperationVariable && isEditable"
                         label
                         size="x-small"
                         border
@@ -36,7 +38,7 @@
                 <template #append-inner>
                     <span class="text-subtitleText">{{ unitSuffix(numberValue) }}</span>
                     <v-btn
-                        v-if="isFocused && !isOperationVariable && isEditable"
+                        v-if="(isFocused || numberValue.value != newNumberValue) && !isOperationVariable && isEditable"
                         size="small"
                         variant="elevated"
                         color="primary"
@@ -100,18 +102,22 @@
 
     // Watchers
     watch(
-        selectedNode,
-        () => {
-            newNumberValue.value = '';
+        () => selectedNode.value,
+        (selectedNodeValue) => {
+            if (selectedNodeValue && Object.keys(selectedNodeValue).length > 0) {
+                newNumberValue.value = props.numberValue.value;
+            } else {
+                newNumberValue.value = '';
+            }
+            setFocus(false);
         },
         { deep: true }
     );
+
     watch(
         () => props.numberValue,
-        () => {
-            if (!isFocused.value) {
-                newNumberValue.value = props.numberValue.value;
-            }
+        (propsNumberValue) => {
+            newNumberValue.value = propsNumberValue.value;
         },
         { deep: true }
     );
@@ -120,7 +126,6 @@
         newNumberValue.value = props.numberValue.value;
     });
 
-    // Methods
     function updateValue(): void {
         if (isOperationVariable.value) {
             return;
@@ -136,15 +141,16 @@
             if (response.success) {
                 // After successful patch request fetch and dispatch updated SME
                 fetchAndDispatchSme(selectedNode.value.path, false);
+                setFocus(false);
             }
         });
     }
 
-    function setFocus(e: boolean): void {
-        if (isOperationVariable.value && !e) {
+    function setFocus(isFocusedToSet: boolean): void {
+        if (isOperationVariable.value && !isFocusedToSet) {
             updateValue();
         }
-        isFocused.value = e;
-        if (!e) newNumberValue.value = props.numberValue.value; // set input to current value in the AAS if the input field is not focused
+        isFocused.value = isFocusedToSet;
+        if (!isFocusedToSet) newNumberValue.value = props.numberValue.value; // set input to current value in the AAS if the input field is not focused
     }
 </script>

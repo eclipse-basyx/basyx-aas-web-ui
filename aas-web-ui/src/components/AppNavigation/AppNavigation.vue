@@ -7,11 +7,24 @@
                     <!-- Logo in the App Bar -->
                     <img :src="LogoPath" style="min-height: 42px; max-height: 42px" alt="Logo" />
                 </v-card>
-                <v-divider v-if="!isMobile" vertical inset class="ml-6"></v-divider>
+                <v-divider v-if="!isMobile" vertical inset class="ml-6" :class="!isMobile ? '' : ''"></v-divider>
+                <!-- Home button -->
+                <v-tooltip v-if="!isMobile" open-delay="600" location="bottom">
+                    <template #activator="{ props }">
+                        <v-btn
+                            icon="mdi-home-outline"
+                            variant="plain"
+                            v-bind="props"
+                            :to="{ name: currentRoute, query: {} }"
+                            class="ml-2">
+                        </v-btn>
+                    </template>
+                    <span>Home</span>
+                </v-tooltip>
                 <!-- Menu Toggle (Desktop) -->
                 <v-menu v-if="!isMobile" v-model="mainMenu" :close-on-content-click="false" :offset="8">
                     <template #activator="{ props }">
-                        <v-btn class="text-none ml-3" v-bind="props" append-icon="mdi-chevron-down" variant="text">
+                        <v-btn class="text-none" v-bind="props" append-icon="mdi-chevron-down" variant="text">
                             {{ route.meta.name }}
                         </v-btn>
                     </template>
@@ -144,6 +157,39 @@
                     style="position: fixed; bottom: 50px; right: 10px; z-index: 9990"></v-btn>
             </template>
             <div class="mr-1 mb-6">
+                <!-- Modules -->
+                <v-row
+                    v-for="(moduleRoute, index) in filteredAndOrderedModuleRoutes"
+                    :key="index"
+                    justify="end"
+                    align="center">
+                    <v-col cols="auto" class="pr-1">
+                        <v-card
+                            class="py-1 px-2 text-buttonText"
+                            color="lightButton"
+                            :to="
+                                moduleRoute?.meta?.preserveRouteQuery === true
+                                    ? { path: moduleRoute.path, query: route.query }
+                                    : { path: moduleRoute.path }
+                            "
+                            >{{ moduleRoute.name }}</v-card
+                        >
+                    </v-col>
+                    <v-col cols="auto" class="py-1">
+                        <v-btn
+                            icon="mdi-view-module"
+                            :to="
+                                moduleRoute?.meta?.preserveRouteQuery === true
+                                    ? { path: moduleRoute.path, query: route.query }
+                                    : { path: moduleRoute.path }
+                            "
+                            :active="route.path === moduleRoute.path"
+                            style="z-index: 9990"
+                            size="small"
+                            color="primary"
+                            class="text-buttonText"></v-btn>
+                    </v-col>
+                </v-row>
                 <!-- AAS Viewer -->
                 <v-row justify="end" align="center">
                     <v-col cols="auto" class="pr-1">
@@ -198,10 +244,12 @@
 </template>
 
 <script lang="ts" setup>
+    import type { RouteRecordRaw } from 'vue-router';
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
     import { useDashboardHandling } from '@/composables/DashboardHandling';
+    import { useAASStore } from '@/store/AASDataStore';
     import { useAuthStore } from '@/store/AuthStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -217,6 +265,7 @@
     const navigationStore = useNavigationStore();
     const envStore = useEnvStore();
     const authStore = useAuthStore();
+    const aasStore = useAASStore();
 
     // Vuetify
     const theme = useTheme();
@@ -229,9 +278,38 @@
     const drawerVisibility = ref(true); // Variable to show the AAS List Drawer
 
     // Computed Properties
+    const currentRoute = computed(() => route.name); // get the current route name
     const isMobile = computed(() => navigationStore.getIsMobile);
     const isDark = computed(() => theme.global.current.value.dark);
     const Snackbar = computed(() => navigationStore.getSnackbar);
+    const selectedAas = computed(() => aasStore.getSelectedAAS); // get selected AAS from Store
+    const selectedNode = computed(() => aasStore.getSelectedNode); // get selected AAS from Store
+    const moduleRoutes = computed(() => navigationStore.getModuleRoutes); // get the module routes
+    const filteredAndOrderedModuleRoutes = computed(() => {
+        const filteredModuleRoutes = moduleRoutes.value.filter((moduleRoute: RouteRecordRaw) => {
+            if (isMobile.value && !moduleRoute?.meta?.isMobileModule) return false;
+            if (!isMobile.value && !moduleRoute?.meta?.isDesktopModule) return false;
+            if (
+                moduleRoute?.meta?.isOnlyVisibleWithSelectedAas &&
+                (!selectedAas.value || Object.keys(selectedAas.value).length === 0)
+            )
+                return false;
+            if (
+                moduleRoute?.meta?.isOnlyVisibleWithSelectedNode &&
+                (!selectedNode.value || Object.keys(selectedNode.value).length === 0)
+            )
+                return false;
+            return moduleRoute?.meta?.isVisibleModule === true || moduleRoute.path === route.path;
+        });
+        const filteredAndOrderedModuleRoutes = filteredModuleRoutes.sort(
+            (moduleRouteA: RouteRecordRaw, moduleRouteB: RouteRecordRaw) => {
+                let moduleNameA: string = moduleRouteA?.name?.toString() || '';
+                let moduleNameB: string = moduleRouteB?.name?.toString() || '';
+                return moduleNameA.localeCompare(moduleNameB);
+            }
+        );
+        return filteredAndOrderedModuleRoutes;
+    });
     const showAASList = computed(() => ['AASViewer', 'AASEditor', 'SubmodelViewer'].includes(route.name as string));
     const drawerState = computed(() => navigationStore.getDrawerState);
     const LogoPath = computed(() => {

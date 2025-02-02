@@ -93,6 +93,7 @@
 // TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent } from 'vue';
+    import { useSMEHandling } from '@/composables/SMEHandling';
     import RequestHandling from '@/mixins/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
@@ -112,9 +113,11 @@
 
         setup() {
             const aasStore = useAASStore();
+            const { fetchAndDispatchSme } = useSMEHandling();
 
             return {
                 aasStore, // AASStore Object
+                fetchAndDispatchSme,
             };
         },
 
@@ -223,10 +226,11 @@
                 // Send Request to update the value of the property
                 this.patchRequest(path, content, headers, context, disableMessage).then((response: any) => {
                     if (response.success) {
+                        // After successful patch request fetch and dispatch updated SME
+                        fetchAndDispatchSme(this.SelectedNode.path, false);
                         // // this.newPropertyValue = ''; // reset input
                         // let updatedPropertyObject = { ...this.propertyObject }; // copy the propertyObject
                         // updatedPropertyObject.value = content.toString().replace(/'/g, ''); // update the value of the propertyObject
-                        // this.$emit('updateValue', updatedPropertyObject); // emit event to update the value in the parent component
                     }
                 });
             },

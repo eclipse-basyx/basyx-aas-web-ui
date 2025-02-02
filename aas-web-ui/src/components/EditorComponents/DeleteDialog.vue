@@ -1,22 +1,29 @@
 <template>
     <v-dialog v-model="deleteDialog" max-width="500px">
         <v-card>
-            <v-card-title>Confirm Delete</v-card-title>
+            <v-card-title> Confirm Delete </v-card-title>
             <v-divider></v-divider>
             <v-card-text class="pb-0">
-                <div>
-                    Are you sure you want to delete the element with the
-                    {{ element.modelType === 'Submodel' ? 'id' : 'idShort' }}
-                </div>
-                <span class="text-primary font-weight-bold">{{
-                    element.modelType === 'Submodel' ? element.id : element.idShort
-                }}</span>
-                <span>?</span>
+                <span>Are you sure you want to delete the </span>
+                <span class="font-weight-bold">{{ element.modelType }}</span>
+                <span> with the</span>
+                {{ element.modelType === 'Submodel' ? 'id' : 'idShort' }}
+                <span class="text-primary font-weight-bold">
+                    {{ element.modelType === 'Submodel' ? element.id : element.idShort }}
+                </span>
+                <span> ?</span>
             </v-card-text>
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn @click="deleteDialog = false">Cancel</v-btn>
-                <v-btn variant="tonal" color="error" :loading="deleteLoading" @click="confirmDelete">Delete</v-btn>
+                <v-btn
+                    prepend-icon="mdi-delete"
+                    variant="tonal"
+                    color="error"
+                    :loading="deleteLoading"
+                    @click="confirmDelete"
+                    >Delete</v-btn
+                >
             </v-card-actions>
         </v-card>
     </v-dialog>

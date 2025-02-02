@@ -6,6 +6,7 @@
 
 // Types
 import type { PluginType } from '@/types/Application';
+import type { App as AppType } from 'vue';
 // Components
 import Keycloak from 'keycloak-js';
 import { KeycloakOnLoad } from 'keycloak-js';
@@ -15,28 +16,27 @@ import { createApp } from 'vue';
 import { defineComponent } from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
 // Plugins
-import { registerPlugins } from '@/plugins';
+import { registerVuetify } from '@/plugins';
 import App from './App.vue';
 import { createAppRouter } from './router';
 import { useAuthStore } from './store/AuthStore';
 import { useEnvStore } from './store/EnvironmentStore';
 import { useNavigationStore } from './store/NavigationStore';
 
-const app = createApp(App);
+initialize();
 
-const pinia = createPinia();
+async function initialize(): Promise<void> {
+    const app = createApp(App);
 
-async function loadPlugins() {
+    // Pinia
+    const pinia = createPinia();
     app.use(pinia);
 
-    const router = await createAppRouter();
-    app.use(router);
+    // Stores
+    const envStore = useEnvStore();
+    const navigationStore = useNavigationStore();
 
-    app.use(VueApexCharts);
-
-    const envStore = useEnvStore(); // Get the store instance
-
-    // create keycloak instance
+    // Create keycloak instance
     if (envStore.getKeycloakActive) {
         try {
             await initKeycloak(envStore.getKeycloakUrl, envStore.getKeycloakRealm, envStore.getKeycloakClientId);
@@ -46,32 +46,44 @@ async function loadPlugins() {
         }
     }
 
-    registerPlugins(app);
+    // Vuetify
+    registerVuetify(app);
 
-    // Plugins aka Component Visualizations
-    const pluginFileRecords = {
-        ...import.meta.glob('./components/Plugins/Submodels/*.vue'),
-        ...import.meta.glob('./components/Plugins/SubmodelElements/*.vue'),
-        ...import.meta.glob('./UserPlugins/*.vue'),
-    };
+    // Load plugins aka Component Visualizations
+    navigationStore.dispatchPlugins(await getVisualizations(app));
 
-    const plugins = [] as Array<PluginType>;
+    // Determine if mobile or desktop
+    const isMobile = window.matchMedia('(max-width: 600px)').matches;
+    navigationStore.dispatchIsMobile(isMobile);
 
-    for (const path in pluginFileRecords) {
-        const pluginName = path.split('/').pop()?.replace('.vue', '') || 'UnnamedPlugin';
-        const pluginComponent: any = await pluginFileRecords[path]();
-
-        if (pluginComponent.default.semanticId) {
-            app.component(
-                pluginName,
-                (pluginComponent.default || pluginComponent) as ReturnType<typeof defineComponent>
-            );
-            plugins.push({ name: pluginName, semanticId: pluginComponent.default.semanticId });
-        }
+    // Extend the window interface to include cordova and electron properties
+    interface ExtendedWindow extends Window {
+        cordova?: any;
+        electron?: any;
     }
+    const extendedWindow = window as ExtendedWindow;
 
-    const navigationStore = useNavigationStore();
-    navigationStore.dispatchPlugins(plugins);
+    // Determine the platform
+    navigationStore.dispatchPlatform({
+        ios: /iPad|iPhone|iPod/.test(navigator.userAgent),
+        android: /Android/.test(navigator.userAgent),
+        cordova: !!extendedWindow.cordova,
+        electron: !!extendedWindow.electron,
+        chrome: /Chrome/.test(navigator.userAgent),
+        edge: /Edge/.test(navigator.userAgent),
+        firefox: /Firefox/.test(navigator.userAgent),
+        opera: /OPR/.test(navigator.userAgent),
+        win: /Windows/.test(navigator.platform),
+        mac: /MacIntel/.test(navigator.platform),
+        linux: /Linux/.test(navigator.platform),
+        touch: 'ontouchstart' in window,
+        ssr: false,
+    });
+
+    const router = await createAppRouter();
+    app.use(router);
+
+    app.use(VueApexCharts);
 
     app.mount('#app');
 }
@@ -139,4 +151,27 @@ async function initKeycloak(keycloakUrl: string, keycloakRealm: string, keycloak
     });
 }
 
-loadPlugins();
+async function getVisualizations(app: AppType) {
+    const pluginFileRecords = {
+        ...import.meta.glob('./components/Plugins/Submodels/*.vue'),
+        ...import.meta.glob('./components/Plugins/SubmodelElements/*.vue'),
+        ...import.meta.glob('./UserPlugins/*.vue'),
+    };
+
+    const plugins = [] as Array<PluginType>;
+
+    for (const path in pluginFileRecords) {
+        const pluginName = path.split('/').pop()?.replace('.vue', '') || 'UnnamedPlugin';
+        const pluginComponent: any = await pluginFileRecords[path]();
+
+        if (pluginComponent.default.semanticId) {
+            app.component(
+                pluginName,
+                (pluginComponent.default || pluginComponent) as ReturnType<typeof defineComponent>
+            );
+            plugins.push({ name: pluginName, semanticId: pluginComponent.default.semanticId });
+        }
+    }
+
+    return plugins;
+}

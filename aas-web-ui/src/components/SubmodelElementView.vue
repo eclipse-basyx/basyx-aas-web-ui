@@ -253,7 +253,8 @@
 
             resetLocalData();
             initialize(selectedNode.value, true);
-        }
+        },
+        { deep: true }
     );
 
     watch(

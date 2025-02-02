@@ -403,7 +403,7 @@ export function useSMHandling() {
             smOrSme.statements.length > 0
         ) {
             // Entitiy
-            for (const element of smOrSme.value) {
+            for (const element of smOrSme.statements) {
                 await setData(element, path + '.' + element.idShort, withConceptDescriptions, timestamp);
             }
         }

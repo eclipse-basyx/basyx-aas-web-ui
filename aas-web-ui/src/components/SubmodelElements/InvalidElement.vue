@@ -26,8 +26,8 @@
                             variant="outlined"
                             hide-details
                             density="compact"
-                            :rows="8"
-                            @update:focused="setFocus($event)"></v-textarea>
+                            :rows="8"></v-textarea>
+                        <!-- @update:focused="setFocus($event)"></v-textarea> -->
                     </v-card>
                 </v-list-item>
                 <v-divider v-if="!IsOperationVariable" class="mt-3"></v-divider>
@@ -122,17 +122,16 @@
 
         methods: {
             // Function to update the value of the SubmodelElement
-            updateValue() {
-                let invalidElementObject = JSON.parse(this.jsonString);
-                this.$emit('updateValue', invalidElementObject.value);
-            },
-
+            // updateValue() {
+            // let invalidElementObject = JSON.parse(this.jsonString);
+            // this.$emit('updateValue', invalidElementObject.value);
+            // },
             // Function to set the focus on the input field
-            setFocus(e: boolean) {
-                if (!e) {
-                    this.updateValue();
-                }
-            },
+            // setFocus(e: boolean) {
+            // if (!e) {
+            // this.updateValue();
+            // }
+            // },
         },
     });
 </script>

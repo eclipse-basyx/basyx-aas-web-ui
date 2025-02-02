@@ -12,11 +12,11 @@
                         <v-expansion-panel-title>Details</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <TextInput
-                                v-if="newShell"
                                 v-model="AASId"
                                 label="ID"
                                 :show-generate-iri-button="true"
-                                type="AssetAdministrationShell" />
+                                type="AssetAdministrationShell"
+                                :disabled="!newShell" />
                             <TextInput v-model="AASIdShort" label="IdShort" />
                             <MultiLanguageTextInput v-model="displayName" label="Display Name" type="displayName" />
                             <MultiLanguageTextInput v-model="description" label="Description" type="description" />
@@ -313,8 +313,7 @@
             if (fileThumbnail.value !== undefined) {
                 await putThumbnail(fileThumbnail.value, AASObject.value.id);
             }
-            router.push({ query: { aas: getAasEndpointById(AASObject.value.id) } });
-            // await fetchAndDispatchAasById(AASObject.value.id);
+            router.push({ query: { aas: await getAasEndpointById(AASObject.value.id) } });
         } else {
             // Update existing AAS
             await putAas(AASObject.value);
@@ -327,8 +326,8 @@
                 await putThumbnail(fileThumbnail.value, AASObject.value.id);
             }
             if (AASObject.value.id === selectedAAS.value.id) {
-                router.push({ query: { aas: getAasEndpointById(AASObject.value.id) } });
-                // await fetchAndDispatchAasById(AASObject.value.id);
+                // router.push({ query: { aas: await getAasEndpointById(AASObject.value.id) } });
+                // TODO seicke UPDATE selectedAAS
             }
         }
         clearForm();

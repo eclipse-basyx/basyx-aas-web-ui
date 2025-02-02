@@ -5,6 +5,7 @@
                 :style="{ 'padding-left': depth * 22 + 'px' }"
                 density="compact"
                 class="py-0"
+                :class="editMode && item.modelType === 'Submodel' ? 'pr-0' : ''"
                 nav
                 color="primary"
                 :active="isSelected(item)"
@@ -14,6 +15,7 @@
                     <!-- Button to show/hide children -->
                     <v-btn
                         v-if="item.children"
+                        class="ml-n1"
                         size="small"
                         variant="plain"
                         :icon="item.showChildren ? 'mdi-menu-down' : 'mdi-menu-right'"
@@ -56,16 +58,10 @@
                     <v-icon v-else color="primary">mdi-file-code</v-icon>
                 </template>
                 <template #append>
-                    <v-chip
-                        v-if="item.modelType"
-                        color="primary"
-                        size="x-small"
-                        :style="{ 'margin-right': isSelected(item) ? '14px' : '' }"
-                        >{{ item.modelType }}</v-chip
-                    >
+                    <v-chip v-if="item.modelType" color="primary" size="x-small">{{ item.modelType }}</v-chip>
                     <!-- Button to Copy the Path to the clipboard -->
                     <v-tooltip
-                        v-if="isSelected(item)"
+                        v-if="isSelected(item) && (!editMode || (editMode && item.modelType !== 'Submodel'))"
                         text="Copy Path to Clipboard"
                         :open-delay="600"
                         location="bottom">
@@ -73,6 +69,7 @@
                             <v-icon
                                 color="subtitleText"
                                 v-bind="props"
+                                class="ml-1"
                                 @click="copyToClipboard(item.path, 'Path', copyIconAsRef)">
                                 {{ copyIcon }}
                             </v-icon>
@@ -85,13 +82,14 @@
                         </template>
                         <v-sheet border>
                             <v-list dense density="compact" class="py-0">
-                                <!-- Copy Path to Clipboard -->
-                                <v-list-item @click="copyToClipboard(item.path, 'Path', copyIconAsRef)">
+                                <!-- Copy SM endpoint to clipboard -->
+                                <v-list-item @click="copyToClipboard(item.path, 'SM endpoint', copyIconAsRef)">
                                     <template #prepend>
                                         <v-icon size="x-small">{{ copyIcon }} </v-icon>
                                     </template>
-                                    <v-list-item-subtitle>Copy Path</v-list-item-subtitle>
+                                    <v-list-item-subtitle>Copy Submodel endpoint</v-list-item-subtitle>
                                 </v-list-item>
+                                <v-divider></v-divider>
                                 <!-- Open Submodel edit dialog -->
                                 <v-list-item @click="$emit('openEditDialog', item)">
                                     <template #prepend>
@@ -109,6 +107,7 @@
                             </v-list>
                         </v-sheet>
                     </v-menu>
+                    <template v-else-if="editMode"></template>
                 </template>
             </v-list-item>
         </v-lazy>

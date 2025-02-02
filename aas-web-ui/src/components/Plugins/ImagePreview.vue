@@ -1,6 +1,6 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-card>
+        <v-card class="pa-4">
             <v-img
                 v-if="imageUrl.length > 0"
                 :src="imageUrl"

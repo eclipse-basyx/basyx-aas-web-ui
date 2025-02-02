@@ -162,14 +162,16 @@
         () => {
             submodelList.value = [];
             initialize();
-        }
+        },
+        { deep: true }
     );
 
     watch(
         () => selectedNode.value,
         () => {
             scrollToSelectedSubmodel();
-        }
+        },
+        { deep: true }
     );
 
     onMounted(() => {
@@ -181,7 +183,7 @@
     });
 
     function initialize(): void {
-        if (!selectedAAS.value || !selectedAAS.value.endpoints || selectedAAS.value.endpoints.length === 0) {
+        if (!selectedAAS.value || Object.keys(selectedAAS).length > 0) {
             submodelList.value = [];
             return;
         }

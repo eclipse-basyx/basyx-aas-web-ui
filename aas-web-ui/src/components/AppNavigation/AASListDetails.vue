@@ -229,7 +229,8 @@
             }
 
             await initializeView();
-        }
+        },
+        { deep: true }
     );
 
     watch(

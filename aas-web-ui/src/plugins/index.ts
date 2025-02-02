@@ -11,7 +11,7 @@ import { useEnvStore } from '@/store/EnvironmentStore'; // replace with the path
 import { initializeVuetify } from './vuetify';
 import { loadFonts } from './webfontloader';
 
-export async function registerPlugins(app: App) {
+export async function registerVuetify(app: App) {
     loadFonts();
 
     const envStore = useEnvStore();

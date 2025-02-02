@@ -1,54 +1,125 @@
 <template>
-    <!-- Dialog for creating/editing Submodel -->
-    <SubmodelForm v-model="editDialog" :new-sm="newSubmodel" :submodel="submodelToEdit"></SubmodelForm>
-    <!-- Dialog for deleting Element -->
-    <DeleteDialog v-model="deleteDialog" :element="elementToDelete"></DeleteDialog>
     <v-container fluid class="pa-0">
         <v-card color="rgba(0,0,0,0)" elevation="0">
             <template v-if="!singleAas">
                 <!-- Title Bar in the AASTreeview -->
-                <v-card-title style="padding: 15px 16px 16px">
-                    <div v-if="!selectedAAS || Object.keys(selectedAAS).length === 0">AAS Treeview</div>
-                    <div v-else class="d-flex align-center">
-                        <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
-                        <span class="text-truncate ml-2">
-                            {{ nameToDisplay(selectedAAS) }}
+                <v-card-title
+                    :style="
+                        selectedAAS && Object.keys(selectedAAS).length > 0
+                            ? 'padding: 7px 0px 8px'
+                            : 'padding: 15px 0px 16px'
+                    ">
+                    <div class="d-flex align-center">
+                        <v-tooltip
+                            v-if="selectedAAS && Object.keys(selectedAAS).length > 0"
+                            open-delay="600"
+                            location="bottom"
+                            :disabled="isMobile">
+                            <template #activator="{ props }">
+                                <v-btn
+                                    icon="mdi-reload"
+                                    variant="plain"
+                                    :loading="treeLoading"
+                                    v-bind="props"
+                                    @click="initialize()">
+                                    <template #loader>
+                                        <span class="custom-loader"><v-icon light>mdi-cached</v-icon></span>
+                                    </template>
+                                </v-btn>
+                            </template>
+                            <span>Reload Submodel tree</span>
+                        </v-tooltip>
+                        <span v-if="!selectedAAS || Object.keys(selectedAAS).length === 0" class="pl-4">
+                            Submodel tree
                         </span>
+                        <template v-else>
+                            <v-icon icon="custom:aasIcon" color="primary" size="small" class="" />
+                            <span class="text-truncate ml-2">
+                                {{ nameToDisplay(selectedAAS) }}
+                            </span>
+                        </template>
+                        <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
+                            <v-spacer></v-spacer>
+                            <v-tooltip
+                                v-if="selectedAAS && Object.keys(selectedAAS).length > 0"
+                                open-delay="600"
+                                location="bottom"
+                                :disabled="isMobile">
+                                <template #activator="{ props }">
+                                    <v-btn
+                                        icon="mdi-expand-all"
+                                        variant="plain"
+                                        v-bind="props"
+                                        class="ml-1"
+                                        :disabled="!selectedNode || Object.keys(selectedNode).length === 0"
+                                        @click="expandTree()">
+                                    </v-btn>
+                                </template>
+                                <span>Expand Submodel tree with selected element</span>
+                            </v-tooltip>
+                            <v-tooltip
+                                v-if="selectedAAS && Object.keys(selectedAAS).length > 0"
+                                open-delay="600"
+                                location="bottom"
+                                :disabled="isMobile">
+                                <template #activator="{ props }">
+                                    <v-btn
+                                        icon="mdi-collapse-all"
+                                        variant="plain"
+                                        v-bind="props"
+                                        class="mx-n3"
+                                        @click="collapseTree()">
+                                    </v-btn>
+                                </template>
+                                <span>Collapse Submodel trees</span>
+                            </v-tooltip>
+                            <v-menu v-if="editMode">
+                                <template #activator="{ props }">
+                                    <v-btn icon="mdi-dots-vertical" variant="plain" v-bind="props" class="mr-2"></v-btn>
+                                </template>
+                                <v-sheet border>
+                                    <v-list density="compact" class="py-0">
+                                        <!-- Open SM dialog -->
+                                        <v-tooltip open-delay="600" location="end">
+                                            <template #activator="{ props }">
+                                                <v-list-item slim v-bind="props" @click="openEditDialog(true)">
+                                                    <template #prepend>
+                                                        <v-icon size="small">mdi-plus</v-icon>
+                                                    </template>
+                                                    Create Submodel
+                                                </v-list-item>
+                                            </template>
+                                            <span>Create a new Submodel</span>
+                                        </v-tooltip></v-list
+                                    >
+                                </v-sheet>
+                            </v-menu>
+                        </template>
                     </div>
                     <!-- TODO: Add Searchfield - https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/148 -->
                 </v-card-title>
                 <v-divider></v-divider>
             </template>
             <v-card-text
+                class="px-2 py-2"
                 style="overflow-y: auto"
                 :style="singleAas ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 170px)'">
-                <div v-if="treeLoading">
+                <template v-if="treeLoading">
                     <v-list-item v-for="i in 6" :key="i" density="compact" nav class="pa-0">
                         <template #prepend>
                             <v-skeleton-loader type="list-item" :width="50"></v-skeleton-loader>
                         </template>
-                        <template #title>
+                        <v-list-item-title>
                             <v-skeleton-loader type="list-item" :width="240"></v-skeleton-loader>
-                        </template>
+                        </v-list-item-title>
                         <template #append>
                             <v-skeleton-loader type="list-item" :width="90"></v-skeleton-loader>
                         </template>
                     </v-list-item>
-                </div>
+                </template>
                 <template v-else>
                     <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
-                        <!-- Button to add a new Submodel -->
-                        <template v-if="editMode && submodelTree.length > 0">
-                            <v-row justify="center">
-                                <v-col cols="auto" class="pt-1 pb-5">
-                                    <v-btn
-                                        prepend-icon="mdi-plus"
-                                        text="Create Submodel"
-                                        @click="openEditDialog(true)" />
-                                </v-col>
-                            </v-row>
-                        </template>
-                        <template v-if="submodelTree.length > 0">
+                        <template v-if="submodelTree && Array.isArray(submodelTree) && submodelTree.length > 0">
                             <!-- TODO: Evaluate and Replace with Vuetify Treeview Component when it gets fully released in Q1 2025 -->
                             <VTreeview
                                 v-for="item in submodelTree"
@@ -57,7 +128,7 @@
                                 :item="item"
                                 :depth="0"
                                 @open-edit-dialog="openEditDialog(false, $event)"
-                                @show-delete-dialog="showDeleteDialog"></VTreeview>
+                                @show-delete-dialog="openDeleteDialog"></VTreeview>
                         </template>
                         <v-empty-state
                             v-else
@@ -77,6 +148,10 @@
             </v-card-text>
         </v-card>
     </v-container>
+    <!-- Dialog for creating/editing Submodel -->
+    <SubmodelForm v-model="editDialog" :new-sm="newSubmodel" :submodel="submodelToEdit"></SubmodelForm>
+    <!-- Dialog for deleting SM/SME -->
+    <DeleteDialog v-model="deleteDialog" :element="elementToDelete"></DeleteDialog>
 </template>
 
 <script lang="ts" setup>
@@ -110,6 +185,7 @@
     const elementToDelete = ref<any | undefined>(undefined); // Variable to store the Element to be deleted
 
     // Computed Properties
+    const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // get selected AAS from Store
     const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL); // get AAS Registry URL from Store
     const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL); // get Submodel Registry URL from Store
@@ -120,17 +196,19 @@
     // Watchers
     watch(
         () => aasRegistryURL.value,
-        () => {
-            // Resets the Submodel Tree when the AAS Registry changes
-            submodelTree.value = [];
+        (aasRegistryURLValue) => {
+            if (!aasRegistryURLValue || aasRegistryURLValue.trim() === '')
+                // Resets the Submodel Tree when the AAS Registry changes
+                submodelTree.value = [];
         }
     );
 
     watch(
         () => submodelRegistryURL.value,
-        () => {
-            // Resets the Submodel Tree when the Submodel Registry changes
-            submodelTree.value = [];
+        (submodelRegistryURLValue) => {
+            if (!submodelRegistryURLValue || submodelRegistryURLValue.trim() === '')
+                // Resets the Submodel Tree when the Submodel Registry changes
+                submodelTree.value = [];
         }
     );
 
@@ -139,7 +217,8 @@
         () => {
             submodelTree.value = [];
             initialize();
-        }
+        },
+        { deep: true }
     );
 
     onMounted(() => {
@@ -147,7 +226,7 @@
     });
 
     async function initialize(): Promise<void> {
-        if (!selectedAAS.value || !selectedAAS.value.endpoints || selectedAAS.value.endpoints.length === 0) {
+        if (!selectedAAS.value || Object.keys(selectedAAS).length === 0) {
             submodelTree.value = [];
             return;
         }
@@ -245,6 +324,75 @@
         return children;
     }
 
+    function collapseTree(submodelElements: Array<any> = submodelTree.value): void {
+        submodelElements.map((sme: any) => {
+            sme.showChildren = false;
+
+            if (
+                sme.modelType == 'Submodel' &&
+                sme.submodelElements &&
+                Array.isArray(sme.submodelElements) &&
+                sme.submodelElements.length > 0
+            ) {
+                sme.submodelElements = collapseTree(sme.submodelElements);
+            } else if (
+                ['SubmodelElementCollection', 'SubmodelElementList'].includes(sme.modelType) &&
+                sme.value &&
+                Array.isArray(sme.value) &&
+                sme.value.length > 0
+            ) {
+                sme.value = collapseTree(sme.value);
+            } else if (
+                sme.modelType == 'Entity' &&
+                sme.statements &&
+                Array.isArray(sme.statements) &&
+                sme.statements.length > 0
+            ) {
+                sme.statements = collapseTree(sme.statements);
+            }
+
+            return sme;
+        });
+    }
+
+    function expandTree(submodelElements: Array<any> = submodelTree.value): void {
+        submodelElements.map((sme: any) => {
+            sme.showChildren =
+                selectedNode.value &&
+                Object.keys(selectedNode).length > 0 &&
+                selectedNode.value.path &&
+                selectedNode.value.path.trim() !== '' &&
+                selectedNode.value.path.includes(sme.path)
+                    ? true
+                    : false;
+
+            if (
+                sme.modelType == 'Submodel' &&
+                sme.submodelElements &&
+                Array.isArray(sme.submodelElements) &&
+                sme.submodelElements.length > 0
+            ) {
+                sme.submodelElements = collapseTree(sme.submodelElements);
+            } else if (
+                ['SubmodelElementCollection', 'SubmodelElementList'].includes(sme.modelType) &&
+                sme.value &&
+                Array.isArray(sme.value) &&
+                sme.value.length > 0
+            ) {
+                sme.value = collapseTree(sme.value);
+            } else if (
+                sme.modelType == 'Entity' &&
+                sme.statements &&
+                Array.isArray(sme.statements) &&
+                sme.statements.length > 0
+            ) {
+                sme.statements = collapseTree(sme.statements);
+            }
+
+            return sme;
+        });
+    }
+
     function openEditDialog(createNew: boolean, submodel?: any): void {
         editDialog.value = true;
         newSubmodel.value = createNew;
@@ -253,7 +401,7 @@
         }
     }
 
-    function showDeleteDialog(element: any): void {
+    function openDeleteDialog(element: any): void {
         deleteDialog.value = true;
         elementToDelete.value = element;
     }

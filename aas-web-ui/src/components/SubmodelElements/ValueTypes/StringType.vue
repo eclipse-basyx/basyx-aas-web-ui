@@ -5,17 +5,20 @@
                 v-model="newStringValue"
                 variant="outlined"
                 density="compact"
-                :clearable="isEditable"
+                :clearable="(isFocused || stringValue.value != newStringValue) && !isOperationVariable && isEditable"
                 :readonly="isOutputVariable || !isEditable"
                 auto-grow
                 :rows="1"
                 :label="isOperationVariable ? stringValue.idShort : ''"
                 :hide-details="isOperationVariable ? true : false"
-                @update:focused="setFocus">
+                :focused="isFocused"
+                @keydown.enter="updateValue()"
+                @update:focused="setFocus(!isFocused)"
+                @update:model-value="setFocus(true)">
                 <!-- Update Value Button -->
                 <template #append-inner>
                     <v-btn
-                        v-if="!isOperationVariable && isEditable"
+                        v-if="(isFocused || stringValue.value != newStringValue) && !isOperationVariable && isEditable"
                         size="small"
                         variant="elevated"
                         color="primary"
@@ -64,6 +67,7 @@
 
     // Data
     const newStringValue = ref('');
+    const isFocused = ref<boolean>(false);
 
     // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode);
@@ -76,16 +80,22 @@
 
     // Watchers
     watch(
-        selectedNode,
-        () => {
-            newStringValue.value = '';
+        () => selectedNode.value,
+        (selectedNodeValue) => {
+            if (selectedNodeValue && Object.keys(selectedNodeValue).length > 0) {
+                newStringValue.value = props.stringValue.value;
+            } else {
+                newStringValue.value = '';
+            }
+            setFocus(false);
         },
         { deep: true }
     );
+
     watch(
         () => props.stringValue,
-        () => {
-            newStringValue.value = props.stringValue.value;
+        (propsStringValue) => {
+            newStringValue.value = propsStringValue.value;
         },
         { deep: true }
     );
@@ -94,28 +104,31 @@
         newStringValue.value = props.stringValue.value;
     });
 
-    // Methods
     function updateValue(): void {
         if (isOperationVariable.value) {
             return;
         }
+
         const path = `${props.stringValue.path}/$value`;
         const content = JSON.stringify(newStringValue.value);
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
         const context = `updating ${props.stringValue.modelType} "${props.stringValue.idShort}"`;
         const disableMessage = false;
-        const requestHeaders = new Headers();
-        requestHeaders.append('Content-Type', 'application/json');
-        patchRequest(path, content, requestHeaders, context, disableMessage).then((response: any) => {
+        patchRequest(path, content, headers, context, disableMessage).then((response: any) => {
             if (response.success) {
                 // After successful patch request fetch and dispatch updated SME
                 fetchAndDispatchSme(selectedNode.value.path, false);
+                setFocus(false);
             }
         });
     }
 
-    function setFocus(e: boolean): void {
-        if (isOperationVariable.value && !e) {
+    function setFocus(isFocusedToSet: boolean): void {
+        if (isOperationVariable.value && !isFocusedToSet) {
             updateValue();
         }
+        isFocused.value = isFocusedToSet;
+        if (!isFocusedToSet) newStringValue.value = props.stringValue.value; // set input to current value in the AAS if the input field is not focused
     }
 </script>
