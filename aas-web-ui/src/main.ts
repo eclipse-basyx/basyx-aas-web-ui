@@ -29,9 +29,6 @@ const pinia = createPinia();
 async function loadPlugins() {
     app.use(pinia);
 
-    const router = await createAppRouter();
-    app.use(router);
-
     app.use(VueApexCharts);
 
     const envStore = useEnvStore(); // Get the store instance
@@ -72,6 +69,38 @@ async function loadPlugins() {
 
     const navigationStore = useNavigationStore();
     navigationStore.dispatchPlugins(plugins);
+
+    // Determine if mobile or desktop
+    const isMobile = window.matchMedia('(max-width: 600px)').matches;
+    console.log('isMobile', isMobile);
+    navigationStore.dispatchIsMobile(isMobile);
+
+    // Extend the window interface to include cordova and electron properties
+    interface ExtendedWindow extends Window {
+        cordova?: any;
+        electron?: any;
+    }
+    const extendedWindow = window as ExtendedWindow;
+
+    // Determine the platform
+    navigationStore.dispatchPlatform({
+        ios: /iPad|iPhone|iPod/.test(navigator.userAgent),
+        android: /Android/.test(navigator.userAgent),
+        cordova: !!extendedWindow.cordova,
+        electron: !!extendedWindow.electron,
+        chrome: /Chrome/.test(navigator.userAgent),
+        edge: /Edge/.test(navigator.userAgent),
+        firefox: /Firefox/.test(navigator.userAgent),
+        opera: /OPR/.test(navigator.userAgent),
+        win: /Windows/.test(navigator.platform),
+        mac: /MacIntel/.test(navigator.platform),
+        linux: /Linux/.test(navigator.platform),
+        touch: 'ontouchstart' in window,
+        ssr: false,
+    });
+
+    const router = await createAppRouter();
+    app.use(router);
 
     app.mount('#app');
 }

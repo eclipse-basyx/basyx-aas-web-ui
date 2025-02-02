@@ -5,8 +5,7 @@ import type {
     Router,
     RouteRecordRaw,
 } from 'vue-router';
-import { createRouter, createWebHistory } from 'vue-router';
-// import { createRouter, createWebHistory, RouteRecordNameGeneric } from 'vue-router';
+import { createRouter, createWebHistory, RouteRecordNameGeneric } from 'vue-router';
 import AASList from '@/components/AppNavigation/AASList.vue';
 import ComponentVisualization from '@/components/ComponentVisualization.vue';
 import SubmodelList from '@/components/SubmodelList.vue';
@@ -21,7 +20,7 @@ import Dashboard from '@/pages/Dashboard.vue';
 import DashboardGroup from '@/pages/DashboardGroup.vue';
 import Page404 from '@/pages/Page404.vue';
 import SubmodelViewer from '@/pages/SubmodelViewer.vue';
-// import { useEnvStore } from '@/store/EnvironmentStore';
+import { useEnvStore } from '@/store/EnvironmentStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
@@ -116,6 +115,7 @@ export async function createAppRouter(): Promise<Router> {
 
     // Stores
     const navigationStore = useNavigationStore();
+    const envStore = useEnvStore();
 
     // Connect to (BaSyx) components, otherwise IDs redirecting not possible
     navigationStore.connectComponents();
@@ -127,17 +127,17 @@ export async function createAppRouter(): Promise<Router> {
     const { fetchAndDispatchSme } = useSMEHandling();
 
     // Data
-    // const routesForMobile: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList', 'Visualization'];
-    // const routesForDesktop: Array<RouteRecordNameGeneric> = [
-    //     'AASViewer',
-    //     'SubmodelViewer',
-    //     'AASEditor',
-    //     'Visualization',
-    // ];
-    // const routesStayOnPages: Array<RouteRecordNameGeneric> = ['About', 'NotFound404'];
-    // const routesDesktopToAASViewer: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList'];
-    // const routesMobileToAASList: Array<RouteRecordNameGeneric> = ['AASViewer', 'AASEditor', 'SubmodelViewer'];
-    // const routesToVisualization: Array<RouteRecordNameGeneric> = ['ComponentVisualization'];
+    const routesForMobile: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList', 'Visualization'];
+    const routesForDesktop: Array<RouteRecordNameGeneric> = [
+        'AASViewer',
+        'SubmodelViewer',
+        'AASEditor',
+        'Visualization',
+    ];
+    const routesStayOnPages: Array<RouteRecordNameGeneric> = ['About', 'NotFound404'];
+    const routesDesktopToAASViewer: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList'];
+    const routesMobileToAASList: Array<RouteRecordNameGeneric> = ['AASViewer', 'AASEditor', 'SubmodelViewer'];
+    const routesToVisualization: Array<RouteRecordNameGeneric> = ['ComponentVisualization'];
     const possibleGloBalAssetIdQueryParameter = ['globalAssetId', 'globalassedid'];
     const possibleAasIdQueryParameter = ['aasId', 'aasid'];
     const possibleSmIdQueryParameter = ['smId', 'smid'];
@@ -154,7 +154,7 @@ export async function createAppRouter(): Promise<Router> {
     const mobile = computed(() => {
         return navigationStore.getIsMobile;
     });
-    // const allowEditing = computed(() => envStore.getAllowEditing); // Check if the current environment allows showing the AAS Editor
+    const allowEditing = computed(() => envStore.getAllowEditing); // Check if the current environment allows showing the AAS Editor
     const showMobileVersion = computed(() => {
         return (
             mobile.value ||
@@ -235,55 +235,55 @@ export async function createAppRouter(): Promise<Router> {
                 }
             }
 
-            // // Check if single AAS mode is on and no aas query is set to either redirect or show 404
-            // if (envStore.getSingleAas && aasEndpoint.value.trim() === '') {
-            //     if (!routesStayOnPages.includes(to.name as string) && !to.path.startsWith('/modules/')) {
-            //         if (envStore.getSingleAasRedirect) {
-            //             window.location.replace(envStore.getSingleAasRedirect);
-            //             return;
-            //         } else if (to.name !== 'NotFound404') {
-            //             next({ name: 'NotFound404' });
-            //             return;
-            //         }
-            //     }
-            // }
+            // Check if single AAS mode is on and no aas query is set to either redirect or show 404
+            if (envStore.getSingleAas && aasEndpoint.value.trim() === '') {
+                if (!routesStayOnPages.includes(to.name as string) && !to.path.startsWith('/modules/')) {
+                    if (envStore.getSingleAasRedirect) {
+                        window.location.replace(envStore.getSingleAasRedirect);
+                        return;
+                    } else if (to.name !== 'NotFound404') {
+                        next({ name: 'NotFound404' });
+                        return;
+                    }
+                }
+            }
 
-            // // Check which platform is used and handle the view
-            // if (showMobileVersion) {
-            //     // Handle mobile view
-            //     if (routesForMobile.includes(to.name) || routesStayOnPages.includes(to.name)) {
-            //         // Do nothing
-            //     } else if (routesMobileToAASList.includes(to.name)) {
-            //         // Redirect to 'AASList' with existing query parameters
-            //         next({ name: 'AASList', query: to.query });
-            //         return;
-            //     } else if (routesToVisualization.includes(to.name)) {
-            //         // Redirect to 'Visualization' with existing query parameters
-            //         next({ name: 'Visualization', query: to.query });
-            //         return;
-            //     } else {
-            //         // Default redirect to 'AASList' without query parameters
-            //         next({ name: 'AASList' });
-            //         return;
-            //     }
-            //     // Noting todo for to.name === 'SubmodelList'
-            // } else {
-            //     // Handle desktop view
-            //     if (routesForDesktop.includes(to.name) || routesStayOnPages.includes(to.name)) {
-            //         // Do nothing
-            //     } else if (
-            //         routesDesktopToAASViewer.includes(to.name) ||
-            //         (to.name === 'AASEditor' && allowEditing.value)
-            //     ) {
-            //         // Redirect to 'AASViewer' with existing query parameters
-            //         next({ name: 'AASViewer', query: to.query });
-            //         return;
-            //     } else if (routesToVisualization.includes(to.name)) {
-            //         // Redirect to 'Visualization' with existing query parameters
-            //         next({ name: 'Visualization', query: to.query });
-            //         return;
-            //     }
-            // }
+            // Check which platform is used and handle the view
+            if (showMobileVersion) {
+                // Handle mobile view
+                if (routesForMobile.includes(to.name) || routesStayOnPages.includes(to.name)) {
+                    // Do nothing
+                } else if (routesMobileToAASList.includes(to.name)) {
+                    // Redirect to 'AASList' with existing query parameters
+                    next({ name: 'AASList', query: to.query });
+                    return;
+                } else if (routesToVisualization.includes(to.name)) {
+                    // Redirect to 'Visualization' with existing query parameters
+                    next({ name: 'Visualization', query: to.query });
+                    return;
+                } else {
+                    // Default redirect to 'AASList' without query parameters
+                    next({ name: 'AASList' });
+                    return;
+                }
+                // Noting todo for to.name === 'SubmodelList'
+            } else {
+                // Handle desktop view
+                if (routesForDesktop.includes(to.name) || routesStayOnPages.includes(to.name)) {
+                    // Do nothing
+                } else if (
+                    routesDesktopToAASViewer.includes(to.name) ||
+                    (to.name === 'AASEditor' && allowEditing.value)
+                ) {
+                    // Redirect to 'AASViewer' with existing query parameters
+                    next({ name: 'AASViewer', query: to.query });
+                    return;
+                } else if (routesToVisualization.includes(to.name)) {
+                    // Redirect to 'Visualization' with existing query parameters
+                    next({ name: 'Visualization', query: to.query });
+                    return;
+                }
+            }
         }
 
         // Fetch and dispatch with respect to URL query parameter (aas, path)
