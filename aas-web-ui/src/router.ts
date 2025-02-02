@@ -6,7 +6,6 @@ import type {
     RouteRecordRaw,
 } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
-import { useDisplay } from 'vuetify';
 // import { createRouter, createWebHistory, RouteRecordNameGeneric } from 'vue-router';
 import AASList from '@/components/AppNavigation/AASList.vue';
 import ComponentVisualization from '@/components/ComponentVisualization.vue';
@@ -127,9 +126,6 @@ export async function createAppRouter(): Promise<Router> {
     const { getSmEndpointById } = useSMHandling();
     const { fetchAndDispatchSme } = useSMEHandling();
 
-    // Vuetify
-    const { mobile, platform } = useDisplay();
-
     // Data
     // const routesForMobile: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList', 'Visualization'];
     // const routesForDesktop: Array<RouteRecordNameGeneric> = [
@@ -152,6 +148,12 @@ export async function createAppRouter(): Promise<Router> {
     ];
 
     // Computed Properties
+    const platform = computed(() => {
+        return navigationStore.getPlatform;
+    });
+    const mobile = computed(() => {
+        return navigationStore.getIsMobile;
+    });
     // const allowEditing = computed(() => envStore.getAllowEditing); // Check if the current environment allows showing the AAS Editor
     const showMobileVersion = computed(() => {
         return (

@@ -12,3 +12,34 @@
         </v-main>
     </v-app>
 </template>
+
+<script lang="ts" setup>
+    import { onMounted } from 'vue';
+    import { useDisplay } from 'vuetify';
+    import { useNavigationStore } from './store/NavigationStore';
+
+    // Stores
+    const navigationStore = useNavigationStore();
+
+    // Vuetify
+    const { mobile } = useDisplay();
+    const { platform } = useDisplay();
+
+    onMounted(async () => {
+        // Check if the platform is a mobile device
+        let showMobileVersion = false;
+        if (
+            mobile.value ||
+            // include IPad as mobile device
+            (platform.value.mac && platform.value.touch) ||
+            // IOS and Android are mobile platforms
+            platform.value.ios ||
+            platform.value.android
+        ) {
+            showMobileVersion = true;
+        }
+        // Dispatch the mobile status to the store
+        navigationStore.dispatchIsMobile(showMobileVersion);
+        navigationStore.dispatchPlatform(platform.value);
+    });
+</script>
