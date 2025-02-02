@@ -122,13 +122,13 @@
                                     "
                                     :submodel-element-data="documentVersion.previewFile"></ImagePreview>
                                 <PDFPreview
-                                    v-if="
+                                    v-else-if="
                                         documentVersion.previewFile.contentType &&
                                         documentVersion.previewFile.contentType.includes('pdf')
                                     "
                                     :submodel-element-data="documentVersion.previewFile"></PDFPreview>
                                 <CADPreview
-                                    v-if="
+                                    v-else-if="
                                         documentVersion.previewFile.contentType &&
                                         (documentVersion.previewFile.contentType.includes('sla') ||
                                             documentVersion.previewFile.contentType.includes('stl') ||
@@ -137,15 +137,24 @@
                                             documentVersion.previewFile.contentType.includes('gltf'))
                                     "
                                     :submodel-element-data="documentVersion.previewFile"></CADPreview>
+                                <v-alert
+                                    v-else
+                                    text="No preview available for this file type"
+                                    class="mt-3"
+                                    density="compact"
+                                    type="warning"
+                                    variant="outlined"></v-alert>
                             </div>
                             <!-- Download Button -->
                             <v-card-actions class="pt-4 pb-0 pr-0">
                                 <v-spacer></v-spacer>
                                 <v-btn
                                     v-if="documentVersion.previewFile"
+                                    size="small"
                                     color="primary"
                                     variant="elevated"
                                     prepend-icon="mdi-download"
+                                    class="text-buttonText"
                                     @click="downloadFile(documentVersion.previewFile)">
                                     Download Preview File
                                 </v-btn>
@@ -168,13 +177,13 @@
                                     "
                                     :submodel-element-data="documentVersion.digitalFile"></ImagePreview>
                                 <PDFPreview
-                                    v-if="
+                                    v-else-if="
                                         documentVersion.digitalFile.contentType &&
                                         documentVersion.digitalFile.contentType.includes('pdf')
                                     "
                                     :submodel-element-data="documentVersion.digitalFile"></PDFPreview>
                                 <CADPreview
-                                    v-if="
+                                    v-else-if="
                                         documentVersion.digitalFile.contentType &&
                                         (documentVersion.digitalFile.contentType.includes('sla') ||
                                             documentVersion.digitalFile.contentType.includes('stl') ||
@@ -183,15 +192,24 @@
                                             documentVersion.digitalFile.contentType.includes('gltf'))
                                     "
                                     :submodel-element-data="documentVersion.digitalFile"></CADPreview>
+                                <v-alert
+                                    v-else
+                                    text="No preview available for this file type"
+                                    class="mt-3"
+                                    density="compact"
+                                    type="warning"
+                                    variant="outlined"></v-alert>
                             </div>
                             <!-- Download Button -->
                             <v-card-actions class="pt-4 pb-0 pr-0">
                                 <v-spacer></v-spacer>
                                 <v-btn
                                     v-if="documentVersion.digitalFile"
+                                    size="small"
                                     color="primary"
                                     variant="elevated"
                                     prepend-icon="mdi-download"
+                                    class="text-buttonText"
                                     @click="downloadFile(documentVersion.digitalFile)">
                                     Download Digital File
                                 </v-btn>
