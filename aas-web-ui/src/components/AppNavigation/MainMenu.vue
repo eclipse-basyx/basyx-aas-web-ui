@@ -149,6 +149,7 @@
     const dashboardAvailable = ref(false);
 
     // Computed Properties
+    const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
     const currentRoute = computed(() => route.name); // get the current route name
     const currentRoutePath = computed(() => route.path); // get the current route path
     const currentRouteQuery = computed(() => route.query); // get the current route query
@@ -158,6 +159,8 @@
     const selectedNode = computed(() => aasStore.getSelectedNode); // get selected AAS from Store
     const filteredAndOrderedModuleRoutes = computed(() => {
         const filteredModuleRoutes = moduleRoutes.value.filter((moduleRoute: RouteRecordRaw) => {
+            if (isMobile.value && !moduleRoute?.meta?.isMobileModule) return false;
+            if (!isMobile.value && !moduleRoute?.meta?.isDesktopModule) return false;
             if (
                 moduleRoute?.meta?.isOnlyVisibleWithSelectedAas &&
                 (!selectedAas.value || Object.keys(selectedAas.value).length === 0)
@@ -170,6 +173,7 @@
                 return false;
             return moduleRoute?.meta?.isVisibleModule === true || moduleRoute.path === route.path;
         });
+
         const filteredAndOrderedModuleRoutes = filteredModuleRoutes.sort(
             (moduleRouteA: RouteRecordRaw, moduleRouteB: RouteRecordRaw) => {
                 let moduleNameA: string = moduleRouteA?.name?.toString() || '';

@@ -12,3 +12,29 @@
         </v-main>
     </v-app>
 </template>
+
+<script lang="ts" setup>
+    import { onBeforeUnmount, onMounted, ref } from 'vue';
+    import { useRouter } from 'vue-router';
+
+    // Vue Router
+    const router = useRouter();
+
+    // Data
+    const mediaQueryList = window.matchMedia('(max-width: 600px)');
+    const matchesMobile = ref(mediaQueryList.matches);
+
+    onMounted(() => {
+        mediaQueryList.addEventListener('change', handleMediaChange);
+    });
+
+    onBeforeUnmount(() => {
+        mediaQueryList.removeEventListener('change', handleMediaChange);
+    });
+
+    function handleMediaChange(event: MediaQueryListEvent): void {
+        if (matchesMobile.value !== event.matches) {
+            router.go(0); // This reloads the current route
+        }
+    }
+</script>

@@ -3,9 +3,10 @@ import type {
     NavigationGuardNext,
     RouteLocationNormalizedGeneric,
     Router,
+    RouteRecordNameGeneric,
     RouteRecordRaw,
 } from 'vue-router';
-import { createRouter, createWebHistory, RouteRecordNameGeneric } from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router';
 import AASList from '@/components/AppNavigation/AASList.vue';
 import ComponentVisualization from '@/components/ComponentVisualization.vue';
 import SubmodelList from '@/components/SubmodelList.vue';
@@ -32,10 +33,6 @@ const staticRoutes: Array<RouteRecordRaw> = [
         component: AASViewer,
         meta: { name: 'AAS Viewer', subtitle: 'Visualize Asset Administration Shells' },
     },
-    { path: '/aaslist', name: 'AASList', component: AASList },
-    { path: '/submodellist', name: 'SubmodelList', component: SubmodelList },
-    { path: '/componentvisualization', name: 'ComponentVisualization', component: ComponentVisualization },
-    { path: '/visu', name: 'Visualization', component: ComponentVisualization, meta: { name: 'Visualization' } },
     {
         path: '/aaseditor',
         name: 'AASEditor',
@@ -48,6 +45,10 @@ const staticRoutes: Array<RouteRecordRaw> = [
         component: SubmodelViewer,
         meta: { name: 'Submodel Viewer', subtitle: 'Visualize Submodels' },
     },
+    { path: '/aaslist', name: 'AASList', component: AASList },
+    { path: '/submodellist', name: 'SubmodelList', component: SubmodelList },
+    { path: '/componentvisualization', name: 'ComponentVisualization', component: ComponentVisualization },
+    { path: '/visu', name: 'Visualization', component: ComponentVisualization, meta: { name: 'Visualization' } },
     {
         path: '/about',
         name: 'About',
@@ -76,8 +77,9 @@ const generateModuleRoutes = async (): Promise<Array<RouteRecordRaw>> => {
         // Define the route path, e.g., '/modules/module-a' if needed
         const routePath = `/modules/${moduleName.toLowerCase()}`;
 
-        const isVisibleModule = moduleComponent.default?.isVisibleModule ?? true;
-        const isMobileModule = moduleComponent.default?.isMobileModule ?? false;
+        const isDesktopModule = moduleComponent.default?.isDesktopModule ?? true; // Modules are per default available in desktop view
+        const isMobileModule = moduleComponent.default?.isDesktopModule ?? false; // Modules are per default not available in mobile view
+        const isVisibleModule = moduleComponent.default?.isVisibleModule ?? true; // Modules are per default visible
         const isOnlyVisibleWithSelectedAas = moduleComponent.default?.isOnlyVisibleWithSelectedAas ?? false;
         const isOnlyVisibleWithSelectedNode = moduleComponent.default?.isOnlyVisibleWithSelectedNode ?? false;
         let preserveRouteQuery = moduleComponent.default?.preserveRouteQuery ?? false;
@@ -91,6 +93,7 @@ const generateModuleRoutes = async (): Promise<Array<RouteRecordRaw>> => {
             meta: {
                 name: moduleName,
                 subtitle: 'Module',
+                isDesktopModule: isDesktopModule,
                 isMobileModule: isMobileModule,
                 isVisibleModule: isVisibleModule,
                 isOnlyVisibleWithSelectedAas: isOnlyVisibleWithSelectedAas,
@@ -130,8 +133,8 @@ export async function createAppRouter(): Promise<Router> {
     const routesForMobile: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList', 'Visualization'];
     const routesForDesktop: Array<RouteRecordNameGeneric> = [
         'AASViewer',
-        'SubmodelViewer',
         'AASEditor',
+        'SubmodelViewer',
         'Visualization',
     ];
     const routesStayOnPages: Array<RouteRecordNameGeneric> = ['About', 'NotFound404'];
@@ -148,30 +151,11 @@ export async function createAppRouter(): Promise<Router> {
     ];
 
     // Computed Properties
-    const platform = computed(() => {
-        return navigationStore.getPlatform;
-    });
-    const mobile = computed(() => {
-        return navigationStore.getIsMobile;
-    });
+    const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
     const allowEditing = computed(() => envStore.getAllowEditing); // Check if the current environment allows showing the AAS Editor
-    const showMobileVersion = computed(() => {
-        return (
-            mobile.value ||
-            // include IPad as mobile device
-            (platform.value.mac && platform.value.touch) ||
-            // IOS and Android are mobile platforms
-            platform.value.ios ||
-            platform.value.android
-        );
-    });
     const searchParams = computed(() => new URL(window.location.href).searchParams);
     const aasEndpoint = computed(() => (searchParams.value.get('aas') || '').trim());
     const smePath = computed(() => (searchParams.value.get('path') || '').trim());
-
-    // Dispatch the mobile status to the store
-    navigationStore.dispatchIsMobile(showMobileVersion.value);
-    navigationStore.dispatchPlatform(platform.value);
 
     // Save the generated routes in the navigation store
     navigationStore.dispatchModuleRoutes(moduleRoutes);
@@ -234,55 +218,55 @@ export async function createAppRouter(): Promise<Router> {
                     }
                 }
             }
+        }
 
-            // Check if single AAS mode is on and no aas query is set to either redirect or show 404
-            if (envStore.getSingleAas && aasEndpoint.value.trim() === '') {
-                if (!routesStayOnPages.includes(to.name as string) && !to.path.startsWith('/modules/')) {
-                    if (envStore.getSingleAasRedirect) {
-                        window.location.replace(envStore.getSingleAasRedirect);
-                        return;
-                    } else if (to.name !== 'NotFound404') {
-                        next({ name: 'NotFound404' });
-                        return;
-                    }
+        // Check if single AAS mode is on and no aas query is set to either redirect or show 404
+        if (envStore.getSingleAas && aasEndpoint.value.trim() === '') {
+            if (!routesStayOnPages.includes(to.name as string) && !to.path.startsWith('/modules/')) {
+                if (envStore.getSingleAasRedirect) {
+                    window.location.replace(envStore.getSingleAasRedirect);
+                    return;
+                } else if (to.name !== 'NotFound404') {
+                    next({ name: 'NotFound404' });
+                    return;
                 }
             }
+        }
 
-            // Check which platform is used and handle the view
-            if (showMobileVersion) {
-                // Handle mobile view
-                if (routesForMobile.includes(to.name) || routesStayOnPages.includes(to.name)) {
-                    // Do nothing
-                } else if (routesMobileToAASList.includes(to.name)) {
-                    // Redirect to 'AASList' with existing query parameters
-                    next({ name: 'AASList', query: to.query });
-                    return;
-                } else if (routesToVisualization.includes(to.name)) {
-                    // Redirect to 'Visualization' with existing query parameters
-                    next({ name: 'Visualization', query: to.query });
-                    return;
-                } else {
-                    // Default redirect to 'AASList' without query parameters
-                    next({ name: 'AASList' });
-                    return;
-                }
-                // Noting todo for to.name === 'SubmodelList'
-            } else {
-                // Handle desktop view
-                if (routesForDesktop.includes(to.name) || routesStayOnPages.includes(to.name)) {
-                    // Do nothing
-                } else if (
-                    routesDesktopToAASViewer.includes(to.name) ||
-                    (to.name === 'AASEditor' && allowEditing.value)
-                ) {
-                    // Redirect to 'AASViewer' with existing query parameters
-                    next({ name: 'AASViewer', query: to.query });
-                    return;
-                } else if (routesToVisualization.includes(to.name)) {
-                    // Redirect to 'Visualization' with existing query parameters
-                    next({ name: 'Visualization', query: to.query });
-                    return;
-                }
+        // Handle mobile/desktop view
+        if (isMobile.value) {
+            // Handle mobile view
+            if (
+                routesForMobile.includes(to.name) ||
+                routesStayOnPages.includes(to.name) ||
+                (to.path.includes('/modules/') && to.meta.isMobileModule)
+            ) {
+                // Do nothing
+            } else if (routesMobileToAASList.includes(to.name)) {
+                // Redirect to 'AASList' with query
+                next({ name: 'AASList', query: to.query });
+                return;
+            } else if (routesToVisualization.includes(to.name)) {
+                // Redirect to 'Visualization' with query
+                next({ name: 'Visualization', query: to.query });
+                return;
+            }
+        } else {
+            // Handle desktop view
+            if (
+                routesForDesktop.includes(to.name) ||
+                routesStayOnPages.includes(to.name) ||
+                (to.path.includes('/modules/') && to.meta.isDesktopModule)
+            ) {
+                // Do nothing
+            } else if (routesDesktopToAASViewer.includes(to.name) || (to.name === 'AASEditor' && !allowEditing.value)) {
+                // Redirect to 'AASViewer' with query
+                next({ name: 'AASViewer', query: to.query });
+                return;
+            } else if (routesToVisualization.includes(to.name)) {
+                // Redirect to 'Visualization' with query
+                next({ name: 'Visualization', query: to.query });
+                return;
             }
         }
 

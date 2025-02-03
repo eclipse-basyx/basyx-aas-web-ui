@@ -26,7 +26,7 @@ const app = createApp(App);
 
 const pinia = createPinia();
 
-async function loadPlugins() {
+async function loadPlugins(): Promise<void> {
     app.use(pinia);
 
     app.use(VueApexCharts);
@@ -72,7 +72,6 @@ async function loadPlugins() {
 
     // Determine if mobile or desktop
     const isMobile = window.matchMedia('(max-width: 600px)').matches;
-    console.log('isMobile', isMobile);
     navigationStore.dispatchIsMobile(isMobile);
 
     // Extend the window interface to include cordova and electron properties
