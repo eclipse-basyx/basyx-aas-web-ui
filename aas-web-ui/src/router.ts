@@ -155,9 +155,6 @@ export async function createAppRouter(): Promise<Router> {
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
     const allowEditing = computed(() => envStore.getAllowEditing); // Check if the current environment allows showing the AAS Editor
-    const searchParams = computed(() => new URL(window.location.href).searchParams);
-    const aasEndpoint = computed(() => (searchParams.value.get('aas') || '').trim());
-    const smePath = computed(() => (searchParams.value.get('path') || '').trim());
 
     // Save the generated routes in the navigation store
     navigationStore.dispatchModuleRoutes(moduleRoutes);
@@ -221,7 +218,7 @@ export async function createAppRouter(): Promise<Router> {
         }
 
         // Check if single AAS mode is on and no aas query is set to either redirect or show 404
-        if (envStore.getSingleAas && aasEndpoint.value.trim() === '') {
+        if (envStore.getSingleAas && (!to.query.aas || (to.query.aas as string).trim() === '')) {
             if (!routesStayOnPages.includes(to.name as string) && !to.path.startsWith('/modules/')) {
                 if (envStore.getSingleAasRedirect) {
                     window.location.replace(envStore.getSingleAasRedirect);

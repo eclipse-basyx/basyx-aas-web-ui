@@ -227,7 +227,7 @@
                 this.patchRequest(path, content, headers, context, disableMessage).then((response: any) => {
                     if (response.success) {
                         // After successful patch request fetch and dispatch updated SME
-                        fetchAndDispatchSme(this.SelectedNode.path, false);
+                        this.fetchAndDispatchSme(this.SelectedNode.path, false);
                         // // this.newPropertyValue = ''; // reset input
                         // let updatedPropertyObject = { ...this.propertyObject }; // copy the propertyObject
                         // updatedPropertyObject.value = content.toString().replace(/'/g, ''); // update the value of the propertyObject

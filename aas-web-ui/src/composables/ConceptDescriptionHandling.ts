@@ -1,5 +1,5 @@
 import { formatDate } from '@/utils/DateUtils';
-import { getEquivalentEclassSemanticIds, getEquivalentIriSemanticIds } from '@/utils/SemanticIdUtils';
+// import { getEquivalentEclassSemanticIds, getEquivalentIriSemanticIds } from '@/utils/SemanticIdUtils';
 import { useCDRepositoryClient } from './Client/CDRepositoryClient';
 
 export function useConceptDescriptionHandling() {
