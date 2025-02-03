@@ -146,7 +146,7 @@
     async function initSubmodelList() {
         // console.log('Initialize SubmodelList', this.SelectedAAS, this.initialUpdate, this.initialNode);
         // return if no endpoints are available
-        if (!selectedAAS.value || !selectedAAS.value.endpoints || selectedAAS.value.endpoints.length === 0) {
+        if (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0) {
             // this.navigationStore.dispatchSnackbar({ status: true, timeout: 4000, color: 'error', btnColor: 'buttonText', text: 'AAS with no (valid) Endpoint selected!' });
             submodelData.value = [];
             return;
@@ -287,8 +287,8 @@
     // Function to initialize the Submodel List with the Route Parameters
     function initSubmodelListWithRouteParameters() {
         // check if the selectedAAS is already set in the Store and initialize the Submodel List if so
-        if (selectedAAS.value && selectedAAS.value.endpoints && selectedAAS.value.endpoints.length > 0) {
-            // console.log('init Tree from Route Params: ', this.selectedAAS);
+        if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
+            initialUpdate.value = true;
             initSubmodelList();
         }
 
