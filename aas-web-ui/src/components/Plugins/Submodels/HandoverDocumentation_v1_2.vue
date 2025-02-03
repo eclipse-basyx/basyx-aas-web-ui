@@ -1,82 +1,101 @@
 <template>
     <v-container fluid class="pa-0">
-        <!-- Header -->
-        <v-card class="mb-4">
-            <v-card-title>
-                <div class="text-subtitle-1">
-                    {{ nameToDisplay(submodelElementData, 'en', 'Handover Documentation') }}
-                </div>
-            </v-card-title>
-            <v-card-text v-if="descriptionToDisplay(submodelElementData)" class="pt-0">
-                {{ descriptionToDisplay(submodelElementData) }}
-            </v-card-text>
-        </v-card>
-        <!-- Documents -->
-        <v-card v-if="loading">
+        <VisualizationHeader
+            :submodel-element-data="submodelElementData"
+            default-title="Handover Documentation"></VisualizationHeader>
+        <!-- Loading -->
+        <v-card v-if="isLoading">
             <v-skeleton-loader type="list-item-avatar, divider, list-item-avatar" :height="144"></v-skeleton-loader>
         </v-card>
-        <v-expansion-panels v-else v-model="panel">
-            <v-expansion-panel v-for="(document, index) in documents" :key="document.idShort">
+        <v-expansion-panels v-else-if="documents.length > 0" v-model="panel">
+            <!-- Documents -->
+            <v-expansion-panel v-for="(document, i) in documents" :key="document.idShort">
                 <v-expansion-panel-title>
                     <v-list-item class="pa-0">
                         <template #prepend>
                             <v-icon size="small">mdi-file-outline</v-icon>
                         </template>
-                        <v-list-item-title>{{ nameToDisplay(document) }}</v-list-item-title>
+                        <v-list-item-title>
+                            {{ nameToDisplay(document) }}
+                            <DescriptionTooltip :description-array="document?.description" />
+                        </v-list-item-title>
                     </v-list-item>
                 </v-expansion-panel-title>
-                <v-divider v-if="panel === index"></v-divider>
-                <v-expansion-panel-text>
+                <v-divider v-if="panel === i"></v-divider>
+                <v-expansion-panel-text class="pt-4">
                     <template v-for="documentVersion in document.documentVersions" :key="documentVersion.idShort">
                         <!-- General Document Information (DocumentVersion) -->
-                        <v-table>
-                            <tbody>
-                                <tr
-                                    v-for="(versionPropertie, index) in documentVersion.meta"
-                                    :key="versionPropertie.idShort"
-                                    :class="index % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
-                                    <td>
-                                        <div class="text-subtitleText text-caption">
-                                            <span>{{ versionPropertie.idShort }}</span>
-                                            <v-tooltip
-                                                v-if="
-                                                    versionPropertie.description &&
-                                                    versionPropertie.description.length > 0
-                                                "
-                                                activator="parent"
-                                                open-delay="600"
-                                                transition="slide-y-transition"
-                                                max-width="360px"
-                                                location="bottom">
-                                                <div
-                                                    v-for="(description, i) in versionPropertie.description"
-                                                    :key="i"
-                                                    class="text-caption">
-                                                    <span class="font-weight-bold">{{
-                                                        description.language + ': '
-                                                    }}</span
-                                                    >{{ description.text }}
+                        <v-sheet border rounded>
+                            <v-table>
+                                <tbody>
+                                    <template
+                                        v-for="(metaProperty, j) in documentVersion.meta"
+                                        :key="metaProperty.idShort">
+                                        <tr
+                                            v-if="hasValue(metaProperty)"
+                                            :class="j % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
+                                            <td>
+                                                <div class="text-subtitleText text-caption">
+                                                    <span>{{ nameToDisplay(metaProperty) }}</span>
+                                                    <DescriptionTooltip
+                                                        :description-array="metaProperty?.description" />
                                                 </div>
-                                            </v-tooltip>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <!-- MultiLanguageProperties -->
-                                        <template v-if="versionPropertie.modelType == 'MultiLanguageProperty'">
-                                            <v-list-item class="pl-0">
-                                                <v-list-item-title class="text-caption">{{
-                                                    versionPropertie.value[0].text
-                                                }}</v-list-item-title>
-                                            </v-list-item>
-                                        </template>
-                                        <!-- Default -->
-                                        <span v-else class="text-caption">{{ versionPropertie.value }}</span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </v-table>
+                                            </td>
+                                            <td>
+                                                <!-- Language -->
+                                                <template v-if="checkIdShort(metaProperty, 'Language')">
+                                                    <!-- Show english value, if available -->
+                                                    <div v-if="valueToDisplay(metaProperty)" class="text-caption">
+                                                        <template v-if="getLanguageName(valueToDisplay(metaProperty))">
+                                                            {{ getLanguageName(valueToDisplay(metaProperty)) }}
+                                                            ({{ valueToDisplay(metaProperty) }})
+                                                        </template>
+                                                        <template v-else>{{ valueToDisplay(metaProperty) }}</template>
+                                                    </div>
+                                                    <!-- Otherwise show all available values -->
+                                                    <template
+                                                        v-for="(langStringSet, k) in metaProperty.value"
+                                                        v-else
+                                                        :key="k">
+                                                        <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                                                            <v-chip size="x-small" label class="mr-1">{{
+                                                                langStringSet.language
+                                                            }}</v-chip>
+                                                            {{ langStringSet?.text }}
+                                                        </div>
+                                                    </template>
+                                                </template>
+                                                <!-- MultiLanguageProperties -->
+                                                <template v-else-if="metaProperty.modelType == 'MultiLanguageProperty'">
+                                                    <!-- Show english value, if available -->
+                                                    <div v-if="valueToDisplay(metaProperty)" class="text-caption">
+                                                        {{ valueToDisplay(metaProperty) }}
+                                                    </div>
+                                                    <!-- Otherwise show all available values -->
+                                                    <template
+                                                        v-for="(langStringSet, k) in metaProperty.value"
+                                                        v-else
+                                                        :key="k">
+                                                        <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                                                            <v-chip size="x-small" label class="mr-1">{{
+                                                                langStringSet.language
+                                                            }}</v-chip>
+                                                            {{ langStringSet?.text }}
+                                                        </div>
+                                                    </template>
+                                                </template>
+                                                <!-- Default -->
+                                                <span v-else class="text-caption">
+                                                    {{ valueToDisplay(metaProperty) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </v-table>
+                        </v-sheet>
                         <!-- Switcher for File Preview/Digital File -->
-                        <v-row justify="center" class="mt-3">
+                        <v-row justify="center" class="my-1">
                             <v-col cols="auto">
                                 <v-btn-toggle
                                     v-model="documentVersion.fileToggle"
@@ -95,7 +114,7 @@
                         </v-row>
                         <!-- File Preview (PreviewFile) -->
                         <template v-if="documentVersion.fileToggle === 'preview'">
-                            <div v-if="documentVersion.previewFile" class="mt-3">
+                            <div v-if="documentVersion.previewFile">
                                 <ImagePreview
                                     v-if="
                                         documentVersion.previewFile.contentType &&
@@ -103,13 +122,13 @@
                                     "
                                     :submodel-element-data="documentVersion.previewFile"></ImagePreview>
                                 <PDFPreview
-                                    v-if="
+                                    v-else-if="
                                         documentVersion.previewFile.contentType &&
                                         documentVersion.previewFile.contentType.includes('pdf')
                                     "
                                     :submodel-element-data="documentVersion.previewFile"></PDFPreview>
                                 <CADPreview
-                                    v-if="
+                                    v-else-if="
                                         documentVersion.previewFile.contentType &&
                                         (documentVersion.previewFile.contentType.includes('sla') ||
                                             documentVersion.previewFile.contentType.includes('stl') ||
@@ -118,25 +137,35 @@
                                             documentVersion.previewFile.contentType.includes('gltf'))
                                     "
                                     :submodel-element-data="documentVersion.previewFile"></CADPreview>
+                                <v-alert
+                                    v-else
+                                    text="No preview available for this file type"
+                                    class="mt-3"
+                                    density="compact"
+                                    type="warning"
+                                    variant="outlined"></v-alert>
                             </div>
                             <!-- Download Button -->
-                            <v-btn
-                                v-if="documentVersion.previewFile"
-                                class="mt-3"
-                                block
-                                color="primary"
-                                variant="tonal"
-                                @click="downloadFile(documentVersion.previewFile)">
-                                <v-icon left>mdi-download</v-icon>
-                                <span>Download Preview File</span>
-                            </v-btn>
-                            <v-alert
-                                v-else
-                                text="No preview file found!"
-                                class="mt-3"
-                                density="compact"
-                                type="warning"
-                                variant="outlined"></v-alert>
+                            <v-card-actions class="pt-4 pb-0 pr-0">
+                                <v-spacer></v-spacer>
+                                <v-btn
+                                    v-if="documentVersion.previewFile"
+                                    size="small"
+                                    color="primary"
+                                    variant="elevated"
+                                    prepend-icon="mdi-download"
+                                    class="text-buttonText"
+                                    @click="downloadFile(documentVersion.previewFile)">
+                                    Download Preview File
+                                </v-btn>
+                                <v-alert
+                                    v-else
+                                    text="No available preview file"
+                                    class="mt-3"
+                                    density="compact"
+                                    type="warning"
+                                    variant="outlined"></v-alert>
+                            </v-card-actions>
                         </template>
                         <!-- File Preview (DigitalFile) -->
                         <template v-else-if="documentVersion.fileToggle === 'digital'">
@@ -148,13 +177,13 @@
                                     "
                                     :submodel-element-data="documentVersion.digitalFile"></ImagePreview>
                                 <PDFPreview
-                                    v-if="
+                                    v-else-if="
                                         documentVersion.digitalFile.contentType &&
                                         documentVersion.digitalFile.contentType.includes('pdf')
                                     "
                                     :submodel-element-data="documentVersion.digitalFile"></PDFPreview>
                                 <CADPreview
-                                    v-if="
+                                    v-else-if="
                                         documentVersion.digitalFile.contentType &&
                                         (documentVersion.digitalFile.contentType.includes('sla') ||
                                             documentVersion.digitalFile.contentType.includes('stl') ||
@@ -163,276 +192,273 @@
                                             documentVersion.digitalFile.contentType.includes('gltf'))
                                     "
                                     :submodel-element-data="documentVersion.digitalFile"></CADPreview>
+                                <v-alert
+                                    v-else
+                                    text="No preview available for this file type"
+                                    class="mt-3"
+                                    density="compact"
+                                    type="warning"
+                                    variant="outlined"></v-alert>
                             </div>
                             <!-- Download Button -->
-                            <v-btn
-                                v-if="documentVersion.digitalFile"
-                                class="mt-3"
-                                block
-                                color="primary"
-                                variant="tonal"
-                                @click="downloadFile(documentVersion.digitalFile)">
-                                <v-icon left>mdi-download</v-icon>
-                                <span>Download Digital File</span>
-                            </v-btn>
-                            <v-alert
-                                v-else
-                                text="No digital file found!"
-                                class="mt-3"
-                                density="compact"
-                                type="warning"
-                                variant="outlined"></v-alert>
+                            <v-card-actions class="pt-4 pb-0 pr-0">
+                                <v-spacer></v-spacer>
+                                <v-btn
+                                    v-if="documentVersion.digitalFile"
+                                    size="small"
+                                    color="primary"
+                                    variant="elevated"
+                                    prepend-icon="mdi-download"
+                                    class="text-buttonText"
+                                    @click="downloadFile(documentVersion.digitalFile)">
+                                    Download Digital File
+                                </v-btn>
+                                <v-alert
+                                    v-else
+                                    text="No available digital file"
+                                    class="mt-3"
+                                    density="compact"
+                                    type="warning"
+                                    variant="outlined"></v-alert>
+                            </v-card-actions>
                         </template>
                     </template>
                     <!-- DocumentClassifications -->
-                    <v-card variant="outlined" class="mt-3">
-                        <v-table>
-                            <thead>
-                                <tr v-if="document.documentClassifications.length > 0">
-                                    <th
-                                        v-for="classificationProperty in document.documentClassifications[0].value"
-                                        :key="classificationProperty.idShort">
-                                        <v-list-item class="pl-0">
-                                            <v-list-item-title class="text-caption">{{
-                                                classificationProperty.idShort
-                                            }}</v-list-item-title>
-                                        </v-list-item>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr
-                                    v-for="(documentClassification, index) in document.documentClassifications"
-                                    :key="documentClassification.idShort"
-                                    :class="index % 2 === 0 ? 'bg-tableOdd' : 'bg-tableEven'">
-                                    <td
-                                        v-for="classificationProperty in documentClassification.value"
-                                        :key="classificationProperty.idShort">
-                                        <!-- MultiLanguageProperties -->
-                                        <template v-if="classificationProperty.modelType == 'MultiLanguageProperty'">
-                                            <v-list-item class="pl-0">
-                                                <span class="text-caption text-subtitleText">{{
-                                                    classificationProperty.value[0].text
-                                                }}</span>
-                                            </v-list-item>
-                                        </template>
-                                        <!-- Default -->
-                                        <span v-else class="text-caption text-subtitleText">{{
-                                            classificationProperty.value
-                                        }}</span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </v-table>
-                    </v-card>
+                    <template v-if="document.documentClassificationSMCs.length > 0">
+                        <v-card variant="outlined" class="mt-3">
+                            <v-table>
+                                <thead>
+                                    <tr>
+                                        <th
+                                            v-for="classificationProperty in document.documentClassificationSMCs[0]
+                                                .value"
+                                            :key="classificationProperty.idShort">
+                                            <div class="text-caption">
+                                                <span>{{ nameToDisplay(classificationProperty) }}</span>
+                                                <DescriptionTooltip
+                                                    :description-array="classificationProperty?.description" />
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template
+                                        v-for="(documentClassificationSMC, j) in document.documentClassificationSMCs"
+                                        :key="documentClassificationSMC.idShort">
+                                        <tr
+                                            v-if="hasValue(documentClassificationSMC)"
+                                            :class="j % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
+                                            <td
+                                                v-for="classificationProperty in documentClassificationSMC.value"
+                                                :key="classificationProperty.idShort">
+                                                <!-- MultiLanguageProperties -->
+                                                <template
+                                                    v-if="classificationProperty.modelType == 'MultiLanguageProperty'">
+                                                    <!-- Show english value, if available -->
+                                                    <div
+                                                        v-if="valueToDisplay(classificationProperty)"
+                                                        class="text-caption text-subtitleText">
+                                                        {{ valueToDisplay(classificationProperty) }}
+                                                    </div>
+                                                    <!-- Otherwise show all available values -->
+                                                    <template
+                                                        v-for="(langStringSet, k) in classificationProperty.value"
+                                                        v-else
+                                                        :key="k">
+                                                        <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                                                            <v-chip size="x-small" label class="mr-1">{{
+                                                                langStringSet.language
+                                                            }}</v-chip>
+                                                            {{ langStringSet?.text }}
+                                                        </div>
+                                                    </template>
+                                                </template>
+                                                <!-- Default -->
+                                                <span v-else class="text-caption text-subtitleText">
+                                                    {{ valueToDisplay(classificationProperty) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </v-table>
+                        </v-card>
+                    </template>
                     <!-- DocumentIds -->
-                    <v-card variant="outlined" class="mt-3">
-                        <v-table>
-                            <thead>
-                                <tr v-if="document.documentIds.length > 0">
-                                    <th v-for="idProperty in document.documentIds[0].value" :key="idProperty.idShort">
-                                        <v-list-item class="pl-0">
-                                            <v-list-item-title class="text-caption">{{
-                                                nameToDisplay(idProperty)
-                                            }}</v-list-item-title>
-                                        </v-list-item>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr
-                                    v-for="(documentId, index) in document.documentIds"
-                                    :key="documentId.idShort"
-                                    :class="index % 2 === 0 ? 'bg-tableOdd' : 'bg-tableEven'">
-                                    <td v-for="idProperty in documentId.value" :key="idProperty.idShort">
-                                        <!-- MultiLanguageProperties -->
-                                        <template v-if="idProperty.modelType == 'MultiLanguageProperty'">
-                                            <v-list-item class="pl-0">
-                                                <span class="text-caption text-subtitleText">{{
-                                                    idProperty.value[0].text
-                                                }}</span>
-                                            </v-list-item>
-                                        </template>
-                                        <!-- Default -->
-                                        <span v-else class="text-caption text-subtitleText">{{
-                                            idProperty.value
-                                        }}</span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </v-table>
-                    </v-card>
+                    <template v-if="document.documentIds.length > 0">
+                        <v-card variant="outlined" class="mt-3">
+                            <v-table>
+                                <thead>
+                                    <tr>
+                                        <th
+                                            v-for="idProperty in document.documentIds[0].value"
+                                            :key="idProperty.idShort">
+                                            <div class="text-caption">
+                                                <span>{{ nameToDisplay(idProperty) }}</span>
+                                                <DescriptionTooltip :description-array="idProperty?.description" />
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template
+                                        v-for="(documentIdSMC, j) in document.documentIds"
+                                        :key="documentIdSMC.idShort">
+                                        <tr
+                                            v-if="hasValue(documentIdSMC)"
+                                            :class="j % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
+                                            <td v-for="idProperty in documentIdSMC.value" :key="idProperty.idShort">
+                                                <!-- MultiLanguageProperties -->
+                                                <template v-if="idProperty.modelType == 'MultiLanguageProperty'">
+                                                    <!-- Show english value, if available -->
+                                                    <div
+                                                        v-if="valueToDisplay(idProperty)"
+                                                        class="text-caption text-subtitleText">
+                                                        {{ valueToDisplay(idProperty) }}
+                                                    </div>
+                                                    <!-- Otherwise show all available values -->
+                                                    <template
+                                                        v-for="(langStringSet, k) in idProperty.value"
+                                                        v-else
+                                                        :key="k">
+                                                        <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                                                            <v-chip size="x-small" label class="mr-1">{{
+                                                                langStringSet.language
+                                                            }}</v-chip>
+                                                            {{ langStringSet?.text }}
+                                                        </div>
+                                                    </template>
+                                                </template>
+                                                <!-- Default -->
+                                                <span v-else class="text-caption text-subtitleText">
+                                                    {{ valueToDisplay(idProperty) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </v-table>
+                        </v-card>
+                    </template>
                 </v-expansion-panel-text>
             </v-expansion-panel>
         </v-expansion-panels>
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-    import { useTheme } from 'vuetify';
+<script lang="ts" setup>
+    import { onMounted, ref } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/SMHandling';
-    import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-    import { useAASStore } from '@/store/AASDataStore';
-    import { checkSemanticId } from '@/utils/SemanticIdUtils';
+    import { getLanguageName } from '@/utils/LocaleUtils';
+    import { getSubmodelElementBySemanticId, getSubmodelElementsBySemanticId } from '@/utils/SemanticIdUtils';
+    import { downloadFile } from '@/utils/SubmodelElements/FileUtils';
+    import { hasValue, valueToDisplay } from '@/utils/SubmodelElements/SubmodelElementUtils';
 
-    export default defineComponent({
+    // Options
+    defineOptions({
         name: 'HandoverDocumentation',
         semanticId: '0173-1#01-AHF578#001',
-        mixins: [RequestHandling, SubmodelElementHandling],
-        props: ['submodelElementData'],
+    });
 
-        setup() {
-            const theme = useTheme();
-            const aasStore = useAASStore();
-            const { setData } = useSMHandling();
-            const { checkIdShort, descriptionToDisplay, nameToDisplay } = useReferableUtils();
+    // Composables
+    const { setData } = useSMHandling();
+    const { checkIdShort, nameToDisplay } = useReferableUtils();
 
-            return {
-                theme, // Theme Object
-                aasStore, // AASStore Object
-                checkIdShort,
-                descriptionToDisplay,
-                nameToDisplay,
-                checkSemanticId,
-                setData,
-            };
-        },
-
-        data() {
-            return {
-                handoverDocuData: {} as any,
-                panel: null as number | null,
-                documents: [] as Array<any>,
-                loading: false,
-            };
-        },
-
-        computed: {
-            // Get the selected Treeview Node (SubmodelElement) from the store
-            SelectedNode() {
-                return this.aasStore.getSelectedNode;
-            },
-        },
-
-        mounted() {
-            this.initHandoverDocumentation();
-        },
-
-        methods: {
-            async initHandoverDocumentation() {
-                this.loading = true;
-
-                if (Object.keys(this.submodelElementData).length === 0) {
-                    this.handoverDocuData = {};
-                    this.loading = false;
-                    return;
-                }
-                this.handoverDocuData = await this.setData(
-                    { ...this.submodelElementData },
-                    this.submodelElementData.path,
-                    true,
-                    this.submodelElementData.timestamp
-                );
-
-                // create array of documents
-                let documents = this.handoverDocuData.submodelElements.filter((element: any) => {
-                    return this.checkSemanticId(element, '0173-1#02-ABI500#001/0173-1#01-AHF579#001');
-                });
-                documents.forEach((document: any) => {
-                    this.extractDocumentVersions(document);
-                    this.extractDocumentIds(document);
-                    this.extractDocumentClassifications(document);
-                });
-                // console.log('Documents: ', documents);
-                this.documents = documents;
-                this.loading = false;
-            },
-
-            extractDocumentVersions(document: any) {
-                // create an array with every DocumentVersion SubmodelElementCollection
-                document.documentVersions = document.value.filter((element: any) => {
-                    return (
-                        element.semanticId &&
-                        element.semanticId.keys &&
-                        element.semanticId.keys.length > 0 &&
-                        this.checkSemanticId(element, '0173-1#02-ABI503#001/0173-1#01-AHF582#001')
-                    );
-                });
-                // prepare each DocumentVersion
-                document.documentVersions.forEach((documentVersion: any) => {
-                    // extract the DigitalFile
-                    documentVersion.digitalFile = this.getElementBySemanticId('0173-1#02-ABI504', documentVersion);
-                    // extract the PreviewFile
-                    documentVersion.previewFile = this.getElementBySemanticId('0173-1#02-ABI505', documentVersion);
-                    // filter for relevant versionProperties
-                    documentVersion.meta = documentVersion.value.filter((element: any) => {
-                        // return elements with the following idShorts: Language, Title, SubTitle, Summary, KeyWords
-                        return (
-                            this.checkIdShort(element, 'Language') ||
-                            this.checkIdShort(element, 'Title') ||
-                            this.checkIdShort(element, 'SubTitle') ||
-                            this.checkIdShort(element, 'Summary') ||
-                            this.checkIdShort(element, 'KeyWords')
-                        );
-                    });
-                    documentVersion.fileToggle = 'preview';
-                });
-            },
-
-            extractDocumentIds(document: any) {
-                document.documentIds = document.value.filter((element: any) => {
-                    return (
-                        element.semanticId &&
-                        element.semanticId.keys &&
-                        element.semanticId.keys.length > 0 &&
-                        this.checkSemanticId(element, '0173-1#02-ABI501#001/0173-1#01-AHF580#001')
-                    );
-                });
-            },
-
-            extractDocumentClassifications(document: any) {
-                document.documentClassifications = document.value.filter((element: any) => {
-                    return (
-                        element.semanticId &&
-                        element.semanticId.keys &&
-                        element.semanticId.keys.length > 0 &&
-                        this.checkSemanticId(element, '0173-1#02-ABI502#001/0173-1#01-AHF581#001*02')
-                    );
-                });
-            },
-
-            downloadFile(file: any) {
-                let path = this.getLocalPath(file.value, file);
-                let context = 'retrieving Attachment File';
-                let disableMessage = false;
-                this.getRequest(path, context, disableMessage).then((response: any) => {
-                    if (response.success) {
-                        // execute if the Request was successful
-                        let Base64File = URL.createObjectURL(response.data as Blob);
-                        const link = document.createElement('a');
-                        link.href = Base64File;
-                        link.download = file.idShort;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                    }
-                });
-            },
-
-            getElementBySemanticId(semanticId: string, parentElement: any) {
-                return parentElement.value.find((element: any) => {
-                    return (
-                        element.semanticId &&
-                        element.semanticId.keys &&
-                        element.semanticId.keys.length > 0 &&
-                        this.checkSemanticId(element, semanticId)
-                    );
-                });
-            },
+    // Properties
+    const props = defineProps({
+        submodelElementData: {
+            type: Object as any,
+            default: {} as any,
         },
     });
+
+    // Data
+    const isLoading = ref(false);
+    const handoverDocumentationData = ref({} as any);
+    const panel = ref(null as number | null);
+    const documents = ref([] as Array<any>);
+
+    onMounted(() => {
+        initializeVisualization();
+    });
+
+    async function initializeVisualization(): Promise<void> {
+        isLoading.value = true;
+
+        if (!props.submodelElementData || Object.keys(props.submodelElementData).length === 0) {
+            handoverDocumentationData.value = {};
+            isLoading.value = false;
+            return;
+        }
+
+        handoverDocumentationData.value = await setData(
+            { ...props.submodelElementData },
+            props.submodelElementData.path,
+            true,
+            props.submodelElementData.timestamp
+        );
+
+        documents.value = getSubmodelElementsBySemanticId(
+            '0173-1#02-ABI500#001/0173-1#01-AHF579#001',
+            handoverDocumentationData.value
+        ).filter((sme: any) => {
+            return hasValue(sme);
+        });
+
+        documents.value.forEach((document: any) => {
+            extractDocumentVersions(document);
+
+            // Extract Document IDs
+            document.documentIds = getSubmodelElementsBySemanticId(
+                '0173-1#02-ABI501#001/0173-1#01-AHF580#001',
+                document
+            ).filter((sme: any) => {
+                return hasValue(sme);
+            });
+
+            // Extract Document Classifications
+            document.documentClassificationSMCs = getSubmodelElementsBySemanticId(
+                '0173-1#02-ABI502#001/0173-1#01-AHF581#001*02',
+                document
+            ).filter((sme: any) => {
+                return hasValue(sme);
+            });
+        });
+
+        isLoading.value = false;
+    }
+
+    function extractDocumentVersions(document: any): void {
+        // Extract Document Version
+        document.documentVersions = getSubmodelElementsBySemanticId(
+            '0173-1#02-ABI503#001/0173-1#01-AHF582#001',
+            document
+        ).filter((sme: any) => {
+            return hasValue(sme);
+        });
+
+        // Extract Digital File / Preview File / Meta data for each Document Version
+        document.documentVersions.forEach((documentVersion: any) => {
+            // Extract the Digital File
+            documentVersion.digitalFile = getSubmodelElementBySemanticId('0173-1#02-ABI504', documentVersion);
+
+            // Extract the Preview File
+            documentVersion.previewFile = getSubmodelElementBySemanticId('0173-1#02-ABI505', documentVersion);
+
+            // Extract Metadata
+            documentVersion.meta = documentVersion.value.filter((documentVersionSME: any) => {
+                return (
+                    hasValue(documentVersionSME) &&
+                    (checkIdShort(documentVersionSME, 'Language') ||
+                        checkIdShort(documentVersionSME, 'Title') ||
+                        checkIdShort(documentVersionSME, 'SubTitle') ||
+                        checkIdShort(documentVersionSME, 'Summary') ||
+                        checkIdShort(documentVersionSME, 'KeyWords'))
+                );
+            });
+
+            documentVersion.fileToggle = 'preview';
+        });
+    }
 </script>
