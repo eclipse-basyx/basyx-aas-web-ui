@@ -78,7 +78,7 @@ const generateModuleRoutes = async (): Promise<Array<RouteRecordRaw>> => {
         const routePath = `/modules/${moduleName.toLowerCase()}`;
 
         const isDesktopModule = moduleComponent.default?.isDesktopModule ?? true; // Modules are per default available in desktop view
-        const isMobileModule = moduleComponent.default?.isDesktopModule ?? false; // Modules are per default not available in mobile view
+        const isMobileModule = moduleComponent.default?.isMobileModule ?? false; // Modules are per default not available in mobile view
         const isVisibleModule = moduleComponent.default?.isVisibleModule ?? true; // Modules are per default visible
         const isOnlyVisibleWithSelectedAas = moduleComponent.default?.isOnlyVisibleWithSelectedAas ?? false;
         const isOnlyVisibleWithSelectedNode = moduleComponent.default?.isOnlyVisibleWithSelectedNode ?? false;
