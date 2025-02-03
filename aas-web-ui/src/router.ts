@@ -166,8 +166,6 @@ export async function createAppRouter(): Promise<Router> {
     });
 
     router.beforeEach(async (to, from, next) => {
-        console.warn('from', from);
-        console.warn('to', to);
         // Handle redirection of `globalAssetId`, `aasId` and `smId`
         if (await idRedirectHandled(to, next)) return;
 
@@ -242,7 +240,10 @@ export async function createAppRouter(): Promise<Router> {
                 (to.path.includes('/modules/') && to.meta.isMobileModule)
             ) {
                 // Do nothing
-            } else if (routesMobileToAASList.includes(to.name)) {
+            } else if (
+                routesMobileToAASList.includes(to.name) ||
+                (to.path.includes('/modules/') && !to.meta.isMobileModule)
+            ) {
                 // Redirect to 'AASList' with query
                 next({ name: 'AASList', query: to.query });
                 return;
@@ -259,7 +260,11 @@ export async function createAppRouter(): Promise<Router> {
                 (to.path.includes('/modules/') && to.meta.isDesktopModule)
             ) {
                 // Do nothing
-            } else if (routesDesktopToAASViewer.includes(to.name) || (to.name === 'AASEditor' && !allowEditing.value)) {
+            } else if (
+                routesDesktopToAASViewer.includes(to.name) ||
+                (to.name === 'AASEditor' && !allowEditing.value) ||
+                (to.path.includes('/modules/') && !to.meta.isDesktopModule)
+            ) {
                 // Redirect to 'AASViewer' with query
                 next({ name: 'AASViewer', query: to.query });
                 return;
