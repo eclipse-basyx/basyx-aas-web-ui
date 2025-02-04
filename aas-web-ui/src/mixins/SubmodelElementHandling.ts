@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { defineComponent } from 'vue';
 import { useRouter } from 'vue-router';
 import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
+import { useJumpHandling } from '@/composables/JumpHandling';
 import RequestHandling from '@/mixins/RequestHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useNavigationStore } from '@/store/NavigationStore';
@@ -18,12 +19,14 @@ export default defineComponent({
         const navigationStore = useNavigationStore();
         const router = useRouter();
         const { checkIdShort } = useReferableUtils();
+        const { jumpToAasByAasDescriptor } = useJumpHandling();
 
         return {
             aasStore, // AASStore Object
             navigationStore, // NavigationStore Object
             router, // Router Object
             checkIdShort,
+            jumpToAasByAasDescriptor,
         };
     },
 
@@ -423,8 +426,6 @@ export default defineComponent({
                 // );
                 this.jumpToSubmodelElement(reference, aasDescriptor, smRef);
             } else if (aasDescriptor && Object.keys(aasDescriptor).length > 0) {
-                // if the referenced Element is an AAS
-                // console.log('jumpToReference --> jumpToAasByAasDescriptor', 'aasDescriptor', aasDescriptor);
                 this.jumpToAasByAasDescriptor(aasDescriptor);
             }
         },
@@ -836,40 +837,6 @@ export default defineComponent({
             const aasId = aasReference?.keys[0]?.value.trim();
 
             return this.aasIsAvailableById(aasId);
-        },
-
-        // Jumps to AAS by AAS Descriptor
-        // TODO Transfer to Util resp. Composable
-        async jumpToAasByAasDescriptor(aasDescriptor: any) {
-            // console.log('jumpToAasByAasDescriptor()', aasDescriptor);
-            const aasEndpoint = this.extractEndpointHref(aasDescriptor, 'AAS-3.0');
-            // console.log('jumpToAasByAasDescriptor() --> jumpToAasBy()', aasEndpoint);
-            this.jumpToAas(aasEndpoint);
-        },
-
-        // Jumps to AAS by AAS ID
-        // TODO Transfer to Util resp. Composable
-        async jumpToAasById(aasId: string) {
-            if (!this.aasIsAvailableById(aasId)) return;
-
-            const aas = await this.fetchAasById(aasId);
-            const aasEndpoint = this.extractEndpointHref(aas, 'AAS-3.0');
-
-            this.jumpToAas(aasEndpoint);
-        },
-
-        // Jumps to AAS by AAS Endpoint
-        // TODO Transfer to Util resp. Composable
-        async jumpToAas(aasEndpoint: string) {
-            // console.log('jumpToAasBy()', aasEndpoint);
-            if (aasEndpoint.trim() === '') return;
-
-            if (this.navigationStore.getIsMobile) {
-                this.router.push({ name: 'SubmodelList', query: { aas: aasEndpoint } });
-            } else {
-                this.router.push({ query: { aas: aasEndpoint } });
-            }
-            await this.fetchAndDispatchAas(aasEndpoint);
         },
 
         // TODO Move to SMHandling/SMEHandling/SMRegistryClient/SMRepoClient
