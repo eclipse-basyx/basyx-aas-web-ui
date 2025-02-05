@@ -331,7 +331,9 @@ export function useSMHandling() {
         startPath: string,
         withConceptDescriptions: boolean = false
     ): Promise<any> {
-        if (!parent || Object.keys(parent).length === 0) return;
+        const failResponse = {};
+
+        if (!parent || Object.keys(parent).length === 0) return failResponse;
 
         parent.path = startPath;
         // Just set if it is not available (e.g. for a Submodel it is available!)
@@ -383,7 +385,7 @@ export function useSMHandling() {
             parent.modelType == 'Entity'
         ) {
             // Entitiy
-            for (const element of parent.value) {
+            for (const element of parent.statements) {
                 await calculateSMEPathes(element, startPath + '.' + element.idShort, withConceptDescriptions);
             }
         }
