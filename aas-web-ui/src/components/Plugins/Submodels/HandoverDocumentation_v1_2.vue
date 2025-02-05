@@ -347,10 +347,9 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, onMounted, ref } from 'vue';
+    import { onMounted, ref } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/SMHandling';
-    import { useAASStore } from '@/store/AASDataStore';
     import { getLanguageName } from '@/utils/LocaleUtils';
     import { getSubmodelElementBySemanticId, getSubmodelElementsBySemanticId } from '@/utils/SemanticIdUtils';
     import { downloadFile } from '@/utils/SubmodelElements/FileUtils';
@@ -361,9 +360,6 @@
         name: 'HandoverDocumentation',
         semanticId: '0173-1#01-AHF578#001',
     });
-
-    // Stores
-    const aasStore = useAASStore();
 
     // Composables
     const { calculateSMEPathes } = useSMHandling();
@@ -383,9 +379,6 @@
     const panel = ref(null as number | null);
     const documents = ref([] as Array<any>);
 
-    // Computed Properties
-    const selectedNode = computed(() => aasStore.getSelectedNode);
-
     onMounted(() => {
         initializeVisualization();
     });
@@ -401,7 +394,7 @@
 
         handoverDocumentationData.value = await calculateSMEPathes(
             { ...props.submodelElementData },
-            selectedNode.value.path
+            props.submodelElementData.path
         );
 
         documents.value = getSubmodelElementsBySemanticId(

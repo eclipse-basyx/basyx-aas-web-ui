@@ -300,7 +300,6 @@
     import { useSMHandling } from '@/composables/SMHandling';
     import { useContactInformation_v1_0Utils } from '@/composables/SubmodelTemplates/ContactInformation_v1_0Utils';
     import { useVirtualContactFileUtils } from '@/composables/VirtualContactFileUtils';
-    import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { getCountryName } from '@/utils/LocaleUtils';
     import { valueUrl } from '@/utils/SubmodelElements/FileUtils';
@@ -315,7 +314,6 @@
 
     // Stores
     const navigationStore = useNavigationStore();
-    const aasStore = useAASStore();
 
     // Composables
     const { calculateSMEPathes } = useSMHandling();
@@ -347,7 +345,6 @@
     const center = ref(latLng(51.1657, 10.4515)); // Initial center of the Map (center of Germany)
 
     // Computed Properties
-    const selectedNode = computed(() => aasStore.getSelectedNode);
     const isMobile = computed(() => navigationStore.getIsMobile);
 
     onMounted(() => {
@@ -365,7 +362,7 @@
 
         digitalNameplateData.value = await calculateSMEPathes(
             { ...props.submodelElementData },
-            selectedNode.value.path,
+            props.submodelElementData.path,
             true
         );
 
