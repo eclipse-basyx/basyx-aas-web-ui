@@ -1,5 +1,5 @@
 import { formatDate } from '@/utils/DateUtils';
-import { getEquivalentEclassSemanticIds, getEquivalentIriSemanticIds } from '@/utils/SemanticIdUtils';
+// import { getEquivalentEclassSemanticIds, getEquivalentIriSemanticIds } from '@/utils/SemanticIdUtils';
 import { useCDRepositoryClient } from './Client/CDRepositoryClient';
 
 export function useConceptDescriptionHandling() {
@@ -132,9 +132,11 @@ export function useConceptDescriptionHandling() {
                 semanticId.startsWith('0173/1///') ||
                 semanticId.startsWith('https://api.eclass-cdp.com/0173-1')
             ) {
-                semanticIdsToFetch.push(...getEquivalentEclassSemanticIds(semanticId));
+                // NOTE deactivated till improvement is implemented to avoid /massive request to CD repo
+                // semanticIdsToFetch.push(...getEquivalentEclassSemanticIds(semanticId));
             } else if (semanticId.startsWith('http://') || semanticId.startsWith('https://')) {
-                semanticIdsToFetch.push(...getEquivalentIriSemanticIds(semanticId));
+                // NOTE deactivated till improvement is implemented to avoid /massive request to CD repo
+                // semanticIdsToFetch.push(...getEquivalentIriSemanticIds(semanticId));
             }
         });
 

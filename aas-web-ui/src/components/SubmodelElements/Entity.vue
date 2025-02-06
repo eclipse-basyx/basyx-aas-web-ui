@@ -79,13 +79,14 @@
 <script lang="ts">
     import { defineComponent, Ref, ref } from 'vue';
     import { useRouter } from 'vue-router';
+    import { useAASHandling } from '@/composables/AASHandling';
+    import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
     import { useClipboardUtil } from '@/composables/ClipboardUtil';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useJumpHandling } from '@/composables/JumpHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'Entity',
-        mixins: [SubmodelElementHandling],
         props: {
             entityObject: {
                 type: Object,
@@ -97,7 +98,10 @@
             const aasStore = useAASStore();
             const router = useRouter();
 
+            const { getAasId } = useAASDiscoveryClient();
+            const { fetchAasDescriptor } = useAASHandling();
             const { copyToClipboard } = useClipboardUtil();
+            const { jumpToAasByAasDescriptor } = useJumpHandling();
 
             const copyIcon = ref<string>('mdi-clipboard-file-outline');
 
@@ -111,6 +115,9 @@
                 copyToClipboard,
                 copyIcon,
                 getCopyIconAsRef,
+                jumpToAasByAasDescriptor,
+                getAasId,
+                fetchAasDescriptor,
             };
         },
 
@@ -149,12 +156,12 @@
             checkAndSetDisabledState(assetId: string) {
                 if (this.entityObject.entityType === 'CoManagedEntity') return;
                 this.loadingStates[assetId] = true;
-                this.checkAssetId(assetId)
-                    .then(({ success, aasDescriptor }: { success: boolean; aasDescriptor?: any }) => {
+                this.getAasId(assetId)
+                    .then(async (aasId: string) => {
                         this.loadingStates[assetId] = false;
-                        if (success) {
+                        if (aasId && aasId.trim() !== '') {
                             this.disabledStates[assetId] = false;
-                            this.aasDescriptors[assetId] = aasDescriptor;
+                            this.aasDescriptors[assetId] = await this.fetchAasDescriptor(aasId);
                         } else {
                             this.disabledStates[assetId] = true;
                         }
