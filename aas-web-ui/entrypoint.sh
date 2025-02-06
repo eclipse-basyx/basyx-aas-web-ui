@@ -21,6 +21,8 @@
 : "${KEYCLOAK_URL:=}"
 : "${KEYCLOAK_REALM:=}"
 : "${KEYCLOAK_CLIENT_ID:=}"
+: "${PRECONFIGURED_AUTH_USERNAME:=}"
+: "${PRECONFIGURED_AUTH_PASSWORD:=}"
 : "${ENDPOINT_CONFIG_AVAILABLE:=true}"
 : "${SINGLE_AAS:=false}"
 : "${SINGLE_AAS_REDIRECT:=}"
@@ -62,6 +64,13 @@ else
     BASIC_AUTH_ACTIVE=false
 fi
 
+# Automatically set PRECONFIGURED_AUTH if PRECONFIGURED_AUTH_USERNAME and PRECONFIGURED_AUTH_PASSWORD are set
+if [ -n "$PRECONFIGURED_AUTH_USERNAME" ] && [ -n "$PRECONFIGURED_AUTH_PASSWORD" ]; then
+    PRECONFIGURED_AUTH=true
+else
+    PRECONFIGURED_AUTH=false
+fi
+
 # Informational message
 echo "========================================="
 echo "Starting NGINX with base path: $BASE_PATH"
@@ -92,6 +101,9 @@ printf "%-38s %s\n" "Keycloak active:" "$KEYCLOAK_ACTIVE"
 printf "%-38s %s\n" "Keycloak URL:" "$KEYCLOAK_URL"
 printf "%-38s %s\n" "Keycloak realm:" "$KEYCLOAK_REALM"
 printf "%-38s %s\n" "Keycloak client ID:" "$KEYCLOAK_CLIENT_ID"
+printf "%-38s %s\n" "Preconfigured auth:" "$PRECONFIGURED_AUTH"
+printf "%-38s %s\n" "Preconfigured auth username:" "$PRECONFIGURED_AUTH_USERNAME"
+printf "%-38s %s\n" "Preconfigured auth password:" "$PRECONFIGURED_AUTH_PASSWORD"
 printf "%-38s %s\n" "InfluxDB token:" "$INFLUXDB_TOKEN"
 printf "%-38s %s\n" "Endpoint config available:" "$ENDPOINT_CONFIG_AVAILABLE"
 printf "%-38s %s\n" "Single AAS:" "$SINGLE_AAS"
@@ -123,6 +135,9 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__KEYCLOAK_URL_PLACEHOLDER__/|$KEYCLOAK_URL|g" \
     -e "s|/__KEYCLOAK_REALM_PLACEHOLDER__/|$KEYCLOAK_REALM|g" \
     -e "s|/__KEYCLOAK_CLIENT_ID_PLACEHOLDER__/|$KEYCLOAK_CLIENT_ID|g" \
+    -e "s|/__PRECONFIGURED_AUTH_PLACEHOLDER__/|$PRECONFIGURED_AUTH|g" \
+    -e "s|/__PRECONFIGURED_AUTH_USERNAME_PLACEHOLDER__/|$PRECONFIGURED_AUTH_USERNAME|g" \
+    -e "s|/__PRECONFIGURED_AUTH_PASSWORD_PLACEHOLDER__/|$PRECONFIGURED_AUTH_PASSWORD|g" \
     -e "s|/__ENDPOINT_CONFIG_AVAILABLE_PLACEHOLDER__/|$ENDPOINT_CONFIG_AVAILABLE|g" \
     -e "s|/__SINGLE_AAS_PLACEHOLDER__/|$SINGLE_AAS|g" \
     -e "s|/__SINGLE_AAS_REDIRECT_PLACEHOLDER__/|$SINGLE_AAS_REDIRECT|g" \
