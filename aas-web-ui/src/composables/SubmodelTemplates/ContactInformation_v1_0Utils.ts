@@ -268,6 +268,7 @@ export function useContactInformation_v1_0Utils() {
             'NationalCode',
             'POBox',
             'ZipCodeOfPOBox',
+            'Country',
         ];
         const addressValues = {} as any;
 
@@ -285,7 +286,9 @@ export function useContactInformation_v1_0Utils() {
             addressValues?.zipcode,
             addressValues?.cityTown,
             addressValues?.stateCounty,
-            getCountryName(addressValues?.nationalCode),
+            getCountryName(addressValues?.nationalCode)
+                ? getCountryName(addressValues?.nationalCode)
+                : addressValues?.country,
             addressValues?.pOBox,
             addressValues?.zipCodeOfPOBox
         );
