@@ -1,6 +1,6 @@
-import { formatDate } from '@/utils/DateUtils';
 // import { getEquivalentEclassSemanticIds, getEquivalentIriSemanticIds } from '@/utils/SemanticIdUtils';
-import { useCDRepositoryClient } from './Client/CDRepositoryClient';
+import { useCDRepositoryClient } from '@/composables/Client/CDRepositoryClient';
+import { formatDate } from '@/utils/DateUtils';
 
 export function useConceptDescriptionHandling() {
     // Composables

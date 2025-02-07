@@ -1,12 +1,12 @@
+import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
 import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
 import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
+import { useIDUtils } from '@/composables/IDUtils';
 import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';
 import { extractEndpointHref } from '@/utils/DescriptorUtils';
 import { extractId as extractIdFromReference } from '@/utils/ReferenceUtils';
-import { useAASRepositoryClient } from './Client/AASRepositoryClient';
-import { useIDUtils } from './IDUtils';
 
 export function useSMHandling() {
     // Composables
