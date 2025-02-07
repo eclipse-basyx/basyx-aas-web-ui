@@ -4,7 +4,7 @@
             :submodel-element-data="submodelElementData"
             default-title="Handover Documentation"></VisualizationHeader>
         <!-- Loading -->
-        <v-card v-if="isLoading">
+        <v-card v-if="isLoading" class="mb-4">
             <v-skeleton-loader type="list-item-avatar, divider, list-item-avatar" :height="144"></v-skeleton-loader>
         </v-card>
         <v-expansion-panels v-else-if="documents.length > 0" v-model="panel">
