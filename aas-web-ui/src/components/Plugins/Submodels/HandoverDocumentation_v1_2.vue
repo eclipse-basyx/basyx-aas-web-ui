@@ -350,10 +350,10 @@
     import { onMounted, ref } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/SMHandling';
+    import { useSMEFile } from '@/composables/SubmodelElements/File';
+    import { useSME } from '@/composables/SubmodelElements/SubmodelElement';
     import { getLanguageName } from '@/utils/LocaleUtils';
     import { getSubmodelElementBySemanticId, getSubmodelElementsBySemanticId } from '@/utils/SemanticIdUtils';
-    import { downloadFile } from '@/utils/SubmodelElements/FileUtils';
-    import { hasValue, valueToDisplay } from '@/utils/SubmodelElements/SubmodelElementUtils';
 
     // Options
     defineOptions({
@@ -364,6 +364,8 @@
     // Composables
     const { calculateSMEPathes } = useSMHandling();
     const { checkIdShort, nameToDisplay } = useReferableUtils();
+    const { hasValue, valueToDisplay } = useSME();
+    const { downloadFile } = useSMEFile();
 
     // Properties
     const props = defineProps({
