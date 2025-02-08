@@ -1,6 +1,6 @@
 import { useRouter } from 'vue-router';
+import { useAASHandling } from '@/composables/AASHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
-import { useAASHandling } from './AASHandling';
 
 export function useJumpHandling() {
     // Stores
