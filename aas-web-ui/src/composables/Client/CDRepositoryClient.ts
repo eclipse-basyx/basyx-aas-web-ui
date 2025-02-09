@@ -2,12 +2,18 @@ import { computed } from 'vue';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
+import { stripLastCharacter } from '@/utils/StringUtils';
 
 export function useCDRepositoryClient() {
-    const { getRequest } = useRequestHandling();
-
+    // Stores
     const navigationStore = useNavigationStore();
 
+    // Composables
+    const { getRequest } = useRequestHandling();
+
+    const endpointPath = '/concept-descriptions';
+
+    // Computed Properties
     const conceptDescriptionRepoUrl = computed(() => navigationStore.getConceptDescriptionRepoURL);
 
     /**
@@ -24,9 +30,8 @@ export function useCDRepositoryClient() {
 
         let cdRepoUrl = conceptDescriptionRepoUrl.value;
         if (cdRepoUrl.trim() === '') return failResponse;
-        if (!cdRepoUrl.includes('/concept-descriptions')) {
-            cdRepoUrl += '/concept-descriptions';
-        }
+        if (cdRepoUrl.endsWith('/')) cdRepoUrl = stripLastCharacter(cdRepoUrl);
+        if (!cdRepoUrl.endsWith(endpointPath)) cdRepoUrl += endpointPath;
 
         const cdRepoPath = cdRepoUrl;
         const cdRepoContext = 'retrieving all CDs';
@@ -63,9 +68,8 @@ export function useCDRepositoryClient() {
 
         let cdRepoUrl = conceptDescriptionRepoUrl.value;
         if (cdRepoUrl.trim() === '') return failResponse;
-        if (!cdRepoUrl.includes('/concept-descriptions')) {
-            cdRepoUrl += '/concept-descriptions';
-        }
+        if (cdRepoUrl.endsWith('/')) cdRepoUrl = stripLastCharacter(cdRepoUrl);
+        if (!cdRepoUrl.endsWith(endpointPath)) cdRepoUrl += endpointPath;
 
         const cdEndpoint = cdRepoUrl + '/' + base64Encode(cdId);
         return fetchCd(cdEndpoint);
@@ -182,9 +186,8 @@ export function useCDRepositoryClient() {
 
         let cdRepoUrl = conceptDescriptionRepoUrl.value;
         if (cdRepoUrl.trim() === '') return failResponse;
-        if (!cdRepoUrl.includes('/concept-descriptions')) {
-            cdRepoUrl += '/concept-descriptions';
-        }
+        if (cdRepoUrl.endsWith('/')) cdRepoUrl = stripLastCharacter(cdRepoUrl);
+        if (!cdRepoUrl.endsWith(endpointPath)) cdRepoUrl += endpointPath;
 
         const cdEndpoint = cdRepoUrl + '/' + base64Encode(cdId);
 
@@ -192,6 +195,7 @@ export function useCDRepositoryClient() {
     }
 
     return {
+        endpointPath,
         fetchCdList,
         fetchCdById,
         fetchCd,

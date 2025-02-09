@@ -252,12 +252,12 @@
     import { computed, onActivated, onBeforeUnmount, onMounted, Ref, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useAASHandling } from '@/composables/AASHandling';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
 
     // Extend the ComponentPublicInstance type to include scrollToIndex
     interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -271,6 +271,7 @@
     // Composables
     const { downloadAasx, isAvailableByIdInRepo } = useAASRepositoryClient();
     const { getAasEndpoint, fetchAndDispatchAasById, fetchAasDescriptorList } = useAASHandling();
+    const { nameToDisplay, descriptionToDisplay } = useReferableUtils();
 
     // Stores
     const navigationStore = useNavigationStore();

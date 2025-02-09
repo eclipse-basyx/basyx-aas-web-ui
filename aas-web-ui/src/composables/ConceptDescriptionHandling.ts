@@ -1,6 +1,6 @@
+// import { getEquivalentEclassSemanticIds, getEquivalentIriSemanticIds } from '@/utils/SemanticIdUtils';
+import { useCDRepositoryClient } from '@/composables/Client/CDRepositoryClient';
 import { formatDate } from '@/utils/DateUtils';
-import { getEquivalentEclassSemanticIds, getEquivalentIriSemanticIds } from '@/utils/SemanticIdUtils';
-import { useCDRepositoryClient } from './Client/CDRepositoryClient';
 
 export function useConceptDescriptionHandling() {
     // Composables
@@ -13,25 +13,14 @@ export function useConceptDescriptionHandling() {
      * If not, it attempts to fetch them. Then, it looks through the concept descriptions
      * to find and return the first found unit specification from the embedded data specifications.
      *
-     * @async
      * @param {object} sme - The SME object containing concept descriptions.
      * @param {Array} [sme.conceptDescriptions] - Optional concept descriptions array.
-     * @returns {Promise<string>} A promise that resolves to the unit suffix if found, otherwise an empty string.
+     * @returns {string} Returns the unit suffix if found, otherwise an empty string.
      */
-    async function unitSuffix(sme: any): Promise<string> {
+    function unitSuffix(sme: any): string {
         const failResponse = '';
 
         if (!sme || Object.keys(sme).length === 0) return failResponse;
-
-        // Fetch CDs if not available
-        if (
-            !sme.conceptDescriptions ||
-            !Array.isArray(sme.conceptDescriptions) ||
-            sme.conceptDescriptions.length === 0
-        ) {
-            const cds = await fetchCds(sme);
-            if (cds && Array.isArray(cds) && cds.length > 0) sme.conceptDescriptions = cds;
-        }
 
         if (
             !sme.conceptDescriptions ||
@@ -143,9 +132,11 @@ export function useConceptDescriptionHandling() {
                 semanticId.startsWith('0173/1///') ||
                 semanticId.startsWith('https://api.eclass-cdp.com/0173-1')
             ) {
-                semanticIdsToFetch.push(...getEquivalentEclassSemanticIds(semanticId));
+                // NOTE deactivated till improvement is implemented to avoid /massive request to CD repo
+                // semanticIdsToFetch.push(...getEquivalentEclassSemanticIds(semanticId));
             } else if (semanticId.startsWith('http://') || semanticId.startsWith('https://')) {
-                semanticIdsToFetch.push(...getEquivalentIriSemanticIds(semanticId));
+                // NOTE deactivated till improvement is implemented to avoid /massive request to CD repo
+                // semanticIdsToFetch.push(...getEquivalentIriSemanticIds(semanticId));
             }
         });
 

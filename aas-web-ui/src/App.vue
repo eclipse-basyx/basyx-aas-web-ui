@@ -18,10 +18,10 @@
     import { computed, onMounted } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useDisplay } from 'vuetify';
+    import { useAASHandling } from '@/composables/AASHandling';
+    import { useSMEHandling } from '@/composables/SMEHandling';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { useAASHandling } from './composables/AASHandling';
-    import { useSMEHandling } from './composables/SMEHandling';
 
     // Stores
     const navigationStore = useNavigationStore();

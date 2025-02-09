@@ -1,5 +1,12 @@
 import { keyTypes } from '@/utils/KeyTypesUtil';
 
+/**
+ * Extracts the ID (Key) from a Reference object based on the given Key Type name.
+ *
+ * @param {Object} reference - The Reference object containing ID/Key information.
+ * @param {string} keyType - The Key Type name.
+ * @returns {string} The ID (Key) of the matching Key Type name if found, otherwise an empty string.
+ */
 export function extractId(reference: any, keyType: string): string {
     const failResponse = '';
 
@@ -14,7 +21,7 @@ export function extractId(reference: any, keyType: string): string {
     }
 
     const keys = reference.keys;
-    // find the right endpoint based on the interfaceShortName (has to match endpoint.interface)
+    // find the key based on the key type name
     const key = keys.find((key: any) => {
         return key?.type === keyType;
     });

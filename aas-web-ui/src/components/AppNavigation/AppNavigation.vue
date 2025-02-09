@@ -75,7 +75,7 @@
                 </v-tooltip>
                 <!-- Logout Button -->
                 <v-tooltip
-                    v-if="isAuthEnabled && authStatus"
+                    v-if="isAuthEnabled && authStatus && !preconfiguredAuth"
                     text="Authorization Status"
                     location="bottom"
                     :open-delay="600">
@@ -255,6 +255,7 @@
     });
     const authStatus = computed(() => (authStore.getAuthStatus ? 'Authenticated' : 'Not Authenticated'));
     const isAuthEnabled = computed(() => authStore.getAuthEnabled);
+    const preconfiguredAuth = computed(() => envStore.getPreconfiguredAuth);
 
     // Watch for changes in the Snackbar Object and close it after the Timeout
     watch(
@@ -276,9 +277,6 @@
     onMounted(async () => {
         dashboardAvailable.value = await checkDashboardAvailability();
         applyTheme();
-
-        // Auto connect to BaSyx Components
-        navigationStore.connectComponents();
 
         // Get auto-sync object from the lcoal storage
         const autoSyncToDispatch = JSON.parse(localStorage.getItem('autoSync') || '{}') as AutoSyncType;
@@ -333,5 +331,9 @@
 
     function logout() {
         authStore.getKeycloak?.logout();
+        const refreshIntervalId = authStore.getRefreshIntervalId;
+        if (refreshIntervalId) {
+            window.clearInterval(refreshIntervalId);
+        }
     }
 </script>

@@ -1,431 +1,442 @@
 <template>
     <v-container fluid class="pa-0">
-        <!-- Header -->
-        <v-card class="mb-4">
-            <v-card-title>
-                <div class="text-subtitle-1">
-                    {{ nameToDisplay(submodelElementData, 'en', 'Contact Information') }}
-                </div>
-            </v-card-title>
-            <v-card-text v-if="descriptionToDisplay(submodelElementData)" class="pt-0">
-                {{ descriptionToDisplay(submodelElementData) }}
-            </v-card-text>
-        </v-card>
-        <!-- Documents -->
-        <v-card v-if="loading">
+        <VisualizationHeader
+            :submodel-element-data="submodelElementData"
+            default-title="Contact Information"></VisualizationHeader>
+        <!-- Loading -->
+        <v-card v-if="loading" class="mb-4">
             <v-skeleton-loader type="list-item-avatar, divider, table-heading@8, actions"></v-skeleton-loader>
         </v-card>
-        <v-expansion-panels v-else v-model="panel">
-            <v-expansion-panel v-for="(contact, index) in contacts" :key="index">
-                <v-expansion-panel-title>
-                    <v-list-item class="pa-0">
-                        <template #prepend>
-                            <v-icon size="small">mdi-card-account-phone</v-icon>
-                        </template>
-                        <v-list-item-title>{{ nameToDisplay(contact) }}</v-list-item-title>
-                    </v-list-item>
-                </v-expansion-panel-title>
-                <v-divider v-if="panel === index"></v-divider>
-                <v-expansion-panel-text>
-                    <!-- General Properties -->
-                    <v-table>
-                        <tbody>
-                            <tr
-                                v-for="(generalProperty, index) in contact.generalProperties"
-                                :key="generalProperty.idShort"
-                                :class="index % 2 === 0 ? 'tableEven' : 'bg-tableOdd'">
-                                <td>
-                                    <div class="text-subtitleText text-caption">
-                                        <span>{{ nameToDisplay(generalProperty) }}</span>
-                                        <v-tooltip
-                                            v-if="generalProperty.description && generalProperty.description.length > 0"
-                                            activator="parent"
-                                            open-delay="600"
-                                            transition="slide-y-transition"
-                                            max-width="360px"
-                                            location="bottom">
-                                            <div
-                                                v-for="(description, i) in generalProperty.description"
-                                                :key="i"
-                                                class="text-caption">
-                                                <span class="font-weight-bold">{{ description.language + ': ' }}</span
-                                                >{{ description.text }}
-                                            </div>
-                                        </v-tooltip>
-                                    </div>
-                                </td>
-                                <td>
-                                    <!-- MultiLanguageProperties -->
-                                    <template v-if="generalProperty.modelType == 'MultiLanguageProperty'">
-                                        <v-list-item class="pl-0">
-                                            <v-list-item-title class="text-caption">{{
-                                                generalProperty.value[0].text
-                                            }}</v-list-item-title>
-                                        </v-list-item>
+        <template v-else-if="Object.keys(submodelElementData).length > 0">
+            <v-expansion-panels v-if="contactInformations.length > 0" v-model="panel">
+                <v-expansion-panel v-for="(contactInformation, index) in contactInformations" :key="index">
+                    <v-expansion-panel-title>
+                        <v-list-item class="pa-0">
+                            <template #prepend>
+                                <v-icon size="small">mdi-card-account-phone</v-icon>
+                            </template>
+                            <v-list-item-title>
+                                {{ nameToDisplay(contactInformation, 'en', 'Contact Information') }}
+                                <DescriptionTooltip :description-array="contactInformation?.description" />
+                            </v-list-item-title>
+                        </v-list-item>
+                    </v-expansion-panel-title>
+                    <v-divider v-if="panel === index"></v-divider>
+                    <v-expansion-panel-text class="pt-4">
+                        <v-sheet border rounded>
+                            <v-table>
+                                <tbody>
+                                    <template
+                                        v-for="(contactInformationProperty, i) in contactInformation.properties"
+                                        :key="contactInformationProperty.idShort">
+                                        <tr
+                                            v-if="hasValue(contactInformationProperty)"
+                                            :class="i % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
+                                            <td>
+                                                <div class="text-subtitleText text-caption">
+                                                    <span>{{ nameToDisplay(contactInformationProperty) }}</span>
+                                                    <DescriptionTooltip
+                                                        :description-array="contactInformationProperty?.description" />
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <!-- Address of Additional Link -->
+                                                <a
+                                                    v-if="
+                                                        checkIdShort(
+                                                            contactInformationProperty,
+                                                            'AddressOfAdditionalLink'
+                                                        )
+                                                    "
+                                                    :href="valueToDisplay(contactInformationProperty)"
+                                                    target="_blank"
+                                                    class="text-caption">
+                                                    {{ valueToDisplay(contactInformationProperty) }}
+                                                </a>
+                                                <!-- Language -->
+                                                <template
+                                                    v-else-if="checkIdShort(contactInformationProperty, 'Language')">
+                                                    <!-- Show english value, if available -->
+                                                    <div
+                                                        v-if="valueToDisplay(contactInformationProperty)"
+                                                        class="text-caption">
+                                                        <template
+                                                            v-if="
+                                                                getLanguageName(
+                                                                    valueToDisplay(contactInformationProperty)
+                                                                )
+                                                            ">
+                                                            {{
+                                                                getLanguageName(
+                                                                    valueToDisplay(contactInformationProperty)
+                                                                )
+                                                            }}
+                                                            ({{ valueToDisplay(contactInformationProperty) }})
+                                                        </template>
+                                                        <template v-else>
+                                                            {{ valueToDisplay(contactInformationProperty) }}
+                                                        </template>
+                                                    </div>
+                                                    <!-- Otherwise show all available values -->
+                                                    <template
+                                                        v-for="(langStringSet, j) in contactInformationProperty.value"
+                                                        v-else
+                                                        :key="j">
+                                                        <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                                                            <v-chip size="x-small" label class="mr-1">{{
+                                                                langStringSet.language
+                                                            }}</v-chip>
+                                                            {{ langStringSet?.text }}
+                                                        </div>
+                                                    </template>
+                                                </template>
+                                                <!-- NationalCode -->
+                                                <template
+                                                    v-else-if="
+                                                        checkIdShort(contactInformationProperty, 'NationalCode')
+                                                    ">
+                                                    <!-- Show english value, if available -->
+                                                    <div
+                                                        v-if="valueToDisplay(contactInformationProperty)"
+                                                        class="text-caption">
+                                                        {{ valueToDisplay(contactInformationProperty) }}
+                                                        {{
+                                                            getCountryName(valueToDisplay(contactInformationProperty))
+                                                                ? ' (' +
+                                                                  getCountryName(
+                                                                      valueToDisplay(contactInformationProperty)
+                                                                  ) +
+                                                                  ')'
+                                                                : ''
+                                                        }}
+                                                    </div>
+                                                    <!-- Otherwise show all available values -->
+                                                    <template
+                                                        v-for="(langStringSet, j) in contactInformationProperty.value"
+                                                        v-else
+                                                        :key="j">
+                                                        <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                                                            <v-chip size="x-small" label class="mr-1">{{
+                                                                langStringSet.language
+                                                            }}</v-chip>
+                                                            {{ langStringSet?.text }}
+                                                        </div>
+                                                    </template>
+                                                </template>
+                                                <!-- Telephone number / Fax number / Email -->
+                                                <div
+                                                    v-else-if="
+                                                        checkIdShort(contactInformationProperty, 'TelephoneNumber') ||
+                                                        checkIdShort(contactInformationProperty, 'FaxNumber') ||
+                                                        checkIdShort(contactInformationProperty, 'Email')
+                                                    "
+                                                    class="text-caption">
+                                                    <v-chip
+                                                        v-if="
+                                                            contactInformationProperty?.typeOfValue &&
+                                                            contactInformationProperty?.typeOfValue.trim() !== ''
+                                                        "
+                                                        :prepend-icon="
+                                                            contactInformationProperty.typeOfValue.includes('Office') ||
+                                                            ['Secretary', 'Substitute'].includes(
+                                                                contactInformationProperty.typeOfValue
+                                                            )
+                                                                ? 'mdi-office-building'
+                                                                : 'mdi-home'
+                                                        "
+                                                        size="x-small"
+                                                        class="mr-2">
+                                                        {{ contactInformationProperty.typeOfValue }}
+                                                    </v-chip>
+                                                    <template
+                                                        v-if="
+                                                            checkIdShort(contactInformationProperty, 'TelephoneNumber')
+                                                        ">
+                                                        <a
+                                                            :href="`tel:${valueToDisplay(contactInformationProperty).replaceAll(' ', '')}`">
+                                                            {{ valueToDisplay(contactInformationProperty) }}
+                                                        </a>
+                                                    </template>
+                                                    <template
+                                                        v-else-if="checkIdShort(contactInformationProperty, 'Email')">
+                                                        <a
+                                                            :href="`mailto:${valueToDisplay(contactInformationProperty)}`">
+                                                            {{ valueToDisplay(contactInformationProperty) }}
+                                                        </a>
+                                                    </template>
+                                                    <template v-else>
+                                                        {{ valueToDisplay(contactInformationProperty) }}
+                                                    </template>
+                                                </div>
+                                                <!-- MultiLanguageProperties -->
+                                                <template
+                                                    v-else-if="
+                                                        contactInformationProperty.modelType == 'MultiLanguageProperty'
+                                                    ">
+                                                    <!-- Show english value, if available -->
+                                                    <div
+                                                        v-if="valueToDisplay(contactInformationProperty)"
+                                                        class="text-caption">
+                                                        {{ valueToDisplay(contactInformationProperty) }}
+                                                    </div>
+                                                    <!-- Otherwise show all available values -->
+                                                    <template
+                                                        v-for="(langStringSet, j) in contactInformationProperty.value"
+                                                        v-else
+                                                        :key="j">
+                                                        <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                                                            <v-chip size="x-small" label class="mr-1">{{
+                                                                langStringSet.language
+                                                            }}</v-chip>
+                                                            {{ langStringSet?.text }}
+                                                        </div>
+                                                    </template>
+                                                </template>
+                                                <!-- Default -->
+                                                <span v-else class="text-caption">
+                                                    {{ valueToDisplay(contactInformationProperty) }}
+                                                </span>
+                                            </td>
+                                        </tr>
                                     </template>
-                                    <!-- Default -->
-                                    <span v-else class="text-caption">{{ generalProperty.value }}</span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </v-table>
-                    <v-card-actions class="pa-0">
-                        <v-spacer></v-spacer>
-                        <v-btn
-                            size="small"
-                            color="primary"
-                            variant="elevated"
-                            class="text-buttonText"
-                            @click="downloadVCard(contact.vCard, 'ContactPerson.vcf')"
-                            >{{ 'Download Contact' }}</v-btn
-                        >
-                    </v-card-actions>
-                </v-expansion-panel-text>
-            </v-expansion-panel>
-        </v-expansion-panels>
+                                </tbody>
+                            </v-table>
+                        </v-sheet>
+                        <v-card-actions
+                            v-if="contactInformation?.vCard && contactInformation.vCard.trim() !== ''"
+                            class="pt-4 pb-0 pr-0">
+                            <v-spacer></v-spacer>
+                            <v-btn
+                                size="small"
+                                color="primary"
+                                variant="elevated"
+                                prepend-icon="mdi-card-account-details"
+                                class="text-buttonText"
+                                @click="
+                                    downloadVCard(contactInformation.vCard, nameToDisplay(contactInformation) + '.vcf')
+                                ">
+                                {{ 'Download Contact' }}
+                            </v-btn>
+                        </v-card-actions>
+                    </v-expansion-panel-text>
+                </v-expansion-panel>
+            </v-expansion-panels>
+        </template>
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-    import { useTheme } from 'vuetify';
+<script lang="ts" setup>
+    import { onMounted, ref } from 'vue';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/SMHandling';
-    import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-    import { useAASStore } from '@/store/AASDataStore';
-    import { checkIdShort, descriptionToDisplay, nameToDisplay } from '@/utils/ReferableUtils';
+    import { useSME } from '@/composables/SubmodelElements/SubmodelElement';
+    import { useContactInformation_v1_0Utils } from '@/composables/SubmodelTemplates/ContactInformation_v1_0Utils';
+    import { useVirtualContactFileUtils } from '@/composables/VirtualContactFileUtils';
+    import { getCountryName, getLanguageName } from '@/utils/LocaleUtils';
+    import { checkSemanticId } from '@/utils/SemanticIdUtils';
+    import { firstLangStringSetText } from '@/utils/SubmodelElements/MultiLanguagePropertyUtils';
 
-    export default defineComponent({
+    // Options
+    defineOptions({
         name: 'ContactInformation',
-        semanticId: 'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations',
-        mixins: [RequestHandling, SubmodelElementHandling],
-        props: ['submodelElementData'],
+        semanticId: [
+            'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations', // Visualization for the SMT ContactInformations
+            'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation', // Visualization for the SMC ContactInformation, e.g. in the SMT Nameplate v2
+        ],
+    });
 
-        setup() {
-            const theme = useTheme();
-            const aasStore = useAASStore();
-            const { calculateSMEPathes } = useSMHandling();
+    // Composables
+    const { calculateSMEPathes } = useSMHandling();
+    const { checkIdShort, getSubmodelElementByIdShort, nameToDisplay } = useReferableUtils();
+    const {
+        semanticIdSMCContactInformation,
+        determineAddress,
+        determineContactName,
+        generateVCard,
+        getTypeOfEmailAddress,
+        getTypeOfFaxNumber,
+        getTypeOfTelephone,
+        rolesOfContactPerson,
+    } = useContactInformation_v1_0Utils();
+    const { hasValue, valueToDisplay } = useSME();
+    const { downloadVCard } = useVirtualContactFileUtils();
 
-            return {
-                theme, // Theme Object
-                aasStore, // AASStore Object
-                checkIdShort,
-                descriptionToDisplay,
-                nameToDisplay,
-                calculateSMEPathes,
-            };
-        },
-
-        data() {
-            return {
-                contactInformationData: {} as any,
-                panel: 0 as number | null,
-                contacts: [] as Array<any>,
-                loading: false,
-            };
-        },
-
-        computed: {
-            // Get the selected Treeview Node (SubmodelElement) from the store
-            SelectedNode() {
-                return this.aasStore.getSelectedNode;
-            },
-        },
-
-        mounted() {
-            this.initContactInformation();
-        },
-
-        methods: {
-            async initContactInformation() {
-                this.loading = true;
-
-                if (Object.keys(this.submodelElementData).length === 0) {
-                    this.contactInformationData = {};
-                    this.loading = false;
-                    return;
-                }
-
-                let submodelElementData = { ...this.submodelElementData };
-                this.contactInformationData = await this.calculateSMEPathes(
-                    submodelElementData,
-                    this.SelectedNode.path
-                );
-
-                // create array of contacts
-                let contacts = this.contactInformationData.submodelElements.filter((element: any) => {
-                    return (
-                        element.semanticId.keys[0].value ===
-                        'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation'
-                    );
-                });
-                contacts.forEach((contact: any) => {
-                    contact.generalProperties = [] as Array<any>;
-                    // create Contact Person Property
-                    let nameParts = [];
-                    // find property with the idShort "Title"
-                    let title = contact.value.find((element: any) => this.checkIdShort(element, 'Title'));
-                    if (title && title.value && title.value.length > 0) {
-                        nameParts.push(title.value[0].text);
-                    }
-                    // find property with the idShort "FirstName"
-                    let firstName = contact.value.find((element: any) => this.checkIdShort(element, 'FirstName'));
-                    if (firstName && firstName.value && firstName.value.length > 0) {
-                        nameParts.push(firstName.value[0].text);
-                    }
-                    // find property with the idShort "MiddleNames"
-                    let middleNames = contact.value.find((element: any) => this.checkIdShort(element, 'MiddleNames'));
-                    if (middleNames && middleNames.value && middleNames.value.length > 0) {
-                        nameParts.push(middleNames.value[0].text);
-                    }
-                    // find property with the idShort "NameOfContact"
-                    let nameOfContact = contact.value.find((element: any) =>
-                        this.checkIdShort(element, 'NameOfContact')
-                    );
-                    if (nameOfContact && nameOfContact.value && nameOfContact.value.length > 0) {
-                        nameParts.push(nameOfContact.value[0].text);
-                    }
-                    // join all name parts with a space
-                    let name = nameParts.filter(Boolean).join(' ');
-                    // find property with the idShort "AcademicTitle"
-                    let academicTitle = contact.value.find((element: any) =>
-                        this.checkIdShort(element, 'AcademicTitle')
-                    );
-                    if (academicTitle && academicTitle.value && academicTitle.value.length > 0) {
-                        // add a comma before the academic title if the name is not empty
-                        name += (name ? ', ' : '') + academicTitle.value[0].text;
-                    }
-                    // add Contact Person Property to the generalProperties
-                    if (name.length > 0) {
-                        contact.generalProperties.push({
-                            idShort: 'ContactPerson',
-                            value: name,
-                            modelType: 'Property',
-                        });
-                    }
-                    // find property with the idShort "Company" and add that element to the generalProperties
-                    let company = contact.value.find((element: any) => this.checkIdShort(element, 'Company'));
-                    if (company) {
-                        contact.generalProperties.push(company);
-                    }
-                    // find property with the idShort "Department" and add that element to the generalProperties
-                    let department = contact.value.find((element: any) => this.checkIdShort(element, 'Department'));
-                    if (department) {
-                        contact.generalProperties.push(department);
-                    }
-                    // find property with the idShort "RoleOfContactPerson" and add that element to the generalProperties
-                    let roleOfContactPerson = contact.value.find((element: any) =>
-                        this.checkIdShort(element, 'RoleOfContactPerson')
-                    );
-                    if (roleOfContactPerson) {
-                        contact.generalProperties.push(this.translateRole(roleOfContactPerson));
-                    }
-                    // find property with the idShort "Language" and add that element to the generalProperties
-                    let language = contact.value.find((element: any) => this.checkIdShort(element, 'Language'));
-                    if (language) {
-                        contact.generalProperties.push(language);
-                    }
-                    // find property with the idShort "Street" and add that element to the generalProperties
-                    let street = contact.value.find((element: any) => this.checkIdShort(element, 'Street'));
-                    if (street) {
-                        contact.generalProperties.push(street);
-                    }
-                    let address = '';
-                    // find property with the idShort "NationalCode"
-                    let nationalCode = contact.value.find((element: any) => this.checkIdShort(element, 'NationalCode'));
-                    if (nationalCode) {
-                        address += nationalCode.value[0].text + ' ';
-                    }
-                    // find property with the idShort "Zipcode"
-                    let zipcode = contact.value.find((element: any) => this.checkIdShort(element, 'Zipcode'));
-                    if (zipcode) {
-                        address += zipcode.value[0].text + ' ';
-                    }
-                    // find property with the idShort "City"
-                    let cityTown = contact.value.find((element: any) => this.checkIdShort(element, 'CityTown'));
-                    if (cityTown) {
-                        address += cityTown.value[0].text;
-                    }
-                    // add Address Property to the generalProperties
-                    if (address.length > 0) {
-                        contact.generalProperties.push({ idShort: 'Address', value: address, modelType: 'String' });
-                    }
-                    // get the Phone Information
-                    let phone = contact.value.find((element: any) => this.checkIdShort(element, 'Phone'));
-                    if (phone) {
-                        // find property with the idShort "TelephoneNumber" and add that element to the generalProperties
-                        let telephoneNumber = phone.value.find((element: any) =>
-                            this.checkIdShort(element, 'TelephoneNumber')
-                        );
-                        if (telephoneNumber) {
-                            contact.generalProperties.push(telephoneNumber);
-                        }
-                    }
-                    // get the Fax Information
-                    let fax = contact.value.find((element: any) => this.checkIdShort(element, 'Fax'));
-                    if (fax) {
-                        // find property with the idShort "FaxNumber" and add that element to the generalProperties
-                        let faxNumber = fax.value.find((element: any) => this.checkIdShort(element, 'FaxNumber'));
-                        if (faxNumber) {
-                            contact.generalProperties.push(faxNumber);
-                        }
-                    }
-                    // get the Email Information
-                    let email = contact.value.find((element: any) => this.checkIdShort(element, 'Email'));
-                    if (email) {
-                        // find property with the idShort "EmailAddress" and add that element to the generalProperties
-                        let emailAddress = email.value.find((element: any) =>
-                            this.checkIdShort(element, 'EmailAddress')
-                        );
-                        if (emailAddress) {
-                            contact.generalProperties.push(emailAddress);
-                        }
-                    }
-                    // find property with the idShort "AddressOfAdditionalLink" and add that element to the generalProperties
-                    let addressOfAdditionalLink = contact.value.find((element: any) =>
-                        this.checkIdShort(element, 'AddressOfAdditionalLink')
-                    );
-                    if (addressOfAdditionalLink) {
-                        contact.generalProperties.push(addressOfAdditionalLink);
-                    }
-                    this.generateVCard(contact);
-                });
-                this.contacts = contacts;
-                this.loading = false;
-            },
-
-            // Function to generate a vCard from the given contact
-            generateVCard(contact: any) {
-                let vCard = 'BEGIN:VCARD\n';
-                vCard += 'VERSION:3.0\n';
-                // add Contact Person Property to the vCard
-                let contactPerson = contact.generalProperties.find((element: any) =>
-                    this.checkIdShort(element, 'ContactPerson')
-                );
-                if (contactPerson) {
-                    vCard += 'FN:' + contactPerson.value + '\n';
-                }
-                // add Company Property to the vCard
-                let company = contact.generalProperties.find((element: any) => this.checkIdShort(element, 'Company'));
-                if (company) {
-                    vCard += 'ORG:' + company.value[0].text + '\n';
-                }
-                // add Department Property to the vCard
-                let department = contact.generalProperties.find((element: any) =>
-                    this.checkIdShort(element, 'Department')
-                );
-                if (department) {
-                    vCard += 'TITLE:' + department.value[0].text + '\n';
-                }
-                // add RoleOfContactPerson Property to the vCard
-                let roleOfContactPerson = contact.generalProperties.find((element: any) =>
-                    this.checkIdShort(element, 'RoleOfContactPerson')
-                );
-                if (roleOfContactPerson) {
-                    vCard += 'ROLE:' + roleOfContactPerson.value + '\n';
-                }
-                // add Language Property to the vCard
-                let language = contact.generalProperties.find((element: any) => this.checkIdShort(element, 'Language'));
-                if (language) {
-                    vCard += 'LANG:' + language.value + '\n';
-                }
-                // add Address Property to the vCard
-                let street = contact.generalProperties.find((element: any) => this.checkIdShort(element, 'Street'));
-                let address = contact.generalProperties.find((element: any) => this.checkIdShort(element, 'Address'));
-                if (address) {
-                    vCard +=
-                        'ADR;TYPE=WORK:;;' +
-                        (street && street.value && street.value.length > 0 ? street.value[0].text + ' ' : '') +
-                        address.value +
-                        ';;;\n';
-                }
-                // get the Phone Information
-                let phone = contact.value.find((element: any) => this.checkIdShort(element, 'Phone'));
-                if (phone) {
-                    // find property with the idShort "TelephoneNumber" and add that element to the vCard
-                    let telephoneNumber = phone.value.find((element: any) =>
-                        this.checkIdShort(element, 'TelephoneNumber')
-                    );
-                    if (telephoneNumber) {
-                        vCard += 'TEL;TYPE=WORK,VOICE:' + telephoneNumber.value[0].text + '\n';
-                    }
-                }
-                // get the Fax Information
-                let fax = contact.value.find((element: any) => this.checkIdShort(element, 'Fax'));
-                if (fax) {
-                    // find property with the idShort "FaxNumber" and add that element to the vCard
-                    let faxNumber = fax.value.find((element: any) => this.checkIdShort(element, 'FaxNumber'));
-                    if (faxNumber) {
-                        vCard += 'TEL;TYPE=WORK,FAX:' + faxNumber.value[0].text + '\n';
-                    }
-                }
-                // get the Email Information
-                let email = contact.value.find((element: any) => this.checkIdShort(element, 'Email'));
-                if (email) {
-                    // find property with the idShort "EmailAddress" and add that element to the vCard
-                    let emailAddress = email.value.find((element: any) => this.checkIdShort(element, 'EmailAddress'));
-                    if (emailAddress) {
-                        vCard += 'EMAIL;TYPE=WORK:' + emailAddress.value + '\n';
-                    }
-                }
-                // add AddressOfAdditionalLink Property to the vCard
-                let addressOfAdditionalLink = contact.value.find((element: any) =>
-                    this.checkIdShort(element, 'AddressOfAdditionalLink')
-                );
-                if (addressOfAdditionalLink) {
-                    vCard += 'URL:' + addressOfAdditionalLink.value + '\n';
-                }
-                vCard += 'END:VCARD';
-                // console.log('vCard: ', vCard);
-                contact.vCard = vCard;
-            },
-
-            downloadVCard(vCard: string, filename: string) {
-                let blob = new Blob([vCard], { type: 'text/vcard;charset=utf-8;' });
-                const data = window.URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = data;
-                link.download = filename;
-
-                // this part will prompt the user to view the VCard in a new tab on iOS
-                if (this.$vuetify.display.platform.ios || this.$vuetify.display.platform.mac) {
-                    window.open(data, '_blank');
-                } else {
-                    // For desktop browsers, download the vCard
-                    link.click();
-                }
-
-                setTimeout(function () {
-                    // For Firefox it is necessary to delay revoking the ObjectURL
-                    window.URL.revokeObjectURL(data);
-                }, 100);
-            },
-
-            // Function to translate the RoleOfContactPerson
-            translateRole(role: any) {
-                let translatedRole = { ...role };
-                switch (role.value) {
-                    case '0173-1#07-AAS927#001':
-                        translatedRole.value = 'Administrativ Contact';
-                        break;
-                    case '0173-1#07-AAS928#001':
-                        translatedRole.value = 'Commercial Contact';
-                        break;
-                    case '0173-1#07-AAS929#001':
-                        translatedRole.value = 'Other Contact';
-                        break;
-                    case '0173-1#07-AAS930#001':
-                        translatedRole.value = 'Hazardous Goods Contact';
-                        break;
-                    case '0173-1#07-AAS931#001':
-                        translatedRole.value = 'Technical Contact';
-                        break;
-                    default:
-                        break;
-                }
-                return translatedRole;
-            },
+    // Props
+    const props = defineProps({
+        submodelElementData: {
+            type: Object as any,
+            default: {} as any,
         },
     });
+
+    // Data
+    const loading = ref(false);
+    const panel = ref(0);
+    const contactInformations = ref([] as Array<any>);
+
+    onMounted(() => {
+        initializeVisualization();
+    });
+
+    async function initializeVisualization(): Promise<void> {
+        loading.value = true;
+
+        if (!props.submodelElementData || Object.keys(props.submodelElementData).length === 0) {
+            contactInformations.value = [];
+            loading.value = false;
+            return;
+        }
+
+        let submodelElementData = await calculateSMEPathes(
+            { ...props.submodelElementData },
+            props.submodelElementData.path
+        );
+
+        // Determine ContactInformation SMCs
+        let contactInformationSMCs = [];
+        if (submodelElementData.submodelElements) {
+            // For SMT ContactInformations
+            contactInformationSMCs = submodelElementData.submodelElements.filter((sme: any) => {
+                return (
+                    checkIdShort(sme, 'ContactInformation', true) ||
+                    checkSemanticId(sme, semanticIdSMCContactInformation)
+                );
+            });
+        } else if (submodelElementData.value) {
+            // For SMC ContactInformation
+            contactInformationSMCs = [submodelElementData.value];
+        }
+
+        contactInformationSMCs.forEach((contactInformationSMC: any) => {
+            let contactInformation = {} as any;
+
+            contactInformation.idShort = contactInformationSMC.idShort;
+            contactInformation.description = contactInformationSMC.description;
+            contactInformation.displayName = contactInformationSMC.displayName;
+
+            contactInformation.properties = [] as Array<any>;
+
+            // Contact name
+            let contactName = determineContactName(contactInformationSMC);
+            if (contactName.trim() !== '') {
+                contactInformation.properties.push({
+                    idShort: 'ContactPerson',
+                    displayName: [{ language: 'en', text: 'Contact person' }],
+                    modelType: 'Property',
+                    valueType: 'String',
+                    value: contactName,
+                });
+            }
+
+            // Role of Contact Person
+            let roleOfContactPersonMlp = getSubmodelElementByIdShort('RoleOfContactPerson', contactInformationSMC);
+            let roleOfContactPerson = valueToDisplay(
+                roleOfContactPersonMlp,
+                'en',
+                firstLangStringSetText(roleOfContactPersonMlp)
+            );
+            if (roleOfContactPerson.trim() !== '') {
+                const foundRoleOfContactPerson = rolesOfContactPerson.find(
+                    (rolesOfContactPersonElement: any) => rolesOfContactPersonElement.valueId === roleOfContactPerson
+                );
+                if (foundRoleOfContactPerson) {
+                    roleOfContactPersonMlp.value = foundRoleOfContactPerson.value;
+                    roleOfContactPersonMlp.valueId = foundRoleOfContactPerson.valueId;
+                }
+                contactInformation.properties.push(roleOfContactPersonMlp);
+            }
+
+            // General properties
+            contactInformationSMC.value.forEach((sme: any) => {
+                [
+                    'FurtherDetailsOfContact',
+                    'Company',
+                    'Department',
+                    'Language',
+                    'TimeZone',
+                    'AddressOfAdditionalLink',
+                    'NationalCode',
+                ].forEach((idShort: any) => {
+                    if (checkIdShort(sme, idShort) && hasValue(sme)) {
+                        contactInformation.properties.push(sme);
+                    }
+                });
+            });
+
+            // (postal) address
+            let address = determineAddress(contactInformationSMC);
+            if (address.trim() !== '') {
+                contactInformation.properties.push({
+                    idShort: 'Address',
+                    displayName: [{ language: 'en', text: 'Address' }],
+                    modelType: 'Property',
+                    valueType: 'String',
+                    value: address,
+                });
+            }
+
+            // Telephone number
+            let phoneSMC = getSubmodelElementByIdShort('Phone', contactInformationSMC);
+            if (hasValue(phoneSMC)) {
+                let telephoneNumberMLP = getSubmodelElementByIdShort('TelephoneNumber', phoneSMC);
+                let typeOfTelephoneProperty = getSubmodelElementByIdShort('TypeOfTelephone', phoneSMC);
+                if (hasValue(telephoneNumberMLP)) {
+                    contactInformation.properties.push({
+                        idShort: 'TelephoneNumber',
+                        displayName: [{ language: 'en', text: 'Telephone number' }],
+                        modelType: 'Property',
+                        valueType: 'String',
+                        value: valueToDisplay(telephoneNumberMLP, 'en', firstLangStringSetText(telephoneNumberMLP)),
+                        typeOfValue: getTypeOfTelephone(valueToDisplay(typeOfTelephoneProperty)),
+                    });
+                }
+            }
+
+            // Fax number
+            let faxSMC = getSubmodelElementByIdShort('Fax', contactInformationSMC);
+            if (faxSMC && Object.keys(faxSMC).length > 0 && Array.isArray(faxSMC.value) && faxSMC.value.length > 0) {
+                let faxNumberMLP = getSubmodelElementByIdShort('FaxNumber', faxSMC);
+                let typeOfFaxNumberProperty = getSubmodelElementByIdShort('TypeOfFaxNumber', faxSMC);
+                if (hasValue(faxNumberMLP)) {
+                    contactInformation.properties.push({
+                        idShort: 'FaxNumber',
+                        displayName: [{ language: 'en', text: 'Fax number' }],
+                        modelType: 'Property',
+                        valueType: 'String',
+                        value: valueToDisplay(faxNumberMLP, 'en', firstLangStringSetText(faxNumberMLP)),
+                        typeOfValue: getTypeOfFaxNumber(valueToDisplay(typeOfFaxNumberProperty)),
+                    });
+                }
+            }
+
+            // Email
+            let emailSMC = getSubmodelElementByIdShort('Email', contactInformationSMC);
+            if (
+                emailSMC &&
+                Object.keys(emailSMC).length > 0 &&
+                Array.isArray(emailSMC.value) &&
+                emailSMC.value.length > 0
+            ) {
+                let emailAddressMLP = getSubmodelElementByIdShort('EmailAddress', emailSMC);
+                let typeOfEmailAddressProperty = getSubmodelElementByIdShort('TypeOfEmailAddress', emailSMC);
+                if (hasValue(emailAddressMLP)) {
+                    contactInformation.properties.push({
+                        idShort: 'Email',
+                        displayName: [{ language: 'en', text: 'Email Address' }],
+                        modelType: 'Property',
+                        valueType: 'String',
+                        value: valueToDisplay(emailAddressMLP, 'en', firstLangStringSetText(emailAddressMLP)),
+                        typeOfValue: getTypeOfEmailAddress(valueToDisplay(typeOfEmailAddressProperty)),
+                    });
+                }
+            }
+
+            contactInformation.vCard = generateVCard(contactInformationSMC);
+            // console.log('vCard:', contactInformation.vCard);
+
+            contactInformations.value.push(contactInformation);
+        });
+
+        loading.value = false;
+    }
 </script>

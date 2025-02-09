@@ -2,12 +2,18 @@ import { computed } from 'vue';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
+import { stripLastCharacter } from '@/utils/StringUtils';
 
-export function useAASDicoveryClient() {
-    const { getRequest } = useRequestHandling();
-
+export function useAASDiscoveryClient() {
+    // Stores
     const navigationStore = useNavigationStore();
 
+    // Composables
+    const { getRequest } = useRequestHandling();
+
+    const endpointPath = '/lookup/shells';
+
+    // Computed Properties
     const aasDiscoveryUrl = computed(() => navigationStore.getAASDiscoveryURL);
 
     /**
@@ -29,9 +35,8 @@ export function useAASDicoveryClient() {
 
         let aasDiscUrl = aasDiscoveryUrl.value;
         if (aasDiscUrl.trim() === '') return failResponse;
-        if (!aasDiscUrl.includes('/lookup/shells')) {
-            aasDiscUrl += '/lookup/shells';
-        }
+        if (aasDiscUrl.endsWith('/')) aasDiscUrl = stripLastCharacter(aasDiscUrl);
+        if (!aasDiscUrl.endsWith(endpointPath)) aasDiscUrl += endpointPath;
 
         const assetIdObject = JSON.stringify({ name: 'globalAssetId', value: globalAssetId });
         const aasDiscoveryPath = `${aasDiscUrl}?assetIds=${base64Encode(assetIdObject)}`;
@@ -55,7 +60,35 @@ export function useAASDicoveryClient() {
         return failResponse;
     }
 
+    /**
+     * Checks the availability of a global asset by its ID.
+     *
+     * This function trims the provided global asset ID and checks if a corresponding AAS ID exists.
+     * If the global asset ID is empty or invalid, it returns false.
+     * Otherwise, it returns true if a valid AAS ID is found.
+     *
+     * @param {string} globalAssetId - The ID of the global asset to check availability for.
+     * @returns {Promise<boolean>} A promise that resolves to true if the asset is available, otherwise false.
+     */
+    async function isAvailableById(globalAssetId: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!globalAssetId) return failResponse;
+
+        globalAssetId = globalAssetId.trim();
+
+        if (globalAssetId === '') return failResponse;
+
+        const aasId = await getAasId(globalAssetId);
+
+        if (aasId && aasId.trim() !== '') return true;
+
+        return failResponse;
+    }
+
     return {
+        endpointPath,
         getAasId,
+        isAvailableById,
     };
 }

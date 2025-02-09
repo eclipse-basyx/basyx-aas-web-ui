@@ -15,10 +15,10 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, defineOptions, onMounted, ref } from 'vue';
+    import { computed, onMounted, ref } from 'vue';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/SMHandling';
     import { useAASStore } from '@/store/AASDataStore';
-    import { nameToDisplay } from '@/utils/ReferableUtils';
 
     defineOptions({
         name: 'HelloWorldPlugin',
@@ -30,6 +30,7 @@
 
     // Composables
     const { calculateSMEPathes } = useSMHandling();
+    const { nameToDisplay } = useReferableUtils();
 
     const props = defineProps({
         submodelElementData: {
@@ -58,6 +59,7 @@
         const copiedSubmodelData = { ...props.submodelElementData };
 
         // Calculate the pathes of the child elements and save the data in the mySubmodelData variable
-        submodelData.value = await calculateSMEPathes(copiedSubmodelData, selectedNode.value.path);
+        // Set last parameter `withConceptDescriptions` to true, if Concept Descriptions are needed in the plugin
+        submodelData.value = await calculateSMEPathes(copiedSubmodelData, selectedNode.value.path, false);
     }
 </script>
