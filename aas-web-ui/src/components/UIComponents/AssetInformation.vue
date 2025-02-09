@@ -14,21 +14,19 @@
                 "></v-divider>
             <!-- Specific Asset IDs -->
             <SpecificAssetIds :asset-object="assetObject"></SpecificAssetIds>
-            <v-divider v-if="defaultThumbnailUrl" class="mt-2"></v-divider>
             <v-img
                 v-if="defaultThumbnailUrl"
                 :src="defaultThumbnailUrl"
                 max-width="100%"
                 :max-height="thumbnailMaxHeight"
                 contain
-                class="mt-2 mx-2"></v-img>
-            <v-chip
+                class="mt-2 rounded"></v-img>
+            <span
                 v-if="defaultThumbnailCaption !== ''"
-                size="x-small"
-                color="primary"
-                style="position: absolute; bottom: 12px; right: 16px; opacity: 1">
+                class="font-weight-light text-medium-emphasis"
+                style="font-size: 0.5rem">
                 {{ defaultThumbnailCaption }}
-            </v-chip>
+            </span>
         </v-list>
     </v-container>
 </template>
@@ -106,7 +104,7 @@
             );
             if (productImageUrlFromSmTechnicalData && productImageUrlFromSmTechnicalData.trim() !== '') {
                 defaultThumbnailUrl.value = productImageUrlFromSmTechnicalData.trim();
-                defaultThumbnailCaption.value = 'Product Image of SM TechnicalData';
+                defaultThumbnailCaption.value = 'Product Image from SM TechnicalData';
             } else {
                 defaultThumbnailUrl.value = '';
                 defaultThumbnailCaption.value = '';
