@@ -1,14 +1,15 @@
 import { useSMEHandling } from '@/composables/SMEHandling';
 import { useSMHandling } from '@/composables/SMHandling';
-import { useFileUtils } from '@/composables/SubmodelElements/FileUtils';
-import { checkIdShort } from '@/utils/ReferableUtils';
+import { useSMEFile } from '@/composables/SubmodelElements/File';
 import { checkSemanticId } from '@/utils/SemanticIdUtils';
+import { useReferableUtils } from '../AAS/ReferableUtils';
 
 export function useTechnicalData_v1_2Utils() {
     // Composables
     const { getSmIdOfAasIdBySemanticId, fetchSmById, getSmEndpointById } = useSMHandling();
     const { fetchSme } = useSMEHandling();
-    const { valueUrl: smeFileValueUrl } = useFileUtils();
+    const { checkIdShort } = useReferableUtils();
+    const { valueUrl: smeFileValueUrl } = useSMEFile();
 
     const smSemanticId = 'https://admin-shell.io/ZVEI/TechnicalData/Submodel/1/2';
     const smIdShort = 'TechnicalData';
