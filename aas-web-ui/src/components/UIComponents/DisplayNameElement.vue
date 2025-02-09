@@ -1,9 +1,9 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-list-item>
+        <v-list-item v-if="displayNameArray && Array.isArray(displayNameArray) && displayNameArray.length > 0">
             <!-- Tooltip with DisplayName -->
             <v-tooltip activator="parent" open-delay="600" transition="slide-x-transition">
-                <div v-for="(displayName, i) in displayNameObject" :key="i" class="text-caption">
+                <div v-for="(displayName, i) in displayNameArray" :key="i" class="text-caption">
                     <span class="font-weight-bold">{{ displayName.language + ': ' }}</span
                     >{{ displayName.text }}
                 </div>
@@ -15,7 +15,7 @@
                 </div>
             </template>
             <!-- DisplayNames List (different Languages) -->
-            <v-list-item-subtitle v-for="(displayName, i) in displayNameObject" :key="i">
+            <v-list-item-subtitle v-for="(displayName, i) in displayNameArray" :key="i">
                 <div class="pt-2">
                     <v-chip label size="x-small" border class="mr-2">{{
                         displayName.language ? displayName.language : 'no-lang'
@@ -27,12 +27,20 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-
-    export default defineComponent({
-        name: 'DisplayNameElement',
-        props: ['displayNameObject', 'displayNameTitle', 'small'],
+<script setup lang="ts">
+    // Props
+    defineProps({
+        displayNameArray: {
+            type: Object as any,
+            default: {} as any,
+        },
+        displayNameTitle: {
+            type: String,
+            default: 'Display Name',
+        },
+        small: {
+            type: Boolean,
+            default: false,
+        },
     });
 </script>

@@ -1,6 +1,8 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-list-item :class="semanticTitle && semanticTitle.trim().length > 0 && !small ? '' : 'pa-0'">
+        <v-list-item
+            v-if="semanticIdObject && Object.keys(semanticIdObject).length > 0"
+            :class="semanticTitle && semanticTitle.trim().length > 0 && !small ? '' : 'pa-0'">
             <!-- Tooltip with SemanticId -->
             <v-tooltip activator="parent" open-delay="600" transition="slide-x-transition">
                 <div v-for="(semanticId, i) in semanticIdObject.keys" :key="i" class="text-caption">
@@ -23,12 +25,20 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-
-    export default defineComponent({
-        name: 'SemanticID',
-        props: ['semanticIdObject', 'semanticTitle', 'small'],
+<script setup lang="ts">
+    // Props
+    defineProps({
+        semanticIdObject: {
+            type: Object as any,
+            default: {} as any,
+        },
+        semanticTitle: {
+            type: String,
+            default: 'Semantic ID',
+        },
+        small: {
+            type: Boolean,
+            default: false,
+        },
     });
 </script>

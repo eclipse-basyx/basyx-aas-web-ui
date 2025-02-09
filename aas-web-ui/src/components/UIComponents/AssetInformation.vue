@@ -13,7 +13,7 @@
                     assetObject.specificAssetIds.length > 0
                 "></v-divider>
             <!-- Specific Asset IDs -->
-            <SpecificAssetIds :asset-object="assetObject"></SpecificAssetIds>
+            <SpecificAssetIds :specific-asset-ids="assetObject.specificAssetIds"></SpecificAssetIds>
             <v-img
                 v-if="defaultThumbnailUrl"
                 :src="defaultThumbnailUrl"
