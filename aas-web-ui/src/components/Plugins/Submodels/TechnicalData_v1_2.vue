@@ -295,10 +295,10 @@
     import { computed, onMounted, ref } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/SMHandling';
+    import { useSMEFile } from '@/composables/SubmodelElements/File';
+    import { useSME } from '@/composables/SubmodelElements/SubmodelElement';
     import { useAASStore } from '@/store/AASDataStore';
     import { getSubmodelElementBySemanticId } from '@/utils/SemanticIdUtils';
-    import { valueUrl } from '@/utils/SubmodelElements/FileUtils';
-    import { hasValue, valueToDisplay } from '@/utils/SubmodelElements/SubmodelElementUtils';
 
     // Define component options such as custom static properties
     defineOptions({
@@ -312,6 +312,8 @@
     // Composables
     const { calculateSMEPathes } = useSMHandling();
     const { nameToDisplay, checkIdShort } = useReferableUtils();
+    const { hasValue, valueToDisplay } = useSME();
+    const { valueUrl } = useSMEFile();
 
     // Properties
     const props = defineProps({

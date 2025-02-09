@@ -10,7 +10,7 @@
                 <!-- ConceptDescription DisplayName -->
                 <DisplayNameElement
                     v-if="conceptDescriptionObject.displayName && conceptDescriptionObject.displayName.length > 0"
-                    :display-name-object="conceptDescriptionObject.displayName"
+                    :display-name-array="conceptDescriptionObject.displayName"
                     :display-name-title="'Display Name'"
                     :small="false"></DisplayNameElement>
                 <v-divider
@@ -19,7 +19,7 @@
                 <!-- ConceptDescription Description -->
                 <DescriptionElement
                     v-if="conceptDescriptionObject.description && conceptDescriptionObject.description.length > 0"
-                    :description-object="conceptDescriptionObject.description"
+                    :description-array="conceptDescriptionObject.description"
                     :description-title="'Description'"
                     :small="false"></DescriptionElement>
             </v-list>

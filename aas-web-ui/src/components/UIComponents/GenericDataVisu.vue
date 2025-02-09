@@ -9,7 +9,7 @@
                 <v-expansion-panel-text>
                     <DescriptionElement
                         v-if="submodelElement.description && submodelElement.description.length > 0"
-                        :description-object="submodelElement.description"
+                        :description-array="submodelElement.description"
                         :description-title="'Description'"
                         :small="false"></DescriptionElement>
                     <GenericDataVisu

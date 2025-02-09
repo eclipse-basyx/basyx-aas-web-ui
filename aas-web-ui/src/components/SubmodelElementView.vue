@@ -43,7 +43,7 @@
                             <!-- SubmodelELement DisplayName -->
                             <DisplayNameElement
                                 v-if="submodelElementData.displayName && submodelElementData.displayName.length > 0"
-                                :display-name-object="submodelElementData.displayName"
+                                :display-name-array="submodelElementData.displayName"
                                 :display-name-title="'Display Name'"
                                 :small="false"></DisplayNameElement>
                             <v-divider
@@ -52,7 +52,7 @@
                             <!-- SubmodelELement Description -->
                             <DescriptionElement
                                 v-if="submodelElementData.description && submodelElementData.description.length > 0"
-                                :description-object="submodelElementData.description"
+                                :description-array="submodelElementData.description"
                                 :description-title="'Description'"
                                 :small="false"></DescriptionElement>
                             <v-divider

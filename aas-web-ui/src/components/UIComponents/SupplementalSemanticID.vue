@@ -1,6 +1,11 @@
 <template>
     <v-container fluid class="pa-0">
         <v-list-item
+            v-if="
+                supplementalSemanticIdsArray &&
+                Array.isArray(supplementalSemanticIdsArray) &&
+                supplementalSemanticIdsArray.length > 0
+            "
             :class="supplementalSemanticIdsTitle && supplementalSemanticIdsTitle.trim().length > 0 ? '' : 'pa-0'">
             <!-- SupplementalSemanticIds Title -->
             <template v-if="supplementalSemanticIdsTitle && supplementalSemanticIdsTitle.trim().length > 0" #title>
@@ -28,12 +33,16 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-
-    export default defineComponent({
-        name: 'SupplementalSemanticID',
-        props: ['supplementalSemanticIdsArray', 'supplementalSemanticIdsTitle'],
+<script setup lang="ts">
+    // Props
+    defineProps({
+        supplementalSemanticIdsArray: {
+            type: Array<any>,
+            default: [] as Array<any>,
+        },
+        supplementalSemanticIdsTitle: {
+            type: String,
+            default: 'Description',
+        },
     });
 </script>

@@ -170,59 +170,38 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent, Ref, ref } from 'vue';
+<script setup lang="ts">
+    import { Ref, ref } from 'vue';
     import { useClipboardUtil } from '@/composables/ClipboardUtil';
-    import { useNavigationStore } from '@/store/NavigationStore';
-    import DataSpecificationContent from './DataSpecificationContent.vue';
-    import SemanticID from './SemanticID.vue';
 
-    export default defineComponent({
-        name: 'AdministrativeInformationElement',
-        components: {
-            SemanticID,
-            DataSpecificationContent,
+    // Composables
+    const { copyToClipboard } = useClipboardUtil();
+
+    // Props
+    defineProps({
+        administrativeInformationObject: {
+            type: Object as any,
+            default: {} as any,
         },
-        // props: ['administrativeInformationObject', 'administrativeInformationTitle', 'small', 'backgroundColor'],
-        props: {
-            administrativeInformationObject: {
-                type: Object,
-                default: () => ({}),
-            },
-            administrativeInformationTitle: {
-                type: String,
-                default: '',
-            },
-            small: {
-                type: Boolean,
-                default: true,
-            },
-            backgroundColor: {
-                type: String,
-                default: '',
-            },
+        administrativeInformationTitle: {
+            type: String,
+            default: 'Identification (ID)',
         },
-
-        setup() {
-            const navigationStore = useNavigationStore();
-
-            const { copyToClipboard } = useClipboardUtil();
-
-            const copyIcon = ref<string>('mdi-clipboard-file-outline');
-
-            const getCopyIconAsRef = (): Ref => {
-                return copyIcon;
-            };
-
-            return {
-                navigationStore, // NavigationStore Object
-                copyToClipboard,
-                copyIcon,
-                getCopyIconAsRef,
-            };
+        small: {
+            type: Boolean,
+            default: false,
+        },
+        backgroundColor: {
+            type: String,
+            default: '',
         },
     });
+
+    // Data
+    const copyIcon = ref<string>('mdi-clipboard-file-outline');
+    const getCopyIconAsRef = (): Ref => {
+        return copyIcon;
+    };
 </script>
 
 <style lang="css" scoped>
