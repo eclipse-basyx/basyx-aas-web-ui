@@ -1,6 +1,6 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-list-item v-if="identificationObject">
+        <v-list-item v-if="identificationObject && Object.keys(identificationObject).length > 0">
             <!-- Tooltip with ID and idShort -->
             <div>
                 <div class="d-flex justify-space-between align-center">
@@ -95,55 +95,38 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent, Ref, ref } from 'vue';
+<script setup lang="ts">
+    import { Ref, ref } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useClipboardUtil } from '@/composables/ClipboardUtil';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-    import { useNavigationStore } from '@/store/NavigationStore';
 
-    export default defineComponent({
-        name: 'IdentificationElement',
-        mixins: [SubmodelElementHandling],
-        props: {
-            identificationObject: {
-                type: Object as any,
-                default: {} as any,
-            },
-            vChipContent: {
-                type: String,
-                default: '',
-            },
-            identificationTitle: {
-                type: String,
-                default: 'Identification (ID)',
-            },
-            idShortTitle: {
-                type: String,
-                default: 'ID short',
-            },
+    // Composables
+    const { nameToDisplay } = useReferableUtils();
+    const { copyToClipboard } = useClipboardUtil();
+
+    // Props
+    defineProps({
+        identificationObject: {
+            type: Object as any,
+            default: {} as any,
         },
-
-        setup() {
-            const navigationStore = useNavigationStore();
-            const { nameToDisplay } = useReferableUtils();
-
-            const { copyToClipboard } = useClipboardUtil();
-
-            const copyIcon = ref<string>('mdi-clipboard-file-outline');
-
-            const getCopyIconAsRef = (): Ref => {
-                return copyIcon;
-            };
-
-            return {
-                navigationStore, // NavigationStore Object
-                copyToClipboard,
-                copyIcon,
-                getCopyIconAsRef,
-                nameToDisplay,
-            };
+        vChipContent: {
+            type: String,
+            default: '',
+        },
+        identificationTitle: {
+            type: String,
+            default: 'Identification (ID)',
+        },
+        idShortTitle: {
+            type: String,
+            default: 'ID short',
         },
     });
+
+    // Data
+    const copyIcon = ref<string>('mdi-clipboard-file-outline');
+    const getCopyIconAsRef = (): Ref => {
+        return copyIcon;
+    };
 </script>

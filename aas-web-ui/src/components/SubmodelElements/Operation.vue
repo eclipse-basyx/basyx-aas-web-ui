@@ -25,7 +25,7 @@
                             <!-- Variable Description -->
                             <DescriptionElement
                                 v-if="variable.value && variable.value.description"
-                                :description-object="variable.value.description"
+                                :description-array="variable.value.description"
                                 :description-title="'Description'"
                                 :small="true"></DescriptionElement>
                             <v-divider v-if="variable.value && variable.value.description" class="mt-1"></v-divider>

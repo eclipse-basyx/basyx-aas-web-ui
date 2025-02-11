@@ -60,8 +60,35 @@ export function useAASDiscoveryClient() {
         return failResponse;
     }
 
+    /**
+     * Checks the availability of a global asset by its ID.
+     *
+     * This function trims the provided global asset ID and checks if a corresponding AAS ID exists.
+     * If the global asset ID is empty or invalid, it returns false.
+     * Otherwise, it returns true if a valid AAS ID is found.
+     *
+     * @param {string} globalAssetId - The ID of the global asset to check availability for.
+     * @returns {Promise<boolean>} A promise that resolves to true if the asset is available, otherwise false.
+     */
+    async function isAvailableById(globalAssetId: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!globalAssetId) return failResponse;
+
+        globalAssetId = globalAssetId.trim();
+
+        if (globalAssetId === '') return failResponse;
+
+        const aasId = await getAasId(globalAssetId);
+
+        if (aasId && aasId.trim() !== '') return true;
+
+        return failResponse;
+    }
+
     return {
         endpointPath,
         getAasId,
+        isAvailableById,
     };
 }

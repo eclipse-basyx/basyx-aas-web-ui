@@ -106,7 +106,7 @@
                             assetAdministrationShellData.displayName &&
                             assetAdministrationShellData.displayName.length > 0
                         "
-                        :display-name-object="assetAdministrationShellData.displayName"
+                        :display-name-array="assetAdministrationShellData.displayName"
                         :display-name-title="'DisplayName'"
                         :small="false"></DisplayNameElement>
                     <v-divider
@@ -121,7 +121,7 @@
                             assetAdministrationShellData.description &&
                             assetAdministrationShellData.description.length > 0
                         "
-                        :description-object="assetAdministrationShellData.description"
+                        :description-array="assetAdministrationShellData.description"
                         :description-title="'Description'"
                         :small="false"></DescriptionElement>
                 </v-list>

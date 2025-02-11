@@ -229,12 +229,12 @@
     import { onMounted, ref } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/SMHandling';
+    import { useSME } from '@/composables/SubmodelElements/SubmodelElement';
     import { useContactInformation_v1_0Utils } from '@/composables/SubmodelTemplates/ContactInformation_v1_0Utils';
     import { useVirtualContactFileUtils } from '@/composables/VirtualContactFileUtils';
     import { getCountryName, getLanguageName } from '@/utils/LocaleUtils';
     import { checkSemanticId } from '@/utils/SemanticIdUtils';
     import { firstLangStringSetText } from '@/utils/SubmodelElements/MultiLanguagePropertyUtils';
-    import { hasValue, valueToDisplay } from '@/utils/SubmodelElements/SubmodelElementUtils';
 
     // Options
     defineOptions({
@@ -258,6 +258,7 @@
         getTypeOfTelephone,
         rolesOfContactPerson,
     } = useContactInformation_v1_0Utils();
+    const { hasValue, valueToDisplay } = useSME();
     const { downloadVCard } = useVirtualContactFileUtils();
 
     // Props

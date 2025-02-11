@@ -1,6 +1,6 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-list-item>
+        <v-list-item v-if="dataSpecificationObject && Object.keys(dataSpecificationObject).length > 0">
             <!-- Title -->
             <template #title>
                 <div class="text-subtitle-2 mt-2">{{ 'Data Specification Content:' }}</div>
@@ -17,7 +17,7 @@
             <!-- definition -->
             <DescriptionElement
                 v-if="dataSpecificationObject.definition && dataSpecificationObject.definition.length > 0"
-                :description-object="dataSpecificationObject.definition"
+                :description-array="dataSpecificationObject.definition"
                 :description-title="'Definition'"
                 :small="true"></DescriptionElement>
             <v-divider
@@ -39,7 +39,7 @@
             <!-- preferredName -->
             <DescriptionElement
                 v-if="dataSpecificationObject.preferredName && dataSpecificationObject.preferredName.length > 0"
-                :description-object="dataSpecificationObject.preferredName"
+                :description-array="dataSpecificationObject.preferredName"
                 :description-title="'Preferred Name'"
                 :small="true"></DescriptionElement>
             <v-divider
@@ -48,7 +48,7 @@
             <!-- shortName -->
             <DescriptionElement
                 v-if="dataSpecificationObject.shortName && dataSpecificationObject.shortName.length > 0"
-                :description-object="dataSpecificationObject.shortName"
+                :description-array="dataSpecificationObject.shortName"
                 :description-title="'Short Name'"
                 :small="true"></DescriptionElement>
             <v-divider v-if="dataSpecificationObject.unit" class="mt-2"></v-divider>
@@ -93,28 +93,12 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-    import DescriptionElement from './DescriptionElement.vue';
-
-    export default defineComponent({
-        name: 'DataSpecificationContent',
-        components: {
-            DescriptionElement,
+<script setup lang="ts">
+    // Props
+    defineProps({
+        dataSpecificationObject: {
+            type: Object as any,
+            default: {} as any,
         },
-        props: ['dataSpecificationObject'],
-
-        data() {
-            return {};
-        },
-
-        computed: {},
-
-        watch: {},
-
-        mounted() {},
-
-        methods: {},
     });
 </script>

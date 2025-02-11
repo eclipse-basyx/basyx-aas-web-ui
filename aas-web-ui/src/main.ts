@@ -8,8 +8,6 @@
 import type { PluginType } from '@/types/Application';
 import type { App as AppType } from 'vue';
 // Components
-import Keycloak from 'keycloak-js';
-import { KeycloakOnLoad } from 'keycloak-js';
 import { createPinia } from 'pinia';
 // Composables
 import { createApp } from 'vue';
@@ -18,8 +16,8 @@ import VueApexCharts from 'vue3-apexcharts';
 // Plugins
 import { registerVuetify } from '@/plugins';
 import App from './App.vue';
+import { initKeycloak, loginWithDirectGrant } from './authService';
 import { createAppRouter } from './router';
-import { useAuthStore } from './store/AuthStore';
 import { useEnvStore } from './store/EnvironmentStore';
 import { useNavigationStore } from './store/NavigationStore';
 
@@ -38,13 +36,37 @@ async function initialize(): Promise<void> {
 
     // Create keycloak instance
     if (envStore.getKeycloakActive) {
-        try {
-            await initKeycloak(envStore.getKeycloakUrl, envStore.getKeycloakRealm, envStore.getKeycloakClientId);
-        } catch {
-            alert('Could not connect to Keycloak.');
-            return;
+        if (envStore.getPreconfiguredAuth) {
+            // Try to login with preconfigured credentials
+            const username = envStore.getPreconfiguredAuthUsername;
+            const password = envStore.getPreconfiguredAuthPassword;
+
+            try {
+                await loginWithDirectGrant(
+                    envStore.getKeycloakUrl,
+                    envStore.getKeycloakRealm,
+                    envStore.getKeycloakClientId,
+                    username,
+                    password
+                );
+            } catch {
+                alert('Could not login with preconfigured credentials.');
+                return;
+            }
+        } else {
+            // Use the normal Keycloak login flow with redirect to the Keycloak login page
+            try {
+                await initKeycloak(envStore.getKeycloakUrl, envStore.getKeycloakRealm, envStore.getKeycloakClientId);
+            } catch {
+                alert('Could not connect to Keycloak.');
+                return;
+            }
         }
     }
+
+    // Create the router
+    const router = await createAppRouter();
+    app.use(router);
 
     // Vuetify
     registerVuetify(app);
@@ -80,78 +102,13 @@ async function initialize(): Promise<void> {
         ssr: false,
     });
 
-    const router = await createAppRouter();
-    app.use(router);
-
     app.use(VueApexCharts);
 
+    // Mount the app
     app.mount('#app');
 }
 
-async function initKeycloak(keycloakUrl: string, keycloakRealm: string, keycloakClientId: string) {
-    return new Promise<void>((resolve, reject) => {
-        let keycloak: Keycloak | null = null;
-
-        const initOptions = {
-            url: keycloakUrl,
-            realm: keycloakRealm,
-            clientId: keycloakClientId,
-            onLoad: 'login-required' as KeycloakOnLoad,
-        };
-
-        try {
-            keycloak = new Keycloak(initOptions);
-            // set the keycloak instance in the auth store
-            const authStore = useAuthStore();
-            authStore.setKeycloak(keycloak);
-            authStore.setAuthStatus(false);
-            authStore.setAuthEnabled(true);
-        } catch (error) {
-            console.error('Failed to initialize Keycloak, running without authentication.', error);
-            const authStore = useAuthStore();
-            authStore.setAuthEnabled(false);
-        }
-
-        keycloak
-            ?.init({ onLoad: initOptions.onLoad })
-            .then(async (auth: boolean) => {
-                if (!auth) {
-                    window.location.reload();
-                } else {
-                    // console.info("Authenticated");
-                    resolve();
-                    const authStore = useAuthStore();
-                    authStore.setToken(keycloak.token);
-                    authStore.setRefreshToken(keycloak.refreshToken);
-                    authStore.setAuthStatus(true);
-                    setInterval(() => {
-                        keycloak
-                            .updateToken(70)
-                            .then((refreshed: boolean) => {
-                                if (refreshed) {
-                                    // console.log('Token refreshed');
-                                    authStore.setToken(keycloak.token);
-                                    authStore.setRefreshToken(keycloak.refreshToken);
-                                }
-                                authStore.setAuthStatus(true);
-                            })
-                            .catch(() => {
-                                console.error('Failed to refresh token');
-                                authStore.setAuthStatus(false);
-                            });
-                    }, 60000);
-                }
-            })
-            .catch((error: any) => {
-                console.error('Failed to authenticate with Keycloak', error);
-                const authStore = useAuthStore();
-                authStore.setAuthStatus(false);
-                reject();
-            });
-    });
-}
-
-async function getVisualizations(app: AppType) {
+async function getVisualizations(app: AppType): Promise<PluginType[]> {
     const pluginFileRecords = {
         ...import.meta.glob('./components/Plugins/Submodels/*.vue'),
         ...import.meta.glob('./components/Plugins/SubmodelElements/*.vue'),

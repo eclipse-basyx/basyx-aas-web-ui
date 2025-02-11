@@ -9,6 +9,7 @@ export const useAuthStore = defineStore({
         authStatus: false as boolean,
         authEnabled: false as boolean,
         keycloak: null as Keycloak | null,
+        refreshIntervalId: undefined as number | undefined,
     }),
     getters: {
         getToken: (state) => state.token,
@@ -16,6 +17,7 @@ export const useAuthStore = defineStore({
         getAuthStatus: (state) => state.authStatus,
         getAuthEnabled: (state) => state.authEnabled,
         getKeycloak: (state) => state.keycloak,
+        getRefreshIntervalId: (state) => state.refreshIntervalId,
     },
     actions: {
         setToken(token: string | undefined) {
@@ -32,6 +34,9 @@ export const useAuthStore = defineStore({
         },
         setKeycloak(keycloak: Keycloak | null) {
             this.keycloak = keycloak;
+        },
+        setRefreshIntervalId(intervalId: number) {
+            this.refreshIntervalId = intervalId;
         },
     },
 });

@@ -1,411 +1,413 @@
 <template>
     <v-container fluid class="pa-0">
-        <!-- Header -->
-        <v-card class="mb-4">
-            <v-card-title>
-                <div class="text-subtitle-1">
-                    {{ nameToDisplay(submodelElementData, 'en', 'Technical Data') }}
-                </div>
-            </v-card-title>
-            <v-card-text v-if="descriptionToDisplay(submodelElementData)" class="pt-0">
-                {{ descriptionToDisplay(submodelElementData) }}
-            </v-card-text>
-        </v-card>
-        <!-- Technical Data Collections -->
-        <v-card v-if="loading">
+        <VisualizationHeader
+            :submodel-element-data="submodelElementData"
+            default-title="Technical Data for Industrial Equipment in Manufacturing"></VisualizationHeader>
+        <!-- Loading -->
+        <v-card v-if="isLoading" class="mb-4">
             <v-skeleton-loader
                 type="list-item-avatar, divider, list-item-avatar, divider, list-item-avatar, divider, list-item-avatar"
                 :height="288"></v-skeleton-loader>
         </v-card>
-        <v-expansion-panels v-else v-model="panel" multiple>
-            <!-- General Information -->
-            <v-expansion-panel>
-                <v-expansion-panel-title>
-                    <v-list-item class="pa-0">
-                        <template #prepend>
-                            <v-icon size="small">mdi-file-document-outline</v-icon>
-                        </template>
-                        <v-list-item-title>{{ 'General Information' }}</v-list-item-title>
-                    </v-list-item>
-                </v-expansion-panel-title>
-                <v-divider v-if="panel.includes(0)"></v-divider>
-                <v-expansion-panel-text>
-                    <v-table>
-                        <tbody>
-                            <tr
-                                v-for="(generalProperty, index) in generalProperties"
-                                :key="generalProperty.idShort"
-                                :class="index % 2 === 0 ? 'tableEven' : 'bg-tableOdd'">
-                                <td>
-                                    <div class="text-subtitleText text-caption">
-                                        <span>{{ nameToDisplay(generalProperty) }}</span>
-                                        <v-tooltip
-                                            v-if="generalProperty.description && generalProperty.description.length > 0"
-                                            activator="parent"
-                                            open-delay="600"
-                                            transition="slide-y-transition"
-                                            max-width="360px"
-                                            location="bottom">
-                                            <div
-                                                v-for="(description, i) in generalProperty.description"
-                                                :key="i"
-                                                class="text-caption">
-                                                <span class="font-weight-bold">{{ description.language + ': ' }}</span
-                                                >{{ description.text }}
-                                            </div>
-                                        </v-tooltip>
-                                    </div>
-                                </td>
-                                <td>
-                                    <!-- Files -->
-                                    <v-img
-                                        v-if="checkIdShort(generalProperty, 'ManufacturerLogo')"
-                                        :src="ManufacturerLogoUrl"
-                                        max-width="100%"
-                                        max-height="100%"
-                                        contain
-                                        class="my-2"></v-img>
-                                    <v-img
-                                        v-else-if="checkIdShort(generalProperty, 'ProductImage')"
-                                        :src="ProductImageUrl"
-                                        max-width="100%"
-                                        max-height="100%"
-                                        contain
-                                        class="my-2"></v-img>
-                                    <!-- MultiLanguageProperties -->
-                                    <template v-else-if="generalProperty.modelType == 'MultiLanguageProperty'">
-                                        <v-list-item class="pl-0">
-                                            <v-list-item-title class="text-caption">{{
-                                                generalProperty.value[0].text
-                                            }}</v-list-item-title>
-                                        </v-list-item>
-                                    </template>
-                                    <!-- Default -->
-                                    <span v-else class="text-caption">{{ generalProperty.value }}</span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </v-table>
-                </v-expansion-panel-text>
-            </v-expansion-panel>
-            <!-- Product Classifications -->
-            <v-expansion-panel>
-                <v-expansion-panel-title>
-                    <v-list-item class="pa-0">
-                        <template #prepend>
-                            <v-icon size="small">mdi-package-variant-closed</v-icon>
-                        </template>
-                        <v-list-item-title>{{ 'Product Classifications' }}</v-list-item-title>
-                    </v-list-item>
-                </v-expansion-panel-title>
-                <v-divider v-if="panel.includes(1)"></v-divider>
-                <v-expansion-panel-text>
-                    <v-card v-if="productClassifications.length > 0" variant="outlined" class="mt-3">
-                        <v-table>
-                            <thead>
-                                <tr v-if="productClassifications.length > 0">
-                                    <th
-                                        v-for="classificationProperty in productClassifications[0].value"
-                                        :key="classificationProperty.idShort">
-                                        <v-list-item class="pl-0">
-                                            <v-list-item-title class="text-caption">{{
-                                                nameToDisplay(classificationProperty)
-                                            }}</v-list-item-title>
-                                        </v-list-item>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr
-                                    v-for="(productClassification, index) in productClassifications"
-                                    :key="productClassification.idShort"
-                                    :class="index % 2 === 0 ? 'bg-tableOdd' : 'bg-tableEven'">
-                                    <td
-                                        v-for="classificationProperty in productClassification.value"
-                                        :key="classificationProperty.idShort">
-                                        <!-- MultiLanguageProperties -->
-                                        <template v-if="classificationProperty.modelType == 'MultiLanguageProperty'">
-                                            <v-list-item class="pl-0">
-                                                <span class="text-caption text-subtitleText">{{
-                                                    classificationProperty.value[0].text
-                                                }}</span>
-                                            </v-list-item>
+        <template v-else-if="Object.keys(technicalData).length > 0">
+            <v-expansion-panels v-model="panel" multiple>
+                <!-- General Information -->
+                <template v-if="generalInformationProperties.length > 0">
+                    <v-expansion-panel>
+                        <v-expansion-panel-title>
+                            <v-list-item class="pa-0">
+                                <template #prepend>
+                                    <v-icon size="small">mdi-file-document-outline</v-icon>
+                                </template>
+                                <v-list-item-title>
+                                    {{ nameToDisplay(generalInformationSMC, 'en', 'General Information') }}
+                                    <DescriptionTooltip :description-array="generalInformationSMC?.description" />
+                                </v-list-item-title>
+                            </v-list-item>
+                        </v-expansion-panel-title>
+                        <v-divider v-if="panel.includes(0)"></v-divider>
+                        <v-expansion-panel-text class="pt-4 pb-2">
+                            <v-sheet border rounded>
+                                <v-table>
+                                    <tbody>
+                                        <tr
+                                            v-for="(generalProperty, index) in generalInformationProperties"
+                                            :key="generalProperty.idShort"
+                                            :class="index % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
+                                            <td>
+                                                <div class="text-subtitleText text-caption">
+                                                    <span>{{ nameToDisplay(generalProperty) }}</span>
+                                                    <DescriptionTooltip
+                                                        :description-array="generalProperty?.description" />
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <!-- Files -->
+                                                <v-img
+                                                    v-if="
+                                                        checkIdShort(generalProperty, 'ManufacturerLogo') ||
+                                                        checkIdShort(generalProperty, 'ProductImage')
+                                                    "
+                                                    :src="valueUrl(generalProperty)"
+                                                    max-width="300px"
+                                                    max-height="300px"
+                                                    contain
+                                                    class="my-2"></v-img>
+                                                <!-- MultiLanguageProperties -->
+                                                <template
+                                                    v-else-if="generalProperty.modelType == 'MultiLanguageProperty'">
+                                                    <!-- Show english value, if available -->
+                                                    <div v-if="valueToDisplay(generalProperty)" class="text-caption">
+                                                        {{ valueToDisplay(generalProperty) }}
+                                                    </div>
+                                                    <!-- Otherwise show all available values -->
+                                                    <template
+                                                        v-for="(langStringSet, j) in generalProperty.value"
+                                                        v-else
+                                                        :key="j">
+                                                        <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                                                            <v-chip size="x-small" label class="mr-1">{{
+                                                                langStringSet.language
+                                                            }}</v-chip>
+                                                            {{ langStringSet?.text }}
+                                                        </div>
+                                                    </template>
+                                                </template>
+                                                <!-- Default -->
+                                                <span v-else class="text-caption">
+                                                    {{ valueToDisplay(generalProperty) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </v-table>
+                            </v-sheet>
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
+                </template>
+                <!-- Product Classifications -->
+                <template v-if="productClassifications.length > 0">
+                    <v-expansion-panel>
+                        <v-expansion-panel-title>
+                            <v-list-item class="pa-0">
+                                <template #prepend>
+                                    <v-icon size="small">mdi-package-variant-closed</v-icon>
+                                </template>
+                                <v-list-item-title>
+                                    {{ nameToDisplay(productClassificationsSMC, 'en', 'Product Classifications') }}
+                                    <DescriptionTooltip :description-array="productClassificationsSMC?.description" />
+                                </v-list-item-title>
+                            </v-list-item>
+                        </v-expansion-panel-title>
+                        <v-divider v-if="panel.includes(1)"></v-divider>
+                        <v-expansion-panel-text class="pb-2">
+                            <v-card variant="outlined" class="mt-3">
+                                <v-table>
+                                    <thead>
+                                        <tr v-if="productClassifications.length > 0">
+                                            <th
+                                                v-for="classificationProperty in productClassifications[0].value"
+                                                :key="classificationProperty.idShort">
+                                                <div class="text-caption">
+                                                    <span>{{ nameToDisplay(classificationProperty) }}</span>
+                                                    <DescriptionTooltip
+                                                        :description-array="classificationProperty?.description" />
+                                                </div>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template
+                                            v-for="(productClassification, index) in productClassifications"
+                                            :key="productClassification.idShort">
+                                            <tr
+                                                v-if="hasValue(productClassification)"
+                                                :class="index % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
+                                                <td
+                                                    v-for="classificationProperty in productClassification.value"
+                                                    :key="classificationProperty.idShort">
+                                                    <!-- MultiLanguageProperties -->
+                                                    <template
+                                                        v-if="
+                                                            classificationProperty.modelType == 'MultiLanguageProperty'
+                                                        ">
+                                                        <!-- Show english value, if available -->
+                                                        <div
+                                                            v-if="valueToDisplay(classificationProperty)"
+                                                            class="text-caption text-subtitleText">
+                                                            {{ valueToDisplay(classificationProperty) }}
+                                                        </div>
+                                                        <!-- Otherwise show all available values -->
+                                                        <template
+                                                            v-for="(langStringSet, k) in classificationProperty.value"
+                                                            v-else
+                                                            :key="k">
+                                                            <div
+                                                                v-if="langStringSet?.text.length > 0"
+                                                                class="text-caption">
+                                                                <v-chip size="x-small" label class="mr-1">{{
+                                                                    langStringSet.language
+                                                                }}</v-chip>
+                                                                {{ langStringSet?.text }}
+                                                            </div>
+                                                        </template>
+                                                    </template>
+                                                    <!-- Default -->
+                                                    <span v-else class="text-caption text-subtitleText">
+                                                        {{ valueToDisplay(classificationProperty) }}
+                                                    </span>
+                                                </td>
+                                            </tr>
                                         </template>
-                                        <!-- Default -->
-                                        <span v-else class="text-caption text-subtitleText">{{
-                                            classificationProperty.value
-                                        }}</span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </v-table>
-                    </v-card>
-                </v-expansion-panel-text>
-            </v-expansion-panel>
-            <!-- Technical Properties -->
-            <v-expansion-panel>
-                <v-expansion-panel-title v-slot="{ expanded }">
-                    <v-list-item class="pa-0">
-                        <template #prepend>
-                            <v-icon size="small">mdi-cog-outline</v-icon>
-                        </template>
-                        <v-list-item-title>{{ 'Technical Properties' }}</v-list-item-title>
-                        <template #append>
-                            <v-switch
-                                v-if="expanded"
-                                v-model="tableView"
-                                color="primary"
-                                label="Table view"
-                                hide-details
-                                density="compact"
-                                class="ml-5"
-                                @click.stop></v-switch>
-                        </template>
-                    </v-list-item>
-                </v-expansion-panel-title>
-                <v-divider v-if="panel.includes(2)"></v-divider>
-                <v-expansion-panel-text>
-                    <GenericDataVisu
-                        v-if="!tableView"
-                        class="mt-3"
-                        :submodel-element-data="technicalProperties"></GenericDataVisu>
-                    <template v-else>
-                        <v-card border class="mt-3">
-                            <v-table density="comfortable" hover>
-                                <thead class="bg-tableHeader">
-                                    <tr>
-                                        <th class="text-titleText">SubmodelElement</th>
-                                        <th class="text-titleText">Description</th>
-                                        <th class="text-titleText">Definition</th>
-                                        <th class="text-titleText">Value</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <GenericDataTableView
-                                        class="mt-3"
-                                        :submodel-element-data="technicalProperties"
-                                        :level="0"></GenericDataTableView>
-                                </tbody>
-                            </v-table>
-                        </v-card>
-                    </template>
-                </v-expansion-panel-text>
-            </v-expansion-panel>
-            <!-- Further Information -->
-            <v-expansion-panel>
-                <v-expansion-panel-title>
-                    <v-list-item class="pa-0">
-                        <template #prepend>
-                            <v-icon size="small">mdi-information-outline</v-icon>
-                        </template>
-                        <v-list-item-title>{{ 'Further Information' }}</v-list-item-title>
-                    </v-list-item>
-                </v-expansion-panel-title>
-                <v-divider v-if="panel.includes(3)"></v-divider>
-                <v-expansion-panel-text>
-                    <v-table v-if="furtherInformation.length > 0">
-                        <tbody>
-                            <tr
-                                v-for="(furtherInfo, index) in furtherInformation"
-                                :key="furtherInfo.idShort"
-                                :class="index % 2 === 0 ? 'tableEven' : 'bg-tableOdd'">
-                                <td>
-                                    <div class="text-subtitleText text-caption">
-                                        <span>{{ nameToDisplay(furtherInfo) }}</span>
-                                        <v-tooltip
-                                            v-if="furtherInfo.description && furtherInfo.description.length > 0"
-                                            activator="parent"
-                                            open-delay="600"
-                                            transition="slide-y-transition"
-                                            max-width="360px"
-                                            location="bottom">
-                                            <div
-                                                v-for="(description, i) in furtherInfo.description"
-                                                :key="i"
-                                                class="text-caption">
-                                                <span class="font-weight-bold">{{ description.language + ': ' }}</span
-                                                >{{ description.text }}
-                                            </div>
-                                        </v-tooltip>
-                                    </div>
-                                </td>
-                                <td>
-                                    <!-- MultiLanguageProperties -->
-                                    <template v-if="furtherInfo.modelType == 'MultiLanguageProperty'">
-                                        <v-list-item class="pl-0">
-                                            <v-list-item-title class="text-caption">{{
-                                                furtherInfo.value[0].text
-                                            }}</v-list-item-title>
-                                        </v-list-item>
-                                    </template>
-                                    <!-- Default -->
-                                    <span v-else class="text-caption">{{ furtherInfo.value }}</span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </v-table>
-                </v-expansion-panel-text>
-            </v-expansion-panel>
-        </v-expansion-panels>
+                                    </tbody>
+                                </v-table>
+                            </v-card>
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
+                </template>
+                <!-- Technical Properties -->
+                <template v-if="technicalProperties.length > 0">
+                    <v-expansion-panel>
+                        <v-expansion-panel-title v-slot="{ expanded }">
+                            <v-list-item class="pa-0">
+                                <template #prepend>
+                                    <v-icon size="small">mdi-cog-outline</v-icon>
+                                </template>
+                                <v-list-item-title>
+                                    {{ nameToDisplay(technicalPropertiesSMC, 'en', 'Technical Properties') }}
+                                    <DescriptionTooltip :description-array="technicalPropertiesSMC?.description" />
+                                </v-list-item-title>
+                                <template #append>
+                                    <v-switch
+                                        v-if="expanded"
+                                        v-model="tableView"
+                                        color="primary"
+                                        label="Table view"
+                                        hide-details
+                                        density="compact"
+                                        class="ml-5"
+                                        @click.stop></v-switch>
+                                </template>
+                            </v-list-item>
+                        </v-expansion-panel-title>
+                        <v-divider v-if="panel.includes(2)"></v-divider>
+                        <v-expansion-panel-text class="pb-2">
+                            <GenericDataVisu
+                                v-if="!tableView"
+                                class="mt-3"
+                                :submodel-element-data="technicalProperties"></GenericDataVisu>
+                            <template v-else>
+                                <v-card border class="mt-3">
+                                    <v-table density="comfortable" hover>
+                                        <thead class="bg-tableHeader">
+                                            <tr>
+                                                <th class="text-titleText">SubmodelElement</th>
+                                                <th class="text-titleText">Description</th>
+                                                <th class="text-titleText">Definition</th>
+                                                <th class="text-titleText">Value</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <GenericDataTableView
+                                                class="mt-3"
+                                                :submodel-element-data="technicalProperties"
+                                                :level="0"></GenericDataTableView>
+                                        </tbody>
+                                    </v-table>
+                                </v-card>
+                            </template>
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
+                </template>
+                <!-- Further Information -->
+                <template v-if="furtherInformation.length > 0">
+                    <v-expansion-panel>
+                        <v-expansion-panel-title>
+                            <v-list-item class="pa-0">
+                                <template #prepend>
+                                    <v-icon size="small">mdi-information-outline</v-icon>
+                                </template>
+                                <v-list-item-title>
+                                    {{ nameToDisplay(furtherInformationSMC, 'en', 'Further Information') }}
+                                    <DescriptionTooltip :description-array="furtherInformationSMC?.description" />
+                                </v-list-item-title>
+                            </v-list-item>
+                        </v-expansion-panel-title>
+                        <v-divider v-if="panel.includes(3)"></v-divider>
+                        <v-expansion-panel-text class="pt-4 pb-2">
+                            <v-sheet border rounded>
+                                <v-table v-if="furtherInformation.length > 0">
+                                    <tbody>
+                                        <template
+                                            v-for="(furtherInfo, index) in furtherInformation"
+                                            :key="furtherInfo.idShort">
+                                            <tr
+                                                v-if="hasValue(furtherInfo)"
+                                                :class="index % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
+                                                <td>
+                                                    <div class="text-subtitleText text-caption">
+                                                        <span>{{ nameToDisplay(furtherInfo) }}</span>
+                                                        <DescriptionTooltip
+                                                            :description-array="furtherInfo?.description" />
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <!-- MultiLanguageProperties -->
+                                                    <template v-if="furtherInfo.modelType == 'MultiLanguageProperty'">
+                                                        <!-- Show english value, if available -->
+                                                        <div v-if="valueToDisplay(furtherInfo)" class="text-caption">
+                                                            {{ valueToDisplay(furtherInfo) }}
+                                                        </div>
+                                                        <!-- Otherwise show all available values -->
+                                                        <template
+                                                            v-for="(langStringSet, k) in furtherInfo.value"
+                                                            v-else
+                                                            :key="k">
+                                                            <div
+                                                                v-if="langStringSet?.text.length > 0"
+                                                                class="text-caption">
+                                                                <v-chip size="x-small" label class="mr-1">{{
+                                                                    langStringSet.language
+                                                                }}</v-chip>
+                                                                {{ langStringSet?.text }}
+                                                            </div>
+                                                        </template>
+                                                    </template>
+                                                    <!-- Default -->
+                                                    <span v-else class="text-caption">
+                                                        {{ valueToDisplay(furtherInfo) }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </v-table>
+                            </v-sheet>
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
+                </template>
+            </v-expansion-panels>
+        </template>
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-    import { useTheme } from 'vuetify';
+<script lang="ts" setup>
+    import { computed, onMounted, ref } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/SMHandling';
-    import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useSMEFile } from '@/composables/SubmodelElements/File';
+    import { useSME } from '@/composables/SubmodelElements/SubmodelElement';
     import { useAASStore } from '@/store/AASDataStore';
+    import { getSubmodelElementBySemanticId } from '@/utils/SemanticIdUtils';
 
-    export default defineComponent({
+    // Define component options such as custom static properties
+    defineOptions({
         name: 'TechnicalData',
         semanticId: 'https://admin-shell.io/ZVEI/TechnicalData/Submodel/1/2',
-        mixins: [RequestHandling, SubmodelElementHandling],
-        props: ['submodelElementData'],
+    });
 
-        setup() {
-            const theme = useTheme();
-            const aasStore = useAASStore();
-            const { setData } = useSMHandling();
-            const { checkIdShort, descriptionToDisplay, nameToDisplay } = useReferableUtils();
+    // Stores
+    const aasStore = useAASStore();
 
-            return {
-                theme, // Theme Object
-                aasStore, // AASStore Object
-                checkIdShort,
-                descriptionToDisplay,
-                nameToDisplay,
-                setData,
-            };
-        },
+    // Composables
+    const { setData } = useSMHandling();
+    const { nameToDisplay, checkIdShort } = useReferableUtils();
+    const { hasValue, valueToDisplay } = useSME();
+    const { valueUrl } = useSMEFile();
 
-        data() {
-            return {
-                panel: [] as Array<number>,
-                technicalData: {} as any,
-                generalProperties: [] as Array<any>,
-                productClassifications: [] as Array<any>,
-                technicalProperties: [] as Array<any>,
-                furtherInformation: [] as Array<any>,
-                ManufacturerLogoUrl: '',
-                ProductImageUrl: '',
-                loading: false,
-                tableView: true,
-            };
-        },
-
-        computed: {
-            // Get the selected Treeview Node (SubmodelElement) from the store
-            SelectedNode() {
-                return this.aasStore.getSelectedNode;
-            },
-        },
-
-        mounted() {
-            this.initTechnicalData();
-        },
-
-        methods: {
-            async initTechnicalData() {
-                this.loading = true;
-
-                if (Object.keys(this.submodelElementData).length === 0) {
-                    this.technicalData = {};
-                    this.loading = false;
-                    return;
-                }
-
-                this.technicalData = await this.setData(
-                    { ...this.submodelElementData },
-                    this.submodelElementData.path,
-                    true,
-                    this.submodelElementData.timestamp
-                ); // Set the DigitalNameplate Data
-                this.extractGeneralProperties(this.technicalData);
-                this.extractProductClassifications(this.technicalData);
-                this.extractTechnicalProperties(this.technicalData);
-                this.extractFurtherInformation(this.technicalData);
-                this.loading = false;
-            },
-
-            extractGeneralProperties(technicalData: any) {
-                // find SubmodelElementCollection with semanticId: https://admin-shell.io/ZVEI/TechnicalData/GeneralInformation/1/1
-                let generalInformation = technicalData.submodelElements.find((element: any) => {
-                    return (
-                        element.semanticId.keys[0].value ===
-                        'https://admin-shell.io/ZVEI/TechnicalData/GeneralInformation/1/1'
-                    );
-                });
-                if (!generalInformation) return;
-                generalInformation.value.forEach((generalProperty: any) => {
-                    if (this.checkIdShort(generalProperty.idShort, 'ManufacturerLogo')) {
-                        this.getImageUrl(generalProperty, 'ManufacturerLogoUrl');
-                    }
-                    if (generalProperty.idShort.includes('ProductImage')) {
-                        this.getImageUrl(generalProperty, 'ProductImageUrl');
-                    }
-                });
-                // console.log('General Information:', generalInformation);
-                this.generalProperties = generalInformation.value;
-            },
-
-            extractProductClassifications(technicalData: any) {
-                // find SubmodelElementCollection with semanticId: https://admin-shell.io/ZVEI/TechnicalData/ProductClassifications/1/1
-                let productClassifications = technicalData.submodelElements.find((element: any) => {
-                    return (
-                        element.semanticId.keys[0].value ===
-                        'https://admin-shell.io/ZVEI/TechnicalData/ProductClassifications/1/1'
-                    );
-                });
-                // console.log('Product Classifications:', productClassifications);
-                if (!productClassifications) return;
-                this.productClassifications = productClassifications.value;
-            },
-
-            extractTechnicalProperties(technicalData: any) {
-                // find SubmodelElementCollection with semanticId: https://admin-shell.io/ZVEI/TechnicalData/TechnicalProperties/1/1
-                let technicalProperties = technicalData.submodelElements.find((element: any) => {
-                    return (
-                        element.semanticId.keys[0].value ===
-                        'https://admin-shell.io/ZVEI/TechnicalData/TechnicalProperties/1/1'
-                    );
-                });
-                // console.log('Technical Properties:', technicalProperties);
-                this.technicalProperties = technicalProperties.value;
-            },
-
-            extractFurtherInformation(technicalData: any) {
-                // find SubmodelElementCollection with semanticId: https://admin-shell.io/ZVEI/TechnicalData/FurtherInformation/1/1
-                let furtherInformation = technicalData.submodelElements.find((element: any) => {
-                    return (
-                        element.semanticId.keys[0].value ===
-                        'https://admin-shell.io/ZVEI/TechnicalData/FurtherInformation/1/1'
-                    );
-                });
-                // console.log('Further Information:', furtherInformation);
-                if (!furtherInformation) return;
-                this.furtherInformation = furtherInformation.value;
-            },
-
-            getImageUrl(fileProperty: any, dataElementName: string) {
-                if (!fileProperty.value) return;
-                try {
-                    new URL(fileProperty.value);
-                    (this as any)[dataElementName] = fileProperty.value;
-                } catch {
-                    let path = this.getLocalPath(fileProperty.value, fileProperty);
-                    let context = 'retrieving Attachment File';
-                    let disableMessage = false;
-                    this.getRequest(path, context, disableMessage).then((response: any) => {
-                        if (response.success) {
-                            (this as any)[dataElementName] = URL.createObjectURL(response.data as Blob);
-                        }
-                    });
-                }
-            },
+    // Properties
+    const props = defineProps({
+        submodelElementData: {
+            type: Object as any,
+            default: {} as any,
         },
     });
+
+    // Data
+    const isLoading = ref(false);
+    const technicalData = ref({} as any);
+    const panel = ref([] as Array<number>);
+    const generalInformationSMC = ref({} as any);
+    const generalInformationProperties = ref([] as Array<any>);
+    const productClassificationsSMC = ref({} as any);
+    const productClassifications = ref([] as Array<any>);
+    const technicalPropertiesSMC = ref({} as any);
+    const technicalProperties = ref([] as Array<any>);
+    const furtherInformationSMC = ref({} as any);
+    const furtherInformation = ref([] as Array<any>);
+    const tableView = ref(true as boolean);
+
+    // Computed Properties
+    const selectedNode = computed(() => aasStore.getSelectedNode);
+
+    onMounted(() => {
+        initializeVisualization();
+    });
+
+    async function initializeVisualization(): Promise<void> {
+        isLoading.value = true;
+
+        if (!props.submodelElementData || Object.keys(props.submodelElementData).length === 0) {
+            technicalData.value = {};
+            isLoading.value = false;
+            return;
+        }
+
+        technicalData.value = await setData({ ...props.submodelElementData }, selectedNode.value.path, true);
+
+        extractGeneralInformation(technicalData.value);
+        extractProductClassifications(technicalData.value);
+        extractTechnicalProperties(technicalData.value);
+        extractFurtherInformation(technicalData.value);
+
+        isLoading.value = false;
+    }
+
+    function extractGeneralInformation(technicalData: any): void {
+        let generalInformationSMC_local = getSubmodelElementBySemanticId(
+            'https://admin-shell.io/ZVEI/TechnicalData/GeneralInformation/1/1',
+            technicalData
+        );
+
+        if (hasValue(generalInformationSMC_local)) {
+            generalInformationSMC.value = generalInformationSMC_local;
+            generalInformationProperties.value = generalInformationSMC_local.value;
+        }
+    }
+
+    function extractProductClassifications(technicalData: any): void {
+        let productClassificationsSMC_local = getSubmodelElementBySemanticId(
+            'https://admin-shell.io/ZVEI/TechnicalData/ProductClassifications/1/1',
+            technicalData
+        );
+
+        if (hasValue(productClassificationsSMC_local)) {
+            productClassificationsSMC.value = productClassificationsSMC_local;
+            productClassifications.value = productClassificationsSMC_local.value;
+        }
+    }
+
+    function extractTechnicalProperties(technicalData: any): void {
+        let technicalPropertiesSMC_local = getSubmodelElementBySemanticId(
+            'https://admin-shell.io/ZVEI/TechnicalData/TechnicalProperties/1/1',
+            technicalData
+        );
+
+        if (hasValue(technicalPropertiesSMC_local)) {
+            technicalPropertiesSMC.value = technicalPropertiesSMC_local;
+            technicalProperties.value = technicalPropertiesSMC_local.value;
+        }
+    }
+
+    function extractFurtherInformation(technicalData: any): void {
+        let furtherInformationSMC_local = getSubmodelElementBySemanticId(
+            'https://admin-shell.io/ZVEI/TechnicalData/FurtherInformation/1/1',
+            technicalData
+        );
+
+        if (hasValue(furtherInformationSMC_local)) {
+            furtherInformationSMC.value = furtherInformationSMC_local;
+            furtherInformation.value = furtherInformationSMC_local.value;
+        }
+    }
 </script>

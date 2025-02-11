@@ -1,12 +1,12 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-list-item v-if="Array.isArray(assetObject?.specificAssetIds) && assetObject?.specificAssetIds.length > 0">
+        <v-list-item v-if="specificAssetIds && Array.isArray(specificAssetIds) && specificAssetIds.length > 0">
             <template #title>
                 <div class="mt-1 mb-2 text-subtitle-2">
                     {{ 'Specific Asset IDs:' }}
                 </div>
             </template>
-            <div v-for="(specificAssetId, index) in assetObject.specificAssetIds" :key="index">
+            <div v-for="(specificAssetId, index) in specificAssetIds" :key="index">
                 <div class="px-2">
                     <v-list-item-title>
                         <v-hover v-slot="{ isHovering, props }">
@@ -34,39 +34,30 @@
                         :semantic-title="specificAssetId.semanticId.keys.length > 0 ? 'Semantic IDs' : 'Semantic ID:'"
                         :small="true"></SemanticID>
                 </div>
-                <v-divider v-if="index < assetObject.specificAssetIds.length - 1" class="my-2"></v-divider>
+                <v-divider v-if="index < specificAssetIds.length - 1" class="my-2"></v-divider>
             </div>
         </v-list-item>
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent, Ref, ref } from 'vue';
+<script setup lang="ts">
+    import { Ref, ref } from 'vue';
     import { useClipboardUtil } from '@/composables/ClipboardUtil';
-    import { useNavigationStore } from '@/store/NavigationStore';
 
-    export default defineComponent({
-        name: 'SpecificAssetIds',
-        props: ['assetObject'],
+    // Composables
+    const { copyToClipboard } = useClipboardUtil();
 
-        setup() {
-            const navigationStore = useNavigationStore();
-
-            const { copyToClipboard } = useClipboardUtil();
-
-            const copyIcon = ref<string>('mdi-clipboard-file-outline');
-
-            const getCopyIconAsRef = (): Ref => {
-                return copyIcon;
-            };
-
-            return {
-                navigationStore, // NavigationStore Object
-                copyToClipboard,
-                copyIcon,
-                getCopyIconAsRef,
-            };
+    // Props
+    defineProps({
+        specificAssetIds: {
+            type: Array<any>,
+            default: [] as Array<any>,
         },
     });
+
+    // Data
+    const copyIcon = ref<string>('mdi-clipboard-file-outline');
+    const getCopyIconAsRef = (): Ref => {
+        return copyIcon;
+    };
 </script>

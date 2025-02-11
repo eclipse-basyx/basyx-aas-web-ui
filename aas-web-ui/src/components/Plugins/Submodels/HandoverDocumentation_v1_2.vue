@@ -4,7 +4,7 @@
             :submodel-element-data="submodelElementData"
             default-title="Handover Documentation"></VisualizationHeader>
         <!-- Loading -->
-        <v-card v-if="isLoading">
+        <v-card v-if="isLoading" class="mb-4">
             <v-skeleton-loader type="list-item-avatar, divider, list-item-avatar" :height="144"></v-skeleton-loader>
         </v-card>
         <v-expansion-panels v-else-if="documents.length > 0" v-model="panel">
@@ -350,10 +350,10 @@
     import { onMounted, ref } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/SMHandling';
+    import { useSMEFile } from '@/composables/SubmodelElements/File';
+    import { useSME } from '@/composables/SubmodelElements/SubmodelElement';
     import { getLanguageName } from '@/utils/LocaleUtils';
     import { getSubmodelElementBySemanticId, getSubmodelElementsBySemanticId } from '@/utils/SemanticIdUtils';
-    import { downloadFile } from '@/utils/SubmodelElements/FileUtils';
-    import { hasValue, valueToDisplay } from '@/utils/SubmodelElements/SubmodelElementUtils';
 
     // Options
     defineOptions({
@@ -364,6 +364,8 @@
     // Composables
     const { setData } = useSMHandling();
     const { checkIdShort, nameToDisplay } = useReferableUtils();
+    const { hasValue, valueToDisplay } = useSME();
+    const { downloadFile } = useSMEFile();
 
     // Properties
     const props = defineProps({
@@ -394,9 +396,7 @@
 
         handoverDocumentationData.value = await setData(
             { ...props.submodelElementData },
-            props.submodelElementData.path,
-            true,
-            props.submodelElementData.timestamp
+            props.submodelElementData.path
         );
 
         documents.value = getSubmodelElementsBySemanticId(

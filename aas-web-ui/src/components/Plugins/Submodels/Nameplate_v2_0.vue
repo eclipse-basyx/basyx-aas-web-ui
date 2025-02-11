@@ -298,13 +298,13 @@
     import { computed, onMounted, ref } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/SMHandling';
+    import { useSMEFile } from '@/composables/SubmodelElements/File';
+    import { useSME } from '@/composables/SubmodelElements/SubmodelElement';
     import { useContactInformation_v1_0Utils } from '@/composables/SubmodelTemplates/ContactInformation_v1_0Utils';
     import { useVirtualContactFileUtils } from '@/composables/VirtualContactFileUtils';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { getCountryName } from '@/utils/LocaleUtils';
-    import { valueUrl } from '@/utils/SubmodelElements/FileUtils';
     import { firstLangStringSetText } from '@/utils/SubmodelElements/MultiLanguagePropertyUtils';
-    import { hasValue, valueToDisplay } from '@/utils/SubmodelElements/SubmodelElementUtils';
 
     // Options
     defineOptions({
@@ -318,9 +318,11 @@
     // Composables
     const { setData } = useSMHandling();
     const { checkIdShort, getSubmodelElementByIdShort, nameToDisplay } = useReferableUtils();
+    const { hasValue, valueToDisplay } = useSME();
     const { determineAddress, generateVCard, getTypeOfEmailAddress, getTypeOfFaxNumber, getTypeOfTelephone } =
         useContactInformation_v1_0Utils();
     const { downloadVCard } = useVirtualContactFileUtils();
+    const { valueUrl } = useSMEFile();
 
     // Properties
     const props = defineProps({
@@ -363,8 +365,7 @@
         digitalNameplateData.value = await setData(
             { ...props.submodelElementData },
             props.submodelElementData.path,
-            true,
-            props.submodelElementData.timestamp
+            true
         );
 
         extractProductProperties(digitalNameplateData.value);
