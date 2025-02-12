@@ -10,7 +10,7 @@
                 :readonly="!isEditable"
                 :color="dateTimeStampValue.value == newDateTimeStampValue ? '' : 'warning'"
                 :persistent-hint="!isOperationVariable"
-                :hint="dateTimeStampValue.value == newDateTimeStampValue ? '' : 'Current Value not yet saved.'"
+                :hint="dateTimeStampValue.value == newDateTimeStampValue ? '' : 'Current value not yet saved.'"
                 :hide-details="isOperationVariable ? true : false"
                 @keydown.enter="updateValue()"
                 @click:clear="clearDateTimeStamp"
@@ -45,7 +45,7 @@
             <v-col cols="auto">
                 <v-text-field v-model="newTime" type="time" variant="solo" @change="applyTime"></v-text-field>
             </v-col>
-            <!-- Timezone Picker -->
+            <!-- TODO Timezone Picker -->
         </v-row>
     </v-list-item>
 </template>
@@ -55,6 +55,8 @@
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useSMEHandling } from '@/composables/SMEHandling';
     import { useAASStore } from '@/store/AASDataStore';
+    import { createXSDDateString, dateTimeRegex } from '@/utils/DateUtils';
+    import { padTo2Digits } from '@/utils/NumberUtils';
 
     // Stores
     const aasStore = useAASStore();
@@ -83,8 +85,6 @@
     });
 
     // Data
-    const dateTimeStampRegex =
-        /^(\d{4})-([1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:Z|[+-](?:0[0-9]|1[0-3]):[0-5][0-9])$/;
     const newDateTimeStampValue = ref<string>('');
     const newDate = ref<any>(new Date());
     const newTime = ref<string>('');
@@ -101,24 +101,8 @@
     // Watchers
     watch(
         () => selectedNode.value,
-        (selectedNodeValue) => {
-            if (selectedNodeValue && Object.keys(selectedNodeValue)) {
-                newDateTimeStampValue.value = props.dateTimeStampValue.value;
-            } else {
-                newDateTimeStampValue.value = '';
-            }
-        },
-        { deep: true }
-    );
-
-    watch(
-        () => props.dateTimeStampValue,
         () => {
-            if (!props.dateTimeStampValue.value || props.dateTimeStampValue.value == '') {
-                newDateTimeStampValue.value = '';
-            } else {
-                newDateTimeStampValue.value = props.dateTimeStampValue.value;
-            }
+            initialize(props.dateTimeStampValue.value);
         },
         { deep: true }
     );
@@ -126,7 +110,8 @@
     watch(
         () => props.dateTimeStampValue,
         (propsDateTimeStampValue) => {
-            initialize(propsDateTimeStampValue.value);
+            if (newDateTimeStampValue.value !== propsDateTimeStampValue.value)
+                initialize(props.dateTimeStampValue.value);
         },
         { deep: true }
     );
@@ -136,32 +121,40 @@
     });
 
     function initialize(dateTimeStampValue: string): void {
-        // if (!props.dateTimeStampValue.value || props.dateTimeStampValue.value == '') {
-        // newDateTimeStampValue.value = '';
-        // } else {
-        // newDateTimeStampValue.value = props.dateTimeStampValue.value;
-        // }
-        // const date = createDateObject(newDateTimeStampValue.value); // create a new Date Object from the given string
-        // newTime.value = getTimeFromDate(date); // get the time from the date
-
         if (dateTimeStampValue && dateTimeStampValue.trim() !== '') {
             const dateTimeStampString = dateTimeStampValue.trim();
-            const matches = dateTimeStampString.match(new RegExp(dateTimeStampRegex));
+            const matches = dateTimeStampString.match(new RegExp(dateTimeRegex));
             if (matches) {
                 newDateTimeStampValue.value = dateTimeStampString;
-                console.log(matches);
-                // const numbers = matches ? matches.map(Number) : [];
 
-                // const year: number = numbers[1];
-                // const month: number = numbers[2];
-                // const day: number = numbers[3];
-                // newDate.value = new Date(year, month - 1, day);
+                const numbers = matches ? matches.map(Number) : [];
+                // const strings = matches ? matches.map(String) : [];
+
+                const year: number = numbers[2];
+                const month: number = numbers[3];
+                const day: number = numbers[4];
+                newDate.value = new Date(year, month - 1, day);
+
+                const hour = numbers[6];
+                const minute = numbers[7];
+                const second = numbers[8];
+
+                newTime.value = [
+                    hour ? padTo2Digits(hour) : padTo2Digits(0),
+                    minute ? padTo2Digits(minute) : padTo2Digits(0),
+                    second ? padTo2Digits(second) : padTo2Digits(0),
+                ].join(':');
+                return;
+            } else {
+                newDateTimeStampValue.value = dateTimeStampValue;
+                newDate.value = new Date();
+                newTime.value = '00:00:00';
                 return;
             }
         }
         newDateTimeStampValue.value = '';
         newDate.value = new Date();
-        newTime.value = '00:00';
+        newTime.value = '00:00:00';
     }
 
     function updateValue(): void {
@@ -183,69 +176,25 @@
         });
     }
 
-    // create XSD Date String for the current date
-    function createXSDDateString(): string {
-        const date = new Date();
-
-        // Generate the date and time part in the format 'yyyy-mm-ddThh:mm:ss.sss'
-        let dateTime = date.toISOString();
-
-        // Get the timezone offset in minutes and convert it to the format '+hh:mm'
-        let timezoneOffset = -date.getTimezoneOffset();
-        const timezoneSign = timezoneOffset >= 0 ? '+' : '-';
-        timezoneOffset = Math.abs(timezoneOffset);
-        const timezoneHours = String(Math.floor(timezoneOffset / 60)).padStart(2, '0');
-        const timezoneMinutes = String(timezoneOffset % 60).padStart(2, '0');
-        const timezone = timezoneSign + timezoneHours + ':' + timezoneMinutes;
-
-        // Add pseudo microseconds and replace the timezone part
-        const pseudoMicroseconds = '000';
-        dateTime = dateTime.replace('Z', pseudoMicroseconds + timezone);
-
-        return dateTime;
-    }
-
-    // Function to create a new Date Object from the given string
-    function createDateObject(dateString: string): Date {
-        const cleanedTimestamp = dateString.split('[')[0];
-
-        return new Date(cleanedTimestamp);
-    }
-
-    // Function to get the time from the given Date Object
-    function getTimeFromDate(date: Date): string {
-        const hours = date.getHours().toString().padStart(2, '0');
-        const minutes = date.getMinutes().toString().padStart(2, '0');
-        const seconds = date.getSeconds().toString().padStart(2, '0');
-
-        // check if any of the values is NaN
-        if (isNaN(Number(hours)) || isNaN(Number(minutes)) || isNaN(Number(seconds)) || !hours || !minutes || !seconds)
-            return '';
-
-        return hours + ':' + minutes + ':' + seconds;
-    }
-
     // Function to apply the selected date to the newDateTimeStampValue
     function applyDate(date: any): void {
         if (!date) return;
-
-        // convert date to string (format: YYYY-MM-DD)
+        // replace the date in the newDateTimeStampValue
         const year = date.getFullYear();
         const month = (1 + date.getMonth()).toString().padStart(2, '0'); // Months are zero indexed, hence the +1. padStart will add a 0 in front if it's a single digit
         const day = date.getDate().toString().padStart(2, '0'); // padStart will add a 0 in front if it's a single digit
         const dateString = year + '-' + month + '-' + day;
 
-        // replace the date in the newDateTimeStampValue
-        let tempDateTimeStampValue = newDateTimeStampValue.value.split('T')[1];
+        let tempTimeStampValue = newDateTimeStampValue.value.split('T')[1];
 
         // if the time is not set, set it to the current time including the timezone
-        if (!tempDateTimeStampValue) {
+        if (!tempTimeStampValue) {
             const timeString = createXSDDateString().split('T')[1];
-            tempDateTimeStampValue = timeString;
+            tempTimeStampValue = timeString;
             newTime.value = timeString.split('.')[0];
         }
 
-        newDateTimeStampValue.value = dateString + 'T' + tempDateTimeStampValue;
+        newDateTimeStampValue.value = dateString + 'T' + tempTimeStampValue;
 
         if (isOperationVariable.value) {
             updateValue();
@@ -255,15 +204,14 @@
     // Function to apply the selected time to the newDateTimeStampValue
     function applyTime(): void {
         // replace the time in the newDateTimeStampValue
-        const tempDateTimeStampValue = newDateTimeStampValue.value.split('T')[0];
+        const tempDateValue = newDateTimeStampValue.value.split('T')[0];
         const tempStampEnd = newDateTimeStampValue.value.split('.')[1];
-
         if (!tempStampEnd) {
-            newDateTimeStampValue.value = tempDateTimeStampValue + 'T' + newTime.value + 'Z';
+            newDateTimeStampValue.value = tempDateValue + 'T' + newTime.value + ':00';
+            if (newDateTimeStampValue.value.includes('Z')) newDateTimeStampValue.value += 'Z';
         } else {
-            newDateTimeStampValue.value = tempDateTimeStampValue + 'T' + newTime.value + '.' + tempStampEnd;
+            newDateTimeStampValue.value = tempDateValue + 'T' + newTime.value + ':00' + '.' + tempStampEnd;
         }
-
         if (isOperationVariable.value) {
             updateValue();
         }
@@ -276,8 +224,8 @@
     }
 
     // Function to set the focus on the input field
-    function setFocus(e: boolean): void {
-        if (isOperationVariable.value && !e) {
+    function setFocus(isFocusedToSet: boolean): void {
+        if (isOperationVariable.value && !isFocusedToSet) {
             updateValue();
         }
     }

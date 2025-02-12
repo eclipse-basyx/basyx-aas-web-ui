@@ -1,12 +1,13 @@
 <template>
     <v-list-item class="pt-0">
         <v-list-item-title :class="isOperationVariable ? 'pt-2' : ''">
-            <v-textarea
+            <v-text-field
                 v-model="newStringValue"
                 variant="outlined"
                 density="compact"
                 :clearable="(isFocused || stringValue.value != newStringValue) && !isOperationVariable && isEditable"
                 :readonly="isOutputVariable || !isEditable"
+                :hint="stringValue.value == newStringValue ? '' : 'Current value not yet saved.'"
                 auto-grow
                 :rows="1"
                 :label="isOperationVariable ? stringValue.idShort : ''"
@@ -28,7 +29,7 @@
                         <v-icon>mdi-upload</v-icon>
                     </v-btn>
                 </template>
-            </v-textarea>
+            </v-text-field>
         </v-list-item-title>
     </v-list-item>
 </template>
@@ -66,7 +67,7 @@
     });
 
     // Data
-    const newStringValue = ref('');
+    const newStringValue = ref<string>('');
     const isFocused = ref<boolean>(false);
 
     // Computed Properties
@@ -119,7 +120,6 @@
             if (response.success) {
                 // After successful patch request fetch and dispatch updated SME
                 fetchAndDispatchSme(selectedNode.value.path, false);
-                setFocus(false);
             }
         });
     }

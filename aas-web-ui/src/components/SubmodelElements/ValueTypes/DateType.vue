@@ -10,7 +10,7 @@
                 :readonly="!isEditable"
                 :color="dateValue.value == newDateValue ? '' : 'warning'"
                 :persistent-hint="!isOperationVariable"
-                :hint="dateValue.value == newDateValue ? '' : 'Current Value not yet saved.'"
+                :hint="dateValue.value == newDateValue ? '' : 'Current value not yet saved.'"
                 :hide-details="isOperationVariable ? true : false"
                 @keydown.enter="updateValue()"
                 @click:clear="clearDate"
@@ -50,6 +50,7 @@
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useSMEHandling } from '@/composables/SMEHandling';
     import { useAASStore } from '@/store/AASDataStore';
+    import { dateRegex } from '@/utils/DateUtils';
 
     // Stores
     const aasStore = useAASStore();
@@ -78,7 +79,6 @@
     });
 
     // Data
-    const dateRegex = /^(\d{4})-(\d{2})-(\d{2})$/;
     const newDateValue = ref<string>('');
     const newDate = ref<any>(new Date());
 
@@ -94,20 +94,16 @@
     // Watchers
     watch(
         () => selectedNode.value,
-        (selectedNodeValue) => {
-            if (selectedNodeValue && Object.keys(selectedNodeValue).length > 0) {
-                newDateValue.value = props.dateValue.value;
-            } else {
-                newDateValue.value = '';
-            }
+        () => {
+            initialize(props.dateValue.value);
         },
         { deep: true }
     );
 
     watch(
         () => props.dateValue,
-        (propsStringValue) => {
-            initialize(propsStringValue.value);
+        (propsDateValue) => {
+            if (newDateValue.value !== propsDateValue.value) initialize(propsDateValue.value);
         },
         { deep: true }
     );
@@ -178,8 +174,8 @@
     }
 
     // Function to set the focus on the input field
-    function setFocus(e: boolean): void {
-        if (isOperationVariable.value && !e) {
+    function setFocus(isFocusedToSet: boolean): void {
+        if (isOperationVariable.value && !isFocusedToSet) {
             updateValue();
         }
     }

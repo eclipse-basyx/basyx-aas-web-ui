@@ -8,7 +8,7 @@
                 density="compact"
                 :clearable="(isFocused || numberValue.value != newNumberValue) && !isOperationVariable && isEditable"
                 :readonly="isOutputVariable || !isEditable"
-                :hint="isOperationVariable ? '' : 'greyed out value on the left shows the current value in the AAS'"
+                :hint="isOperationVariable ? '' : 'Boxed value on the left shows the current value in the AAS'"
                 :label="isOperationVariable ? numberValue.idShort : ''"
                 :hide-details="isOperationVariable ? true : false"
                 :focused="isFocused"
@@ -135,13 +135,12 @@
         const content = JSON.stringify(newNumberValue.value);
         const headers = new Headers();
         headers.append('Content-Type', 'application/json');
-        let context = `updating ${props.numberValue.modelType} "${props.numberValue.idShort}"`;
-        let disableMessage = false;
+        const context = `updating ${props.numberValue.modelType} "${props.numberValue.idShort}"`;
+        const disableMessage = false;
         patchRequest(path, content, headers, context, disableMessage).then((response: any) => {
             if (response.success) {
                 // After successful patch request fetch and dispatch updated SME
                 fetchAndDispatchSme(selectedNode.value.path, false);
-                setFocus(false);
             }
         });
     }
