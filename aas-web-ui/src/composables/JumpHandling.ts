@@ -1,6 +1,9 @@
 import { useRouter } from 'vue-router';
-import { useAASHandling } from '@/composables/AASHandling';
+import { useReferenceUtils } from '@/composables//AAS/ReferenceUtils';
 import { useNavigationStore } from '@/store/NavigationStore';
+import { useAASRegistryClient } from './Client/AASRegistryClient';
+import { useAASRepositoryClient } from './Client/AASRepositoryClient';
+import { useSMRepositoryClient } from './Client/SMRepositoryClient';
 
 export function useJumpHandling() {
     // Stores
@@ -10,7 +13,58 @@ export function useJumpHandling() {
     const router = useRouter();
 
     // Composables
-    const { getAasEndpoint, getAasEndpointById, fetchAndDispatchAas } = useAASHandling();
+    const { getAasEndpoint } = useAASRegistryClient();
+    const { getAasEndpointById: getAasEndpointByIdFromRepo, fetchAasList } = useAASRepositoryClient();
+    const { fetchSm } = useSMRepositoryClient();
+    const { referenceTypes, checkReference, getEndpoints, extractId } = useReferenceUtils();
+
+    async function jumpToReference(reference: any): Promise<void> {
+        if (await checkReference(reference)) {
+            if (!referenceTypes.includes(reference.type)) return;
+
+            if (reference.type === 'ModelReference') {
+                const { aasEndpoint, smEndpoint, smePath } = await getEndpoints(reference);
+                if (aasEndpoint.trim() !== '') {
+                    jumpToAas(aasEndpoint, smePath);
+                    return;
+                } else if (aasEndpoint.trim() === '' && smEndpoint.trim() !== '') {
+                    // Find first AAS which includes the SM of the SM endpoint
+                    const sm = await fetchSm(smEndpoint);
+                    if (sm && Object.keys(sm).length > 0) {
+                        const smId = sm.id;
+                        const aasList = await fetchAasList();
+                        if (aasList && Array.isArray(aasList) && aasList.length > 0) {
+                            for (const aas of aasList) {
+                                const aasEndpoint = getAasEndpointByIdFromRepo(aas.id);
+                                const submodelRefs = aas.submodels;
+                                if (
+                                    aasEndpoint.trim() !== '' &&
+                                    submodelRefs &&
+                                    Array.isArray(submodelRefs) &&
+                                    submodelRefs.length > 0
+                                ) {
+                                    for (const submodelRef of submodelRefs) {
+                                        if (smId === extractId(submodelRef, 'Submodel')) {
+                                            jumpToAas(aasEndpoint, smePath);
+                                            return;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } else if (reference.type === 'ExternalReference') {
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 10000,
+                    color: 'warning',
+                    btnColor: 'buttonText',
+                    text: 'Reference check for ExternalReference is not implemented',
+                });
+            }
+        }
+    }
 
     /**
      * Jumps to the Asset Administration Shell (AAS) based on the provided AAS ID.
@@ -29,7 +83,7 @@ export function useJumpHandling() {
 
         if (aasId === '') return;
 
-        const aasEndpoint = await getAasEndpointById(aasId);
+        const aasEndpoint = getAasEndpointByIdFromRepo(aasId);
 
         jumpToAas(aasEndpoint);
     }
@@ -62,7 +116,7 @@ export function useJumpHandling() {
      * @returns {Promise<void>} A promise that resolves when the operation is complete.
      *                         The function does not return any value.
      */
-    async function jumpToAas(aasEndpoint: string): Promise<void> {
+    async function jumpToAas(aasEndpoint: string, smePath: string = ''): Promise<void> {
         if (!aasEndpoint) return;
 
         aasEndpoint = aasEndpoint.trim();
@@ -70,12 +124,19 @@ export function useJumpHandling() {
         if (aasEndpoint === '') return;
 
         if (navigationStore.getIsMobile) {
-            router.push({ name: 'SubmodelList', query: { aas: aasEndpoint } });
+            if (smePath.trim() === '') {
+                router.push({ name: 'AASList', query: { aas: aasEndpoint } });
+            } else {
+                router.push({ name: 'AASList', query: { aas: aasEndpoint, path: smePath } });
+            }
         } else {
-            router.push({ query: { aas: aasEndpoint } });
+            if (smePath.trim() === '') {
+                router.push({ query: { aas: aasEndpoint } });
+            } else {
+                router.push({ query: { aas: aasEndpoint, path: smePath } });
+            }
         }
-        await fetchAndDispatchAas(aasEndpoint);
     }
 
-    return { jumpToAas, jumpToAasById, jumpToAasByAasDescriptor };
+    return { jumpToReference, jumpToAas, jumpToAasById, jumpToAasByAasDescriptor };
 }

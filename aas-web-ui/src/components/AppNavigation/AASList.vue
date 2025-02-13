@@ -296,7 +296,7 @@
 
     // Composables
     const { downloadAasx, isAvailableByIdInRepo } = useAASRepositoryClient();
-    const { getAasEndpoint, fetchAasDescriptorList } = useAASHandling();
+    const { fetchAasDescriptorList } = useAASHandling();
     const { nameToDisplay, descriptionToDisplay } = useReferableUtils();
     const { copyToClipboard } = useClipboardUtil();
 
@@ -520,7 +520,7 @@
             //     scrollToAas = true;
             // }
 
-            router.push({ query: { aas: getAasEndpoint(aas) } });
+            router.push({ query: { aas: aas.path } });
 
             // if (scrollToAas) scrollToSelectedAAS();
         }

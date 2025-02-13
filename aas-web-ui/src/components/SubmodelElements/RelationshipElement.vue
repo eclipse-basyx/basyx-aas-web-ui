@@ -45,13 +45,7 @@
                                 class="text-buttonText"
                                 color="primary"
                                 :disabled="getDisabledState[referenceKey as 'first' | 'second']"
-                                @click="
-                                    jumpToReference(
-                                        getReferences[referenceKey as 'first' | 'second'],
-                                        getAasDescriptor[referenceKey as 'first' | 'second'],
-                                        getSmRef[referenceKey as 'first' | 'second']
-                                    )
-                                "
+                                @click="jumpToReference(getReferences[referenceKey as 'first' | 'second'])"
                                 >Jump</v-btn
                             >
                         </template>
@@ -66,6 +60,8 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useRouter } from 'vue-router';
+    import { useReferenceUtils } from '@/composables/AAS/ReferenceUtils';
+    import { useJumpHandling } from '@/composables/JumpHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { capitalizeFirstLetter } from '@/utils/StringUtils';
@@ -83,11 +79,15 @@
         setup() {
             const aasStore = useAASStore();
             const router = useRouter();
+            const { checkReference } = useReferenceUtils();
+            const { jumpToReference } = useJumpHandling();
 
             return {
                 aasStore, // AASStore Object
                 router, // Router Object
                 capitalizeFirstLetter,
+                checkReference,
+                jumpToReference,
             };
         },
 
@@ -96,18 +96,10 @@
                 referenceKeys: ['first', 'second'], // Keys of the References
                 firstReference: {} as any,
                 secondReference: {} as any,
-                // firstReferenceKeys: [] as Array<any>, // Value of the first Reference (Array of Reference Keys)
-                // secondReferenceKeys: [] as Array<any>, // Value of the second Reference (Array of Reference Keys)
-                // firstReferenceType: '' as string,
-                // secondReferenceType: '' as string,
                 firstLoading: false, // Loading State of the first Jump-Button (loading when checking if referenced element exists in one of the registered AAS)
                 secondLoading: false, // Loading State of the second Jump-Button (loading when checking if referenced element exists in one of the registered AAS)
                 firstDisabled: true, // Disabled State of the first Jump-Button (disabled when referenced element does not exist in one of the registered AAS)
                 secondDisabled: true, // Disabled State of the second Jump-Button (disabled when referenced element does not exist in one of the registered AAS)
-                firstAasDescriptor: Object as any, // first AAS in which the referenced Element is included (if it exists)
-                secondAasDescriptor: Object as any, // second AAS in which the referenced Element is included (if it exists)
-                firstSmRef: Object as any, // first Submodel in which the referenced Element is included (if it exists)
-                secondSmRef: Object as any, // second Submodel in which the referenced Element is included (if it exists)
             };
         },
 
@@ -117,22 +109,6 @@
                 return {
                     first: this.firstReference,
                     second: this.secondReference,
-                };
-            },
-
-            // Get the referencedAAS based on the referenceKey
-            getAasDescriptor() {
-                return {
-                    first: this.firstAasDescriptor,
-                    second: this.secondAasDescriptor,
-                };
-            },
-
-            // Get the referencedSubmodel based on the referenceKey
-            getSmRef() {
-                return {
-                    first: this.firstSmRef,
-                    second: this.secondSmRef,
                 };
             },
 
@@ -178,19 +154,9 @@
             validateReference(referenceKey: string) {
                 (this as any)[referenceKey + 'Loading'] = true;
 
-                this.checkReference((this as any)[referenceKey + 'Reference'], this.selectedAAS)
-                    .then(({ success, aasDescriptor, submodelRef }) => {
-                        // console.log(
-                        //     'validateReference (' + referenceKey + ') --> checkReference: ',
-                        //     success,
-                        //     aasDescriptor,
-                        //     submodelRef
-                        // );
-                        if (success) {
-                            (this as any)[referenceKey + 'AasDescriptor'] = aasDescriptor;
-                            (this as any)[referenceKey + 'SmRef'] = submodelRef;
-                            (this as any)[referenceKey + 'Disabled'] = false;
-                        }
+                this.checkReference((this as any)[referenceKey + 'Reference'])
+                    .then((success) => {
+                        (this as any)[referenceKey + 'Disabled'] = !success;
                         (this as any)[referenceKey + 'Loading'] = false;
                     })
                     .catch((error) => {

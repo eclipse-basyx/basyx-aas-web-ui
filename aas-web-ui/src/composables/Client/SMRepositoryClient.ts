@@ -237,6 +237,34 @@ export function useSMRepositoryClient() {
         return failResponse;
     }
 
+    /**
+     * Retrieves the Submodel (SM) endpoint URL by its ID.
+     *
+     * @param {string} smId - The ID of the SM to retrieve the endpoint for.
+     * @returns {string} The SM endpoint.
+     */
+    function getSmEndpointById(smId: string): string {
+        const failResponse = '';
+
+        if (!smId) return failResponse;
+
+        smId = smId.trim();
+
+        if (smId === '') return failResponse;
+
+        // AAS Descriptor not found in registry or registry not available
+        if (submodelRepoUrl.value.trim() === '') return failResponse;
+
+        let smRepoUrl = submodelRepoUrl.value;
+        if (smRepoUrl.trim() === '') return failResponse;
+        if (smRepoUrl.endsWith('/')) smRepoUrl = stripLastCharacter(smRepoUrl);
+        if (!smRepoUrl.endsWith(endpointPath)) smRepoUrl += endpointPath;
+
+        const smEndpoint = smRepoUrl + '/' + base64Encode(smId);
+
+        return smEndpoint || failResponse;
+    }
+
     async function postSubmodel(submodel: aasTypes.Submodel): Promise<void> {
         if (submodelRepoUrl.value.trim() === '') return;
 
@@ -379,6 +407,7 @@ export function useSMRepositoryClient() {
         isAvailableById,
         isAvailableByIdInRepo,
         isAvailable,
+        getSmEndpointById,
         postSubmodel,
         putSubmodel,
         deleteSubmodel,

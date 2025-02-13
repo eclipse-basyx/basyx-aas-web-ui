@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
 import * as descriptorTypes from '@/types/Descriptors';
+import { extractEndpointHref } from '@/utils/DescriptorUtils';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { removeNullValues } from '@/utils/generalUtils';
 import { stripLastCharacter } from '@/utils/StringUtils';
@@ -96,6 +97,50 @@ export function useSMRegistryClient() {
     }
 
     /**
+     * Retrieves the Submodel (Sm) endpoint URL by its ID.
+     *
+     * @async
+     * @param {string} smId - The ID of the SM to retrieve the endpoint for.
+     * @returns {Promise<string>} A promise that resolves to an SM endpoint.
+     */
+    async function getSmEndpointById(smId: string): Promise<string> {
+        const failResponse = '';
+
+        if (!smId) return failResponse;
+
+        smId = smId.trim();
+
+        if (smId === '') return failResponse;
+
+        const aasDescriptor = await fetchSmDescriptorById(smId);
+        const aasEndpoint = extractEndpointHref(aasDescriptor, 'Submodel-3.0');
+
+        return aasEndpoint || failResponse;
+    }
+
+    /**
+     * Retrieves the Submodel (SM) endpoint URL of an SM descriptor.
+     *
+     * @param {string} smDescriptor - The SM descriptor to retrieve the endpoint for.
+     * @returns {string} A promise that resolves to an SM endpoint.
+     */
+    function getSmEndpoint(smDescriptor: any): string {
+        const failResponse = '';
+
+        if (
+            !smDescriptor ||
+            Object.keys(smDescriptor).length === 0 ||
+            !smDescriptor.id ||
+            smDescriptor.id.trim() === ''
+        )
+            return failResponse;
+
+        const smEndpoint = extractEndpointHref(smDescriptor, 'Submodel-3.0');
+
+        return smEndpoint || failResponse;
+    }
+
+    /**
      * Checks if Submodel (SM) Descriptor with provided ID is available (in registry).
      *
      * @async
@@ -177,6 +222,8 @@ export function useSMRegistryClient() {
 
     return {
         endpointPath,
+        getSmEndpoint,
+        getSmEndpointById,
         fetchSmDescriptorList,
         fetchSmDescriptorById,
         isAvailableById,

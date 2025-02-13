@@ -83,11 +83,14 @@ export function useAASRepositoryClient() {
 
         if (aasId === '') return failResponse;
 
-        // TODO fetchAasById just with the repository (e.g. if registry is not available)
         const aasDescriptor = await fetchAasDescriptorById(aasId);
 
         if (aasDescriptor && Object.keys(aasDescriptor).length > 0) {
+            // AAS Descriptor found in registry
             const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0');
+            return fetchAas(aasEndpoint);
+        } else if (!aasDescriptor || Object.keys(aasDescriptor).length === 0) {
+            const aasEndpoint = getAasEndpointById(aasId);
             return fetchAas(aasEndpoint);
         }
 
@@ -206,6 +209,33 @@ export function useAASRepositoryClient() {
         }
 
         return failResponse;
+    }
+
+    /**
+     * Retrieves the Asset Administration Shell (AAS) endpoint URL by its ID.
+     *
+     * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
+     * @returns {string} The AAS endpoint.
+     */
+    function getAasEndpointById(aasId: string): string {
+        const failResponse = '';
+
+        if (!aasId) return failResponse;
+
+        aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
+
+        if (aasRepositoryUrl.value.trim() === '') return failResponse;
+
+        let aasRepoUrl = aasRepositoryUrl.value;
+        if (aasRepoUrl.trim() === '') return failResponse;
+        if (aasRepoUrl.endsWith('/')) aasRepoUrl = stripLastCharacter(aasRepoUrl);
+        if (!aasRepoUrl.endsWith(endpointPath)) aasRepoUrl += endpointPath;
+
+        const aasEndpoint = aasRepoUrl + '/' + base64Encode(aasId);
+
+        return aasEndpoint || failResponse;
     }
 
     /**
@@ -544,6 +574,7 @@ export function useAASRepositoryClient() {
         isAvailableById,
         isAvailableByIdInRepo,
         isAvailable,
+        getAasEndpointById,
         fetchAssetInformation,
         fetchAssetInformationById,
         uploadAas,

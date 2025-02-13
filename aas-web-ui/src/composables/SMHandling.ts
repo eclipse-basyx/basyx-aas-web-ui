@@ -1,3 +1,4 @@
+import { useReferenceUtils } from '@/composables/AAS/ReferenceUtils';
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
 import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
@@ -5,8 +6,6 @@ import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionH
 import { useIDUtils } from '@/composables/IDUtils';
 import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';
-import { extractEndpointHref } from '@/utils/DescriptorUtils';
-import { extractId as extractIdFromReference } from '@/utils/ReferenceUtils';
 
 export function useSMHandling() {
     // Composables
@@ -14,14 +13,18 @@ export function useSMHandling() {
     const {
         fetchSmDescriptorById: fetchSmDescriptorByIdFromRegistry,
         fetchSmDescriptorList: fetchSmDescriptorListFromRegistry,
+        getSmEndpoint,
+        getSmEndpointById: getSmEndpointByIdFromRegistry,
     } = useSMRegistryClient();
     const {
-        fetchSmById: fetchSmByIdFromRepo,
         fetchSm: fetchSmFromRepo,
+        fetchSmById: fetchSmByIdFromRepo,
+        getSmEndpointById: getSmEndpointByIdFromRepo,
         fetchSme: fetchSmeFromRepo,
     } = useSMRepositoryClient();
-    const { generateUUID } = useIDUtils();
     const { fetchCds } = useConceptDescriptionHandling();
+    const { generateUUID } = useIDUtils();
+    const { extractId: extractIdFromReference } = useReferenceUtils();
 
     // Stores
     const aasStore = useAASStore();
@@ -218,7 +221,7 @@ export function useSMHandling() {
         }
 
         sm.timestamp = formatDate(new Date());
-        sm.path = getSmEndpoint(sm);
+        sm.path = getSmEndpointByIdFromRepo(smId);
 
         if (setDataRecursive) {
             sm = await setData({ ...sm }, sm.path, withConceptDescriptions, sm.timestamp);
@@ -234,11 +237,11 @@ export function useSMHandling() {
     }
 
     /**
-     * Retrieves the Submodel (SM) endpoint URL by its ID.
+     * Retrieves the Submodel (Sm) endpoint URL by its ID.
      *
      * @async
      * @param {string} smId - The ID of the SM to retrieve the endpoint for.
-     * @returns {Promise<string>} A promise that resolves to a SM endpoint.
+     * @returns {Promise<string>} A promise that resolves to an SM endpoint.
      */
     async function getSmEndpointById(smId: string): Promise<string> {
         const failResponse = '';
@@ -249,33 +252,13 @@ export function useSMHandling() {
 
         if (smId === '') return failResponse;
 
-        const smDescriptor = await fetchSmDescriptorByIdFromRegistry(smId);
-        const smEndpoint = getSmEndpoint(smDescriptor);
+        // First try to determine SM endpoint with the help of the registry
+        const smEndpoint = await getSmEndpointByIdFromRegistry(smId);
 
-        return smEndpoint || failResponse;
-    }
+        if (smEndpoint && smEndpoint.trim() !== '') return smEndpoint;
 
-    /**
-     * Retrieves the Submodel (SM) endpoint URL of a SM descriptor.
-     *
-     * @param {string} smDescriptor - The SM descriptor to retrieve the endpoint for.
-     * @returns {string} A promise that resolves to a SM endpoint.
-     */
-    function getSmEndpoint(smDescriptor: any): string {
-        // TODO Replace extractEndpointHref(smDescriptor), 'SUBMODEL-3.0') by getSmEndpoint(smDescriptor) in all components
-        const failResponse = '';
-
-        if (
-            !smDescriptor ||
-            Object.keys(smDescriptor).length === 0 ||
-            !smDescriptor.id ||
-            smDescriptor.id.trim() === ''
-        )
-            return failResponse;
-
-        const smEndpoint = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0');
-
-        return smEndpoint || failResponse;
+        // Second try to determine SM endpoint with the help of the repo
+        return getSmEndpointByIdFromRepo(smId) || failResponse;
     }
 
     /**
@@ -421,7 +404,6 @@ export function useSMHandling() {
         getSmIdOfAasIdBySemanticId,
         fetchSm,
         fetchSmById,
-        getSmEndpoint,
         getSmEndpointById,
         fetchSmDescriptorList,
         fetchSmDescriptor,

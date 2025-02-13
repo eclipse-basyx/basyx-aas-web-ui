@@ -1,4 +1,5 @@
 import { defineComponent } from 'vue';
+import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
 import RequestHandling from '@/mixins/RequestHandling';
 import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
 import { useAASStore } from '@/store/AASDataStore';
@@ -11,10 +12,12 @@ export default defineComponent({
     setup() {
         const navigationStore = useNavigationStore();
         const aasStore = useAASStore();
+        const { unitSuffix } = useConceptDescriptionHandling();
 
         return {
             navigationStore, // NavigationStore Object
             aasStore, // AASStore Object
+            unitSuffix,
         };
     },
 
