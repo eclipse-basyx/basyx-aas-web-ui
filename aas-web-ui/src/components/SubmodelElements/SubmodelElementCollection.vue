@@ -8,12 +8,11 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-
-    export default defineComponent({
-        name: 'SubmodelElementCollection',
-        props: ['submodelElementCollectionObject'],
+<script lang="ts" setup>
+    defineProps({
+        submodelElementCollectionObject: {
+            type: Object,
+            default: () => ({}),
+        },
     });
 </script>
