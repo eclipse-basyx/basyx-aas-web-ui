@@ -339,5 +339,6 @@ export function useRequestHandling() {
         putRequest,
         patchRequest,
         deleteRequest,
+        errorHandler,
     };
 }

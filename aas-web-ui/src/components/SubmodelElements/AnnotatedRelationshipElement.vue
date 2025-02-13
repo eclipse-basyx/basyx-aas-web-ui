@@ -11,44 +11,23 @@
             :key="SubmodelElement.idShort"
             class="mb-3">
             <!-- Display SubmodelElement -->
-            <!-- <SubmodelElementWrapper :SubmodelElementObject="SubmodelElement" :cardStyle="'outlined'"></SubmodelElementWrapper> -->
-            <component
-                :is="SubmodelElementWrapper"
-                v-if="SubmodelElementWrapper"
+            <SubmodelElementWrapper
                 :submodel-element-object="SubmodelElement"
                 :card-style="'outlined'"
-                :is-editable="isEditable"></component>
+                :is-editable="isEditable"></SubmodelElementWrapper>
         </div>
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent, shallowRef } from 'vue';
-
-    export default defineComponent({
-        name: 'AnnotatedRelationshipElement',
-        props: {
-            annotatedRelationshipElementObject: {
-                type: Object,
-                default: () => ({}),
-            },
-            isEditable: {
-                type: Boolean,
-                default: true,
-            },
+<script lang="ts" setup>
+    defineProps({
+        annotatedRelationshipElementObject: {
+            type: Object,
+            default: () => ({}),
         },
-
-        setup() {
-            const SubmodelElementWrapper = shallowRef(null) as any;
-
-            import('@/components/UIComponents/SubmodelElementWrapper.vue').then((module) => {
-                SubmodelElementWrapper.value = module.default;
-            });
-
-            return {
-                SubmodelElementWrapper,
-            };
+        isEditable: {
+            type: Boolean,
+            default: true,
         },
     });
 </script>

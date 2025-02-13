@@ -107,158 +107,128 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-    import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-    import { useAASStore } from '@/store/AASDataStore';
+<script lang="ts" setup>
+    import { onMounted, ref } from 'vue';
+    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useNavigationStore } from '@/store/NavigationStore';
 
-    export default defineComponent({
-        name: 'Operation',
-        mixins: [RequestHandling, SubmodelElementHandling],
-        props: {
-            operationObject: {
-                type: Object,
-                default: () => ({}),
-            },
-            isEditable: {
-                type: Boolean,
-                default: true,
-            },
+    // Stores
+    const navigationStore = useNavigationStore();
+
+    // Composables
+    const { postRequest, errorHandler } = useRequestHandling();
+
+    const props = defineProps({
+        operationObject: {
+            type: Object,
+            default: () => ({}),
         },
-
-        setup() {
-            const navigationStore = useNavigationStore();
-            const aasStore = useAASStore();
-
-            return {
-                navigationStore, // NavigationStore Object
-                aasStore, // AASStore Object
-            };
-        },
-
-        data() {
-            return {
-                localOperationObject: {} as any, // Local copy of the Operation Object
-                variableTypes: [
-                    // Variable Types for the Operation
-                    { type: 'inputVariables', name: 'Input Variables', id: 0 }, // write
-                    { type: 'inoutputVariables', name: 'In-/Output Variables', id: 1 }, // read/write
-                    { type: 'outputVariables', name: 'Output Variables', id: 2 }, // read
-                ] as Array<any>,
-                loading: false, // Loading State of the Operation
-            };
-        },
-
-        computed: {
-            // get selected AAS from Store
-            SelectedAAS() {
-                return this.aasStore.getSelectedAAS;
-            },
-
-            // Get the selected Treeview Node (SubmodelElement) from the store
-            SelectedNode() {
-                return this.aasStore.getSelectedNode;
-            },
-        },
-
-        watch: {},
-
-        mounted() {
-            // console.log(this.operationObject)
-            // create local copy of the Operation Object
-            this.localOperationObject = JSON.parse(JSON.stringify(this.operationObject));
-            // check if inputVariables, inoutputVariables or outputVariables exist (if not, create them as empty arrays)
-            if (!this.localOperationObject.inputVariables) {
-                this.localOperationObject.inputVariables = [];
-            }
-            if (!this.localOperationObject.inoutputVariables) {
-                this.localOperationObject.inoutputVariables = [];
-            }
-            if (!this.localOperationObject.outputVariables) {
-                this.localOperationObject.outputVariables = [];
-            }
-        },
-
-        methods: {
-            // Function to clear all Fields
-            clearFields() {
-                // console.log('clearFields: ', this.localOperationObject)
-                // clear the inputVariables
-                if (this.localOperationObject.inputVariables) {
-                    this.localOperationObject.inputVariables.forEach((variable: any) => {
-                        variable.value.value = null;
-                    });
-                }
-                // clear the inoutputVariables
-                if (this.localOperationObject.inoutputVariables) {
-                    this.localOperationObject.inoutputVariables.forEach((variable: any) => {
-                        variable.value.value = null;
-                    });
-                }
-                // clear the outputVariables
-                if (this.localOperationObject.outputVariables) {
-                    this.localOperationObject.outputVariables.forEach((variable: any) => {
-                        variable.value.value = null;
-                    });
-                }
-            },
-
-            // Function to execute the Operation
-            executeOperation() {
-                // create Array containing the Input Variables which will will be send to the Server
-                // console.log('executeOperation: ', this.localOperationObject)
-                let inputArguments = this.localOperationObject.inputVariables;
-                // create Array containing the In-/Output Variables which will will be send to the Server
-                let inoutputArguments = this.localOperationObject.inoutputVariables;
-                // console.log('executeOperation: ', inputVariables, inoutputVariables);
-                let path = this.localOperationObject.path + '/invoke?async=true';
-                let content = {
-                    inputArguments: inputArguments,
-                    inoutputArguments: inoutputArguments,
-                    clientTimeoutDuration: 'PT60S', // 60 second timeout
-                };
-                let body = JSON.stringify(content);
-                let headers = new Headers();
-                headers.append('accept', 'application/json');
-                headers.append('Content-Type', 'application/json');
-                let context =
-                    'invoking ' + this.localOperationObject.modelType + ' "' + this.localOperationObject.idShort + '"';
-                let disableMessage = false;
-                this.loading = true;
-                this.postRequest(path, body, headers, context, disableMessage).then((response: any) => {
-                    this.loading = false;
-                    if (response.success) {
-                        // console.log('executeOperation: ', response.data);
-                        // fill the operationVariables with the new values
-                        if (response.data.inoutputArguments) {
-                            this.localOperationObject.inoutputVariables = response.data.inoutputArguments;
-                        }
-                        if (response.data.outputArguments) {
-                            this.localOperationObject.outputVariables = response.data.outputArguments;
-                        }
-                        // check the operationResult, if success is false, show an error message
-                        if (response.data.operationResult && !response.data.operationResult.success) {
-                            this.errorHandler(response.data.operationResult, context);
-                        } else {
-                            this.navigationStore.dispatchSnackbar({
-                                status: true,
-                                timeout: 4000,
-                                color: 'success',
-                                btnColor: 'buttonText',
-                                text: 'Operation executed successfully.',
-                            }); // Show Success Snackbar
-                        }
-                    }
-                });
-            },
-
-            updateOperationVariable(e: any, variable: any) {
-                // console.log('updateOperationVariable: ', 'new Value: ', e, ' Variable: ', variable);
-                variable.value = e;
-            },
+        isEditable: {
+            type: Boolean,
+            default: true,
         },
     });
+
+    const localOperationObject = ref({} as any);
+    const variableTypes = ref([
+        { type: 'inputVariables', name: 'Input Variables', id: 0 },
+        { type: 'inoutputVariables', name: 'In-/Output Variables', id: 1 },
+        { type: 'outputVariables', name: 'Output Variables', id: 2 },
+    ]);
+    const loading = ref(false);
+
+    onMounted(() => {
+        // create local copy of the Operation Object
+        const operationObjectCopy = { ...props.operationObject };
+        delete operationObjectCopy.parent;
+        localOperationObject.value = operationObjectCopy;
+
+        // check if inputVariables, inoutputVariables or outputVariables exist (if not, create them as empty arrays)
+        if (!localOperationObject.value.inputVariables) {
+            localOperationObject.value.inputVariables = [];
+        }
+        if (!localOperationObject.value.inoutputVariables) {
+            localOperationObject.value.inoutputVariables = [];
+        }
+        if (!localOperationObject.value.outputVariables) {
+            localOperationObject.value.outputVariables = [];
+        }
+    });
+
+    function clearFields(): void {
+        if (localOperationObject.value.inputVariables) {
+            localOperationObject.value.inputVariables.forEach((variable: any) => {
+                variable.value.value = null;
+            });
+        }
+
+        if (localOperationObject.value.inoutputVariables) {
+            localOperationObject.value.inoutputVariables.forEach((variable: any) => {
+                variable.value.value = null;
+            });
+        }
+
+        if (localOperationObject.value.outputVariables) {
+            localOperationObject.value.outputVariables.forEach((variable: any) => {
+                variable.value.value = null;
+            });
+        }
+    }
+
+    // Function to execute the Operation
+    function executeOperation(): void {
+        // create Array containing the Input Variables which will will be send to the Server
+        const inputArguments = localOperationObject.value.inputVariables;
+        // create Array containing the In-/Output Variables which will will be send to the Server
+        const inoutputArguments = localOperationObject.value.inoutputVariables;
+        // console.log('executeOperation: ', inputVariables, inoutputVariables);
+        const path = localOperationObject.value.path + '/invoke?async=true';
+        const content = {
+            inputArguments: inputArguments,
+            inoutputArguments: inoutputArguments,
+            clientTimeoutDuration: 'PT60S', // 60 second timeout
+        };
+        const body = JSON.stringify(content);
+        const headers = new Headers();
+        headers.append('accept', 'application/json');
+        headers.append('Content-Type', 'application/json');
+        const context =
+            'invoking ' + localOperationObject.value.modelType + ' "' + localOperationObject.value.idShort + '"';
+        const disableMessage = false;
+
+        loading.value = true;
+
+        postRequest(path, body, headers, context, disableMessage).then((response: any) => {
+            loading.value = false;
+
+            if (response.success) {
+                // fill the operationVariables with the new values
+                if (response.data.inoutputArguments) {
+                    localOperationObject.value.inoutputVariables = response.data.inoutputArguments;
+                }
+
+                if (response.data.outputArguments) {
+                    localOperationObject.value.outputVariables = response.data.outputArguments;
+                }
+
+                // check the operationResult, if success is false, show an error message
+                if (response.data.operationResult && !response.data.operationResult.success) {
+                    errorHandler(response.data.operationResult, context);
+                } else {
+                    navigationStore.dispatchSnackbar({
+                        status: true,
+                        timeout: 4000,
+                        color: 'success',
+                        btnColor: 'buttonText',
+                        text: 'Operation executed successfully.',
+                    });
+                }
+            }
+        });
+    }
+
+    function updateOperationVariable(e: any, variable: any): void {
+        // console.log('updateOperationVariable: ', 'new Value: ', e, ' Variable: ', variable);
+        variable.value = e;
+    }
 </script>
