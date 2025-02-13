@@ -2,20 +2,22 @@
     <v-container fluid class="pa-0">
         <VisualizationHeader
             :submodel-element-data="submodelElementData"
-            default-title="Hierarchical Structures enabling Bills of Material"></VisualizationHeader>
+            default-title="Hierarchical Structures enabling Bills of Material" />
         <!-- BoM Graph -->
         <v-card>
-            <v-card-text id="BoMCard">
-                <!-- Archetype -->
-                <v-list-item class="px-2 pb-3">
-                    <v-list-item-title>
-                        <span class="text-subtitle-2 mr-2">{{ 'Archetype: ' }}</span>
-                        <v-chip label size="x-small" border color="primary" style="margin-top: -3px">
-                            {{ archetype }}
-                        </v-chip>
-                    </v-list-item-title>
-                </v-list-item>
-                <div id="BoMDiagram" style="position: relative; max-width: 100%"></div>
+            <v-card-text>
+                <div ref="boMCard">
+                    <!-- Archetype -->
+                    <v-list-item class="px-2 pb-3">
+                        <v-list-item-title>
+                            <span class="text-subtitle-2 mr-2">Archetype:</span>
+                            <v-chip label size="x-small" border color="primary" style="margin-top: -3px">
+                                {{ archetype }}
+                            </v-chip>
+                        </v-list-item-title>
+                    </v-list-item>
+                    <div :id="diagramId" ref="boMDiagram" style="position: relative; max-width: 100%"></div>
+                </div>
             </v-card-text>
         </v-card>
     </v-container>
@@ -23,7 +25,7 @@
 
 <script lang="ts" setup>
     import mermaid from 'mermaid';
-    import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+    import { computed, getCurrentInstance, onBeforeUnmount, onMounted, ref, watch } from 'vue';
     import { useTheme } from 'vuetify';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
@@ -53,7 +55,7 @@
     // Vuetify
     const theme = useTheme();
 
-    // Properties
+    // Props
     const props = defineProps({
         submodelElementData: {
             type: Object as any,
@@ -80,7 +82,16 @@
     const isDark = computed(() => theme.global.current.value.dark);
     const primaryColor = computed(() => theme.current.value.colors.primary);
 
-    // Watchers
+    // Generate a unique diagram ID using the component instance's uid
+    const instance = getCurrentInstance();
+    const uid = instance?.uid || Math.random().toString(36).substr(2, 9);
+    const diagramId = `BoMDiagram-${uid}`;
+
+    // Refs for DOM elements
+    const boMDiagram = ref<HTMLElement | null>(null);
+    const boMCard = ref<HTMLElement | null>(null);
+
+    // Watcher to update theme dynamically
     watch(isDark, () => {
         applyTheme();
     });
@@ -136,36 +147,38 @@
 
     async function drawDiagram(bomData: any): Promise<void> {
         try {
-            let element = document.querySelector('#BoMDiagram');
-            // create the graphDefinition
-            const graphDefinition = createGraphDefinition(bomData);
-            const { svg, bindFunctions } = await mermaid.render('BoMDiagram', graphDefinition);
-            if (element) {
-                element.innerHTML = svg;
-                let foreignObjects = element.querySelectorAll('foreignObject');
-                foreignObjects.forEach((foreignObject) => {
-                    let div = foreignObject.querySelector('div');
-                    if (div) {
-                        // Calculate the required width based on content
-                        let textLength = div.textContent?.length;
-                        let baseWidth = Math.max(150, (textLength ?? 0) * 8); // Base width estimation
-                        let contentWidth = div.scrollWidth; // Actual content width
-
-                        // Choose the larger of the two widths and add a buffer
-                        let newWidth = Math.max(baseWidth, contentWidth) + 20; // Add a 20px buffer
-
-                        foreignObject.setAttribute('width', newWidth.toString());
-                        div.style.maxWidth = `${newWidth}px`; // Set the same max-width for div
-                    }
-                });
-                // add the element to the card
-                let card = document.querySelector('#BoMCard');
-                if (card) {
-                    card.appendChild(element);
-                }
-                // bind the functions to the graph
-                bindFunctions?.(element);
+            const element = boMDiagram.value;
+            if (!element) {
+                console.error('BoMDiagram element not found!');
+                return;
             }
+            // Build the graph definition
+            const graphDefinition = createGraphDefinition(bomData);
+            // Use the unique diagramId here
+            const { svg, bindFunctions } = await mermaid.render(diagramId, graphDefinition);
+            element.innerHTML = svg;
+
+            // Adjust any foreignObject elements for proper sizing
+            const foreignObjects = element.querySelectorAll('foreignObject');
+            foreignObjects.forEach((foreignObject) => {
+                const div = foreignObject.querySelector('div');
+                if (div) {
+                    const textLength = div.textContent?.length;
+                    const baseWidth = Math.max(150, (textLength ?? 0) * 8);
+                    const contentWidth = div.scrollWidth;
+                    const newWidth = Math.max(baseWidth, contentWidth) + 20;
+                    foreignObject.setAttribute('width', newWidth.toString());
+                    div.style.maxWidth = `${newWidth}px`;
+                }
+            });
+
+            // (Optional) Append the element to the card if needed
+            const card = boMCard.value;
+            if (card && !card.contains(element)) {
+                card.appendChild(element);
+            }
+            // Bind any functions to the graph
+            bindFunctions?.(element);
         } catch (error) {
             console.error('Error rendering Mermaid diagram:', error);
         }
@@ -190,17 +203,15 @@
     function createGraphDefinition(bomData: any): string {
         let graphDefinition = 'graph LR\n';
         let callBacks = '';
-        let entryNode = bomData.submodelElements.find((element: any) => {
+        const entryNode = bomData.submodelElements.find((element: any) => {
             return (
                 element.semanticId.keys[0].value === 'https://admin-shell.io/idta/HierarchicalStructures/EntryNode/1/0'
             );
         });
         if (!entryNode) return graphDefinition;
-
         if (!entryNode.statements) return graphDefinition;
-        const hasChildren = entryNode.statements.some((element: any) => {
-            return element.modelType === 'Entity';
-        });
+
+        const hasChildren = entryNode.statements.some((element: any) => element.modelType === 'Entity');
         if (!hasChildren) return graphDefinition;
 
         [graphDefinition, callBacks] = addChildrenToGraph(entryNode, graphDefinition, callBacks); // Update the graphDefinition
@@ -210,22 +221,12 @@
     }
 
     function addChildrenToGraph(parentNode: any, graphDefinition: string, callBacks: string): [string, string] {
-        // get all children of the parentNode
-        let children = parentNode.statements.filter((element: any) => {
-            return element.modelType === 'Entity';
-        });
-        // get all RelationShipElements of the parentNode
-        let relationships = parentNode.statements.filter((element: any) => {
-            return element.modelType === 'RelationshipElement';
-        });
-        // extract the semanticId of the relationships (result should be relationships = [semanticId1, semanticId2, ...])
-        relationships = relationships.map((element: any) => {
-            return element.semanticId.keys[0].value;
-        });
-        // check if all relationships are the same
-        const allEqual = relationships.every((element: any) => {
-            return element === relationships[0];
-        });
+        const children = parentNode.statements.filter((element: any) => element.modelType === 'Entity');
+        let relationships = parentNode.statements
+            .filter((element: any) => element.modelType === 'RelationshipElement')
+            .map((element: any) => element.semanticId.keys[0].value);
+
+        const allEqual = relationships.every((element: any) => element === relationships[0]);
         if (!allEqual)
             navigationStore.dispatchSnackbar({
                 status: true,
@@ -248,45 +249,28 @@
         }
 
         children.forEach((child: any) => {
-            graphDefinition +=
-                parentNode.idShort +
-                '(' +
-                nameToDisplay(parentNode) +
-                ') -->|' +
-                relationship +
-                '| ' +
-                child.idShort +
-                '(' +
-                nameToDisplay(child) +
-                ')\n'; // add the relationship to the graphDefinition
-            callBacks += 'click ' + child.idShort + ' call callback(' + child.globalAssetId + ')\n'; // add the callback to the callBacks
+            graphDefinition += `${parentNode.idShort}(${nameToDisplay(parentNode)}) -->|${relationship}| ${child.idShort}(${nameToDisplay(child)})\n`;
+            callBacks += `click ${child.idShort} call callback(${child.globalAssetId})\n`;
             if (child.statements) {
-                const hasChildren = child.statements.some((element: any) => {
-                    return element.modelType === 'Entity';
-                });
+                const hasChildren = child.statements.some((element: any) => element.modelType === 'Entity');
                 if (hasChildren) {
-                    [graphDefinition, callBacks] = addChildrenToGraph(child, graphDefinition, callBacks); // Update graphDefinition with returned value
+                    [graphDefinition, callBacks] = addChildrenToGraph(child, graphDefinition, callBacks);
                 }
             }
         });
 
-        return [graphDefinition, callBacks]; // Return the updated string
+        return [graphDefinition, callBacks];
     }
 
     function getArchetype(bomData: any): string {
-        let archetypeElement = getSubmodelElementBySemanticId(
+        const archetypeElement = getSubmodelElementBySemanticId(
             'https://admin-shell.io/idta/HierarchicalStructures/ArcheType/1/0',
             bomData
         );
-
-        if (archetypeElement) {
-            return archetypeElement.value;
-        }
-
-        return 'no archetype found';
+        return archetypeElement ? archetypeElement.value : 'no archetype found';
     }
 
-    // apply the theme to the mermaid graph
+    // Apply the current theme to mermaid and re-render the diagram
     function applyTheme(): void {
         mermaid.initialize({
             startOnLoad: false,
