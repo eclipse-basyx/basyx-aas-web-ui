@@ -308,7 +308,7 @@ export function useAASRepositoryClient() {
     }
 
     // Upload an AAS to the AAS Repository
-    async function uploadAas(aasFile: File) {
+    async function uploadAas(aasFile: File): Promise<any> {
         const context = 'uploading AAS';
         const disableMessage = false;
         const path = uploadURL.value;
@@ -318,25 +318,16 @@ export function useAASRepositoryClient() {
 
         // Send Request to upload the file
         const response = await postRequest(path, formData, headers, context, disableMessage);
-        if (response.success) {
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 4000,
-                color: 'success',
-                btnColor: 'buttonText',
-                text: 'AASX-File uploaded.',
-            }); // Show Success Snackbar
-            navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
-        }
-
         return response;
     }
 
-    async function postAas(aas: aasTypes.AssetAdministrationShell) {
-        if (aasRepositoryUrl.value.trim() === '') return;
+    async function postAas(aas: aasTypes.AssetAdministrationShell): Promise<boolean> {
+        const failResponse = false;
+
+        if (aasRepositoryUrl.value.trim() === '') return failResponse;
 
         let aasRepoUrl = aasRepositoryUrl.value;
-        if (aasRepoUrl.trim() === '') return;
+        if (aasRepoUrl.trim() === '') return failResponse;
         if (aasRepoUrl.endsWith('/')) aasRepoUrl = stripLastCharacter(aasRepoUrl);
         if (!aasRepoUrl.endsWith(endpointPath)) aasRepoUrl += endpointPath;
 
@@ -352,29 +343,21 @@ export function useAASRepositoryClient() {
         const body = JSON.stringify(jsonAas);
 
         const response = await postRequest(path, body, headers, context, disableMessage);
-        if (response.success) {
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 4000,
-                color: 'success',
-                btnColor: 'buttonText',
-                text: 'AAS successfully created',
-            }); // Show Success Snackbar
-            navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
-        }
+        return response.success;
     }
 
-    async function putAas(aas: aasTypes.AssetAdministrationShell) {
-        if (aasRepositoryUrl.value.trim() === '') return;
+    async function putAas(aas: aasTypes.AssetAdministrationShell): Promise<boolean> {
+        const failResponse = false;
+
+        if (aasRepositoryUrl.value.trim() === '') return failResponse;
 
         let aasRepoUrl = aasRepositoryUrl.value;
-        if (aasRepoUrl.trim() === '') return;
+        if (aasRepoUrl.trim() === '') return failResponse;
         if (aasRepoUrl.endsWith('/')) aasRepoUrl = stripLastCharacter(aasRepoUrl);
         if (!aasRepoUrl.endsWith(endpointPath)) aasRepoUrl += endpointPath;
 
         // Convert AAS to JSON
         const jsonAas = jsonization.toJsonable(aas);
-        // console.log('putAas()', jsonAas);
 
         const context = 'updating AAS';
         const disableMessage = false;
@@ -384,28 +367,22 @@ export function useAASRepositoryClient() {
         const body = JSON.stringify(jsonAas);
 
         const response = await putRequest(path, body, headers, context, disableMessage);
-        if (response.success) {
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 4000,
-                color: 'success',
-                btnColor: 'buttonText',
-                text: 'AAS successfully updated',
-            }); // Show Success Snackbar
-        }
+        return response.success;
     }
 
-    async function putThumbnail(thumbnail: File, aasId: string) {
-        if (!aasId) return;
+    async function putThumbnail(thumbnail: File, aasId: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!aasId) return failResponse;
 
         aasId = aasId.trim();
 
-        if (aasId === '') return;
+        if (aasId === '') return failResponse;
 
-        if (aasRepositoryUrl.value.trim() === '') return;
+        if (aasRepositoryUrl.value.trim() === '') return failResponse;
 
         let aasRepoUrl = aasRepositoryUrl.value;
-        if (aasRepoUrl.trim() === '') return;
+        if (aasRepoUrl.trim() === '') return failResponse;
         if (aasRepoUrl.endsWith('/')) aasRepoUrl = stripLastCharacter(aasRepoUrl);
         if (!aasRepoUrl.endsWith(endpointPath)) aasRepoUrl += endpointPath;
 
@@ -421,7 +398,8 @@ export function useAASRepositoryClient() {
         const body = formData;
 
         // Send Request to upload the file
-        await putRequest(path, body, headers, context, disableMessage);
+        const response = await putRequest(path, body, headers, context, disableMessage);
+        return response.success;
     }
 
     async function getSubmodelRefsById(aasId: string): Promise<Array<any>> {

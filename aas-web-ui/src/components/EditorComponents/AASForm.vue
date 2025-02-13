@@ -325,9 +325,9 @@
             if (fileThumbnail.value !== undefined) {
                 await putThumbnail(fileThumbnail.value, AASObject.value.id);
             }
+            // TODO Update AASList item
             if (AASObject.value.id === selectedAAS.value.id) {
-                // router.push({ query: { aas: await getAasEndpointById(AASObject.value.id) } });
-                // TODO seicke UPDATE selectedAAS
+                router.go(0); // Reload current route
             }
         }
         clearForm();

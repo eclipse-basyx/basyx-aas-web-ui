@@ -166,11 +166,13 @@ export function useAASRegistryClient() {
         return failResponse;
     }
 
-    async function postAasDescriptor(aasDescriptor: descriptorTypes.AASDescriptor): Promise<void> {
-        if (aasRegistryUrl.value.trim() === '') return;
+    async function postAasDescriptor(aasDescriptor: descriptorTypes.AASDescriptor): Promise<boolean> {
+        const failResponse = false;
+
+        if (aasRegistryUrl.value.trim() === '') return failResponse;
 
         let aasRegUrl = aasRegistryUrl.value;
-        if (aasRegUrl.trim() === '') return;
+        if (aasRegUrl.trim() === '') return failResponse;
         if (aasRegUrl.endsWith('/')) aasRegUrl = stripLastCharacter(aasRegUrl);
         if (!aasRegUrl.endsWith(endpointPath)) aasRegUrl += endpointPath;
 
@@ -182,16 +184,17 @@ export function useAASRegistryClient() {
         const body = JSON.stringify(aasDescriptor);
 
         const response = await postRequest(path, body, headers, context, disableMessage);
-        if (response.success) {
-            navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
-        }
+
+        return response.success;
     }
 
-    async function putAasDescriptor(aasDescriptor: descriptorTypes.AASDescriptor): Promise<void> {
-        if (aasRegistryUrl.value.trim() === '') return;
+    async function putAasDescriptor(aasDescriptor: descriptorTypes.AASDescriptor): Promise<boolean> {
+        const failResponse = false;
+
+        if (aasRegistryUrl.value.trim() === '') return failResponse;
 
         let aasRegUrl = aasRegistryUrl.value;
-        if (aasRegUrl.trim() === '') return;
+        if (aasRegUrl.trim() === '') return failResponse;
         if (aasRegUrl.endsWith('/')) aasRegUrl = stripLastCharacter(aasRegUrl);
         if (!aasRegUrl.endsWith(endpointPath)) aasRegUrl += endpointPath;
 
@@ -203,9 +206,7 @@ export function useAASRegistryClient() {
         const body = JSON.stringify(aasDescriptor);
 
         const response = await putRequest(path, body, headers, context, disableMessage);
-        if (response.success) {
-            navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
-        }
+        return response.success;
     }
 
     function createDescriptorFromAAS(

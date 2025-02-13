@@ -67,7 +67,8 @@
                                         icon="mdi-collapse-all"
                                         variant="plain"
                                         v-bind="props"
-                                        class="mx-n3"
+                                        class="ml-n3"
+                                        :class="editMode ? 'mr-n3' : ''"
                                         @click="collapseTree()">
                                     </v-btn>
                                 </template>
@@ -257,6 +258,8 @@
 
     // // Function to prepare the data structure for the Tree
     function prepareForTree(submodelElements: Array<any>, parent: any): Array<any> {
+        if (!submodelElements || !Array.isArray(submodelElements) || submodelElements.length === 0) return [];
+
         const children = submodelElements.map((sme: any, index: number) => {
             sme.parent = parent;
 

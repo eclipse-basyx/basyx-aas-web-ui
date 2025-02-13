@@ -165,11 +165,13 @@ export function useSMRegistryClient() {
         return failResponse;
     }
 
-    async function postSubmodelDescriptor(submodelDescriptor: descriptorTypes.SubmodelDescriptor): Promise<void> {
-        if (submodelRegistryUrl.value.trim() === '') return;
+    async function postSubmodelDescriptor(submodelDescriptor: descriptorTypes.SubmodelDescriptor): Promise<boolean> {
+        const failResponse = false;
+
+        if (submodelRegistryUrl.value.trim() === '') return failResponse;
 
         let smRegistryUrl = submodelRegistryUrl.value;
-        if (smRegistryUrl.trim() === '') return;
+        if (smRegistryUrl.trim() === '') return failResponse;
         if (smRegistryUrl.endsWith('/')) smRegistryUrl = stripLastCharacter(smRegistryUrl);
         if (!smRegistryUrl.endsWith(endpointPath)) smRegistryUrl += endpointPath;
 
@@ -180,14 +182,18 @@ export function useSMRegistryClient() {
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(submodelDescriptor);
 
-        await postRequest(path, body, headers, context, disableMessage);
+        const response = await postRequest(path, body, headers, context, disableMessage);
+
+        return response.success;
     }
 
-    async function putSubmodelDescriptor(submodelDescriptor: descriptorTypes.SubmodelDescriptor): Promise<void> {
-        if (submodelRegistryUrl.value.trim() === '') return;
+    async function putSubmodelDescriptor(submodelDescriptor: descriptorTypes.SubmodelDescriptor): Promise<boolean> {
+        const failResponse = false;
+
+        if (submodelRegistryUrl.value.trim() === '') return failResponse;
 
         let smRegistryUrl = submodelRegistryUrl.value;
-        if (smRegistryUrl.trim() === '') return;
+        if (smRegistryUrl.trim() === '') return failResponse;
         if (smRegistryUrl.endsWith('/')) smRegistryUrl = stripLastCharacter(smRegistryUrl);
         if (!smRegistryUrl.endsWith(endpointPath)) smRegistryUrl += endpointPath;
 
@@ -198,7 +204,9 @@ export function useSMRegistryClient() {
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(submodelDescriptor);
 
-        await putRequest(path, body, headers, context, disableMessage);
+        const response = await putRequest(path, body, headers, context, disableMessage);
+
+        return response.success;
     }
 
     function createDescriptorFromSubmodel(

@@ -265,11 +265,13 @@ export function useSMRepositoryClient() {
         return smEndpoint || failResponse;
     }
 
-    async function postSubmodel(submodel: aasTypes.Submodel): Promise<void> {
-        if (submodelRepoUrl.value.trim() === '') return;
+    async function postSubmodel(submodel: aasTypes.Submodel): Promise<boolean> {
+        const failResponse = false;
+
+        if (submodelRepoUrl.value.trim() === '') return failResponse;
 
         let smRepoUrl = submodelRepoUrl.value;
-        if (smRepoUrl.trim() === '') return;
+        if (smRepoUrl.trim() === '') return failResponse;
         if (smRepoUrl.endsWith('/')) smRepoUrl = stripLastCharacter(smRepoUrl);
         if (!smRepoUrl.endsWith(endpointPath)) smRepoUrl += endpointPath;
 
@@ -285,22 +287,16 @@ export function useSMRepositoryClient() {
         const body = JSON.stringify(jsonSubmodel);
 
         const response = await postRequest(path, body, headers, context, disableMessage);
-        if (response.success) {
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 4000,
-                color: 'success',
-                btnColor: 'buttonText',
-                text: 'Submodel successfully created',
-            }); // Show Success Snackbar
-        }
+        return response.success;
     }
 
-    async function putSubmodel(submodel: aasTypes.Submodel): Promise<void> {
-        if (submodelRepoUrl.value.trim() === '') return;
+    async function putSubmodel(submodel: aasTypes.Submodel): Promise<boolean> {
+        const failResponse = false;
+
+        if (submodelRepoUrl.value.trim() === '') return failResponse;
 
         let smRepoUrl = submodelRepoUrl.value;
-        if (smRepoUrl.trim() === '') return;
+        if (smRepoUrl.trim() === '') return failResponse;
         if (smRepoUrl.endsWith('/')) smRepoUrl = stripLastCharacter(smRepoUrl);
         if (!smRepoUrl.endsWith(endpointPath)) smRepoUrl += endpointPath;
 
@@ -316,22 +312,16 @@ export function useSMRepositoryClient() {
         const body = JSON.stringify(jsonSubmodel);
 
         const response = await putRequest(path, body, headers, context, disableMessage);
-        if (response.success) {
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 4000,
-                color: 'success',
-                btnColor: 'buttonText',
-                text: 'Submodel successfully updated',
-            }); // Show Success Snackbar
-        }
+        return response.success;
     }
 
-    async function deleteSubmodel(submodelId: string): Promise<void> {
-        if (submodelRepoUrl.value.trim() === '') return;
+    async function deleteSubmodel(submodelId: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (submodelRepoUrl.value.trim() === '') return failResponse;
 
         let smRepoUrl = submodelRepoUrl.value;
-        if (smRepoUrl.trim() === '') return;
+        if (smRepoUrl.trim() === '') return failResponse;
         if (smRepoUrl.endsWith('/')) smRepoUrl = stripLastCharacter(smRepoUrl);
         if (!smRepoUrl.endsWith(endpointPath)) smRepoUrl += endpointPath;
 
@@ -340,15 +330,7 @@ export function useSMRepositoryClient() {
         const path = smRepoUrl + '/' + base64Encode(submodelId);
 
         const response = await deleteRequest(path, context, disableMessage);
-        if (response.success) {
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 4000,
-                color: 'success',
-                btnColor: 'buttonText',
-                text: 'Submodel successfully deleted',
-            }); // Show Success Snackbar
-        }
+        return response.success;
     }
 
     function smNotFound(response: any, submodelId: string, path: string, text: string): any {

@@ -297,11 +297,9 @@
             const descriptor = createDescriptorFromSubmodel(jsonSubmodel, fetchedDescriptor.endpoints);
             // Update AAS Descriptor
             await putSubmodelDescriptor(descriptor);
-            // TODO seicke UPDATE VTreeview item
+            // TODO Update VTreeview item
             if (submodelObject.value.id === selectedNode.value.id) {
-                // TODO seicke UPDATE selectedNode
-                // const path = submodelRepoUrl.value + '/' + base64Encode(submodelObject.value.id);
-                // await fetchAndDispatchSm(path);
+                router.go(0); // Reload current route
             }
         }
         clearForm();
@@ -330,9 +328,7 @@
             localAAS.submodels.push(jsonization.toJsonable(submodelReference));
         }
         await putAas(aas);
-        // TODO seicke UPDATE selected AAS
-        // dispatch the updated AAS
-        // aasStore.dispatchSelectedAAS(localAAS);
+        router.go(0); // Reload current route
     }
 
     function closeDialog(): void {
