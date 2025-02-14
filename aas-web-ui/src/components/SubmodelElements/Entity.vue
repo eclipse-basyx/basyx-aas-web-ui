@@ -75,108 +75,79 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent, Ref, ref } from 'vue';
-    import { useRouter } from 'vue-router';
+<script lang="ts" setup>
+    import { onMounted, Ref, ref } from 'vue';
     import { useAASHandling } from '@/composables/AASHandling';
     import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
     import { useClipboardUtil } from '@/composables/ClipboardUtil';
     import { useJumpHandling } from '@/composables/JumpHandling';
-    import { useAASStore } from '@/store/AASDataStore';
 
-    export default defineComponent({
-        name: 'Entity',
-        props: {
-            entityObject: {
-                type: Object,
-                default: () => ({}),
-            },
-        },
-
-        setup() {
-            const aasStore = useAASStore();
-            const router = useRouter();
-
-            const { getAasId } = useAASDiscoveryClient();
-            const { fetchAasDescriptor } = useAASHandling();
-            const { copyToClipboard } = useClipboardUtil();
-            const { jumpToAasByAasDescriptor } = useJumpHandling();
-
-            const copyIcon = ref<string>('mdi-clipboard-file-outline');
-
-            const getCopyIconAsRef = (): Ref => {
-                return copyIcon;
-            };
-
-            return {
-                aasStore, // AASStore Object
-                router, // Router Object
-                copyToClipboard,
-                copyIcon,
-                getCopyIconAsRef,
-                jumpToAasByAasDescriptor,
-                getAasId,
-                fetchAasDescriptor,
-            };
-        },
-
-        data() {
-            return {
-                disabledStates: {} as any,
-                loadingStates: {} as any,
-                aasDescriptors: {} as any,
-            };
-        },
-
-        created() {
-            // initialize disabledStates, loadingStates and
-            if (this.entityObject.globalAssetId) {
-                this.checkAndSetDisabledState(this.entityObject.globalAssetId);
-                this.loadingStates[this.entityObject.globalAssetId] = false;
-            }
-            if (this.entityObject.specificAssetIds) {
-                this.entityObject.specificAssetIds.forEach((specificAssetId: any) => {
-                    this.checkAndSetDisabledState(specificAssetId.name);
-                    this.loadingStates[specificAssetId.name] = false;
-                });
-            }
-        },
-
-        methods: {
-            isDisabled(assetId: string): boolean {
-                if (this.entityObject?.entityType && this.entityObject?.entityType === 'CoManagedEntity') return true;
-                return this.disabledStates[assetId] || false;
-            },
-
-            isLoading(assetId: string): boolean {
-                return this.loadingStates[assetId] || false;
-            },
-
-            checkAndSetDisabledState(assetId: string) {
-                if (this.entityObject.entityType === 'CoManagedEntity') return;
-                this.loadingStates[assetId] = true;
-                this.getAasId(assetId)
-                    .then(async (aasId: string) => {
-                        this.loadingStates[assetId] = false;
-                        if (aasId && aasId.trim() !== '') {
-                            this.disabledStates[assetId] = false;
-                            this.aasDescriptors[assetId] = await this.fetchAasDescriptor(aasId);
-                        } else {
-                            this.disabledStates[assetId] = true;
-                        }
-                    })
-                    .catch(() => {
-                        this.loadingStates[assetId] = false;
-                        this.disabledStates[assetId] = true;
-                    });
-            },
-
-            jump(assetId: string) {
-                // console.log('Jump to AAS with assetId: ', assetId);
-                let aasDescriptor = this.aasDescriptors[assetId];
-                this.jumpToAasByAasDescriptor(aasDescriptor);
-            },
+    const props = defineProps({
+        entityObject: {
+            type: Object,
+            default: () => ({}),
         },
     });
+
+    // Composables
+    const { getAasId } = useAASDiscoveryClient();
+    const { fetchAasDescriptor } = useAASHandling();
+    const { copyToClipboard } = useClipboardUtil();
+    const { jumpToAasByAasDescriptor } = useJumpHandling();
+
+    const disabledStates = ref<any>({});
+    const loadingStates = ref<any>({});
+    const aasDescriptors = ref<any>({});
+    const copyIcon = ref<string>('mdi-clipboard-file-outline');
+    const getCopyIconAsRef = (): Ref => {
+        return copyIcon;
+    };
+
+    onMounted(() => {
+        // initialize disabledStates, loadingStates and
+        if (props.entityObject.globalAssetId) {
+            checkAndSetDisabledState(props.entityObject.globalAssetId);
+            loadingStates.value[props.entityObject.globalAssetId] = false;
+        }
+        if (props.entityObject.specificAssetIds) {
+            props.entityObject.specificAssetIds.forEach((specificAssetId: any) => {
+                checkAndSetDisabledState(specificAssetId.name);
+                loadingStates.value[specificAssetId.name] = false;
+            });
+        }
+    });
+
+    function checkAndSetDisabledState(assetId: string): void {
+        if (props.entityObject.entityType === 'CoManagedEntity') return;
+        loadingStates.value[assetId] = true;
+        getAasId(assetId)
+            .then(async (aasId: string) => {
+                loadingStates.value[assetId] = false;
+                if (aasId && aasId.trim() !== '') {
+                    disabledStates.value[assetId] = false;
+                    aasDescriptors.value[assetId] = await fetchAasDescriptor(aasId);
+                } else {
+                    disabledStates.value[assetId] = true;
+                }
+            })
+            .catch(() => {
+                loadingStates.value[assetId] = false;
+                disabledStates.value[assetId] = true;
+            });
+    }
+
+    function isDisabled(assetId: string): boolean {
+        if (props.entityObject?.entityType && props.entityObject?.entityType === 'CoManagedEntity') return true;
+        return disabledStates.value[assetId] || false;
+    }
+
+    function isLoading(assetId: string): boolean {
+        return loadingStates.value[assetId] || false;
+    }
+
+    function jump(assetId: string): void {
+        // console.log('Jump to AAS with assetId: ', assetId);
+        let aasDescriptor = aasDescriptors.value[assetId];
+        jumpToAasByAasDescriptor(aasDescriptor);
+    }
 </script>
