@@ -239,8 +239,11 @@
 
             submodelTree.value = sortedSubmodels.map((submodel: any) => {
                 // Assumes submodel.path is already set for top-level nodes
-                submodel.showChildren = shouldExpandNode(submodel.path);
-                submodel.children = prepareForTree(submodel.submodelElements, submodel);
+                if (Array.isArray(submodel.submodelElements) && submodel.submodelElements.length) {
+                    submodel.children = prepareForTree(submodel.submodelElements, submodel);
+                    submodel.showChildren = shouldExpandNode(submodel.path);
+                    return submodel;
+                }
                 return submodel;
             });
         } finally {
@@ -261,6 +264,7 @@
 
             if (sme.modelType === 'Submodel' && Array.isArray(sme.submodelElements) && sme.submodelElements.length) {
                 sme.children = prepareForTree(sme.submodelElements, sme);
+                console.log(sme.children);
                 sme.showChildren = expand;
             } else if (
                 ['SubmodelElementCollection', 'SubmodelElementList'].includes(sme.modelType) &&
