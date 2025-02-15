@@ -264,7 +264,6 @@
 
             if (sme.modelType === 'Submodel' && Array.isArray(sme.submodelElements) && sme.submodelElements.length) {
                 sme.children = prepareForTree(sme.submodelElements, sme);
-                console.log(sme.children);
                 sme.showChildren = expand;
             } else if (
                 ['SubmodelElementCollection', 'SubmodelElementList'].includes(sme.modelType) &&
