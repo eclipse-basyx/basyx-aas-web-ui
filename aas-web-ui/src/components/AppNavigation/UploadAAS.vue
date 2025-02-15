@@ -94,9 +94,11 @@
 
             if (registerAAS.value) {
                 for (const aasId of response.data.aasIds) {
-                    createAndPostDescriptors(aasId);
+                    await createAndPostDescriptors(aasId);
                 }
             }
+
+            navigationStore.dispatchTriggerAASListReload();
         } catch (error) {
             console.error('Error uploading AAS:', error);
         } finally {
