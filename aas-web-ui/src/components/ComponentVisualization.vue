@@ -3,7 +3,7 @@
         <v-card color="card" elevation="0">
             <template v-if="!singleAas || isMobile">
                 <!-- Title Bar in the Submodel Element View -->
-                <v-card-title :style="{ padding: isMobile ? '' : '15px 16px 16px' }">
+                <v-card-title :style="{ padding: isVisualization ? '' : '15px 16px 16px' }">
                     <div v-if="!isMobile">
                         <template v-if="routesToVisualization.includes(route.name)">
                             <v-btn class="ml-0" variant="plain" icon="mdi-chevron-left" @click="backToAASViewer()" />
@@ -191,6 +191,7 @@
         return plugins;
     });
     const viewerMode = computed(() => route.name === 'SubmodelViewer' || routesToVisualization.includes(route.name));
+    const isVisualization = computed(() => route.name === 'Visualization');
 
     // Watchers
     watch(
