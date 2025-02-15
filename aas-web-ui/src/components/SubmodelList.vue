@@ -39,7 +39,7 @@
                 <template v-else>
                     <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
                         <!-- List of Submodels -->
-                        <v-list v-if="submodelList.length > 0" class="pa-0">
+                        <v-list v-if="submodelList.length > 0" class="pa-0" nav density="compact">
                             <v-virtual-scroll
                                 ref="virtualScrollRef"
                                 :items="submodelList"
@@ -52,7 +52,6 @@
                                         color="primarySurface"
                                         base-color="listItem"
                                         variant="tonal"
-                                        nav
                                         class="mb-2"
                                         style="border-width: 1px"
                                         :style="{
@@ -126,7 +125,7 @@
 
     // Data
     const submodelList = ref([] as Array<any>) as Ref<Array<any>>; // Variable to store the SM Data
-    const submodelListUnfiltered = ref([] as Array<any>) as Ref<Array<any>>; // Variable to store the S; Data before filtering
+    const submodelListUnfiltered = ref([] as Array<any>) as Ref<Array<any>>; // Variable to store the SM Data before filtering
     const listLoading = ref(false); // Variable to store if the AAS List is loading
     const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null); // Reference to the Virtual Scroll Component
 
@@ -183,7 +182,7 @@
     });
 
     function initialize(): void {
-        if (!selectedAAS.value || Object.keys(selectedAAS).length > 0) {
+        if (!selectedAAS.value || Object.keys(selectedAAS).length === 0) {
             submodelList.value = [];
             return;
         }
@@ -267,7 +266,6 @@
         return selectedNode.value.id === submodel.id;
     }
 
-    // Function to scroll to the selected AAS
     function scrollToSelectedSubmodel(): void {
         // Find the index of the selected item
         const index = submodelList.value.findIndex((sm: any) => isSelected(sm));
