@@ -78,6 +78,10 @@
         },
     });
 
+    const emit = defineEmits<{
+        (event: 'updateValue', updatedDateValue: any): void;
+    }>();
+
     // Data
     const newDateValue = ref<string>('');
     const newDate = ref<any>(new Date());
@@ -134,6 +138,7 @@
     // Methods
     function updateValue(): void {
         if (isOperationVariable.value) {
+            emit('updateValue', newDateValue.value);
             return;
         }
 

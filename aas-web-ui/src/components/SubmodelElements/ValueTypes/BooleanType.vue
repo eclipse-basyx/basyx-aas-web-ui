@@ -65,6 +65,10 @@
         },
     });
 
+    const emit = defineEmits<{
+        (event: 'updateValue', updatedBooleanValue: any): void;
+    }>();
+
     // Data
     const newBooleanValue = ref<boolean>(false);
 
@@ -108,6 +112,7 @@
 
     function updateValue(): void {
         if (IsOperationVariable.value) {
+            emit('updateValue', newBooleanValue.value);
             return;
         }
 

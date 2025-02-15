@@ -10,13 +10,11 @@ import { useCDRepositoryClient } from '@/composables/Client/CDRepositoryClient';
 import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
 import { useRequestHandling } from '@/composables/RequestHandling';
-// import { useAASStore } from '@/store/AASDataStore';
 import { useEnvStore } from '@/store/EnvironmentStore';
 import { stripLastCharacter } from '@/utils/StringUtils';
 
 export const useNavigationStore = defineStore('navigationStore', () => {
     // Initialize Dependent Stores
-    // const aasStore = useAASStore();
     const envStore = useEnvStore();
 
     // Composables
@@ -195,11 +193,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         moduleRoutes.value = routes;
     }
 
-    function dispatchComponentURL(
-        componentKey: BaSyxComponentKey,
-        url: string
-        // clearSelectedNode: boolean = true
-    ): void {
+    function dispatchComponentURL(componentKey: BaSyxComponentKey, url: string): void {
         switch (componentKey) {
             case 'AASDiscovery':
                 AASDiscoveryURL.value = url;

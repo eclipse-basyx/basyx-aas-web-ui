@@ -268,6 +268,7 @@
             updateReferenceElementObject() {
                 let referenceElementObject = { ...this.referenceElementObject };
                 referenceElementObject.value = this.reference;
+                this.$emit('updateValue', referenceElementObject.value);
             },
 
             // Function to add a new Key to Reference

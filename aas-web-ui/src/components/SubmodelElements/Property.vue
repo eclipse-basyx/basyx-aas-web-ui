@@ -46,31 +46,36 @@
                     :number-value="propertyObject"
                     :is-operation-variable="isOperationVariable"
                     :variable-type="variableType"
-                    :is-editable="isEditable"></NumberType>
+                    :is-editable="isEditable"
+                    @update-value="updateValue"></NumberType>
                 <BooleanType
                     v-else-if="propertyObject.valueType == 'xs:boolean'"
                     :boolean-value="propertyObject"
                     :is-operation-variable="isOperationVariable"
                     :variable-type="variableType"
-                    :is-editable="isEditable"></BooleanType>
+                    :is-editable="isEditable"
+                    @update-value="updateValue"></BooleanType>
                 <DateType
                     v-else-if="propertyObject.valueType == 'xs:date'"
                     :date-value="propertyObject"
                     :is-operation-variable="isOperationVariable"
                     :variable-type="variableType"
-                    :is-editable="isEditable"></DateType>
+                    :is-editable="isEditable"
+                    @update-value="updateValue"></DateType>
                 <DateTimeStampType
                     v-else-if="propertyObject.valueType == 'xs:dateTime'"
                     :date-time-stamp-value="propertyObject"
                     :is-operation-variable="isOperationVariable"
                     :variable-type="variableType"
-                    :is-editable="isEditable"></DateTimeStampType>
+                    :is-editable="isEditable"
+                    @update-value="updateValue"></DateTimeStampType>
                 <StringType
                     v-else
                     :string-value="propertyObject"
                     :is-operation-variable="isOperationVariable"
                     :variable-type="variableType"
-                    :is-editable="isEditable"></StringType>
+                    :is-editable="isEditable"
+                    @update-value="updateValue"></StringType>
             </v-list>
         </v-card>
     </v-container>
@@ -99,7 +104,15 @@
         },
     });
 
+    const emit = defineEmits<{
+        (e: 'updateValue', updatedPropertyObject: any): void;
+    }>();
+
     const isOperationVariable = computed(() => {
         return props.isOperationVariable != undefined ? props.isOperationVariable : false;
     });
+
+    function updateValue(updatedPropertyObject: any): void {
+        emit('updateValue', updatedPropertyObject);
+    }
 </script>

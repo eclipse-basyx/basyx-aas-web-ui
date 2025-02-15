@@ -66,6 +66,10 @@
         },
     });
 
+    const emit = defineEmits<{
+        (event: 'updateValue', updatedStringValue: any): void;
+    }>();
+
     // Data
     const newStringValue = ref<string>('');
     const isFocused = ref<boolean>(false);
@@ -107,6 +111,7 @@
 
     function updateValue(): void {
         if (isOperationVariable.value) {
+            emit('updateValue', newStringValue.value);
             return;
         }
 

@@ -26,8 +26,8 @@
                             variant="outlined"
                             hide-details
                             density="compact"
-                            :rows="8"></v-textarea>
-                        <!-- @update:focused="setFocus($event)"></v-textarea> -->
+                            :rows="8"
+                            @update:focused="setFocus($event)"></v-textarea>
                     </v-card>
                 </v-list-item>
                 <v-divider v-if="!localIsOperationVariable" class="mt-3"></v-divider>
@@ -76,9 +76,9 @@
         },
     });
 
-    // const emit = defineEmits<{
-    //     (e: 'updateValue', updatedInvalidElementObject: any): void;
-    // }>();
+    const emit = defineEmits<{
+        (e: 'updateValue', updatedInvalidElementObject: any): void;
+    }>();
 
     const submodelElements = ref([
         'Submodel',
@@ -129,13 +129,13 @@
         jsonString.value = JSON.stringify(localInvalidElementObject, null, 2);
     });
 
-    // function updateValue(): void {
-    //     emit('updateValue', JSON.parse(jsonString.value));
-    // }
+    function updateValue(): void {
+        emit('updateValue', JSON.parse(jsonString.value));
+    }
 
-    // function setFocus(e: boolean): void {
-    //     if (!e) {
-    //         updateValue();
-    //     }
-    // }
+    function setFocus(e: boolean): void {
+        if (!e) {
+            updateValue();
+        }
+    }
 </script>
