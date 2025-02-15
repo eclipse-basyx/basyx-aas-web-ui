@@ -196,23 +196,11 @@
     const editMode = computed(() => route.name === 'AASEditor'); // Check if the current Route is the AAS Editor
 
     // Watchers
-    watch(
-        () => aasRegistryURL.value,
-        (aasRegistryURLValue) => {
-            if (!aasRegistryURLValue || aasRegistryURLValue.trim() === '')
-                // Resets the Submodel Tree when the AAS Registry changes
-                submodelTree.value = [];
+    watch([aasRegistryURL, submodelRegistryURL], ([newAAS, newSubmodelRegistry]) => {
+        if (isEmptyString(newAAS) || isEmptyString(newSubmodelRegistry)) {
+            submodelTree.value = [];
         }
-    );
-
-    watch(
-        () => submodelRegistryURL.value,
-        (submodelRegistryURLValue) => {
-            if (!submodelRegistryURLValue || submodelRegistryURLValue.trim() === '')
-                // Resets the Submodel Tree when the Submodel Registry changes
-                submodelTree.value = [];
-        }
-    );
+    });
 
     watch(
         () => selectedAAS.value,
@@ -228,161 +216,99 @@
     });
 
     async function initialize(): Promise<void> {
-        if (!selectedAAS.value || Object.keys(selectedAAS).length === 0) {
+        if (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0) {
             submodelTree.value = [];
             return;
         }
 
         treeLoading.value = true;
 
-        fetchAasSmListById(selectedAAS.value.id).then((submodels: Array<any>) => {
-            let submodelsSorted = submodels.sort((a: { [x: string]: number }, b: { [x: string]: number }) =>
-                a['id'] > b['id'] ? 1 : -1
-            );
+        try {
+            const submodels: Array<any> = await fetchAasSmListById(selectedAAS.value.id);
+            const sortedSubmodels = submodels.sort((a, b) => a.id.localeCompare(b.id));
 
-            submodelTree.value = [...submodelsSorted].map((submodel: any) => {
-                submodel.showChildren =
-                    selectedNode.value &&
-                    selectedNode.value.path &&
-                    selectedNode.value.path.trim() !== '' &&
-                    selectedNode.value.path.startsWith(submodel.path) &&
-                    selectedNode.value.path !== submodel.path;
-
+            submodelTree.value = sortedSubmodels.map((submodel: any) => {
+                // Assumes submodel.path is already set for top-level nodes
+                submodel.showChildren = shouldExpandNode(submodel.path);
                 submodel.children = prepareForTree(submodel.submodelElements, submodel);
                 return submodel;
             });
-
+        } finally {
             treeLoading.value = false;
-        });
+        }
     }
 
-    // Function to prepare the data structure for the Tree
+    // Prepare tree structure recursively
     function prepareForTree(submodelElements: Array<any>, parent: any): Array<any> {
-        if (!submodelElements || !Array.isArray(submodelElements) || submodelElements.length === 0) return [];
+        if (!submodelElements || !Array.isArray(submodelElements) || submodelElements.length === 0) {
+            return [];
+        }
 
         return submodelElements.map((sme: any, index: number) => {
             sme.parent = parent;
+            sme.path = computePath(sme, parent, index);
+            const expand = shouldExpandNode(sme.path);
 
-            // Set path
-            if (sme.parent.modelType === 'Submodel') {
-                sme.path = `${sme.parent.path}/submodel-elements/${sme.idShort}`;
-            } else if (sme.parent.modelType === 'SubmodelElementList') {
-                sme.path = `${sme.parent.path}${encodeURIComponent('[')}${index}${encodeURIComponent(']')}`;
-            } else {
-                sme.path = `${sme.parent.path}.${sme.idShort}`;
-            }
-
-            const shouldExpand =
-                selectedNode.value &&
-                selectedNode.value.path &&
-                selectedNode.value.path.trim() !== '' &&
-                selectedNode.value.path.startsWith(sme.path) &&
-                selectedNode.value.path !== sme.path;
-
-            if (
-                sme.modelType === 'Submodel' &&
-                sme.submodelElements &&
-                Array.isArray(sme.submodelElements) &&
-                sme.submodelElements.length > 0
-            ) {
-                // Submodel
+            if (sme.modelType === 'Submodel' && Array.isArray(sme.submodelElements) && sme.submodelElements.length) {
                 sme.children = prepareForTree(sme.submodelElements, sme);
-                sme.showChildren = shouldExpand;
+                sme.showChildren = expand;
             } else if (
                 ['SubmodelElementCollection', 'SubmodelElementList'].includes(sme.modelType) &&
-                sme.value &&
                 Array.isArray(sme.value) &&
-                sme.value.length > 0
+                sme.value.length
             ) {
-                // SubmodelElementCollection or SubmodelElementList
                 sme.children = prepareForTree(sme.value, sme);
-                sme.showChildren = shouldExpand;
-            } else if (
-                sme.modelType === 'Entity' &&
-                sme.statements &&
-                Array.isArray(sme.statements) &&
-                sme.statements.length > 0
-            ) {
-                // Entity
+                sme.showChildren = expand;
+            } else if (sme.modelType === 'Entity' && Array.isArray(sme.statements) && sme.statements.length) {
                 sme.children = prepareForTree(sme.statements, sme);
-                sme.showChildren = shouldExpand;
+                sme.showChildren = expand;
             }
             return sme;
         });
     }
 
+    // Collapse the entire tree recursively
     function collapseTree(submodelElements: Array<any> = submodelTree.value): void {
-        submodelElements.map((sme: any) => {
+        submodelElements.forEach((sme: any) => {
             sme.showChildren = false;
 
-            if (
-                sme.modelType == 'Submodel' &&
-                sme.submodelElements &&
-                Array.isArray(sme.submodelElements) &&
-                sme.submodelElements.length > 0
-            ) {
-                sme.submodelElements = collapseTree(sme.submodelElements);
+            if (sme.modelType === 'Submodel' && Array.isArray(sme.submodelElements) && sme.submodelElements.length) {
+                collapseTree(sme.submodelElements);
             } else if (
                 ['SubmodelElementCollection', 'SubmodelElementList'].includes(sme.modelType) &&
-                sme.value &&
                 Array.isArray(sme.value) &&
-                sme.value.length > 0
+                sme.value.length
             ) {
-                sme.value = collapseTree(sme.value);
-            } else if (
-                sme.modelType == 'Entity' &&
-                sme.statements &&
-                Array.isArray(sme.statements) &&
-                sme.statements.length > 0
-            ) {
-                sme.statements = collapseTree(sme.statements);
+                collapseTree(sme.value);
+            } else if (sme.modelType === 'Entity' && Array.isArray(sme.statements) && sme.statements.length) {
+                collapseTree(sme.statements);
             }
-
-            return sme;
         });
     }
 
+    // Expand the tree recursively
     function expandTree(submodelElements: Array<any> = submodelTree.value): void {
-        submodelElements.map((sme: any) => {
-            sme.showChildren =
-                selectedNode.value &&
-                Object.keys(selectedNode.value).length > 0 &&
-                selectedNode.value.path &&
-                selectedNode.value.path.trim() !== '' &&
-                selectedNode.value.path.startsWith(sme.path) &&
-                selectedNode.value.path !== sme.path;
+        submodelElements.forEach((sme: any) => {
+            sme.showChildren = shouldExpandNode(sme.path);
 
-            if (
-                sme.modelType === 'Submodel' &&
-                sme.submodelElements &&
-                Array.isArray(sme.submodelElements) &&
-                sme.submodelElements.length > 0
-            ) {
+            if (sme.modelType === 'Submodel' && Array.isArray(sme.submodelElements) && sme.submodelElements.length) {
                 expandTree(sme.submodelElements);
             } else if (
                 ['SubmodelElementCollection', 'SubmodelElementList'].includes(sme.modelType) &&
-                sme.value &&
                 Array.isArray(sme.value) &&
-                sme.value.length > 0
+                sme.value.length
             ) {
                 expandTree(sme.value);
-            } else if (
-                sme.modelType === 'Entity' &&
-                sme.statements &&
-                Array.isArray(sme.statements) &&
-                sme.statements.length > 0
-            ) {
+            } else if (sme.modelType === 'Entity' && Array.isArray(sme.statements) && sme.statements.length) {
                 expandTree(sme.statements);
             }
-
-            return sme;
         });
     }
 
     function openEditDialog(createNew: boolean, submodel?: any): void {
         editDialog.value = true;
         newSubmodel.value = createNew;
-        if (createNew === false && submodel) {
+        if (!createNew && submodel) {
             submodelToEdit.value = submodel;
         }
     }
@@ -390,6 +316,28 @@
     function openDeleteDialog(element: any): void {
         deleteDialog.value = true;
         elementToDelete.value = element;
+    }
+
+    function isEmptyString(val: string): boolean {
+        return !val || val.trim() === '';
+    }
+
+    function computePath(sme: any, parent: any, index: number): string {
+        if (parent.modelType === 'Submodel') {
+            return `${parent.path}/submodel-elements/${sme.idShort}`;
+        } else if (parent.modelType === 'SubmodelElementList') {
+            return `${parent.path}${encodeURIComponent('[')}${index}${encodeURIComponent(']')}`;
+        }
+        return `${parent.path}.${sme.idShort}`;
+    }
+
+    function shouldExpandNode(nodePath: string): boolean {
+        return (
+            selectedNode.value &&
+            !isEmptyString(selectedNode.value.path) &&
+            selectedNode.value.path.startsWith(nodePath) &&
+            selectedNode.value.path !== nodePath
+        );
     }
 </script>
 
