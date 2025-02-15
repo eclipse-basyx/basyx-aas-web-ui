@@ -102,9 +102,9 @@
                 <v-divider></v-divider>
             </template>
             <v-card-text
-                class="px-2 py-2"
                 style="overflow-y: auto"
                 :style="singleAas ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 170px)'">
+                <!-- Show Skeleton Loader when the tree is loading -->
                 <template v-if="treeLoading">
                     <v-list-item v-for="i in 6" :key="i" density="compact" nav class="pa-0">
                         <template #prepend>
@@ -118,6 +118,7 @@
                         </template>
                     </v-list-item>
                 </template>
+                <!-- Show the Submodel Tree -->
                 <template v-else>
                     <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
                         <template v-if="submodelTree && Array.isArray(submodelTree) && submodelTree.length > 0">

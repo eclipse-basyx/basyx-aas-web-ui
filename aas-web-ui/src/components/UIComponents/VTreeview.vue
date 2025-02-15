@@ -7,6 +7,7 @@
                 class="py-0"
                 :class="editMode && item.modelType === 'Submodel' ? 'pr-0' : ''"
                 nav
+                slim
                 color="primary"
                 :active="isSelected(item)"
                 @click="selectSmOrSme(item)">
@@ -217,10 +218,3 @@
         return selectedNode.value.path === smOrSme.path;
     }
 </script>
-
-<style scoped>
-    /* move the Treeview Text a few Pixels to the left for a better look */
-    ::v-deep(.v-list-item__prepend) {
-        margin-right: -16px !important;
-    }
-</style>
