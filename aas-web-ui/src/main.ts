@@ -30,6 +30,9 @@ async function initialize(): Promise<void> {
     const pinia = createPinia();
     app.use(pinia);
 
+    // ApexCharts
+    app.use(VueApexCharts);
+
     // Stores
     const envStore = useEnvStore();
     const navigationStore = useNavigationStore();
@@ -63,10 +66,6 @@ async function initialize(): Promise<void> {
             }
         }
     }
-
-    // Create the router
-    const router = await createAppRouter();
-    app.use(router);
 
     // Vuetify
     registerVuetify(app);
@@ -102,7 +101,9 @@ async function initialize(): Promise<void> {
         ssr: false,
     });
 
-    app.use(VueApexCharts);
+    // Create the router
+    const router = await createAppRouter();
+    app.use(router);
 
     // Mount the app
     app.mount('#app');
