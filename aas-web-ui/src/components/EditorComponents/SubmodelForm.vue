@@ -288,6 +288,7 @@
             const path = submodelRepoUrl.value + '/' + base64Encode(submodelObject.value.id);
             const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
             router.push({ query: { aas: aasEndpoint, path: path } });
+            navigationStore.dispatchTriggerTreeviewReload();
         } else {
             // Update existing Submodel
             await putSubmodel(submodelObject.value);
@@ -297,10 +298,10 @@
             const descriptor = createDescriptorFromSubmodel(jsonSubmodel, fetchedDescriptor.endpoints);
             // Update AAS Descriptor
             await putSubmodelDescriptor(descriptor);
-            // TODO Update VTreeview item
             if (submodelObject.value.id === selectedNode.value.id) {
                 router.go(0); // Reload current route
             }
+            navigationStore.dispatchTriggerTreeviewReload();
         }
         clearForm();
         editSMDialog.value = false;
@@ -328,7 +329,9 @@
             localAAS.submodels.push(jsonization.toJsonable(submodelReference));
         }
         await putAas(aas);
-        router.go(0); // Reload current route
+
+        // Update AAS in Store
+        aasStore.dispatchSelectedAAS(localAAS);
     }
 
     function closeDialog(): void {

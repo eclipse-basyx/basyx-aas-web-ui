@@ -53,6 +53,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const plugins = ref<PluginType[]>([]);
     const triggerAASListReload = ref(false);
     const triggerAASListScroll = ref(false);
+    const triggerTreeviewReload = ref(false);
     const urlQuery = ref<LocationQuery>({} as LocationQuery);
     const moduleRoutes = ref<Array<RouteRecordRaw>>([]);
 
@@ -130,6 +131,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const getPlugins = computed(() => plugins.value);
     const getTriggerAASListReload = computed(() => triggerAASListReload.value);
     const getTriggerAASListScroll = computed(() => triggerAASListScroll.value);
+    const getTriggerTreeviewReload = computed(() => triggerTreeviewReload.value);
     const getUrlQuery = computed(() => urlQuery.value);
     const getModuleRoutes = computed(() => moduleRoutes.value);
     const getBasyxComponents = computed(() => basyxComponents);
@@ -174,6 +176,15 @@ export const useNavigationStore = defineStore('navigationStore', () => {
 
     function dispatchTriggerAASListScroll(): void {
         triggerAASListScroll.value = !triggerAASListScroll.value;
+    }
+
+    function dispatchTriggerTreeviewReload(): void {
+        triggerTreeviewReload.value = !triggerTreeviewReload.value;
+
+        setTimeout(() => {
+            // Reset dispatchTriggerTreeviewReload after 100 ms
+            triggerTreeviewReload.value = false;
+        }, 100);
     }
 
     function dispatchUrlQuery(query: LocationQuery): void {
@@ -388,6 +399,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         getPlugins,
         getTriggerAASListReload,
         getTriggerAASListScroll,
+        getTriggerTreeviewReload,
         getUrlQuery,
         getModuleRoutes,
         getBasyxComponents,
@@ -403,6 +415,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         dispatchPlugins,
         dispatchTriggerAASListReload,
         dispatchTriggerAASListScroll,
+        dispatchTriggerTreeviewReload,
         dispatchUrlQuery,
         dispatchModuleRoutes,
         connectComponents,

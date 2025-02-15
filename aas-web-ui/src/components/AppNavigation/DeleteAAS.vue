@@ -81,7 +81,7 @@
                     const submodelRefs = aasRepoResponse.data.result;
                     // Extract all references in an array called submodelIds from each keys[0].value
                     const submodelIds = submodelRefs.map((ref: any) => ref.keys[0].value);
-                    removeAAS(props.aas);
+                    await removeAAS(props.aas);
                     // Remove each submodel
                     for (const submodelId of submodelIds) {
                         const submodelRegistryPath = `${submodelRegistryURL.value}/${base64Encode(submodelId)}`;
@@ -102,23 +102,24 @@
                     error = true;
                 }
             } else {
-                removeAAS(props.aas, true);
+                await removeAAS(props.aas);
             }
         } finally {
             deleteDialog.value = false;
             deleteSubmodels.value = false;
             if (!error) {
-                //remove query from URL
-                router.push({ query: {} });
-                aasStore.dispatchSelectedAAS({});
+                // Check if the selected AAS is the one being deleted
+                if (aasStore.getSelectedAAS.id === props.aas.id) {
+                    router.push({ query: {} });
+                    aasStore.dispatchSelectedAAS({});
+                }
                 navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
             }
             deleteLoading.value = false;
         }
     }
 
-    async function removeAAS(AAS: any, reload: boolean = false) {
-        // console.log('Remove AAS: ', AAS);
+    async function removeAAS(AAS: any): Promise<void> {
         // return if loading state is true -> prevents multiple requests
         if (props.listLoadingState) {
             navigationStore.dispatchSnackbar({
@@ -135,11 +136,6 @@
         let path = aasEndpopint;
         let context = 'removing AAS';
         let disableMessage = false;
-        const response = await deleteRequest(path, context, disableMessage);
-        if (response.success) {
-            if (reload) {
-                navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
-            }
-        }
+        await deleteRequest(path, context, disableMessage);
     }
 </script>

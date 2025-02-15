@@ -194,6 +194,7 @@
     const selectedNode = computed(() => aasStore.getSelectedNode); // get the updated Treeview Node from Store
     const singleAas = computed(() => envStore.getSingleAas); // Get the single AAS state from the Store
     const editMode = computed(() => route.name === 'AASEditor'); // Check if the current Route is the AAS Editor
+    const triggerTreeviewReload = computed(() => navigationStore.getTriggerTreeviewReload); // Reload the Treeview
 
     // Watchers
     watch([aasRegistryURL, submodelRegistryURL], ([newAAS, newSubmodelRegistry]) => {
@@ -209,6 +210,15 @@
             initialize();
         },
         { deep: true }
+    );
+
+    watch(
+        () => triggerTreeviewReload.value,
+        (triggerVal) => {
+            if (triggerVal === true) {
+                initialize();
+            }
+        }
     );
 
     onMounted(() => {

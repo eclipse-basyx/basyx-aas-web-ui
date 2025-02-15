@@ -81,6 +81,7 @@
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useIDUtils } from '@/composables/IDUtils';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useNavigationStore } from '@/store/NavigationStore';
 
     const props = defineProps<{
         modelValue: boolean;
@@ -97,6 +98,7 @@
 
     // Stores
     const aasStore = useAASStore();
+    const navigationStore = useNavigationStore();
 
     const emit = defineEmits<{
         (event: 'update:modelValue', value: boolean): void;
@@ -179,7 +181,7 @@
         }
     );
 
-    async function initializeInputs() {
+    async function initializeInputs(): Promise<void> {
         if (props.newShell === false && props.aas) {
             const aas = await fetchAasById(props.aas.id);
 
@@ -314,6 +316,7 @@
                 await putThumbnail(fileThumbnail.value, AASObject.value.id);
             }
             router.push({ query: { aas: await getAasEndpointById(AASObject.value.id) } });
+            navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
         } else {
             // Update existing AAS
             await putAas(AASObject.value);
@@ -325,21 +328,21 @@
             if (fileThumbnail.value !== undefined) {
                 await putThumbnail(fileThumbnail.value, AASObject.value.id);
             }
-            // TODO Update AASList item
             if (AASObject.value.id === selectedAAS.value.id) {
                 router.go(0); // Reload current route
+                navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
             }
         }
         clearForm();
         editAASDialog.value = false;
     }
 
-    function closeDialog() {
+    function closeDialog(): void {
         clearForm();
         editAASDialog.value = false;
     }
 
-    function clearForm() {
+    function clearForm(): void {
         // Reset all values
         AASId.value = generateUUID();
         AASIdShort.value = null;
@@ -358,7 +361,7 @@
         openPanels.value = [0, 3];
     }
 
-    function handleFileSthumbnail(file: File | undefined) {
+    function handleFileSthumbnail(file: File | undefined): void {
         fileThumbnail.value = file;
     }
 </script>
