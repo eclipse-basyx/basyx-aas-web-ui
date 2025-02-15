@@ -243,12 +243,11 @@
             submodelTree.value = [...submodelsSorted].map((submodel: any) => {
                 submodel.showChildren =
                     selectedNode.value &&
-                    Object.keys(selectedNode).length > 0 &&
                     selectedNode.value.path &&
                     selectedNode.value.path.trim() !== '' &&
-                    selectedNode.value.path.includes(submodel.path)
-                        ? true
-                        : false;
+                    selectedNode.value.path.startsWith(submodel.path) &&
+                    selectedNode.value.path !== submodel.path;
+
                 submodel.children = prepareForTree(submodel.submodelElements, submodel);
                 return submodel;
             });
@@ -257,38 +256,38 @@
         });
     }
 
-    // // Function to prepare the data structure for the Tree
+    // Function to prepare the data structure for the Tree
     function prepareForTree(submodelElements: Array<any>, parent: any): Array<any> {
         if (!submodelElements || !Array.isArray(submodelElements) || submodelElements.length === 0) return [];
 
-        const children = submodelElements.map((sme: any, index: number) => {
+        return submodelElements.map((sme: any, index: number) => {
             sme.parent = parent;
 
             // Set path
-            if (sme.parent.modelType == 'Submodel') {
-                sme.path = sme.parent.path + '/submodel-elements/' + sme.idShort;
-            } else if (sme.parent.modelType == 'SubmodelElementList') {
-                sme.path = sme.parent.path + encodeURIComponent('[') + index + encodeURIComponent(']');
+            if (sme.parent.modelType === 'Submodel') {
+                sme.path = `${sme.parent.path}/submodel-elements/${sme.idShort}`;
+            } else if (sme.parent.modelType === 'SubmodelElementList') {
+                sme.path = `${sme.parent.path}${encodeURIComponent('[')}${index}${encodeURIComponent(']')}`;
             } else {
-                sme.path = sme.parent.path + '.' + sme.idShort;
+                sme.path = `${sme.parent.path}.${sme.idShort}`;
             }
 
+            const shouldExpand =
+                selectedNode.value &&
+                selectedNode.value.path &&
+                selectedNode.value.path.trim() !== '' &&
+                selectedNode.value.path.startsWith(sme.path) &&
+                selectedNode.value.path !== sme.path;
+
             if (
-                sme.modelType == 'Submodel' &&
+                sme.modelType === 'Submodel' &&
                 sme.submodelElements &&
                 Array.isArray(sme.submodelElements) &&
                 sme.submodelElements.length > 0
             ) {
                 // Submodel
                 sme.children = prepareForTree(sme.submodelElements, sme);
-                sme.showChildren =
-                    selectedNode.value &&
-                    Object.keys(selectedNode).length > 0 &&
-                    selectedNode.value.path &&
-                    selectedNode.value.path.trim() !== '' &&
-                    selectedNode.value.path.includes(sme.path)
-                        ? true
-                        : false;
+                sme.showChildren = shouldExpand;
             } else if (
                 ['SubmodelElementCollection', 'SubmodelElementList'].includes(sme.modelType) &&
                 sme.value &&
@@ -297,35 +296,19 @@
             ) {
                 // SubmodelElementCollection or SubmodelElementList
                 sme.children = prepareForTree(sme.value, sme);
-                sme.showChildren =
-                    selectedNode.value &&
-                    Object.keys(selectedNode).length > 0 &&
-                    selectedNode.value.path &&
-                    selectedNode.value.path.trim() !== '' &&
-                    selectedNode.value.path.includes(sme.path)
-                        ? true
-                        : false;
+                sme.showChildren = shouldExpand;
             } else if (
-                sme.modelType == 'Entity' &&
+                sme.modelType === 'Entity' &&
                 sme.statements &&
                 Array.isArray(sme.statements) &&
                 sme.statements.length > 0
             ) {
                 // Entity
                 sme.children = prepareForTree(sme.statements, sme);
-                sme.showChildren =
-                    selectedNode.value &&
-                    Object.keys(selectedNode).length > 0 &&
-                    selectedNode.value.path &&
-                    selectedNode.value.path.trim() !== '' &&
-                    selectedNode.value.path.includes(sme.path)
-                        ? true
-                        : false;
+                sme.showChildren = shouldExpand;
             }
             return sme;
         });
-
-        return children;
     }
 
     function collapseTree(submodelElements: Array<any> = submodelTree.value): void {
@@ -363,34 +346,33 @@
         submodelElements.map((sme: any) => {
             sme.showChildren =
                 selectedNode.value &&
-                Object.keys(selectedNode).length > 0 &&
+                Object.keys(selectedNode.value).length > 0 &&
                 selectedNode.value.path &&
                 selectedNode.value.path.trim() !== '' &&
-                selectedNode.value.path.includes(sme.path)
-                    ? true
-                    : false;
+                selectedNode.value.path.startsWith(sme.path) &&
+                selectedNode.value.path !== sme.path;
 
             if (
-                sme.modelType == 'Submodel' &&
+                sme.modelType === 'Submodel' &&
                 sme.submodelElements &&
                 Array.isArray(sme.submodelElements) &&
                 sme.submodelElements.length > 0
             ) {
-                sme.submodelElements = collapseTree(sme.submodelElements);
+                expandTree(sme.submodelElements);
             } else if (
                 ['SubmodelElementCollection', 'SubmodelElementList'].includes(sme.modelType) &&
                 sme.value &&
                 Array.isArray(sme.value) &&
                 sme.value.length > 0
             ) {
-                sme.value = collapseTree(sme.value);
+                expandTree(sme.value);
             } else if (
-                sme.modelType == 'Entity' &&
+                sme.modelType === 'Entity' &&
                 sme.statements &&
                 Array.isArray(sme.statements) &&
                 sme.statements.length > 0
             ) {
-                sme.statements = collapseTree(sme.statements);
+                expandTree(sme.statements);
             }
 
             return sme;

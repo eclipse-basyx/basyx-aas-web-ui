@@ -130,16 +130,10 @@
 
 <script lang="ts" setup>
     import { computed, ref } from 'vue';
-    // import { defineComponent } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useClipboardUtil } from '@/composables/ClipboardUtil';
-    // import { extractEndpointHref } from '@/utils/DescriptorUtils';
     import { useAASStore } from '@/store/AASDataStore';
-    // import { useTheme } from 'vuetify';
-    // import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
-    // import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
-    // import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     // Vue Router
@@ -178,9 +172,7 @@
     const isMobile = computed(() => navigationStore.getIsMobile);
     const copyIconAsRef = computed(() => copyIcon);
 
-    //     methods: {
-    //         // Function to show/hide Children
-    function toggleTree(smOrSme: any) {
+    function toggleTree(smOrSme: any): void {
         smOrSme.showChildren = !smOrSme.showChildren;
     }
 
@@ -192,7 +184,6 @@
             router.push({ query: query });
         } else {
             // Select submodel/submodel element: add smePath to path query
-            smOrSme.showChildren = true;
             let query = { ...route.query };
             query.path = smOrSme.path;
             if (isMobile.value) {
