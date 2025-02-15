@@ -79,10 +79,15 @@
                     <!-- Context menu for Submodels -->
                     <v-menu v-if="editMode && item.modelType === 'Submodel'">
                         <template #activator="{ props }">
-                            <v-btn icon="mdi-dots-vertical" variant="plain" color="subtitleText" v-bind="props"></v-btn>
+                            <v-btn
+                                icon="mdi-dots-vertical"
+                                size="small"
+                                variant="plain"
+                                color="subtitleText"
+                                v-bind="props"></v-btn>
                         </template>
                         <v-sheet border>
-                            <v-list dense density="compact" class="py-0">
+                            <v-list dense density="compact" class="py-0" slim>
                                 <!-- Copy SM endpoint to clipboard -->
                                 <v-list-item @click="copyToClipboard(item.path, 'SM endpoint', copyIconAsRef)">
                                     <template #prepend>

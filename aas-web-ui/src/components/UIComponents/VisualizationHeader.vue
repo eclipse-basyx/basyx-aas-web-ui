@@ -1,7 +1,9 @@
 <template>
     <!-- Header -->
     <v-card class="mb-4">
-        <v-card-title class="text-subtitle-1">{{ nameToDisplay(submodelElementData, 'en', defaultTitle) }}</v-card-title>
+        <v-card-title class="text-subtitle-1">{{
+            nameToDisplay(submodelElementData, 'en', defaultTitle)
+        }}</v-card-title>
         <v-card-subtitle v-if="descriptionToDisplay(submodelElementData)" class="mb-2 text-caption">
             {{ descriptionToDisplay(submodelElementData) }}
         </v-card-subtitle>
