@@ -1,19 +1,10 @@
-import type {
-    LocationQuery,
-    NavigationGuardNext,
-    RouteLocationNormalizedGeneric,
-    Router,
-    RouteRecordNameGeneric,
-    RouteRecordRaw,
-} from 'vue-router';
+import type { Router, RouteRecordNameGeneric, RouteRecordRaw } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
 import AASList from '@/components/AppNavigation/AASList.vue';
 import ComponentVisualization from '@/components/ComponentVisualization.vue';
 import SubmodelList from '@/components/SubmodelList.vue';
 import { useAASHandling } from '@/composables/AASHandling';
-import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
 import { useSMEHandling } from '@/composables/SMEHandling';
-import { useSMHandling } from '@/composables/SMHandling';
 import AASEditor from '@/pages/AASEditor.vue';
 import AASViewer from '@/pages/AASViewer.vue';
 import About from '@/pages/About.vue';
@@ -23,7 +14,7 @@ import Page404 from '@/pages/Page404.vue';
 import SubmodelViewer from '@/pages/SubmodelViewer.vue';
 import { useEnvStore } from '@/store/EnvironmentStore';
 import { useNavigationStore } from '@/store/NavigationStore';
-import { base64Decode } from '@/utils/EncodeDecodeUtils';
+import { useRouteHandling } from './composables/routeHandling';
 import { useAASStore } from './store/AASDataStore';
 
 // Static routes
@@ -126,10 +117,9 @@ export async function createAppRouter(): Promise<Router> {
     navigationStore.connectComponents();
 
     // Composables
-    const { getAasId } = useAASDiscoveryClient();
-    const { fetchAndDispatchAas, getAasEndpointById } = useAASHandling();
-    const { getSmEndpointById } = useSMHandling();
+    const { fetchAndDispatchAas } = useAASHandling();
     const { fetchAndDispatchSme } = useSMEHandling();
+    const { idRedirectHandled } = useRouteHandling();
 
     // Data
     const routesForMobile: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList', 'Visualization'];
@@ -143,7 +133,7 @@ export async function createAppRouter(): Promise<Router> {
     const routesDesktopToAASViewer: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList'];
     const routesMobileToAASList: Array<RouteRecordNameGeneric> = ['AASViewer', 'AASEditor', 'SubmodelViewer'];
     const routesToVisualization: Array<RouteRecordNameGeneric> = ['ComponentVisualization'];
-    const possibleGloBalAssetIdQueryParameter = ['globalAssetId', 'globalassedid'];
+    const possibleGloBalAssetIdQueryParameter = ['globalAssetId', 'globalassetid'];
     const possibleAasIdQueryParameter = ['aasId', 'aasid'];
     const possibleSmIdQueryParameter = ['smId', 'smid'];
     const possibleIdQueryParameter = [
@@ -166,7 +156,17 @@ export async function createAppRouter(): Promise<Router> {
 
     router.beforeEach(async (to, from, next) => {
         // Handle redirection of `globalAssetId`, `aasId` and `smId`
-        if (await idRedirectHandled(to, next)) return;
+        if (
+            await idRedirectHandled(
+                to,
+                next,
+                possibleIdQueryParameter,
+                possibleGloBalAssetIdQueryParameter,
+                possibleAasIdQueryParameter,
+                possibleSmIdQueryParameter
+            )
+        )
+            return;
 
         // Same route
         if (from.name && from.name === to.name) {
@@ -308,115 +308,6 @@ export async function createAppRouter(): Promise<Router> {
 
         next();
     });
-
-    /**
-     * Handles the redirection of `globalAssetId`, `aasId` and `smId` query parameter from the given route location.
-     *
-     * @async
-     * @function idRedirectHandled
-     * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
-     * @param {NavigationGuardNext} next - A function that must be called to resolve the hook. The action depends on the arguments provided to `next`.
-     * @returns {Promise<boolean>} Returns a promise that resolves to true if a redirection was performed, otherwise false.
-     */
-    async function idRedirectHandled(to: RouteLocationNormalizedGeneric, next: NavigationGuardNext): Promise<boolean> {
-        // Note: Query parameter are handled case sensitive!
-        if (possibleIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater))) {
-            if (await globalAssetIdRedirectHandled(to, next)) return true;
-            if (await aasIdSmIdRedirectHandled(to, next)) return true;
-        }
-        return false;
-    }
-
-    /**
-     * Handles the redirection of `globalAssetId` query parameter from the given route location.
-     * It resolves the `globalAssetId` to an `aasId` and finally to an `aasEndpoint`, and updates the route query.
-     *
-     * @async
-     * @function globalAssetIdRedirectHandled
-     * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
-     * @param {NavigationGuardNext} next - A function that must be called to resolve the hook. The action depends on the arguments provided to `next`.
-     * @returns {Promise<boolean>} Returns a promise that resolves to true if a redirection was performed, otherwise false.
-     */
-    async function globalAssetIdRedirectHandled(
-        to: RouteLocationNormalizedGeneric,
-        next: NavigationGuardNext
-    ): Promise<boolean> {
-        if (possibleGloBalAssetIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater))) {
-            const globalAssetIdBase64Encoded = to.query[possibleGloBalAssetIdQueryParameter[0]]
-                ? (to.query[possibleGloBalAssetIdQueryParameter[0]] as string)
-                : (to.query[possibleGloBalAssetIdQueryParameter[1]] as string);
-            const globalAssetId = base64Decode(globalAssetIdBase64Encoded);
-            const aasId = await getAasId(globalAssetId);
-            const aasEndpoint = await getAasEndpointById(aasId);
-            const query = {} as LocationQuery;
-
-            if (aasEndpoint.trim() !== '') {
-                query.aas = aasEndpoint.trim();
-                const updatedRoute = Object.assign({}, to, {
-                    query: query,
-                });
-                next(updatedRoute);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Handles the redirection of `aasId` and `smId` query parameter from the given route location.
-     * It resolves the `aasId`to an `aasEndpoint`, the `smId`to an `smEndpoint` and updates the route query.
-     *
-     * @async
-     * @function aasIdSmIdRedirectHandled
-     * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
-     * @param {NavigationGuardNext} next - A function that must be called to resolve the hook. The action depends on the arguments provided to `next`.
-     * @returns {Promise<boolean>} Returns a promise that resolves to true if a redirection was performed, otherwise false.
-     */
-    async function aasIdSmIdRedirectHandled(
-        to: RouteLocationNormalizedGeneric,
-        next: NavigationGuardNext
-    ): Promise<boolean> {
-        if (
-            possibleAasIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater)) ||
-            possibleSmIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater))
-        ) {
-            let aasEndpoint = '';
-            let smEndpoint = '';
-
-            if (to.query.aasId) {
-                const aasIdBase64Encoded = to.query[possibleAasIdQueryParameter[0]]
-                    ? (to.query[possibleAasIdQueryParameter[0]] as string)
-                    : (to.query[possibleAasIdQueryParameter[1]] as string);
-                const aasId = base64Decode(aasIdBase64Encoded);
-                aasEndpoint = await getAasEndpointById(aasId);
-            }
-            if (to.query.smId) {
-                const smIdBase64Encoded = to.query[possibleSmIdQueryParameter[0]]
-                    ? (to.query[possibleSmIdQueryParameter[0]] as string)
-                    : (to.query[possibleSmIdQueryParameter[1]] as string);
-                const smId = base64Decode(smIdBase64Encoded);
-                smEndpoint = await getSmEndpointById(smId);
-            }
-
-            aasEndpoint = aasEndpoint.trim();
-            smEndpoint = smEndpoint.trim();
-
-            if (aasEndpoint !== '' || smEndpoint !== '') {
-                const query = {} as LocationQuery;
-
-                if (aasEndpoint !== '') query.aas = aasEndpoint.trim();
-                if (smEndpoint !== '') query.path = smEndpoint.trim();
-
-                const updatedRoute = Object.assign({}, to, {
-                    query: query,
-                });
-
-                next(updatedRoute);
-                return true;
-            }
-        }
-        return false;
-    }
 
     return router;
 }
