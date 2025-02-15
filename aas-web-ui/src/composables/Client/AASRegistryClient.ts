@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
 import * as descriptorTypes from '@/types/Descriptors';
+import { extractEndpointHref } from '@/utils/DescriptorUtils';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { removeNullValues } from '@/utils/generalUtils';
 import { stripLastCharacter } from '@/utils/StringUtils';
@@ -97,6 +98,50 @@ export function useAASRegistryClient() {
     }
 
     /**
+     * Retrieves the Asset Administration Shell (AAS) endpoint URL by its ID.
+     *
+     * @async
+     * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
+     * @returns {Promise<string>} A promise that resolves to an AAS endpoint.
+     */
+    async function getAasEndpointById(aasId: string): Promise<string> {
+        const failResponse = '';
+
+        if (!aasId) return failResponse;
+
+        aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
+
+        const aasDescriptor = await fetchAasDescriptorById(aasId);
+        const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0');
+
+        return aasEndpoint || failResponse;
+    }
+
+    /**
+     * Retrieves the Asset Administration Shell (AAS) endpoint URL of an AAS descriptor.
+     *
+     * @param {string} aasDescriptor - The AAS descriptor to retrieve the endpoint for.
+     * @returns {string} A promise that resolves to an AAS endpoint.
+     */
+    function getAasEndpoint(aasDescriptor: any): string {
+        const failResponse = '';
+
+        if (
+            !aasDescriptor ||
+            Object.keys(aasDescriptor).length === 0 ||
+            !aasDescriptor.id ||
+            aasDescriptor.id.trim() === ''
+        )
+            return failResponse;
+
+        const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0');
+
+        return aasEndpoint || failResponse;
+    }
+
+    /**
      * Checks if Asset Administration Shell (AAS) Descriptor with provided ID is available (in registry).
      *
      * @async
@@ -121,11 +166,13 @@ export function useAASRegistryClient() {
         return failResponse;
     }
 
-    async function postAasDescriptor(aasDescriptor: descriptorTypes.AASDescriptor): Promise<void> {
-        if (aasRegistryUrl.value.trim() === '') return;
+    async function postAasDescriptor(aasDescriptor: descriptorTypes.AASDescriptor): Promise<boolean> {
+        const failResponse = false;
+
+        if (aasRegistryUrl.value.trim() === '') return failResponse;
 
         let aasRegUrl = aasRegistryUrl.value;
-        if (aasRegUrl.trim() === '') return;
+        if (aasRegUrl.trim() === '') return failResponse;
         if (aasRegUrl.endsWith('/')) aasRegUrl = stripLastCharacter(aasRegUrl);
         if (!aasRegUrl.endsWith(endpointPath)) aasRegUrl += endpointPath;
 
@@ -137,16 +184,17 @@ export function useAASRegistryClient() {
         const body = JSON.stringify(aasDescriptor);
 
         const response = await postRequest(path, body, headers, context, disableMessage);
-        if (response.success) {
-            navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
-        }
+
+        return response.success;
     }
 
-    async function putAasDescriptor(aasDescriptor: descriptorTypes.AASDescriptor): Promise<void> {
-        if (aasRegistryUrl.value.trim() === '') return;
+    async function putAasDescriptor(aasDescriptor: descriptorTypes.AASDescriptor): Promise<boolean> {
+        const failResponse = false;
+
+        if (aasRegistryUrl.value.trim() === '') return failResponse;
 
         let aasRegUrl = aasRegistryUrl.value;
-        if (aasRegUrl.trim() === '') return;
+        if (aasRegUrl.trim() === '') return failResponse;
         if (aasRegUrl.endsWith('/')) aasRegUrl = stripLastCharacter(aasRegUrl);
         if (!aasRegUrl.endsWith(endpointPath)) aasRegUrl += endpointPath;
 
@@ -158,9 +206,7 @@ export function useAASRegistryClient() {
         const body = JSON.stringify(aasDescriptor);
 
         const response = await putRequest(path, body, headers, context, disableMessage);
-        if (response.success) {
-            navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
-        }
+        return response.success;
     }
 
     function createDescriptorFromAAS(
@@ -188,6 +234,8 @@ export function useAASRegistryClient() {
 
     return {
         endpointPath,
+        getAasEndpoint,
+        getAasEndpointById,
         fetchAasDescriptorList,
         fetchAasDescriptorById,
         isAvailableById,

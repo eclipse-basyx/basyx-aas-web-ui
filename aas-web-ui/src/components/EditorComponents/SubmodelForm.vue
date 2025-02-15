@@ -2,7 +2,7 @@
     <v-dialog v-model="editSMDialog" width="860" persistent>
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{ newSm ? 'Create a new Submodel' : 'Edit Submodel' }}</span>
+                {{ newSm ? 'Create a new Submodel' : 'Edit Submodel' }}
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
@@ -12,11 +12,11 @@
                         <v-expansion-panel-title>Details</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <TextInput
-                                v-if="newSm"
                                 v-model="submodelId"
                                 label="ID"
                                 :show-generate-iri-button="true"
-                                type="Submodel" />
+                                type="Submodel"
+                                :disabled="!newSm" />
                             <TextInput v-model="submodelIdShort" label="IdShort" />
                             <SelectInput v-model="submodelKind" label="Modelling Kind" type="modellingKind" />
                             <MultiLanguageTextInput v-model="displayName" label="Display Name" type="displayName" />
@@ -73,8 +73,6 @@
     import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useIDUtils } from '@/composables/IDUtils';
-    import { useSMEHandling } from '@/composables/SMEHandling';
-    import { useSMHandling } from '@/composables/SMHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/DescriptorUtils';
@@ -91,8 +89,6 @@
 
     // Composables
     const { generateUUID } = useIDUtils();
-    const { fetchAndDispatchSme } = useSMEHandling();
-    const { fetchAndDispatchSmById } = useSMHandling();
 
     // Stores
     const aasStore = useAASStore();
@@ -292,9 +288,7 @@
             const path = submodelRepoUrl.value + '/' + base64Encode(submodelObject.value.id);
             const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
             router.push({ query: { aas: aasEndpoint, path: path } });
-            await fetchAndDispatchSme(path);
-            aasStore.dispatchSelectedNode(submodelObject.value);
-            await fetchAndDispatchSmById(submodelObject.value.id);
+            navigationStore.dispatchTriggerTreeviewReload();
         } else {
             // Update existing Submodel
             await putSubmodel(submodelObject.value);
@@ -305,9 +299,9 @@
             // Update AAS Descriptor
             await putSubmodelDescriptor(descriptor);
             if (submodelObject.value.id === selectedNode.value.id) {
-                const path = submodelRepoUrl.value + '/' + base64Encode(submodelObject.value.id);
-                await fetchAndDispatchSme(path);
+                router.go(0); // Reload current route
             }
+            navigationStore.dispatchTriggerTreeviewReload();
         }
         clearForm();
         editSMDialog.value = false;
@@ -335,8 +329,9 @@
             localAAS.submodels.push(jsonization.toJsonable(submodelReference));
         }
         await putAas(aas);
-        // dispatch the updated AAS
-        // aasStore.dispatchSelectedAAS(localAAS);
+
+        // Update AAS in Store
+        aasStore.dispatchSelectedAAS(localAAS);
     }
 
     function closeDialog(): void {

@@ -310,7 +310,7 @@
     const aasStore = useAASStore();
 
     // Composables
-    const { calculateSMEPathes } = useSMHandling();
+    const { setData } = useSMHandling();
     const { nameToDisplay, checkIdShort } = useReferableUtils();
     const { hasValue, valueToDisplay } = useSME();
     const { valueUrl } = useSMEFile();
@@ -353,7 +353,7 @@
             return;
         }
 
-        technicalData.value = await calculateSMEPathes({ ...props.submodelElementData }, selectedNode.value.path, true);
+        technicalData.value = await setData({ ...props.submodelElementData }, selectedNode.value.path, true);
 
         extractGeneralInformation(technicalData.value);
         extractProductClassifications(technicalData.value);

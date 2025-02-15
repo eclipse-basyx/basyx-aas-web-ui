@@ -49,6 +49,7 @@
     import { useTheme } from 'vuetify';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
+    import { useSME } from '@/composables/SubmodelElements/SubmodelElement';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
 
     export default defineComponent({
@@ -73,12 +74,14 @@
             const theme = useTheme();
             const { cdDefinition } = useConceptDescriptionHandling();
             const { descriptionToDisplay, nameToDisplay } = useReferableUtils();
+            const { valueToDisplay } = useSME();
 
             return {
                 theme, // Theme Object
                 cdDefinition,
                 nameToDisplay,
                 descriptionToDisplay,
+                valueToDisplay,
             };
         },
     });

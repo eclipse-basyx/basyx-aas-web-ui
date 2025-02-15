@@ -1,16 +1,25 @@
+import { useReferenceUtils } from '@/composables/AAS/ReferenceUtils';
 import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
 import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';
-import { extractEndpointHref } from '@/utils/DescriptorUtils';
+import { useSMHandling } from './SMHandling';
 
 export function useAASHandling() {
     // Composables
     const {
         fetchAasDescriptorById: fetchAasDescriptorByIdFromRegistry,
         fetchAasDescriptorList: fetchAasDescriptorListFromRegistry,
+        getAasEndpoint,
+        getAasEndpointById: getAasEndpointByIdFromRegistry,
     } = useAASRegistryClient();
-    const { fetchAas: fetchAasFromRepo, fetchAasById: fetchAasByIdFromRepo } = useAASRepositoryClient();
+    const {
+        fetchAas: fetchAasFromRepo,
+        fetchAasById: fetchAasByIdFromRepo,
+        getAasEndpointById: getAasEndpointByIdFromRepo,
+    } = useAASRepositoryClient();
+    const { fetchSmById } = useSMHandling();
+    const { extractId } = useReferenceUtils();
 
     // Stores
     const aasStore = useAASStore();
@@ -36,10 +45,6 @@ export function useAASHandling() {
 
         if (!aas || Object.keys(aas).length === 0) return failResponse;
 
-        aas.isActive = true;
-
-        // TODO move router.push to AASDataStore
-        // router.push({ query: { aas: aasEndpoint } });
         aasStore.dispatchSelectedAAS(aas);
 
         return aas;
@@ -66,10 +71,6 @@ export function useAASHandling() {
 
         if (!aas || Object.keys(aas).length === 0) return failResponse;
 
-        aas.isActive = true;
-
-        // TODO move router.push to AASDataStore
-        // router.push({ query: { aas: getAasEndpoint(aas) } });
         aasStore.dispatchSelectedAAS(aas);
 
         return aas;
@@ -91,6 +92,7 @@ export function useAASHandling() {
 
         aasDescriptors = aasDescriptors.map((aasDescriptor: any) => {
             aasDescriptor.timestamp = formatDate(new Date());
+            aasDescriptor.path = getAasEndpoint(aasDescriptor);
             return aasDescriptor;
         });
 
@@ -121,6 +123,7 @@ export function useAASHandling() {
         }
 
         aasDescriptor.timestamp = formatDate(new Date());
+        aasDescriptor.path = getAasEndpoint(aasDescriptor);
 
         return aasDescriptor || failResponse;
     }
@@ -177,10 +180,8 @@ export function useAASHandling() {
             return failResponse;
         }
 
-        const aasEndpoint = getAasEndpoint(aas);
-
         aas.timestamp = formatDate(new Date());
-        aas.path = aasEndpoint;
+        aas.path = getAasEndpointByIdFromRepo(aasId);
 
         return aas;
     }
@@ -188,7 +189,6 @@ export function useAASHandling() {
     /**
      * Retrieves the Asset Administration Shell (AAS) endpoint URL by its ID.
      *
-     * @async
      * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
      * @returns {Promise<string>} A promise that resolves to an AAS endpoint.
      */
@@ -201,34 +201,50 @@ export function useAASHandling() {
 
         if (aasId === '') return failResponse;
 
-        const aasDescriptor = await fetchAasDescriptorByIdFromRegistry(aasId);
-        const aasEndpoint = getAasEndpoint(aasDescriptor);
+        // First try to determine AAS endpoint with the help of the registry
+        const aasEndpoint = await getAasEndpointByIdFromRegistry(aasId);
 
-        return aasEndpoint || failResponse;
+        if (aasEndpoint && aasEndpoint.trim() !== '') return aasEndpoint;
+
+        // Second try to determine AAS endpoint with the help of the repo
+        return getAasEndpointByIdFromRepo(aasId) || failResponse;
     }
 
     /**
-     * Retrieves the Asset Administration Shell (AAS) endpoint URL of an AAS descriptor.
+     * Fetches a list of all available Submodel (SM) Descriptors of a specified Asset Administration Shell (AAS).
      *
      * @async
-     * @param {string} aasDescriptor - The AAS descriptor to retrieve the endpoint for.
-     * @returns {string} A promise that resolves to an AAS endpoint.
+     * @returns {Promise<Array<any>>} A promise that resolves to an array of SM Descriptors.
+     * An empty array is returned if the request fails or no SM Descriptors are found.
      */
-    function getAasEndpoint(aasDescriptor: any): string {
-        // TODO Replace extractEndpointHref(aasDescriptor, 'AAS-3.0') by getAasEndpoint(aasDescriptor) in all components
-        const failResponse = '';
+    async function fetchAasSmListById(aasId: string): Promise<Array<any>> {
+        const failResponse = [] as Array<any>;
+
+        if (!aasId) return failResponse;
+
+        aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
+
+        const aas = await fetchAasById(aasId);
 
         if (
-            !aasDescriptor ||
-            Object.keys(aasDescriptor).length === 0 ||
-            !aasDescriptor.id ||
-            aasDescriptor.id.trim() === ''
-        )
-            return failResponse;
+            aas &&
+            Object.keys(aas).length > 0 &&
+            aas.submodels &&
+            Array.isArray(aas.submodels) &&
+            aas.submodels.length > 0
+        ) {
+            const submodelRefs = aas.submodels;
 
-        const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0');
+            const submodelPromises = submodelRefs.map((submodelRef: any) => {
+                return fetchSmById(extractId(submodelRef, 'Submodel'), false, true);
+            });
 
-        return aasEndpoint || failResponse;
+            return await Promise.all(submodelPromises);
+        }
+
+        return failResponse;
     }
 
     return {
@@ -238,7 +254,7 @@ export function useAASHandling() {
         fetchAasDescriptor,
         fetchAas,
         fetchAasById,
-        getAasEndpoint,
+        fetchAasSmListById,
         getAasEndpointById,
     };
 }

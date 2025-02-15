@@ -1,18 +1,10 @@
-import type {
-    LocationQuery,
-    NavigationGuardNext,
-    RouteLocationNormalizedGeneric,
-    Router,
-    RouteRecordRaw,
-} from 'vue-router';
+import type { Router, RouteRecordNameGeneric, RouteRecordRaw } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
 import AASList from '@/components/AppNavigation/AASList.vue';
 import ComponentVisualization from '@/components/ComponentVisualization.vue';
 import SubmodelList from '@/components/SubmodelList.vue';
 import { useAASHandling } from '@/composables/AASHandling';
-import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
 import { useSMEHandling } from '@/composables/SMEHandling';
-import { useSMHandling } from '@/composables/SMHandling';
 import AASEditor from '@/pages/AASEditor.vue';
 import AASViewer from '@/pages/AASViewer.vue';
 import About from '@/pages/About.vue';
@@ -20,8 +12,10 @@ import Dashboard from '@/pages/Dashboard.vue';
 import DashboardGroup from '@/pages/DashboardGroup.vue';
 import Page404 from '@/pages/Page404.vue';
 import SubmodelViewer from '@/pages/SubmodelViewer.vue';
+import { useEnvStore } from '@/store/EnvironmentStore';
 import { useNavigationStore } from '@/store/NavigationStore';
-import { base64Decode } from '@/utils/EncodeDecodeUtils';
+import { useRouteHandling } from './composables/routeHandling';
+import { useAASStore } from './store/AASDataStore';
 
 // Static routes
 const staticRoutes: Array<RouteRecordRaw> = [
@@ -31,16 +25,16 @@ const staticRoutes: Array<RouteRecordRaw> = [
         component: AASViewer,
         meta: { name: 'AAS Viewer', subtitle: 'Visualize Asset Administration Shells' },
     },
-    { path: '/aaslist', name: 'AASList', component: AASList },
-    { path: '/submodellist', name: 'SubmodelList', component: SubmodelList },
-    { path: '/componentvisualization', name: 'ComponentVisualization', component: ComponentVisualization },
-    { path: '/visu', name: 'Visualization', component: ComponentVisualization, meta: { name: 'Visualization' } },
     {
         path: '/aaseditor',
         name: 'AASEditor',
         component: AASEditor,
         meta: { name: 'AAS Editor', subtitle: 'Edit Asset Administration Shells' },
     },
+    { path: '/aaslist', name: 'AASList', component: AASList },
+    { path: '/submodellist', name: 'SubmodelList', component: SubmodelList },
+    { path: '/componentvisualization', name: 'ComponentVisualization', component: ComponentVisualization },
+    { path: '/visu', name: 'Visualization', component: ComponentVisualization, meta: { name: 'Visualization' } },
     {
         path: '/submodelviewer',
         name: 'SubmodelViewer',
@@ -75,7 +69,9 @@ const generateModuleRoutes = async (): Promise<Array<RouteRecordRaw>> => {
         // Define the route path, e.g., '/modules/module-a' if needed
         const routePath = `/modules/${moduleName.toLowerCase()}`;
 
-        const isVisibleModule = moduleComponent.default?.isVisibleModule ?? true;
+        const isDesktopModule = moduleComponent.default?.isDesktopModule ?? true; // Modules are per default available in desktop view
+        const isMobileModule = moduleComponent.default?.isMobileModule ?? false; // Modules are per default not available in mobile view
+        const isVisibleModule = moduleComponent.default?.isVisibleModule ?? true; // Modules are per default visible
         const isOnlyVisibleWithSelectedAas = moduleComponent.default?.isOnlyVisibleWithSelectedAas ?? false;
         const isOnlyVisibleWithSelectedNode = moduleComponent.default?.isOnlyVisibleWithSelectedNode ?? false;
         let preserveRouteQuery = moduleComponent.default?.preserveRouteQuery ?? false;
@@ -89,6 +85,8 @@ const generateModuleRoutes = async (): Promise<Array<RouteRecordRaw>> => {
             meta: {
                 name: moduleName,
                 subtitle: 'Module',
+                isDesktopModule: isDesktopModule,
+                isMobileModule: isMobileModule,
                 isVisibleModule: isVisibleModule,
                 isOnlyVisibleWithSelectedAas: isOnlyVisibleWithSelectedAas,
                 isOnlyVisibleWithSelectedNode: isOnlyVisibleWithSelectedNode,
@@ -112,18 +110,30 @@ export async function createAppRouter(): Promise<Router> {
 
     // Stores
     const navigationStore = useNavigationStore();
+    const aasStore = useAASStore();
+    const envStore = useEnvStore();
 
     // Connect to (BaSyx) components, otherwise IDs redirecting not possible
     navigationStore.connectComponents();
 
     // Composables
-    const { getAasId } = useAASDiscoveryClient();
-    const { fetchAndDispatchAas, getAasEndpointById } = useAASHandling();
-    const { getSmEndpointById } = useSMHandling();
+    const { fetchAndDispatchAas } = useAASHandling();
     const { fetchAndDispatchSme } = useSMEHandling();
+    const { idRedirectHandled } = useRouteHandling();
 
     // Data
-    const possibleGloBalAssetIdQueryParameter = ['globalAssetId', 'globalassedid'];
+    const routesForMobile: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList', 'Visualization'];
+    const routesForDesktop: Array<RouteRecordNameGeneric> = [
+        'AASViewer',
+        'AASEditor',
+        'SubmodelViewer',
+        'Visualization',
+    ];
+    const routesStayOnPages: Array<RouteRecordNameGeneric> = ['About', 'NotFound404'];
+    const routesDesktopToAASViewer: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList'];
+    const routesMobileToAASList: Array<RouteRecordNameGeneric> = ['AASViewer', 'AASEditor', 'SubmodelViewer'];
+    const routesToVisualization: Array<RouteRecordNameGeneric> = ['ComponentVisualization'];
+    const possibleGloBalAssetIdQueryParameter = ['globalAssetId', 'globalassetid'];
     const possibleAasIdQueryParameter = ['aasId', 'aasid'];
     const possibleSmIdQueryParameter = ['smId', 'smid'];
     const possibleIdQueryParameter = [
@@ -131,6 +141,10 @@ export async function createAppRouter(): Promise<Router> {
         ...possibleAasIdQueryParameter,
         ...possibleSmIdQueryParameter,
     ];
+
+    // Computed Properties
+    const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
+    const allowEditing = computed(() => envStore.getAllowEditing); // Check if the current environment allows showing the AAS Editor
 
     // Save the generated routes in the navigation store
     navigationStore.dispatchModuleRoutes(moduleRoutes);
@@ -142,9 +156,17 @@ export async function createAppRouter(): Promise<Router> {
 
     router.beforeEach(async (to, from, next) => {
         // Handle redirection of `globalAssetId`, `aasId` and `smId`
-        if (await idRedirectHandled(to, next)) return;
-
-        // TODO Move route handling (handleMobileView(), handleDesktopView()) from App.vue to this route guard - https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/225
+        if (
+            await idRedirectHandled(
+                to,
+                next,
+                possibleIdQueryParameter,
+                possibleGloBalAssetIdQueryParameter,
+                possibleAasIdQueryParameter,
+                possibleSmIdQueryParameter
+            )
+        )
+            return;
 
         // Same route
         if (from.name && from.name === to.name) {
@@ -187,128 +209,105 @@ export async function createAppRouter(): Promise<Router> {
                     if (queryLoaded && Object.keys(queryLoaded).length > 0 && updatedRoute !== to) {
                         next(updatedRoute);
                         // Dispatch AAS/SM/SME with respect to URL query parameter
-                        if (queryLoaded.aas) await fetchAndDispatchAas(queryLoaded.aas as string);
-                        if (queryLoaded.path) await fetchAndDispatchSme(queryLoaded.path as string, true);
+                        // if (queryLoaded.aas) await fetchAndDispatchAas(queryLoaded.aas as string);
+                        // if (queryLoaded.path) await fetchAndDispatchSme(queryLoaded.path as string, true);
                         return;
                     }
                 }
             }
         }
 
-        // TODO Fetch and dispatching of AAS/SM/SME with respect to URL query parameter
+        // Check if single AAS mode is on and no aas query is set to either redirect or show 404
+        if (envStore.getSingleAas && (!to.query.aas || (to.query.aas as string).trim() === '')) {
+            if (!routesStayOnPages.includes(to.name as string) && !to.path.startsWith('/modules/')) {
+                if (envStore.getSingleAasRedirect) {
+                    window.location.replace(envStore.getSingleAasRedirect);
+                    return;
+                } else if (to.name !== 'NotFound404') {
+                    next({ name: 'NotFound404' });
+                    return;
+                }
+            }
+        }
+
+        // Handle mobile/desktop view
+        if (isMobile.value) {
+            // Handle mobile view
+            if (
+                routesForMobile.includes(to.name) ||
+                routesStayOnPages.includes(to.name) ||
+                (to.path.includes('/modules/') && to.meta.isMobileModule)
+            ) {
+                // Do nothing
+            } else if (
+                routesMobileToAASList.includes(to.name) ||
+                (to.path.includes('/modules/') && !to.meta.isMobileModule)
+            ) {
+                // Redirect to 'AASList' with query
+                next({ name: 'AASList', query: to.query });
+                return;
+            } else if (routesToVisualization.includes(to.name)) {
+                // Redirect to 'Visualization' with query
+                next({ name: 'Visualization', query: to.query });
+                return;
+            }
+        } else {
+            // Handle desktop view
+            if (
+                routesForDesktop.includes(to.name) ||
+                routesStayOnPages.includes(to.name) ||
+                (to.path.includes('/modules/') && to.meta.isDesktopModule)
+            ) {
+                // Do nothing
+            } else if (
+                routesDesktopToAASViewer.includes(to.name) ||
+                (to.name === 'AASEditor' && !allowEditing.value) ||
+                (to.path.includes('/modules/') && !to.meta.isDesktopModule)
+            ) {
+                // Redirect to 'AASViewer' with query
+                next({ name: 'AASViewer', query: to.query });
+                return;
+            } else if (routesToVisualization.includes(to.name)) {
+                // Redirect to 'Visualization' with query
+                next({ name: 'Visualization', query: to.query });
+                return;
+            }
+        }
+
         // TODO Remove keep alive from App.vue
+
+        // Fetch and dispatch AAS
+        if (to.query.aas && to.query.aas !== '' && from.query.aas !== to.query.aas) {
+            const aas = await fetchAndDispatchAas(to.query.aas as string);
+            if (!aas || Object.keys(aas).length === 0) {
+                // Remove aas query for not available AAS endpoint
+                const updatedRoute = Object.assign({}, to, {
+                    query: {},
+                });
+                next(updatedRoute);
+                return;
+            }
+        } else if (!to.query.aas || to.query.aas === '') {
+            aasStore.dispatchSelectedAAS({});
+        }
+
+        // Fetch and dispatch SM/SME
+        if (to.query.path && to.query.path !== '' && from.query.path !== to.query.path) {
+            const sme = await fetchAndDispatchSme(to.query.path as string, true);
+            if (!sme || Object.keys(sme).length === 0) {
+                // Remove path query for not available SME path
+                const updatedRoute = Object.assign({}, to, {
+                    query: { aas: to.query.aas },
+                });
+                next(updatedRoute);
+                return;
+            }
+        } else if (!to.query.path || to.query.path === '') {
+            aasStore.dispatchSelectedNode({});
+        }
 
         next();
     });
-
-    /**
-     * Handles the redirection of `globalAssetId`, `aasId` and `smId` query parameter from the given route location.
-     *
-     * @async
-     * @function idRedirectHandled
-     * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
-     * @param {NavigationGuardNext} next - A function that must be called to resolve the hook. The action depends on the arguments provided to `next`.
-     * @returns {Promise<boolean>} Returns a promise that resolves to true if a redirection was performed, otherwise false.
-     */
-    async function idRedirectHandled(to: RouteLocationNormalizedGeneric, next: NavigationGuardNext): Promise<boolean> {
-        // Note: Query parameter are handled case sensitive!
-        if (possibleIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater))) {
-            if (await globalAssetIdRedirectHandled(to, next)) return true;
-            if (await aasIdSmIdRedirectHandled(to, next)) return true;
-        }
-        return false;
-    }
-
-    /**
-     * Handles the redirection of `globalAssetId` query parameter from the given route location.
-     * It resolves the `globalAssetId` to an `aasId` and finally to an `aasEndpoint`, and updates the route query.
-     *
-     * @async
-     * @function globalAssetIdRedirectHandled
-     * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
-     * @param {NavigationGuardNext} next - A function that must be called to resolve the hook. The action depends on the arguments provided to `next`.
-     * @returns {Promise<boolean>} Returns a promise that resolves to true if a redirection was performed, otherwise false.
-     */
-    async function globalAssetIdRedirectHandled(
-        to: RouteLocationNormalizedGeneric,
-        next: NavigationGuardNext
-    ): Promise<boolean> {
-        if (possibleGloBalAssetIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater))) {
-            const globalAssetIdBase64Encoded = to.query[possibleGloBalAssetIdQueryParameter[0]]
-                ? (to.query[possibleGloBalAssetIdQueryParameter[0]] as string)
-                : (to.query[possibleGloBalAssetIdQueryParameter[1]] as string);
-            const globalAssetId = base64Decode(globalAssetIdBase64Encoded);
-            const aasId = await getAasId(globalAssetId);
-            const aasEndpoint = await getAasEndpointById(aasId);
-            const query = {} as LocationQuery;
-
-            if (aasEndpoint.trim() !== '') {
-                query.aas = aasEndpoint.trim();
-                const updatedRoute = Object.assign({}, to, {
-                    query: query,
-                });
-                next(updatedRoute);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Handles the redirection of `aasId` and `smId` query parameter from the given route location.
-     * It resolves the `aasId`to an `aasEndpoint`, the `smId`to an `smEndpoint` and updates the route query.
-     *
-     * @async
-     * @function aasIdSmIdRedirectHandled
-     * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
-     * @param {NavigationGuardNext} next - A function that must be called to resolve the hook. The action depends on the arguments provided to `next`.
-     * @returns {Promise<boolean>} Returns a promise that resolves to true if a redirection was performed, otherwise false.
-     */
-    async function aasIdSmIdRedirectHandled(
-        to: RouteLocationNormalizedGeneric,
-        next: NavigationGuardNext
-    ): Promise<boolean> {
-        if (
-            possibleAasIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater)) ||
-            possibleSmIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater))
-        ) {
-            let aasEndpoint = '';
-            let smEndpoint = '';
-
-            if (to.query.aasId) {
-                const aasIdBase64Encoded = to.query[possibleAasIdQueryParameter[0]]
-                    ? (to.query[possibleAasIdQueryParameter[0]] as string)
-                    : (to.query[possibleAasIdQueryParameter[1]] as string);
-                const aasId = base64Decode(aasIdBase64Encoded);
-                aasEndpoint = await getAasEndpointById(aasId);
-            }
-            if (to.query.smId) {
-                const smIdBase64Encoded = to.query[possibleSmIdQueryParameter[0]]
-                    ? (to.query[possibleSmIdQueryParameter[0]] as string)
-                    : (to.query[possibleSmIdQueryParameter[1]] as string);
-                const smId = base64Decode(smIdBase64Encoded);
-                smEndpoint = await getSmEndpointById(smId);
-            }
-
-            aasEndpoint = aasEndpoint.trim();
-            smEndpoint = smEndpoint.trim();
-
-            if (aasEndpoint !== '' || smEndpoint !== '') {
-                const query = {} as LocationQuery;
-
-                if (aasEndpoint !== '') query.aas = aasEndpoint.trim();
-                if (smEndpoint !== '') query.path = smEndpoint.trim();
-
-                const updatedRoute = Object.assign({}, to, {
-                    query: query,
-                });
-
-                next(updatedRoute);
-                return true;
-            }
-        }
-        return false;
-    }
 
     return router;
 }

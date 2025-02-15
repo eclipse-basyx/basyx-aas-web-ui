@@ -55,6 +55,13 @@
                     :variable-type="variableType"
                     :is-editable="isEditable"
                     @update-value="updateValue"></BooleanType>
+                <DateType
+                    v-else-if="propertyObject.valueType == 'xs:date'"
+                    :date-value="propertyObject"
+                    :is-operation-variable="isOperationVariable"
+                    :variable-type="variableType"
+                    :is-editable="isEditable"
+                    @update-value="updateValue"></DateType>
                 <DateTimeStampType
                     v-else-if="propertyObject.valueType == 'xs:dateTime'"
                     :date-time-stamp-value="propertyObject"

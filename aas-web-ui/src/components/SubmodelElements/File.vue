@@ -104,6 +104,7 @@
 // TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent } from 'vue';
+    import { useSMEHandling } from '@/composables/SMEHandling';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -124,9 +125,11 @@
 
         setup() {
             const aasStore = useAASStore();
+            const { fetchAndDispatchSme } = useSMEHandling();
 
             return {
                 aasStore, // AASStore Object
+                fetchAndDispatchSme,
             };
         },
 
@@ -193,7 +196,8 @@
                 // Send Request to update the path of the file element
                 this.patchRequest(path, content, headers, context, disableMessage).then((response: any) => {
                     if (response.success) {
-                        this.$emit('updatePath'); // emit event to update the path in the parent component
+                        // After successful patch request fetch and dispatch updated SME
+                        this.fetchAndDispatchSme(this.SelectedNode.path, false);
                     }
                 });
             },

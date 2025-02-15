@@ -7,13 +7,13 @@
                 density="compact"
                 :readonly="IsOutputVariable || !isEditable"
                 color="primary"
-                :messages="
-                    isOperationVariable ? '' : 'greyed out value on the right shows the current value in the AAS'
-                "
+                :messages="isOperationVariable ? '' : 'greyed out text on the right shows the current value in the AAS'"
                 :hide-details="IsOperationVariable ? true : false"
                 @update:model-value="changeState">
                 <template #label>
-                    <span style="display: inline; white-space: nowrap">{{ booleanValue.value }}</span>
+                    <span style="display: inline; white-space: nowrap" class="text-subtitleText">
+                        {{ booleanValue.value }}
+                    </span>
                 </template>
             </v-switch>
         </template>
@@ -36,6 +36,7 @@
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRequestHandling } from '@/composables/RequestHandling';
+    import { useSMEHandling } from '@/composables/SMEHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
     // Stores
@@ -43,6 +44,7 @@
 
     // Composables
     const { patchRequest } = useRequestHandling();
+    const { fetchAndDispatchSme } = useSMEHandling();
 
     const props = defineProps({
         booleanValue: {
@@ -81,31 +83,30 @@
 
     // Watchers
     watch(
-        selectedNode,
+        () => selectedNode.value,
         () => {
-            newBooleanValue.value = false;
+            initialize(props.booleanValue.value);
         },
         { deep: true }
     );
+
     watch(
         () => props.booleanValue,
-        () => {
-            setBooleanValue();
+        (propsBooleanValue) => {
+            initialize(propsBooleanValue.value);
         },
         { deep: true }
     );
 
     onMounted(() => {
-        setBooleanValue();
+        initialize(props.booleanValue.value);
     });
 
-    // Methods
-    function setBooleanValue(): void {
-        if (typeof props.booleanValue.value === 'string') {
-            const convertedValue = props.booleanValue.value === 'true';
-            newBooleanValue.value = convertedValue;
+    function initialize(booleanValue: string | boolean): void {
+        if (typeof booleanValue === 'string') {
+            newBooleanValue.value = booleanValue === 'true';
         } else {
-            newBooleanValue.value = props.booleanValue.value;
+            newBooleanValue.value = booleanValue;
         }
     }
 
@@ -123,9 +124,8 @@
         const disableMessage = false;
         patchRequest(path, content, headers, context, disableMessage).then((response: any) => {
             if (response.success) {
-                const updatedBooleanValue = { ...props.booleanValue };
-                updatedBooleanValue.value = content.toString().replace(/'/g, '');
-                emit('updateValue', updatedBooleanValue);
+                // After successful patch request fetch and dispatch updated SME
+                fetchAndDispatchSme(selectedNode.value.path, false);
             }
         });
     }

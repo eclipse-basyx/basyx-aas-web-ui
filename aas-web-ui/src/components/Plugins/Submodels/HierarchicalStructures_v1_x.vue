@@ -44,7 +44,7 @@
     });
 
     // Composables
-    const { calculateSMEPathes } = useSMHandling();
+    const { setData } = useSMHandling();
     const { getAasId } = useAASDiscoveryClient();
     const { nameToDisplay } = useReferableUtils();
     const { jumpToAasById } = useJumpHandling();
@@ -120,7 +120,7 @@
             return;
         }
 
-        bomData.value = await calculateSMEPathes({ ...props.submodelElementData }, props.submodelElementData.path);
+        bomData.value = await setData({ ...props.submodelElementData }, props.submodelElementData.path);
 
         // apply the primary color to the mermaid settings
         customDefaultThemeColors.nodeBorder = primaryColor.value;

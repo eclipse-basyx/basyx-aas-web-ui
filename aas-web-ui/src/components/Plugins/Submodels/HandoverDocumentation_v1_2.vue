@@ -362,7 +362,7 @@
     });
 
     // Composables
-    const { calculateSMEPathes } = useSMHandling();
+    const { setData } = useSMHandling();
     const { checkIdShort, nameToDisplay } = useReferableUtils();
     const { hasValue, valueToDisplay } = useSME();
     const { downloadFile } = useSMEFile();
@@ -394,7 +394,7 @@
             return;
         }
 
-        handoverDocumentationData.value = await calculateSMEPathes(
+        handoverDocumentationData.value = await setData(
             { ...props.submodelElementData },
             props.submodelElementData.path
         );

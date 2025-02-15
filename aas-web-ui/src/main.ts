@@ -6,6 +6,7 @@
 
 // Types
 import type { PluginType } from '@/types/Application';
+import type { App as AppType } from 'vue';
 // Components
 import { createPinia } from 'pinia';
 // Composables
@@ -13,23 +14,30 @@ import { createApp } from 'vue';
 import { defineComponent } from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
 // Plugins
-import { registerPlugins } from '@/plugins';
+import { registerVuetify } from '@/plugins';
 import App from './App.vue';
 import { initKeycloak, loginWithDirectGrant } from './authService';
 import { createAppRouter } from './router';
 import { useEnvStore } from './store/EnvironmentStore';
 import { useNavigationStore } from './store/NavigationStore';
 
-const app = createApp(App);
-const pinia = createPinia();
-app.use(pinia);
-app.use(VueApexCharts);
+initialize();
 
-async function startApp(): Promise<void> {
-    // Initialize the Environment Variable Store
+async function initialize(): Promise<void> {
+    const app = createApp(App);
+
+    // Pinia
+    const pinia = createPinia();
+    app.use(pinia);
+
+    // ApexCharts
+    app.use(VueApexCharts);
+
+    // Stores
     const envStore = useEnvStore();
+    const navigationStore = useNavigationStore();
 
-    // create keycloak instance
+    // Create keycloak instance
     if (envStore.getKeycloakActive) {
         if (envStore.getPreconfiguredAuth) {
             // Try to login with preconfigured credentials
@@ -59,14 +67,49 @@ async function startApp(): Promise<void> {
         }
     }
 
+    // Vuetify
+    registerVuetify(app);
+
+    // Load plugins aka Component Visualizations
+    navigationStore.dispatchPlugins(await getVisualizations(app));
+
+    // Determine if mobile or desktop
+    const isMobile = window.matchMedia('(max-width: 600px)').matches;
+    navigationStore.dispatchIsMobile(isMobile);
+
+    // Extend the window interface to include cordova and electron properties
+    interface ExtendedWindow extends Window {
+        cordova?: any;
+        electron?: any;
+    }
+    const extendedWindow = window as ExtendedWindow;
+
+    // Determine the platform
+    navigationStore.dispatchPlatform({
+        ios: /iPad|iPhone|iPod/.test(navigator.userAgent),
+        android: /Android/.test(navigator.userAgent),
+        cordova: !!extendedWindow.cordova,
+        electron: !!extendedWindow.electron,
+        chrome: /Chrome/.test(navigator.userAgent),
+        edge: /Edge/.test(navigator.userAgent),
+        firefox: /Firefox/.test(navigator.userAgent),
+        opera: /OPR/.test(navigator.userAgent),
+        win: /Windows/.test(navigator.platform),
+        mac: /MacIntel/.test(navigator.platform),
+        linux: /Linux/.test(navigator.platform),
+        touch: 'ontouchstart' in window,
+        ssr: false,
+    });
+
     // Create the router
     const router = await createAppRouter();
     app.use(router);
 
-    // Register Plugins (used for Vuetify components)
-    await registerPlugins(app);
+    // Mount the app
+    app.mount('#app');
+}
 
-    // Register BaSyx Web UI Plugins aka Component Visualizations
+async function getVisualizations(app: AppType): Promise<PluginType[]> {
     const pluginFileRecords = {
         ...import.meta.glob('./components/Plugins/Submodels/*.vue'),
         ...import.meta.glob('./components/Plugins/SubmodelElements/*.vue'),
@@ -88,12 +131,5 @@ async function startApp(): Promise<void> {
         }
     }
 
-    // Initialize the Navigation Store to manage the plugins
-    const navigationStore = useNavigationStore();
-    navigationStore.dispatchPlugins(plugins);
-
-    // Mount the app
-    app.mount('#app');
+    return plugins;
 }
-
-startApp();

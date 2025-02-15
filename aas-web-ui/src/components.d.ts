@@ -31,6 +31,7 @@ declare module 'vue' {
     DashboardElement: typeof import('./components/Dashboard/DashboardElement.vue')['default']
     DataSpecificationContent: typeof import('./components/UIComponents/DataSpecificationContent.vue')['default']
     DateTimeStampType: typeof import('./components/SubmodelElements/ValueTypes/DateTimeStampType.vue')['default']
+    DateType: typeof import('./components/SubmodelElements/ValueTypes/DateType.vue')['default']
     DeleteAAS: typeof import('./components/AppNavigation/DeleteAAS.vue')['default']
     DeleteDialog: typeof import('./components/EditorComponents/DeleteDialog.vue')['default']
     DescriptionElement: typeof import('./components/UIComponents/DescriptionElement.vue')['default']

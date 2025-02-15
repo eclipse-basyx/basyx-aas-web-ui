@@ -316,7 +316,7 @@
     const navigationStore = useNavigationStore();
 
     // Composables
-    const { calculateSMEPathes } = useSMHandling();
+    const { setData } = useSMHandling();
     const { checkIdShort, getSubmodelElementByIdShort, nameToDisplay } = useReferableUtils();
     const { hasValue, valueToDisplay } = useSME();
     const { determineAddress, generateVCard, getTypeOfEmailAddress, getTypeOfFaxNumber, getTypeOfTelephone } =
@@ -362,7 +362,7 @@
             return;
         }
 
-        digitalNameplateData.value = await calculateSMEPathes(
+        digitalNameplateData.value = await setData(
             { ...props.submodelElementData },
             props.submodelElementData.path,
             true

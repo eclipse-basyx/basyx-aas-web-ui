@@ -102,7 +102,7 @@
                             color="primary"
                             :loading="loading"
                             :disabled="disabled"
-                            @click="jumpToReference(reference, aasDescriptor, smRef)"
+                            @click="jumpToReference(reference)"
                             >Jump</v-btn
                         >
                         <!-- Add new Reference Key -->
@@ -128,6 +128,8 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useRouter } from 'vue-router';
+    import { useReferenceUtils } from '@/composables/AAS/ReferenceUtils';
+    import { useJumpHandling } from '@/composables/JumpHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
@@ -156,10 +158,14 @@
         setup() {
             const aasStore = useAASStore();
             const router = useRouter();
+            const { checkReference } = useReferenceUtils();
+            const { jumpToReference } = useJumpHandling();
 
             return {
                 aasStore, // AASStore Object
                 router, // Router Object
+                checkReference,
+                jumpToReference,
             };
         },
 
@@ -247,14 +253,9 @@
             // Function to check if the referenced Element exists
             validateReference() {
                 this.loading = true;
-                this.checkReference(this.reference, this.selectedAAS)
-                    .then(({ success, aasDescriptor, submodelRef }) => {
-                        // console.log('validateReference --> checkReference: ', success, aasDescriptor, submodelRef);
-                        if (success) {
-                            this.aasDescriptor = aasDescriptor;
-                            this.smRef = submodelRef;
-                            this.disabled = false;
-                        }
+                this.checkReference(this.reference)
+                    .then((success) => {
+                        this.disabled = !success;
                         this.loading = false;
                     })
                     .catch((error) => {
