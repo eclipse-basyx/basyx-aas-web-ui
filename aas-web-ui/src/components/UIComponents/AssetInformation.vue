@@ -33,7 +33,7 @@
 
 <script lang="ts" setup>
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-    import { useTechnicalData_v1_2Utils } from '@/composables/SubmodelTemplates/TechnicalData_v1_2Utils';
+    import { useTechnicalData_v1_2Utils } from '@/composables/AAS/SubmodelTemplates/TechnicalData_v1_2Utils';
     import { useAASStore } from '@/store/AASDataStore';
 
     // Composables

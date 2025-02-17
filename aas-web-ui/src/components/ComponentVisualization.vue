@@ -109,7 +109,7 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { checkSemanticId } from '@/utils/SemanticIdUtils';
+    import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils';
 
     // Vue Router
     const route = useRoute();

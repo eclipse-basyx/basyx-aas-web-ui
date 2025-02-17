@@ -1,8 +1,8 @@
+import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
 import { useReferenceUtils } from '@/composables/AAS/ReferenceUtils';
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
 import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
-import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
 import { useIDUtils } from '@/composables/IDUtils';
 import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';

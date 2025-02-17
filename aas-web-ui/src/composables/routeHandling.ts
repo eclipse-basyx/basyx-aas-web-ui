@@ -1,7 +1,7 @@
 import type { LocationQuery, NavigationGuardNext, RouteLocationNormalizedGeneric } from 'vue-router';
-import { useAASHandling } from '@/composables/AASHandling';
+import { useAASHandling } from '@/composables/AAS/AASHandling';
+import { useSMHandling } from '@/composables/AAS/SMHandling';
 import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
-import { useSMHandling } from '@/composables/SMHandling';
 import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
 export function useRouteHandling() {

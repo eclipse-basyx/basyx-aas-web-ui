@@ -77,7 +77,7 @@
 
 <script lang="ts" setup>
     import { onMounted, Ref, ref } from 'vue';
-    import { useAASHandling } from '@/composables/AASHandling';
+    import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
     import { useClipboardUtil } from '@/composables/ClipboardUtil';
     import { useJumpHandling } from '@/composables/JumpHandling';

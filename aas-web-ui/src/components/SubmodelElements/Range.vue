@@ -23,7 +23,7 @@
 
 <script lang="ts" setup>
     import { computed } from 'vue';
-    import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
+    import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
 
     const props = defineProps({
         rangeObject: {

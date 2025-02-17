@@ -1,5 +1,5 @@
+import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
-import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';
 

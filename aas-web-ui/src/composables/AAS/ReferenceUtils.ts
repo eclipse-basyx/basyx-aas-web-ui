@@ -4,7 +4,7 @@ import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
 import { useAASStore } from '@/store/AASDataStore';
 import { useNavigationStore } from '@/store/NavigationStore';
-import { keyTypes } from '@/utils/KeyTypesUtil';
+import { keyTypes } from '@/utils/AAS/KeyTypesUtil';
 
 export function useReferenceUtils() {
     // Stores

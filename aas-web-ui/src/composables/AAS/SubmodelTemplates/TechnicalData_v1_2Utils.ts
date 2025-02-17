@@ -1,8 +1,8 @@
-import { useSMEHandling } from '@/composables/SMEHandling';
-import { useSMHandling } from '@/composables/SMHandling';
-import { useSMEFile } from '@/composables/SubmodelElements/File';
-import { checkSemanticId } from '@/utils/SemanticIdUtils';
-import { useReferableUtils } from '../AAS/ReferableUtils';
+import { useSMEHandling } from '@/composables/AAS/SMEHandling';
+import { useSMHandling } from '@/composables/AAS/SMHandling';
+import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
+import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils';
+import { useReferableUtils } from '../ReferableUtils';
 
 export function useTechnicalData_v1_2Utils() {
     // Composables

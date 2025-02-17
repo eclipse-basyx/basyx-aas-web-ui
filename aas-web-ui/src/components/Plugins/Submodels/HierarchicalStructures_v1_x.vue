@@ -28,11 +28,11 @@
     import { computed, getCurrentInstance, onBeforeUnmount, onMounted, ref, watch } from 'vue';
     import { useTheme } from 'vuetify';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
+    import { useSMHandling } from '@/composables/AAS/SMHandling';
     import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
     import { useJumpHandling } from '@/composables/JumpHandling';
-    import { useSMHandling } from '@/composables/SMHandling';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { getSubmodelElementBySemanticId } from '@/utils/SemanticIdUtils';
+    import { getSubmodelElementBySemanticId } from '@/utils/AAS/SemanticIdUtils';
 
     // Options
     defineOptions({

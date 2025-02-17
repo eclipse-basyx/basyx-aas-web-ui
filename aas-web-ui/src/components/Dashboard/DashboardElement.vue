@@ -67,7 +67,7 @@
     import DashboardHandling from '@/mixins/DashboardHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useEnvStore } from '@/store/EnvironmentStore';
-    import { checkSemanticId } from '@/utils/SemanticIdUtils';
+    import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils';
 
     export default defineComponent({
         name: 'DashboardElement',

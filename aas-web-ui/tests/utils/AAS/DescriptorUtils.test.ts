@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractEndpointHref } from '@/utils/DescriptorUtils';
+import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 
 // Define test data
 const testData = [

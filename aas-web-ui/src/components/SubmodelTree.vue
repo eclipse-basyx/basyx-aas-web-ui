@@ -2,7 +2,7 @@
     <v-container fluid class="pa-0">
         <v-card color="rgba(0,0,0,0)" elevation="0">
             <template v-if="!singleAas">
-                <!-- Title Bar in the AASTreeview -->
+                <!-- Title Bar  -->
                 <v-card-title
                     :style="
                         selectedAAS && Object.keys(selectedAAS).length > 0
@@ -159,8 +159,8 @@
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
+    import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
-    import { useAASHandling } from '@/composables/AASHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';

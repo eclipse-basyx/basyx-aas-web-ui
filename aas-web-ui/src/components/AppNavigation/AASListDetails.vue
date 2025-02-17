@@ -133,13 +133,13 @@
 <script lang="ts" setup>
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
-    import { useAASHandling } from '@/composables/AASHandling';
+    import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { extractEndpointHref } from '@/utils/DescriptorUtils';
-    import { getKeyTypeAbbreviation } from '@/utils/KeyTypesUtil';
+    import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
+    import { getKeyTypeAbbreviation } from '@/utils/AAS/KeyTypesUtil';
 
     // Vue Router
     const route = useRoute();

@@ -47,8 +47,8 @@
 
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
+    import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useRequestHandling } from '@/composables/RequestHandling';
-    import { useSMEHandling } from '@/composables/SMEHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { dateRegex } from '@/utils/DateUtils';
 

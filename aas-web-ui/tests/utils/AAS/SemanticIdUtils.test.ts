@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { checkSemanticId, getEquivalentEclassSemanticIds, getEquivalentIriSemanticIds } from '@/utils/SemanticIdUtils';
+import {
+    checkSemanticId,
+    getEquivalentEclassSemanticIds,
+    getEquivalentIriSemanticIds,
+} from '@/utils/AAS/SemanticIdUtils';
 
 describe('SemanticIdUtils.ts; Tests for checkSemanticId()', () => {
     // Define semanticId
