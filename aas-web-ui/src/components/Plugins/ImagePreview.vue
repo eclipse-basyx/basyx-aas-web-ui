@@ -97,7 +97,7 @@
                     new URL(this.submodelElementData.value);
                     this.imageUrl = this.submodelElementData.value;
                 } catch {
-                    let path = this.valueUrl(this.submodelElementData.value);
+                    let path = this.valueUrl(this.submodelElementData);
                     let context = 'retrieving Attachment File';
                     let disableMessage = false;
                     this.getRequest(path, context, disableMessage).then((response: any) => {

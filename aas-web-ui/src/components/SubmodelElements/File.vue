@@ -172,7 +172,7 @@
                 handler() {
                     if (!this.isFocused) {
                         this.newPathValue = this.fileObject.value;
-                        this.localPathValue = this.valueUrl(this.fileObject.value);
+                        this.localPathValue = this.valueUrl(this.fileObject);
                     }
                 },
             },
@@ -180,7 +180,7 @@
 
         mounted() {
             this.newPathValue = this.fileObject.value;
-            this.localPathValue = this.valueUrl(this.fileObject.value);
+            this.localPathValue = this.valueUrl(this.fileObject);
         },
 
         methods: {
