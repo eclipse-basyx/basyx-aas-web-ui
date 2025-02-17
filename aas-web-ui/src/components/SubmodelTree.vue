@@ -164,6 +164,7 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { isEmptyString } from '@/utils/StringUtils';
 
     // Vue Router
     const route = useRoute();
@@ -329,10 +330,6 @@
     function openDeleteDialog(element: any): void {
         deleteDialog.value = true;
         elementToDelete.value = element;
-    }
-
-    function isEmptyString(val: string): boolean {
-        return !val || val.trim() === '';
     }
 
     function computePath(sme: any, parent: any, index: number): string {
