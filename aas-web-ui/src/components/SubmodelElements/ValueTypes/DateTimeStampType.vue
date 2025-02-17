@@ -52,8 +52,8 @@
 
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
+    import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useRequestHandling } from '@/composables/RequestHandling';
-    import { useSMEHandling } from '@/composables/SMEHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { createXSDDateString, dateTimeRegex } from '@/utils/DateUtils';
     import { padTo2Digits } from '@/utils/NumberUtils';

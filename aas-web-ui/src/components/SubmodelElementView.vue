@@ -165,8 +165,8 @@
 <script lang="ts" setup>
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
-    import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
-    import { useSMEHandling } from '@/composables/SMEHandling';
+    import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
+    import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';

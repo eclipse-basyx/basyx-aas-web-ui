@@ -349,11 +349,11 @@
 <script lang="ts" setup>
     import { onMounted, ref } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
-    import { useSMHandling } from '@/composables/SMHandling';
-    import { useSMEFile } from '@/composables/SubmodelElements/File';
-    import { useSME } from '@/composables/SubmodelElements/SubmodelElement';
+    import { useSMHandling } from '@/composables/AAS/SMHandling';
+    import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
+    import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement';
+    import { getSubmodelElementBySemanticId, getSubmodelElementsBySemanticId } from '@/utils/AAS/SemanticIdUtils';
     import { getLanguageName } from '@/utils/LocaleUtils';
-    import { getSubmodelElementBySemanticId, getSubmodelElementsBySemanticId } from '@/utils/SemanticIdUtils';
 
     // Options
     defineOptions({

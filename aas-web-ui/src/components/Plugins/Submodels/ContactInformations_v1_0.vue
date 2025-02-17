@@ -228,13 +228,13 @@
 <script lang="ts" setup>
     import { onMounted, ref } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
-    import { useSMHandling } from '@/composables/SMHandling';
-    import { useSME } from '@/composables/SubmodelElements/SubmodelElement';
-    import { useContactInformation_v1_0Utils } from '@/composables/SubmodelTemplates/ContactInformation_v1_0Utils';
+    import { useSMHandling } from '@/composables/AAS/SMHandling';
+    import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement';
+    import { useContactInformation_v1_0Utils } from '@/composables/AAS/SubmodelTemplates/ContactInformation_v1_0Utils';
     import { useVirtualContactFileUtils } from '@/composables/VirtualContactFileUtils';
+    import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils';
+    import { firstLangStringSetText } from '@/utils/AAS/SubmodelElements/MultiLanguagePropertyUtils';
     import { getCountryName, getLanguageName } from '@/utils/LocaleUtils';
-    import { checkSemanticId } from '@/utils/SemanticIdUtils';
-    import { firstLangStringSetText } from '@/utils/SubmodelElements/MultiLanguagePropertyUtils';
 
     // Options
     defineOptions({

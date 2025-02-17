@@ -258,8 +258,8 @@
 // TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent } from 'vue';
+    import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
-    import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import DescriptionElement from './DescriptionElement.vue';

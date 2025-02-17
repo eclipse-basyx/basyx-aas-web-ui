@@ -60,7 +60,7 @@
 <script lang="ts" setup>
     import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { computed, onMounted, ref, watch } from 'vue';
-    import { extractEndpointHref } from '@/utils/DescriptorUtils';
+    import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 
     const props = defineProps<{
         label: string;

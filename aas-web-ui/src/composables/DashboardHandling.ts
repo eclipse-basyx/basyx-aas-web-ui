@@ -3,7 +3,7 @@ import { useIDUtils } from '@/composables/IDUtils';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useEnvStore } from '@/store/EnvironmentStore';
-import { extractEndpointHref } from '@/utils/DescriptorUtils';
+import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
 export function useDashboardHandling() {

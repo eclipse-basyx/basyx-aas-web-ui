@@ -1,9 +1,9 @@
-import { useSMEFile } from '@/composables/SubmodelElements/File';
-import { useSMEProperty } from '@/composables/SubmodelElements/Property';
+import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
+import { useSMEProperty } from '@/composables/AAS/SubmodelElements/Property';
 import {
     hasValue as mlpHasValue,
     valueToDisplay as mlpValueToDisplay,
-} from '@/utils/SubmodelElements/MultiLanguagePropertyUtils';
+} from '@/utils/AAS/SubmodelElements/MultiLanguagePropertyUtils';
 
 export function useSME() {
     const { hasValue: fileHasValue, valueToDisplay: fileValueToDisplay } = useSMEFile();

@@ -1,5 +1,5 @@
 import { defineComponent } from 'vue';
-import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
+import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
 import RequestHandling from '@/mixins/RequestHandling';
 import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
 import { useAASStore } from '@/store/AASDataStore';

@@ -27,7 +27,7 @@
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { extractEndpointHref } from '@/utils/DescriptorUtils';
+    import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
     import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
     const router = useRouter();

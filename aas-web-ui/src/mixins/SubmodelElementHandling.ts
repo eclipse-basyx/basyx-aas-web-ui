@@ -5,9 +5,9 @@ import { useJumpHandling } from '@/composables/JumpHandling';
 import RequestHandling from '@/mixins/RequestHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useNavigationStore } from '@/store/NavigationStore';
+import { getEquivalentEclassSemanticIds, getEquivalentIriSemanticIds } from '@/utils/AAS/SemanticIdUtils';
 import { formatDate } from '@/utils/DateUtils';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
-import { getEquivalentEclassSemanticIds, getEquivalentIriSemanticIds } from '@/utils/SemanticIdUtils';
 
 export default defineComponent({
     name: 'SubmodelElementHandling',

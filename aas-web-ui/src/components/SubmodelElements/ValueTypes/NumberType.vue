@@ -55,9 +55,9 @@
 
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
-    import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
+    import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
+    import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useRequestHandling } from '@/composables/RequestHandling';
-    import { useSMEHandling } from '@/composables/SMEHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
     // Stores

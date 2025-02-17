@@ -93,7 +93,7 @@
 // TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import { useSMEHandling } from '@/composables/SMEHandling';
+    import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import RequestHandling from '@/mixins/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
 

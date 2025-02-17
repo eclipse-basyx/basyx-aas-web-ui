@@ -294,11 +294,11 @@
 <script lang="ts" setup>
     import { computed, onMounted, ref } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
-    import { useSMHandling } from '@/composables/SMHandling';
-    import { useSMEFile } from '@/composables/SubmodelElements/File';
-    import { useSME } from '@/composables/SubmodelElements/SubmodelElement';
+    import { useSMHandling } from '@/composables/AAS/SMHandling';
+    import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
+    import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement';
     import { useAASStore } from '@/store/AASDataStore';
-    import { getSubmodelElementBySemanticId } from '@/utils/SemanticIdUtils';
+    import { getSubmodelElementBySemanticId } from '@/utils/AAS/SemanticIdUtils';
 
     // Define component options such as custom static properties
     defineOptions({

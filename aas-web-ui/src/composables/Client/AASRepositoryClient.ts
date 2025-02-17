@@ -5,7 +5,7 @@ import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
 import { useIDUtils } from '@/composables/IDUtils';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
-import { extractEndpointHref } from '@/utils/DescriptorUtils';
+import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { downloadFile } from '@/utils/generalUtils';
 import { stripLastCharacter } from '@/utils/StringUtils';

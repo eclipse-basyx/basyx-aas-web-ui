@@ -1,4 +1,4 @@
-import { useConceptDescriptionHandling } from '@/composables/ConceptDescriptionHandling';
+import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
 
 export function useSMEProperty() {
     // Composables

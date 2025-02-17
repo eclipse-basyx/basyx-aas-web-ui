@@ -38,7 +38,7 @@
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { extractEndpointHref } from '@/utils/DescriptorUtils';
+    import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 
     const aasStore = useAASStore();
     const navigationStore = useNavigationStore();

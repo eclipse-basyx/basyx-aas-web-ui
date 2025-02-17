@@ -4,7 +4,7 @@ import { computed } from 'vue';
 import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
-import { extractEndpointHref } from '@/utils/DescriptorUtils';
+import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { stripLastCharacter } from '@/utils/StringUtils';
 
