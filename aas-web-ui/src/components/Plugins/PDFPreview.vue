@@ -25,13 +25,12 @@
     import { useTheme } from 'vuetify';
     import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
     import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'PDFPreview',
-        mixins: [RequestHandling, SubmodelElementHandling],
+        mixins: [RequestHandling],
         props: ['submodelElementData'],
 
         setup() {

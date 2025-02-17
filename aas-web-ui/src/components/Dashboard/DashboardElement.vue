@@ -65,13 +65,12 @@
     import { defineComponent } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import DashboardHandling from '@/mixins/DashboardHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils';
 
     export default defineComponent({
         name: 'DashboardElement',
-        mixins: [SubmodelElementHandling, DashboardHandling],
+        mixins: [DashboardHandling],
         props: ['dashboardData', 'globalSyncStatus'],
         emits: ['deleteElement', 'updateElement'],
 

@@ -32,12 +32,11 @@
     import { useTheme } from 'vuetify';
     import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
     import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'ImagePreview',
-        mixins: [SubmodelElementHandling, RequestHandling],
+        mixins: [RequestHandling],
         props: ['submodelElementData'],
 
         setup() {

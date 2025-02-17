@@ -62,13 +62,11 @@
     import { useRouter } from 'vue-router';
     import { useReferenceUtils } from '@/composables/AAS/ReferenceUtils';
     import { useJumpHandling } from '@/composables/JumpHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { capitalizeFirstLetter } from '@/utils/StringUtils';
 
     export default defineComponent({
         name: 'RelationshipElement',
-        mixins: [SubmodelElementHandling],
         props: {
             relationshipElementObject: {
                 type: Object,

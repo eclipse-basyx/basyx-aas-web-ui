@@ -1116,13 +1116,12 @@
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useIDUtils } from '@/composables/IDUtils';
     import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'HTWFuehrungskomponente',
         semanticId: 'http://htw-berlin.de/smc_statemachine',
-        mixins: [RequestHandling, SubmodelElementHandling],
+        mixins: [RequestHandling],
         props: ['submodelElementData', 'selectedNode'],
 
         setup() {

@@ -107,12 +107,11 @@
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
     import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'File',
-        mixins: [RequestHandling, SubmodelElementHandling],
+        mixins: [RequestHandling],
         props: {
             fileObject: {
                 type: Object,
