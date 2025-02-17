@@ -201,35 +201,44 @@
     import { useTheme } from 'vuetify';
     import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
-    import DashboardHandling from '@/mixins/DashboardHandling';
-    import RequestHandling from '@/mixins/RequestHandling';
+    import { useDashboardHandling } from '@/composables/DashboardHandling';
+    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
+    import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'TimeSeriesData',
         semanticId: 'https://admin-shell.io/idta/TimeSeries/1/1',
-        mixins: [RequestHandling, DashboardHandling],
         props: ['submodelElementData', 'configData', 'editDialog', 'loadTrigger'],
         emits: ['timeVal', 'YVal', 'newOptions'],
 
         setup() {
-            const theme = useTheme();
             const aasStore = useAASStore();
             const envStore = useEnvStore();
+            const navigationStore = useNavigationStore();
+
+            const theme = useTheme();
             const route = useRoute();
+
             const { fetchCds } = useConceptDescriptionHandling();
             const { checkIdShort, descriptionToDisplay, nameToDisplay } = useReferableUtils();
+            const { getRequest, postRequest } = useRequestHandling();
+            const { dashboardAdd } = useDashboardHandling();
 
             return {
                 theme, // Theme Object
                 aasStore, // AASStore Object
                 envStore, // EnvironmentStore Object
+                navigationStore, // NavigationStore Object
                 route, // Route Object
                 descriptionToDisplay,
                 nameToDisplay,
                 checkIdShort,
                 fetchCds,
+                getRequest,
+                postRequest,
+                dashboardAdd,
             };
         },
 
@@ -295,6 +304,15 @@
                 }
                 // return null if no Segment Type was found
                 return null;
+            },
+
+            // check if plugin is in dashboard
+            hideSettings() {
+                if (this.route.name === 'DashboardGroup') {
+                    return true;
+                } else {
+                    return false;
+                }
             },
         },
 

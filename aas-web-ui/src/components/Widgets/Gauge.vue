@@ -1,21 +1,5 @@
 <template>
     <v-container fluid class="pa-0">
-        <!-- Options -->
-        <!-- <v-list nav class="pa-0" style="margin-left: -8px; margin-top: -14px">
-            <v-list-item class="pb-0">
-                <template v-slot:title>
-                    <div class="text-subtitle-2">{{ "Options: " }}</div>
-                </template>
-</v-list-item>
-</v-list>
-<v-row align="center">
-    <v-col cols="auto">
-        <v-text-field type="number" hide-details density="compact" v-model="numberOfCategories" @blur="initializeSeries()" @keydown.native.enter="initializeSeries()" label="Bins" variant="outlined"></v-text-field>
-    </v-col>
-    <v-col cols="auto">
-        <v-switch hide-details label="stacked" v-model="stacked" density="compact" @change="changeVariant()"></v-switch>
-    </v-col>
-</v-row> -->
         <apexchart ref="gauge" height="350" :options="chartOptions" :series="chartSeries"></apexchart>
     </v-container>
 </template>
@@ -25,12 +9,10 @@
     import { defineComponent } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
-    import DashboardHandling from '@/mixins/DashboardHandling';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'Gauge',
-        mixins: [DashboardHandling],
         props: ['chartData', 'timeVariable', 'yVariables', 'chartOptionsExternal', 'editDialog'],
 
         setup() {
@@ -95,6 +77,15 @@
             // Check if the current Theme is dark
             isDark() {
                 return this.theme.global.current.value.dark;
+            },
+
+            // check if plugin is in dashboard
+            hideSettings() {
+                if (this.route.name === 'DashboardGroup') {
+                    return true;
+                } else {
+                    return false;
+                }
             },
         },
 
