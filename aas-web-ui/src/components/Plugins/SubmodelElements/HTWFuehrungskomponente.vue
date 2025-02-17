@@ -1115,26 +1115,28 @@
     import { useTheme } from 'vuetify';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useIDUtils } from '@/composables/IDUtils';
-    import RequestHandling from '@/mixins/RequestHandling';
+    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'HTWFuehrungskomponente',
         semanticId: 'http://htw-berlin.de/smc_statemachine',
-        mixins: [RequestHandling],
         props: ['submodelElementData', 'selectedNode'],
 
         setup() {
             const theme = useTheme();
             const navigationStore = useNavigationStore();
+
             const { generateUUIDFromString } = useIDUtils();
             const { checkIdShort } = useReferableUtils();
+            const { putRequest } = useRequestHandling();
 
             return {
                 theme, // Theme Object
                 navigationStore, // NavigationStore Object
                 checkIdShort,
                 generateUUIDFromString,
+                putRequest,
             };
         },
 

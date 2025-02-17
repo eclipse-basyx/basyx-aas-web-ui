@@ -71,23 +71,25 @@
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
-    import RequestHandling from '@/mixins/RequestHandling';
+    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'GenericDataVisu',
-        mixins: [RequestHandling],
         props: ['submodelElementData'],
 
         setup() {
             const theme = useTheme();
             const aasStore = useAASStore();
+
             const { nameToDisplay } = useReferableUtils();
+            const { putRequest } = useRequestHandling();
 
             return {
                 theme, // Theme Object
                 aasStore, // AASStore Object
                 nameToDisplay,
+                putRequest,
             };
         },
 
