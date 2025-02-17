@@ -1,12 +1,12 @@
 <template>
     <v-container fluid class="pa-0">
-        <!-- Horizontal Flexbox for the three main components (AASTreeview, PropertyView, ComponentVisualization) -->
+        <!-- Horizontal Flexbox for the three main components (SubmodelTree, PropertyView, ComponentVisualization) -->
         <div style="display: flex">
-            <!-- AASTreeview Component -->
+            <!-- SubmodelTree Component -->
             <div class="pa-0 window" style="width: 35%">
-                <AASTreeview />
+                <SubmodelTree />
             </div>
-            <!-- Divider between AASTreeview and PropertyView -->
+            <!-- Divider between SubmodelTree and PropertyView -->
             <div style="position: relative; height: calc(100vh - 106px); z-index: 1">
                 <v-icon style="position: absolute; top: -3px; left: -16.5px">mdi-pan-left</v-icon>
                 <v-divider vertical style="position: absolute; height: calc(100vh - 106px); z-index: 1"></v-divider>

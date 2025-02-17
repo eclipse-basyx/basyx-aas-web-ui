@@ -4,8 +4,8 @@ export const useAASStore = defineStore({
     id: 'aasStore',
     state: () => ({
         aasObject: {} as any, // holds the AAS object for the currently selected AAS
-        selectedNode: {} as any, // holds the currently selected Node in the AAS Treeview Component
-        initTreeByReferenceElement: false, // holds the state if the AAS Treeview Component should be initialized because the Jump-Button was clicked on a ReferenceElement
+        selectedNode: {} as any, // holds the currently selected Node in the SubmodelTree/List Component
+        initTreeByReferenceElement: false, // holds the state if the SubmodelTree Component should be initialized (e.g. cause of clicking Jump-Button of a ReferenceElement)
     }),
     getters: {
         getSelectedAAS: (state) => state.aasObject,
