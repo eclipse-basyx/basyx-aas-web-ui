@@ -1,13 +1,12 @@
 import { defineComponent } from 'vue';
 import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
 import RequestHandling from '@/mixins/RequestHandling';
-import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 
 export default defineComponent({
     name: 'WidgetHandling',
-    mixins: [RequestHandling, SubmodelElementHandling],
+    mixins: [RequestHandling],
 
     setup() {
         const navigationStore = useNavigationStore();

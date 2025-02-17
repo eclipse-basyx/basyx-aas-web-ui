@@ -72,12 +72,11 @@
     import { useTheme } from 'vuetify';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'GenericDataVisu',
-        mixins: [RequestHandling, SubmodelElementHandling],
+        mixins: [RequestHandling],
         props: ['submodelElementData'],
 
         setup() {

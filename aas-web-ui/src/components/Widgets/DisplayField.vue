@@ -27,11 +27,9 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
-    // import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
 
     export default defineComponent({
         name: 'DisplayField',
-        // mixins: [SubmodelElementHandling],
         props: ['chartData', 'timeVariable', 'yVariables'],
 
         setup() {

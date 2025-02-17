@@ -96,13 +96,12 @@
     import { defineComponent } from 'vue';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 
     export default defineComponent({
         name: 'Blob',
-        mixins: [RequestHandling, SubmodelElementHandling],
+        mixins: [RequestHandling],
         props: {
             blobObject: {
                 type: Object,

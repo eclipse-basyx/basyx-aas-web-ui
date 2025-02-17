@@ -90,13 +90,12 @@
     import { defineComponent } from 'vue';
     import { useIDUtils } from '@/composables/IDUtils';
     import DashboardHandling from '@/mixins/DashboardHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils';
 
     export default defineComponent({
         name: 'DashboardEditElement',
-        mixins: [SubmodelElementHandling, DashboardHandling],
+        mixins: [DashboardHandling],
         props: ['aasData', 'dashboardData'],
 
         setup() {

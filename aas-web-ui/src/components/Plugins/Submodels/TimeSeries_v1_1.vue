@@ -199,17 +199,17 @@
     import { defineComponent } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
+    import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import DashboardHandling from '@/mixins/DashboardHandling';
     import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
 
     export default defineComponent({
         name: 'TimeSeriesData',
         semanticId: 'https://admin-shell.io/idta/TimeSeries/1/1',
-        mixins: [RequestHandling, SubmodelElementHandling, DashboardHandling],
+        mixins: [RequestHandling, DashboardHandling],
         props: ['submodelElementData', 'configData', 'editDialog', 'loadTrigger'],
         emits: ['timeVal', 'YVal', 'newOptions'],
 
@@ -218,6 +218,7 @@
             const aasStore = useAASStore();
             const envStore = useEnvStore();
             const route = useRoute();
+            const { fetchCds } = useConceptDescriptionHandling();
             const { checkIdShort, descriptionToDisplay, nameToDisplay } = useReferableUtils();
 
             return {
@@ -228,6 +229,7 @@
                 descriptionToDisplay,
                 nameToDisplay,
                 checkIdShort,
+                fetchCds,
             };
         },
 
@@ -346,7 +348,7 @@
                 // request the concept descriptions for the records (if they have semanticIds)
                 // Create a list of promises
                 let promises = records.map((record: any) => {
-                    return this.getConceptDescriptions(record).then((response: any) => {
+                    return this.fetchCds(record).then((response: any) => {
                         // add ConceptDescription to the record
                         if (response) {
                             record.conceptDescriptions = response;

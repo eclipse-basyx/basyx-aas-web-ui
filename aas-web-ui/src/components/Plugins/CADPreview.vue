@@ -18,15 +18,15 @@
     import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
+    import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
     import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useAuthStore } from '@/store/AuthStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'CADPreview',
-        mixins: [RequestHandling, SubmodelElementHandling],
+        mixins: [RequestHandling],
         props: ['submodelElementData'],
 
         setup() {
@@ -34,12 +34,14 @@
             const navigationStore = useNavigationStore();
             const aasStore = useAASStore();
             const authStore = useAuthStore();
+            const { valueUrl } = useSMEFile();
 
             return {
                 theme, // Theme Object
                 navigationStore, // NavigationStore Object
                 aasStore, // AASStore Object
                 authStore,
+                valueUrl,
             };
         },
 
@@ -63,7 +65,7 @@
         watch: {
             submodelElementData() {
                 if (this.submodelElementData.modelType == 'File') {
-                    this.localPathValue = this.getLocalPath(this.submodelElementData.value, this.submodelElementData);
+                    this.localPathValue = this.valueUrl(this.submodelElementData);
                     // this.initThree();
                 }
             },
@@ -71,7 +73,7 @@
 
         mounted() {
             if (this.submodelElementData.modelType == 'File') {
-                this.localPathValue = this.getLocalPath(this.submodelElementData.value, this.submodelElementData);
+                this.localPathValue = this.valueUrl(this.submodelElementData);
                 this.initThree();
             }
         },
