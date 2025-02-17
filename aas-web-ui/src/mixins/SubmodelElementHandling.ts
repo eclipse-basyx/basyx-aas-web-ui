@@ -132,19 +132,5 @@ export default defineComponent({
             ); // Filter empty Objects
             return conceptDescriptions;
         },
-
-        // Function to calculate the local path (used for files)
-        // TODO Transfer to Util resp. Composable
-        getLocalPath(path: string, selectedNode: any): string {
-            if (!path) return '';
-            try {
-                new URL(path);
-                // If no error is thrown, path is a valid URL
-                return path;
-            } catch {
-                // If error is thrown, path is not a valid URL
-                return `${selectedNode.path}/attachment`;
-            }
-        },
     },
 });

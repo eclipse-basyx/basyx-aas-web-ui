@@ -30,6 +30,7 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
+    import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -42,10 +43,12 @@
         setup() {
             const theme = useTheme();
             const aasStore = useAASStore();
+            const { valueUrl } = useSMEFile();
 
             return {
                 theme, // Theme Object
                 aasStore, // AASStore Object
+                valueUrl,
             };
         },
 
@@ -95,7 +98,7 @@
                     new URL(this.submodelElementData.value);
                     this.imageUrl = this.submodelElementData.value;
                 } catch {
-                    let path = this.getLocalPath(this.submodelElementData.value, this.submodelElementData);
+                    let path = this.valueUrl(this.submodelElementData.value);
                     let context = 'retrieving Attachment File';
                     let disableMessage = false;
                     this.getRequest(path, context, disableMessage).then((response: any) => {

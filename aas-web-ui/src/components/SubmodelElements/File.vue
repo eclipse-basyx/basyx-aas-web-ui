@@ -105,6 +105,7 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
+    import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
     import RequestHandling from '@/mixins/RequestHandling';
     import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -126,10 +127,12 @@
         setup() {
             const aasStore = useAASStore();
             const { fetchAndDispatchSme } = useSMEHandling();
+            const { valueUrl } = useSMEFile();
 
             return {
                 aasStore, // AASStore Object
                 fetchAndDispatchSme,
+                valueUrl,
             };
         },
 
@@ -170,7 +173,7 @@
                 handler() {
                     if (!this.isFocused) {
                         this.newPathValue = this.fileObject.value;
-                        this.localPathValue = this.getLocalPath(this.fileObject.value, this.SelectedNode);
+                        this.localPathValue = this.valueUrl(this.fileObject.value);
                     }
                 },
             },
@@ -178,7 +181,7 @@
 
         mounted() {
             this.newPathValue = this.fileObject.value;
-            this.localPathValue = this.getLocalPath(this.fileObject.value, this.SelectedNode);
+            this.localPathValue = this.valueUrl(this.fileObject.value);
         },
 
         methods: {
