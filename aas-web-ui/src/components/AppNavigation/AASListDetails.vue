@@ -108,7 +108,8 @@
                         "
                         :display-name-array="assetAdministrationShellData.displayName"
                         :display-name-title="'DisplayName'"
-                        :small="false"></DisplayNameElement>
+                        :small="false"
+                        :background-color="'detailsCard'"></DisplayNameElement>
                     <v-divider
                         v-if="
                             assetAdministrationShellData.description &&
