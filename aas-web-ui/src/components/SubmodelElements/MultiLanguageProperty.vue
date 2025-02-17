@@ -94,12 +94,11 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
-    import RequestHandling from '@/mixins/RequestHandling';
+    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'MultiLanguageProperty',
-        mixins: [RequestHandling],
         props: {
             multiLanguagePropertyObject: {
                 type: Object,
@@ -113,11 +112,14 @@
 
         setup() {
             const aasStore = useAASStore();
+
             const { fetchAndDispatchSme } = useSMEHandling();
+            const { patchRequest } = useRequestHandling();
 
             return {
                 aasStore, // AASStore Object
                 fetchAndDispatchSme,
+                patchRequest,
             };
         },
 

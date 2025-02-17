@@ -70,23 +70,26 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useRouter } from 'vue-router';
-    import DashboardHandling from '@/mixins/DashboardHandling';
+    import { useDashboardHandling } from '@/composables/DashboardHandling';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'DashboardGroups',
-        mixins: [DashboardHandling],
 
         setup() {
             const navigationStore = useNavigationStore();
             const envStore = useEnvStore();
             const router = useRouter();
 
+            const { getGroups, deleteGroup } = useDashboardHandling();
+
             return {
                 navigationStore, // NavigationStore Object
                 envStore, // EnvironmentStore Object
                 router, // Router Object
+                getGroups,
+                deleteGroup,
             };
         },
 

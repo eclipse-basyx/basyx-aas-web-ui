@@ -37,21 +37,24 @@
     import { defineComponent } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
-    import DashboardHandling from '@/mixins/DashboardHandling';
-    import WidgetHandling from '@/mixins/WidgetHandling';
+    import { useChartHandling } from '@/composables/ChartHandling';
 
     export default defineComponent({
         name: 'AreaChart',
-        mixins: [WidgetHandling, DashboardHandling],
         props: ['chartData', 'timeVariable', 'yVariables', 'chartOptionsExternal', 'editDialog'],
 
         setup() {
             const theme = useTheme();
             const route = useRoute();
 
+            const { prepareSeriesValues, prepareYValueTooltip, prepareLegend } = useChartHandling();
+
             return {
                 theme, // Theme Object
                 route, // Route Object
+                prepareSeriesValues,
+                prepareYValueTooltip,
+                prepareLegend,
             };
         },
 
@@ -119,6 +122,15 @@
             // Check if the current Theme is dark
             isDark() {
                 return this.theme.global.current.value.dark;
+            },
+
+            // check if plugin is in dashboard
+            hideSettings() {
+                if (this.route.name === 'DashboardGroup') {
+                    return true;
+                } else {
+                    return false;
+                }
             },
         },
 

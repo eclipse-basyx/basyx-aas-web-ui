@@ -106,12 +106,11 @@
     import { defineComponent } from 'vue';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
-    import RequestHandling from '@/mixins/RequestHandling';
+    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'File',
-        mixins: [RequestHandling],
         props: {
             fileObject: {
                 type: Object,
@@ -125,13 +124,17 @@
 
         setup() {
             const aasStore = useAASStore();
+
             const { fetchAndDispatchSme } = useSMEHandling();
             const { valueUrl } = useSMEFile();
+            const { patchRequest, putRequest } = useRequestHandling();
 
             return {
                 aasStore, // AASStore Object
                 fetchAndDispatchSme,
                 valueUrl,
+                patchRequest,
+                putRequest,
             };
         },
 

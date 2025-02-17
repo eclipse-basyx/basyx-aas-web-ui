@@ -19,14 +19,13 @@
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
     import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
-    import RequestHandling from '@/mixins/RequestHandling';
+    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useAuthStore } from '@/store/AuthStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'CADPreview',
-        mixins: [RequestHandling],
         props: ['submodelElementData'],
 
         setup() {
@@ -34,7 +33,9 @@
             const navigationStore = useNavigationStore();
             const aasStore = useAASStore();
             const authStore = useAuthStore();
+
             const { valueUrl } = useSMEFile();
+            const { getRequest } = useRequestHandling();
 
             return {
                 theme, // Theme Object
@@ -42,6 +43,7 @@
                 aasStore, // AASStore Object
                 authStore,
                 valueUrl,
+                getRequest,
             };
         },
 

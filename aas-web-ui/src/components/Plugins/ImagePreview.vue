@@ -31,23 +31,25 @@
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
     import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
-    import RequestHandling from '@/mixins/RequestHandling';
+    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'ImagePreview',
-        mixins: [RequestHandling],
         props: ['submodelElementData'],
 
         setup() {
             const theme = useTheme();
             const aasStore = useAASStore();
+
             const { valueUrl } = useSMEFile();
+            const { getRequest } = useRequestHandling();
 
             return {
                 theme, // Theme Object
                 aasStore, // AASStore Object
                 valueUrl,
+                getRequest,
             };
         },
 
