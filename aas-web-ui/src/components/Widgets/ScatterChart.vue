@@ -37,21 +37,26 @@
     import { defineComponent } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
+    import { useChartHandling } from '@/composables/ChartHandling';
     import DashboardHandling from '@/mixins/DashboardHandling';
-    import WidgetHandling from '@/mixins/WidgetHandling';
 
     export default defineComponent({
         name: 'AreaChart',
-        mixins: [WidgetHandling, DashboardHandling],
+        mixins: [DashboardHandling],
         props: ['chartData', 'timeVariable', 'yVariables', 'chartOptionsExternal', 'editDialog'],
 
         setup() {
             const theme = useTheme();
             const route = useRoute();
 
+            const { prepareSeriesValues, prepareYValueTooltip, prepareLegend } = useChartHandling();
+
             return {
                 theme, // Theme Object
                 route, // Route Object
+                prepareSeriesValues,
+                prepareYValueTooltip,
+                prepareLegend,
             };
         },
 
