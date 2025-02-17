@@ -5,9 +5,7 @@ import { useJumpHandling } from '@/composables/JumpHandling';
 import RequestHandling from '@/mixins/RequestHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useNavigationStore } from '@/store/NavigationStore';
-import { getEquivalentEclassSemanticIds, getEquivalentIriSemanticIds } from '@/utils/AAS/SemanticIdUtils';
 import { formatDate } from '@/utils/DateUtils';
-import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
 export default defineComponent({
     name: 'SubmodelElementHandling',
@@ -67,70 +65,5 @@ export default defineComponent({
         },
     },
 
-    methods: {
-        // Get all ConceptDescriptions for the SubmodelElement from the ConceptDescription Repository
-        // TODO Replace usage of this function with ConceptDescriptionHandling.ts/fetchCds()
-        async getConceptDescriptions(SelectedNode: any) {
-            if (!this.conceptDescriptionRepoUrl || this.conceptDescriptionRepoUrl === '') {
-                return Promise.resolve([]); // Return an empty object wrapped in a resolved promise
-            }
-
-            // return if no SemanticID is available
-            if (!SelectedNode.semanticId || !SelectedNode.semanticId.keys || SelectedNode.semanticId.keys.length == 0) {
-                return Promise.resolve([]);
-            }
-
-            const semanticIdsToFetch = SelectedNode.semanticId.keys.map((key: any) => {
-                return key.value;
-            });
-
-            semanticIdsToFetch.forEach((semanticId: string) => {
-                if (
-                    semanticId.startsWith('0173-1#') ||
-                    semanticId.startsWith('0173/1///') ||
-                    semanticId.startsWith('https://api.eclass-cdp.com/0173-1')
-                ) {
-                    semanticIdsToFetch.push(...getEquivalentEclassSemanticIds(semanticId));
-                } else if (semanticId.startsWith('http://') || semanticId.startsWith('https://')) {
-                    semanticIdsToFetch.push(...getEquivalentIriSemanticIds(semanticId));
-                }
-            });
-
-            const semanticIdsUniqueToFetch = semanticIdsToFetch.filter(
-                (value: string, index: number, self: string) => self.indexOf(value) === index
-            );
-
-            const cdPromises = semanticIdsUniqueToFetch.map((semanticId: string) => {
-                const path = this.conceptDescriptionRepoUrl + '/' + base64Encode(semanticId);
-                const context = 'retrieving ConceptDescriptions';
-                const disableMessage = true;
-
-                return this.getRequest(path, context, disableMessage).then((response: any) => {
-                    if (response.success) {
-                        // console.log('ConceptDescription Data: ', response.data);
-                        const conceptDescription = response.data;
-                        conceptDescription.path = path;
-                        // Check if ConceptDescription has data to be displayed
-                        if (
-                            (conceptDescription.displayName && conceptDescription.displayName.length > 0) ||
-                            (conceptDescription.description && conceptDescription.description.length > 0) ||
-                            (conceptDescription.embeddedDataSpecifications &&
-                                conceptDescription.embeddedDataSpecifications.length > 0)
-                        ) {
-                            return conceptDescription;
-                        }
-                        return {};
-                    } else {
-                        return {};
-                    }
-                });
-            });
-
-            let conceptDescriptions = await Promise.all(cdPromises);
-            conceptDescriptions = conceptDescriptions.filter(
-                (conceptDescription: any) => Object.keys(conceptDescription).length !== 0
-            ); // Filter empty Objects
-            return conceptDescriptions;
-        },
-    },
+    methods: {},
 });
