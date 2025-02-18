@@ -185,16 +185,6 @@
         return filteredAndOrderedModuleRoutes;
     });
 
-    // TODO move to route guard
-    watch(
-        () => currentRoute.value,
-        () => {
-            // Just reset dispatched AAS with aas query parameter is missing
-            if (!currentRouteQuery.value.aas || currentRouteQuery.value.aas.toString().trim() === '')
-                aasStore.dispatchSelectedAAS({});
-        }
-    );
-
     onMounted(async () => {
         dashboardAvailable.value = await checkDashboardAvailability();
         scrollToSelectedModule();
