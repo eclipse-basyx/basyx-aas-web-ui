@@ -415,7 +415,7 @@
             }, statusCheck.value.interval);
         }
 
-        initialize(true);
+        initialize();
     });
 
     onBeforeUnmount(() => {
@@ -431,7 +431,7 @@
     }
 
     // Function to get the AAS Data from the Registry Server
-    async function initialize(init: boolean = false): Promise<void> {
+    async function initialize(): Promise<void> {
         listLoading.value = true;
 
         fetchAasDescriptorList().then(async (aasDescriptors: Array<any>) => {
@@ -440,8 +440,6 @@
             );
 
             aasDescriptorList.value = [...aasDescriptorsSorted];
-
-            await updateStatus(init);
 
             aasDescriptorListUnfiltered.value = [...aasDescriptorsSorted];
 

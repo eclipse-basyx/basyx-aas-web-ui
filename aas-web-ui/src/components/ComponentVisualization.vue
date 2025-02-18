@@ -224,8 +224,7 @@
         () => {
             resetLocalData();
             initialize();
-        },
-        { deep: true }
+        }
     );
 
     onMounted(() => {

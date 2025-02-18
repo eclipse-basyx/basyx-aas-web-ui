@@ -278,8 +278,7 @@
                 resetLocalData();
                 initialize(selectedNodeValue, true);
             }
-        },
-        { deep: true }
+        }
     );
 
     watch(

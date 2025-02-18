@@ -362,11 +362,7 @@
             return;
         }
 
-        digitalNameplateData.value = await setData(
-            { ...props.submodelElementData },
-            props.submodelElementData.path,
-            true
-        );
+        digitalNameplateData.value = await setData({ ...props.submodelElementData }, props.submodelElementData.path);
 
         extractProductProperties(digitalNameplateData.value);
         extractManufacturerProperties(digitalNameplateData.value);
