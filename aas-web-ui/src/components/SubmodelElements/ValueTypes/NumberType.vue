@@ -114,8 +114,7 @@
                 newNumberValue.value = '';
             }
             setFocus(false);
-        },
-        { deep: true }
+        }
     );
 
     watch(

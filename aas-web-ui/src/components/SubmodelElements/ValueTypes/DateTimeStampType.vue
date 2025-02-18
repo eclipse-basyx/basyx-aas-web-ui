@@ -107,8 +107,7 @@
         () => selectedNode.value,
         () => {
             initialize(props.dateTimeStampValue.value);
-        },
-        { deep: true }
+        }
     );
 
     watch(

@@ -100,8 +100,7 @@
         () => selectedNode.value,
         () => {
             initialize(props.dateValue.value);
-        },
-        { deep: true }
+        }
     );
 
     watch(

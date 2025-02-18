@@ -93,8 +93,7 @@
                 newStringValue.value = '';
             }
             setFocus(false);
-        },
-        { deep: true }
+        }
     );
 
     watch(

@@ -169,8 +169,7 @@
         () => selectedNode.value,
         () => {
             scrollToSelectedSubmodel();
-        },
-        { deep: true }
+        }
     );
 
     onMounted(() => {
