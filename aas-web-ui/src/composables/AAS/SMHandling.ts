@@ -221,7 +221,6 @@ export function useSMHandling() {
         }
 
         sm.timestamp = formatDate(new Date());
-        sm.path = getSmEndpointByIdFromRepo(smId);
 
         if (setDataRecursive) {
             sm = await setData({ ...sm }, sm.path, withConceptDescriptions, sm.timestamp);

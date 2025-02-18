@@ -74,7 +74,9 @@ export function useSMRepositoryClient() {
         if (smDescriptor && Object.keys(smDescriptor).length > 0) {
             // SM Descriptor found in registry
             const smEndpoint = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0');
-            return fetchSm(smEndpoint);
+            const sm = await fetchSm(smEndpoint);
+            sm.path = smEndpoint;
+            return sm;
         } else if (!smDescriptor || Object.keys(smDescriptor).length === 0) {
             const smEndpoint = getSmEndpointById(smId);
             return fetchSm(smEndpoint);
