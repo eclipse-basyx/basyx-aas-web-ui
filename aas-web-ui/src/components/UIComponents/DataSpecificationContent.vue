@@ -100,7 +100,7 @@
     </v-container>
 </template>
 
-<script setup lang="ts">
+<script ses">
     // Props
     defineProps({
         dataSpecificationObject: {
