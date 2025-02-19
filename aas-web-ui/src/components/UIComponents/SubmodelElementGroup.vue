@@ -86,8 +86,7 @@
                                 v-else-if="SubmodelElement.modelType == 'MultiLanguageProperty'"
                                 :description-array="SubmodelElement.value"
                                 :description-title="nameToDisplay(SubmodelElement)"
-                                :small="false"
-                                style="margin-top: -12px"></DescriptionElement>
+                                style="margin-top: -12px" />
                             <!-- Operation -->
                             <v-alert
                                 v-else-if="SubmodelElement.modelType == 'Operation'"
@@ -237,7 +236,7 @@
                                 variant="outlined"></v-alert>
                         </v-list-item-title>
                     </v-list-item>
-                    <v-divider v-if="i < smeObject[smeLocator].length - 1" class="mt-2 mb-1"></v-divider>
+                    <v-divider v-if="i < smeObject[smeLocator].length - 1" class="mt-2 mb-1" />
                 </div>
             </v-list>
             <v-list v-else nav class="bg-elevatedCard pt-0">

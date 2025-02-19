@@ -1,7 +1,7 @@
 <template>
     <v-container class="pa-0" fluid>
         <v-sheet>
-            <v-divider v-if="!singleAas || !isMobile"></v-divider>
+            <v-divider v-if="!singleAas || !isMobile" />
             <v-card-title class="bg-detailsHeader px-1">
                 <v-row align="center" style="height: 40px" class="mx-0">
                     <!-- AAS Status -->
@@ -67,7 +67,7 @@
                     </v-tooltip>
                 </v-row>
             </v-card-title>
-            <v-divider></v-divider>
+            <v-divider />
             <v-card-text class="bg-detailsCard pa-0" style="overflow-y: auto" :style="{ height: detailsListHeight }">
                 <!-- Asset Information -->
                 <!-- 1) AssetInformation is mandatory for an AssetAdministrationShell -->
@@ -77,7 +77,7 @@
                     :asset-object="assetInformation"></AssetInformation>
                 <v-divider
                     v-if="assetInformation?.assetKind && Object.keys(assetInformation).length > 1"
-                    thickness="2"></v-divider>
+                    thickness="2" />
                 <!-- AAS Details -->
                 <v-list v-if="assetAdministrationShellData" lines="one" nav class="bg-detailsCard">
                     <!-- AAS Identification -->
@@ -87,44 +87,36 @@
                             getKeyTypeAbbreviation(assetAdministrationShellData.modelType)
                         "></IdentificationElement>
                     <!-- AAS Administrative Information-->
-                    <v-divider v-if="assetAdministrationShellData?.administration"></v-divider>
+                    <v-divider v-if="assetAdministrationShellData?.administration" />
                     <AdministrativeInformationElement
                         v-if="assetAdministrationShellData.administration"
                         :administrative-information-object="assetAdministrationShellData.administration"
                         :administrative-information-title="'Administrative Information'"
-                        :small="false"
-                        :background-color="'detailsCard'"></AdministrativeInformationElement>
+                        :background-color="'detailsCard'" />
                     <v-divider
                         v-if="
                             assetAdministrationShellData.displayName &&
+                            Array.isArray(assetAdministrationShellData.displayName) &&
                             assetAdministrationShellData.displayName.length > 0
                         "
-                        class="mt-2"></v-divider>
+                        class="mt-2" />
                     <!-- AAS DisplayName -->
                     <DisplayNameElement
-                        v-if="
-                            assetAdministrationShellData.displayName &&
-                            assetAdministrationShellData.displayName.length > 0
-                        "
                         :display-name-array="assetAdministrationShellData.displayName"
                         :display-name-title="'DisplayName'"
-                        :small="false"
-                        :background-color="'detailsCard'"></DisplayNameElement>
+                        :background-color="'detailsCard'" />
                     <v-divider
                         v-if="
                             assetAdministrationShellData.description &&
+                            Array.isArray(assetAdministrationShellData.description) &&
                             assetAdministrationShellData.description.length > 0
                         "
-                        class="mt-2"></v-divider>
+                        class="mt-2" />
                     <!-- AAS Description -->
                     <DescriptionElement
-                        v-if="
-                            assetAdministrationShellData.description &&
-                            assetAdministrationShellData.description.length > 0
-                        "
                         :description-array="assetAdministrationShellData.description"
                         :description-title="'Description'"
-                        :small="false"></DescriptionElement>
+                        :background-color="'detailsCard'" />
                 </v-list>
             </v-card-text>
         </v-sheet>

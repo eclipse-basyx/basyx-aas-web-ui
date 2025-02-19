@@ -11,9 +11,11 @@
                     assetObject.specificAssetIds &&
                     Array.isArray(assetObject.specificAssetIds) &&
                     assetObject.specificAssetIds.length > 0
-                "></v-divider>
+                " />
             <!-- Specific Asset IDs -->
-            <SpecificAssetIds :specific-asset-ids="assetObject.specificAssetIds"></SpecificAssetIds>
+            <SpecificAssetIds
+                :specific-asset-ids="assetObject.specificAssetIds"
+                background-color="detailsCard"></SpecificAssetIds>
             <v-img
                 v-if="defaultThumbnailUrl"
                 :src="defaultThumbnailUrl"

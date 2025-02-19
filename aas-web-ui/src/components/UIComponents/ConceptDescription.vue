@@ -5,29 +5,33 @@
                 <!-- ConceptDescription Identification -->
                 <IdentificationElement :identification-object="conceptDescriptionObject"></IdentificationElement>
                 <v-divider
-                    v-if="conceptDescriptionObject.displayName && conceptDescriptionObject.displayName.length > 0"
-                    class="mt-2"></v-divider>
+                    v-if="
+                        conceptDescriptionObject.displayName &&
+                        Array.isArray(conceptDescriptionObject.displayName) &&
+                        conceptDescriptionObject.displayName.length > 0
+                    "
+                    class="mt-2" />
                 <!-- ConceptDescription DisplayName -->
                 <DisplayNameElement
-                    v-if="conceptDescriptionObject.displayName && conceptDescriptionObject.displayName.length > 0"
                     :display-name-array="conceptDescriptionObject.displayName"
-                    :display-name-title="'Display Name'"
-                    :small="false"></DisplayNameElement>
+                    :display-name-title="'Display Name'" />
                 <v-divider
-                    v-if="conceptDescriptionObject.description && conceptDescriptionObject.description.length > 0"
-                    class="mt-2"></v-divider>
+                    v-if="
+                        conceptDescriptionObject.description &&
+                        Array.isArray(conceptDescriptionObject.description) &&
+                        conceptDescriptionObject.description.length > 0
+                    "
+                    class="mt-2" />
                 <!-- ConceptDescription Description -->
                 <DescriptionElement
-                    v-if="conceptDescriptionObject.description && conceptDescriptionObject.description.length > 0"
                     :description-array="conceptDescriptionObject.description"
-                    :description-title="'Description'"
-                    :small="false"></DescriptionElement>
+                    :description-title="'Description'" />
             </v-list>
             <v-divider
                 v-if="
                     conceptDescriptionObject.embeddedDataSpecifications &&
                     conceptDescriptionObject.embeddedDataSpecifications.length > 0
-                "></v-divider>
+                " />
             <v-list
                 v-if="
                     conceptDescriptionObject.embeddedDataSpecifications &&
@@ -43,27 +47,20 @@
                     <v-list nav class="bg-elevatedCard pt-0">
                         <!-- hasDataSpecification -->
                         <SemanticID
-                            v-if="
-                                embeddedDataSpecification.dataSpecification &&
-                                embeddedDataSpecification.dataSpecification.keys &&
-                                embeddedDataSpecification.dataSpecification.keys.length > 0
-                            "
                             :semantic-id-object="embeddedDataSpecification.dataSpecification"
                             :semantic-title="'Data Specification'"
-                            :small="false"
-                            class="mb-2"></SemanticID>
-                        <v-divider v-if="embeddedDataSpecification.dataSpecificationContent" class="mt-2"></v-divider>
+                            background-color="elevatedCard" />
+                        <v-divider v-if="embeddedDataSpecification.dataSpecificationContent" class="mt-2" />
                         <!-- dataSpecificationContent -->
                         <DataSpecificationContent
                             v-if="embeddedDataSpecification.dataSpecificationContent"
-                            :data-specification-object="
-                                embeddedDataSpecification.dataSpecificationContent
-                            "></DataSpecificationContent>
+                            :data-specification-object="embeddedDataSpecification.dataSpecificationContent"
+                            background-color="elevatedCard"></DataSpecificationContent>
                     </v-list>
                 </v-card>
             </v-list>
             <!-- Last Sync -->
-            <v-divider></v-divider>
+            <v-divider />
             <LastSync :timestamp="conceptDescriptionObject.timestamp"></LastSync>
         </v-card>
     </v-container>
