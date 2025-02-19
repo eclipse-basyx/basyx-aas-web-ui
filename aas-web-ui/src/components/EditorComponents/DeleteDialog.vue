@@ -33,8 +33,8 @@
     import { computed, ref, watch } from 'vue';
     import { useRouter } from 'vue-router';
     import { useRoute } from 'vue-router';
+    import { useSMHandling } from '@/composables/AAS/SMHandling';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
-    import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -47,7 +47,7 @@
     const route = useRoute();
 
     const { deleteRequest } = useRequestHandling();
-    const { fetchSmDescriptorById } = useSMRegistryClient();
+    const { fetchSmDescriptor } = useSMHandling();
     const { deleteSubmodelRef } = useAASRepositoryClient();
 
     const props = defineProps<{
@@ -82,7 +82,7 @@
         deleteLoading.value = true;
         if (props.element.modelType === 'Submodel') {
             // Fetch the submodel from the submodel registry
-            const smDescriptor = await fetchSmDescriptorById(props.element.id);
+            const smDescriptor = await fetchSmDescriptor(props.element.id);
             // extract the submodel endpoint
             const smEndpoint = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0');
             try {

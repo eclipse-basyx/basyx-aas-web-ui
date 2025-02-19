@@ -33,8 +33,8 @@ export function useAASDiscoveryClient() {
 
         if (globalAssetId === '') return failResponse;
 
-        let aasDiscUrl = aasDiscoveryUrl.value;
-        if (aasDiscUrl.trim() === '') return failResponse;
+        let aasDiscUrl = aasDiscoveryUrl.value.trim();
+        if (aasDiscUrl === '') return failResponse;
         if (aasDiscUrl.endsWith('/')) aasDiscUrl = stripLastCharacter(aasDiscUrl);
         if (!aasDiscUrl.endsWith(endpointPath)) aasDiscUrl += endpointPath;
 

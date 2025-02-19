@@ -5,11 +5,14 @@ import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement';
 import { firstLangStringSetText } from '@/utils/AAS/SubmodelElements/MultiLanguagePropertyUtils';
 import { getCountryName } from '@/utils/LocaleUtils';
 import { firstLetterToLowerCase } from '@/utils/StringUtils';
+import { useAASHandling } from '../AASHandling';
 
 export function useContactInformation_v1_0Utils() {
-    const { getSmIdOfAasIdBySemanticId, fetchSmById } = useSMHandling();
+    const { getSmIdOfAasIdBySemanticId } = useAASHandling();
+    const { fetchSmById } = useSMHandling();
     const { checkIdShort, getSubmodelElementByIdShort } = useReferableUtils();
     const { hasValue, valueToDisplay } = useSME();
+
     const { valueUrl } = useSMEFile();
 
     const semanticId = 'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations';

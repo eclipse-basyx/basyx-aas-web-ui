@@ -1,12 +1,14 @@
+import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
 import { useSMEHandling } from '@/composables/AAS/SMEHandling';
 import { useSMHandling } from '@/composables/AAS/SMHandling';
 import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
 import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils';
-import { useReferableUtils } from '../ReferableUtils';
+import { useAASHandling } from '../AASHandling';
 
 export function useTechnicalData_v1_2Utils() {
     // Composables
-    const { getSmIdOfAasIdBySemanticId, fetchSmById, getSmEndpointById } = useSMHandling();
+    const { getSmIdOfAasIdBySemanticId } = useAASHandling();
+    const { fetchSmById, getSmEndpointById } = useSMHandling();
     const { fetchSme } = useSMEHandling();
     const { checkIdShort } = useReferableUtils();
     const { valueUrl: smeFileValueUrl } = useSMEFile();

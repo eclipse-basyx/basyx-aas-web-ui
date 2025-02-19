@@ -198,19 +198,28 @@
     const triggerTreeviewReload = computed(() => navigationStore.getTriggerTreeviewReload); // Reload the Treeview
 
     // Watchers
-    watch([aasRegistryURL, submodelRegistryURL], ([newAAS, newSubmodelRegistry]) => {
-        if (isEmptyString(newAAS) || isEmptyString(newSubmodelRegistry)) {
+    watch(
+        () => aasRegistryURL.value,
+        () => {
+            // Resets the Submodel Tree when the AAS Registry changes
             submodelTree.value = [];
         }
-    });
+    );
+
+    watch(
+        () => submodelRegistryURL.value,
+        () => {
+            // Resets the Submodel Tree when the Submodel Registry changes
+            submodelTree.value = [];
+        }
+    );
 
     watch(
         () => selectedAAS.value,
         () => {
             submodelTree.value = [];
             initialize();
-        },
-        { deep: true }
+        }
     );
 
     watch(

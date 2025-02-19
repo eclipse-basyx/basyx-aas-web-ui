@@ -161,8 +161,7 @@
         () => {
             submodelList.value = [];
             initialize();
-        },
-        { deep: true }
+        }
     );
 
     watch(

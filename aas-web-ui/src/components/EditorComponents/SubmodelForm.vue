@@ -69,6 +69,7 @@
     import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRouter } from 'vue-router';
+    import { useSMHandling } from '@/composables/AAS/SMHandling';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
@@ -98,8 +99,9 @@
         (event: 'update:modelValue', value: boolean): void;
     }>();
 
-    const { fetchSmById, postSubmodel, putSubmodel } = useSMRepositoryClient();
-    const { putSubmodelDescriptor, createDescriptorFromSubmodel, fetchSmDescriptorById } = useSMRegistryClient();
+    const { postSubmodel, putSubmodel } = useSMRepositoryClient();
+    const { putSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient();
+    const { fetchSmById, fetchSmDescriptor } = useSMHandling();
     const { putAas } = useAASRepositoryClient();
 
     const editSMDialog = ref(false);
@@ -294,7 +296,7 @@
             await putSubmodel(submodelObject.value);
             const jsonSubmodel = jsonization.toJsonable(submodelObject.value);
             // Fetch the current desciptor from the registry
-            const fetchedDescriptor = await fetchSmDescriptorById(submodelObject.value.id);
+            const fetchedDescriptor = await fetchSmDescriptor(submodelObject.value.id);
             const descriptor = createDescriptorFromSubmodel(jsonSubmodel, fetchedDescriptor.endpoints);
             // Update AAS Descriptor
             await putSubmodelDescriptor(descriptor);

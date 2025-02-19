@@ -30,7 +30,7 @@
                                 hide-details
                                 label="Search for AAS..."
                                 clearable
-                                @update:model-value="filterAasDescriptorList"></v-text-field>
+                                @update:model-value="filterAasList"></v-text-field>
                         </v-col>
                         <!-- Add AAS -->
                         <v-col cols="auto" class="px-0">
@@ -118,11 +118,7 @@
                     </v-list-item>
                 </template>
                 <template v-else>
-                    <v-virtual-scroll
-                        ref="virtualScrollRef"
-                        :items="aasDescriptorList"
-                        :item-height="56"
-                        class="pb-2 bg-card">
+                    <v-virtual-scroll ref="virtualScrollRef" :items="aasList" :item-height="56" class="pb-2 bg-card">
                         <template #default="{ item }">
                             <!-- Single AAS -->
                             <v-list-item
@@ -295,8 +291,8 @@
     const router = useRouter();
 
     // Composables
-    const { downloadAasx, isAvailableByIdInRepo } = useAASRepositoryClient();
-    const { fetchAasDescriptorList } = useAASHandling();
+    const { downloadAasx } = useAASRepositoryClient();
+    const { fetchAasDescriptorList, fetchAasList, aasIsAvailableById } = useAASHandling();
     const { nameToDisplay, descriptionToDisplay } = useReferableUtils();
     const { copyToClipboard } = useClipboardUtil();
 
@@ -309,8 +305,8 @@
     const theme = useTheme();
 
     // Data
-    const aasDescriptorList = ref([] as Array<any>) as Ref<Array<any>>; // Variable to store the AAS Data
-    const aasDescriptorListUnfiltered = ref([] as Array<any>) as Ref<Array<any>>; // Variable to store the AAS Data before filtering
+    const aasList = ref([] as Array<any>) as Ref<Array<any>>; // Variable to store the AAS Data (AAS or AAS Descriptors)
+    const aasListUnfiltered = ref([] as Array<any>) as Ref<Array<any>>; // Variable to store the AAS Data before filtering
     const listLoading = ref(false); // Variable to store if the AAS List is loading
     const deleteDialog = ref(false); // Variable to store if the Delete Dialog should be shown
     const aasToDelete = ref({}); // Variable to store the AAS to be deleted
@@ -354,10 +350,8 @@
     // Watchers
     watch(
         () => aasRegistryURL.value,
-        (newValue) => {
-            if (newValue !== '') {
-                initialize();
-            }
+        () => {
+            initialize();
         }
     );
 
@@ -381,13 +375,13 @@
                     updateStatus();
                 }, statusCheck.value.interval);
             } else {
-                aasDescriptorList.value.forEach((aasDescriptor: any) => {
+                aasList.value.forEach((aasDescriptor: any) => {
                     aasDescriptor.status = 'check disabled';
                 });
 
                 // Reset status icon after 2 seconds
                 setTimeout(() => {
-                    aasDescriptorList.value.forEach((aasDescriptor: any) => {
+                    aasList.value.forEach((aasDescriptor: any) => {
                         aasDescriptor.status = '';
                     });
                 }, 2000);
@@ -434,14 +428,23 @@
     async function initialize(): Promise<void> {
         listLoading.value = true;
 
-        fetchAasDescriptorList().then(async (aasDescriptors: Array<any>) => {
-            let aasDescriptorsSorted = aasDescriptors.sort((a: { [x: string]: number }, b: { [x: string]: number }) =>
-                a['id'] > b['id'] ? 1 : -1
-            );
+        fetchAasDescriptorList().then(async (aasDescriptorList: Array<any>) => {
+            if (aasDescriptorList.length > 0) {
+                let aasDescriptorListSorted = aasDescriptorList.sort(
+                    (a: { [x: string]: number }, b: { [x: string]: number }) => (a['id'] > b['id'] ? 1 : -1)
+                );
+                aasList.value = [...aasDescriptorListSorted];
 
-            aasDescriptorList.value = [...aasDescriptorsSorted];
+                aasListUnfiltered.value = [...aasDescriptorListSorted];
+            } else {
+                const listOfAas = await fetchAasList();
+                let listOfAasSorted = listOfAas.sort((a: { [x: string]: number }, b: { [x: string]: number }) =>
+                    a['id'] > b['id'] ? 1 : -1
+                );
+                aasList.value = [...listOfAasSorted];
 
-            aasDescriptorListUnfiltered.value = [...aasDescriptorsSorted];
+                aasListUnfiltered.value = [...listOfAasSorted];
+            }
 
             scrollToSelectedAAS();
 
@@ -461,37 +464,37 @@
      *                                  based on availability checks.
      */
     function updateStatus(init: boolean = false): void {
-        if (Array.isArray(aasDescriptorList.value) && aasDescriptorList.value.length > 0)
-            aasDescriptorList.value.forEach(async (aasDescriptor: any) => {
-                if (aasDescriptor && Object.keys(aasDescriptor).length > 0) {
+        if (Array.isArray(aasList.value) && aasList.value.length > 0)
+            aasList.value.forEach(async (aasOrAasDescriptor: any) => {
+                if (aasOrAasDescriptor && Object.keys(aasOrAasDescriptor).length > 0) {
                     await new Promise((resolve) => setTimeout(resolve, 600)); // Give the UI the chance to refresh status icons
 
-                    const aasIsAvailable = await isAvailableByIdInRepo(aasDescriptor.id);
+                    const aasIsAvailable = await aasIsAvailableById(aasOrAasDescriptor.id);
 
                     if (aasIsAvailable) {
-                        aasDescriptor.status =
+                        aasOrAasDescriptor.status =
                             statusCheck.value.state === true ? 'online' : init ? '' : 'check disabled';
                     } else {
-                        aasDescriptor.status =
+                        aasOrAasDescriptor.status =
                             statusCheck.value.state === true ? 'offline' : init ? '' : 'check disabled';
                     }
                 }
             });
     }
 
-    function filterAasDescriptorList(value: string): void {
+    function filterAasList(value: string): void {
         if (!value || value.trim() === '') {
-            aasDescriptorList.value = aasDescriptorListUnfiltered.value;
+            aasList.value = aasListUnfiltered.value;
         } else {
             // filter list of AAS Descriptors
-            let aasDescriptorListFiltered = aasDescriptorListUnfiltered.value.filter(
+            let aasListFiltered = aasListUnfiltered.value.filter(
                 (aasDescriptor: any) =>
                     aasDescriptor.id.toLowerCase().includes(value.toLowerCase()) ||
                     aasDescriptor.idShort.toLowerCase().includes(value.toLowerCase()) ||
                     nameToDisplay(aasDescriptor).toLowerCase().includes(value.toLowerCase()) ||
                     descriptionToDisplay(aasDescriptor).toLowerCase().includes(value.toLowerCase())
             );
-            aasDescriptorList.value = aasDescriptorListFiltered;
+            aasList.value = aasListFiltered;
         }
         scrollToSelectedAAS();
     }
@@ -524,24 +527,24 @@
         }
     }
 
-    function isSelected(aas: any): boolean {
+    function isSelected(aasOrAasDescriptor: any): boolean {
         if (
             !selectedAAS.value ||
             Object.keys(selectedAAS.value).length === 0 ||
             !selectedAAS.value.id ||
-            !aas ||
-            Object.keys(aas).length === 0 ||
-            !aas.id
+            !aasOrAasDescriptor ||
+            Object.keys(aasOrAasDescriptor).length === 0 ||
+            !aasOrAasDescriptor.id
         ) {
             return false;
         }
-        return selectedAAS.value.id === aas.id;
+        return selectedAAS.value.id === aasOrAasDescriptor.id;
     }
 
     // Function to scroll to the selected AAS
     function scrollToSelectedAAS(): void {
         // Find the index of the selected item
-        const index = aasDescriptorList.value.findIndex((aasDescriptor: any) => isSelected(aasDescriptor));
+        const index = aasList.value.findIndex((aasOrAasDescriptor: any) => isSelected(aasOrAasDescriptor));
 
         if (index !== -1) {
             const intervalId = setInterval(() => {
@@ -557,16 +560,16 @@
         }
     }
 
-    function openDeleteDialog(AAS: any): void {
+    function openDeleteDialog(aasOrAasDescriptor: any): void {
         deleteDialog.value = true;
-        aasToDelete.value = AAS;
+        aasToDelete.value = aasOrAasDescriptor;
     }
 
-    function openEditDialog(createNew: boolean, aas?: any): void {
+    function openEditDialog(createNew: boolean, aasOrAasDescriptor?: any): void {
         editDialog.value = true;
         newShell.value = createNew;
-        if (createNew === false && aas) {
-            aasToEdit.value = aas;
+        if (createNew === false && aasOrAasDescriptor) {
+            aasToEdit.value = aasOrAasDescriptor;
         }
     }
 </script>
