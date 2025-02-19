@@ -50,11 +50,9 @@
     import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
 
     export default defineComponent({
         name: 'GenericDataTableView',
-        mixins: [SubmodelElementHandling],
         inheritAttrs: false,
         props: {
             submodelElementData: {

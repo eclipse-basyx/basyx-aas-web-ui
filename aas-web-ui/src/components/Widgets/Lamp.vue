@@ -23,16 +23,19 @@
 // TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import RequestHandling from '@/mixins/RequestHandling';
+    import { useRequestHandling } from '@/composables/RequestHandling';
 
     export default defineComponent({
         name: 'Lamp',
-        mixins: [RequestHandling],
 
         props: ['submodelElementData', 'widgetSettings'],
 
         setup() {
-            return {};
+            const { putRequest } = useRequestHandling();
+
+            return {
+                putRequest,
+            };
         },
 
         data() {

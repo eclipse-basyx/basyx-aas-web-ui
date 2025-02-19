@@ -95,14 +95,12 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
-    import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 
     export default defineComponent({
         name: 'Blob',
-        mixins: [RequestHandling, SubmodelElementHandling],
         props: {
             blobObject: {
                 type: Object,
@@ -116,12 +114,16 @@
 
         setup() {
             const aasStore = useAASStore();
+
             const { fetchAndDispatchSme } = useSMEHandling();
+            const { putRequest, patchRequest } = useRequestHandling();
 
             return {
                 aasStore, // AASStore Object
                 extractEndpointHref,
                 fetchAndDispatchSme,
+                putRequest,
+                patchRequest,
             };
         },
 

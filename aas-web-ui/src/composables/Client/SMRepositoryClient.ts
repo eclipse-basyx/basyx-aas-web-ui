@@ -69,11 +69,16 @@ export function useSMRepositoryClient() {
 
         if (smId === '') return failResponse;
 
-        // TODO fetchSmById just with the repository (e.g. if registry is not available)
         const smDescriptor = await fetchSmDescriptorById(smId);
 
         if (smDescriptor && Object.keys(smDescriptor).length > 0) {
+            // SM Descriptor found in registry
             const smEndpoint = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0');
+            const sm = await fetchSm(smEndpoint);
+            sm.path = smEndpoint;
+            return sm;
+        } else if (!smDescriptor || Object.keys(smDescriptor).length === 0) {
+            const smEndpoint = getSmEndpointById(smId);
             return fetchSm(smEndpoint);
         }
 

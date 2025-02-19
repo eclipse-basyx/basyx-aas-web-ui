@@ -6,7 +6,7 @@
 
 # BaSyx AAS Web UI
 
-The AAS Web UI is a Vue.js Webapplication to visualize and manage Asset Administration Shells, Submodels and Concept Descriptions.
+The AAS Web UI is a Vue.js web application to visualize and manage Asset Administration Shells, Submodels and Concept Descriptions.
 
 ![alt text](Docs/Figs/AAS_Web_UI.png "AAS GUI")
 
@@ -16,15 +16,13 @@ The documentation of the BaSyx AAS Web UI can be found in the [BaSyx Wiki](https
 
 ## AAS Web UI Compatibility and Features
 
-### Important Notice :warning:
-
-The AAS Web UI is now **only compatible with the components of BaSyx V2 and the Asset Administration Shell V3**. 
-
-If you still wish to use BaSyx V1, please use the following release of the UI:
-
-```bash
-docker pull eclipsebasyx/aas-gui:v230703
-```
+> [!WARNING]
+> The AAS Web UI is now **only compatible with the components of BaSyx V2 and the Asset Administration Shell V3**. 
+>
+> If you still wish to use BaSyx V1, please use the following release of the UI:
+> ```bash
+> docker pull eclipsebasyx/aas-gui:v230703
+> ```
 
 ### Supported SubmodelElements
 
@@ -56,7 +54,7 @@ The BaSyx-UI includes a Feature to develop your own Plugins. They can be used to
 
 Plugins will be displayed in the `Visualization`-Part of the UI. In order for Plugins to be loaded, a Submodel(Element) has to have a SemanticID which matches with the configured `semanticId` of the desired Plugin. The configuration of a Plugin `semanticId` can be done via a string (e.g. `'http://hello.world.de/plugin_submodel'`) or via an array for multiple SemanticIds (e.g. `['http://hello.world.de/plugin_submodel', 'http://hello.world.de/plugin_property']`)
 
-To include your own Plugins, you have to create a Vue.js Component and add it to the `UserPlugins`-Folder in the `aas-web-ui/src`-Directory. The Plugin will then be automatically loaded and displayed in the UI. 
+To include your own Plugins, you have to create a Vue.js Component and add it to the `UserPlugins` folder in the `aas-web-ui/src`-Directory. The Plugin will then be automatically loaded and displayed in the UI. 
 
 > If you plan on including your own plugins, keep in mind that you have to build the Docker Image yourself!
 
@@ -64,9 +62,9 @@ A Demo-Plugin can be found here:
 
 [HelloWorldPlugin.vue](./aas-web-ui/src/UserPlugins/HelloWorldPlugin.vue)
 
-### Prerequisites for developing on you own machine
+### Prerequisites for developing on your own machine
 
-After you cloned the project to your local machine, it is recommendet to install `ESLint` globally:
+After you cloned the project to your local machine, it is recommended to install `ESLint` globally:
 
 ```
 npm install --global eslint
@@ -80,7 +78,7 @@ Before starting a dev server, run the
 yarn
 ```
 
-command inside the `aas-web-ui` directory. For more details for your specific OS, follow the instructions in the next subsections.
+command inside the `aas-web-ui` directory. For more details about your specific OS, follow the instructions in the next subsections.
 
 ### How to develop on MacOS:
 
@@ -98,7 +96,7 @@ command inside the `aas-web-ui` directory. For more details for your specific OS
     . bootstrap.sh
     ```
 5. On initial installation answer first question with **y** (Yes) otherwise **n** (No)
-6. Answer second question with **n** (No)
+6. Answer the second question with **n** (No)
 
 ### How to develop on Linux:
 
@@ -116,7 +114,7 @@ command inside the `aas-web-ui` directory. For more details for your specific OS
     . bootstrap.sh
     ```
 5. On initial installation answer first question with **y** (Yes) otherwise **n** (No)
-6. Answer second question with **n** (No)
+6. Answer the second question with **n** (No)
 
 ### How to develop on Windows:
 
@@ -136,7 +134,7 @@ command inside the `aas-web-ui` directory. For more details for your specific OS
     . bootstrap.sh
     ```
 7. On initial installation answer first question with **y** (Yes) otherwise **n** (No)
-8. Answer second question with **n** (No)
+8. Answer the second question with **n** (No)
 
 ### Building your own Docker Image:
 
@@ -234,19 +232,21 @@ http(s)://your-url/base-path
 
 ### Start Dev Environment (e.g. VSCode):
 
-1. Open terminal/shell on the root directory of the project
+1. Open the terminal/shell on the root directory of the project
 2. Bootstrap the project
     ```bash
     . bootstrap.sh
     ```
 3. On initial installation answer first question with **y** (Yes) otherwise **n** (No)
-4. Answer second question with **n** (No)
+4. Answer the second question with **n** (No)
 5. Start coding :wink:
 
-### Create deployable (optimized) build:
-> :warning: does not support the plugin mechanism :warning:
+### Create a deployable (optimized) build:
+> [!WARNING]
+> A production build does not support the loading of Submodel Plugins during runtime.
+> You must first put your plugins in the dedicated directory and then build the Docker Image.
 
-1. Open terminal/shell on the root directory of the project
+1. Open the terminal/shell on the root directory of the project
 2. Go to the aas-web-ui folder
     ```bash
     cd aas-web-ui
@@ -262,7 +262,7 @@ http(s)://your-url/base-path
 
 ### Contribute your code to this repo
 
-As a prerequesite you need to sign the [Eclipse Contributor Agreement](https://www.eclipse.org/legal/ECA.php).
+As a prerequisite you need to sign the [Eclipse Contributor Agreement](https://www.eclipse.org/legal/ECA.php).
 
 After you signed the ECA you can create Pull Requests to this Repository.
 

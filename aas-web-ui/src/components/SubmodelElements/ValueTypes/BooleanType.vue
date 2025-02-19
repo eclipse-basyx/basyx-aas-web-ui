@@ -86,8 +86,7 @@
         () => selectedNode.value,
         () => {
             initialize(props.booleanValue.value);
-        },
-        { deep: true }
+        }
     );
 
     watch(

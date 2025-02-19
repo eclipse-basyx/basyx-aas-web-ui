@@ -18,15 +18,14 @@
     import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
+    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useAuthStore } from '@/store/AuthStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     export default defineComponent({
         name: 'CADPreview',
-        mixins: [RequestHandling, SubmodelElementHandling],
         props: ['submodelElementData'],
 
         setup() {
@@ -35,11 +34,16 @@
             const aasStore = useAASStore();
             const authStore = useAuthStore();
 
+            const { valueUrl } = useSMEFile();
+            const { getRequest } = useRequestHandling();
+
             return {
                 theme, // Theme Object
                 navigationStore, // NavigationStore Object
                 aasStore, // AASStore Object
                 authStore,
+                valueUrl,
+                getRequest,
             };
         },
 
@@ -63,7 +67,7 @@
         watch: {
             submodelElementData() {
                 if (this.submodelElementData.modelType == 'File') {
-                    this.localPathValue = this.getLocalPath(this.submodelElementData.value, this.submodelElementData);
+                    this.localPathValue = this.valueUrl(this.submodelElementData);
                     // this.initThree();
                 }
             },
@@ -71,7 +75,7 @@
 
         mounted() {
             if (this.submodelElementData.modelType == 'File') {
-                this.localPathValue = this.getLocalPath(this.submodelElementData.value, this.submodelElementData);
+                this.localPathValue = this.valueUrl(this.submodelElementData);
                 this.initThree();
             }
         },

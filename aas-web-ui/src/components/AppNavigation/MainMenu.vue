@@ -116,7 +116,7 @@
 <script lang="ts" setup>
     import type { ComponentPublicInstance } from 'vue';
     import type { RouteRecordRaw } from 'vue-router';
-    import { computed, onMounted, Ref, ref, watch } from 'vue';
+    import { computed, onMounted, Ref, ref } from 'vue';
     import { useRoute } from 'vue-router';
     import { useDashboardHandling } from '@/composables/DashboardHandling';
     import { useAASStore } from '@/store/AASDataStore';
@@ -150,9 +150,7 @@
 
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
-    const currentRoute = computed(() => route.name); // get the current route name
     const currentRoutePath = computed(() => route.path); // get the current route path
-    const currentRouteQuery = computed(() => route.query); // get the current route query
     const allowEditing = computed(() => envStore.getAllowEditing); // Check if the current environment allows showing the AAS Editor
     const moduleRoutes = computed(() => navigationStore.getModuleRoutes); // get the module routes
     const selectedAas = computed(() => aasStore.getSelectedAAS); // get selected AAS from Store
@@ -184,16 +182,6 @@
         );
         return filteredAndOrderedModuleRoutes;
     });
-
-    // TODO move to route guard
-    watch(
-        () => currentRoute.value,
-        () => {
-            // Just reset dispatched AAS with aas query parameter is missing
-            if (!currentRouteQuery.value.aas || currentRouteQuery.value.aas.toString().trim() === '')
-                aasStore.dispatchSelectedAAS({});
-        }
-    );
 
     onMounted(async () => {
         dashboardAvailable.value = await checkDashboardAvailability();

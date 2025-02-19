@@ -130,12 +130,10 @@
     import { useRouter } from 'vue-router';
     import { useReferenceUtils } from '@/composables/AAS/ReferenceUtils';
     import { useJumpHandling } from '@/composables/JumpHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'ReferenceElement',
-        mixins: [SubmodelElementHandling],
         props: {
             referenceElementObject: {
                 type: Object,

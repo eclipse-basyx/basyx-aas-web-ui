@@ -36,3 +36,13 @@ export function stripLastCharacter(string: string): string {
     if (!string || string.length < 2) return '';
     return string.substring(0, string.length - 1);
 }
+
+/**
+ * Checks if the provided string is empty or only contains whitespace.
+ *
+ * @param {string} val - The string to be checked.
+ * @returns {boolean} - Returns true if the string is empty or only contains whitespace; otherwise, returns false.
+ */
+export function isEmptyString(val: string): boolean {
+    return !val || val.trim() === '';
+}

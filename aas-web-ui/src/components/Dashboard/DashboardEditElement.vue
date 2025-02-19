@@ -88,25 +88,27 @@
 // TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent } from 'vue';
+    import { useDashboardHandling } from '@/composables/DashboardHandling';
     import { useIDUtils } from '@/composables/IDUtils';
-    import DashboardHandling from '@/mixins/DashboardHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils';
 
     export default defineComponent({
         name: 'DashboardEditElement',
-        mixins: [SubmodelElementHandling, DashboardHandling],
         props: ['aasData', 'dashboardData'],
 
         setup() {
             const envStore = useEnvStore();
+
             const { generateUUID } = useIDUtils();
+            const { getGroups, updateElement } = useDashboardHandling();
 
             return {
                 envStore, // EnvironmentStore Object
                 checkSemanticId,
                 generateUUID,
+                getGroups,
+                updateElement,
             };
         },
 

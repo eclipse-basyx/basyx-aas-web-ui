@@ -1,19 +1,22 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-card v-if="operationObject" color="elevatedCard" class="mt-4">
+        <v-card v-if="localOperationObject" color="elevatedCard" class="mt-4">
             <!-- Operation with Variable(s) -->
             <v-list
                 v-if="
-                    operationObject.inputVariables.length > 0 ||
-                    operationObject.inoutputVariables.length > 0 ||
-                    operationObject.outputVariables.length > 0
+                    localOperationObject.inputVariables?.length > 0 ||
+                    localOperationObject.inoutputVariables?.length > 0 ||
+                    localOperationObject.outputVariables?.length > 0
                 "
                 nav
                 class="bg-elevatedCard py-0">
                 <!-- List with the Variable Types -->
                 <v-container v-for="variableType in variableTypes" :key="variableType.id" class="ma-0 pa-0" fluid>
                     <template
-                        v-if="operationObject[variableType.type] && operationObject[variableType.type].length > 0">
+                        v-if="
+                            localOperationObject[variableType.type] &&
+                            localOperationObject[variableType.type].length > 0
+                        ">
                         <!-- Title of the Variable Type -->
                         <v-list-item class="px-1 pb-1 pt-0">
                             <v-list-item-title class="text-subtitle-2 mt-2">{{
@@ -112,7 +115,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useNavigationStore } from '@/store/NavigationStore';
 
@@ -141,7 +144,21 @@
     ]);
     const loading = ref(false);
 
+    // Watchers
+    watch(
+        () => props.operationObject,
+        () => {
+            initOperation();
+        },
+        { deep: true }
+    );
+
     onMounted(() => {
+        initOperation();
+    });
+
+    // Function to initialize the Operation
+    function initOperation(): void {
         // create local copy of the Operation Object
         const operationObjectCopy = { ...props.operationObject };
         delete operationObjectCopy.parent;
@@ -157,7 +174,7 @@
         if (!localOperationObject.value.outputVariables) {
             localOperationObject.value.outputVariables = [];
         }
-    });
+    }
 
     function clearFields(): void {
         if (localOperationObject.value.inputVariables) {

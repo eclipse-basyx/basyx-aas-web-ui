@@ -105,13 +105,12 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
-    import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
+    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'File',
-        mixins: [RequestHandling, SubmodelElementHandling],
         props: {
             fileObject: {
                 type: Object,
@@ -125,11 +124,17 @@
 
         setup() {
             const aasStore = useAASStore();
+
             const { fetchAndDispatchSme } = useSMEHandling();
+            const { valueUrl } = useSMEFile();
+            const { patchRequest, putRequest } = useRequestHandling();
 
             return {
                 aasStore, // AASStore Object
                 fetchAndDispatchSme,
+                valueUrl,
+                patchRequest,
+                putRequest,
             };
         },
 
@@ -170,7 +175,7 @@
                 handler() {
                     if (!this.isFocused) {
                         this.newPathValue = this.fileObject.value;
-                        this.localPathValue = this.getLocalPath(this.fileObject.value, this.SelectedNode);
+                        this.localPathValue = this.valueUrl(this.fileObject);
                     }
                 },
             },
@@ -178,7 +183,7 @@
 
         mounted() {
             this.newPathValue = this.fileObject.value;
-            this.localPathValue = this.getLocalPath(this.fileObject.value, this.SelectedNode);
+            this.localPathValue = this.valueUrl(this.fileObject);
         },
 
         methods: {

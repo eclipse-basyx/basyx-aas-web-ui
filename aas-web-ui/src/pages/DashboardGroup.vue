@@ -51,26 +51,24 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
-    import DashboardHandling from '@/mixins/DashboardHandling';
+    import { useDashboardHandling } from '@/composables/DashboardHandling';
     import { useEnvStore } from '@/store/EnvironmentStore';
-    import DashboardElement from '../components/Dashboard/DashboardElement.vue';
 
     export default defineComponent({
         name: 'Dashboard',
-        components: {
-            DashboardElement,
-        },
-        mixins: [DashboardHandling],
 
         setup() {
             const envStore = useEnvStore();
             const route = useRoute();
             const router = useRouter();
 
+            const { getElements } = useDashboardHandling();
+
             return {
                 envStore, // EnvironmentStore Object
                 route, // Route Object
                 router, // Router Object
+                getElements,
             };
         },
 

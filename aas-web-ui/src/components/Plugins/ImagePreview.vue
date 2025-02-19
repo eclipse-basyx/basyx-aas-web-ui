@@ -30,22 +30,26 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useTheme } from 'vuetify';
-    import RequestHandling from '@/mixins/RequestHandling';
-    import SubmodelElementHandling from '@/mixins/SubmodelElementHandling';
+    import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
+    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'ImagePreview',
-        mixins: [SubmodelElementHandling, RequestHandling],
         props: ['submodelElementData'],
 
         setup() {
             const theme = useTheme();
             const aasStore = useAASStore();
 
+            const { valueUrl } = useSMEFile();
+            const { getRequest } = useRequestHandling();
+
             return {
                 theme, // Theme Object
                 aasStore, // AASStore Object
+                valueUrl,
+                getRequest,
             };
         },
 
@@ -95,7 +99,7 @@
                     new URL(this.submodelElementData.value);
                     this.imageUrl = this.submodelElementData.value;
                 } catch {
-                    let path = this.getLocalPath(this.submodelElementData.value, this.submodelElementData);
+                    let path = this.valueUrl(this.submodelElementData);
                     let context = 'retrieving Attachment File';
                     let disableMessage = false;
                     this.getRequest(path, context, disableMessage).then((response: any) => {
