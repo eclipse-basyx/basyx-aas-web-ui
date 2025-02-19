@@ -188,14 +188,14 @@
     watch(
         () => aasRegistryURL.value,
         async () => {
-            await initializeView();
+            initializeView();
         }
     );
 
     watch(
         () => aasRepoURL.value,
         async () => {
-            await initializeView();
+            initializeView();
         }
     );
 
@@ -224,7 +224,7 @@
                 }
             }
 
-            await initializeView();
+            initializeView();
         },
         { deep: true }
     );
@@ -291,7 +291,7 @@
             }, statusCheck.value.interval);
         }
 
-        await initializeView(true);
+        initializeView(true);
     });
 
     onBeforeUnmount(() => {
