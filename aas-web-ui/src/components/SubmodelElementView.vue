@@ -4,7 +4,7 @@
             <template v-if="!singleAas">
                 <!-- Title Bar in the Submodel Element View -->
                 <v-card-title style="padding: 15px 16px 16px">Element Details</v-card-title>
-                <v-divider></v-divider>
+                <v-divider />
             </template>
             <v-card-text
                 style="overflow-y: auto"
@@ -31,63 +31,59 @@
                                     (submodelElementData.administration.revision != '' ||
                                         submodelElementData.administration.version != '')
                                 "
-                                class="mt-2"></v-divider>
+                                class="mt-2" />
                             <AdministrativeInformationElement
                                 v-if="submodelElementData.administration"
                                 :administrative-information-object="submodelElementData.administration"
-                                :administrative-information-title="'Administrative Information'"
-                                :small="false"></AdministrativeInformationElement>
+                                :administrative-information-title="'Administrative Information'"></AdministrativeInformationElement>
                             <v-divider
-                                v-if="submodelElementData.displayName && submodelElementData.displayName.length > 0"
-                                class="mt-2"></v-divider>
+                                v-if="
+                                    submodelElementData.displayName &&
+                                    Array.isArray(submodelElementData.displayName) &&
+                                    submodelElementData.displayName.length > 0
+                                "
+                                class="mt-2" />
                             <!-- SubmodelELement DisplayName -->
                             <DisplayNameElement
-                                v-if="submodelElementData.displayName && submodelElementData.displayName.length > 0"
                                 :display-name-array="submodelElementData.displayName"
-                                :display-name-title="'Display Name'"
-                                :small="false"></DisplayNameElement>
+                                :display-name-title="'Display Name'" />
                             <v-divider
-                                v-if="submodelElementData.description && submodelElementData.description.length > 0"
-                                class="mt-2"></v-divider>
+                                v-if="
+                                    submodelElementData.description &&
+                                    Array.isArray(submodelElementData.description) &&
+                                    submodelElementData.description.length > 0
+                                "
+                                class="mt-2" />
                             <!-- SubmodelELement Description -->
                             <DescriptionElement
-                                v-if="submodelElementData.description && submodelElementData.description.length > 0"
                                 :description-array="submodelElementData.description"
-                                :description-title="'Description'"
-                                :small="false"></DescriptionElement>
+                                :description-title="'Description'" />
                             <v-divider
                                 v-if="
                                     submodelElementData.semanticId &&
+                                    Object.keys(submodelElementData.semanticId).length > 0 &&
                                     submodelElementData.semanticId.keys &&
+                                    Array.isArray(submodelElementData.semanticId.keys) &&
                                     submodelElementData.semanticId.keys.length > 0
                                 "
-                                class="mt-2"></v-divider>
+                                class="mt-2" />
                             <!-- SubmodelELement SemanticID -->
                             <SemanticID
-                                v-if="
-                                    submodelElementData.semanticId &&
-                                    submodelElementData.semanticId.keys &&
-                                    submodelElementData.semanticId.keys.length > 0
-                                "
                                 :semantic-id-object="submodelElementData.semanticId"
-                                :semantic-title="'Semantic ID'"
-                                :small="false"></SemanticID>
+                                :semantic-title="'Semantic ID'" />
                             <v-divider
                                 v-if="
                                     submodelElementData.supplementalSemanticIds &&
+                                    Array.isArray(submodelElementData.supplementalSemanticIds) &&
                                     submodelElementData.supplementalSemanticIds.length > 0
                                 "
-                                class="mt-2"></v-divider>
+                                class="mt-2" />
                             <!-- SubmodelELement SupplementalSemanticID -->
                             <SupplementalSemanticID
-                                v-if="
-                                    submodelElementData.supplementalSemanticIds &&
-                                    submodelElementData.supplementalSemanticIds.length > 0
-                                "
                                 :supplemental-semantic-ids-array="submodelElementData.supplementalSemanticIds"
-                                :supplemental-semantic-ids-title="'Supplemental Semantic ID'"></SupplementalSemanticID>
+                                :supplemental-semantic-ids-title="'Supplemental Semantic ID'" />
                         </v-list>
-                        <v-divider></v-divider>
+                        <v-divider />
                         <v-list nav class="px-4 pt-0 pb-5">
                             <!-- SubmodelELement Representation for different modelTypes -->
                             <Submodel
@@ -139,7 +135,7 @@
                             <InvalidElement v-else :invalid-element-object="submodelElementData"></InvalidElement>
                         </v-list>
                         <!-- Last Sync -->
-                        <v-divider></v-divider>
+                        <v-divider />
                         <LastSync :timestamp="submodelElementData.timestamp"></LastSync>
                     </v-card>
                     <template v-if="Array.isArray(conceptDescriptions) && conceptDescriptions.length > 0">

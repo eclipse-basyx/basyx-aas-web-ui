@@ -26,15 +26,11 @@
                         </v-hover>
                     </v-list-item-title>
                     <SemanticID
-                        v-if="
-                            Array.isArray(specificAssetId?.semanticId?.keys) &&
-                            specificAssetId.semanticId.keys.length > 0
-                        "
-                        :semantic-id-object="specificAssetId.semanticId"
-                        :semantic-title="specificAssetId.semanticId.keys.length > 0 ? 'Semantic IDs' : 'Semantic ID:'"
-                        :small="true"></SemanticID>
+                        :semantic-id-object="specificAssetId?.semanticId"
+                        :semantic-title="specificAssetId?.semanticId.keys.length > 0 ? 'Semantic IDs' : 'Semantic ID:'"
+                        :background-color="backgroundColor" />
                 </div>
-                <v-divider v-if="index < specificAssetIds.length - 1" class="my-2"></v-divider>
+                <v-divider v-if="index < specificAssetIds.length - 1" class="my-2" />
             </div>
         </v-list-item>
     </v-container>
@@ -52,6 +48,10 @@
         specificAssetIds: {
             type: Array<any>,
             default: [] as Array<any>,
+        },
+        backgroundColor: {
+            type: String,
+            default: '',
         },
     });
 

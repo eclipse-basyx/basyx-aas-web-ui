@@ -12,17 +12,19 @@
                 <span class="text-primary">{{ dataSpecificationObject.dataType }}</span>
             </v-list-item-title>
             <v-divider
-                v-if="dataSpecificationObject.definition && dataSpecificationObject.definition.length > 0"
-                class="mt-2"></v-divider>
+                v-if="
+                    dataSpecificationObject.definition &&
+                    Array.isArray(dataSpecificationObject.definition) &&
+                    dataSpecificationObject.definition.length > 0
+                "
+                class="mt-2" />
             <!-- definition -->
             <DescriptionElement
-                v-if="dataSpecificationObject.definition && dataSpecificationObject.definition.length > 0"
                 :description-array="dataSpecificationObject.definition"
-                :description-title="'Definition'"
-                :small="true"></DescriptionElement>
+                :description-title="'Definition'" />
             <v-divider
                 v-if="dataSpecificationObject.levelTypes && dataSpecificationObject.levelTypes.length > 0"
-                class="mt-2"></v-divider>
+                class="mt-2" />
             <!-- levelTypes -->
             <!-- TODO: DataSpecification levelTypes needs visual update -->
             <v-list-item-title
@@ -34,24 +36,29 @@
                 }}</span>
             </v-list-item-title>
             <v-divider
-                v-if="dataSpecificationObject.preferredName && dataSpecificationObject.preferredName.length > 0"
-                class="mt-2"></v-divider>
+                v-if="
+                    dataSpecificationObject.preferredName &&
+                    Array.isArray(dataSpecificationObject.preferredName) &&
+                    dataSpecificationObject.preferredName.length > 0
+                "
+                class="mt-2" />
             <!-- preferredName -->
             <DescriptionElement
-                v-if="dataSpecificationObject.preferredName && dataSpecificationObject.preferredName.length > 0"
                 :description-array="dataSpecificationObject.preferredName"
                 :description-title="'Preferred Name'"
-                :small="true"></DescriptionElement>
+                :background-color="backgroundColor" />
             <v-divider
-                v-if="dataSpecificationObject.shortName && dataSpecificationObject.shortName.length > 0"
-                class="mt-2"></v-divider>
+                v-if="
+                    dataSpecificationObject.shortName &&
+                    Array.isArray(dataSpecificationObject.shortName) &&
+                    dataSpecificationObject.shortName.length > 0
+                "
+                class="mt-2" />
             <!-- shortName -->
             <DescriptionElement
-                v-if="dataSpecificationObject.shortName && dataSpecificationObject.shortName.length > 0"
                 :description-array="dataSpecificationObject.shortName"
-                :description-title="'Short Name'"
-                :small="true"></DescriptionElement>
-            <v-divider v-if="dataSpecificationObject.unit" class="mt-2"></v-divider>
+                :description-title="'Short Name'" />
+            <v-divider v-if="dataSpecificationObject.unit" class="mt-2" />
             <!-- unit -->
             <v-list-item-title v-if="dataSpecificationObject.unit" class="pt-2 pl-2">
                 <span class="text-caption">Unit: </span>
@@ -78,7 +85,7 @@
             </v-list-item>
             <v-divider
                 v-if="dataSpecificationObject.valueList && dataSpecificationObject.valueList.length > 0"
-                class="mt-2"></v-divider>
+                class="mt-2" />
             <!-- valueList -->
             <!-- TODO: DataSpecification valueList needs visual update -->
             <v-list-item-title
@@ -93,12 +100,16 @@
     </v-container>
 </template>
 
-<script setup lang="ts">
+<script ses">
     // Props
     defineProps({
         dataSpecificationObject: {
             type: Object as any,
             default: {} as any,
+        },
+        backgroundColor: {
+            type: String,
+            default: '',
         },
     });
 </script>
