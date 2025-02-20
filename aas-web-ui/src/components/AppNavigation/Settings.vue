@@ -10,10 +10,10 @@
             <v-list nav class="pt-0 pb-2" :class="isMobile ? 'bg-card' : 'bg-navigationMenu'">
                 <!-- Switch to change the app theme -->
                 <ThemeSwitch></ThemeSwitch>
-                <LdLogout></LdLogout>
                 <v-divider v-if="endpointConfigAvailable" class="mt-3"></v-divider>
                 <!-- Backend Configuration -->
                 <BackendConfig v-if="endpointConfigAvailable"></BackendConfig>
+                <LdLogout></LdLogout>
             </v-list>
         </v-card>
     </v-menu>

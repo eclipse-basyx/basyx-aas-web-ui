@@ -22,6 +22,7 @@ import { useEnvStore } from './store/EnvironmentStore';
 import { useNavigationStore } from './store/NavigationStore';
 
 import { OIDC_CONFIG } from '@/constants/oidc-config';
+import { UserManager } from 'oidc-client-ts';
 
 initialize();
 

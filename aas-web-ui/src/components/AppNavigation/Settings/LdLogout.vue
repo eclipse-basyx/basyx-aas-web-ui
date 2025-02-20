@@ -12,29 +12,23 @@
     import { UserManager } from 'oidc-client-ts';
     import { defineComponent } from 'vue';
     import { OIDC_CONFIG } from '@/constants/oidc-config';
-
     export default defineComponent({
         name: 'LdLogout',
-
         setup() {
             return {};
         },
-
         data() {
             return {
                 email: '',
             };
         },
-
         computed: {},
-
         mounted() {
             const userManager = new UserManager(OIDC_CONFIG);
             userManager.getUser().then((user) => {
                 this.email = user?.profile.email ?? '';
             });
         },
-
         methods: {
             logOut() {
                 const userManager = new UserManager(OIDC_CONFIG);

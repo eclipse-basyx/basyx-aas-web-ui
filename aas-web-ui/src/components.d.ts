@@ -54,6 +54,8 @@ declare module 'vue' {
     JSONArrayProperty: typeof import('./components/Plugins/SubmodelElements/JSONArrayProperty.vue')['default']
     Lamp: typeof import('./components/Widgets/Lamp.vue')['default']
     LastSync: typeof import('./components/UIComponents/LastSync.vue')['default']
+    LdLogout: typeof import('./components/AppNavigation/Settings/LdLogout.vue')['default']
+    LdUser: typeof import('./components/AppNavigation/LdUser.vue')['default']
     LineChart: typeof import('./components/Widgets/LineChart.vue')['default']
     MainMenu: typeof import('./components/AppNavigation/MainMenu.vue')['default']
     MultiLanguageProperty: typeof import('./components/SubmodelElements/MultiLanguageProperty.vue')['default']
