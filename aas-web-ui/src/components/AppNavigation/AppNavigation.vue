@@ -32,6 +32,7 @@
                     <MainMenu @close-menu="mainMenu = false"></MainMenu>
                 </v-menu>
                 <v-spacer></v-spacer>
+                <LdUser></LdUser>
                 <!-- Settings-Menu for Auto-Sync and Sync-Interval -->
                 <AutoSync v-if="showAutoSync"></AutoSync>
                 <!-- Platform I 4.0 Logo -->
@@ -248,6 +249,7 @@
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
+    import LdUser from '@/components/AppNavigation/LdUser.vue';
     import { useDashboardHandling } from '@/composables/DashboardHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useAuthStore } from '@/store/AuthStore';

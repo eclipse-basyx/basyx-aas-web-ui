@@ -21,6 +21,8 @@ import { createAppRouter } from './router';
 import { useEnvStore } from './store/EnvironmentStore';
 import { useNavigationStore } from './store/NavigationStore';
 
+import { OIDC_CONFIG } from '@/constants/oidc-config';
+
 initialize();
 
 async function initialize(): Promise<void> {
@@ -105,6 +107,8 @@ async function initialize(): Promise<void> {
     const router = await createAppRouter();
     app.use(router);
 
+    await handleLogin();
+
     // Mount the app
     app.mount('#app');
 }
@@ -132,4 +136,29 @@ async function getVisualizations(app: AppType): Promise<PluginType[]> {
     }
 
     return plugins;
+}
+
+async function handleLogin(): Promise<void> {
+    const userManager = new UserManager(OIDC_CONFIG);
+
+    if (location.search) {
+        const args = new URLSearchParams(location.search);
+        const state = args.get('state');
+
+        if (state) {
+            const storedState = await userManager.settings.stateStore?.get(state);
+            if (storedState) {
+                try {
+                    await userManager.signinCallback();
+                } finally {
+                    history.replaceState({}, document.title, '/');
+                }
+            }
+        }
+    }
+
+    const user = await userManager.getUser();
+    if (!user) {
+        await userManager.signinRedirect();
+    }
 }
