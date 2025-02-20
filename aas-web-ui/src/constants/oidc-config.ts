@@ -8,6 +8,7 @@ export const OIDC_CONFIG = {
     scope: import.meta.env.VITE_OIDC_CONFIG_SCOPE,
     response_type: import.meta.env.VITE_OIDC_CONFIG_RESPONSE_TYPE,
     client_authentication: import.meta.env.VITE_OIDC_CONFIG_CLIENT_AUTHENTICATION,
+    metadata_url: import.meta.env.VITE_OIDC_CONFIG_OPENID_CONFIGURATION_ENDPOINT,
     loadUserInfo: true,
     userStore: new WebStorageStateStore({ store: window.localStorage }),
 };

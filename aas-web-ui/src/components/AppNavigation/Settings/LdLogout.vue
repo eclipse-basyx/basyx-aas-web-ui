@@ -32,10 +32,7 @@
         methods: {
             logOut() {
                 const userManager = new UserManager(OIDC_CONFIG);
-                userManager.metadataService.getMetadata().then((metadata) => {
-                    metadata.end_session_endpoint = metadata.logout_endpoint;
-                    userManager.signoutRedirect();
-                });
+                userManager.signoutRedirect();
             },
         },
     });
