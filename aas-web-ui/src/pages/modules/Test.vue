@@ -14,5 +14,10 @@
 <script lang="ts" setup>
     import { ref } from 'vue';
 
+    defineOptions({
+        inheritAttrs: false,
+        moduleTitle: 'TestTitle', // optional module title
+    });
+
     const moduleName = ref('Test');
 </script>
