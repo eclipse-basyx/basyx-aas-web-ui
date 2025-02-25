@@ -69,6 +69,11 @@ const generateModuleRoutes = async (): Promise<Array<RouteRecordRaw>> => {
         // Define the route path, e.g., '/modules/module-a' if needed
         const routePath = `/modules/${moduleName.toLowerCase()}`;
 
+        let moduleTitle = moduleName;
+        if (moduleComponent.default?.moduleTitle && moduleComponent.default?.moduleTitle !== '') {
+            moduleTitle = moduleComponent.default?.moduleTitle;
+        }
+
         const isDesktopModule = moduleComponent.default?.isDesktopModule ?? true; // Modules are per default available in desktop view
         const isMobileModule = moduleComponent.default?.isMobileModule ?? false; // Modules are per default not available in mobile view
         const isVisibleModule = moduleComponent.default?.isVisibleModule ?? true; // Modules are per default visible
@@ -84,6 +89,7 @@ const generateModuleRoutes = async (): Promise<Array<RouteRecordRaw>> => {
             name: moduleName,
             meta: {
                 name: moduleName,
+                title: moduleTitle,
                 subtitle: 'Module',
                 isDesktopModule: isDesktopModule,
                 isMobileModule: isMobileModule,
