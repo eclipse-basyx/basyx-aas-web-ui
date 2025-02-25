@@ -108,10 +108,10 @@ export function useSMRegistryClient() {
 
         if (smId === '') return failResponse;
 
-        const aasDescriptor = await fetchSmDescriptorById(smId);
-        const aasEndpoint = extractEndpointHref(aasDescriptor, 'Submodel-3.0');
+        const smDescriptor = await fetchSmDescriptorById(smId);
+        const smEndpoint = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0');
 
-        return aasEndpoint || failResponse;
+        return smEndpoint || failResponse;
     }
 
     /**

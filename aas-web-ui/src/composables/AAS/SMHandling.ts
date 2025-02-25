@@ -37,7 +37,7 @@ export function useSMHandling() {
 
         smDescriptors = smDescriptors.map((smDescriptor: any) => {
             smDescriptor.timestamp = formatDate(new Date());
-            smDescriptor.path = extractEndpointHref(smDescriptor, 'Submodel-3.0');
+            smDescriptor.path = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0');
             return smDescriptor;
         });
 
@@ -66,7 +66,7 @@ export function useSMHandling() {
         }
 
         smDescriptor.timestamp = formatDate(new Date());
-        smDescriptor.path = extractEndpointHref(smDescriptor, 'Submodel-3.0');
+        smDescriptor.path = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0');
 
         return smDescriptor;
     }
@@ -181,12 +181,14 @@ export function useSMHandling() {
         if (smId === '') return failResponse;
 
         // First try to determine SM endpoint with the help of the registry
-        const smEndpoint = await getSmEndpointByIdFromRegistry(smId);
+        let smEndpoint = await getSmEndpointByIdFromRegistry(smId);
 
         if (smEndpoint && smEndpoint.trim() !== '') return smEndpoint.trim();
 
         // Second try to determine SM endpoint with the help of the repo
-        return getSmEndpointByIdFromRepo(smId) || failResponse;
+        smEndpoint = getSmEndpointByIdFromRepo(smId);
+
+        return smEndpoint.trim() || failResponse;
     }
 
     /**

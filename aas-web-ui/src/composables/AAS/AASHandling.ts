@@ -263,7 +263,8 @@ export function useAASHandling() {
             const submodelRefs = aas.submodels;
 
             const submodelPromises = submodelRefs.map((submodelRef: any) => {
-                return fetchSmById(extractIdFromReference(submodelRef, 'Submodel'), false, true);
+                const smId = extractIdFromReference(submodelRef, 'Submodel');
+                return fetchSmById(smId, false, true);
             });
 
             return await Promise.all(submodelPromises);
