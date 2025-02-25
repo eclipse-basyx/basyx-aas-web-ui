@@ -13,10 +13,12 @@
 
 <script lang="ts" setup>
     import { ref } from 'vue';
+
     defineOptions({
         inheritAttrs: false,
         isDesktopModule: true,
         isMobileModule: false,
     });
+
     const moduleName = ref('TestOnlyDesktop');
 </script>
