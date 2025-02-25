@@ -31,7 +31,7 @@ export function extractEndpointHref(descriptor: any, interfaceShortName: string)
         return failResponse;
     }
 
-    if (!descriptor.endpoints || !Array.isArray(descriptor.endpoints) || descriptor.endpoints.length === 0) {
+    if (!Array.isArray(descriptor?.endpoints) || descriptor?.endpoints.length === 0) {
         return failResponse;
     }
 
