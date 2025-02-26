@@ -189,11 +189,8 @@
     const autoSyncInterval = ref<number | undefined>(undefined); // interval to send requests to the AAS
 
     // Computed Properties
-    const searchParams = computed(() => new URL(window.location.href).searchParams);
-    const aasEndpoint = computed(() => (searchParams.value.get('aas') || '').trim());
-    const smePath = computed(() => (searchParams.value.get('path') || '').trim());
-    const aasRegistryServerURL = computed(() => navigationStore.getAASRegistryURL);
-    const submodelRegistryServerURL = computed(() => navigationStore.getSubmodelRegistryURL);
+    const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL);
+    const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL);
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
     const selectedNode = computed(() => aasStore.getSelectedNode);
     const autoSync = computed(() => navigationStore.getAutoSync);
@@ -202,27 +199,7 @@
 
     // Watchers
     watch(
-        () => aasRegistryServerURL.value,
-        () => {
-            if (!aasRegistryServerURL.value) {
-                resetLocalData();
-                initialize(selectedNode.value, true);
-            }
-        }
-    );
-
-    watch(
-        () => submodelRegistryServerURL.value,
-        () => {
-            if (!submodelRegistryServerURL.value) {
-                resetLocalData();
-                initialize(selectedNode.value, true);
-            }
-        }
-    );
-
-    watch(
-        () => aasEndpoint.value,
+        () => aasRegistryURL.value,
         () => {
             resetLocalData();
             initialize(selectedNode.value, true);
@@ -230,7 +207,7 @@
     );
 
     watch(
-        () => smePath.value,
+        () => submodelRegistryURL.value,
         () => {
             resetLocalData();
             initialize(selectedNode.value, true);

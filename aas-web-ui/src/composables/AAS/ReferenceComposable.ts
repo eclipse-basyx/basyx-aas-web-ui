@@ -1,24 +1,21 @@
 import { computed } from 'vue';
+import { useAASHandling } from '@/composables/AAS/AASHandling';
 import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
-import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
-import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+import { useSMEHandling } from '@/composables/AAS/SMEHandling';
+import { useSMHandling } from '@/composables/AAS/SMHandling';
 import { useAASStore } from '@/store/AASDataStore';
 import { useNavigationStore } from '@/store/NavigationStore';
-import { keyTypes } from '@/utils/AAS/KeyTypesUtil';
+import { extractId } from '@/utils/AAS/ReferenceUtil';
 
-export function useReferenceUtils() {
+export function useReferenceComposable() {
     // Stores
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
 
     // Composables
-    const { isAvailableById: aasIsAvailableById, getAasEndpointById: getAasEndpointByIdFromRepo } =
-        useAASRepositoryClient();
-    const {
-        isAvailableById: smIsAvailableById,
-        fetchSme,
-        getSmEndpointById: getSmEndpointByIdFromRepo,
-    } = useSMRepositoryClient();
+    const { aasIsAvailableById, getAasEndpointById } = useAASHandling();
+    const { smIsAvailableById, getSmEndpointById } = useSMHandling();
+    const { fetchSme } = useSMEHandling();
     const { checkIdShort } = useReferableUtils();
 
     // Computed Properties
@@ -140,10 +137,10 @@ export function useReferenceUtils() {
 
                 if (reference?.keys[0]?.type === 'AssetAdministrationShell') {
                     const aasId = reference?.keys[0].value.trim();
-                    aasEndpoint = getAasEndpointByIdFromRepo(aasId);
+                    aasEndpoint = await getAasEndpointById(aasId);
                     if (reference?.keys[1]?.type === 'Submodel') {
                         const smId = reference?.keys[1].value.trim();
-                        smEndpoint = getSmEndpointByIdFromRepo(smId);
+                        smEndpoint = await getSmEndpointById(smId);
                         referenceKeys = referenceKeys.slice(1);
                     }
                     referenceKeys = referenceKeys.slice(1);
@@ -152,7 +149,7 @@ export function useReferenceUtils() {
                 if (reference?.keys[0]?.type === 'Submodel') {
                     // TODO determine aasEndpoint
                     const smId = reference?.keys[0].value.trim();
-                    smEndpoint = getSmEndpointByIdFromRepo(smId);
+                    smEndpoint = await getSmEndpointById(smId);
                     referenceKeys = referenceKeys.slice(1);
                 }
 
@@ -194,34 +191,5 @@ export function useReferenceUtils() {
         return failResponse;
     }
 
-    /**
-     * Extracts the ID (Key) from a Reference object based on the given Key Type name.
-     *
-     * @param {Object} reference - The Reference object containing ID/Key information.
-     * @param {string} keyType - The Key Type name.
-     * @returns {string} The ID (Key) of the matching Key Type name if found, otherwise an empty string.
-     */
-    function extractId(reference: any, keyType: string): string {
-        const failResponse = '';
-
-        if (!reference.keys || !Array.isArray(reference.keys) || reference.keys.length === 0 || keyType.trim() === '') {
-            return '';
-        }
-
-        keyType = keyType.trim();
-
-        if (!keyTypes.some((keyTypeOfKeyTypes: any) => keyTypeOfKeyTypes.name === keyType)) {
-            return failResponse;
-        }
-
-        const keys = reference.keys;
-        // find the key based on the key type name
-        const key = keys.find((key: any) => {
-            return key?.type === keyType;
-        });
-
-        return key?.value && key.value.trim() !== '' ? key.value.trim() : failResponse;
-    }
-
-    return { referenceTypes, checkReference, getEndpoints, extractId };
+    return { referenceTypes, checkReference, getEndpoints };
 }

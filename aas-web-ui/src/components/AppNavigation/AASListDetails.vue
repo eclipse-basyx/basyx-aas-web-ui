@@ -146,8 +146,8 @@
     const router = useRouter();
 
     // Composables
-    const { downloadAasx, fetchAssetInformation, isAvailableById: isAvailableByIdInRepo } = useAASRepositoryClient();
-    const { fetchAas } = useAASHandling();
+    const { downloadAasx, fetchAssetInformation } = useAASRepositoryClient();
+    const { aasIsAvailableById, fetchAas } = useAASHandling();
 
     // Stores
     const navigationStore = useNavigationStore();
@@ -187,19 +187,15 @@
     // Watchers
     watch(
         () => aasRegistryURL.value,
-        async (newValue) => {
-            if (newValue !== '') {
-                await initializeView();
-            }
+        async () => {
+            initializeView();
         }
     );
 
     watch(
         () => aasRepoURL.value,
-        async (newValue) => {
-            if (newValue !== '') {
-                await initializeView();
-            }
+        async () => {
+            initializeView();
         }
     );
 
@@ -228,7 +224,7 @@
                 }
             }
 
-            await initializeView();
+            initializeView();
         },
         { deep: true }
     );
@@ -295,7 +291,7 @@
             }, statusCheck.value.interval);
         }
 
-        await initializeView(true);
+        initializeView(true);
     });
 
     onBeforeUnmount(() => {
@@ -320,7 +316,7 @@
         if (assetAdministrationShellData.value && Object.keys(assetAdministrationShellData.value).length > 0) {
             await new Promise((resolve) => setTimeout(resolve, 600)); // Give the UI the chance to refresh status icons
 
-            const aasIsAvailable = await isAvailableByIdInRepo(assetAdministrationShellData.value.id);
+            const aasIsAvailable = await aasIsAvailableById(assetAdministrationShellData.value.id);
 
             if (aasIsAvailable) {
                 assetAdministrationShellData.value.status =

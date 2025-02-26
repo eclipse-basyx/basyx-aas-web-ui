@@ -128,7 +128,7 @@
 <script lang="ts">
     import { defineComponent } from 'vue';
     import { useRouter } from 'vue-router';
-    import { useReferenceUtils } from '@/composables/AAS/ReferenceUtils';
+    import { useReferenceComposable } from '@/composables/AAS/ReferenceComposable';
     import { useJumpHandling } from '@/composables/JumpHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
@@ -156,7 +156,7 @@
         setup() {
             const aasStore = useAASStore();
             const router = useRouter();
-            const { checkReference } = useReferenceUtils();
+            const { checkReference } = useReferenceComposable();
             const { jumpToReference } = useJumpHandling();
 
             return {

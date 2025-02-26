@@ -143,7 +143,6 @@
     watch(
         () => aasRegistryURL.value,
         () => {
-            // Resets the Submodel List when the AAS Registry changes
             submodelList.value = [];
         }
     );
@@ -151,7 +150,6 @@
     watch(
         () => submodelRegistryURL.value,
         () => {
-            // Resets the Submodel List when the Submodel Registry changes
             submodelList.value = [];
         }
     );
@@ -161,8 +159,7 @@
         () => {
             submodelList.value = [];
             initialize();
-        },
-        { deep: true }
+        }
     );
 
     watch(

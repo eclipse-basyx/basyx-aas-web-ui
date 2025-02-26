@@ -30,10 +30,8 @@ export function useSMRegistryClient() {
     async function fetchSmDescriptorList(): Promise<Array<any>> {
         const failResponse = [] as Array<any>;
 
-        if (submodelRegistryUrl.value.trim() === '') return failResponse;
-
-        let smRegistryUrl = submodelRegistryUrl.value;
-        if (smRegistryUrl.trim() === '') return failResponse;
+        let smRegistryUrl = submodelRegistryUrl.value.trim();
+        if (smRegistryUrl === '') return failResponse;
         if (smRegistryUrl.endsWith('/')) smRegistryUrl = stripLastCharacter(smRegistryUrl);
         if (!smRegistryUrl.endsWith(endpointPath)) smRegistryUrl += endpointPath;
 
@@ -71,10 +69,8 @@ export function useSMRegistryClient() {
 
         if (smId === '') return failResponse;
 
-        if (submodelRegistryUrl.value.trim() === '') return failResponse;
-
-        let smRegistryUrl = submodelRegistryUrl.value;
-        if (smRegistryUrl.trim() === '') return failResponse;
+        let smRegistryUrl = submodelRegistryUrl.value.trim();
+        if (smRegistryUrl === '') return failResponse;
         if (smRegistryUrl.endsWith('/')) smRegistryUrl = stripLastCharacter(smRegistryUrl);
         if (!smRegistryUrl.endsWith(endpointPath)) smRegistryUrl += endpointPath;
 
@@ -112,30 +108,8 @@ export function useSMRegistryClient() {
 
         if (smId === '') return failResponse;
 
-        const aasDescriptor = await fetchSmDescriptorById(smId);
-        const aasEndpoint = extractEndpointHref(aasDescriptor, 'Submodel-3.0');
-
-        return aasEndpoint || failResponse;
-    }
-
-    /**
-     * Retrieves the Submodel (SM) endpoint URL of an SM descriptor.
-     *
-     * @param {string} smDescriptor - The SM descriptor to retrieve the endpoint for.
-     * @returns {string} A promise that resolves to an SM endpoint.
-     */
-    function getSmEndpoint(smDescriptor: any): string {
-        const failResponse = '';
-
-        if (
-            !smDescriptor ||
-            Object.keys(smDescriptor).length === 0 ||
-            !smDescriptor.id ||
-            smDescriptor.id.trim() === ''
-        )
-            return failResponse;
-
-        const smEndpoint = extractEndpointHref(smDescriptor, 'Submodel-3.0');
+        const smDescriptor = await fetchSmDescriptorById(smId);
+        const smEndpoint = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0');
 
         return smEndpoint || failResponse;
     }
@@ -168,10 +142,8 @@ export function useSMRegistryClient() {
     async function postSubmodelDescriptor(submodelDescriptor: descriptorTypes.SubmodelDescriptor): Promise<boolean> {
         const failResponse = false;
 
-        if (submodelRegistryUrl.value.trim() === '') return failResponse;
-
-        let smRegistryUrl = submodelRegistryUrl.value;
-        if (smRegistryUrl.trim() === '') return failResponse;
+        let smRegistryUrl = submodelRegistryUrl.value.trim();
+        if (smRegistryUrl === '') return failResponse;
         if (smRegistryUrl.endsWith('/')) smRegistryUrl = stripLastCharacter(smRegistryUrl);
         if (!smRegistryUrl.endsWith(endpointPath)) smRegistryUrl += endpointPath;
 
@@ -190,10 +162,8 @@ export function useSMRegistryClient() {
     async function putSubmodelDescriptor(submodelDescriptor: descriptorTypes.SubmodelDescriptor): Promise<boolean> {
         const failResponse = false;
 
-        if (submodelRegistryUrl.value.trim() === '') return failResponse;
-
-        let smRegistryUrl = submodelRegistryUrl.value;
-        if (smRegistryUrl.trim() === '') return failResponse;
+        let smRegistryUrl = submodelRegistryUrl.value.trim();
+        if (smRegistryUrl === '') return failResponse;
         if (smRegistryUrl.endsWith('/')) smRegistryUrl = stripLastCharacter(smRegistryUrl);
         if (!smRegistryUrl.endsWith(endpointPath)) smRegistryUrl += endpointPath;
 
@@ -230,7 +200,6 @@ export function useSMRegistryClient() {
 
     return {
         endpointPath,
-        getSmEndpoint,
         getSmEndpointById,
         fetchSmDescriptorList,
         fetchSmDescriptorById,
