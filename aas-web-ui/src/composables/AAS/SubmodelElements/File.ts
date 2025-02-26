@@ -57,7 +57,6 @@ export function useSMEFile() {
      * Retrieves the URL value of a file if it exists, otherwise returns a default value.
      *
      * @param {any} file - The file object to check.
-     * @param {string} [defaultValueToDisplay=''] - The default value to return if the file is invalid or has no value.
      * @returns {string} The URL value of the file or the default value.
      */
     function valueUrl(file: any): string {
@@ -69,6 +68,35 @@ export function useSMEFile() {
             } catch {
                 if (file.path && file.path.trim() !== '') return file.path + '/attachment';
             }
+        }
+        return '';
+    }
+
+    /**
+     * Retrieves a Blob URL for a given file if it has a valid URL.
+     *
+     * This function checks if the provided file object has a valid URL,
+     * and if so, makes a request to retrieve the associated Blob data.
+     * Upon a successful response, it creates and returns a URL that can
+     * be used to access the Blob. If the file does not have a valid URL
+     * or the request fails, it returns an empty string.
+     *
+     * @param {any} file - The file object to be processed. It is expected
+     *                     to have a method or property that allows
+     *                     getting its URL.
+     * @returns {string} - A URL string for the Blob if successful,
+     *                    or an empty string if not.
+     */
+    function valueBlob(file: any): string {
+        if (valueUrl(file)) {
+            const path = valueUrl(file);
+            const context = 'retrieving Attachment File';
+            const disableMessage = false;
+            getRequest(path, context, disableMessage).then((response: any) => {
+                if (response.success) {
+                    return URL.createObjectURL(response.data as Blob);
+                }
+            });
         }
         return '';
     }
@@ -162,5 +190,5 @@ export function useSMEFile() {
         }
     }
 
-    return { isFile, hasValue, valueToDisplay, valueUrl, getFilename, downloadFile };
+    return { isFile, hasValue, valueToDisplay, valueUrl, valueBlob, getFilename, downloadFile };
 }
