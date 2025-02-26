@@ -13,6 +13,7 @@ import { createPinia } from 'pinia';
 import { createApp } from 'vue';
 import { defineComponent } from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
+import { handleLogin } from '@/ldAuthService';
 // Plugins
 import { registerVuetify } from '@/plugins';
 import App from './App.vue';
@@ -20,9 +21,6 @@ import { initKeycloak, loginWithDirectGrant } from './authService';
 import { createAppRouter } from './router';
 import { useEnvStore } from './store/EnvironmentStore';
 import { useNavigationStore } from './store/NavigationStore';
-
-import { OIDC_CONFIG } from '@/constants/oidc-config';
-import { UserManager } from 'oidc-client-ts';
 
 initialize();
 
@@ -108,6 +106,7 @@ async function initialize(): Promise<void> {
     const router = await createAppRouter();
     app.use(router);
 
+    // Ld Sso login
     await handleLogin();
 
     // Mount the app
@@ -137,29 +136,4 @@ async function getVisualizations(app: AppType): Promise<PluginType[]> {
     }
 
     return plugins;
-}
-
-async function handleLogin(): Promise<void> {
-    const userManager = new UserManager(OIDC_CONFIG);
-
-    if (location.search) {
-        const args = new URLSearchParams(location.search);
-        const state = args.get('state');
-
-        if (state) {
-            const storedState = await userManager.settings.stateStore?.get(state);
-            if (storedState) {
-                try {
-                    await userManager.signinCallback();
-                } finally {
-                    history.replaceState({}, document.title, '/');
-                }
-            }
-        }
-    }
-
-    const user = await userManager.getUser();
-    if (!user) {
-        await userManager.signinRedirect();
-    }
 }
