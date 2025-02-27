@@ -38,13 +38,18 @@
                                         </td>
                                         <td>
                                             <!-- URIOfTheProduct -->
-                                            <a
-                                                v-if="checkIdShort(productProperty, 'URIOfTheProduct')"
-                                                :href="valueToDisplay(productProperty)"
-                                                target="_blank"
-                                                class="text-caption">
-                                                {{ valueToDisplay(productProperty) }}
-                                            </a>
+                                            <template v-if="checkIdShort(productProperty, 'URIOfTheProduct')">
+                                                <a
+                                                    v-if="valueToDisplay(productProperty).startsWith('http')"
+                                                    :href="valueToDisplay(productProperty)"
+                                                    target="_blank"
+                                                    class="text-caption">
+                                                    {{ valueToDisplay(productProperty) }}
+                                                </a>
+                                                <span v-else class="text-caption">
+                                                    {{ valueToDisplay(productProperty) }}
+                                                </span>
+                                            </template>
                                             <!-- CountryOfOrigin -->
                                             <template v-else-if="checkIdShort(productProperty, 'CountryOfOrigin')">
                                                 <div
@@ -137,13 +142,19 @@
                                         </td>
                                         <td>
                                             <!-- Address of Additional Link -->
-                                            <a
-                                                v-if="checkIdShort(manufacturerProperty, 'AddressOfAdditionalLink')"
-                                                :href="valueToDisplay(manufacturerProperty)"
-                                                target="_blank"
-                                                class="text-caption">
-                                                {{ valueToDisplay(manufacturerProperty) }}
-                                            </a>
+                                            <template
+                                                v-if="checkIdShort(manufacturerProperty, 'AddressOfAdditionalLink')">
+                                                <a
+                                                    v-if="valueToDisplay(manufacturerProperty).startsWith('http')"
+                                                    :href="valueToDisplay(manufacturerProperty)"
+                                                    target="_blank"
+                                                    class="text-caption">
+                                                    {{ valueToDisplay(manufacturerProperty) }}
+                                                </a>
+                                                <span v-else class="text-caption">
+                                                    {{ valueToDisplay(manufacturerProperty) }}
+                                                </span>
+                                            </template>
                                             <!-- Company Logo -->
                                             <v-img
                                                 v-else-if="checkIdShort(manufacturerProperty, 'CompanyLogo')"
