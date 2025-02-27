@@ -46,7 +46,15 @@
                                                 <v-img
                                                     v-if="
                                                         checkIdShort(generalProperty, 'ManufacturerLogo') ||
-                                                        checkIdShort(generalProperty, 'ProductImage')
+                                                        checkIdShort(generalProperty, 'ProductImage') ||
+                                                        checkSemanticId(
+                                                            generalProperty,
+                                                            'https://admin-shell.io/ZVEI/TechnicalData/ManufacturerLogo/1/1'
+                                                        ) ||
+                                                        checkSemanticId(
+                                                            generalProperty,
+                                                            'https://admin-shell.io/ZVEI/TechnicalData/ProductImage/1/1'
+                                                        )
                                                     "
                                                     :src="valueUrl(generalProperty)"
                                                     max-width="300px"
@@ -298,7 +306,7 @@
     import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
     import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement';
     import { useAASStore } from '@/store/AASDataStore';
-    import { getSubmodelElementBySemanticId } from '@/utils/AAS/SemanticIdUtils';
+    import { checkSemanticId, getSubmodelElementBySemanticId } from '@/utils/AAS/SemanticIdUtils';
 
     // Define component options such as custom static properties
     defineOptions({
