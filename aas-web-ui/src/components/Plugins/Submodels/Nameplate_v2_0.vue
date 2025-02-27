@@ -158,7 +158,7 @@
                                             <!-- Company Logo -->
                                             <v-img
                                                 v-else-if="checkIdShort(manufacturerProperty, 'CompanyLogo')"
-                                                :src="valueUrl(manufacturerProperty)"
+                                                :src="valueToDisplay(manufacturerProperty)"
                                                 max-width="300px"
                                                 max-height="300px"
                                                 contain
@@ -273,7 +273,7 @@
                 <v-card-text>
                     <v-row class="text-caption mb-2" justify="start">
                         <v-col v-for="marking in markings" :key="marking.idShort" cols="auto" class="pb-0">
-                            <v-img :src="marking.url" height="150px" width="150px" contain></v-img>
+                            <v-img :src="marking.src" height="150px" width="150px" contain></v-img>
                             <span class="text-subtitleText text-caption">{{ marking.name }}</span>
                         </v-col>
                     </v-row>
@@ -333,7 +333,7 @@
     const { determineAddress, generateVCard, getTypeOfEmailAddress, getTypeOfFaxNumber, getTypeOfTelephone } =
         useContactInformation_v1_0Utils();
     const { downloadVCard } = useVirtualContactFileUtils();
-    const { valueUrl } = useSMEFile();
+    const { valueBlob } = useSMEFile();
 
     // Properties
     const props = defineProps({
@@ -424,8 +424,11 @@
         const manufacturerPropertyIdShorts = ['ManufacturerName', 'CompanyLogo'];
 
         digitalNameplateData.submodelElements.forEach((sme: any) => {
-            manufacturerPropertyIdShorts.forEach((idShort: any) => {
+            manufacturerPropertyIdShorts.forEach(async (idShort: any) => {
                 if (checkIdShort(sme, idShort) && hasValue(sme)) {
+                    if (idShort === 'CompanyLogo') {
+                        sme.value = await valueBlob(sme);
+                    }
                     manufacturerProperties.value.push(sme);
                 }
             });
@@ -515,7 +518,7 @@
             if (Array.isArray(markingSMCs) && markingSMCs.length > 0) {
                 let formattedMarkings = [] as Array<any>;
 
-                markingSMCs.forEach((markingSMC: any) => {
+                markingSMCs.forEach(async (markingSMC: any) => {
                     let markingFile = getSubmodelElementByIdShort('MarkingFile', markingSMC);
                     let markingName = getSubmodelElementByIdShort('MarkingName', markingSMC);
 
@@ -523,7 +526,7 @@
                         let formattedMarking = {
                             idShort: markingSMC.idShort,
                             name: markingName.value,
-                            url: valueUrl(markingFile),
+                            src: await valueBlob(markingFile),
                         };
                         formattedMarkings.push(formattedMarking);
                     }

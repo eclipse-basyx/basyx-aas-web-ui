@@ -17,7 +17,7 @@ export function useUrlUtils() {
 
         if (!url || url.trim() === '') return failResponse;
 
-        const context = 'retrieving Attachment File';
+        const context = 'retrieving File';
         const disableMessage = false;
         const response = await getRequest(url, context, disableMessage);
         if (response.success) {

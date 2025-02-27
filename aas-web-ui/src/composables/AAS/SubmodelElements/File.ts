@@ -1,10 +1,12 @@
 import mime from 'mime';
 import { v4 as uuidv4 } from 'uuid';
 import { useRequestHandling } from '@/composables/RequestHandling';
+import { useUrlUtils } from '@/composables/UrlUtils';
 
 export function useSMEFile() {
     // Composables
     const { getRequest } = useRequestHandling();
+    const { getBlobUrl } = useUrlUtils();
 
     /**
      * Checks if the given file object is a valid File model with respect to AAS metamodel specs.
@@ -87,16 +89,9 @@ export function useSMEFile() {
      * @returns {string} - A URL string for the Blob if successful,
      *                    or an empty string if not.
      */
-    function valueBlob(file: any): string {
+    async function valueBlob(file: any): Promise<string> {
         if (valueUrl(file)) {
-            const path = valueUrl(file);
-            const context = 'retrieving Attachment File';
-            const disableMessage = false;
-            getRequest(path, context, disableMessage).then((response: any) => {
-                if (response.success) {
-                    return URL.createObjectURL(response.data as Blob);
-                }
-            });
+            return await getBlobUrl(valueUrl(file));
         }
         return '';
     }
