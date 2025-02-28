@@ -1,35 +1,45 @@
 <template>
-    <v-container fluid class="pa-0">
-        <v-list-item
-            v-if="
-                supplementalSemanticIdsArray &&
-                Array.isArray(supplementalSemanticIdsArray) &&
-                supplementalSemanticIdsArray.length > 0
-            "
-            :class="supplementalSemanticIdsTitle && supplementalSemanticIdsTitle.trim().length > 0 ? '' : 'pa-0'">
-            <!-- SupplementalSemanticIds Title -->
-            <template v-if="supplementalSemanticIdsTitle && supplementalSemanticIdsTitle.trim().length > 0" #title>
-                <div class="text-subtitle-2 mt-2">{{ supplementalSemanticIdsTitle + ':' }}</div>
-            </template>
-            <!-- SupplementalSemanticIds List -->
-            <template
-                v-for="(supplementalSemanticId, supplementalSemanticIdIndex) in supplementalSemanticIdsArray"
-                :key="supplementalSemanticIdIndex">
-                <v-container fluid class="pa-0 my-n2">
-                    <SemanticID
-                        v-if="
-                            supplementalSemanticId &&
-                            supplementalSemanticId.keys &&
-                            supplementalSemanticId.keys.length > 0
-                        "
-                        :semantic-id-object="supplementalSemanticId"
-                        :small="false"></SemanticID>
-                </v-container>
-                <v-divider
-                    v-if="supplementalSemanticIdIndex < supplementalSemanticIdsArray.length - 1"
-                    class="mt-2 mb-0"></v-divider>
-            </template>
-        </v-list-item>
+    <v-container
+        v-if="
+            supplementalSemanticIdsArray &&
+            Array.isArray(supplementalSemanticIdsArray) &&
+            supplementalSemanticIdsArray.length > 0
+        "
+        fluid
+        class="pa-0">
+        <v-expansion-panels class="mb-n2">
+            <v-expansion-panel elevation="0" tile static :class="'bg-' + backgroundColor">
+                <v-expansion-panel-title class="px-2">
+                    <span class="text-subtitle-2">
+                        {{ supplementalSemanticIdsTitle }}
+                    </span>
+                </v-expansion-panel-title>
+                <v-expansion-panel-text>
+                    <v-list nav class="pa-0" :class="'bg-' + backgroundColor">
+                        <v-list-item class="py-0">
+                            <!-- SupplementalSemanticIds List -->
+                            <template
+                                v-for="(
+                                    supplementalSemanticId, supplementalSemanticIdIndex
+                                ) in supplementalSemanticIdsArray"
+                                :key="supplementalSemanticIdIndex">
+                                <SemanticID :semantic-id-object="supplementalSemanticId" />
+                                <!-- <v-divider
+                                    v-if="
+                                        supplementalSemanticId &&
+                                        Object.keys(supplementalSemanticId).length > 0 &&
+                                        supplementalSemanticId.keys &&
+                                        Array.isArray(supplementalSemanticId.keys) &&
+                                        supplementalSemanticId.keys.length > 0 &&
+                                        supplementalSemanticIdIndex < supplementalSemanticIdsArray.length - 1
+                                    "
+                                    class="mt-2 mb-0" /> -->
+                            </template>
+                        </v-list-item>
+                    </v-list>
+                </v-expansion-panel-text>
+            </v-expansion-panel>
+        </v-expansion-panels>
     </v-container>
 </template>
 
@@ -44,5 +54,16 @@
             type: String,
             default: 'Description',
         },
+        backgroundColor: {
+            type: String,
+            default: '',
+        },
     });
 </script>
+
+<style lang="css" scoped>
+    .v-expansion-panel-text :deep(.v-expansion-panel-text__wrapper) {
+        padding: 0px !important;
+        margin: 0px !important;
+    }
+</style>
