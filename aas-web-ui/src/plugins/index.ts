@@ -7,9 +7,9 @@
 // Plugins
 // Types
 import type { App } from 'vue';
+import { loadFonts } from '@/plugins//webfontloader';
+import { initializeVuetify } from '@/plugins/vuetify';
 import { useEnvStore } from '@/store/EnvironmentStore'; // replace with the path to your store file
-import { initializeVuetify } from './vuetify';
-import { loadFonts } from './webfontloader';
 
 export async function registerVuetify(app: App) {
     loadFonts();

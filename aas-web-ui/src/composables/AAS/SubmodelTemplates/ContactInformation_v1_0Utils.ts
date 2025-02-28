@@ -1,3 +1,4 @@
+import { useAASHandling } from '@/composables/AAS/AASHandling';
 import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
 import { useSMHandling } from '@/composables/AAS/SMHandling';
 import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
@@ -5,7 +6,6 @@ import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement';
 import { firstLangStringSetText } from '@/utils/AAS/SubmodelElements/MultiLanguagePropertyUtils';
 import { getCountryName } from '@/utils/LocaleUtils';
 import { firstLetterToLowerCase } from '@/utils/StringUtils';
-import { useAASHandling } from '../AASHandling';
 
 export function useContactInformation_v1_0Utils() {
     const { getSmIdOfAasIdBySemanticId } = useAASHandling();

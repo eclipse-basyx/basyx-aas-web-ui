@@ -5,6 +5,7 @@ import ComponentVisualization from '@/components/ComponentVisualization.vue';
 import SubmodelList from '@/components/SubmodelList.vue';
 import { useAASHandling } from '@/composables/AAS/AASHandling';
 import { useSMEHandling } from '@/composables/AAS/SMEHandling';
+import { useRouteHandling } from '@/composables/routeHandling';
 import AASEditor from '@/pages/AASEditor.vue';
 import AASViewer from '@/pages/AASViewer.vue';
 import About from '@/pages/About.vue';
@@ -12,10 +13,9 @@ import Dashboard from '@/pages/Dashboard.vue';
 import DashboardGroup from '@/pages/DashboardGroup.vue';
 import Page404 from '@/pages/Page404.vue';
 import SubmodelViewer from '@/pages/SubmodelViewer.vue';
+import { useAASStore } from '@/store/AASDataStore';
 import { useEnvStore } from '@/store/EnvironmentStore';
 import { useNavigationStore } from '@/store/NavigationStore';
-import { useRouteHandling } from './composables/routeHandling';
-import { useAASStore } from './store/AASDataStore';
 
 // Static routes
 const staticRoutes: Array<RouteRecordRaw> = [

@@ -1,10 +1,10 @@
 import { useRouter } from 'vue-router';
 import { useAASHandling } from '@/composables/AAS/AASHandling';
 import { useReferenceComposable } from '@/composables/AAS/ReferenceComposable';
+import { useSMHandling } from '@/composables/AAS/SMHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 import { extractId as extractIdFromReference } from '@/utils/AAS/ReferenceUtil';
-import { useSMHandling } from './AAS/SMHandling';
 
 export function useJumpHandling() {
     // Stores

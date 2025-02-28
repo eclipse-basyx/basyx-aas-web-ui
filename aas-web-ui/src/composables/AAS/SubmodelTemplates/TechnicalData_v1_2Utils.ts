@@ -1,9 +1,9 @@
+import { useAASHandling } from '@/composables/AAS/AASHandling';
 import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
 import { useSMEHandling } from '@/composables/AAS/SMEHandling';
 import { useSMHandling } from '@/composables/AAS/SMHandling';
 import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
 import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils';
-import { useAASHandling } from '../AASHandling';
 
 export function useTechnicalData_v1_2Utils() {
     // Composables

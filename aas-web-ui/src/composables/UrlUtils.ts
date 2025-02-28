@@ -1,4 +1,4 @@
-import { useRequestHandling } from './RequestHandling';
+import { useRequestHandling } from '@/composables/RequestHandling';
 
 export function useUrlUtils() {
     const { getRequest } = useRequestHandling();

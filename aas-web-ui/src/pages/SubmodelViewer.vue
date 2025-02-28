@@ -17,8 +17,3 @@
         </div>
     </v-container>
 </template>
-
-<script lang="ts" setup>
-    import ComponentVisualization from '../components/ComponentVisualization.vue';
-    import SubmodelList from '../components/SubmodelList.vue';
-</script>

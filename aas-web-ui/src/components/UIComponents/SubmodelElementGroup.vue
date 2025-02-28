@@ -258,10 +258,10 @@
 // TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent } from 'vue';
+    import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
     import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useAASStore } from '@/store/AASDataStore';
-    import DescriptionElement from './DescriptionElement.vue';
 
     export default defineComponent({
         name: 'SubmodelElementGroup',
