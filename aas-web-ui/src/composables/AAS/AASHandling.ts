@@ -1,10 +1,10 @@
+import { useSMHandling } from '@/composables/AAS/SMHandling';
 import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
 import { useAASStore } from '@/store/AASDataStore';
 import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 import { extractId as extractIdFromReference } from '@/utils/AAS/ReferenceUtil';
 import { formatDate } from '@/utils/DateUtils';
-import { useSMHandling } from './SMHandling';
 
 export function useAASHandling() {
     // Composables

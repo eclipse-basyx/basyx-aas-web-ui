@@ -6,7 +6,7 @@
 
 import Keycloak from 'keycloak-js';
 import { KeycloakOnLoad } from 'keycloak-js';
-import { useAuthStore } from './store/AuthStore';
+import { useAuthStore } from '@/store/AuthStore';
 
 /**
  * Logs in a user with direct grant using Keycloak
