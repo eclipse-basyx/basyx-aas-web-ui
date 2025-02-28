@@ -126,13 +126,14 @@
             const aasStore = useAASStore();
 
             const { fetchAndDispatchSme } = useSMEHandling();
-            const { valueUrl } = useSMEFile();
+            const { valueUrl, valueBlob } = useSMEFile();
             const { patchRequest, putRequest } = useRequestHandling();
 
             return {
                 aasStore, // AASStore Object
                 fetchAndDispatchSme,
                 valueUrl,
+                valueBlob,
                 patchRequest,
                 putRequest,
             };
@@ -172,18 +173,18 @@
             // watch for changes in the fileObject and set the newPathValue
             fileObject: {
                 deep: true,
-                handler() {
+                async handler() {
                     if (!this.isFocused) {
                         this.newPathValue = this.fileObject.value;
-                        this.localPathValue = this.valueUrl(this.fileObject);
+                        this.localPathValue = await this.valueBlob(this.fileObject);
                     }
                 },
             },
         },
 
-        mounted() {
+        async mounted() {
             this.newPathValue = this.fileObject.value;
-            this.localPathValue = this.valueUrl(this.fileObject);
+            this.localPathValue = await this.valueBlob(this.fileObject);
         },
 
         methods: {
