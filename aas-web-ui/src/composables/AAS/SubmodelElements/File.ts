@@ -59,19 +59,19 @@ export function useSMEFile() {
      * Retrieves the URL value of a file if it exists, otherwise returns a default value.
      *
      * @param {any} file - The file object to check.
-     * @returns {string} The URL value of the file or the default value.
+     * @returns {{ url: string, isExternal: boolean }} The URL value of the file or the default value.
      */
-    function valueUrl(file: any): string {
+    function valueUrl(file: any): { url: string; isExternal: boolean } {
         if (isFile(file) && hasValue(file)) {
             try {
                 new URL(file.value);
                 // If no error is thrown, value is a valid URL
-                return file.value;
+                return { url: file.value, isExternal: true };
             } catch {
-                if (file.path && file.path.trim() !== '') return file.path + '/attachment';
+                if (file.path && file.path.trim() !== '') return { url: `${file.path}/attachment`, isExternal: false };
             }
         }
-        return '';
+        return { url: '', isExternal: false };
     }
 
     /**
@@ -90,8 +90,9 @@ export function useSMEFile() {
      *                    or an empty string if not.
      */
     async function valueBlob(file: any): Promise<string> {
-        if (valueUrl(file)) {
-            return await getBlobUrl(valueUrl(file));
+        const fileUrl = valueUrl(file);
+        if (fileUrl.url && fileUrl.url.trim() !== '') {
+            return await getBlobUrl(fileUrl.url, fileUrl.isExternal);
         }
         return '';
     }
@@ -104,7 +105,7 @@ export function useSMEFile() {
      */
     function getFilename(file: any): string {
         if (isFile(file) && hasValue(file)) {
-            const fileValueUrl = valueUrl(file);
+            const fileValueUrl = valueUrl(file).url;
 
             if (fileValueUrl && fileValueUrl.trim() !== '') {
                 const fileValueUrlParts = fileValueUrl.split('/');
@@ -159,7 +160,7 @@ export function useSMEFile() {
      */
     async function downloadFile(file: any): Promise<void> {
         if (isFile(file) && hasValue(file) && valueUrl(file)) {
-            const path = valueUrl(file);
+            const path = valueUrl(file).url;
             const context = 'retrieving Attachment File';
             const disableMessage = false;
             await getRequest(path, context, disableMessage).then((response: any) => {

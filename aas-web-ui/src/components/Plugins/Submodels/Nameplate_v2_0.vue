@@ -509,30 +509,31 @@
         }
     }
 
-    function extractMarkings(digitalNameplateData: any): void {
+    async function extractMarkings(digitalNameplateData: any): Promise<void> {
         markingsSMC.value = getSubmodelElementByIdShort('Markings', digitalNameplateData);
 
         if (hasValue(markingsSMC.value)) {
-            let markingSMCs = markingsSMC.value.value;
+            const markingSMCs = markingsSMC.value.value;
 
             if (Array.isArray(markingSMCs) && markingSMCs.length > 0) {
-                let formattedMarkings = [] as Array<any>;
+                const formattedMarkings = await Promise.all(
+                    markingSMCs.map(async (markingSMC: any) => {
+                        const markingFile = getSubmodelElementByIdShort('MarkingFile', markingSMC);
+                        const markingName = getSubmodelElementByIdShort('MarkingName', markingSMC);
 
-                markingSMCs.forEach(async (markingSMC: any) => {
-                    let markingFile = getSubmodelElementByIdShort('MarkingFile', markingSMC);
-                    let markingName = getSubmodelElementByIdShort('MarkingName', markingSMC);
+                        if (hasValue(markingName) && hasValue(markingFile)) {
+                            return {
+                                idShort: markingSMC.idShort,
+                                name: markingName.value,
+                                src: await valueBlob(markingFile),
+                            };
+                        }
+                        return null;
+                    })
+                );
 
-                    if (hasValue(markingName) && hasValue(markingFile)) {
-                        let formattedMarking = {
-                            idShort: markingSMC.idShort,
-                            name: markingName.value,
-                            src: await valueBlob(markingFile),
-                        };
-                        formattedMarkings.push(formattedMarking);
-                    }
-                });
-
-                markings.value = formattedMarkings;
+                // Filter out any markings that returned null.
+                markings.value = formattedMarkings.filter((m) => m !== null);
             }
         }
     }

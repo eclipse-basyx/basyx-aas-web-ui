@@ -42,13 +42,13 @@
             const theme = useTheme();
             const aasStore = useAASStore();
 
-            const { valueUrl } = useSMEFile();
+            const { valueBlob } = useSMEFile();
             const { getRequest } = useRequestHandling();
 
             return {
                 theme, // Theme Object
                 aasStore, // AASStore Object
-                valueUrl,
+                valueBlob,
                 getRequest,
             };
         },
@@ -69,11 +69,11 @@
         },
 
         watch: {
-            submodelElementData() {
+            async submodelElementData() {
                 this.Base64Image = '';
                 this.imageUrl = '';
                 if (this.submodelElementData.modelType == 'File') {
-                    this.getImageBlob();
+                    this.Base64Image = await this.valueBlob(this.submodelElementData);
                 } else if (this.submodelElementData.modelType == 'Blob') {
                     this.getDecodedImageBlob();
                 }
@@ -81,12 +81,12 @@
             },
         },
 
-        mounted() {
+        async mounted() {
             this.Base64Image = '';
             this.imageUrl = '';
             if (this.submodelElementData.modelType == 'File') {
                 // console.log('SubmodelElementData: ', this.submodelElementData);
-                this.getImageBlob();
+                this.Base64Image = await this.valueBlob(this.submodelElementData);
             } else if (this.submodelElementData.modelType == 'Blob') {
                 this.getDecodedImageBlob();
             }
@@ -94,23 +94,6 @@
         },
 
         methods: {
-            getImageBlob() {
-                try {
-                    new URL(this.submodelElementData.value);
-                    this.imageUrl = this.submodelElementData.value;
-                } catch {
-                    let path = this.valueUrl(this.submodelElementData);
-                    let context = 'retrieving Attachment File';
-                    let disableMessage = false;
-                    this.getRequest(path, context, disableMessage).then((response: any) => {
-                        if (response.success) {
-                            // execute if the Request was successful
-                            this.Base64Image = URL.createObjectURL(response.data as Blob);
-                        }
-                    });
-                }
-            },
-
             getDecodedImageBlob() {
                 let decodedValue = atob(this.submodelElementData.value);
                 this.Base64Image = `data:${this.submodelElementData.contentType};base64,${decodedValue}`;
