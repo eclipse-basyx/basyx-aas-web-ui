@@ -48,7 +48,8 @@ export function useAASRegistryClient() {
                 const aasDescriptors = aasRegistryResponse.data.result;
                 return aasDescriptors;
             }
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
         return failResponse;
@@ -87,7 +88,8 @@ export function useAASRegistryClient() {
             ) {
                 return aasRegistryResponse.data;
             }
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
         return failResponse;

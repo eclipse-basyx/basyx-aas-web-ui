@@ -41,7 +41,8 @@ export function useCDRepositoryClient() {
             if (cdRepoResponse.success && cdRepoResponse.data.result && cdRepoResponse.data.result.length > 0) {
                 return cdRepoResponse.data.result;
             }
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
 
@@ -105,7 +106,8 @@ export function useCDRepositoryClient() {
 
                 return cd;
             }
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
 
@@ -160,7 +162,8 @@ export function useCDRepositoryClient() {
             if (cdRepoResponse?.success && cdRepoResponse?.data && Object.keys(cdRepoResponse?.data).length > 0) {
                 return true;
             }
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
 

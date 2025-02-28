@@ -37,7 +37,8 @@ export function useDashboardHandling() {
             const response = await getRequest(path, context, disableMessage);
             if (response.success) return true;
             return false;
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return false;
         }
     }
