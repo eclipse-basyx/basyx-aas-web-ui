@@ -256,6 +256,9 @@ export function useAASRepositoryClient() {
                     // TODO: This does not work with active keycloak because there the thumbnail would have to be fetched with a token
                     const assetInformationThumbnailEndpoint = assetInformationEndpoint + '/thumbnail';
                     assetInformation.defaultThumbnail.path = assetInformationThumbnailEndpoint;
+                    assetInformation.defaultThumbnail.isExternal = false;
+                } else {
+                    assetInformation.defaultThumbnail.isExternal = true;
                 }
 
                 return assetInformation;

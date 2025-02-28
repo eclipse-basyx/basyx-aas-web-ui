@@ -1,10 +1,12 @@
 import mime from 'mime';
 import { v4 as uuidv4 } from 'uuid';
 import { useRequestHandling } from '@/composables/RequestHandling';
+import { useUrlUtils } from '@/composables/UrlUtils';
 
 export function useSMEFile() {
     // Composables
     const { getRequest } = useRequestHandling();
+    const { getBlobUrl } = useUrlUtils();
 
     /**
      * Checks if the given file object is a valid File model with respect to AAS metamodel specs.
@@ -57,19 +59,19 @@ export function useSMEFile() {
      * Retrieves the URL value of a file if it exists, otherwise returns a default value.
      *
      * @param {any} file - The file object to check.
-     * @returns {string} The URL value of the file or the default value.
+     * @returns {{ url: string, isExternal: boolean }} The URL value of the file or the default value.
      */
-    function valueUrl(file: any): string {
+    function valueUrl(file: any): { url: string; isExternal: boolean } {
         if (isFile(file) && hasValue(file)) {
             try {
                 new URL(file.value);
                 // If no error is thrown, value is a valid URL
-                return file.value;
+                return { url: file.value, isExternal: true };
             } catch {
-                if (file.path && file.path.trim() !== '') return file.path + '/attachment';
+                if (file.path && file.path.trim() !== '') return { url: `${file.path}/attachment`, isExternal: false };
             }
         }
-        return '';
+        return { url: '', isExternal: false };
     }
 
     /**
@@ -87,16 +89,10 @@ export function useSMEFile() {
      * @returns {string} - A URL string for the Blob if successful,
      *                    or an empty string if not.
      */
-    function valueBlob(file: any): string {
-        if (valueUrl(file)) {
-            const path = valueUrl(file);
-            const context = 'retrieving Attachment File';
-            const disableMessage = false;
-            getRequest(path, context, disableMessage).then((response: any) => {
-                if (response.success) {
-                    return URL.createObjectURL(response.data as Blob);
-                }
-            });
+    async function valueBlob(file: any): Promise<string> {
+        const fileUrl = valueUrl(file);
+        if (fileUrl.url && fileUrl.url.trim() !== '') {
+            return await getBlobUrl(fileUrl.url, fileUrl.isExternal);
         }
         return '';
     }
@@ -109,7 +105,7 @@ export function useSMEFile() {
      */
     function getFilename(file: any): string {
         if (isFile(file) && hasValue(file)) {
-            const fileValueUrl = valueUrl(file);
+            const fileValueUrl = valueUrl(file).url;
 
             if (fileValueUrl && fileValueUrl.trim() !== '') {
                 const fileValueUrlParts = fileValueUrl.split('/');
@@ -164,7 +160,7 @@ export function useSMEFile() {
      */
     async function downloadFile(file: any): Promise<void> {
         if (isFile(file) && hasValue(file) && valueUrl(file)) {
-            const path = valueUrl(file);
+            const path = valueUrl(file).url;
             const context = 'retrieving Attachment File';
             const disableMessage = false;
             await getRequest(path, context, disableMessage).then((response: any) => {

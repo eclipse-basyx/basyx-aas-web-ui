@@ -38,13 +38,18 @@
                                         </td>
                                         <td>
                                             <!-- URIOfTheProduct -->
-                                            <a
-                                                v-if="checkIdShort(productProperty, 'URIOfTheProduct')"
-                                                :href="valueToDisplay(productProperty)"
-                                                target="_blank"
-                                                class="text-caption">
-                                                {{ valueToDisplay(productProperty) }}
-                                            </a>
+                                            <template v-if="checkIdShort(productProperty, 'URIOfTheProduct')">
+                                                <a
+                                                    v-if="valueToDisplay(productProperty).startsWith('http')"
+                                                    :href="valueToDisplay(productProperty)"
+                                                    target="_blank"
+                                                    class="text-caption">
+                                                    {{ valueToDisplay(productProperty) }}
+                                                </a>
+                                                <span v-else class="text-caption">
+                                                    {{ valueToDisplay(productProperty) }}
+                                                </span>
+                                            </template>
                                             <!-- CountryOfOrigin -->
                                             <template v-else-if="checkIdShort(productProperty, 'CountryOfOrigin')">
                                                 <div
@@ -137,17 +142,23 @@
                                         </td>
                                         <td>
                                             <!-- Address of Additional Link -->
-                                            <a
-                                                v-if="checkIdShort(manufacturerProperty, 'AddressOfAdditionalLink')"
-                                                :href="valueToDisplay(manufacturerProperty)"
-                                                target="_blank"
-                                                class="text-caption">
-                                                {{ valueToDisplay(manufacturerProperty) }}
-                                            </a>
+                                            <template
+                                                v-if="checkIdShort(manufacturerProperty, 'AddressOfAdditionalLink')">
+                                                <a
+                                                    v-if="valueToDisplay(manufacturerProperty).startsWith('http')"
+                                                    :href="valueToDisplay(manufacturerProperty)"
+                                                    target="_blank"
+                                                    class="text-caption">
+                                                    {{ valueToDisplay(manufacturerProperty) }}
+                                                </a>
+                                                <span v-else class="text-caption">
+                                                    {{ valueToDisplay(manufacturerProperty) }}
+                                                </span>
+                                            </template>
                                             <!-- Company Logo -->
                                             <v-img
                                                 v-else-if="checkIdShort(manufacturerProperty, 'CompanyLogo')"
-                                                :src="valueUrl(manufacturerProperty)"
+                                                :src="valueToDisplay(manufacturerProperty)"
                                                 max-width="300px"
                                                 max-height="300px"
                                                 contain
@@ -262,7 +273,7 @@
                 <v-card-text>
                     <v-row class="text-caption mb-2" justify="start">
                         <v-col v-for="marking in markings" :key="marking.idShort" cols="auto" class="pb-0">
-                            <v-img :src="marking.url" height="150px" width="150px" contain></v-img>
+                            <v-img :src="marking.src" height="150px" width="150px" contain></v-img>
                             <span class="text-subtitleText text-caption">{{ marking.name }}</span>
                         </v-col>
                     </v-row>
@@ -322,7 +333,7 @@
     const { determineAddress, generateVCard, getTypeOfEmailAddress, getTypeOfFaxNumber, getTypeOfTelephone } =
         useContactInformation_v1_0Utils();
     const { downloadVCard } = useVirtualContactFileUtils();
-    const { valueUrl } = useSMEFile();
+    const { valueBlob } = useSMEFile();
 
     // Properties
     const props = defineProps({
@@ -413,8 +424,11 @@
         const manufacturerPropertyIdShorts = ['ManufacturerName', 'CompanyLogo'];
 
         digitalNameplateData.submodelElements.forEach((sme: any) => {
-            manufacturerPropertyIdShorts.forEach((idShort: any) => {
+            manufacturerPropertyIdShorts.forEach(async (idShort: any) => {
                 if (checkIdShort(sme, idShort) && hasValue(sme)) {
+                    if (idShort === 'CompanyLogo') {
+                        sme.value = await valueBlob(sme);
+                    }
                     manufacturerProperties.value.push(sme);
                 }
             });
@@ -495,30 +509,31 @@
         }
     }
 
-    function extractMarkings(digitalNameplateData: any): void {
+    async function extractMarkings(digitalNameplateData: any): Promise<void> {
         markingsSMC.value = getSubmodelElementByIdShort('Markings', digitalNameplateData);
 
         if (hasValue(markingsSMC.value)) {
-            let markingSMCs = markingsSMC.value.value;
+            const markingSMCs = markingsSMC.value.value;
 
             if (Array.isArray(markingSMCs) && markingSMCs.length > 0) {
-                let formattedMarkings = [] as Array<any>;
+                const formattedMarkings = await Promise.all(
+                    markingSMCs.map(async (markingSMC: any) => {
+                        const markingFile = getSubmodelElementByIdShort('MarkingFile', markingSMC);
+                        const markingName = getSubmodelElementByIdShort('MarkingName', markingSMC);
 
-                markingSMCs.forEach((markingSMC: any) => {
-                    let markingFile = getSubmodelElementByIdShort('MarkingFile', markingSMC);
-                    let markingName = getSubmodelElementByIdShort('MarkingName', markingSMC);
+                        if (hasValue(markingName) && hasValue(markingFile)) {
+                            return {
+                                idShort: markingSMC.idShort,
+                                name: markingName.value,
+                                src: await valueBlob(markingFile),
+                            };
+                        }
+                        return null;
+                    })
+                );
 
-                    if (hasValue(markingName) && hasValue(markingFile)) {
-                        let formattedMarking = {
-                            idShort: markingSMC.idShort,
-                            name: markingName.value,
-                            url: valueUrl(markingFile),
-                        };
-                        formattedMarkings.push(formattedMarking);
-                    }
-                });
-
-                markings.value = formattedMarkings;
+                // Filter out any markings that returned null.
+                markings.value = formattedMarkings.filter((m) => m !== null);
             }
         }
     }

@@ -50,8 +50,8 @@ export function useTechnicalData_v1_2Utils() {
      * @param {string} aasId - The ID of the AAS to retrieve its Product Image URL.
      * @returns {string} A promise that resolves to  URL of the Product Image.
      */
-    async function getProductImageUrlByAasId(aasId: string): Promise<string> {
-        const failResponse = '';
+    async function getProductImageUrlByAasId(aasId: string): Promise<{ url: string; isExternal: boolean }> {
+        const failResponse = { url: '', isExternal: false };
 
         if (!aasId) return failResponse;
 
@@ -81,7 +81,7 @@ export function useTechnicalData_v1_2Utils() {
         return failResponse;
     }
 
-    function getProductImageURL(smTechnicalData: any): string {
+    function getProductImageURL(smTechnicalData: any): { url: string; isExternal: boolean } {
         if (
             smTechnicalData &&
             Object.keys(smTechnicalData).length > 0 &&
@@ -100,7 +100,7 @@ export function useTechnicalData_v1_2Utils() {
             }
         }
 
-        return '';
+        return { url: '', isExternal: false };
     }
 
     return { smSemanticId, smIdShort, getSm, getProductImageUrlByAasId, getProductImageURL };

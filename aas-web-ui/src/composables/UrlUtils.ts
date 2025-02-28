@@ -12,12 +12,16 @@ export function useUrlUtils() {
      * @param {string} url - The URL from which to retrieve the Blob.
      * @returns {string} An object URL representing the Blob, or an empty string if the request fails.
      */
-    async function getBlobUrl(url: string): Promise<string> {
+    async function getBlobUrl(url: string, isExternal: boolean): Promise<string> {
         const failResponse = '';
 
         if (!url || url.trim() === '') return failResponse;
 
-        const context = 'retrieving Attachment File';
+        if (isExternal) {
+            return url;
+        }
+
+        const context = 'retrieving File';
         const disableMessage = false;
         const response = await getRequest(url, context, disableMessage);
         if (response.success) {

@@ -98,14 +98,20 @@
             props.assetObject.defaultThumbnail?.path &&
             props.assetObject.defaultThumbnail?.path.trim() !== ''
         ) {
-            thumbnailSrc.value = await getBlobUrl(props.assetObject.defaultThumbnail.path.trim());
+            thumbnailSrc.value = await getBlobUrl(
+                props.assetObject.defaultThumbnail.path.trim(),
+                props.assetObject.defaultThumbnail.isExternal
+            );
             thumbnailCaption.value = '';
         } else {
             const productImageUrlFromSmTechnicalData = await getProductImageUrlByAasIdFromSmTechnicalData(
                 selectedAas.value.id
             );
-            if (productImageUrlFromSmTechnicalData && productImageUrlFromSmTechnicalData.trim() !== '') {
-                thumbnailSrc.value = await getBlobUrl(productImageUrlFromSmTechnicalData.trim());
+            if (productImageUrlFromSmTechnicalData && productImageUrlFromSmTechnicalData.url.trim() !== '') {
+                thumbnailSrc.value = await getBlobUrl(
+                    productImageUrlFromSmTechnicalData.url.trim(),
+                    productImageUrlFromSmTechnicalData.isExternal
+                );
                 thumbnailCaption.value = 'Product Image from SM TechnicalData';
             } else {
                 thumbnailSrc.value = '';

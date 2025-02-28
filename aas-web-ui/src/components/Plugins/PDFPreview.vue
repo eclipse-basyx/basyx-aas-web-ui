@@ -37,14 +37,14 @@
             const navigationStore = useNavigationStore();
             const aasStore = useAASStore();
 
-            const { valueUrl } = useSMEFile();
+            const { valueBlob } = useSMEFile();
             const { getRequest } = useRequestHandling();
 
             return {
                 theme, // Theme Object
                 navigationStore, // NavigationStore Object
                 aasStore, // AASStore Object
-                valueUrl,
+                valueBlob,
                 getRequest,
             };
         },
@@ -66,47 +66,30 @@
         },
 
         watch: {
-            submodelElementData() {
+            async submodelElementData() {
                 this.Base64PDF = '';
                 this.pdfUrl = '';
                 if (this.submodelElementData.modelType == 'File') {
                     // console.log('SubmodelElementData: ', this.submodelElementData);
-                    this.getPDFBlob();
+                    this.Base64PDF = await this.valueBlob(this.submodelElementData);
                 } else if (this.submodelElementData.modelType == 'Blob') {
                     this.getDecodedPDFBlob();
                 }
             },
         },
 
-        mounted() {
+        async mounted() {
             this.Base64PDF = '';
             this.pdfUrl = '';
             if (this.submodelElementData.modelType == 'File') {
                 // console.log('SubmodelElementData: ', this.submodelElementData);
-                this.getPDFBlob();
+                this.Base64PDF = await this.valueBlob(this.submodelElementData);
             } else if (this.submodelElementData.modelType == 'Blob') {
                 this.getDecodedPDFBlob();
             }
         },
 
         methods: {
-            getPDFBlob() {
-                try {
-                    new URL(this.submodelElementData.value);
-                    this.pdfUrl = this.submodelElementData.value;
-                } catch {
-                    let path = this.valueUrl(this.submodelElementData);
-                    let context = 'retrieving Attachment File';
-                    let disableMessage = false;
-                    this.getRequest(path, context, disableMessage).then((response: any) => {
-                        if (response.success) {
-                            // execute if the Request was successful
-                            this.Base64PDF = URL.createObjectURL(response.data as Blob);
-                        }
-                    });
-                }
-            },
-
             getDecodedPDFBlob() {
                 let decodedValue = atob(this.submodelElementData.value);
                 this.Base64PDF = `data:${this.submodelElementData.contentType};base64,${decodedValue}`;
