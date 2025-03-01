@@ -59,6 +59,7 @@ declare module 'vue' {
     MultiLanguageProperty: typeof import('./components/SubmodelElements/MultiLanguageProperty.vue')['default']
     MultiLanguageTextInput: typeof import('./components/EditorComponents/InputTypes/MultiLanguageTextInput.vue')['default']
     Nameplate_v2_0: typeof import('./components/Plugins/Submodels/Nameplate_v2_0.vue')['default']
+    Nameplate_v3_0: typeof import('./components/Plugins/Submodels/Nameplate_v3_0.vue')['default']
     NumberType: typeof import('./components/SubmodelElements/ValueTypes/NumberType.vue')['default']
     Operation: typeof import('./components/SubmodelElements/Operation.vue')['default']
     PDFPreview: typeof import('./components/Plugins/PDFPreview.vue')['default']

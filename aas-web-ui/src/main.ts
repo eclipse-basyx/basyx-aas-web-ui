@@ -13,13 +13,13 @@ import { createPinia } from 'pinia';
 import { createApp } from 'vue';
 import { defineComponent } from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
+import App from '@/App.vue';
+import { initKeycloak, loginWithDirectGrant } from '@/authService';
 // Plugins
 import { registerVuetify } from '@/plugins';
-import App from './App.vue';
-import { initKeycloak, loginWithDirectGrant } from './authService';
-import { createAppRouter } from './router';
-import { useEnvStore } from './store/EnvironmentStore';
-import { useNavigationStore } from './store/NavigationStore';
+import { createAppRouter } from '@/router';
+import { useEnvStore } from '@/store/EnvironmentStore';
+import { useNavigationStore } from '@/store/NavigationStore';
 
 initialize();
 
