@@ -41,7 +41,8 @@ export function useSMRepositoryClient() {
             if (smRepoResponse.success && smRepoResponse.data.result && smRepoResponse.data.result.length > 0) {
                 return smRepoResponse.data.result;
             }
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
 
@@ -105,7 +106,8 @@ export function useSMRepositoryClient() {
 
                 return sm;
             }
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
 
@@ -142,7 +144,8 @@ export function useSMRepositoryClient() {
                 const sme = smRepoResponse.data;
                 return sme;
             }
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
 
@@ -197,7 +200,8 @@ export function useSMRepositoryClient() {
             if (smRepoResponse?.success && smRepoResponse?.data && Object.keys(smRepoResponse?.data).length > 0) {
                 return true;
             }
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
 

@@ -47,7 +47,8 @@ export function useSMRegistryClient() {
             ) {
                 return smRegistryResponse.data.result;
             }
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
         return failResponse;
@@ -86,7 +87,8 @@ export function useSMRegistryClient() {
             ) {
                 return smRegistryResponse.data;
             }
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
         return failResponse;

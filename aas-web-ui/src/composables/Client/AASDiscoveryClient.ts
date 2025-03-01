@@ -52,8 +52,8 @@ export function useAASDiscoveryClient() {
                 const aasIds = aasDiscoveryResponse.data.result;
                 if (Array.isArray(aasIds) && aasIds.length > 0) return aasIds[0];
             }
-        } catch {
-            // handle error
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
 

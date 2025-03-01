@@ -54,7 +54,8 @@ export function useAASRepositoryClient() {
                 const aasList = aasRepoResponse.data.result;
                 return aasList;
             }
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
         return failResponse;
@@ -112,7 +113,8 @@ export function useAASRepositoryClient() {
 
                 return aas;
             }
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
 
@@ -166,7 +168,8 @@ export function useAASRepositoryClient() {
             if (aasRepoResponse?.success && aasRepoResponse?.data && Object.keys(aasRepoResponse?.data).length > 0) {
                 return true;
             }
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
 
@@ -253,17 +256,17 @@ export function useAASRepositoryClient() {
                     assetInformation.defaultThumbnail.path &&
                     !assetInformation.defaultThumbnail.path.startsWith('http')
                 ) {
-                    // TODO: This does not work with active keycloak because there the thumbnail would have to be fetched with a token
                     const assetInformationThumbnailEndpoint = assetInformationEndpoint + '/thumbnail';
                     assetInformation.defaultThumbnail.path = assetInformationThumbnailEndpoint;
                     assetInformation.defaultThumbnail.isExternal = false;
-                } else {
+                } else if (assetInformation.defaultThumbnail) {
                     assetInformation.defaultThumbnail.isExternal = true;
                 }
 
                 return assetInformation;
             }
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
 
@@ -400,7 +403,8 @@ export function useAASRepositoryClient() {
                 const submodelRefList = aasRepoResponse.data.result;
                 return submodelRefList;
             }
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
 
