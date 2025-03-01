@@ -53,8 +53,6 @@ const staticRoutes: Array<RouteRecordRaw> = [
     { path: '/:pathMatch(.*)*', name: 'NotFound', component: Page404 },
 ];
 
-const routeNamesToSaveAndLoadUrlQuery = ['AASList', 'AASEditor', 'AASViewer', 'SubmodelViewer'];
-
 // Function to generate routes from modules
 const generateModuleRoutes = async (): Promise<Array<RouteRecordRaw>> => {
     const moduleFileRecords = import.meta.glob('@/pages/modules/*.vue');
@@ -135,10 +133,17 @@ export async function createAppRouter(): Promise<Router> {
         'SubmodelViewer',
         'Visualization',
     ];
+    const routesToSaveAndLoadUrlQuery: Array<RouteRecordNameGeneric> = [
+        'AASList',
+        'AASEditor',
+        'AASViewer',
+        'SubmodelViewer',
+    ];
     const routesStayOnPages: Array<RouteRecordNameGeneric> = ['About', 'NotFound404'];
     const routesDesktopToAASViewer: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList'];
     const routesMobileToAASList: Array<RouteRecordNameGeneric> = ['AASViewer', 'AASEditor', 'SubmodelViewer'];
     const routesToVisualization: Array<RouteRecordNameGeneric> = ['ComponentVisualization'];
+
     const possibleGloBalAssetIdQueryParameter = ['globalAssetId', 'globalassetid'];
     const possibleAasIdQueryParameter = ['aasId', 'aasid'];
     const possibleSmIdQueryParameter = ['smId', 'smid'];
@@ -176,20 +181,20 @@ export async function createAppRouter(): Promise<Router> {
 
         // Same route
         if (from.name && from.name === to.name) {
-            // But changed URL query
+            // But changed URL query parameter
             if (from.query !== to.query) {
-                // Just for routes to save/load Query
-                if (routeNamesToSaveAndLoadUrlQuery.includes(from.name as string))
-                    // Save URL query
+                // Just for routes to save/load Query parameter
+                if (routesToSaveAndLoadUrlQuery.includes(from.name))
+                    // Save URL query parameter
                     navigationStore.dispatchUrlQuery(to.query);
             }
         }
 
-        // Switch from one route to another
+        // Switch from one route to another one
         if (from.name && from.name !== to.name) {
-            // Just for switching from a route to Save/Load Query
-            if (routeNamesToSaveAndLoadUrlQuery.includes(from.name as string) || from.path.startsWith('/modules/')) {
-                // Save URL query
+            // Just for switching from a route to save/load URL query parameter
+            if (routesToSaveAndLoadUrlQuery.includes(from.name) || from.path.startsWith('/modules/')) {
+                // Save URL query parameter
                 if (Object.keys(from.query).length > 0) {
                     const queryToDispatch = from.query;
 
@@ -203,9 +208,9 @@ export async function createAppRouter(): Promise<Router> {
                 }
             }
 
-            // Just for switching to a route to save/load Query
-            if (routeNamesToSaveAndLoadUrlQuery.includes(to.name as string)) {
-                // Load URL query
+            // Just for switching to a route to save/load URL query parameter
+            if (routesToSaveAndLoadUrlQuery.includes(to.name)) {
+                // Load URL query parameter
                 if (!to.query || Object.keys(to.query).length === 0) {
                     const queryLoaded = navigationStore.getUrlQuery;
                     const updatedRoute = Object.assign({}, to, {
@@ -214,9 +219,6 @@ export async function createAppRouter(): Promise<Router> {
 
                     if (queryLoaded && Object.keys(queryLoaded).length > 0 && updatedRoute !== to) {
                         next(updatedRoute);
-                        // Dispatch AAS/SM/SME with respect to URL query parameter
-                        // if (queryLoaded.aas) await fetchAndDispatchAas(queryLoaded.aas as string);
-                        // if (queryLoaded.path) await fetchAndDispatchSme(queryLoaded.path as string, true);
                         return;
                     }
                 }
@@ -225,7 +227,7 @@ export async function createAppRouter(): Promise<Router> {
 
         // Check if single AAS mode is on and no aas query is set to either redirect or show 404
         if (envStore.getSingleAas && (!to.query.aas || (to.query.aas as string).trim() === '')) {
-            if (!routesStayOnPages.includes(to.name as string) && !to.path.startsWith('/modules/')) {
+            if (!routesStayOnPages.includes(to.name) && !to.path.startsWith('/modules/')) {
                 if (envStore.getSingleAasRedirect) {
                     window.location.replace(envStore.getSingleAasRedirect);
                     return;
@@ -279,8 +281,6 @@ export async function createAppRouter(): Promise<Router> {
                 return;
             }
         }
-
-        // TODO Remove keep alive from App.vue
 
         // Fetch and dispatch AAS
         if (to.query.aas && to.query.aas !== '' && from.query.aas !== to.query.aas) {
