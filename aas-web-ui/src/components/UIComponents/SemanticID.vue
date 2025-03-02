@@ -1,27 +1,45 @@
 <template>
-    <v-container fluid class="pa-0">
-        <v-list-item
-            v-if="semanticIdObject && Object.keys(semanticIdObject).length > 0"
-            :class="semanticTitle && semanticTitle.trim().length > 0 && !small ? '' : 'pa-0'">
-            <!-- Tooltip with SemanticId -->
-            <v-tooltip activator="parent" open-delay="600" transition="slide-x-transition">
-                <div v-for="(semanticId, i) in semanticIdObject.keys" :key="i" class="text-caption">
-                    <span class="font-weight-bold">{{ '(' + semanticId.type + ') ' }}</span
-                    >{{ semanticId.value }}
-                </div>
-            </v-tooltip>
-            <!-- SemanticIId Title -->
-            <template v-if="semanticTitle && semanticTitle.trim().length > 0" #title>
-                <div class="mt-1" :class="small ? 'text-caption' : 'text-subtitle-2 '">{{ semanticTitle + ':' }}</div>
-            </template>
-            <!-- SemanticId List -->
-            <v-list-item-subtitle v-for="(semanticId, i) in semanticIdObject.keys" :key="i">
-                <div class="pt-2">
-                    <v-chip label size="x-small" border class="mr-2">{{ semanticId.type }}</v-chip>
-                    <span>{{ semanticId.value }}</span>
-                </div>
-            </v-list-item-subtitle>
-        </v-list-item>
+    <v-container
+        v-if="
+            semanticIdObject &&
+            Object.keys(semanticIdObject).length > 0 &&
+            semanticIdObject.keys &&
+            Array.isArray(semanticIdObject.keys) &&
+            semanticIdObject.keys.length > 0
+        "
+        fluid
+        class="pa-0">
+        <v-expansion-panels class="mb-n2">
+            <v-expansion-panel elevation="0" tile static :class="'bg-' + backgroundColor">
+                <v-expansion-panel-title class="px-2">
+                    <v-tooltip activator="parent" open-delay="600" transition="slide-x-transition">
+                        <div v-for="(semanticId, i) in semanticIdObject.keys" :key="i" class="text-caption">
+                            <span class="font-weight-bold">
+                                {{ '(' + semanticId.type + ') ' }}
+                            </span>
+                            {{ semanticId.value }}
+                        </div>
+                    </v-tooltip>
+                    <span class="text-subtitle-2">
+                        {{ semanticTitle }}
+                    </span>
+                </v-expansion-panel-title>
+                <v-expansion-panel-text>
+                    <v-list nav class="pa-0" :class="'bg-' + backgroundColor">
+                        <v-list-item class="py-0">
+                            <v-list-item-subtitle v-for="(semanticId, i) in semanticIdObject.keys" :key="i">
+                                <div>
+                                    <v-chip label size="x-small" border class="mr-2">
+                                        {{ semanticId.type }}
+                                    </v-chip>
+                                    <span>{{ semanticId.value }}</span>
+                                </div>
+                            </v-list-item-subtitle></v-list-item
+                        >
+                    </v-list>
+                </v-expansion-panel-text>
+            </v-expansion-panel>
+        </v-expansion-panels>
     </v-container>
 </template>
 
@@ -36,9 +54,16 @@
             type: String,
             default: 'Semantic ID',
         },
-        small: {
-            type: Boolean,
-            default: false,
+        backgroundColor: {
+            type: String,
+            default: '',
         },
     });
 </script>
+
+<style lang="css" scoped>
+    .v-expansion-panel-text :deep(.v-expansion-panel-text__wrapper) {
+        padding: 0px !important;
+        margin: 0px !important;
+    }
+</style>
