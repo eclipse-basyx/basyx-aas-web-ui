@@ -486,13 +486,13 @@
         if (!value || value.trim() === '') {
             aasList.value = aasListUnfiltered.value;
         } else {
-            // filter list of AAS Descriptors
+            // Filter list of AAS/AAS Descriptors (cf. AASList.vue)
             let aasListFiltered = aasListUnfiltered.value.filter(
-                (aasDescriptor: any) =>
-                    aasDescriptor.id.toLowerCase().includes(value.toLowerCase()) ||
-                    aasDescriptor.idShort.toLowerCase().includes(value.toLowerCase()) ||
-                    nameToDisplay(aasDescriptor).toLowerCase().includes(value.toLowerCase()) ||
-                    descriptionToDisplay(aasDescriptor).toLowerCase().includes(value.toLowerCase())
+                (aasOrAasDescriptor: any) =>
+                    aasOrAasDescriptor.id.toLowerCase().includes(value.toLowerCase()) ||
+                    aasOrAasDescriptor.idShort.toLowerCase().includes(value.toLowerCase()) ||
+                    nameToDisplay(aasOrAasDescriptor).toLowerCase().includes(value.toLowerCase()) ||
+                    descriptionToDisplay(aasOrAasDescriptor).toLowerCase().includes(value.toLowerCase())
             );
             aasList.value = aasListFiltered;
         }
