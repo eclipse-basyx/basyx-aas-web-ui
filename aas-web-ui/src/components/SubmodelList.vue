@@ -28,7 +28,6 @@
                             {{ nameToDisplay(selectedAAS) }}
                         </span>
                     </div>
-                    <!-- TODO: Add Searchfield - https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/148 -->
                 </v-card-title>
                 <v-divider></v-divider>
             </template>
@@ -67,7 +66,7 @@
                                         </template>
                                         <v-list-item-title
                                             :class="isSelected(item) ? 'text-primary' : 'text-listItemText'"
-                                            >{{ item.idShort }}</v-list-item-title
+                                            >{{ nameToDisplay(item) }}</v-list-item-title
                                         >
                                     </v-list-item>
                                 </template>
@@ -204,7 +203,7 @@
         if (!value || value.trim() === '') {
             submodelList.value = submodelListUnfiltered.value;
         } else {
-            // filter list of SMs
+            // Filter list of SMs (cf. AASList.vue)
             let submodelListFiltered = submodelListUnfiltered.value.filter(
                 (sm: any) =>
                     sm.id.toLowerCase().includes(value.toLowerCase()) ||
