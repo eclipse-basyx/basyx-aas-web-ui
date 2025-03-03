@@ -129,7 +129,7 @@
 
     // Computed Properties
     const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL);
-    const submodelRegistryServerURL = computed(() => navigationStore.getSubmodelRegistryURL);
+    const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL);
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
     const selectedNode = computed(() => aasStore.getSelectedNode);
     const isMobile = computed(() => navigationStore.getIsMobile);
@@ -202,23 +202,20 @@
     );
 
     watch(
-        () => submodelRegistryServerURL.value,
+        () => submodelRegistryURL.value,
         () => {
             resetLocalData();
         }
     );
 
-    // Resets the SubmodelElementView when the AAS changes
     watch(
         () => selectedAAS.value,
         () => {
             resetLocalData();
             initialize();
-        },
-        { deep: true }
+        }
     );
 
-    // Watch for changes in the selected Node and (re-)initialize the Component
     watch(
         () => selectedNode.value,
         () => {

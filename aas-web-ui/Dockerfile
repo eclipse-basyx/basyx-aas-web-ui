@@ -14,7 +14,7 @@ COPY . .
 RUN yarn build && rm -rf node_modules
 
 # Production Stage
-FROM nginx:mainline-alpine3.20-slim AS production-stage
+FROM nginx:mainline-alpine-slim AS production-stage
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
 # Set working directory

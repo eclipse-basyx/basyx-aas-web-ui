@@ -41,18 +41,28 @@
                                             </td>
                                             <td>
                                                 <!-- Address of Additional Link -->
-                                                <a
+                                                <template
                                                     v-if="
                                                         checkIdShort(
                                                             contactInformationProperty,
                                                             'AddressOfAdditionalLink'
                                                         )
-                                                    "
-                                                    :href="valueToDisplay(contactInformationProperty)"
-                                                    target="_blank"
-                                                    class="text-caption">
-                                                    {{ valueToDisplay(contactInformationProperty) }}
-                                                </a>
+                                                    ">
+                                                    <a
+                                                        v-if="
+                                                            valueToDisplay(contactInformationProperty).startsWith(
+                                                                'http'
+                                                            )
+                                                        "
+                                                        :href="valueToDisplay(contactInformationProperty)"
+                                                        target="_blank"
+                                                        class="text-caption">
+                                                        {{ valueToDisplay(contactInformationProperty) }}
+                                                    </a>
+                                                    <span v-else class="text-caption">{{
+                                                        valueToDisplay(contactInformationProperty)
+                                                    }}</span>
+                                                </template>
                                                 <!-- Language -->
                                                 <template
                                                     v-else-if="checkIdShort(contactInformationProperty, 'Language')">

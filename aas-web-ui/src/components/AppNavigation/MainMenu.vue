@@ -78,7 +78,11 @@
                                             slim
                                             nav
                                             :subtitle="item.path"
-                                            :title="item.name?.toString()"
+                                            :title="
+                                                item.meta?.title
+                                                    ? item.meta.title.toString()
+                                                    : item.meta?.name?.toString()
+                                            "
                                             :to="
                                                 item?.meta?.preserveRouteQuery === true
                                                     ? { path: item.path, query: route.query }

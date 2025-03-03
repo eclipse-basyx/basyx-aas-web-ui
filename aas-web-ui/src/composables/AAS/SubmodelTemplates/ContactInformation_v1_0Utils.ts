@@ -1,3 +1,4 @@
+import { useAASHandling } from '@/composables/AAS/AASHandling';
 import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
 import { useSMHandling } from '@/composables/AAS/SMHandling';
 import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
@@ -7,9 +8,11 @@ import { getCountryName } from '@/utils/LocaleUtils';
 import { firstLetterToLowerCase } from '@/utils/StringUtils';
 
 export function useContactInformation_v1_0Utils() {
-    const { getSmIdOfAasIdBySemanticId, fetchSmById } = useSMHandling();
+    const { getSmIdOfAasIdBySemanticId } = useAASHandling();
+    const { fetchSmById } = useSMHandling();
     const { checkIdShort, getSubmodelElementByIdShort } = useReferableUtils();
     const { hasValue, valueToDisplay } = useSME();
+
     const { valueUrl } = useSMEFile();
 
     const semanticId = 'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations';

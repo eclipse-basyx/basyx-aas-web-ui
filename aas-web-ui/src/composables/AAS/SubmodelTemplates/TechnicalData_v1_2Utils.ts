@@ -1,12 +1,14 @@
+import { useAASHandling } from '@/composables/AAS/AASHandling';
+import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
 import { useSMEHandling } from '@/composables/AAS/SMEHandling';
 import { useSMHandling } from '@/composables/AAS/SMHandling';
 import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
 import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils';
-import { useReferableUtils } from '../ReferableUtils';
 
 export function useTechnicalData_v1_2Utils() {
     // Composables
-    const { getSmIdOfAasIdBySemanticId, fetchSmById, getSmEndpointById } = useSMHandling();
+    const { getSmIdOfAasIdBySemanticId } = useAASHandling();
+    const { fetchSmById, getSmEndpointById } = useSMHandling();
     const { fetchSme } = useSMEHandling();
     const { checkIdShort } = useReferableUtils();
     const { valueUrl: smeFileValueUrl } = useSMEFile();
@@ -48,8 +50,8 @@ export function useTechnicalData_v1_2Utils() {
      * @param {string} aasId - The ID of the AAS to retrieve its Product Image URL.
      * @returns {string} A promise that resolves to  URL of the Product Image.
      */
-    async function getProductImageUrlByAasId(aasId: string): Promise<string> {
-        const failResponse = '';
+    async function getProductImageUrlByAasId(aasId: string): Promise<{ url: string; isExternal: boolean }> {
+        const failResponse = { url: '', isExternal: false };
 
         if (!aasId) return failResponse;
 
@@ -79,7 +81,7 @@ export function useTechnicalData_v1_2Utils() {
         return failResponse;
     }
 
-    function getProductImageURL(smTechnicalData: any): string {
+    function getProductImageURL(smTechnicalData: any): { url: string; isExternal: boolean } {
         if (
             smTechnicalData &&
             Object.keys(smTechnicalData).length > 0 &&
@@ -98,7 +100,7 @@ export function useTechnicalData_v1_2Utils() {
             }
         }
 
-        return '';
+        return { url: '', isExternal: false };
     }
 
     return { smSemanticId, smIdShort, getSm, getProductImageUrlByAasId, getProductImageURL };

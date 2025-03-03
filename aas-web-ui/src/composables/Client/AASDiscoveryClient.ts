@@ -33,8 +33,8 @@ export function useAASDiscoveryClient() {
 
         if (globalAssetId === '') return failResponse;
 
-        let aasDiscUrl = aasDiscoveryUrl.value;
-        if (aasDiscUrl.trim() === '') return failResponse;
+        let aasDiscUrl = aasDiscoveryUrl.value.trim();
+        if (aasDiscUrl === '') return failResponse;
         if (aasDiscUrl.endsWith('/')) aasDiscUrl = stripLastCharacter(aasDiscUrl);
         if (!aasDiscUrl.endsWith(endpointPath)) aasDiscUrl += endpointPath;
 
@@ -52,8 +52,8 @@ export function useAASDiscoveryClient() {
                 const aasIds = aasDiscoveryResponse.data.result;
                 if (Array.isArray(aasIds) && aasIds.length > 0) return aasIds[0];
             }
-        } catch {
-            // handle error
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
 

@@ -1,10 +1,8 @@
 import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
 import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
 import { computed } from 'vue';
-import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
-import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { stripLastCharacter } from '@/utils/StringUtils';
 
@@ -14,7 +12,6 @@ export function useSMRepositoryClient() {
 
     // Composables
     const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
-    const { fetchSmDescriptorById, isAvailableById: isAvailableByIdInRegistry } = useSMRegistryClient();
 
     const endpointPath = '/submodels';
 
@@ -31,10 +28,8 @@ export function useSMRepositoryClient() {
     async function fetchSmList(): Promise<Array<any>> {
         const failResponse = [] as Array<any>;
 
-        if (submodelRepoUrl.value.trim() === '') return failResponse;
-
-        let smRepoUrl = submodelRepoUrl.value;
-        if (smRepoUrl.trim() === '') return failResponse;
+        let smRepoUrl = submodelRepoUrl.value.trim();
+        if (smRepoUrl === '') return failResponse;
         if (smRepoUrl.endsWith('/')) smRepoUrl = stripLastCharacter(smRepoUrl);
         if (!smRepoUrl.endsWith(endpointPath)) smRepoUrl += endpointPath;
 
@@ -46,7 +41,8 @@ export function useSMRepositoryClient() {
             if (smRepoResponse.success && smRepoResponse.data.result && smRepoResponse.data.result.length > 0) {
                 return smRepoResponse.data.result;
             }
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
 
@@ -69,18 +65,9 @@ export function useSMRepositoryClient() {
 
         if (smId === '') return failResponse;
 
-        const smDescriptor = await fetchSmDescriptorById(smId);
+        const smEndpoint = getSmEndpointById(smId);
 
-        if (smDescriptor && Object.keys(smDescriptor).length > 0) {
-            // SM Descriptor found in registry
-            const smEndpoint = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0');
-            const sm = await fetchSm(smEndpoint);
-            sm.path = smEndpoint;
-            return sm;
-        } else if (!smDescriptor || Object.keys(smDescriptor).length === 0) {
-            const smEndpoint = getSmEndpointById(smId);
-            return fetchSm(smEndpoint);
-        }
+        if (smEndpoint && smEndpoint.trim() !== '') return fetchSm(smEndpoint.trim());
 
         return failResponse;
     }
@@ -119,7 +106,8 @@ export function useSMRepositoryClient() {
 
                 return sm;
             }
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
 
@@ -156,33 +144,10 @@ export function useSMRepositoryClient() {
                 const sme = smRepoResponse.data;
                 return sme;
             }
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
-
-        return failResponse;
-    }
-
-    /**
-     * Checks if Submodel with provided ID is available (in registry or repository).
-     *
-     * @async
-     * @param {string} smId - The ID of the SM to check.
-     * @returns {Promise<boolean>} A promise that resolves to `true` if SM with provided ID is available, otherwise `false`.
-     */
-    async function isAvailableById(smId: string): Promise<boolean> {
-        const failResponse = false;
-
-        if (!smId) return failResponse;
-
-        smId = smId.trim();
-
-        if (smId === '') return failResponse;
-
-        // First check the registry
-        if (await isAvailableByIdInRegistry(smId)) return true;
-        // Second check the repository (e.g. if registry is no available)
-        if (await isAvailableByIdInRepo(smId)) return true;
 
         return failResponse;
     }
@@ -194,7 +159,7 @@ export function useSMRepositoryClient() {
      * @param {string} smId - The ID of the SM to check.
      * @returns {Promise<boolean>} A promise that resolves to `true` if SM with provided ID is available, otherwise `false`.
      */
-    async function isAvailableByIdInRepo(smId: string): Promise<boolean> {
+    async function smIsAvailableById(smId: string): Promise<boolean> {
         const failResponse = false;
 
         if (!smId) return failResponse;
@@ -203,21 +168,21 @@ export function useSMRepositoryClient() {
 
         if (smId === '') return failResponse;
 
-        const sm = await fetchSmById(smId);
+        const smEndpoint = getSmEndpointById(smId);
 
-        if (sm && Object.keys(sm).length > 0) return true;
+        if (smEndpoint && smEndpoint.trim() !== '') return await smIsAvailable(smEndpoint.trim());
 
         return failResponse;
     }
 
     /**
-     * Checks if Submodel (SM) is available (in repository) by the provided SM endpoint
+     * Checks if Submodel (SM) is available for provided SM endpoint
      *
      * @async
      * @param {string} smEndpopint - The endpoint URL of the SM to check.
-     * @returns {Promise<boolean>} A promise that resolves to `true` if SM with provided ID is available, otherwise `false`.
+     * @returns {Promise<boolean>} A promise that resolves to `true` if SM with provided endpoint is available, otherwise `false`.
      */
-    async function isAvailable(smEndpopint: string): Promise<boolean> {
+    async function smIsAvailable(smEndpopint: string): Promise<boolean> {
         const failResponse = false;
 
         if (!smEndpopint) return failResponse;
@@ -235,7 +200,8 @@ export function useSMRepositoryClient() {
             if (smRepoResponse?.success && smRepoResponse?.data && Object.keys(smRepoResponse?.data).length > 0) {
                 return true;
             }
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
 
@@ -243,7 +209,20 @@ export function useSMRepositoryClient() {
     }
 
     /**
+     * Checks if Submodel Element (SME) is available for provided SME path
+     *
+     * @async
+     * @param {string} smePath - The path of the SME to check.
+     * @returns {Promise<boolean>} A promise that resolves to `true` if SME with provided path is available, otherwise `false`.
+     */
+    async function smeIsAvailable(smePath: string): Promise<boolean> {
+        return smIsAvailable(smePath);
+    }
+
+    /**
      * Retrieves the Submodel (SM) endpoint URL by its ID.
+     *
+     * Just concats SM repository URL (from the store) with the Base64UrlEncoded provided SM ID.
      *
      * @param {string} smId - The ID of the SM to retrieve the endpoint for.
      * @returns {string} The SM endpoint.
@@ -257,11 +236,8 @@ export function useSMRepositoryClient() {
 
         if (smId === '') return failResponse;
 
-        // AAS Descriptor not found in registry or registry not available
-        if (submodelRepoUrl.value.trim() === '') return failResponse;
-
-        let smRepoUrl = submodelRepoUrl.value;
-        if (smRepoUrl.trim() === '') return failResponse;
+        let smRepoUrl = submodelRepoUrl.value.trim();
+        if (smRepoUrl === '') return failResponse;
         if (smRepoUrl.endsWith('/')) smRepoUrl = stripLastCharacter(smRepoUrl);
         if (!smRepoUrl.endsWith(endpointPath)) smRepoUrl += endpointPath;
 
@@ -273,10 +249,8 @@ export function useSMRepositoryClient() {
     async function postSubmodel(submodel: aasTypes.Submodel): Promise<boolean> {
         const failResponse = false;
 
-        if (submodelRepoUrl.value.trim() === '') return failResponse;
-
-        let smRepoUrl = submodelRepoUrl.value;
-        if (smRepoUrl.trim() === '') return failResponse;
+        let smRepoUrl = submodelRepoUrl.value.trim();
+        if (smRepoUrl === '') return failResponse;
         if (smRepoUrl.endsWith('/')) smRepoUrl = stripLastCharacter(smRepoUrl);
         if (!smRepoUrl.endsWith(endpointPath)) smRepoUrl += endpointPath;
 
@@ -298,10 +272,8 @@ export function useSMRepositoryClient() {
     async function putSubmodel(submodel: aasTypes.Submodel): Promise<boolean> {
         const failResponse = false;
 
-        if (submodelRepoUrl.value.trim() === '') return failResponse;
-
-        let smRepoUrl = submodelRepoUrl.value;
-        if (smRepoUrl.trim() === '') return failResponse;
+        let smRepoUrl = submodelRepoUrl.value.trim();
+        if (smRepoUrl === '') return failResponse;
         if (smRepoUrl.endsWith('/')) smRepoUrl = stripLastCharacter(smRepoUrl);
         if (!smRepoUrl.endsWith(endpointPath)) smRepoUrl += endpointPath;
 
@@ -323,10 +295,8 @@ export function useSMRepositoryClient() {
     async function deleteSubmodel(submodelId: string): Promise<boolean> {
         const failResponse = false;
 
-        if (submodelRepoUrl.value.trim() === '') return failResponse;
-
         let smRepoUrl = submodelRepoUrl.value;
-        if (smRepoUrl.trim() === '') return failResponse;
+        if (smRepoUrl === '') return failResponse;
         if (smRepoUrl.endsWith('/')) smRepoUrl = stripLastCharacter(smRepoUrl);
         if (!smRepoUrl.endsWith(endpointPath)) smRepoUrl += endpointPath;
 
@@ -391,9 +361,9 @@ export function useSMRepositoryClient() {
         fetchSmById,
         fetchSm,
         fetchSme,
-        isAvailableById,
-        isAvailableByIdInRepo,
-        isAvailable,
+        smIsAvailableById,
+        smIsAvailable,
+        smeIsAvailable,
         getSmEndpointById,
         postSubmodel,
         putSubmodel,

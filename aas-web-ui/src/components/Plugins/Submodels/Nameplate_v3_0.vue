@@ -320,7 +320,7 @@
     // Options
     defineOptions({
         name: 'DigitalNameplate',
-        semanticId: 'https://admin-shell.io/zvei/nameplate/2/0/Nameplate',
+        semanticId: 'https://admin-shell.io/idta/nameplate/3/0/Nameplate',
     });
 
     // Stores
@@ -421,7 +421,7 @@
     }
 
     function extractManufacturerProperties(digitalNameplateData: any): void {
-        const manufacturerPropertyIdShorts = ['ManufacturerName', 'CompanyLogo'];
+        const manufacturerPropertyIdShorts = ['ManufacturerName', 'CompanyLogo', 'UniqueFacilityIdentifier'];
 
         digitalNameplateData.submodelElements.forEach((sme: any) => {
             manufacturerPropertyIdShorts.forEach(async (idShort: any) => {
@@ -434,7 +434,7 @@
             });
         });
 
-        let manufacturerContactInformationSMC = getSubmodelElementByIdShort('ContactInformation', digitalNameplateData);
+        let manufacturerContactInformationSMC = getSubmodelElementByIdShort('AddressInformation', digitalNameplateData);
         if (hasValue(manufacturerContactInformationSMC)) {
             // (postal) address
             let address = determineAddress(manufacturerContactInformationSMC);

@@ -1,9 +1,10 @@
 import { useRouter } from 'vue-router';
-import { useReferenceUtils } from '@/composables//AAS/ReferenceUtils';
+import { useAASHandling } from '@/composables/AAS/AASHandling';
+import { useReferenceComposable } from '@/composables/AAS/ReferenceComposable';
+import { useSMHandling } from '@/composables/AAS/SMHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
-import { useAASRegistryClient } from './Client/AASRegistryClient';
-import { useAASRepositoryClient } from './Client/AASRepositoryClient';
-import { useSMRepositoryClient } from './Client/SMRepositoryClient';
+import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
+import { extractId as extractIdFromReference } from '@/utils/AAS/ReferenceUtil';
 
 export function useJumpHandling() {
     // Stores
@@ -13,10 +14,9 @@ export function useJumpHandling() {
     const router = useRouter();
 
     // Composables
-    const { getAasEndpoint } = useAASRegistryClient();
-    const { getAasEndpointById: getAasEndpointByIdFromRepo, fetchAasList } = useAASRepositoryClient();
-    const { fetchSm } = useSMRepositoryClient();
-    const { referenceTypes, checkReference, getEndpoints, extractId } = useReferenceUtils();
+    const { fetchAasDescriptorList, fetchAasList, fetchAas, getAasEndpointById } = useAASHandling();
+    const { fetchSm } = useSMHandling();
+    const { referenceTypes, checkReference, getEndpoints } = useReferenceComposable();
 
     async function jumpToReference(reference: any): Promise<void> {
         if (await checkReference(reference)) {
@@ -28,14 +28,34 @@ export function useJumpHandling() {
                     jumpToAas(aasEndpoint, smePath);
                     return;
                 } else if (aasEndpoint.trim() === '' && smEndpoint.trim() !== '') {
-                    // Find first AAS which includes the SM of the SM endpoint
+                    // Determine (first) AAS which includes the SM of the SM endpoint via SM ID
                     const sm = await fetchSm(smEndpoint);
                     if (sm && Object.keys(sm).length > 0) {
                         const smId = sm.id;
+
+                        // (1) With specified AAS Registry: Check if SM ID exists in SM Descriptors in one of the AAS Descriptors
+                        const aasDescriptors = await fetchAasDescriptorList();
+                        if (aasDescriptors && Array.isArray(aasDescriptors) && aasDescriptors.length > 0) {
+                            for (const aasDescriptor of aasDescriptors) {
+                                const smDescriptors = aasDescriptor.submodelDescriptors;
+                                if (smDescriptors && Array.isArray(smDescriptors) && smDescriptors.length > 0) {
+                                    for (const smDescriptor of smDescriptors) {
+                                        if (smDescriptor && Object.keys(smDescriptor).length > 0) {
+                                            if (smId === smDescriptor.id) {
+                                                jumpToAas(aasEndpoint, smePath);
+                                                return;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // (2) With specified AAS Repository: Check if SM ID exists in SM Refs in one of the AAS
                         const aasList = await fetchAasList();
                         if (aasList && Array.isArray(aasList) && aasList.length > 0) {
                             for (const aas of aasList) {
-                                const aasEndpoint = getAasEndpointByIdFromRepo(aas.id);
+                                const aasEndpoint = await getAasEndpointById(aas.id);
                                 const submodelRefs = aas.submodels;
                                 if (
                                     aasEndpoint.trim() !== '' &&
@@ -44,7 +64,31 @@ export function useJumpHandling() {
                                     submodelRefs.length > 0
                                 ) {
                                     for (const submodelRef of submodelRefs) {
-                                        if (smId === extractId(submodelRef, 'Submodel')) {
+                                        if (smId === extractIdFromReference(submodelRef, 'Submodel')) {
+                                            jumpToAas(aasEndpoint, smePath);
+                                            return;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // (3) Special case for using BaSyx components without specified AAS Repository:
+                        // Determine AAS Endpoint using AAS Descriptors and fetch AAS
+                        // Check if SM ID exists in SM Refs in one of the AAS
+                        if (aasDescriptors && Array.isArray(aasDescriptors) && aasDescriptors.length > 0) {
+                            for (const aasDescriptor of aasDescriptors) {
+                                const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0');
+                                const aas = await fetchAas(aasEndpoint);
+                                const submodelRefs = aas.submodels;
+                                if (
+                                    aasEndpoint.trim() !== '' &&
+                                    submodelRefs &&
+                                    Array.isArray(submodelRefs) &&
+                                    submodelRefs.length > 0
+                                ) {
+                                    for (const submodelRef of submodelRefs) {
+                                        if (smId === extractIdFromReference(submodelRef, 'Submodel')) {
                                             jumpToAas(aasEndpoint, smePath);
                                             return;
                                         }
@@ -83,7 +127,7 @@ export function useJumpHandling() {
 
         if (aasId === '') return;
 
-        const aasEndpoint = getAasEndpointByIdFromRepo(aasId);
+        const aasEndpoint = await getAasEndpointById(aasId);
 
         jumpToAas(aasEndpoint);
     }
@@ -101,7 +145,7 @@ export function useJumpHandling() {
     async function jumpToAasByAasDescriptor(aasDescriptor: any): Promise<void> {
         if (!aasDescriptor || Object.keys(aasDescriptor).length === 0) return;
 
-        const aasEndpoint = getAasEndpoint(aasDescriptor);
+        const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0');
 
         jumpToAas(aasEndpoint);
     }

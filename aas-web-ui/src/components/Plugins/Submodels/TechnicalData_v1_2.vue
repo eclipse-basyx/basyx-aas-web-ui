@@ -46,9 +46,17 @@
                                                 <v-img
                                                     v-if="
                                                         checkIdShort(generalProperty, 'ManufacturerLogo') ||
-                                                        checkIdShort(generalProperty, 'ProductImage')
+                                                        checkIdShort(generalProperty, 'ProductImage') ||
+                                                        checkSemanticId(
+                                                            generalProperty,
+                                                            'https://admin-shell.io/ZVEI/TechnicalData/ManufacturerLogo/1/1'
+                                                        ) ||
+                                                        checkSemanticId(
+                                                            generalProperty,
+                                                            'https://admin-shell.io/ZVEI/TechnicalData/ProductImage/1/1'
+                                                        )
                                                     "
-                                                    :src="valueUrl(generalProperty)"
+                                                    :src="getBlobUrl(generalProperty)"
                                                     max-width="300px"
                                                     max-height="300px"
                                                     contain
@@ -298,7 +306,7 @@
     import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
     import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement';
     import { useAASStore } from '@/store/AASDataStore';
-    import { getSubmodelElementBySemanticId } from '@/utils/AAS/SemanticIdUtils';
+    import { checkSemanticId, getSubmodelElementBySemanticId } from '@/utils/AAS/SemanticIdUtils';
 
     // Define component options such as custom static properties
     defineOptions({
@@ -313,7 +321,7 @@
     const { setData } = useSMHandling();
     const { nameToDisplay, checkIdShort } = useReferableUtils();
     const { hasValue, valueToDisplay } = useSME();
-    const { valueUrl } = useSMEFile();
+    const { valueBlob } = useSMEFile();
 
     // Properties
     const props = defineProps({
@@ -336,6 +344,7 @@
     const furtherInformationSMC = ref({} as any);
     const furtherInformation = ref([] as Array<any>);
     const tableView = ref(true as boolean);
+    const blobUrls = ref<Record<string, string>>({});
 
     // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode);
@@ -409,5 +418,18 @@
             furtherInformationSMC.value = furtherInformationSMC_local;
             furtherInformation.value = furtherInformationSMC_local.value;
         }
+    }
+
+    function getBlobUrl(property: any): string {
+        // Check if we've already resolved this URL
+        if (blobUrls.value[property.idShort]) {
+            return blobUrls.value[property.idShort];
+        }
+        // Otherwise, call valueBlob and cache the result
+        valueBlob(property).then((url: string) => {
+            blobUrls.value[property.idShort] = url;
+        });
+        // Return an empty string (or a placeholder) until resolved
+        return '';
     }
 </script>

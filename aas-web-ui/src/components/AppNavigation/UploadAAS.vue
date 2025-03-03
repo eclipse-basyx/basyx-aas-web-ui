@@ -38,10 +38,10 @@
 
 <script lang="ts" setup>
     import { computed, ref, watch, watchEffect } from 'vue';
+    import { useSMHandling } from '@/composables/AAS/SMHandling';
     import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
-    import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { Endpoint, ProtocolInformation, SubmodelDescriptor } from '@/types/Descriptors';
     import { base64Encode } from '@/utils/EncodeDecodeUtils';
@@ -53,7 +53,7 @@
 
     // Composables
     const { fetchAas, uploadAas } = useAASRepositoryClient();
-    const { fetchSm } = useSMRepositoryClient();
+    const { fetchSm } = useSMHandling();
     const { postAasDescriptor, createDescriptorFromAAS } = useAASRegistryClient();
     const { postSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient();
 

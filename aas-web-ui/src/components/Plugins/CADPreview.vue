@@ -67,7 +67,7 @@
         watch: {
             submodelElementData() {
                 if (this.submodelElementData.modelType == 'File') {
-                    this.localPathValue = this.valueUrl(this.submodelElementData);
+                    this.localPathValue = this.valueUrl(this.submodelElementData).url;
                     // this.initThree();
                 }
             },
@@ -75,7 +75,7 @@
 
         mounted() {
             if (this.submodelElementData.modelType == 'File') {
-                this.localPathValue = this.valueUrl(this.submodelElementData);
+                this.localPathValue = this.valueUrl(this.submodelElementData).url;
                 this.initThree();
             }
         },

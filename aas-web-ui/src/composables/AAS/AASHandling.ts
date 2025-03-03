@@ -1,25 +1,26 @@
-import { useReferenceUtils } from '@/composables/AAS/ReferenceUtils';
+import { useSMHandling } from '@/composables/AAS/SMHandling';
 import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
 import { useAASStore } from '@/store/AASDataStore';
+import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
+import { extractId as extractIdFromReference } from '@/utils/AAS/ReferenceUtil';
 import { formatDate } from '@/utils/DateUtils';
-import { useSMHandling } from './SMHandling';
 
 export function useAASHandling() {
     // Composables
     const {
         fetchAasDescriptorById: fetchAasDescriptorByIdFromRegistry,
         fetchAasDescriptorList: fetchAasDescriptorListFromRegistry,
-        getAasEndpoint,
         getAasEndpointById: getAasEndpointByIdFromRegistry,
     } = useAASRegistryClient();
     const {
+        fetchAasList: fetchAasListFromRepo,
         fetchAas: fetchAasFromRepo,
-        fetchAasById: fetchAasByIdFromRepo,
         getAasEndpointById: getAasEndpointByIdFromRepo,
+        aasIsAvailable: aasIsAvailableInRepo,
+        getSubmodelRefs: getSubmodelRefsFromRepo,
     } = useAASRepositoryClient();
-    const { fetchSmById } = useSMHandling();
-    const { extractId } = useReferenceUtils();
+    const { fetchSmDescriptor, fetchSmById } = useSMHandling();
 
     // Stores
     const aasStore = useAASStore();
@@ -86,17 +87,41 @@ export function useAASHandling() {
     async function fetchAasDescriptorList(): Promise<Array<any>> {
         const failResponse = [] as Array<any>;
 
-        let aasDescriptors = await fetchAasDescriptorListFromRegistry();
+        let aasDescriptorList = await fetchAasDescriptorListFromRegistry();
 
-        if (!aasDescriptors || !Array.isArray(aasDescriptors) || aasDescriptors.length === 0) return failResponse;
+        if (!aasDescriptorList || !Array.isArray(aasDescriptorList) || aasDescriptorList.length === 0)
+            return failResponse;
 
-        aasDescriptors = aasDescriptors.map((aasDescriptor: any) => {
+        aasDescriptorList = aasDescriptorList.map((aasDescriptor: any) => {
             aasDescriptor.timestamp = formatDate(new Date());
-            aasDescriptor.path = getAasEndpoint(aasDescriptor);
+            aasDescriptor.path = extractEndpointHref(aasDescriptor, 'AAS-3.0');
             return aasDescriptor;
         });
 
-        return aasDescriptors;
+        return aasDescriptorList;
+    }
+
+    /**
+     * Fetches a list of all available Asset Administration Shell (AAS).
+     *
+     * @async
+     * @returns {Promise<Array<any>>} A promise that resolves to an array of AAS.
+     * An empty array is returned if the request fails or no AAS Descriptors are found.
+     */
+    async function fetchAasList(): Promise<Array<any>> {
+        const failResponse = [] as Array<any>;
+
+        let aasList = await fetchAasListFromRepo();
+
+        if (!aasList || !Array.isArray(aasList) || aasList.length === 0) return failResponse;
+
+        aasList = aasList.map((aas: any) => {
+            aas.timestamp = formatDate(new Date());
+            aas.path = getAasEndpointByIdFromRepo(aas.id);
+            return aas;
+        });
+
+        return aasList;
     }
 
     /**
@@ -123,7 +148,7 @@ export function useAASHandling() {
         }
 
         aasDescriptor.timestamp = formatDate(new Date());
-        aasDescriptor.path = getAasEndpoint(aasDescriptor);
+        aasDescriptor.path = extractEndpointHref(aasDescriptor, 'AAS-3.0');
 
         return aasDescriptor || failResponse;
     }
@@ -173,21 +198,21 @@ export function useAASHandling() {
 
         if (aasId === '') return failResponse;
 
-        const aas = await fetchAasByIdFromRepo(aasId);
+        const aasEndpoint = await getAasEndpointById(aasId);
 
-        if (!aas || Object.keys(aas).length === 0) {
-            console.warn("Fetching AAS (id = '" + aasId + "') failed!");
-            return failResponse;
+        if (aasEndpoint && aasEndpoint.trim() !== '') {
+            return fetchAas(aasEndpoint.trim());
         }
 
-        aas.timestamp = formatDate(new Date());
-        aas.path = getAasEndpointByIdFromRepo(aasId);
-
-        return aas;
+        return failResponse;
     }
 
     /**
      * Retrieves the Asset Administration Shell (AAS) endpoint URL by its ID.
+     *
+     * This function attempts to obtain the AAS endpoint using two methods: first by querying
+     * the AAS registry, and if that fails, it tries to obtain it from the AAS repository. If the provided
+     * AAS ID is invalid or empty, the function returns an empty string.
      *
      * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
      * @returns {Promise<string>} A promise that resolves to an AAS endpoint.
@@ -204,7 +229,7 @@ export function useAASHandling() {
         // First try to determine AAS endpoint with the help of the registry
         const aasEndpoint = await getAasEndpointByIdFromRegistry(aasId);
 
-        if (aasEndpoint && aasEndpoint.trim() !== '') return aasEndpoint;
+        if (aasEndpoint && aasEndpoint.trim() !== '') return aasEndpoint.trim();
 
         // Second try to determine AAS endpoint with the help of the repo
         return getAasEndpointByIdFromRepo(aasId) || failResponse;
@@ -238,7 +263,8 @@ export function useAASHandling() {
             const submodelRefs = aas.submodels;
 
             const submodelPromises = submodelRefs.map((submodelRef: any) => {
-                return fetchSmById(extractId(submodelRef, 'Submodel'), false, true);
+                const smId = extractIdFromReference(submodelRef, 'Submodel');
+                return fetchSmById(smId, false, true);
             });
 
             return await Promise.all(submodelPromises);
@@ -247,14 +273,88 @@ export function useAASHandling() {
         return failResponse;
     }
 
+    async function aasIsAvailableById(aasId: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!aasId) return failResponse;
+
+        aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
+
+        const aasEndpoint = await getAasEndpointById(aasId);
+
+        return await aasIsAvailableInRepo(aasEndpoint);
+    }
+
+    async function getSubmodelRefsById(aasId: string): Promise<Array<any>> {
+        const failResponse = [] as Array<any>;
+
+        if (!aasId) return failResponse;
+
+        aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
+
+        const aasEndpoint = await getAasEndpointById(aasId);
+
+        if (aasEndpoint && aasEndpoint.trim() !== '') return getSubmodelRefsFromRepo(aasEndpoint.trim());
+
+        return failResponse;
+    }
+
+    /**
+     * Retrieves a Submodel (SM) of an Asset Administration Shell (AAS) SM descriptor.
+     *
+     * @async
+     * @param {string} aasId - The ID of the AAS to retrieve its SM.
+     * @param {string} semanticId - The semantic ID of the SM.
+     * @returns {string} A promise that resolves to a SM.
+     */
+    async function getSmIdOfAasIdBySemanticId(aasId: string, semanticId: string): Promise<string> {
+        const failResponse = '';
+
+        if (!aasId || !semanticId) return failResponse;
+
+        aasId = aasId.trim();
+        semanticId = semanticId.trim();
+
+        if (aasId === '' || semanticId === '') return failResponse;
+
+        const submodelRefs = await getSubmodelRefsById(aasId);
+
+        for (const submodelRef of submodelRefs) {
+            const smId = extractIdFromReference(submodelRef, 'Submodel');
+            const smDescriptor = await fetchSmDescriptor(smId);
+            if (
+                smDescriptor &&
+                Object.keys(smDescriptor).length > 0 &&
+                smDescriptor?.semanticId?.keys &&
+                Array.isArray(smDescriptor.semanticId.keys) &&
+                smDescriptor.semanticId.keys.length > 0
+            ) {
+                const semanticIds = smDescriptor.semanticId.keys.map((key: any) => key.value);
+                if (semanticIds.includes(semanticId)) {
+                    return smId;
+                }
+            }
+        }
+
+        return failResponse;
+    }
+
     return {
+        getAasEndpointById,
+        getSubmodelRefsById,
+        getSmIdOfAasIdBySemanticId,
+        aasIsAvailableById,
         fetchAndDispatchAas,
         fetchAndDispatchAasById,
         fetchAasDescriptorList,
         fetchAasDescriptor,
+        fetchAasList,
         fetchAas,
         fetchAasById,
         fetchAasSmListById,
-        getAasEndpointById,
     };
 }

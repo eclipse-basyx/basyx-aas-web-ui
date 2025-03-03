@@ -25,7 +25,7 @@
                 <v-menu v-if="!isMobile" v-model="mainMenu" :close-on-content-click="false" :offset="8">
                     <template #activator="{ props }">
                         <v-btn class="text-none" v-bind="props" append-icon="mdi-chevron-down" variant="text">
-                            {{ route.meta.name }}
+                            {{ route.meta?.title ? route.meta.title.toString() : route.meta?.name?.toString() }}
                         </v-btn>
                     </template>
                     <!-- Main Menu Component -->

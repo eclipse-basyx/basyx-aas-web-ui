@@ -30,10 +30,8 @@ export function useAASRegistryClient() {
     async function fetchAasDescriptorList(): Promise<Array<any>> {
         const failResponse = [] as Array<any>;
 
-        if (aasRegistryUrl.value.trim() === '') return failResponse;
-
-        let aasRegUrl = aasRegistryUrl.value;
-        if (aasRegUrl.trim() === '') return failResponse;
+        let aasRegUrl = aasRegistryUrl.value.trim();
+        if (aasRegUrl === '') return failResponse;
         if (aasRegUrl.endsWith('/')) aasRegUrl = stripLastCharacter(aasRegUrl);
         if (!aasRegUrl.endsWith(endpointPath)) aasRegUrl += endpointPath;
 
@@ -50,7 +48,8 @@ export function useAASRegistryClient() {
                 const aasDescriptors = aasRegistryResponse.data.result;
                 return aasDescriptors;
             }
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
         return failResponse;
@@ -72,10 +71,8 @@ export function useAASRegistryClient() {
 
         if (aasId === '') return failResponse;
 
-        if (aasRegistryUrl.value.trim() === '') return failResponse;
-
-        let aasRegUrl = aasRegistryUrl.value;
-        if (aasRegUrl.trim() === '') return failResponse;
+        let aasRegUrl = aasRegistryUrl.value.trim();
+        if (aasRegUrl === '') return failResponse;
         if (aasRegUrl.endsWith('/')) aasRegUrl = stripLastCharacter(aasRegUrl);
         if (!aasRegUrl.endsWith(endpointPath)) aasRegUrl += endpointPath;
 
@@ -91,7 +88,8 @@ export function useAASRegistryClient() {
             ) {
                 return aasRegistryResponse.data;
             }
-        } catch {
+        } catch (e) {
+            console.warn(e);
             return failResponse;
         }
         return failResponse;
@@ -120,35 +118,13 @@ export function useAASRegistryClient() {
     }
 
     /**
-     * Retrieves the Asset Administration Shell (AAS) endpoint URL of an AAS descriptor.
-     *
-     * @param {string} aasDescriptor - The AAS descriptor to retrieve the endpoint for.
-     * @returns {string} A promise that resolves to an AAS endpoint.
-     */
-    function getAasEndpoint(aasDescriptor: any): string {
-        const failResponse = '';
-
-        if (
-            !aasDescriptor ||
-            Object.keys(aasDescriptor).length === 0 ||
-            !aasDescriptor.id ||
-            aasDescriptor.id.trim() === ''
-        )
-            return failResponse;
-
-        const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0');
-
-        return aasEndpoint || failResponse;
-    }
-
-    /**
      * Checks if Asset Administration Shell (AAS) Descriptor with provided ID is available (in registry).
      *
      * @async
      * @param {string} aasId - The ID of the AAS to check.
      * @returns {Promise<boolean>} A promise that resolves to `true` if AAS with provided ID is available, otherwise `false`.
      */
-    async function isAvailableById(aasId: string): Promise<boolean> {
+    async function aasDescriptorIsAvailableById(aasId: string): Promise<boolean> {
         const failResponse = false;
 
         if (!aasId) return failResponse;
@@ -169,10 +145,8 @@ export function useAASRegistryClient() {
     async function postAasDescriptor(aasDescriptor: descriptorTypes.AASDescriptor): Promise<boolean> {
         const failResponse = false;
 
-        if (aasRegistryUrl.value.trim() === '') return failResponse;
-
-        let aasRegUrl = aasRegistryUrl.value;
-        if (aasRegUrl.trim() === '') return failResponse;
+        let aasRegUrl = aasRegistryUrl.value.trim();
+        if (aasRegUrl === '') return failResponse;
         if (aasRegUrl.endsWith('/')) aasRegUrl = stripLastCharacter(aasRegUrl);
         if (!aasRegUrl.endsWith(endpointPath)) aasRegUrl += endpointPath;
 
@@ -191,10 +165,8 @@ export function useAASRegistryClient() {
     async function putAasDescriptor(aasDescriptor: descriptorTypes.AASDescriptor): Promise<boolean> {
         const failResponse = false;
 
-        if (aasRegistryUrl.value.trim() === '') return failResponse;
-
-        let aasRegUrl = aasRegistryUrl.value;
-        if (aasRegUrl.trim() === '') return failResponse;
+        let aasRegUrl = aasRegistryUrl.value.trim();
+        if (aasRegUrl === '') return failResponse;
         if (aasRegUrl.endsWith('/')) aasRegUrl = stripLastCharacter(aasRegUrl);
         if (!aasRegUrl.endsWith(endpointPath)) aasRegUrl += endpointPath;
 
@@ -234,11 +206,10 @@ export function useAASRegistryClient() {
 
     return {
         endpointPath,
-        getAasEndpoint,
         getAasEndpointById,
         fetchAasDescriptorList,
         fetchAasDescriptorById,
-        isAvailableById,
+        aasDescriptorIsAvailableById,
         putAasDescriptor,
         postAasDescriptor,
         createDescriptorFromAAS,

@@ -1,29 +1,25 @@
 import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
-import { useReferenceUtils } from '@/composables/AAS/ReferenceUtils';
-import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
 import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
 import { useIDUtils } from '@/composables/IDUtils';
+import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 import { formatDate } from '@/utils/DateUtils';
 
 export function useSMHandling() {
     // Composables
-    const { getSubmodelRefsById: getSubmodelRefsByIdFromRepo } = useAASRepositoryClient();
     const {
         fetchSmDescriptorById: fetchSmDescriptorByIdFromRegistry,
         fetchSmDescriptorList: fetchSmDescriptorListFromRegistry,
-        getSmEndpoint,
         getSmEndpointById: getSmEndpointByIdFromRegistry,
     } = useSMRegistryClient();
     const {
         fetchSm: fetchSmFromRepo,
-        fetchSmById: fetchSmByIdFromRepo,
         getSmEndpointById: getSmEndpointByIdFromRepo,
         fetchSme: fetchSmeFromRepo,
+        smIsAvailable: smIsAvailableInRepo,
     } = useSMRepositoryClient();
     const { fetchCds } = useConceptDescriptionHandling();
     const { generateUUID } = useIDUtils();
-    const { extractId: extractIdFromReference } = useReferenceUtils();
 
     /**
      * Fetches a list of all available Submodel (SM) Descriptors.
@@ -41,7 +37,7 @@ export function useSMHandling() {
 
         smDescriptors = smDescriptors.map((smDescriptor: any) => {
             smDescriptor.timestamp = formatDate(new Date());
-            smDescriptor.path = getSmEndpoint(smDescriptor);
+            smDescriptor.path = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0');
             return smDescriptor;
         });
 
@@ -70,7 +66,7 @@ export function useSMHandling() {
         }
 
         smDescriptor.timestamp = formatDate(new Date());
-        smDescriptor.path = getSmEndpoint(smDescriptor);
+        smDescriptor.path = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0');
 
         return smDescriptor;
     }
@@ -82,14 +78,14 @@ export function useSMHandling() {
      * @param {string} smEndpoint - The endpoint URL of the SM to fetch.
      * @param {boolean} withConceptDescriptions - Flag to specify if SM/SME and its Submodel Elements (SME)
      *                                            should be fetched with ConceptDescriptions (CDs)
-     * @param {boolean} setSmeData - Flag to specify if data (`path`, `timestamp`, ìd`) should be set to
+     * @param {boolean} setDataFlag - Flag to specify if data (`path`, `timestamp`, ìd`) should be set to
      *                               Submodel Elements (SME) of SM/SME object
      * @returns {Promise<any>} A promise that resolves to a SM.
      */
     async function fetchSm(
         smEndpoint: string,
         withConceptDescriptions = false,
-        setSmeData: boolean = false
+        setDataFlag: boolean = false
     ): Promise<any> {
         const failResponse = {};
 
@@ -118,7 +114,7 @@ export function useSMHandling() {
         smOrSme.timestamp = formatDate(new Date());
         smOrSme.path = smEndpoint;
 
-        if (setSmeData) {
+        if (setDataFlag) {
             smOrSme = await setData({ ...smOrSme }, smOrSme.path, withConceptDescriptions, smOrSme.timestamp);
         }
 
@@ -138,14 +134,14 @@ export function useSMHandling() {
      * @param {string} smId - The ID of the SM to fetch.
      * @param {boolean} withConceptDescriptions - Flag to specify if SM and its Submodel Elements (SME)
      *                                            should be fetched with ConceptDescriptions (CDs)
-     * @param {boolean} setSmeData - Flag to specify if data (`path`, `timestamp`, ìd`) should be set to
+     * @param {boolean} setDataFlag - Flag to specify if data (`path`, `timestamp`, ìd`) should be set to
      *                               Submodel Elements (SME) of SM object
      * @returns {Promise<any>} A promise that resolves to a SM.
      */
     async function fetchSmById(
         smId: string,
         withConceptDescriptions = false,
-        setDataRecursive: boolean = false
+        setDataFlag: boolean = false
     ): Promise<any> {
         const failResponse = {};
 
@@ -155,30 +151,21 @@ export function useSMHandling() {
 
         if (smId === '') return failResponse;
 
-        let sm = await fetchSmByIdFromRepo(smId);
+        const smEndpoint = await getSmEndpointById(smId);
 
-        if (!sm || Object.keys(sm).length === 0) {
-            console.warn("Fetching SM (id = '" + smId + "') failed!");
-            return failResponse;
+        if (smEndpoint && smEndpoint.trim() !== '') {
+            return fetchSm(smEndpoint.trim(), withConceptDescriptions, setDataFlag);
         }
 
-        sm.timestamp = formatDate(new Date());
-
-        if (setDataRecursive) {
-            sm = await setData({ ...sm }, sm.path, withConceptDescriptions, sm.timestamp);
-        }
-
-        if (withConceptDescriptions) {
-            sm.conceptDescriptions = await fetchCds(sm);
-        } else {
-            sm.conceptDescriptions = [];
-        }
-
-        return sm;
+        return failResponse;
     }
 
     /**
      * Retrieves the Submodel (Sm) endpoint URL by its ID.
+     *
+     * This function attempts to obtain the SM endpoint using two methods: first by querying
+     * the SM registry, and if that fails, it tries to obtain it from the SM repository. If the provided
+     * SM ID is invalid or empty, the function returns an empty string.
      *
      * @async
      * @param {string} smId - The ID of the SM to retrieve the endpoint for.
@@ -194,52 +181,14 @@ export function useSMHandling() {
         if (smId === '') return failResponse;
 
         // First try to determine SM endpoint with the help of the registry
-        const smEndpoint = await getSmEndpointByIdFromRegistry(smId);
+        let smEndpoint = await getSmEndpointByIdFromRegistry(smId);
 
-        if (smEndpoint && smEndpoint.trim() !== '') return smEndpoint;
+        if (smEndpoint && smEndpoint.trim() !== '') return smEndpoint.trim();
 
         // Second try to determine SM endpoint with the help of the repo
-        return getSmEndpointByIdFromRepo(smId) || failResponse;
-    }
+        smEndpoint = getSmEndpointByIdFromRepo(smId);
 
-    /**
-     * Retrieves a Submodel (SM) of an Asset Administration Shell (AAS) SM descriptor.
-     *
-     * @async
-     * @param {string} aasId - The ID of the AAS to retrieve its SM.
-     * @param {string} semanticId - The semantic ID of the SM.
-     * @returns {string} A promise that resolves to a SM.
-     */
-    async function getSmIdOfAasIdBySemanticId(aasId: string, semanticId: string): Promise<string> {
-        const failResponse = '';
-
-        if (!aasId || !semanticId) return failResponse;
-
-        aasId = aasId.trim();
-        semanticId = semanticId.trim();
-
-        if (aasId === '' || semanticId === '') return failResponse;
-
-        const submodelRefs = await getSubmodelRefsByIdFromRepo(aasId);
-
-        for (const submodelRef of submodelRefs) {
-            const smId = extractIdFromReference(submodelRef, 'Submodel');
-            const smDescriptor = await fetchSmDescriptor(smId);
-            if (
-                smDescriptor &&
-                Object.keys(smDescriptor).length > 0 &&
-                smDescriptor?.semanticId?.keys &&
-                Array.isArray(smDescriptor.semanticId.keys) &&
-                smDescriptor.semanticId.keys.length > 0
-            ) {
-                const semanticIds = smDescriptor.semanticId.keys.map((key: any) => key.value);
-                if (semanticIds.includes(semanticId)) {
-                    return smId;
-                }
-            }
-        }
-
-        return failResponse;
+        return smEndpoint.trim() || failResponse;
     }
 
     /**
@@ -339,11 +288,25 @@ export function useSMHandling() {
         return smOrSme;
     }
 
+    async function smIsAvailableById(smId: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!smId) return failResponse;
+
+        smId = smId.trim();
+
+        if (smId === '') return failResponse;
+
+        const aasEndpoint = await getSmEndpointById(smId);
+
+        return await smIsAvailableInRepo(aasEndpoint);
+    }
+
     return {
-        getSmIdOfAasIdBySemanticId,
+        getSmEndpointById,
+        smIsAvailableById,
         fetchSm,
         fetchSmById,
-        getSmEndpointById,
         fetchSmDescriptorList,
         fetchSmDescriptor,
         setData,

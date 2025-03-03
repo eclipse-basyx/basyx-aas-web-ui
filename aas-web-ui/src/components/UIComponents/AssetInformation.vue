@@ -17,17 +17,17 @@
                 :specific-asset-ids="assetObject.specificAssetIds"
                 background-color="detailsCard"></SpecificAssetIds>
             <v-img
-                v-if="defaultThumbnailUrl"
-                :src="defaultThumbnailUrl"
+                v-if="thumbnailSrc"
+                :src="thumbnailSrc"
                 max-width="100%"
                 :max-height="thumbnailMaxHeight"
                 contain
                 class="mt-2 rounded"></v-img>
             <span
-                v-if="defaultThumbnailCaption !== ''"
+                v-if="thumbnailCaption !== ''"
                 class="font-weight-light text-medium-emphasis"
                 style="font-size: 0.5rem">
-                {{ defaultThumbnailCaption }}
+                {{ thumbnailCaption }}
             </span>
         </v-list>
     </v-container>
@@ -36,10 +36,12 @@
 <script lang="ts" setup>
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
     import { useTechnicalData_v1_2Utils } from '@/composables/AAS/SubmodelTemplates/TechnicalData_v1_2Utils';
+    import { useUrlUtils } from '@/composables/UrlUtils';
     import { useAASStore } from '@/store/AASDataStore';
 
     // Composables
     const { getProductImageUrlByAasId: getProductImageUrlByAasIdFromSmTechnicalData } = useTechnicalData_v1_2Utils();
+    const { getBlobUrl } = useUrlUtils();
 
     // Props
     const props = defineProps({
@@ -53,9 +55,9 @@
     const aasStore = useAASStore();
 
     // Data
+    const thumbnailSrc = ref('' as string);
     const thumbnailMaxHeight = ref(0 as number);
-    const defaultThumbnailUrl = ref('' as string);
-    const defaultThumbnailCaption = ref('' as string);
+    const thumbnailCaption = ref('' as string);
 
     // Computed
     const assetInfo = computed(() => {
@@ -88,8 +90,8 @@
 
     async function initialize(): Promise<void> {
         if (!props.assetObject || Object.keys(props.assetObject).length === 0) {
-            defaultThumbnailUrl.value = '';
-            defaultThumbnailCaption.value = '';
+            thumbnailSrc.value = '';
+            thumbnailCaption.value = '';
             return;
         }
         if (
@@ -98,24 +100,32 @@
             props.assetObject.defaultThumbnail?.path &&
             props.assetObject.defaultThumbnail?.path.trim() !== ''
         ) {
-            defaultThumbnailUrl.value = props.assetObject.defaultThumbnail.path.trim();
-            defaultThumbnailCaption.value = '';
+            thumbnailSrc.value = await getBlobUrl(
+                props.assetObject.defaultThumbnail.path.trim(),
+                props.assetObject.defaultThumbnail.isExternal
+            );
+            thumbnailCaption.value = '';
         } else {
             const productImageUrlFromSmTechnicalData = await getProductImageUrlByAasIdFromSmTechnicalData(
                 selectedAas.value.id
             );
-            if (productImageUrlFromSmTechnicalData && productImageUrlFromSmTechnicalData.trim() !== '') {
-                defaultThumbnailUrl.value = productImageUrlFromSmTechnicalData.trim();
-                defaultThumbnailCaption.value = 'Product Image from SM TechnicalData';
+            if (productImageUrlFromSmTechnicalData && productImageUrlFromSmTechnicalData.url.trim() !== '') {
+                thumbnailSrc.value = await getBlobUrl(
+                    productImageUrlFromSmTechnicalData.url.trim(),
+                    productImageUrlFromSmTechnicalData.isExternal
+                );
+                thumbnailCaption.value = 'Product Image from SM TechnicalData';
             } else {
-                defaultThumbnailUrl.value = '';
-                defaultThumbnailCaption.value = '';
+                thumbnailSrc.value = '';
+                thumbnailCaption.value = '';
             }
         }
     }
+
     function handleResize(): void {
         calcThumbnailMaxHeight();
     }
+
     function calcThumbnailMaxHeight(): void {
         const toolbarHeight = document.getElementsByClassName('v-toolbar')[0]?.clientHeight as number;
         const footerHeight = document.getElementsByClassName('v-footer')[0]?.clientHeight as number;
