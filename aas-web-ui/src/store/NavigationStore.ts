@@ -14,7 +14,7 @@ import { useEnvStore } from '@/store/EnvironmentStore';
 import { stripLastCharacter } from '@/utils/StringUtils';
 
 export const useNavigationStore = defineStore('navigationStore', () => {
-    // Initialize Dependent Stores
+    // Stores
     const envStore = useEnvStore();
 
     // Composables
@@ -26,7 +26,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const { endpointPath: smRepoEndpointPath } = useSMRepositoryClient();
     const { endpointPath: cdRepoEndpointPath } = useCDRepositoryClient();
 
-    // Computed Property
+    // Computed Properties
     const endpointConfigAvailable = computed(() => envStore.getEndpointConfigAvailable);
     const EnvAASDiscoveryPath = computed(() => envStore.getEnvAASDiscoveryPath);
     const EnvAASRegistryPath = computed(() => envStore.getEnvAASRegistryPath);
@@ -35,7 +35,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const EnvSubmodelRepoPath = computed(() => envStore.getEnvSubmodelRepoPath);
     const EnvConceptDescriptionRepoPath = computed(() => envStore.getEnvConceptDescriptionRepoPath);
 
-    // State Variables
+    // States
     const drawerState = ref(true);
     const AASDiscoveryURL = ref('');
     const AASRegistryURL = ref('');
