@@ -2,7 +2,6 @@ import type { AutoSyncType, PlatformType, PluginType, SnackbarType, StatusCheckT
 import type { BaSyxComponent, BaSyxComponentKey } from '@/types/BaSyx';
 import type { LocationQuery, RouteRecordRaw } from 'vue-router';
 import { defineStore } from 'pinia';
-import { computed, reactive, ref } from 'vue';
 import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
 import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
