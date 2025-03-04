@@ -13,18 +13,8 @@
                 <v-icon style="position: absolute; top: -3px; right: -16.5px">mdi-pan-right</v-icon>
             </div>
             <!-- SubmodelElementView Component -->
-            <div class="pa-0 window" style="width: 30%">
+            <div class="pa-0 window" style="width: 65%">
                 <SubmodelElementView />
-            </div>
-            <!-- Divider between PropertyView and ComponentVisualization -->
-            <div style="position: relative; height: calc(100vh - 106px); z-index: 1">
-                <v-icon style="position: absolute; top: -3px; left: -16.5px">mdi-pan-left</v-icon>
-                <v-divider vertical style="position: absolute; height: calc(100vh - 106px); z-index: 1"></v-divider>
-                <v-icon style="position: absolute; top: -3px; right: -16.5px">mdi-pan-right</v-icon>
-            </div>
-            <!-- ComponentVisualization Component -->
-            <div class="pa-0 window" style="width: 35%">
-                <ComponentVisualization />
             </div>
         </div>
     </v-container>
@@ -60,7 +50,7 @@
     });
 
     // creates a div element (Resize Bar) on each Divider between Windows to allow the user to resize the windows
-    function resizableWindow(window: any) {
+    function resizableWindow(window: any): void {
         window.style.position = 'relative';
         let div = createDiv(); // create div element (Resize Bar) on each Divider between Windows
         window.appendChild(div); // append the div to the Window
@@ -68,7 +58,7 @@
     }
 
     // creates Event Listeners for the Resize Bars to allow the user to resize the windows
-    function setListeners(div: HTMLDivElement) {
+    function setListeners(div: HTMLDivElement): void {
         let pageX: number, curCol: any, nxtCol: any, curColWidth: number, nxtColWidth: number;
 
         // highlight Resize Bar when mouse is over it
@@ -118,7 +108,7 @@
     }
 
     // creates the div element (Resize Bar) on each Divider between Windows
-    function createDiv() {
+    function createDiv(): HTMLDivElement {
         let div = document.createElement('div');
         div.style.top = '0';
         div.style.right = '-1px';

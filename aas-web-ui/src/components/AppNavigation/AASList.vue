@@ -1,7 +1,7 @@
 <template>
     <v-container fluid class="pa-0">
         <v-card color="card" elevation="0">
-            <!-- Title Bar in the AAS List -->
+            <!-- Title bar -->
             <template v-if="!singleAas">
                 <v-card-title>
                     <v-row align="center">

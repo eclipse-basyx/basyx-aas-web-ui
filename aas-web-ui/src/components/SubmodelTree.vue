@@ -2,7 +2,7 @@
     <v-container fluid class="pa-0">
         <v-card color="rgba(0,0,0,0)" elevation="0">
             <template v-if="!singleAas">
-                <!-- Title Bar  -->
+                <!-- Title bar -->
                 <v-card-title
                     :style="
                         selectedAAS && Object.keys(selectedAAS).length > 0

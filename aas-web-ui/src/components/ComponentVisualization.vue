@@ -1,10 +1,10 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-card color="card" elevation="0">
+        <v-card color="rgba(0,0,0,0)" elevation="0">
             <template v-if="!singleAas || isMobile">
-                <!-- Title Bar in the Submodel Element View -->
+                <!-- Title bar -->
                 <v-card-title :style="{ padding: isVisualization ? '' : '15px 16px 16px' }">
-                    <div v-if="!isMobile">
+                    <div v-if="!isMobile" class="d-flex align-center">
                         <template v-if="routesToVisualization.includes(route.name)">
                             <v-btn class="ml-0" variant="plain" icon="mdi-chevron-left" @click="backToAASViewer()" />
                             <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
@@ -15,6 +15,23 @@
                                 <span class="text-truncate ml-2">|</span>
                                 <span class="text-truncate ml-2">{{ nameToDisplay(selectedNode) }}</span>
                             </template>
+                        </template>
+                        <template v-else-if="aasViewerMode">
+                            <v-btn-toggle
+                                v-model="btns"
+                                color="primary"
+                                divided
+                                class="pa-0 ma-0"
+                                style="height: 32px !important">
+                                <v-btn value="SMEView" class="ma-0" @click="$emit('switchTo', 'SMEView')">
+                                    <v-icon start>mdi-folder-edit-outline</v-icon>
+                                    <span class="hidden-sm-and-down">Element Details</span>
+                                </v-btn>
+                                <v-btn value="Visualization" class="ma-0" @click="$emit('switchTo', 'Visualization')">
+                                    <v-icon start>mdi-folder-star-outline</v-icon>
+                                    <span class="hidden-sm-and-down">Visualization</span>
+                                </v-btn>
+                            </v-btn-toggle>
                         </template>
                         <span v-else>Visualization</span>
                     </div>
@@ -123,9 +140,13 @@
     // Composables
     const { nameToDisplay } = useReferableUtils();
 
+    // Emits
+    defineEmits(['switchTo']);
+
     // Data
     const submodelElementData = ref({} as any);
     const routesToVisualization: Array<RouteRecordNameGeneric> = ['ComponentVisualization', 'Visualization'];
+    const btns = ref('Visualization');
 
     // Computed Properties
     const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL);
@@ -191,6 +212,7 @@
         return plugins;
     });
     const viewerMode = computed(() => route.name === 'SubmodelViewer' || routesToVisualization.includes(route.name));
+    const aasViewerMode = computed(() => route.name === 'AASViewer');
     const isVisualization = computed(() => route.name === 'Visualization');
 
     // Watchers

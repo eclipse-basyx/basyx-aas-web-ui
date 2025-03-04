@@ -2,8 +2,29 @@
     <v-container fluid class="pa-0">
         <v-card color="rgba(0,0,0,0)" elevation="0">
             <template v-if="!singleAas">
-                <!-- Title Bar in the Submodel Element View -->
-                <v-card-title style="padding: 15px 16px 16px">Element Details</v-card-title>
+                <!-- Title bar -->
+                <v-card-title style="padding: 15px 16px 16px">
+                    <div class="d-flex align-center">
+                        <template v-if="aasViewerMode">
+                            <v-btn-toggle
+                                v-model="btns"
+                                color="primary"
+                                divided
+                                class="pa-0 ma-0"
+                                style="height: 32px !important">
+                                <v-btn value="SMEView" class="ma-0" @click="$emit('switchTo', 'SMEView')">
+                                    <v-icon start>mdi-folder-edit-outline</v-icon>
+                                    <span class="hidden-sm-and-down">Element Details</span>
+                                </v-btn>
+                                <v-btn value="Visualization" class="ma-0" @click="$emit('switchTo', 'Visualization')">
+                                    <v-icon start>mdi-folder-star-outline</v-icon>
+                                    <span class="hidden-sm-and-down">Visualization</span>
+                                </v-btn>
+                            </v-btn-toggle>
+                        </template>
+                        <span v-else>Element Details</span>
+                    </div>
+                </v-card-title>
                 <v-divider></v-divider>
             </template>
             <v-card-text
@@ -102,27 +123,27 @@
                             <Property
                                 v-else-if="submodelElementData.modelType === 'Property'"
                                 :property-object="submodelElementData"
-                                :is-editable="editMode"></Property>
+                                :is-editable="aasEditorMode"></Property>
                             <MultiLanguageProperty
                                 v-else-if="submodelElementData.modelType === 'MultiLanguageProperty'"
                                 :multi-language-property-object="submodelElementData"
-                                :is-editable="editMode"></MultiLanguageProperty>
+                                :is-editable="aasEditorMode"></MultiLanguageProperty>
                             <Operation
                                 v-else-if="submodelElementData.modelType === 'Operation'"
                                 :operation-object="submodelElementData"
-                                :is-editable="editMode"></Operation>
+                                :is-editable="aasEditorMode"></Operation>
                             <File
                                 v-else-if="submodelElementData.modelType === 'File'"
                                 :file-object="submodelElementData"
-                                :is-editable="editMode"></File>
+                                :is-editable="aasEditorMode"></File>
                             <Blob
                                 v-else-if="submodelElementData.modelType === 'Blob'"
                                 :blob-object="submodelElementData"
-                                :is-editable="editMode"></Blob>
+                                :is-editable="aasEditorMode"></Blob>
                             <ReferenceElement
                                 v-else-if="submodelElementData.modelType === 'ReferenceElement'"
                                 :reference-element-object="submodelElementData"
-                                :is-editable="editMode"></ReferenceElement>
+                                :is-editable="aasEditorMode"></ReferenceElement>
                             <Range
                                 v-else-if="submodelElementData.modelType === 'Range'"
                                 :range-object="submodelElementData"></Range>
@@ -135,7 +156,7 @@
                             <AnnotatedRelationshipElement
                                 v-else-if="submodelElementData.modelType === 'AnnotatedRelationshipElement'"
                                 :annotated-relationship-element-object="submodelElementData"
-                                :is-editable="editMode"></AnnotatedRelationshipElement>
+                                :is-editable="aasEditorMode"></AnnotatedRelationshipElement>
                             <InvalidElement v-else :invalid-element-object="submodelElementData"></InvalidElement>
                         </v-list>
                         <!-- Last Sync -->
@@ -183,10 +204,14 @@
     const { fetchCds } = useConceptDescriptionHandling();
     const { fetchSme } = useSMEHandling();
 
+    // Emits
+    defineEmits(['switchTo']);
+
     // Data
     const submodelElementData = ref({} as any);
     const conceptDescriptions = ref([] as Array<any>);
     const autoSyncInterval = ref<number | undefined>(undefined); // interval to send requests to the AAS
+    const btns = ref('SMEView');
 
     // Computed Properties
     const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL);
@@ -194,7 +219,8 @@
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
     const selectedNode = computed(() => aasStore.getSelectedNode);
     const autoSync = computed(() => navigationStore.getAutoSync);
-    const editMode = computed(() => route.name === 'AASEditor');
+    const aasViewerMode = computed(() => route.name === 'AASViewer');
+    const aasEditorMode = computed(() => route.name === 'AASEditor');
     const singleAas = computed(() => envStore.getSingleAas);
 
     // Watchers

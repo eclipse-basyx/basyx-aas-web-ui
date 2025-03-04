@@ -1,8 +1,8 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-card color="card" elevation="0">
+        <v-card color="rgba(0,0,0,0)" elevation="0">
             <template v-if="!singleAas || isMobile">
-                <!-- Title Bar in the Submodel List -->
+                <!-- Title bar -->
                 <v-card-title :style="{ padding: isMobile ? '' : '15px 16px 16px' }">
                     <div v-if="!selectedAAS || Object.keys(selectedAAS).length === 0">Submodel List</div>
                     <div v-else class="d-flex align-center">
