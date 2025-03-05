@@ -489,11 +489,11 @@
         } else {
             const search = value.toLowerCase();
             aasList.value = aasListUnfiltered.value.filter(
-                (item) =>
-                    item.idLower.includes(search) ||
-                    item.idShortLower.includes(search) ||
-                    item.nameLower.includes(search) ||
-                    item.descLower.includes(search)
+                (aasOrAasDescriptor) =>
+                    aasOrAasDescriptor.idLower.includes(search) ||
+                    aasOrAasDescriptor.idShortLower.includes(search) ||
+                    aasOrAasDescriptor.nameLower.includes(search) ||
+                    aasOrAasDescriptor.descLower.includes(search)
             );
         }
         scrollToSelectedAAS();
