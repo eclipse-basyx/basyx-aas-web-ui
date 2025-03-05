@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia';
-import { computed, ref } from 'vue';
 
 const isProduction = import.meta.env.MODE === 'production';
 
@@ -144,7 +143,6 @@ export const useEnvStore = defineStore('envStore', () => {
     });
 
     return {
-        singleAas,
         getEnvBasePath,
         getEnvLogoLightPath,
         getEnvLogoDarkPath,
