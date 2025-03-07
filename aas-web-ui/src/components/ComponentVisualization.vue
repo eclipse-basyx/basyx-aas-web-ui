@@ -16,23 +16,6 @@
                                 <span class="text-truncate ml-2">{{ nameToDisplay(selectedNode) }}</span>
                             </template>
                         </template>
-                        <template v-else-if="aasViewerMode">
-                            <v-btn-toggle
-                                v-model="btns"
-                                color="primary"
-                                divided
-                                class="pa-0 ma-0"
-                                style="height: 32px !important">
-                                <v-btn value="SMEView" class="ma-0" @click="$emit('switchTo', 'SMEView')">
-                                    <v-icon start>mdi-folder-edit-outline</v-icon>
-                                    <span class="hidden-sm-and-down">Element Details</span>
-                                </v-btn>
-                                <v-btn value="Visualization" class="ma-0" @click="$emit('switchTo', 'Visualization')">
-                                    <v-icon start>mdi-folder-star-outline</v-icon>
-                                    <span class="hidden-sm-and-down">Visualization</span>
-                                </v-btn>
-                            </v-btn-toggle>
-                        </template>
                         <span v-else>Visualization</span>
                     </div>
                     <div v-else class="d-flex align-center">
@@ -48,71 +31,7 @@
             <v-card-text
                 style="overflow-y: auto"
                 :style="singleAas && !isMobile ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 170px)'">
-                <template
-                    v-if="
-                        selectedAAS &&
-                        Object.keys(selectedAAS).length > 0 &&
-                        selectedNode &&
-                        Object.keys(selectedNode).length > 0 &&
-                        submodelElementData &&
-                        Object.keys(submodelElementData).length > 0
-                    ">
-                    <!-- File / Blob Visualizations -->
-                    <template v-if="['File', 'Blob'].includes(submodelElementData.modelType)">
-                        <ImagePreview
-                            v-if="submodelElementData?.contentType && submodelElementData.contentType.includes('image')"
-                            :submodel-element-data="submodelElementData"></ImagePreview>
-                        <PDFPreview
-                            v-if="submodelElementData?.contentType && submodelElementData.contentType.includes('pdf')"
-                            :submodel-element-data="submodelElementData"></PDFPreview>
-                        <CADPreview
-                            v-if="
-                                submodelElementData?.contentType &&
-                                (submodelElementData.contentType.includes('sla') ||
-                                    submodelElementData.contentType.includes('stl') ||
-                                    submodelElementData.contentType.includes('model') ||
-                                    submodelElementData.contentType.includes('obj') ||
-                                    submodelElementData.contentType.includes('gltf'))
-                            "
-                            :submodel-element-data="submodelElementData"></CADPreview>
-                    </template>
-                    <!-- Plugin Visualizations -->
-                    <template v-else>
-                        <template
-                            v-if="
-                                submodelElementData.semanticId &&
-                                submodelElementData.semanticId.keys &&
-                                submodelElementData.semanticId.keys.length > 0 &&
-                                filteredPlugins.length > 0
-                            ">
-                            <component
-                                :is="plugin.name"
-                                v-for="(plugin, index) in filteredPlugins"
-                                :key="index"
-                                :submodel-element-data="submodelElementData">
-                                {{ plugin.name }}
-                            </component>
-                        </template>
-                        <template v-else>
-                            <GenericDataVisu
-                                v-if="viewerMode"
-                                :submodel-element-data="submodelElementData.submodelElements"></GenericDataVisu>
-                            <v-empty-state
-                                v-else
-                                title="No available visualization"
-                                class="text-divider"></v-empty-state>
-                        </template>
-                    </template>
-                </template>
-                <v-empty-state
-                    v-else-if="!selectedAAS || Object.keys(selectedAAS).length === 0"
-                    title="No selected AAS"
-                    class="text-divider"></v-empty-state>
-                <v-empty-state
-                    v-else-if="!selectedNode || Object.keys(selectedNode).length === 0"
-                    title="No selected Submodel / Submodel Element"
-                    text="Select a Submodel / Submodel Element to view its visualization"
-                    class="text-divider"></v-empty-state>
+                <SubmodelElementVisualization />
             </v-card-text>
         </v-card>
     </v-container>
@@ -126,7 +45,6 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils';
 
     // Vue Router
     const route = useRoute();
@@ -140,13 +58,9 @@
     // Composables
     const { nameToDisplay } = useReferableUtils();
 
-    // Emits
-    defineEmits(['switchTo']);
-
     // Data
     const submodelElementData = ref({} as any);
     const routesToVisualization: Array<RouteRecordNameGeneric> = ['ComponentVisualization', 'Visualization'];
-    const btns = ref('Visualization');
 
     // Computed Properties
     const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL);
@@ -155,64 +69,6 @@
     const selectedNode = computed(() => aasStore.getSelectedNode);
     const isMobile = computed(() => navigationStore.getIsMobile);
     const singleAas = computed(() => envStore.getSingleAas);
-    const importedPlugins = computed(() => navigationStore.getPlugins);
-    const filteredPlugins = computed(() => {
-        let plugins = importedPlugins.value.filter((plugin: any) => {
-            if (!plugin.semanticId) return false;
-
-            if (typeof plugin.semanticId === 'string') {
-                return checkSemanticId(submodelElementData.value, plugin.semanticId);
-            } else if (plugin.semanticId.constructor === Array) {
-                for (const pluginSemanticId of plugin.semanticId) {
-                    if (checkSemanticId(submodelElementData.value, pluginSemanticId)) return true;
-                }
-                return false;
-            }
-            return false;
-        });
-
-        // In case of multiple plugins matching for the semanticId of
-        // submodelElementData, the plugins are sorted in descending
-        // alphabetical order with respect to their semanticIds.
-        // This will display the latest (in terms of version) plugin on
-        // top. Plugins without version in the semanticId will be
-        // displayed at the bottom.
-
-        // Sort filtered plugins with respect to semanticId
-        plugins
-            .sort((pluginA: any, pluginB: any) => {
-                let pluginASemanticId = '';
-                let pluginBSemanticId = '';
-
-                if (typeof pluginA.semanticId === 'string') pluginASemanticId = pluginA.semanticId;
-                if (typeof pluginB.semanticId === 'string') pluginBSemanticId = pluginB.semanticId;
-
-                if (Array.isArray(pluginA.semanticId)) {
-                    if (pluginA.semanticId.length > 0) {
-                        pluginA.semanticId
-                            .sort((semanticIdA: any, semanticIdB: any) => semanticIdA.localeCompare(semanticIdB))
-                            .reverse();
-                        pluginASemanticId = pluginA.semanticId[0];
-                    }
-                }
-
-                if (Array.isArray(pluginB.semanticId)) {
-                    if (pluginB.semanticId.length > 0) {
-                        pluginB.semanticId
-                            .sort((semanticIdA: any, semanticIdB: any) => semanticIdA.localeCompare(semanticIdB))
-                            .reverse();
-                        pluginBSemanticId = pluginB.semanticId[0];
-                    }
-                }
-
-                return pluginASemanticId.localeCompare(pluginBSemanticId);
-            })
-            .reverse();
-
-        return plugins;
-    });
-    const viewerMode = computed(() => route.name === 'SubmodelViewer' || routesToVisualization.includes(route.name));
-    const aasViewerMode = computed(() => route.name === 'AASViewer');
     const isVisualization = computed(() => route.name === 'Visualization');
 
     // Watchers

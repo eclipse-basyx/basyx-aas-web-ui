@@ -6,32 +6,25 @@
             <div class="pa-0 window" style="width: 35%">
                 <SubmodelTree />
             </div>
-            <!-- Divider between SubmodelTree and PropertyView -->
+            <!-- Divider -->
             <div style="position: relative; height: calc(100vh - 106px); z-index: 1">
                 <v-icon style="position: absolute; top: -3px; left: -16.5px">mdi-pan-left</v-icon>
                 <v-divider vertical style="position: absolute; height: calc(100vh - 106px); z-index: 1"></v-divider>
                 <v-icon style="position: absolute; top: -3px; right: -16.5px">mdi-pan-right</v-icon>
             </div>
+            <!-- SM/SME view and visualization Component -->
             <div class="pa-0 window" style="width: 65%">
-                <ComponentVisualization
-                    v-if="componentToShow === 'Visualization'"
-                    @switch-to="setComponentToShow($event)" />
-                <SubmodelElementView
-                    v-else-if="componentToShow === 'SMEView'"
-                    @switch-to="setComponentToShow($event)" />
+                <SubmodelElementViewAndVisualization />
             </div>
         </div>
     </v-container>
 </template>
 
 <script lang="ts" setup>
-    import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+    import { computed, onBeforeUnmount, onMounted } from 'vue';
     import { useTheme } from 'vuetify';
 
     const theme = useTheme();
-
-    // Data
-    const componentToShow = ref('SMEView');
 
     // Computed Properties
     const primaryColor = computed(() => theme.current.value.colors.primary);
@@ -127,9 +120,5 @@
         div.style.height = 'calc(100vh - 105px)';
         div.style.zIndex = '3';
         return div;
-    }
-
-    function setComponentToShow(componentName: string): void {
-        componentToShow.value = componentName;
     }
 </script>

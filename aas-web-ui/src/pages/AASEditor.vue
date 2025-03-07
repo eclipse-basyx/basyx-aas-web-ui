@@ -6,15 +6,15 @@
             <div class="pa-0 window" style="width: 35%">
                 <SubmodelTree />
             </div>
-            <!-- Divider between SubmodelTree and PropertyView -->
+            <!-- Divider -->
             <div style="position: relative; height: calc(100vh - 106px); z-index: 1">
                 <v-icon style="position: absolute; top: -3px; left: -16.5px">mdi-pan-left</v-icon>
                 <v-divider vertical style="position: absolute; height: calc(100vh - 106px); z-index: 1"></v-divider>
                 <v-icon style="position: absolute; top: -3px; right: -16.5px">mdi-pan-right</v-icon>
             </div>
-            <!-- SubmodelElementView Component -->
+            <!-- SM/SME view and visualization Component -->
             <div class="pa-0 window" style="width: 65%">
-                <SubmodelElementView />
+                <SubmodelElementViewAndVisualization />
             </div>
         </div>
     </v-container>

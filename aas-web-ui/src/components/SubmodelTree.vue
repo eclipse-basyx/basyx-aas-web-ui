@@ -1,15 +1,44 @@
 <template>
     <v-container fluid class="pa-0">
         <v-card color="rgba(0,0,0,0)" elevation="0">
-            <template v-if="!singleAas">
-                <!-- Title bar -->
-                <v-card-title
-                    :style="
-                        selectedAAS && Object.keys(selectedAAS).length > 0
-                            ? 'padding: 7px 0px 8px'
-                            : 'padding: 15px 0px 16px'
-                    ">
-                    <div class="d-flex align-center">
+            <!-- Title bar -->
+            <v-card-title
+                :style="
+                    selectedAAS && Object.keys(selectedAAS).length > 0
+                        ? 'padding: 7px 0px 8px'
+                        : 'padding: 15px 0px 16px'
+                ">
+                <div class="d-flex align-center">
+                    <v-tooltip
+                        v-if="selectedAAS && Object.keys(selectedAAS).length > 0"
+                        open-delay="600"
+                        location="bottom"
+                        :disabled="isMobile">
+                        <template #activator="{ props }">
+                            <v-btn
+                                icon="mdi-reload"
+                                variant="plain"
+                                :loading="treeLoading"
+                                v-bind="props"
+                                @click="initialize()">
+                                <template #loader>
+                                    <span class="custom-loader"><v-icon light>mdi-cached</v-icon></span>
+                                </template>
+                            </v-btn>
+                        </template>
+                        <span>Reload Submodel tree</span>
+                    </v-tooltip>
+                    <span v-if="!selectedAAS || Object.keys(selectedAAS).length === 0 || singleAas" class="pl-4">
+                        Submodel tree
+                    </span>
+                    <template v-else-if="!singleAas">
+                        <v-icon icon="custom:aasIcon" color="primary" size="small" class="" />
+                        <span class="text-truncate ml-2">
+                            {{ nameToDisplay(selectedAAS) }}
+                        </span>
+                    </template>
+                    <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
+                        <v-spacer></v-spacer>
                         <v-tooltip
                             v-if="selectedAAS && Object.keys(selectedAAS).length > 0"
                             open-delay="600"
@@ -17,90 +46,59 @@
                             :disabled="isMobile">
                             <template #activator="{ props }">
                                 <v-btn
-                                    icon="mdi-reload"
+                                    icon="mdi-expand-all"
                                     variant="plain"
-                                    :loading="treeLoading"
                                     v-bind="props"
-                                    @click="initialize()">
-                                    <template #loader>
-                                        <span class="custom-loader"><v-icon light>mdi-cached</v-icon></span>
-                                    </template>
+                                    class="ml-1"
+                                    :disabled="!selectedNode || Object.keys(selectedNode).length === 0"
+                                    @click="expandTree()">
                                 </v-btn>
                             </template>
-                            <span>Reload Submodel tree</span>
+                            <span>Expand Submodel tree with selected element</span>
                         </v-tooltip>
-                        <span v-if="!selectedAAS || Object.keys(selectedAAS).length === 0" class="pl-4">
-                            Submodel tree
-                        </span>
-                        <template v-else>
-                            <v-icon icon="custom:aasIcon" color="primary" size="small" class="" />
-                            <span class="text-truncate ml-2">
-                                {{ nameToDisplay(selectedAAS) }}
-                            </span>
-                        </template>
-                        <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
-                            <v-spacer></v-spacer>
-                            <v-tooltip
-                                v-if="selectedAAS && Object.keys(selectedAAS).length > 0"
-                                open-delay="600"
-                                location="bottom"
-                                :disabled="isMobile">
-                                <template #activator="{ props }">
-                                    <v-btn
-                                        icon="mdi-expand-all"
-                                        variant="plain"
-                                        v-bind="props"
-                                        class="ml-1"
-                                        :disabled="!selectedNode || Object.keys(selectedNode).length === 0"
-                                        @click="expandTree()">
-                                    </v-btn>
-                                </template>
-                                <span>Expand Submodel tree with selected element</span>
-                            </v-tooltip>
-                            <v-tooltip
-                                v-if="selectedAAS && Object.keys(selectedAAS).length > 0"
-                                open-delay="600"
-                                location="bottom"
-                                :disabled="isMobile">
-                                <template #activator="{ props }">
-                                    <v-btn
-                                        icon="mdi-collapse-all"
-                                        variant="plain"
-                                        v-bind="props"
-                                        class="ml-n3"
-                                        :class="editMode ? 'mr-n3' : ''"
-                                        @click="collapseTree()">
-                                    </v-btn>
-                                </template>
-                                <span>Collapse Submodel trees</span>
-                            </v-tooltip>
-                            <v-menu v-if="editMode">
-                                <template #activator="{ props }">
-                                    <v-btn icon="mdi-dots-vertical" variant="plain" v-bind="props" class="mr-2"></v-btn>
-                                </template>
-                                <v-sheet border>
-                                    <v-list density="compact" class="py-0">
-                                        <!-- Open SM dialog -->
-                                        <v-tooltip open-delay="600" location="end">
-                                            <template #activator="{ props }">
-                                                <v-list-item slim v-bind="props" @click="openEditDialog(true)">
-                                                    <template #prepend>
-                                                        <v-icon size="small">mdi-plus</v-icon>
-                                                    </template>
-                                                    Create Submodel
-                                                </v-list-item>
-                                            </template>
-                                            <span>Create a new Submodel</span>
-                                        </v-tooltip></v-list
-                                    >
-                                </v-sheet>
-                            </v-menu>
-                        </template>
-                    </div>
-                    <!-- TODO: Add Searchfield - https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/148 -->
-                </v-card-title>
-                <v-divider></v-divider>
-            </template>
+                        <v-tooltip
+                            v-if="selectedAAS && Object.keys(selectedAAS).length > 0"
+                            open-delay="600"
+                            location="bottom"
+                            :disabled="isMobile">
+                            <template #activator="{ props }">
+                                <v-btn
+                                    icon="mdi-collapse-all"
+                                    variant="plain"
+                                    v-bind="props"
+                                    class="ml-n3"
+                                    :class="editMode ? 'mr-n3' : ''"
+                                    @click="collapseTree()">
+                                </v-btn>
+                            </template>
+                            <span>Collapse Submodel trees</span>
+                        </v-tooltip>
+                        <v-menu v-if="editMode">
+                            <template #activator="{ props }">
+                                <v-btn icon="mdi-dots-vertical" variant="plain" v-bind="props" class="mr-2"></v-btn>
+                            </template>
+                            <v-sheet border>
+                                <v-list density="compact" class="py-0">
+                                    <!-- Open SM dialog -->
+                                    <v-tooltip open-delay="600" location="end">
+                                        <template #activator="{ props }">
+                                            <v-list-item slim v-bind="props" @click="openEditDialog(true)">
+                                                <template #prepend>
+                                                    <v-icon size="small">mdi-plus</v-icon>
+                                                </template>
+                                                Create Submodel
+                                            </v-list-item>
+                                        </template>
+                                        <span>Create a new Submodel</span>
+                                    </v-tooltip></v-list
+                                >
+                            </v-sheet>
+                        </v-menu>
+                    </template>
+                </div>
+                <!-- TODO: Add Searchfield - https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/148 -->
+            </v-card-title>
+            <v-divider></v-divider>
             <v-card-text
                 style="overflow-y: auto"
                 :style="singleAas ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 170px)'">
