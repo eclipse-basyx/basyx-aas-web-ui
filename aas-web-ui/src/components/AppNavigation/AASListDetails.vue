@@ -1,6 +1,6 @@
 <template>
     <v-container class="pa-0" fluid>
-        <v-sheet>
+        <v-card color="rgba(0,0,0,0)" elevation="0">
             <v-divider v-if="!singleAas || !isMobile" />
             <v-card-title class="bg-detailsHeader px-1">
                 <v-row align="center" style="height: 40px" class="mx-0">
@@ -74,52 +74,49 @@
                 <!-- 2) Minimal (empty) AssetInformation (generated with aas4j) will be { assetKind: null } -->
                 <AssetInformation
                     v-if="assetInformation?.assetKind && Object.keys(assetInformation).length > 1"
-                    :asset-object="assetInformation"></AssetInformation>
+                    :asset-object="assetInformation" />
                 <v-divider
                     v-if="assetInformation?.assetKind && Object.keys(assetInformation).length > 1"
                     thickness="2" />
                 <!-- AAS Details -->
-                <v-list v-if="assetAdministrationShellData" lines="one" nav class="bg-detailsCard">
+                <v-list v-if="assetAdministrationShellData" nav class="pb-0 bg-detailsCard">
                     <!-- AAS Identification -->
                     <IdentificationElement
                         :identification-object="assetAdministrationShellData"
-                        :v-chip-content="
-                            getKeyTypeAbbreviation(assetAdministrationShellData.modelType)
-                        "></IdentificationElement>
+                        :v-chip-content="getKeyTypeAbbreviation(assetAdministrationShellData.modelType)" />
                     <!-- AAS Administrative Information-->
                     <v-divider v-if="assetAdministrationShellData?.administration" />
-                    <AdministrativeInformationElement
+                    <AdministrativeInformationPanel
                         v-if="assetAdministrationShellData.administration"
                         :administrative-information-object="assetAdministrationShellData.administration"
-                        :administrative-information-title="'Administrative Information'"
+                        :title="'Administrative Information'"
                         :background-color="'detailsCard'" />
                     <v-divider
                         v-if="
                             assetAdministrationShellData.displayName &&
                             Array.isArray(assetAdministrationShellData.displayName) &&
                             assetAdministrationShellData.displayName.length > 0
-                        "
-                        class="mt-2" />
+                        " />
                     <!-- AAS DisplayName -->
-                    <DisplayNameElement
-                        :display-name-array="assetAdministrationShellData.displayName"
-                        :display-name-title="'DisplayName'"
+                    <LangStringsPanel
+                        :lang-strings-array="assetAdministrationShellData.displayName"
+                        :title="'Display Name'"
                         :background-color="'detailsCard'" />
                     <v-divider
                         v-if="
                             assetAdministrationShellData.description &&
                             Array.isArray(assetAdministrationShellData.description) &&
                             assetAdministrationShellData.description.length > 0
-                        "
-                        class="mt-2" />
+                        " />
                     <!-- AAS Description -->
-                    <DescriptionElement
-                        :description-array="assetAdministrationShellData.description"
-                        :description-title="'Description'"
-                        :background-color="'detailsCard'" />
+                    <LangStringsPanel
+                        :lang-strings-array="assetAdministrationShellData.description"
+                        :title="'Description'"
+                        :background-color="'detailsCard'"
+                        :opened="true" />
                 </v-list>
             </v-card-text>
-        </v-sheet>
+        </v-card>
     </v-container>
 </template>
 

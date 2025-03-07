@@ -25,9 +25,9 @@
                             </div>
                         </v-hover>
                     </v-list-item-title>
-                    <SemanticID
-                        :semantic-id-object="specificAssetId?.semanticId"
-                        :semantic-title="specificAssetId?.semanticId.keys.length > 0 ? 'Semantic IDs' : 'Semantic ID:'"
+                    <ReferencePanel
+                        :reference-object="specificAssetId?.semanticId"
+                        :title="specificAssetId?.semanticId.keys.length > 1 ? 'Semantic IDs' : 'Semantic ID'"
                         :background-color="backgroundColor" />
                 </div>
                 <v-divider v-if="index < specificAssetIds.length - 1" class="my-2" />

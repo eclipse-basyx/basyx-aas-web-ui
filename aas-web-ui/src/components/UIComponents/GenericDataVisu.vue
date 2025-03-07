@@ -7,9 +7,10 @@
                     <span v-else>{{ 'Element ' + (index + 1) }}</span>
                 </v-expansion-panel-title>
                 <v-expansion-panel-text>
-                    <DescriptionElement
-                        :description-array="submodelElement.description"
-                        :description-title="'Description'" />
+                    <LangStrings
+                        :lang-strings-array="submodelElement.description"
+                        :title="'Description'"
+                        :background-color="'elevatedCard'" />
                     <GenericDataVisu
                         v-if="
                             Array.isArray(submodelElement.value) &&

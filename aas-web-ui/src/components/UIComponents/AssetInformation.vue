@@ -1,11 +1,11 @@
 <template>
     <v-container class="pa-0" fluid>
-        <v-list lines="one" nav class="bg-detailsCard">
+        <v-list lines="one" nav class="pb-0 bg-detailsCard">
             <IdentificationElement
                 id="assetInformationIdentification"
                 :identification-object="assetInfo"
                 :v-chip-content="assetObject.assetKind"
-                :identification-title="'Global Asset ID'"></IdentificationElement>
+                :identification-title="'Global Asset ID'" />
             <v-divider
                 v-if="
                     assetObject.specificAssetIds &&
@@ -13,16 +13,15 @@
                     assetObject.specificAssetIds.length > 0
                 " />
             <!-- Specific Asset IDs -->
-            <SpecificAssetIds
-                :specific-asset-ids="assetObject.specificAssetIds"
-                background-color="detailsCard"></SpecificAssetIds>
+            <SpecificAssetIds :specific-asset-ids="assetObject.specificAssetIds" background-color="detailsCard" />
+            <v-divider v-if="thumbnailSrc" />
             <v-img
                 v-if="thumbnailSrc"
                 :src="thumbnailSrc"
                 max-width="100%"
                 :max-height="thumbnailMaxHeight"
                 contain
-                class="mt-2 rounded"></v-img>
+                class="my-2 rounded"></v-img>
             <span
                 v-if="thumbnailCaption !== ''"
                 class="font-weight-light text-medium-emphasis"

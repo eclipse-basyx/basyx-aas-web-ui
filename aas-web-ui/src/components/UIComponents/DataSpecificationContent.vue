@@ -1,13 +1,13 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-list-item v-if="dataSpecificationObject && Object.keys(dataSpecificationObject).length > 0">
+        <v-list-item v-if="dataSpecificationObject && Object.keys(dataSpecificationObject).length > 0" class="pb-0">
             <!-- Title -->
             <template #title>
                 <div class="text-subtitle-2 mt-2">{{ 'Data Specification Content:' }}</div>
             </template>
             <!-- Content List -->
-            <!-- dataType -->
-            <v-list-item-title v-if="dataSpecificationObject.dataType" class="pt-3 pl-2">
+            <!-- DataType -->
+            <v-list-item-title v-if="dataSpecificationObject.dataType" class="py-3 pl-2">
                 <span class="text-caption">DataType: </span>
                 <span class="text-primary">{{ dataSpecificationObject.dataType }}</span>
             </v-list-item-title>
@@ -16,16 +16,14 @@
                     dataSpecificationObject.definition &&
                     Array.isArray(dataSpecificationObject.definition) &&
                     dataSpecificationObject.definition.length > 0
-                "
-                class="mt-2" />
-            <!-- definition -->
-            <DescriptionElement
-                :description-array="dataSpecificationObject.definition"
-                :description-title="'Definition'" />
-            <v-divider
-                v-if="dataSpecificationObject.levelTypes && dataSpecificationObject.levelTypes.length > 0"
-                class="mt-2" />
-            <!-- levelTypes -->
+                " />
+            <!-- Definition -->
+            <LangStringsPanel
+                :lang-strings-array="dataSpecificationObject.definition"
+                :title="'Definition'"
+                :background-color="'elevatedCard'" />
+            <v-divider v-if="dataSpecificationObject.levelTypes && dataSpecificationObject.levelTypes.length > 0" />
+            <!-- LevelTypes -->
             <!-- TODO: DataSpecification levelTypes needs visual update -->
             <v-list-item-title
                 v-if="dataSpecificationObject.levelTypes && dataSpecificationObject.levelTypes.length > 0"
@@ -40,27 +38,26 @@
                     dataSpecificationObject.preferredName &&
                     Array.isArray(dataSpecificationObject.preferredName) &&
                     dataSpecificationObject.preferredName.length > 0
-                "
-                class="mt-2" />
-            <!-- preferredName -->
-            <DescriptionElement
-                :description-array="dataSpecificationObject.preferredName"
-                :description-title="'Preferred Name'"
+                " />
+            <!-- PreferredName -->
+            <LangStringsPanel
+                :lang-strings-array="dataSpecificationObject.preferredName"
+                :title="'Preferred Name'"
                 :background-color="backgroundColor" />
             <v-divider
                 v-if="
                     dataSpecificationObject.shortName &&
                     Array.isArray(dataSpecificationObject.shortName) &&
                     dataSpecificationObject.shortName.length > 0
-                "
-                class="mt-2" />
-            <!-- shortName -->
-            <DescriptionElement
-                :description-array="dataSpecificationObject.shortName"
-                :description-title="'Short Name'" />
-            <v-divider v-if="dataSpecificationObject.unit" class="mt-2" />
-            <!-- unit -->
-            <v-list-item-title v-if="dataSpecificationObject.unit" class="pt-2 pl-2">
+                " />
+            <!-- ShortName -->
+            <LangStringsPanel
+                :lang-strings-array="dataSpecificationObject.shortName"
+                :title="'Short Name'"
+                :background-color="backgroundColor" />
+            <v-divider v-if="dataSpecificationObject.unit" />
+            <!-- Unit -->
+            <v-list-item-title v-if="dataSpecificationObject.unit" class="py-2 pl-2">
                 <span class="text-caption">Unit: </span>
                 <span class="text-primary">{{ dataSpecificationObject.unit }}</span>
             </v-list-item-title>
@@ -83,14 +80,12 @@
                     </v-list-item-subtitle>
                 </template>
             </v-list-item>
-            <v-divider
-                v-if="dataSpecificationObject.valueList && dataSpecificationObject.valueList.length > 0"
-                class="mt-2" />
-            <!-- valueList -->
+            <v-divider v-if="dataSpecificationObject.valueList && dataSpecificationObject.valueList.length > 0" />
+            <!-- ValueList -->
             <!-- TODO: DataSpecification valueList needs visual update -->
             <v-list-item-title
                 v-if="dataSpecificationObject.valueList && dataSpecificationObject.valueList.length > 0"
-                class="pt-2 pl-2">
+                class="py-2 pl-2">
                 <div class="text-caption">ValueList:</div>
                 <span v-for="(valueList, i) in dataSpecificationObject.valueList" :key="i" class="text-primary">{{
                     valueList

@@ -26,16 +26,16 @@
                         <!-- List with the Fields belonging to the Variable Type -->
                         <v-card v-for="(variable, i) in localOperationObject[variableType.type]" :key="i" class="mb-3">
                             <!-- Variable Description -->
-                            <DescriptionElement
-                                :description-array="variable.value.description"
-                                :description-title="'Description'" />
+                            <LangStringsPanel
+                                :lang-strings-array="variable.value.description"
+                                :title="'Description'"
+                                :background-color="'elevatedCard'" />
                             <v-divider
                                 v-if="
                                     variable.value.description &&
                                     Array.isArray(variable.value.description) &&
                                     variable.value.description.length > 0
-                                "
-                                class="mt-1" />
+                                " />
                             <!-- Variable Value -->
                             <v-list-item class="px-0 pb-0">
                                 <v-list-item-title class="pt-1">

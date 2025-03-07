@@ -21,43 +21,41 @@
                     ">
                     <!-- Detailed View of the selected SubmodelElement (e.g. Property, Operation, etc.) -->
                     <v-card>
-                        <v-list nav>
+                        <v-list nav class="pb-0">
                             <!-- SubmodelELement Identification -->
-                            <IdentificationElement :identification-object="submodelElementData"></IdentificationElement>
-                            <!-- Submodel Administrative Information-->
+                            <IdentificationElement :identification-object="submodelElementData" />
                             <v-divider
                                 v-if="
                                     submodelElementData.administration &&
                                     (submodelElementData.administration.revision != '' ||
                                         submodelElementData.administration.version != '')
-                                "
-                                class="mt-2" />
-                            <AdministrativeInformationElement
+                                " />
+                            <!-- Submodel Administrative Information-->
+                            <AdministrativeInformationPanel
                                 v-if="submodelElementData.administration"
                                 :administrative-information-object="submodelElementData.administration"
-                                :administrative-information-title="'Administrative Information'"></AdministrativeInformationElement>
+                                :title="'Administrative Information'" />
                             <v-divider
                                 v-if="
                                     submodelElementData.displayName &&
                                     Array.isArray(submodelElementData.displayName) &&
                                     submodelElementData.displayName.length > 0
-                                "
-                                class="mt-2" />
+                                " />
                             <!-- SubmodelELement DisplayName -->
-                            <DisplayNameElement
-                                :display-name-array="submodelElementData.displayName"
-                                :display-name-title="'Display Name'" />
+                            <LangStringsPanel
+                                :lang-strings-array="submodelElementData.displayName"
+                                :title="'Display Name'" />
                             <v-divider
                                 v-if="
                                     submodelElementData.description &&
                                     Array.isArray(submodelElementData.description) &&
                                     submodelElementData.description.length > 0
-                                "
-                                class="mt-2" />
+                                " />
                             <!-- SubmodelELement Description -->
-                            <DescriptionElement
-                                :description-array="submodelElementData.description"
-                                :description-title="'Description'" />
+                            <LangStringsPanel
+                                :lang-strings-array="submodelElementData.description"
+                                :title="'Description'"
+                                :opened="true" />
                             <v-divider
                                 v-if="
                                     submodelElementData.semanticId &&
@@ -65,19 +63,15 @@
                                     submodelElementData.semanticId.keys &&
                                     Array.isArray(submodelElementData.semanticId.keys) &&
                                     submodelElementData.semanticId.keys.length > 0
-                                "
-                                class="mt-2" />
+                                " />
                             <!-- SubmodelELement SemanticID -->
-                            <SemanticID
-                                :semantic-id-object="submodelElementData.semanticId"
-                                :semantic-title="'Semantic ID'" />
+                            <ReferencePanel :reference-object="submodelElementData.semanticId" :title="'Semantic ID'" />
                             <v-divider
                                 v-if="
                                     submodelElementData.supplementalSemanticIds &&
                                     Array.isArray(submodelElementData.supplementalSemanticIds) &&
                                     submodelElementData.supplementalSemanticIds.length > 0
-                                "
-                                class="mt-2" />
+                                " />
                             <!-- SubmodelELement SupplementalSemanticID -->
                             <SupplementalSemanticID
                                 :supplemental-semantic-ids-array="submodelElementData.supplementalSemanticIds"

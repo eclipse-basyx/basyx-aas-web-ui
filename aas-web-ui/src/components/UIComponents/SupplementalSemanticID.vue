@@ -23,8 +23,12 @@
                                     supplementalSemanticId, supplementalSemanticIdIndex
                                 ) in supplementalSemanticIdsArray"
                                 :key="supplementalSemanticIdIndex">
-                                <SemanticID :semantic-id-object="supplementalSemanticId" />
-                                <!-- <v-divider
+                                <Reference
+                                    :reference-object="supplementalSemanticId"
+                                    :background-color="backgroundColor"
+                                    :show-title="false"
+                                    :small="true" />
+                                <v-divider
                                     v-if="
                                         supplementalSemanticId &&
                                         Object.keys(supplementalSemanticId).length > 0 &&
@@ -32,8 +36,7 @@
                                         Array.isArray(supplementalSemanticId.keys) &&
                                         supplementalSemanticId.keys.length > 0 &&
                                         supplementalSemanticIdIndex < supplementalSemanticIdsArray.length - 1
-                                    "
-                                    class="mt-2 mb-0" /> -->
+                                    " />
                             </template>
                         </v-list-item>
                     </v-list>

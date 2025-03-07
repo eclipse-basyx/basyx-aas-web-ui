@@ -1,7 +1,7 @@
 <template>
     <v-container fluid class="pa-0">
         <v-card v-if="conceptDescriptionObject && Object.keys(conceptDescriptionObject).length > 0">
-            <v-list nav>
+            <v-list nav class="pb-0">
                 <!-- ConceptDescription Identification -->
                 <IdentificationElement :identification-object="conceptDescriptionObject"></IdentificationElement>
                 <v-divider
@@ -9,23 +9,17 @@
                         conceptDescriptionObject.displayName &&
                         Array.isArray(conceptDescriptionObject.displayName) &&
                         conceptDescriptionObject.displayName.length > 0
-                    "
-                    class="mt-2" />
+                    " />
                 <!-- ConceptDescription DisplayName -->
-                <DisplayNameElement
-                    :display-name-array="conceptDescriptionObject.displayName"
-                    :display-name-title="'Display Name'" />
+                <LangStringsPanel :lang-strings-array="conceptDescriptionObject.displayName" :title="'Display Name'" />
                 <v-divider
                     v-if="
                         conceptDescriptionObject.description &&
                         Array.isArray(conceptDescriptionObject.description) &&
                         conceptDescriptionObject.description.length > 0
-                    "
-                    class="mt-2" />
+                    " />
                 <!-- ConceptDescription Description -->
-                <DescriptionElement
-                    :description-array="conceptDescriptionObject.description"
-                    :description-title="'Description'" />
+                <LangStringsPanel :lang-strings-array="conceptDescriptionObject.description" :title="'Description'" />
             </v-list>
             <v-divider
                 v-if="
@@ -44,13 +38,14 @@
                     :key="i"
                     color="elevatedCard"
                     class="mt-2">
-                    <v-list nav class="bg-elevatedCard pt-0">
+                    <v-list nav class="bg-elevatedCard py-0">
                         <!-- hasDataSpecification -->
-                        <SemanticID
-                            :semantic-id-object="embeddedDataSpecification.dataSpecification"
-                            :semantic-title="'Data Specification'"
-                            background-color="elevatedCard" />
-                        <v-divider v-if="embeddedDataSpecification.dataSpecificationContent" class="mt-2" />
+                        <ReferencePanel
+                            :reference-object="embeddedDataSpecification.dataSpecification"
+                            :title="'Data Specification'"
+                            :background-color="'elevatedCard'"
+                            :opened="true" />
+                        <v-divider v-if="embeddedDataSpecification.dataSpecificationContent" />
                         <!-- dataSpecificationContent -->
                         <DataSpecificationContent
                             v-if="embeddedDataSpecification.dataSpecificationContent"

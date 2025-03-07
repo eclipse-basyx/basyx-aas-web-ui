@@ -82,11 +82,12 @@
                                 </template>
                             </v-text-field>
                             <!-- MultiLanguageProperty -->
-                            <DescriptionElement
+                            <LangStrings
                                 v-else-if="SubmodelElement.modelType == 'MultiLanguageProperty'"
-                                :description-array="SubmodelElement.value"
-                                :description-title="nameToDisplay(SubmodelElement)"
-                                style="margin-top: -12px" />
+                                :lang-strings-array="SubmodelElement.value"
+                                :title="nameToDisplay(SubmodelElement)"
+                                :background-color="'elevatedCard'"
+                                class="mt-n2" />
                             <!-- Operation -->
                             <v-alert
                                 v-else-if="SubmodelElement.modelType == 'Operation'"
@@ -257,16 +258,12 @@
 // TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
     import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'SubmodelElementGroup',
-        components: {
-            DescriptionElement,
-        },
         props: ['smeObject', 'smeLocator', 'topMargin'],
 
         setup() {
