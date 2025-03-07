@@ -2,7 +2,6 @@ import type { AutoSyncType, PlatformType, PluginType, SnackbarType, StatusCheckT
 import type { BaSyxComponent, BaSyxComponentKey } from '@/types/BaSyx';
 import type { LocationQuery, RouteRecordRaw } from 'vue-router';
 import { defineStore } from 'pinia';
-import { computed, reactive, ref } from 'vue';
 import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
 import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
@@ -14,7 +13,7 @@ import { useEnvStore } from '@/store/EnvironmentStore';
 import { stripLastCharacter } from '@/utils/StringUtils';
 
 export const useNavigationStore = defineStore('navigationStore', () => {
-    // Initialize Dependent Stores
+    // Stores
     const envStore = useEnvStore();
 
     // Composables
@@ -26,7 +25,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const { endpointPath: smRepoEndpointPath } = useSMRepositoryClient();
     const { endpointPath: cdRepoEndpointPath } = useCDRepositoryClient();
 
-    // Computed Property
+    // Computed Properties
     const endpointConfigAvailable = computed(() => envStore.getEndpointConfigAvailable);
     const EnvAASDiscoveryPath = computed(() => envStore.getEnvAASDiscoveryPath);
     const EnvAASRegistryPath = computed(() => envStore.getEnvAASRegistryPath);
@@ -35,7 +34,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const EnvSubmodelRepoPath = computed(() => envStore.getEnvSubmodelRepoPath);
     const EnvConceptDescriptionRepoPath = computed(() => envStore.getEnvConceptDescriptionRepoPath);
 
-    // State Variables
+    // States
     const drawerState = ref(true);
     const AASDiscoveryURL = ref('');
     const AASRegistryURL = ref('');

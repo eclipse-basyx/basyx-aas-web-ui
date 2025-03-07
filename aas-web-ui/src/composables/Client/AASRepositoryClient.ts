@@ -105,6 +105,24 @@ export function useAASRepositoryClient() {
         const disableMessage = true;
         try {
             const aasRepoResponse = await getRequest(aasRepoPath, aasRepoContext, disableMessage);
+            const aasRepoMessages = aasRepoResponse.data?.messages || [];
+            const aasRepoAuthorizationError = aasRepoMessages.some(
+                (message: any) => message.code === '403' || message.code === '401'
+            );
+
+            if (aasRepoAuthorizationError) {
+                return {
+                    id: generateUUIDFromString(aasEndpoint),
+                    idShort: 'AAS Not Authorized!',
+                    modelType: 'AAS',
+                    semanticId: null,
+                    description: [],
+                    displayName: [],
+                    path: aasEndpoint,
+                    endpoints: [{ protocolInformation: { href: aasEndpoint }, interface: 'AAS-3.0' }],
+                };
+            }
+
             if (aasRepoResponse?.success && aasRepoResponse?.data && Object.keys(aasRepoResponse?.data).length > 0) {
                 const aas = aasRepoResponse.data;
 
@@ -112,13 +130,23 @@ export function useAASRepositoryClient() {
                 aas.endpoints = [{ protocolInformation: { href: aasEndpoint }, interface: 'AAS-3.0' }];
 
                 return aas;
+            } else {
+                return {
+                    id: generateUUIDFromString(aasEndpoint),
+                    idShort: 'AAS not found',
+                    modelType: 'AAS',
+                    semanticId: null,
+                    description: [],
+                    displayName: [],
+                    submodelElements: [],
+                    path: aasEndpoint,
+                    endpoints: [{ protocolInformation: { href: aasEndpoint }, interface: 'AAS-3.0' }],
+                };
             }
         } catch (e) {
             console.warn(e);
             return failResponse;
         }
-
-        return failResponse;
     }
 
     /**

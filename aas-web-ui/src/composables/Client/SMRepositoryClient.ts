@@ -1,6 +1,7 @@
 import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
 import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
 import { computed } from 'vue';
+import { useIDUtils } from '@/composables/IDUtils';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
@@ -12,6 +13,7 @@ export function useSMRepositoryClient() {
 
     // Composables
     const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
+    const { generateUUIDFromString } = useIDUtils();
 
     const endpointPath = '/submodels';
 
@@ -98,6 +100,25 @@ export function useSMRepositoryClient() {
         const disableMessage = true;
         try {
             const smRepoResponse = await getRequest(smRepoPath, smRepoContext, disableMessage);
+            const smRepoMessages = smRepoResponse.data?.messages || [];
+            const smRepoAuthorizationError = smRepoMessages.some(
+                (message: any) => message.code === '403' || message.code === '401'
+            );
+
+            if (smRepoAuthorizationError) {
+                return {
+                    id: generateUUIDFromString(smEndpoint),
+                    idShort: 'Submodel Not Authorized!',
+                    modelType: 'Submodel',
+                    semanticId: null,
+                    description: [],
+                    displayName: [],
+                    submodelElements: [],
+                    path: smEndpoint,
+                    endpoints: [{ protocolInformation: { href: smEndpoint }, interface: 'SUBMODEL-3.0' }],
+                };
+            }
+
             if (smRepoResponse?.success && smRepoResponse?.data && Object.keys(smRepoResponse?.data).length > 0) {
                 const sm = smRepoResponse.data;
 
@@ -105,13 +126,23 @@ export function useSMRepositoryClient() {
                 sm.endpoints = [{ protocolInformation: { href: smEndpoint }, interface: 'SUBMODEL-3.0' }];
 
                 return sm;
+            } else {
+                return {
+                    id: generateUUIDFromString(smEndpoint),
+                    idShort: 'Submodel not found',
+                    modelType: 'Submodel',
+                    semanticId: null,
+                    description: [],
+                    displayName: [],
+                    submodelElements: [],
+                    path: smEndpoint,
+                    endpoints: [{ protocolInformation: { href: smEndpoint }, interface: 'SUBMODEL-3.0' }],
+                };
             }
         } catch (e) {
             console.warn(e);
             return failResponse;
         }
-
-        return failResponse;
     }
 
     /**
@@ -308,53 +339,6 @@ export function useSMRepositoryClient() {
         return response.success;
     }
 
-    function smNotFound(response: any, submodelId: string, path: string, text: string): any {
-        // Check if response contains a "messages" array with a "403" or "401" code
-        const messages = response.data?.messages || [];
-        const authorizationError = messages.some((message: any) => message.code === '403' || message.code === '401');
-
-        if (authorizationError) {
-            const submodel = {
-                id: submodelId,
-                idShort: 'Submodel Not Authorized!',
-                modelType: 'Submodel',
-                semanticId: null,
-                description: [],
-                displayName: [],
-                submodelElements: [],
-                isActive: false,
-                path: path,
-                authorizationError: true,
-            };
-
-            return submodel;
-        }
-
-        if (text.trim().length > 0) {
-            // TODO should be moved to SMHandling/SMEHandling
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 60000,
-                color: 'error',
-                btnColor: 'buttonText',
-                text: text,
-            });
-        }
-        const submodel = {
-            id: submodelId,
-            idShort: 'Submodel not found',
-            modelType: 'Submodel',
-            semanticId: null,
-            description: [],
-            displayName: [],
-            submodelElements: [],
-            isActive: false,
-            path: path,
-            authorizationError: false,
-        };
-        return submodel;
-    }
-
     return {
         endpointPath,
         fetchSmList,
@@ -368,6 +352,5 @@ export function useSMRepositoryClient() {
         postSubmodel,
         putSubmodel,
         deleteSubmodel,
-        smNotFound,
     };
 }
