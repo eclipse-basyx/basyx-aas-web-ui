@@ -11,9 +11,9 @@
             </v-list-item>
             <v-card v-if="relationshipElementObject" color="elevatedCard">
                 <!-- Value of the Property -->
-                <v-list nav class="bg-elevatedCard pt-0">
+                <v-list nav class="bg-elevatedCard py-0">
                     <template v-for="(keys, i) in getReferences[referenceKey as 'first' | 'second'].keys" :key="i">
-                        <v-list-item>
+                        <v-list-item class="my-0 py-0">
                             <!-- Tooltip with Reference ID -->
                             <v-tooltip activator="parent" open-delay="600" transition="slide-x-transition">
                                 <div class="text-caption">
@@ -23,18 +23,17 @@
                             </v-tooltip>
                             <!-- Reference Representation -->
                             <template #subtitle>
-                                <div class="pt-2">
+                                <div class="">
                                     <v-chip label size="x-small" border class="mr-2">{{ keys.type }}</v-chip>
                                     <span>{{ keys.value }}</span>
                                 </div>
                             </template>
                         </v-list-item>
                         <v-divider
-                            v-if="i < getReferences[referenceKey as 'first' | 'second'].keys.length - 1"
-                            class="mt-3"></v-divider>
+                            v-if="i < getReferences[referenceKey as 'first' | 'second'].keys.length - 1"></v-divider>
                     </template>
                 </v-list>
-                <v-divider></v-divider>
+                <v-divider />
                 <!-- Action Buttons for Reference Jump -->
                 <v-list nav class="bg-elevatedCard pa-0">
                     <v-list-item>
