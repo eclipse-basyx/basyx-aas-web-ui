@@ -30,7 +30,9 @@
                                 hide-details
                                 label="Search for AAS..."
                                 clearable
-                                @update:model-value="filterAasList"></v-text-field>
+                                :placeholder="aasList.length.toString() + ' Shells'"
+                                persistent-placeholder
+                                @update:model-value="debouncedFilterAasList"></v-text-field>
                         </v-col>
                         <!-- Add AAS -->
                         <v-col cols="auto" class="px-0">
@@ -270,6 +272,7 @@
 
 <script lang="ts" setup>
     import type { ComponentPublicInstance } from 'vue';
+    import debounce from 'lodash/debounce';
     import { computed, onActivated, onBeforeUnmount, onMounted, Ref, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
@@ -307,6 +310,7 @@
     // Data
     const aasList = ref([] as Array<any>) as Ref<Array<any>>; // Variable to store the AAS Data (AAS or AAS Descriptors)
     const aasListUnfiltered = ref([] as Array<any>) as Ref<Array<any>>; // Variable to store the AAS Data before filtering
+    const debouncedFilterAasList = debounce(filterAasList, 300); // Debounced function to filter the AAS List
     const listLoading = ref(false); // Variable to store if the AAS List is loading
     const deleteDialog = ref(false); // Variable to store if the Delete Dialog should be shown
     const aasToDelete = ref({}); // Variable to store the AAS to be deleted
@@ -427,27 +431,24 @@
     // Function to get the AAS Data from the Registry Server
     async function initialize(): Promise<void> {
         listLoading.value = true;
-
         fetchAasDescriptorList().then(async (aasDescriptorList: Array<any>) => {
-            if (aasDescriptorList.length > 0) {
-                let aasDescriptorListSorted = aasDescriptorList.sort(
-                    (a: { [x: string]: number }, b: { [x: string]: number }) => (a['id'] > b['id'] ? 1 : -1)
-                );
-                aasList.value = [...aasDescriptorListSorted];
+            let sortedList =
+                aasDescriptorList.length > 0
+                    ? aasDescriptorList.sort((a, b) => (a.id > b.id ? 1 : -1))
+                    : (await fetchAasList()).sort((a, b) => (a.id > b.id ? 1 : -1));
 
-                aasListUnfiltered.value = [...aasDescriptorListSorted];
-            } else {
-                const listOfAas = await fetchAasList();
-                let listOfAasSorted = listOfAas.sort((a: { [x: string]: number }, b: { [x: string]: number }) =>
-                    a['id'] > b['id'] ? 1 : -1
-                );
-                aasList.value = [...listOfAasSorted];
+            // Precompute lowercase search fields
+            const processedList = sortedList.map((item) => ({
+                ...item,
+                idLower: item.id.toLowerCase(),
+                idShortLower: item.idShort.toLowerCase(),
+                nameLower: nameToDisplay(item).toLowerCase(),
+                descLower: descriptionToDisplay(item).toLowerCase(),
+            }));
 
-                aasListUnfiltered.value = [...listOfAasSorted];
-            }
-
+            aasList.value = processedList;
+            aasListUnfiltered.value = processedList;
             scrollToSelectedAAS();
-
             listLoading.value = false;
         });
     }
@@ -486,15 +487,14 @@
         if (!value || value.trim() === '') {
             aasList.value = aasListUnfiltered.value;
         } else {
-            // Filter list of AAS/AAS Descriptors (cf. AASList.vue)
-            let aasListFiltered = aasListUnfiltered.value.filter(
-                (aasOrAasDescriptor: any) =>
-                    aasOrAasDescriptor.id.toLowerCase().includes(value.toLowerCase()) ||
-                    aasOrAasDescriptor.idShort.toLowerCase().includes(value.toLowerCase()) ||
-                    nameToDisplay(aasOrAasDescriptor).toLowerCase().includes(value.toLowerCase()) ||
-                    descriptionToDisplay(aasOrAasDescriptor).toLowerCase().includes(value.toLowerCase())
+            const search = value.toLowerCase();
+            aasList.value = aasListUnfiltered.value.filter(
+                (aasOrAasDescriptor) =>
+                    aasOrAasDescriptor.idLower.includes(search) ||
+                    aasOrAasDescriptor.idShortLower.includes(search) ||
+                    aasOrAasDescriptor.nameLower.includes(search) ||
+                    aasOrAasDescriptor.descLower.includes(search)
             );
-            aasList.value = aasListFiltered;
         }
         scrollToSelectedAAS();
     }
