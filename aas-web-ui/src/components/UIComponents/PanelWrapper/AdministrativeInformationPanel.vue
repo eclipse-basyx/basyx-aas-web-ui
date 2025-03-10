@@ -1,20 +1,23 @@
 <template>
-    <v-container fluid class="pa-0">
-        <v-expansion-panels class="mb-n2">
-            <v-expansion-panel elevation="0" tile static :color="backgroundColor">
+    <v-container
+        v-if="administrativeInformationObject && Object.keys(administrativeInformationObject).length > 0"
+        fluid
+        class="pa-0">
+        <v-expansion-panels v-model="panel">
+            <v-expansion-panel elevation="0" tile static :class="'bg-' + backgroundColor">
                 <v-expansion-panel-title class="px-2">
-                    <span :class="small ? 'text-caption' : 'text-subtitle-2 '">
-                        {{ administrativeInformationTitle }}
+                    <span class="text-subtitle-2">
+                        {{ title }}
                     </span>
                 </v-expansion-panel-title>
-                <v-expansion-panel-text :class="'bg-' + backgroundColor">
+                <v-expansion-panel-text>
                     <v-divider
                         v-if="
                             Array.isArray(administrativeInformationObject?.creator?.keys) &&
                             administrativeInformationObject?.creator?.keys.length > 0
                         "
                         class="mb-1"
-                        opacity="0.05"></v-divider>
+                        opacity="0.05" />
                     <v-list nav class="pa-0">
                         <!-- Creator -->
                         <v-list-item
@@ -59,7 +62,7 @@
                                 (administrativeInformationObject?.version || administrativeInformationObject?.revision)
                             "
                             class="mt-2"
-                            opacity="0.05"></v-divider>
+                            opacity="0.05" />
                         <!-- Version and Revision -->
                         <v-list-item
                             v-if="administrativeInformationObject?.version || administrativeInformationObject?.revision"
@@ -88,7 +91,7 @@
                                 administrativeInformationObject?.revision) &&
                             administrativeInformationObject?.templateId
                         "
-                        opacity="0.05"></v-divider>
+                        opacity="0.05" />
                     <v-list nav class="pa-0">
                         <v-hover v-slot="{ isHovering, props }">
                             <v-list-item v-if="administrativeInformationObject?.templateId" class="ma-0">
@@ -128,7 +131,7 @@
                             Array.isArray(administrativeInformationObject?.embeddedDataSpecifications) &&
                             administrativeInformationObject?.embeddedDataSpecifications.length > 0
                         "
-                        opacity="0.05"></v-divider>
+                        opacity="0.05" />
                     <!-- Embedded Data Specifications -->
                     <v-list
                         v-if="
@@ -145,16 +148,11 @@
                             color="elevatedCard"
                             class="mt-2">
                             <v-list nav class="bg-elevatedCard pt-0">
-                                <!-- hasDataSpecification -->
-                                <SemanticID
-                                    v-if="
-                                        Array.isArray(embeddedDataSpecification?.dataSpecification?.keys) &&
-                                        embeddedDataSpecification?.dataSpecification?.keys.length > 0
-                                    "
-                                    :semantic-id-object="embeddedDataSpecification.dataSpecification"
-                                    :semantic-title="'Data Specification'"
-                                    class="mb-2"></SemanticID>
-                                <v-divider v-if="embeddedDataSpecification?.dataSpecificationContent"></v-divider>
+                                <Reference
+                                    :reference-object="embeddedDataSpecification.dataSpecification"
+                                    :title="'Data Specification'"
+                                    :background-color="backgroundColor" />
+                                <v-divider v-if="embeddedDataSpecification?.dataSpecificationContent" />
                                 <!-- dataSpecificationContent -->
                                 <DataSpecificationContent
                                     v-if="embeddedDataSpecification?.dataSpecificationContent"
@@ -171,29 +169,29 @@
 </template>
 
 <script setup lang="ts">
-    import { Ref, ref } from 'vue';
+    import { onMounted, Ref, ref } from 'vue';
     import { useClipboardUtil } from '@/composables/ClipboardUtil';
 
     // Composables
     const { copyToClipboard } = useClipboardUtil();
 
     // Props
-    defineProps({
+    const props = defineProps({
         administrativeInformationObject: {
             type: Object as any,
             default: {} as any,
         },
-        administrativeInformationTitle: {
+        title: {
             type: String,
             default: 'Identification (ID)',
-        },
-        small: {
-            type: Boolean,
-            default: false,
         },
         backgroundColor: {
             type: String,
             default: '',
+        },
+        opened: {
+            type: Boolean,
+            default: false,
         },
     });
 
@@ -202,6 +200,11 @@
     const getCopyIconAsRef = (): Ref => {
         return copyIcon;
     };
+    const panel = ref();
+
+    onMounted(() => {
+        if (props.opened) panel.value = 0;
+    });
 </script>
 
 <style lang="css" scoped>
