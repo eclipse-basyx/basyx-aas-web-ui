@@ -86,8 +86,7 @@
                                 v-else-if="SubmodelElement.modelType == 'MultiLanguageProperty'"
                                 :lang-strings-array="SubmodelElement.value"
                                 :title="nameToDisplay(SubmodelElement)"
-                                :background-color="'elevatedCard'"
-                                class="mt-n2" />
+                                :background-color="'elevatedCard'" />
                             <!-- Operation -->
                             <v-alert
                                 v-else-if="SubmodelElement.modelType == 'Operation'"
