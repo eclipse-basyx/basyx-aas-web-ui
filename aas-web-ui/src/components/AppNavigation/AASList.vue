@@ -142,15 +142,16 @@
                                 @click="selectAAS(item)">
                                 <!-- Tooltip with idShort and id -->
                                 <v-tooltip
+                                    v-if="item.id || item.idShort"
                                     activator="parent"
                                     open-delay="600"
                                     transition="slide-x-transition"
                                     :disabled="isMobile">
-                                    <div class="text-caption">
+                                    <div v-if="item.idShort" class="text-caption">
                                         <span class="font-weight-bold"> {{ 'idShort: ' }}</span>
                                         {{ item.idShort }}
                                     </div>
-                                    <div class="text-caption">
+                                    <div v-if="item.id" class="text-caption">
                                         <span class="font-weight-bold">{{ 'ID: ' }}</span>
                                         {{ item.id }}
                                     </div>
@@ -440,8 +441,8 @@
             // Precompute lowercase search fields
             const processedList = sortedList.map((item) => ({
                 ...item,
-                idLower: item.id.toLowerCase(),
-                idShortLower: item.idShort.toLowerCase(),
+                idLower: item?.id?.toLowerCase() || '',
+                idShortLower: item?.idShort?.toLowerCase() || '',
                 nameLower: nameToDisplay(item).toLowerCase(),
                 descLower: descriptionToDisplay(item).toLowerCase(),
             }));
