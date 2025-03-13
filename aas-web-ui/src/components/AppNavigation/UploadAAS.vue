@@ -28,9 +28,12 @@
                         >
                     </template>
                 </v-file-input>
+                <v-list-subheader>Options</v-list-subheader>
+                <v-checkbox v-model="ignoreDuplicates" label="Ignore Duplicates" hide-details></v-checkbox>
                 <v-checkbox
                     v-model="registerAAS"
-                    label="Register AAS (Don't use when BaSyx is the Backend!)"></v-checkbox>
+                    label="Register AAS (Don't use when BaSyx is the Backend!)"
+                    hide-details></v-checkbox>
             </v-card-text>
         </v-card>
     </v-dialog>
@@ -68,6 +71,7 @@
     const uploadAASDialog = ref(false);
     const aasFile = ref(null as File | null);
     const loadingUpload = ref(false);
+    const ignoreDuplicates = ref(true);
     const registerAAS = ref(false);
 
     watch(
@@ -90,7 +94,7 @@
         loadingUpload.value = true;
 
         try {
-            let response = await uploadAas(aasFile.value);
+            let response = await uploadAas(aasFile.value, ignoreDuplicates.value);
 
             if (registerAAS.value) {
                 for (const aasId of response.data.aasIds) {
