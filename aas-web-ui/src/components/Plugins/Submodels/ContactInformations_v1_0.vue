@@ -238,7 +238,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
     import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement';
@@ -286,12 +286,24 @@
     const panel = ref(0);
     const contactInformations = ref([] as Array<any>);
 
+    //Watchers
+    watch(
+        // Watcher to ensure data is initialized in case of switching between a SM 'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations' and a SMC 'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation'
+        () => props.submodelElementData,
+        () => {
+            initializeVisualization();
+        }
+    );
+
     onMounted(() => {
         initializeVisualization();
     });
 
     async function initializeVisualization(): Promise<void> {
         loading.value = true;
+        // Reset contactInformations because it is filled by .push()
+        // Otherwise in case of switching between a SM 'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations' and a SMC 'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation' wrong data will be displayed
+        contactInformations.value = [];
 
         if (!props.submodelElementData || Object.keys(props.submodelElementData).length === 0) {
             contactInformations.value = [];
@@ -318,7 +330,7 @@
             });
         } else if (submodelElementData.value) {
             // For SMC ContactInformation
-            contactInformationSMCs = [submodelElementData.value];
+            contactInformationSMCs = [submodelElementData];
         }
 
         contactInformationSMCs.forEach((contactInformationSMC: any) => {
