@@ -56,7 +56,7 @@
                                                         "
                                                         :href="valueToDisplay(contactInformationProperty)"
                                                         target="_blank"
-                                                        class="text-caption">
+                                                        class="text-caption text-primary">
                                                         {{ valueToDisplay(contactInformationProperty) }}
                                                     </a>
                                                     <span v-else class="text-caption">{{
@@ -163,14 +163,16 @@
                                                             checkIdShort(contactInformationProperty, 'TelephoneNumber')
                                                         ">
                                                         <a
-                                                            :href="`tel:${valueToDisplay(contactInformationProperty).replaceAll(' ', '')}`">
+                                                            :href="`tel:${valueToDisplay(contactInformationProperty).replaceAll(' ', '')}`"
+                                                            class="text-caption text-primary">
                                                             {{ valueToDisplay(contactInformationProperty) }}
                                                         </a>
                                                     </template>
                                                     <template
                                                         v-else-if="checkIdShort(contactInformationProperty, 'Email')">
                                                         <a
-                                                            :href="`mailto:${valueToDisplay(contactInformationProperty)}`">
+                                                            :href="`mailto:${valueToDisplay(contactInformationProperty)}`"
+                                                            class="text-caption text-primary">
                                                             {{ valueToDisplay(contactInformationProperty) }}
                                                         </a>
                                                     </template>
