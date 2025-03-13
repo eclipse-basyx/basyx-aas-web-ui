@@ -254,6 +254,7 @@
         semanticId: [
             'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations', // Visualization for the SMT ContactInformations
             'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation', // Visualization for the SMC ContactInformation, e.g. in the SMT Nameplate v2
+            'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/AddressInformation', // Visualization for the SMC ContactInformation, e.g. in the SMT Nameplate v3
         ],
     });
 
