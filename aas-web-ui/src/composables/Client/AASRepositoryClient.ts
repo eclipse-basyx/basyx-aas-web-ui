@@ -302,10 +302,11 @@ export function useAASRepositoryClient() {
     }
 
     // Upload an AAS to the AAS Repository
-    async function uploadAas(aasFile: File): Promise<any> {
+    async function uploadAas(aasFile: File, ignoreDuplicates: boolean): Promise<any> {
         const context = 'uploading AAS';
         const disableMessage = false;
-        const path = uploadURL.value;
+        let path = uploadURL.value;
+        if (ignoreDuplicates) path += '?ignore-duplicates=true';
         const headers = new Headers();
         const formData = new FormData();
         formData.append('file', aasFile);
