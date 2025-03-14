@@ -1,20 +1,18 @@
 import { useAASHandling } from '@/composables/AAS/AASHandling';
-import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
 import { useSMHandling } from '@/composables/AAS/SMHandling';
-import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement';
-import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils';
 
 export function useCarbonFootprint_v0_9Utils() {
     // Composables
     const { getSmIdOfAasIdBySemanticId } = useAASHandling();
     const { fetchSmById } = useSMHandling();
-    const { checkIdShort } = useReferableUtils();
-    const { valueToDisplay } = useSME();
 
     const semanticId = 'https://admin-shell.io/idta/CarbonFootprint/CarbonFootprint/0/9';
 
     const semanticIdSMCProductCarbonFootprint =
         'https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/0/9';
+
+    const semanticIdSMCTransportCarbonFootprint =
+        'https://admin-shell.io/idta/CarbonFootprint/TransportCarbonFootprint/0/9';
 
     const pcfLifeCyclePhases = [
         {
@@ -109,19 +107,40 @@ export function useCarbonFootprint_v0_9Utils() {
         },
         {
             valueId: '0173-1#07-ABZ789#001',
-            value: 'A1 - raw material supply (and upstream production) + A2 - cradle-to-gate transport to factory + A3 - production',
+            value: 'A1 - raw material supply (and upstream production), A2 - cradle-to-gate transport to factory, A3 - production',
             identifier: 'A1-A3',
             icon: '',
         },
     ];
 
+    const tcfProcessesForGreenhouseGasEmissionInATransportServices = [
+        {
+            valueId: '0173-1#07-ABU216#001',
+            value: 'Well-to-Tank',
+            identifier: 'WTT',
+            icon: 'mdi-truck-outline',
+        },
+        {
+            valueId: '0173-1#07-ABU215#001',
+            value: 'Tank-to-Wheel',
+            identifier: 'TTW',
+            icon: 'mdi-truck-outline',
+        },
+        {
+            valueId: '0173-1#07-ABU217#001',
+            value: 'Well-to-Wheel',
+            identifier: 'WTW',
+            icon: 'mdi-truck-outline',
+        },
+    ];
+
     /**
-     * Retrieves Technical Data Submodel (SM) of an Asset Administration Shell (AAS).
+     * Retrieves Carbon Footprint Submodel (SM) of an Asset Administration Shell (AAS).
      *
      * @async
-     * @param {string} aasId - The ID of the AAS to retrieve its Technical Data SM.
+     * @param {string} aasId - The ID of the AAS to retrieve its Carbon Footprint SM.
      * @param {boolean} withConceptDescriptions - Flag to specify if SM should be fetched with ConceptDescriptions (CDs)
-     * @returns {string} A promise that resolves to a Technical Data SM.
+     * @returns {string} A promise that resolves to a Carbon Footprint SM.
      */
     async function getSm(aasId: string, withConceptDescriptions: boolean = false): Promise<any> {
         const failResponse = {};
@@ -134,127 +153,21 @@ export function useCarbonFootprint_v0_9Utils() {
 
         aasId = aasId.trim();
 
-        const smTechnicalDataId = await getSmIdOfAasIdBySemanticId(aasId, semanticId);
-        const smTechnicalData = await fetchSmById(smTechnicalDataId, withConceptDescriptions);
+        const smCarbonFootprintId = await getSmIdOfAasIdBySemanticId(aasId, semanticId);
+        const smCarbonFootprint = await fetchSmById(smCarbonFootprintId, withConceptDescriptions);
 
-        return smTechnicalData;
+        return smCarbonFootprint;
     }
 
-    function extractProductCarbonFootprint(productCarbonFootprintSmc: any): {
-        pcfCalculationMethods: Array<string>;
-        pcfco2eq: string;
-        pcfReferenceValueForCalculation: string;
-        pcfQuantityOfMeasureForCalculation: string;
-        pcfLifeCyclePhases: Array<string>;
-        publicationDate: string;
-        expirationDate: string;
-    } {
-        const failReponse = {
-            pcfCalculationMethods: [],
-            pcfco2eq: '',
-            pcfReferenceValueForCalculation: '',
-            pcfQuantityOfMeasureForCalculation: '',
-            pcfLifeCyclePhases: [],
-            publicationDate: '',
-            expirationDate: '',
-        };
-
-        if (!productCarbonFootprintSmc || Object.keys(productCarbonFootprintSmc).length === 0) return failReponse;
-
-        if (
-            !checkSemanticId(productCarbonFootprintSmc, semanticIdSMCProductCarbonFootprint) ||
-            !checkIdShort(productCarbonFootprintSmc, 'productCarbonFootprint')
-        )
-            return failReponse;
-
-        const pcfCalculationMethods = productCarbonFootprintSmc.value.filter(
-            (sme: any) =>
-                checkIdShort(sme, 'PCFCalculationMethod', true) || checkSemanticId(sme, '0173-1#02-ABG854#002')
-        );
-
-        const pcfco2eq = productCarbonFootprintSmc.value.find(
-            (sme: any) => checkIdShort(sme, 'PCFCO2eq') || checkSemanticId(sme, '0173-1#02-ABG855#001')
-        );
-
-        const pcfReferenceValueForCalculation = productCarbonFootprintSmc.value.find(
-            (sme: any) =>
-                checkIdShort(sme, 'PCFReferenceValueForCalculation') || checkSemanticId(sme, '0173-1#02-ABG856#001')
-        );
-
-        const pcfQuantityOfMeasureForCalculation = productCarbonFootprintSmc.value.find(
-            (sme: any) =>
-                checkIdShort(sme, 'PCFQuantityOfMeasureForCalculation') || checkSemanticId(sme, '0173-1#02-ABG857#001')
-        );
-
-        const pcfFLifeCyclePhases = productCarbonFootprintSmc.value.filter(
-            (sme: any) => checkIdShort(sme, 'PCFLifeCyclePhase', true) || checkSemanticId(sme, '0173-1#02-ABG858#001')
-        );
-
-        const publicationDate = productCarbonFootprintSmc.value.find(
-            (sme: any) =>
-                checkIdShort(sme, 'PublicationDate') ||
-                checkSemanticId(sme, 'https://admin-shell.io/idta/CarbonFootprint/PublicationDate/1/0')
-        );
-
-        const expirationDate = productCarbonFootprintSmc.value.find(
-            (sme: any) =>
-                checkIdShort(sme, 'ExpirationDate') ||
-                checkSemanticId(sme, 'https://admin-shell.io/idta/CarbonFootprint/ExpirationnDate/1/0')
-        );
-
-        const response = {
-            pcfCalculationMethods:
-                pcfCalculationMethods && Array.isArray(pcfCalculationMethods) && pcfCalculationMethods.length > 0
-                    ? pcfCalculationMethods.map((pcfCalculationMethod: any) => {
-                          return pcfCalculationMethod && Object.keys(pcfCalculationMethod).length > 0
-                              ? valueToDisplay(pcfCalculationMethod)
-                              : '';
-                      })
-                    : [],
-            pcfco2eq:
-                pcfco2eq && Object.keys(pcfco2eq).length > 0 && valueToDisplay(pcfco2eq)
-                    ? valueToDisplay(pcfco2eq)
-                    : '',
-            pcfReferenceValueForCalculation:
-                pcfReferenceValueForCalculation &&
-                Object.keys(pcfReferenceValueForCalculation).length > 0 &&
-                valueToDisplay(pcfReferenceValueForCalculation)
-                    ? valueToDisplay(pcfReferenceValueForCalculation)
-                    : '',
-            pcfQuantityOfMeasureForCalculation:
-                pcfQuantityOfMeasureForCalculation &&
-                Object.keys(pcfQuantityOfMeasureForCalculation).length > 0 &&
-                valueToDisplay(pcfQuantityOfMeasureForCalculation)
-                    ? valueToDisplay(pcfQuantityOfMeasureForCalculation)
-                    : '',
-            pcfLifeCyclePhases:
-                pcfFLifeCyclePhases && Array.isArray(pcfFLifeCyclePhases) && pcfFLifeCyclePhases.length > 0
-                    ? pcfFLifeCyclePhases.map((pcfCalculationMethod: any) => {
-                          return pcfCalculationMethod && Object.keys(pcfCalculationMethod).length > 0
-                              ? valueToDisplay(pcfCalculationMethod)
-                              : '';
-                      })
-                    : [],
-            publicationDate:
-                publicationDate && Object.keys(publicationDate).length > 0 && valueToDisplay(publicationDate)
-                    ? valueToDisplay(publicationDate)
-                    : '',
-            expirationDate:
-                expirationDate && Object.keys(expirationDate).length > 0 && valueToDisplay(expirationDate)
-                    ? valueToDisplay(expirationDate)
-                    : '',
-        };
-
-        return response;
-    }
-
-    function getPcfLifeCyclePhase(pcfLifeCyclePhaseId: string): any {
+    function getPcfLifeCyclePhaseFromId(pcfLifeCyclePhaseId: string): any {
         const failResponse = {};
 
         if (!pcfLifeCyclePhaseId || pcfLifeCyclePhaseId.trim() === '') return failResponse;
 
         const pcfLifeCyclePhase = pcfLifeCyclePhases.find(
-            (pcfLifeCyclePhase: any) => pcfLifeCyclePhase.identifier === pcfLifeCyclePhaseId
+            (pcfLifeCyclePhase: any) =>
+                pcfLifeCyclePhase.identifier === pcfLifeCyclePhaseId ||
+                pcfLifeCyclePhase.valueId === pcfLifeCyclePhaseId
         );
 
         if (pcfLifeCyclePhase && Object.keys(pcfLifeCyclePhase).length > 0) return pcfLifeCyclePhase;
@@ -262,12 +175,43 @@ export function useCarbonFootprint_v0_9Utils() {
         return failResponse;
     }
 
+    function getTcfProcessesForGreenhouseGasEmissionInATransportServiceFromId(
+        tcfProcessesForGreenhouseGasEmissionInATransportServiceId: string
+    ): any {
+        const failResponse = {};
+
+        if (
+            !tcfProcessesForGreenhouseGasEmissionInATransportServiceId ||
+            tcfProcessesForGreenhouseGasEmissionInATransportServiceId.trim() === ''
+        )
+            return failResponse;
+
+        const tcfProcessesForGreenhouseGasEmissionInATransportService =
+            tcfProcessesForGreenhouseGasEmissionInATransportServices.find(
+                (tcfProcessesForGreenhouseGasEmissionInATransportService: any) =>
+                    tcfProcessesForGreenhouseGasEmissionInATransportService.identifier ===
+                        tcfProcessesForGreenhouseGasEmissionInATransportServiceId ||
+                    tcfProcessesForGreenhouseGasEmissionInATransportService.valueId ===
+                        tcfProcessesForGreenhouseGasEmissionInATransportServiceId
+            );
+
+        if (
+            tcfProcessesForGreenhouseGasEmissionInATransportService &&
+            Object.keys(tcfProcessesForGreenhouseGasEmissionInATransportService).length > 0
+        )
+            return tcfProcessesForGreenhouseGasEmissionInATransportService;
+
+        return failResponse;
+    }
+
     return {
         semanticId,
         semanticIdSMCProductCarbonFootprint,
+        semanticIdSMCTransportCarbonFootprint,
         pcfLifeCyclePhases,
+        tcfProcessesForGreenhouseGasEmissionInATransportServices,
         getSm,
-        getPcfLifeCyclePhase,
-        extractProductCarbonFootprint,
+        getPcfLifeCyclePhaseFromId,
+        getTcfProcessesForGreenhouseGasEmissionInATransportServiceFromId,
     };
 }
