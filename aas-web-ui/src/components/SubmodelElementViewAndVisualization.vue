@@ -6,9 +6,10 @@
                 <div class="d-flex align-center">
                     <v-btn-toggle
                         v-model="componentToShow"
-                        base-color="elevatedCard"
                         color="primary"
+                        variant="outlined"
                         divided
+                        density="compact"
                         class="pa-0 ma-0"
                         style="height: 32px !important">
                         <v-btn value="SMEView" class="ma-0">
