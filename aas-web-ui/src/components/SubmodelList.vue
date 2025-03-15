@@ -2,36 +2,38 @@
     <v-container fluid class="pa-0">
         <v-card color="rgba(0,0,0,0)" elevation="0">
             <!-- Title bar -->
-            <v-card-title :style="{ padding: isMobile ? '' : '15px 16px 16px' }">
-                <div class="d-flex align-center">
-                    <v-btn
-                        v-if="isMobile"
-                        class="ml-0"
-                        variant="plain"
-                        icon="mdi-chevron-left"
-                        @click="backToAASList()" />
-                    <span v-if="!selectedAAS || Object.keys(selectedAAS).length === 0">Submodel List </span>
-                    <template v-else-if="!isMobile && submodelList.length > 10">
-                        <v-col class="ml-2">
-                            <v-text-field
-                                variant="outlined"
-                                density="compact"
-                                hide-details
-                                label="Search for Submodel ..."
-                                clearable
-                                @update:model-value="filterSubmodelList"></v-text-field>
-                        </v-col>
-                    </template>
-                    <template v-else>
-                        <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
-                        <span class="text-truncate ml-2">
-                            {{ nameToDisplay(selectedAAS) }}
-                        </span>
-                    </template>
-                </div>
-            </v-card-title>
-            <v-divider></v-divider>
-            <v-card-text class="py-2 px-2" style="overflow-y: auto; height: calc(100svh - 170px)">
+            <template v-if="isMobile || submodelListUnfiltered.length > 10">
+                <v-card-title :style="{ padding: !selectedAAS ? '15px 16px 16px' : '0px' }">
+                    <div class="d-flex align-center">
+                        <v-btn
+                            v-if="isMobile"
+                            class="ml-0"
+                            variant="plain"
+                            icon="mdi-chevron-left"
+                            @click="backToAASList()" />
+                        <span v-if="!selectedAAS || Object.keys(selectedAAS).length === 0">Submodel List </span>
+                        <template v-else-if="submodelListUnfiltered.length > 10">
+                            <v-col>
+                                <v-text-field
+                                    variant="outlined"
+                                    density="compact"
+                                    hide-details
+                                    label="Search for Submodel ..."
+                                    clearable
+                                    @update:model-value="filterSubmodelList"></v-text-field>
+                            </v-col>
+                        </template>
+                        <template v-else>
+                            <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
+                            <span class="text-truncate ml-2">
+                                {{ nameToDisplay(selectedAAS) }}
+                            </span>
+                        </template>
+                    </div>
+                </v-card-title>
+                <v-divider></v-divider>
+            </template>
+            <v-card-text class="pt-2 pb-0 px-2" style="overflow-y: auto; height: calc(100svh - 170px)">
                 <div v-if="listLoading">
                     <v-skeleton-loader type="list-item@6"></v-skeleton-loader>
                 </div>
@@ -43,7 +45,7 @@
                                 ref="virtualScrollRef"
                                 :items="submodelList"
                                 :item-height="56"
-                                class="pb-2 bg-card">
+                                class="bg-card">
                                 <template #default="{ item }">
                                     <v-list-item
                                         :key="item.id"

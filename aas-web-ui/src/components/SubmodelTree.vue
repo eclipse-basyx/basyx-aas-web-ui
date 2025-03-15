@@ -99,9 +99,7 @@
                 <!-- TODO: Add Searchfield - https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/148 -->
             </v-card-title>
             <v-divider></v-divider>
-            <v-card-text
-                style="overflow-y: auto"
-                :style="singleAas ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 170px)'">
+            <v-card-text style="overflow-y: auto; height: calc(100svh - 170px)">
                 <!-- Show Skeleton Loader when the tree is loading -->
                 <template v-if="treeLoading">
                     <v-list-item v-for="i in 6" :key="i" density="compact" nav class="pa-0">

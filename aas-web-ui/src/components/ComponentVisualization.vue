@@ -1,9 +1,9 @@
 <template>
     <v-container fluid class="pa-0">
         <v-card color="rgba(0,0,0,0)" elevation="0">
-            <template v-if="!singleAas || isMobile">
-                <!-- Title bar -->
-                <v-card-title :style="{ padding: isVisualization ? '' : '15px 16px 16px' }">
+            <!-- Title bar -->
+            <template v-if="isMobile || (isMobile && !singleAas)">
+                <v-card-title :style="{ padding: isMobile ? '0px' : '15px 16px 16px' }">
                     <div v-if="!isMobile" class="d-flex align-center">
                         <template v-if="routesToVisualization.includes(route.name)">
                             <v-btn class="ml-0" variant="plain" icon="mdi-chevron-left" @click="backToAASViewer()" />
@@ -30,7 +30,13 @@
             </template>
             <v-card-text
                 style="overflow-y: auto"
-                :style="singleAas && !isMobile ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 170px)'">
+                :style="
+                    isMobile
+                        ? 'height: calc(100svh - 154px)'
+                        : submodelViewerMode || visualizationMode
+                          ? 'height: calc(100svh - 105px)'
+                          : 'height: calc(100svh - 170px)'
+                ">
                 <SubmodelElementVisualization />
             </v-card-text>
         </v-card>
@@ -69,7 +75,8 @@
     const selectedNode = computed(() => aasStore.getSelectedNode);
     const isMobile = computed(() => navigationStore.getIsMobile);
     const singleAas = computed(() => envStore.getSingleAas);
-    const isVisualization = computed(() => route.name === 'Visualization');
+    const visualizationMode = computed(() => route.name === 'Visualization');
+    const submodelViewerMode = computed(() => route.name === 'SubmodelViewer');
 
     // Watchers
     watch(

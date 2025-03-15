@@ -24,9 +24,7 @@
                 </div>
             </v-card-title>
             <v-divider></v-divider>
-            <v-card-text
-                style="overflow-y: auto"
-                :style="singleAas ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 170px)'">
+            <v-card-text style="overflow-y: auto; height: calc(100svh - 170px)">
                 <template
                     v-if="
                         selectedAAS &&
@@ -54,17 +52,14 @@
 <script lang="ts" setup>
     import { computed, ref } from 'vue';
     import { useAASStore } from '@/store/AASDataStore';
-    import { useEnvStore } from '@/store/EnvironmentStore';
 
     //Stores
     const aasStore = useAASStore();
-    const envStore = useEnvStore();
 
     // Data
     const componentToShow = ref('SMEView');
 
     // Computed Properties
-    const singleAas = computed(() => envStore.getSingleAas);
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
     const selectedNode = computed(() => aasStore.getSelectedNode);
 </script>
