@@ -1,29 +1,29 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-list-item v-if="dataSpecificationObject && Object.keys(dataSpecificationObject).length > 0">
+        <v-list-item v-if="dataSpecificationObject && Object.keys(dataSpecificationObject).length > 0" class="pb-0">
             <!-- Title -->
             <template #title>
                 <div class="text-subtitle-2 mt-2">{{ 'Data Specification Content:' }}</div>
             </template>
             <!-- Content List -->
-            <!-- dataType -->
-            <v-list-item-title v-if="dataSpecificationObject.dataType" class="pt-3 pl-2">
+            <!-- DataType -->
+            <v-list-item-title v-if="dataSpecificationObject.dataType" class="py-3 pl-2">
                 <span class="text-caption">DataType: </span>
                 <span class="text-primary">{{ dataSpecificationObject.dataType }}</span>
             </v-list-item-title>
             <v-divider
-                v-if="dataSpecificationObject.definition && dataSpecificationObject.definition.length > 0"
-                class="mt-2"></v-divider>
-            <!-- definition -->
-            <DescriptionElement
-                v-if="dataSpecificationObject.definition && dataSpecificationObject.definition.length > 0"
-                :description-array="dataSpecificationObject.definition"
-                :description-title="'Definition'"
-                :small="true"></DescriptionElement>
-            <v-divider
-                v-if="dataSpecificationObject.levelTypes && dataSpecificationObject.levelTypes.length > 0"
-                class="mt-2"></v-divider>
-            <!-- levelTypes -->
+                v-if="
+                    dataSpecificationObject.definition &&
+                    Array.isArray(dataSpecificationObject.definition) &&
+                    dataSpecificationObject.definition.length > 0
+                " />
+            <!-- Definition -->
+            <LangStringsPanel
+                :lang-strings-array="dataSpecificationObject.definition"
+                :title="'Definition'"
+                :background-color="'elevatedCard'" />
+            <v-divider v-if="dataSpecificationObject.levelTypes && dataSpecificationObject.levelTypes.length > 0" />
+            <!-- LevelTypes -->
             <!-- TODO: DataSpecification levelTypes needs visual update -->
             <v-list-item-title
                 v-if="dataSpecificationObject.levelTypes && dataSpecificationObject.levelTypes.length > 0"
@@ -34,26 +34,30 @@
                 }}</span>
             </v-list-item-title>
             <v-divider
-                v-if="dataSpecificationObject.preferredName && dataSpecificationObject.preferredName.length > 0"
-                class="mt-2"></v-divider>
-            <!-- preferredName -->
-            <DescriptionElement
-                v-if="dataSpecificationObject.preferredName && dataSpecificationObject.preferredName.length > 0"
-                :description-array="dataSpecificationObject.preferredName"
-                :description-title="'Preferred Name'"
-                :small="true"></DescriptionElement>
+                v-if="
+                    dataSpecificationObject.preferredName &&
+                    Array.isArray(dataSpecificationObject.preferredName) &&
+                    dataSpecificationObject.preferredName.length > 0
+                " />
+            <!-- PreferredName -->
+            <LangStringsPanel
+                :lang-strings-array="dataSpecificationObject.preferredName"
+                :title="'Preferred Name'"
+                :background-color="backgroundColor" />
             <v-divider
-                v-if="dataSpecificationObject.shortName && dataSpecificationObject.shortName.length > 0"
-                class="mt-2"></v-divider>
-            <!-- shortName -->
-            <DescriptionElement
-                v-if="dataSpecificationObject.shortName && dataSpecificationObject.shortName.length > 0"
-                :description-array="dataSpecificationObject.shortName"
-                :description-title="'Short Name'"
-                :small="true"></DescriptionElement>
-            <v-divider v-if="dataSpecificationObject.unit" class="mt-2"></v-divider>
-            <!-- unit -->
-            <v-list-item-title v-if="dataSpecificationObject.unit" class="pt-2 pl-2">
+                v-if="
+                    dataSpecificationObject.shortName &&
+                    Array.isArray(dataSpecificationObject.shortName) &&
+                    dataSpecificationObject.shortName.length > 0
+                " />
+            <!-- ShortName -->
+            <LangStringsPanel
+                :lang-strings-array="dataSpecificationObject.shortName"
+                :title="'Short Name'"
+                :background-color="backgroundColor" />
+            <v-divider v-if="dataSpecificationObject.unit" />
+            <!-- Unit -->
+            <v-list-item-title v-if="dataSpecificationObject.unit" class="py-2 pl-2">
                 <span class="text-caption">Unit: </span>
                 <span class="text-primary">{{ dataSpecificationObject.unit }}</span>
             </v-list-item-title>
@@ -76,14 +80,12 @@
                     </v-list-item-subtitle>
                 </template>
             </v-list-item>
-            <v-divider
-                v-if="dataSpecificationObject.valueList && dataSpecificationObject.valueList.length > 0"
-                class="mt-2"></v-divider>
-            <!-- valueList -->
+            <v-divider v-if="dataSpecificationObject.valueList && dataSpecificationObject.valueList.length > 0" />
+            <!-- ValueList -->
             <!-- TODO: DataSpecification valueList needs visual update -->
             <v-list-item-title
                 v-if="dataSpecificationObject.valueList && dataSpecificationObject.valueList.length > 0"
-                class="pt-2 pl-2">
+                class="py-2 pl-2">
                 <div class="text-caption">ValueList:</div>
                 <span v-for="(valueList, i) in dataSpecificationObject.valueList" :key="i" class="text-primary">{{
                     valueList
@@ -93,12 +95,16 @@
     </v-container>
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
     // Props
     defineProps({
         dataSpecificationObject: {
             type: Object as any,
             default: {} as any,
+        },
+        backgroundColor: {
+            type: String,
+            default: '',
         },
     });
 </script>
