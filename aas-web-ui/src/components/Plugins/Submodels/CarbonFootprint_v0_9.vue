@@ -5,14 +5,9 @@
             default-title="Digital Nameplate for industrial equipment"></VisualizationHeader>
         <!-- Loading -->
         <v-card v-if="isLoading" class="mb-4">
-            <!-- Product properties -->
-            <v-skeleton-loader type="heading, table-heading@7"></v-skeleton-loader>
-            <!-- Manufacturer properties -->
-            <v-skeleton-loader type="heading, table-heading@5, actions"></v-skeleton-loader>
-            <!-- Markings -->
-            <v-skeleton-loader type="heading, image"></v-skeleton-loader>
-            <!-- Asset Specific Properties -->
-            <v-skeleton-loader type="heading, table-heading@2"></v-skeleton-loader>
+            <v-skeleton-loader type="list-item" />
+            <v-skeleton-loader type="divider" />
+            <v-skeleton-loader type="list-item" />
         </v-card>
         <template v-else-if="Object.keys(carbonFootprintData).length > 0">
             <v-timeline v-if="productCarbonFootprints" direction="vertical" side="start">
@@ -431,6 +426,6 @@
             );
         });
 
-        isLoading.value = false;
+        // isLoading.value = false;
     }
 </script>
