@@ -10,7 +10,7 @@
                             :active="false"
                             nav
                             :border="isActiveRoutePath('/')"
-                            subtitle="Visualize Asset Administration Shells"
+                            subtitle="View Asset Administration Shells"
                             title="AAS Viewer"
                             to="/"
                             @click="closeMenu">
@@ -41,9 +41,25 @@
                             nav
                             :active="false"
                             :border="isActiveRoutePath('/submodelviewer')"
-                            subtitle="Visualize Submodels"
+                            subtitle="View Submodels"
                             title="Submodel Viewer"
                             to="/submodelviewer"
+                            @click="closeMenu">
+                            <template #prepend>
+                                <v-avatar color="surface-light" icon="mdi-group" rounded>
+                                    <v-icon color="medium-emphasis" />
+                                </v-avatar>
+                            </template>
+                        </v-list-item>
+                        <v-list-item
+                            v-if="selectedNode"
+                            class="mt-3 py-2"
+                            nav
+                            :active="false"
+                            :border="isActiveRoutePath('/visu')"
+                            subtitle="Visualize Submodels/Submodel Elements"
+                            title="Visualization"
+                            to="/visu"
                             @click="closeMenu">
                             <template #prepend>
                                 <v-avatar color="surface-light" icon="mdi-chart-line" rounded>
