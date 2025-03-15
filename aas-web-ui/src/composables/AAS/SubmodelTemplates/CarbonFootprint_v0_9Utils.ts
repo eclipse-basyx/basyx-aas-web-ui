@@ -1,11 +1,4 @@
-import { useAASHandling } from '@/composables/AAS/AASHandling';
-import { useSMHandling } from '@/composables/AAS/SMHandling';
-
 export function useCarbonFootprint_v0_9Utils() {
-    // Composables
-    const { getSmIdOfAasIdBySemanticId } = useAASHandling();
-    const { fetchSmById } = useSMHandling();
-
     const semanticId = 'https://admin-shell.io/idta/CarbonFootprint/CarbonFootprint/0/9';
 
     const semanticIdSMCProductCarbonFootprint =
@@ -134,31 +127,6 @@ export function useCarbonFootprint_v0_9Utils() {
         },
     ];
 
-    /**
-     * Retrieves Carbon Footprint Submodel (SM) of an Asset Administration Shell (AAS).
-     *
-     * @async
-     * @param {string} aasId - The ID of the AAS to retrieve its Carbon Footprint SM.
-     * @param {boolean} withConceptDescriptions - Flag to specify if SM should be fetched with ConceptDescriptions (CDs)
-     * @returns {string} A promise that resolves to a Carbon Footprint SM.
-     */
-    async function getSm(aasId: string, withConceptDescriptions: boolean = false): Promise<any> {
-        const failResponse = {};
-
-        if (!aasId) return failResponse;
-
-        aasId = aasId.trim();
-
-        if (aasId === '') return failResponse;
-
-        aasId = aasId.trim();
-
-        const smCarbonFootprintId = await getSmIdOfAasIdBySemanticId(aasId, semanticId);
-        const smCarbonFootprint = await fetchSmById(smCarbonFootprintId, withConceptDescriptions);
-
-        return smCarbonFootprint;
-    }
-
     function getPcfLifeCyclePhaseFromId(pcfLifeCyclePhaseId: string): any {
         const failResponse = {};
 
@@ -210,7 +178,6 @@ export function useCarbonFootprint_v0_9Utils() {
         semanticIdSMCTransportCarbonFootprint,
         pcfLifeCyclePhases,
         tcfProcessesForGreenhouseGasEmissionInATransportServices,
-        getSm,
         getPcfLifeCyclePhaseFromId,
         getTcfProcessesForGreenhouseGasEmissionInATransportServiceFromId,
     };
