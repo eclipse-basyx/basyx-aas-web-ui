@@ -138,6 +138,7 @@ export async function createAppRouter(): Promise<Router> {
         'AASEditor',
         'AASViewer',
         'SubmodelViewer',
+        'Visualization',
     ];
     const routesStayOnPages: Array<RouteRecordNameGeneric> = ['About', 'NotFound404'];
     const routesDesktopToAASViewer: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList'];

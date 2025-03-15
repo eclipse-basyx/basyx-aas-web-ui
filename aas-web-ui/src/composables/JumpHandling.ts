@@ -29,6 +29,7 @@ export function useJumpHandling() {
                     return;
                 } else if (aasEndpoint.trim() === '' && smEndpoint.trim() !== '') {
                     // Determine (first) AAS which includes the SM of the SM endpoint via SM ID
+                    // NOTE: Not needed anymore if aas-gui allow for single SMs to be shown independently (https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/158)
                     const sm = await fetchSm(smEndpoint);
                     if (sm && Object.keys(sm).length > 0) {
                         const smId = sm.id;

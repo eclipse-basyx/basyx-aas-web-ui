@@ -166,12 +166,13 @@
                     <v-col cols="auto" class="pr-1">
                         <v-card
                             class="py-1 px-2 text-buttonText"
-                            color="lightButton"
+                            :color="route.path === moduleRoute.path ? 'primarySurface' : 'primary'"
                             :to="
                                 moduleRoute?.meta?.preserveRouteQuery === true
                                     ? { path: moduleRoute.path, query: route.query }
                                     : { path: moduleRoute.path }
                             "
+                            :disabled="route.path === moduleRoute.path"
                             >{{ moduleRoute.name }}</v-card
                         >
                     </v-col>
@@ -184,6 +185,7 @@
                                     : { path: moduleRoute.path }
                             "
                             :active="route.path === moduleRoute.path"
+                            :disabled="route.path === moduleRoute.path"
                             style="z-index: 9990"
                             size="small"
                             color="primary"
@@ -193,13 +195,20 @@
                 <!-- AAS Viewer -->
                 <v-row justify="end" align="center">
                     <v-col cols="auto" class="pr-1">
-                        <v-card class="py-1 px-2 text-buttonText" color="lightButton" to="/aaslist">AAS Viewer</v-card>
+                        <v-card
+                            class="py-1 px-2 text-buttonText"
+                            :color="route.path === '/aaslist' ? 'primarySurface' : 'primary'"
+                            to="/aaslist"
+                            :disabled="route.path === '/aaslist'"
+                            >AAS Viewer</v-card
+                        >
                     </v-col>
                     <v-col cols="auto" class="py-1">
                         <v-btn
                             icon="mdi-format-list-text"
                             to="/aaslist"
                             :active="route.path === '/aaslist'"
+                            :disabled="route.path === '/aaslist'"
                             style="z-index: 9990"
                             size="small"
                             color="primary"
@@ -209,12 +218,19 @@
                 <!-- Dashboard -->
                 <v-row v-if="dashboardAvailable" justify="end" align="center">
                     <v-col cols="auto" class="pr-1">
-                        <v-card class="py-1 px-2 text-buttonText" color="lightButton" to="/dashboard">Dashboard</v-card>
+                        <v-card
+                            class="py-1 px-2 text-buttonText"
+                            :color="route.path === '/dashboard' ? 'primarySurface' : 'primary'"
+                            to="/dashboard"
+                            :disabled="route.path === '/dashboard'"
+                            >Dashboard</v-card
+                        >
                     </v-col>
                     <v-col cols="auto" class="py-1">
                         <v-btn
                             icon="mdi-chart-timeline-variant-shimmer"
                             to="/dashboard"
+                            :disabled="route.path === '/dashboard'"
                             :active="route.path === '/dashboard'"
                             style="z-index: 9990"
                             size="small"
@@ -225,13 +241,20 @@
                 <!-- About -->
                 <v-row justify="end" align="center">
                     <v-col cols="auto" class="pr-1">
-                        <v-card class="py-1 px-2 text-buttonText" color="lightButton" to="/about">About</v-card>
+                        <v-card
+                            class="py-1 px-2 text-buttonText"
+                            :color="route.path === '/about' ? 'primarySurface' : 'primary'"
+                            to="/about"
+                            :disabled="route.path === '/about'"
+                            >About</v-card
+                        >
                     </v-col>
                     <v-col cols="auto" class="py-1">
                         <v-btn
                             icon="mdi-format-list-group"
                             to="/about"
                             :active="route.path === '/about'"
+                            :disabled="route.path === '/about'"
                             style="z-index: 9990"
                             size="small"
                             color="primary"

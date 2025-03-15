@@ -147,9 +147,10 @@ export function useReferenceComposable() {
                 }
 
                 if (reference?.keys[0]?.type === 'Submodel') {
-                    // TODO determine aasEndpoint
                     const smId = reference?.keys[0].value.trim();
                     smEndpoint = await getSmEndpointById(smId);
+                    // TODO Determine (first) AAS which includes the SM of the SM endpoint via SM ID, cf. jumpToReference() in JumpHandling.ts
+                    // NOTE: Not needed anymore if aas-gui allow for single SMs to be shown independently (https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/158)
                     referenceKeys = referenceKeys.slice(1);
                 }
 
