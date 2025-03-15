@@ -26,8 +26,25 @@
             <v-card-text
                 style="overflow-y: auto"
                 :style="singleAas ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 170px)'">
-                <SubmodelElementView v-if="componentToShow === 'SMEView'" />
-                <SubmodelElementVisualization v-else-if="componentToShow === 'Visualization'" />
+                <template
+                    v-if="
+                        selectedAAS &&
+                        Object.keys(selectedAAS).length > 0 &&
+                        selectedNode &&
+                        Object.keys(selectedNode).length > 0
+                    ">
+                    <SubmodelElementView v-if="componentToShow === 'SMEView'" />
+                    <SubmodelElementVisualization v-else-if="componentToShow === 'Visualization'" />
+                </template>
+                <v-empty-state
+                    v-else-if="!selectedAAS || Object.keys(selectedAAS).length === 0"
+                    title="No selected AAS"
+                    class="text-divider"></v-empty-state>
+                <v-empty-state
+                    v-else-if="!selectedNode || Object.keys(selectedNode).length === 0"
+                    title="No selected Submodel / Submodel Element"
+                    text="Select a Submodel / Submodel Element to view"
+                    class="text-divider"></v-empty-state>
             </v-card-text>
         </v-card>
     </v-container>
@@ -35,9 +52,11 @@
 
 <script lang="ts" setup>
     import { computed, ref } from 'vue';
+    import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
 
     //Stores
+    const aasStore = useAASStore();
     const envStore = useEnvStore();
 
     // Data
@@ -45,4 +64,6 @@
 
     // Computed Properties
     const singleAas = computed(() => envStore.getSingleAas);
+    const selectedAAS = computed(() => aasStore.getSelectedAAS);
+    const selectedNode = computed(() => aasStore.getSelectedNode);
 </script>

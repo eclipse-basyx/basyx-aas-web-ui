@@ -139,15 +139,6 @@
                 </template>
             </template>
         </template>
-        <v-empty-state
-            v-else-if="!selectedAAS || Object.keys(selectedAAS).length === 0"
-            title="No selected AAS"
-            class="text-divider"></v-empty-state>
-        <v-empty-state
-            v-else-if="!selectedNode || Object.keys(selectedNode).length === 0"
-            title="No selected Submodel / Submodel Element"
-            text="Select a Submodel / Submodel Element to view"
-            class="text-divider"></v-empty-state>
     </v-container>
 </template>
 
