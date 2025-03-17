@@ -50,8 +50,8 @@
     "@types/uuid": "^10.0.0",
     "@types/webfontloader": "^1.6.38",
     "@vitejs/plugin-vue": "^5.2.1",
-    "@vitest/coverage-istanbul": "3.0.5",
-    "@vitest/ui": "^3.0.5",
+    "@vitest/coverage-istanbul": "3.0.8",
+    "@vitest/ui": "^3.0.8",
     "@vue/test-utils": "^2.4.6",
     "cross-env": "^7.0.3",
     "eslint": "^9.21.0",
@@ -69,7 +69,7 @@
     "unplugin-vue-components": "^28.1.0",
     "vite": "^6.2.1",
     "vite-plugin-vuetify": "^2.0.4",
-    "vitest": "^3.0.5",
+    "vitest": "^3.0.8",
     "vue-tsc": "^2.2.2"
   }
 }
