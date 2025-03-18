@@ -43,44 +43,29 @@
     </template>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-    import { useTheme } from 'vuetify';
+<script lang="ts" setup>
     import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement';
 
-    export default defineComponent({
-        name: 'GenericDataTableView',
+    defineOptions({
         inheritAttrs: false,
-        props: {
-            submodelElementData: {
-                type: Object,
-                default() {
-                    return {};
-                },
-                required: true,
-            },
-            level: {
-                type: Number,
-                default: 0,
-            },
+    });
+
+    // Composables
+    const { cdDefinition } = useConceptDescriptionHandling();
+    const { descriptionToDisplay, nameToDisplay } = useReferableUtils();
+    const { valueToDisplay } = useSME();
+
+    // Properties
+    defineProps({
+        submodelElementData: {
+            type: Object as any,
+            default: {} as any,
         },
-
-        setup() {
-            const theme = useTheme();
-            const { cdDefinition } = useConceptDescriptionHandling();
-            const { descriptionToDisplay, nameToDisplay } = useReferableUtils();
-            const { valueToDisplay } = useSME();
-
-            return {
-                theme, // Theme Object
-                cdDefinition,
-                nameToDisplay,
-                descriptionToDisplay,
-                valueToDisplay,
-            };
+        level: {
+            type: Number,
+            default: 0,
         },
     });
 </script>
