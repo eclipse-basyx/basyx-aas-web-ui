@@ -75,7 +75,7 @@
     const selectedNode = computed(() => aasStore.getSelectedNode);
     const isMobile = computed(() => navigationStore.getIsMobile);
     const singleAas = computed(() => envStore.getSingleAas);
-    const visualizationMode = computed(() => route.name === 'Visualization');
+    const visualizationMode = computed(() => routesToVisualization.includes(route.name));
     const submodelViewerMode = computed(() => route.name === 'SubmodelViewer');
 
     // Watchers

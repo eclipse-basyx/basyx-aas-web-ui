@@ -47,9 +47,15 @@
                 </template>
                 <template v-else>
                     <GenericDataVisu
-                        v-if="viewerMode"
+                        v-if="visualizationMode"
                         :submodel-element-data="submodelElementData.submodelElements"></GenericDataVisu>
-                    <v-empty-state v-else title="No available visualization" class="text-divider"></v-empty-state>
+                    <v-container
+                        v-else
+                        fluid
+                        class="pa-0 ma-0 d-flex justify-center align-center"
+                        :style="submodelViewerMode ? 'height: calc(100svh - 137px)' : 'height: calc(100svh - 202px)'">
+                        <v-empty-state title="No available visualization" class="text-divider"></v-empty-state>
+                    </v-container>
                 </template>
             </template>
         </template>
@@ -136,7 +142,8 @@
 
         return plugins;
     });
-    const viewerMode = computed(() => route.name === 'SubmodelViewer' || routesToVisualization.includes(route.name));
+    const visualizationMode = computed(() => routesToVisualization.includes(route.name));
+    const submodelViewerMode = computed(() => route.name === 'SubmodelViewer');
 
     // Watchers
     watch(
