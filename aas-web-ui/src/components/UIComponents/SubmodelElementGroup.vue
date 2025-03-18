@@ -82,12 +82,11 @@
                                 </template>
                             </v-text-field>
                             <!-- MultiLanguageProperty -->
-                            <DescriptionElement
+                            <LangStrings
                                 v-else-if="SubmodelElement.modelType == 'MultiLanguageProperty'"
-                                :description-array="SubmodelElement.value"
-                                :description-title="nameToDisplay(SubmodelElement)"
-                                :small="false"
-                                style="margin-top: -12px"></DescriptionElement>
+                                :lang-strings-array="SubmodelElement.value"
+                                :title="nameToDisplay(SubmodelElement)"
+                                :background-color="'elevatedCard'" />
                             <!-- Operation -->
                             <v-alert
                                 v-else-if="SubmodelElement.modelType == 'Operation'"
@@ -237,7 +236,7 @@
                                 variant="outlined"></v-alert>
                         </v-list-item-title>
                     </v-list-item>
-                    <v-divider v-if="i < smeObject[smeLocator].length - 1" class="mt-2 mb-1"></v-divider>
+                    <v-divider v-if="i < smeObject[smeLocator].length - 1" class="mt-2 mb-1" />
                 </div>
             </v-list>
             <v-list v-else nav class="bg-elevatedCard pt-0">
@@ -258,16 +257,12 @@
 // TODO Transfer to composition API
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
     import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useAASStore } from '@/store/AASDataStore';
 
     export default defineComponent({
         name: 'SubmodelElementGroup',
-        components: {
-            DescriptionElement,
-        },
         props: ['smeObject', 'smeLocator', 'topMargin'],
 
         setup() {

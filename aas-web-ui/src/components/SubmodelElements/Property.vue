@@ -5,7 +5,7 @@
         </v-list-item>
         <v-card v-if="propertyObject" color="elevatedCard">
             <!-- Value of the Property -->
-            <v-list nav class="pt-0" :class="isOperationVariable ? '' : 'bg-elevatedCard'">
+            <v-list nav :class="isOperationVariable ? '' : 'bg-elevatedCard'">
                 <!-- valueId -->
                 <v-list-item
                     v-if="
