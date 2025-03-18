@@ -52,7 +52,7 @@
                             </template>
                         </v-list-item>
                         <v-list-item
-                            v-if="selectedNode"
+                            v-if="selectedNode && Object.keys(selectedNode).length > 0"
                             class="mt-3 py-2"
                             nav
                             :active="false"
