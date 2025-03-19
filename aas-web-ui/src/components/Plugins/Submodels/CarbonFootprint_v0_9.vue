@@ -16,7 +16,7 @@
         </v-sheet>
         <template v-else-if="Object.keys(carbonFootprintData).length > 0">
             <v-card v-if="productCarbonFootprints && Object.keys(productCarbonFootprints).length > 0" class="mb-4">
-                <v-card-title>
+                <v-card-title class="text-subtitle-1">
                     {{ 'Product Carbon Footprint' + (Object.keys(productCarbonFootprints).length > 1 ? 's' : '') }}
                 </v-card-title>
                 <v-card-text>
@@ -51,7 +51,7 @@
                                 </template>
                             </template>
                             <div>
-                                <div class="text-h5 font-weight-bold">
+                                <div class="text-h6">
                                     {{
                                         valueToDisplay(
                                             pcfSMC.value.find(
@@ -63,8 +63,8 @@
                                     }}
                                     <span class="">CO<sub>2</sub>eq</span>
                                 </div>
-                                <p>
-                                    <span class="text-caption"> per </span>
+                                <p class="text-caption text-medium-emphasis">
+                                    <span> per </span>
                                     {{
                                         valueToDisplay(
                                             pcfSMC.value.find(
@@ -106,9 +106,9 @@
                                         </span> </template
                                     >)
                                 </p>
-                                <p>
+                                <p class="text-caption text-medium-emphasis">
                                     <v-icon size="small">mdi-calendar</v-icon>
-                                    <span class="text-caption">valid from </span>
+                                    <span>valid from </span>
                                     <span>
                                         {{
                                             valueToDisplay(
@@ -134,7 +134,7 @@
                                                     )
                                             )
                                         ">
-                                        <span class="text-caption">till </span>
+                                        <span class="text-medium-emphasis">till </span>
                                         {{
                                             valueToDisplay(
                                                 pcfSMC.value.find(
@@ -156,9 +156,10 @@
                                                 checkIdShort(sme, 'PCFGoodsAddressHandover') ||
                                                 checkSemanticId(sme, '0173-1#02-ABI497#001')
                                         )
-                                    ">
+                                    "
+                                    class="text-caption text-medium-emphasis">
                                     <v-icon size="small">mdi-map-marker-outline</v-icon>
-                                    <span class="text-caption">
+                                    <span>
                                         {{
                                             determineAddress(
                                                 pcfSMC.value.find(
@@ -177,7 +178,7 @@
             </v-card>
 
             <v-card v-if="transportCarbonFootprints && Object.keys(transportCarbonFootprints).length > 0" class="mb-4">
-                <v-card-title>
+                <v-card-title class="text-subtitle-1">
                     {{ 'Transport Carbon Footprint' + (Object.keys(productCarbonFootprints).length > 1 ? 's' : '') }}
                 </v-card-title>
                 <v-card-text>
@@ -224,7 +225,7 @@
                                 </template>
                             </template>
                             <div>
-                                <div class="text-h5 font-weight-bold">
+                                <div class="text-h6">
                                     {{
                                         valueToDisplay(
                                             tcfSMC.value.find(
@@ -236,8 +237,8 @@
                                     }}
                                     <span class="">CO<sub>2</sub>eq</span>
                                 </div>
-                                <p>
-                                    <span class="text-caption"> per </span>
+                                <p class="text-caption text-medium-emphasis">
+                                    <span> per </span>
                                     {{
                                         valueToDisplay(
                                             tcfSMC.value.find(
@@ -279,9 +280,9 @@
                                         </span> </template
                                     >)
                                 </p>
-                                <p>
+                                <p class="text-caption text-medium-emphasis">
                                     <v-icon size="small">mdi-calendar</v-icon>
-                                    <span class="text-caption">valid from </span>
+                                    <span>valid from </span>
                                     <span>
                                         {{
                                             valueToDisplay(
@@ -307,7 +308,7 @@
                                                     )
                                             )
                                         ">
-                                        <span class="text-caption">till </span>
+                                        <span>till </span>
                                         {{
                                             valueToDisplay(
                                                 tcfSMC.value.find(
@@ -329,9 +330,10 @@
                                                 checkIdShort(sme, 'TCFGoodsTransportAddressTakeover') ||
                                                 checkSemanticId(sme, '0173-1#02-ABI499#001')
                                         )
-                                    ">
+                                    "
+                                    class="text-caption text-medium-emphasis">
                                     <v-icon size="small">mdi-map-marker-outline</v-icon>
-                                    <span class="text-caption">
+                                    <span>
                                         {{
                                             determineAddress(
                                                 tcfSMC.value.find(
@@ -350,9 +352,10 @@
                                                 checkIdShort(sme, 'TCFGoodsTransportAddressHandover') ||
                                                 checkSemanticId(sme, '0173-1#02-ABI498#001')
                                         )
-                                    ">
+                                    "
+                                    class="text-caption text-medium-emphasis">
                                     <v-icon size="small">mdi-map-marker-outline</v-icon>
-                                    <span class="text-caption">
+                                    <span>
                                         {{
                                             determineAddress(
                                                 tcfSMC.value.find(
