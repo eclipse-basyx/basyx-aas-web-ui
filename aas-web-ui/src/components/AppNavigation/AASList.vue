@@ -197,7 +197,9 @@
                                                 <v-divider></v-divider>
                                                 <!-- Copy SM endpoint to clipboard -->
                                                 <v-list-item
-                                                    @click="copyToClipboard(item.path, 'SM endpoint', copyIconAsRef)">
+                                                    @click.stop="
+                                                        copyToClipboard(item.path, 'SM endpoint', copyIconAsRef)
+                                                    ">
                                                     <template #prepend>
                                                         <v-icon size="x-small">{{ copyIcon }} </v-icon>
                                                     </template>
