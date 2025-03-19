@@ -4,11 +4,16 @@
             :submodel-element-data="submodelElementData"
             default-title="Digital Nameplate for industrial equipment"></VisualizationHeader>
         <!-- Loading -->
-        <v-card v-if="isLoading" class="mb-4">
-            <v-skeleton-loader type="list-item" />
-            <v-skeleton-loader type="divider" />
-            <v-skeleton-loader type="list-item" />
-        </v-card>
+        <v-sheet v-if="isLoading" class="mb-4">
+            <v-card class="mb-4">
+                <v-skeleton-loader type="subtitle" />
+                <v-skeleton-loader type="image" />
+            </v-card>
+            <v-card>
+                <v-skeleton-loader type="subtitle" />
+                <v-skeleton-loader type="image" />
+            </v-card>
+        </v-sheet>
         <template v-else-if="Object.keys(carbonFootprintData).length > 0">
             <v-card v-if="productCarbonFootprints && Object.keys(productCarbonFootprints).length > 0" class="mb-4">
                 <v-timeline direction="vertical" side="start">
