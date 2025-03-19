@@ -71,7 +71,7 @@
                                 color="subtitleText"
                                 v-bind="props"
                                 class="ml-1"
-                                @click="copyToClipboard(item.path, 'Path', copyIconAsRef)">
+                                @click.stop="copyToClipboard(item.path, 'Path', copyIconAsRef)">
                                 {{ copyIcon }}
                             </v-icon>
                         </template>
