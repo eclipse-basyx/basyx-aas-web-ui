@@ -96,6 +96,13 @@
                                     <v-list-item-subtitle>Copy Submodel endpoint</v-list-item-subtitle>
                                 </v-list-item>
                                 <v-divider></v-divider>
+                                <!-- Open Add SubmodelElement dialog -->
+                                <v-list-item @click="$emit('openAddSubmodelElementDialog', item)">
+                                    <template #prepend>
+                                        <v-icon size="x-small">mdi-plus</v-icon>
+                                    </template>
+                                    <v-list-item-subtitle>Add Submodel Element</v-list-item-subtitle>
+                                </v-list-item>
                                 <!-- Open Submodel edit dialog -->
                                 <v-list-item @click="$emit('openEditDialog', item)">
                                     <template #prepend>
@@ -161,7 +168,7 @@
     });
 
     // Emits
-    defineEmits(['openEditDialog', 'showDeleteDialog']);
+    defineEmits(['openEditDialog', 'showDeleteDialog', 'openAddSubmodelElementDialog']);
 
     // Data
     const copyIcon = ref<string>('mdi-clipboard-file-outline');

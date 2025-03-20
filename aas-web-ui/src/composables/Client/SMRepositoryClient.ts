@@ -339,6 +339,32 @@ export function useSMRepositoryClient() {
         return response.success;
     }
 
+    async function postSubmodelElement(
+        submodelElement: aasTypes.ISubmodelElement,
+        submodelId: string
+    ): Promise<boolean> {
+        const failResponse = false;
+
+        let smRepoUrl = submodelRepoUrl.value.trim();
+        if (smRepoUrl === '') return failResponse;
+        if (smRepoUrl.endsWith('/')) smRepoUrl = stripLastCharacter(smRepoUrl);
+        if (!smRepoUrl.endsWith(endpointPath)) smRepoUrl += endpointPath;
+
+        // Convert SME to JSON
+        const jsonSubmodelElement = jsonization.toJsonable(submodelElement);
+        // console.log('postSubmodel()', jsonSubmodel);
+
+        const context = 'creating Submodel Element';
+        const disableMessage = false;
+        const path = smRepoUrl + '/' + base64Encode(submodelId) + '/submodel-elements';
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const body = JSON.stringify(jsonSubmodelElement);
+
+        const response = await postRequest(path, body, headers, context, disableMessage);
+        return response.success;
+    }
+
     return {
         endpointPath,
         fetchSmList,
@@ -352,5 +378,6 @@ export function useSMRepositoryClient() {
         postSubmodel,
         putSubmodel,
         deleteSubmodel,
+        postSubmodelElement
     };
 }

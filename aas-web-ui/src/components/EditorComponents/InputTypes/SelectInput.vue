@@ -17,6 +17,7 @@
         category: string;
         assetKind: aasTypes.AssetKind;
         modellingKind: aasTypes.ModellingKind;
+        dataType: aasTypes.DataTypeDefXsd;
     };
 
     type ValueType<T extends keyof ValueMap> = ValueMap[T];
@@ -57,6 +58,39 @@
                 return [
                     { title: 'Instance', value: aasTypes.ModellingKind.Instance },
                     { title: 'Template', value: aasTypes.ModellingKind.Template },
+                ];
+            case 'dataType':
+                return [
+                    { title: 'AnyUri', value: aasTypes.DataTypeDefXsd.AnyUri },
+                    { title: 'Base64Binary', value: aasTypes.DataTypeDefXsd.Base64Binary },
+                    { title: 'Boolean', value: aasTypes.DataTypeDefXsd.Boolean },
+                    { title: 'Byte', value: aasTypes.DataTypeDefXsd.Byte },
+                    { title: 'Date', value: aasTypes.DataTypeDefXsd.Date },
+                    { title: 'DateTime', value: aasTypes.DataTypeDefXsd.DateTime },
+                    { title: 'Decimal', value: aasTypes.DataTypeDefXsd.Decimal },
+                    { title: 'Double', value: aasTypes.DataTypeDefXsd.Double },
+                    { title: 'Duration', value: aasTypes.DataTypeDefXsd.Duration },
+                    { title: 'Float', value: aasTypes.DataTypeDefXsd.Float },
+                    { title: 'GDay', value: aasTypes.DataTypeDefXsd.GDay },
+                    { title: 'GMonth', value: aasTypes.DataTypeDefXsd.GMonth },
+                    { title: 'GMonthDay', value: aasTypes.DataTypeDefXsd.GMonthDay },
+                    { title: 'GYear', value: aasTypes.DataTypeDefXsd.GYear },
+                    { title: 'GYearMonth', value: aasTypes.DataTypeDefXsd.GYearMonth },
+                    { title: 'HexBinary', value: aasTypes.DataTypeDefXsd.HexBinary },
+                    { title: 'Int', value: aasTypes.DataTypeDefXsd.Int },
+                    { title: 'Integer', value: aasTypes.DataTypeDefXsd.Integer },
+                    { title: 'Long', value: aasTypes.DataTypeDefXsd.Long },
+                    { title: 'NegativeInteger', value: aasTypes.DataTypeDefXsd.NegativeInteger },
+                    { title: 'NonNegativeInteger', value: aasTypes.DataTypeDefXsd.NonNegativeInteger },
+                    { title: 'NonPositiveInteger', value: aasTypes.DataTypeDefXsd.NonPositiveInteger },
+                    { title: 'PositiveInteger', value: aasTypes.DataTypeDefXsd.PositiveInteger },
+                    { title: 'Short', value: aasTypes.DataTypeDefXsd.Short },
+                    { title: 'String', value: aasTypes.DataTypeDefXsd.String },
+                    { title: 'Time', value: aasTypes.DataTypeDefXsd.Time },
+                    { title: 'UnsignedByte', value: aasTypes.DataTypeDefXsd.UnsignedByte },
+                    { title: 'UnsignedInt', value: aasTypes.DataTypeDefXsd.UnsignedInt },
+                    { title: 'UnsignedLong', value: aasTypes.DataTypeDefXsd.UnsignedLong },
+                    { title: 'UnsignedShort', value: aasTypes.DataTypeDefXsd.UnsignedShort },
                 ];
             default:
                 return [];
