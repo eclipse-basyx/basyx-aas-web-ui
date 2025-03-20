@@ -1,20 +1,19 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-card color="card" elevation="0">
-            <template v-if="!singleAas || isMobile">
-                <!-- Title Bar in the Submodel List -->
-                <v-card-title :style="{ padding: isMobile ? '' : '15px 16px 16px' }">
-                    <div v-if="!selectedAAS || Object.keys(selectedAAS).length === 0">Submodel List</div>
-                    <div v-else class="d-flex align-center">
+        <v-card color="rgba(0,0,0,0)" elevation="0">
+            <!-- Title bar -->
+            <template v-if="isMobile || submodelListUnfiltered.length > 10">
+                <v-card-title :style="{ padding: !selectedAAS ? '15px 16px 16px' : '0px' }">
+                    <div class="d-flex align-center">
                         <v-btn
                             v-if="isMobile"
                             class="ml-0"
                             variant="plain"
                             icon="mdi-chevron-left"
                             @click="backToAASList()" />
-                        <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
-                        <template v-if="submodelList.length > 10">
-                            <v-col class="ml-2">
+                        <span v-if="!selectedAAS || Object.keys(selectedAAS).length === 0">Submodel List </span>
+                        <template v-else-if="submodelListUnfiltered.length > 10">
+                            <v-col>
                                 <v-text-field
                                     variant="outlined"
                                     density="compact"
@@ -24,14 +23,17 @@
                                     @update:model-value="filterSubmodelList"></v-text-field>
                             </v-col>
                         </template>
-                        <span v-else class="text-truncate ml-2">
-                            {{ nameToDisplay(selectedAAS) }}
-                        </span>
+                        <template v-else>
+                            <v-icon icon="custom:aasIcon" color="primary" size="small" class="ml-2" />
+                            <span class="text-truncate ml-2">
+                                {{ nameToDisplay(selectedAAS) }}
+                            </span>
+                        </template>
                     </div>
                 </v-card-title>
                 <v-divider></v-divider>
             </template>
-            <v-card-text class="py-2 px-2" style="overflow-y: auto; height: calc(100svh - 170px)">
+            <v-card-text class="pt-2 pb-0 px-2" style="overflow-y: auto; height: calc(100svh - 170px)">
                 <div v-if="listLoading">
                     <v-skeleton-loader type="list-item@6"></v-skeleton-loader>
                 </div>
@@ -43,7 +45,7 @@
                                 ref="virtualScrollRef"
                                 :items="submodelList"
                                 :item-height="56"
-                                class="pb-2 bg-card">
+                                class="bg-card">
                                 <template #default="{ item }">
                                     <v-list-item
                                         :key="item.id"
@@ -98,7 +100,6 @@
     import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useAASStore } from '@/store/AASDataStore';
-    import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     // Extend the ComponentPublicInstance type to include scrollToIndex
@@ -117,7 +118,6 @@
     // Stores
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
-    const envStore = useEnvStore();
 
     // Vuetify
     const theme = useTheme();
@@ -136,7 +136,6 @@
     const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL);
     const isMobile = computed(() => navigationStore.getIsMobile);
     const primaryColor = computed(() => theme.current.value.colors.primary);
-    const singleAas = computed(() => envStore.getSingleAas); // Get the single AAS state from the Store
 
     // Watchers
     watch(
@@ -217,7 +216,9 @@
     }
 
     function selectSM(submodel: any): void {
-        if (isSelected(submodel)) {
+        // No deselection on mobile
+        // On mobile every click on a submodel routes to visualization ()
+        if (isSelected(submodel) && !isMobile.value) {
             // Deselect submodel: remove the path query
             let query = { ...route.query };
             delete query.path;
