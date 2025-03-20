@@ -281,8 +281,8 @@
             default: {} as any,
         },
         smeLocator: {
-            type: Number,
-            default: 0,
+            type: String,
+            default: '',
         },
         topMargin: {
             type: String,
