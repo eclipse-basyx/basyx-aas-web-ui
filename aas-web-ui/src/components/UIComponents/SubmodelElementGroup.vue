@@ -82,12 +82,23 @@
                                 </template>
                             </v-text-field>
                             <!-- MultiLanguageProperty -->
-                            <DescriptionElement
-                                v-else-if="SubmodelElement.modelType == 'MultiLanguageProperty'"
-                                :description-array="SubmodelElement.value"
-                                :description-title="nameToDisplay(SubmodelElement)"
-                                :small="false"
-                                style="margin-top: -12px"></DescriptionElement>
+                            <template v-else-if="SubmodelElement.modelType == 'MultiLanguageProperty'">
+                                <v-list-item class="mt-n2">
+                                    <template #title>
+                                        <div class="mt-1 text-subtitle-2">
+                                            {{ nameToDisplay(SubmodelElement) + ':' }}
+                                        </div>
+                                    </template>
+                                    <v-list-item-subtitle v-for="(value, i) in SubmodelElement.value" :key="i">
+                                        <div class="pt-2">
+                                            <v-chip label size="x-small" border class="mr-2">{{
+                                                value.language ? value.language : 'no-lang'
+                                            }}</v-chip>
+                                            <span>{{ value.text }}</span>
+                                        </div>
+                                    </v-list-item-subtitle>
+                                </v-list-item>
+                            </template>
                             <!-- Operation -->
                             <v-alert
                                 v-else-if="SubmodelElement.modelType == 'Operation'"
@@ -255,54 +266,41 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-    import DescriptionElement from '@/components/UIComponents/DescriptionElement.vue';
+<script lang="ts" setup>
     import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
-    import { useAASStore } from '@/store/AASDataStore';
 
-    export default defineComponent({
-        name: 'SubmodelElementGroup',
-        components: {
-            DescriptionElement,
+    // Composables
+    const { unitSuffix } = useConceptDescriptionHandling();
+    const { nameToDisplay } = useReferableUtils();
+
+    // Properties
+    defineProps({
+        smeObject: {
+            type: Object as any,
+            default: {} as any,
         },
-        props: ['smeObject', 'smeLocator', 'topMargin'],
-
-        setup() {
-            const aasStore = useAASStore();
-            const { unitSuffix } = useConceptDescriptionHandling();
-            const { nameToDisplay } = useReferableUtils();
-
-            return {
-                aasStore, // AASStore Object
-                nameToDisplay,
-                unitSuffix,
-            };
+        smeLocator: {
+            type: Number,
+            default: 0,
         },
-
-        computed: {
-            // get selected AAS from Store
-            SelectedAAS() {
-                return this.aasStore.getSelectedAAS;
-            },
-        },
-
-        methods: {
-            referenceKeyTypeToDisplay(keys: any): string {
-                if (keys?.length > 0) {
-                    return keys[keys.length - 1].type;
-                }
-                return '';
-            },
-
-            referenceKeyValueToDisplay(keys: any): string {
-                if (keys?.length > 0) {
-                    return keys[keys.length - 1].value;
-                }
-                return '';
-            },
+        topMargin: {
+            type: String,
+            default: '',
         },
     });
+
+    function referenceKeyTypeToDisplay(keys: any): string {
+        if (keys?.length > 0) {
+            return keys[keys.length - 1].type;
+        }
+        return '';
+    }
+
+    function referenceKeyValueToDisplay(keys: any): string {
+        if (keys?.length > 0) {
+            return keys[keys.length - 1].value;
+        }
+        return '';
+    }
 </script>
