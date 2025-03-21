@@ -88,12 +88,12 @@
                         </template>
                         <v-sheet border>
                             <v-list dense density="compact" class="py-0" slim>
-                                <!-- Copy SM endpoint to clipboard -->
-                                <v-list-item @click="copyToClipboard(item.path, 'SM endpoint', copyIconAsRef)">
+                                <!-- Copy SM Endpoint to clipboard -->
+                                <v-list-item @click.stop="copyToClipboard(item.path, 'SM Endpoint', copyIconAsRef)">
                                     <template #prepend>
                                         <v-icon size="x-small">{{ copyIcon }} </v-icon>
                                     </template>
-                                    <v-list-item-subtitle>Copy Submodel endpoint</v-list-item-subtitle>
+                                    <v-list-item-subtitle>Copy Submodel Endpoint</v-list-item-subtitle>
                                 </v-list-item>
                                 <v-divider></v-divider>
                                 <!-- Open Submodel edit dialog -->
