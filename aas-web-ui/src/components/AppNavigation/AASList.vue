@@ -195,13 +195,15 @@
                                                     <v-list-item-subtitle>Download AAS</v-list-item-subtitle>
                                                 </v-list-item>
                                                 <v-divider></v-divider>
-                                                <!-- Copy SM endpoint to clipboard -->
+                                                <!-- Copy AAS Endpoint to clipboard -->
                                                 <v-list-item
-                                                    @click="copyToClipboard(item.path, 'SM endpoint', copyIconAsRef)">
+                                                    @click.stop="
+                                                        copyToClipboard(item.path, 'AAS Endpoint', copyIconAsRef)
+                                                    ">
                                                     <template #prepend>
                                                         <v-icon size="x-small">{{ copyIcon }} </v-icon>
                                                     </template>
-                                                    <v-list-item-subtitle>Copy AAS endpoint</v-list-item-subtitle>
+                                                    <v-list-item-subtitle>Copy AAS Endpoint</v-list-item-subtitle>
                                                 </v-list-item>
                                                 <v-divider></v-divider>
                                                 <!-- Open AAS edit dialog -->

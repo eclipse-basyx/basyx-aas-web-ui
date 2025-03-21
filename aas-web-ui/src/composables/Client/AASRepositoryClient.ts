@@ -469,7 +469,11 @@ export function useAASRepositoryClient() {
         if (Array.isArray(submodelRefList) && submodelRefList.length > 0) {
             const submodelIds = submodelRefList.map((submodelRef: any) => submodelRef?.keys[0]?.value);
 
-            let aasSerializationPath = aasRepoUrl.substring(0, aasRepoUrl.lastIndexOf('/')); // strips everything after the last slash (http://localhost:8081/shells -> http://localhost:8081)
+            let aasSerializationPath = aasRepoUrl;
+
+            if (aasRepoUrl.split('/').length - 1 > 2) {
+                aasSerializationPath = aasRepoUrl.substring(0, aasRepoUrl.lastIndexOf('/')); // strips everything after the last slash (http://localhost:8081/shells -> http://localhost:8081)
+            }
 
             // e.g. http://localhost:8081/serialization?aasIds=abc&submodelIds=def&submodelIds=ghi&includeConceptDescriptions=true)
             aasSerializationPath +=
