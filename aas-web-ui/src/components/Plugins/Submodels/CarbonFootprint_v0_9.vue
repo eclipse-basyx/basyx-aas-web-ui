@@ -2,9 +2,9 @@
     <v-container fluid class="pa-0">
         <VisualizationHeader
             :submodel-element-data="submodelElementData"
-            default-title="Digital Nameplate for industrial equipment"></VisualizationHeader>
+            default-title="Carbon Footprint"></VisualizationHeader>
         <!-- Loading -->
-        <v-sheet v-if="isLoading" class="mb-4">
+        <v-sheet v-if="isLoading" class="mb-4" color="transparent">
             <v-card class="mb-4">
                 <v-skeleton-loader type="subtitle" />
                 <v-skeleton-loader type="image" />
@@ -20,7 +20,7 @@
                     {{ 'Product Carbon Footprint' + (Object.keys(productCarbonFootprints).length > 1 ? 's' : '') }}
                 </v-card-title>
                 <v-card-text>
-                    <v-timeline direction="vertical" side="start">
+                    <v-timeline direction="vertical" side="start" class="border rounded">
                         <v-timeline-item
                             v-for="pcfSMC in productCarbonFootprints"
                             :key="pcfSMC.idShort"
@@ -41,13 +41,16 @@
                                             pcfLifeCyclePhase?.valueId?.keys &&
                                             Array.isArray(pcfLifeCyclePhase?.valueId?.keys) &&
                                             pcfLifeCyclePhase?.valueId?.keys.length > 0
-                                        "
-                                        v-html="
+                                        ">
+                                        {{
                                             getPcfLifeCyclePhaseFromId(
                                                 pcfLifeCyclePhase?.valueId?.keys[0]?.value
-                                            )?.value.replaceAll(', ', '<br />')
-                                        "></p>
-                                    <p v-else v-html="valueToDisplay(pcfLifeCyclePhase).replaceAll(', ', '<br />')"></p>
+                                            )?.value.replaceAll(', ', '\n')
+                                        }}
+                                    </p>
+                                    <p v-else>
+                                        {{ valueToDisplay(pcfLifeCyclePhase).replaceAll(', ', '\n') }}
+                                    </p>
                                 </template>
                             </template>
                             <div>
@@ -107,7 +110,7 @@
                                     >)
                                 </p>
                                 <p class="text-caption text-medium-emphasis">
-                                    <v-icon size="small">mdi-calendar</v-icon>
+                                    <v-icon size="small" class="mr-1">mdi-calendar</v-icon>
                                     <span>valid from </span>
                                     <span>
                                         {{
@@ -158,7 +161,7 @@
                                         )
                                     "
                                     class="text-caption text-medium-emphasis">
-                                    <v-icon size="small">mdi-map-marker-outline</v-icon>
+                                    <v-icon size="small" class="mr-1">mdi-map-marker-outline</v-icon>
                                     <span>
                                         {{
                                             determineAddress(
@@ -182,7 +185,11 @@
                     {{ 'Transport Carbon Footprint' + (Object.keys(productCarbonFootprints).length > 1 ? 's' : '') }}
                 </v-card-title>
                 <v-card-text>
-                    <v-timeline v-if="transportCarbonFootprints" direction="vertical" side="start">
+                    <v-timeline
+                        v-if="transportCarbonFootprints"
+                        direction="vertical"
+                        side="start"
+                        class="border rounded">
                         <v-timeline-item
                             v-for="tcfSMC in transportCarbonFootprints"
                             :key="tcfSMC.idShort"
@@ -209,19 +216,21 @@
                                             tcfProcessesForGreenhouseGasEmissionInATransportService?.valueId?.keys
                                                 .length > 0
                                         "
-                                        v-html="
+                                        style="white-space: pre-wrap">
+                                        {{
                                             getTcfProcessesForGreenhouseGasEmissionInATransportServiceFromId(
                                                 tcfProcessesForGreenhouseGasEmissionInATransportService?.valueId
                                                     ?.keys[0]?.value
-                                            )?.value.replaceAll(', ', '<br />')
-                                        "></p>
-                                    <p
-                                        v-else
-                                        v-html="
+                                            )?.value.replaceAll(', ', '\n')
+                                        }}
+                                    </p>
+                                    <p v-else style="white-space: pre-wrap">
+                                        {{
                                             valueToDisplay(
                                                 tcfProcessesForGreenhouseGasEmissionInATransportService
-                                            ).replaceAll(', ', '<br />')
-                                        "></p>
+                                            ).replaceAll(', ', '\n')
+                                        }}
+                                    </p>
                                 </template>
                             </template>
                             <div>
@@ -281,7 +290,7 @@
                                     >)
                                 </p>
                                 <p class="text-caption text-medium-emphasis">
-                                    <v-icon size="small">mdi-calendar</v-icon>
+                                    <v-icon size="small" class="mr-1">mdi-calendar</v-icon>
                                     <span>valid from </span>
                                     <span>
                                         {{
@@ -332,7 +341,7 @@
                                         )
                                     "
                                     class="text-caption text-medium-emphasis">
-                                    <v-icon size="small">mdi-map-marker-outline</v-icon>
+                                    <v-icon size="small" class="mr-1">mdi-map-marker-outline</v-icon>
                                     <span>
                                         {{
                                             determineAddress(
