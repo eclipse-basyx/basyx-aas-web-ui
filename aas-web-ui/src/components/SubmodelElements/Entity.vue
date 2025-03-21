@@ -32,9 +32,7 @@
                         v-if="entityObject.globalAssetId"
                         v-bind="props"
                         :class="isHovering ? 'cursor-pointer' : ''"
-                        @click.stop="
-                            copyToClipboard(entityObject.globalAssetId, 'Global Asset ID', getCopyIconAsRef())
-                        ">
+                        @click="copyToClipboard(entityObject.globalAssetId, 'Global Asset ID', getCopyIconAsRef())">
                         <v-icon v-if="isHovering" color="subtitleText" size="x-small" class="mr-1">{{
                             copyIcon
                         }}</v-icon>
