@@ -20,30 +20,6 @@ export function useTechnicalData_v1_2Utils() {
     const fileProductImageSemanticId = 'https://admin-shell.io/ZVEI/TechnicalData/ProductImage/1/1';
 
     /**
-     * Retrieves Technical Data Submodel (SM) of an Asset Administration Shell (AAS).
-     *
-     * @async
-     * @param {string} aasId - The ID of the AAS to retrieve its Technical Data SM.
-     * @returns {string} A promise that resolves to a Technical Data SM.
-     */
-    async function getSm(aasId: string): Promise<any> {
-        const failResponse = {};
-
-        if (!aasId) return failResponse;
-
-        aasId = aasId.trim();
-
-        if (aasId === '') return failResponse;
-
-        aasId = aasId.trim();
-
-        const smTechnicalDataId = await getSmIdOfAasIdBySemanticId(aasId, smSemanticId);
-        const smTechnicalData = await fetchSmById(smTechnicalDataId);
-
-        return smTechnicalData;
-    }
-
-    /**
      * Retrieves Product Image URL of Technical Data Submodel (SM) of an Asset Administration Shell (AAS).
      *
      * @async
@@ -77,8 +53,6 @@ export function useTechnicalData_v1_2Utils() {
 
             return getProductImageURL(smTechnicalData);
         }
-
-        return failResponse;
     }
 
     function getProductImageURL(smTechnicalData: any): { url: string; isExternal: boolean } {
@@ -103,5 +77,5 @@ export function useTechnicalData_v1_2Utils() {
         return { url: '', isExternal: false };
     }
 
-    return { smSemanticId, smIdShort, getSm, getProductImageUrlByAasId, getProductImageURL };
+    return { smSemanticId, smIdShort, getProductImageUrlByAasId, getProductImageURL };
 }
