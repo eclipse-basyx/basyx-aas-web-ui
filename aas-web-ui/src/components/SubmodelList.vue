@@ -66,6 +66,25 @@
                                         <template #prepend>
                                             <v-chip label border color="primary" size="x-small" class="mr-3">SM</v-chip>
                                         </template>
+                                        <v-tooltip
+                                            v-if="item.id || item.idShort"
+                                            activator="parent"
+                                            open-delay="600"
+                                            transition="slide-x-transition"
+                                            :disabled="isMobile">
+                                            <div v-if="item.id" class="text-caption">
+                                                <span class="font-weight-bold">{{ 'ID: ' }}</span>
+                                                {{ item.id }}
+                                            </div>
+                                            <div v-if="item.idShort" class="text-caption">
+                                                <span class="font-weight-bold"> {{ 'idShort: ' }}</span>
+                                                {{ item.idShort }}
+                                            </div>
+                                            <div v-if="item?.semanticId?.keys[0]?.value" class="text-caption">
+                                                <span class="font-weight-bold"> {{ 'semanticId: ' }}</span>
+                                                {{ item.semanticId.keys[0].value }}
+                                            </div>
+                                        </v-tooltip>
                                         <v-list-item-title
                                             :class="isSelected(item) ? 'text-primary' : 'text-listItemText'"
                                             >{{ nameToDisplay(item) }}</v-list-item-title
@@ -191,6 +210,8 @@
             submodelList.value = [...submodelsSorted];
 
             submodelListUnfiltered.value = [...submodelsSorted];
+
+            console.log(submodelListUnfiltered.value);
 
             scrollToSelectedSubmodel();
 
