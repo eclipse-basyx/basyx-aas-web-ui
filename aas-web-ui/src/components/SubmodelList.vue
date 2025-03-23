@@ -67,28 +67,92 @@
                                             <v-chip label border color="primary" size="x-small" class="mr-3">SM</v-chip>
                                         </template>
                                         <v-tooltip
-                                            v-if="item.id || item.idShort"
+                                            v-if="!isMobile"
                                             activator="parent"
                                             open-delay="600"
                                             transition="slide-x-transition"
                                             :disabled="isMobile">
+                                            <!-- Submodel ID -->
                                             <div v-if="item.id" class="text-caption">
                                                 <span class="font-weight-bold">{{ 'ID: ' }}</span>
                                                 {{ item.id }}
                                             </div>
+                                            <!-- Submodel idShort -->
                                             <div v-if="item.idShort" class="text-caption">
                                                 <span class="font-weight-bold"> {{ 'idShort: ' }}</span>
                                                 {{ item.idShort }}
                                             </div>
+                                            <!-- Submodel semanticId -->
                                             <div v-if="item?.semanticId?.keys[0]?.value" class="text-caption">
                                                 <span class="font-weight-bold"> {{ 'semanticId: ' }}</span>
                                                 {{ item.semanticId.keys[0].value }}
                                             </div>
+                                            <v-divider v-if="item.administration?.version" class="my-1" />
+                                            <!-- Submodel administrative information -->
+                                            <div v-if="item.administration?.version" class="text-caption">
+                                                <span class="font-weight-bold">{{ 'Version: ' }}</span>
+                                                {{
+                                                    item.administration.version +
+                                                    (item.administration.revision
+                                                        ? '.' + item.administration.revision
+                                                        : '')
+                                                }}
+                                            </div>
+                                            <v-divider v-if="item?.semanticId?.keys[0]?.value" class="my-1" />
+                                            <!-- Submodel Template name -->
+                                            <div
+                                                v-if="
+                                                    smts.find(
+                                                        (smt: any) => item.semanticId.keys[0].value === smt.semanticId
+                                                    )
+                                                "
+                                                class="text-caption">
+                                                <span class="font-weight-bold">{{ 'SMT: ' }}</span>
+                                                {{
+                                                    smts.find(
+                                                        (smt: any) => item.semanticId.keys[0].value === smt.semanticId
+                                                    )?.name
+                                                }}
+                                            </div>
+                                            <!-- Submodel Template version -->
+                                            <div
+                                                v-if="
+                                                    smts.find(
+                                                        (smt: any) => item.semanticId.keys[0].value === smt.semanticId
+                                                    )
+                                                "
+                                                class="text-caption">
+                                                <span class="font-weight-bold">{{ 'SMT Version: ' }}</span>
+                                                {{
+                                                    smts.find(
+                                                        (smt: any) => item.semanticId.keys[0].value === smt.semanticId
+                                                    )?.version
+                                                }}
+                                            </div>
+                                            <!-- Submodel Template version extracted from semanticId -->
+                                            <div
+                                                v-else-if="
+                                                    extractVersionRevision(item?.semanticId?.keys[0]?.value).version
+                                                "
+                                                class="text-caption">
+                                                <span class="font-weight-bold">{{ 'SMT Version: ' }}</span>
+                                                {{
+                                                    extractVersionRevision(item?.semanticId?.keys[0]?.value).version +
+                                                    (extractVersionRevision(item?.semanticId?.keys[0]?.value).revision
+                                                        ? '.' +
+                                                          extractVersionRevision(item?.semanticId?.keys[0]?.value)
+                                                              .revision
+                                                        : '')
+                                                }}
+                                            </div>
                                         </v-tooltip>
                                         <v-list-item-title
-                                            :class="isSelected(item) ? 'text-primary' : 'text-listItemText'"
-                                            >{{ nameToDisplay(item) }}</v-list-item-title
-                                        >
+                                            :class="isSelected(item) ? 'text-primary' : 'text-listItemText'">
+                                            {{ smTitleToDisplay(item) }}
+                                        </v-list-item-title>
+                                        <template v-if="smVersionToDisplay(item)" #append>
+                                            <v-chip size="x-small"> v{{ smVersionToDisplay(item) }} </v-chip>
+                                        </template>
                                     </v-list-item>
                                 </template>
                             </v-virtual-scroll>
@@ -120,6 +184,8 @@
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { extractVersionRevision } from '@/utils/AAS/SemanticIdUtils';
+    import { smts } from '@/utils/AAS/SubmodelTemplateUtils';
 
     // Extend the ComponentPublicInstance type to include scrollToIndex
     interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -211,8 +277,6 @@
 
             submodelListUnfiltered.value = [...submodelsSorted];
 
-            console.log(submodelListUnfiltered.value);
-
             scrollToSelectedSubmodel();
 
             listLoading.value = false;
@@ -303,5 +367,42 @@
 
     function backToAASList(): void {
         router.push({ name: 'AASList', query: route.query });
+    }
+
+    function smTitleToDisplay(sm: any): string {
+        // If there is a specified displayName, use it
+        if (sm?.displayName && Array.isArray(sm?.displayName) && sm?.displayName.length > 0) return nameToDisplay(sm);
+
+        // Use name of SMT specification
+        const smt = smts.find((smt: any) => sm.semanticId.keys[0].value === smt.semanticId);
+        if (smt) return smt.name;
+
+        return nameToDisplay(sm);
+    }
+
+    function smVersionToDisplay(sm: any): string {
+        // If there are administrative information use it
+        if (sm.administration?.version)
+            return sm.administration.version + (sm.administration.revision ? '.' + sm.administration.revision : '');
+
+        // Use version of SMT specification
+        const smt = smts.find((smt: any) => sm.semanticId.keys[0].value === smt.semanticId);
+        if (smt) return smt.version;
+
+        // Use version of from semanticId
+        if (sm?.semanticId?.keys[0]?.value) {
+            const semanticId = sm.semanticId.keys[0].value;
+
+            if (semanticId.startsWith('http') && extractVersionRevision(semanticId)) {
+                return (
+                    extractVersionRevision(semanticId).version +
+                    (extractVersionRevision(semanticId).revision
+                        ? '.' + extractVersionRevision(semanticId).revision
+                        : '')
+                );
+            }
+        }
+
+        return '';
     }
 </script>
