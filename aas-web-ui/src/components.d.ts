@@ -23,6 +23,7 @@ declare module 'vue' {
     BooleanType: typeof import('./components/SubmodelElements/ValueTypes/BooleanType.vue')['default']
     Button: typeof import('./components/Widgets/Button.vue')['default']
     CADPreview: typeof import('./components/Plugins/CADPreview.vue')['default']
+    CarbonFootprint_v0_9: typeof import('./components/Plugins/Submodels/CarbonFootprint_v0_9.vue')['default']
     ColumnChart: typeof import('./components/Widgets/ColumnChart.vue')['default']
     ComponentVisualization: typeof import('./components/ComponentVisualization.vue')['default']
     ConceptDescription: typeof import('./components/UIComponents/ConceptDescription.vue')['default']
