@@ -142,18 +142,29 @@
                                 @click="selectAAS(item)">
                                 <!-- Tooltip with idShort and id -->
                                 <v-tooltip
-                                    v-if="item.id || item.idShort"
+                                    v-if="!isMobile"
                                     activator="parent"
                                     open-delay="600"
                                     transition="slide-x-transition"
                                     :disabled="isMobile">
+                                    <!-- AAS ID -->
                                     <div v-if="item.id" class="text-caption">
                                         <span class="font-weight-bold">{{ 'ID: ' }}</span>
                                         {{ item.id }}
                                     </div>
+                                    <!-- AAS idShort -->
                                     <div v-if="item.idShort" class="text-caption">
                                         <span class="font-weight-bold"> {{ 'idShort: ' }}</span>
                                         {{ item.idShort }}
+                                    </div>
+                                    <v-divider v-if="item.administration?.version" class="my-1" />
+                                    <!-- AAS administrative information -->
+                                    <div v-if="item.administration?.version" class="text-caption">
+                                        <span class="font-weight-bold">{{ 'Version: ' }}</span>
+                                        {{
+                                            item.administration.version +
+                                            (item.administration.revision ? '.' + item.administration.revision : '')
+                                        }}
                                     </div>
                                 </v-tooltip>
                                 <template #title>
