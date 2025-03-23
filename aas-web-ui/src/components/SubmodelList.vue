@@ -269,9 +269,13 @@
         listLoading.value = true;
 
         fetchAasSmListById(selectedAAS.value.id).then((submodels: Array<any>) => {
-            let submodelsSorted = submodels.sort((a: { [x: string]: number }, b: { [x: string]: number }) =>
-                a['id'] > b['id'] ? 1 : -1
-            );
+            let submodelsSorted = submodels.sort((smA: any, smB: any) => {
+                // Sort SMs with respect to displayed title and version
+                return smTitleToDisplay(smA) + '|' + smVersionToDisplay(smA) >
+                    smTitleToDisplay(smB) + '|' + smVersionToDisplay(smB)
+                    ? 1
+                    : -1;
+            });
 
             submodelList.value = [...submodelsSorted];
 
