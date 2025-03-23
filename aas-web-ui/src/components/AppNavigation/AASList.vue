@@ -147,13 +147,13 @@
                                     open-delay="600"
                                     transition="slide-x-transition"
                                     :disabled="isMobile">
-                                    <div v-if="item.idShort" class="text-caption">
-                                        <span class="font-weight-bold"> {{ 'idShort: ' }}</span>
-                                        {{ item.idShort }}
-                                    </div>
                                     <div v-if="item.id" class="text-caption">
                                         <span class="font-weight-bold">{{ 'ID: ' }}</span>
                                         {{ item.id }}
+                                    </div>
+                                    <div v-if="item.idShort" class="text-caption">
+                                        <span class="font-weight-bold"> {{ 'idShort: ' }}</span>
+                                        {{ item.idShort }}
                                     </div>
                                 </v-tooltip>
                                 <template #title>
