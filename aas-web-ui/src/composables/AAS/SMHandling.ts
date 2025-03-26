@@ -232,7 +232,7 @@ export function useSMHandling() {
             withConceptDescriptions &&
             (!smOrSme.conceptDescriptions ||
                 !Array.isArray(smOrSme.conceptDescriptions) ||
-                smOrSme.conceptDescriptions.length === 1)
+                smOrSme.conceptDescriptions.length === 0)
         ) {
             smOrSme.conceptDescriptions = await fetchCds(smOrSme);
         }
