@@ -100,24 +100,27 @@
                                             </div>
                                             <v-divider
                                                 v-if="
-                                                    smts.find(
+                                                    item?.semanticId?.keys[0]?.value &&
+                                                    (smts.find(
                                                         (smt: any) => item.semanticId.keys[0].value === smt.semanticId
                                                     ) ||
-                                                    extractVersionRevision(item?.semanticId?.keys[0]?.value).version
+                                                        extractVersionRevision(item.semanticId.keys[0].value).version)
                                                 "
                                                 class="my-1" />
                                             <!-- Submodel Template name -->
                                             <div
                                                 v-if="
                                                     smts.find(
-                                                        (smt: any) => item.semanticId.keys[0].value === smt.semanticId
+                                                        (smt: any) =>
+                                                            item?.semanticId?.keys[0]?.value === smt.semanticId
                                                     )
                                                 "
                                                 class="text-caption">
                                                 <span class="font-weight-bold">{{ 'SMT: ' }}</span>
                                                 {{
                                                     smts.find(
-                                                        (smt: any) => item.semanticId.keys[0].value === smt.semanticId
+                                                        (smt: any) =>
+                                                            item?.semanticId?.keys[0]?.value === smt.semanticId
                                                     )?.name
                                                 }}
                                             </div>
@@ -125,20 +128,23 @@
                                             <div
                                                 v-if="
                                                     smts.find(
-                                                        (smt: any) => item.semanticId.keys[0].value === smt.semanticId
+                                                        (smt: any) =>
+                                                            item?.semanticId?.keys[0]?.value === smt.semanticId
                                                     )
                                                 "
                                                 class="text-caption">
                                                 <span class="font-weight-bold">{{ 'SMT Version: ' }}</span>
                                                 {{
                                                     smts.find(
-                                                        (smt: any) => item.semanticId.keys[0].value === smt.semanticId
+                                                        (smt: any) =>
+                                                            item?.semanticId?.keys[0]?.value === smt.semanticId
                                                     )?.version
                                                 }}
                                             </div>
                                             <!-- Submodel Template version extracted from semanticId -->
                                             <div
                                                 v-else-if="
+                                                    item?.semanticId?.keys[0]?.value &&
                                                     extractVersionRevision(item?.semanticId?.keys[0]?.value).version
                                                 "
                                                 class="text-caption">
@@ -385,7 +391,7 @@
         if (sm?.displayName && Array.isArray(sm?.displayName) && sm?.displayName.length > 0) return nameToDisplay(sm);
 
         // Use name of SMT specification
-        const smt = smts.find((smt: any) => sm.semanticId.keys[0].value === smt.semanticId);
+        const smt = smts.find((smt: any) => sm?.semanticId?.keys[0]?.value === smt.semanticId);
         if (smt) return smt.name;
 
         return nameToDisplay(sm);
@@ -397,8 +403,10 @@
             return sm.administration.version + (sm.administration.revision ? '.' + sm.administration.revision : '');
 
         // Use version of SMT specification
-        const smt = smts.find((smt: any) => sm.semanticId.keys[0].value === smt.semanticId);
-        if (smt) return smt.version;
+        if (sm?.semanticId?.keys[0]?.value) {
+            const smt = smts.find((smt: any) => sm.semanticId.keys[0].value === smt.semanticId);
+            if (smt) return smt.version;
+        }
 
         // Use version of from semanticId
         if (sm?.semanticId?.keys[0]?.value) {
