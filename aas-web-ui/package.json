@@ -39,9 +39,8 @@
   },
   "devDependencies": {
     "@aas-core-works/aas-core3.0-typescript": "^1.0.3",
-    "@eslint/js": "^9.20.0",
+    "@eslint/js": "^9.23.0",
     "@testing-library/vue": "^8.1.0",
-    "@types/eslint__js": "^8.42.3",
     "@types/leaflet": "^1.9.17",
     "@types/lodash": "^4.17.16",
     "@types/md5": "^2.3.5",
@@ -54,12 +53,12 @@
     "@vitest/ui": "^3.0.9",
     "@vue/test-utils": "^2.4.6",
     "cross-env": "^7.0.3",
-    "eslint": "^9.21.0",
+    "eslint": "^9.23.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.5",
     "eslint-plugin-promise": "^7.2.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
-    "eslint-plugin-vue": "^9.32.0",
+    "eslint-plugin-vue": "^10.0.0",
     "jsdom": "^26.0.0",
     "prettier": "^3.5.3",
     "sass": "^1.86.0",
@@ -70,6 +69,7 @@
     "vite": "^6.2.3",
     "vite-plugin-vuetify": "^2.1.0",
     "vitest": "^3.0.9",
+    "vue-eslint-parser": "^10.1.1",
     "vue-tsc": "^2.2.8"
   }
 }
