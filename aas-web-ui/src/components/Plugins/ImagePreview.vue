@@ -61,7 +61,7 @@
     async function initialize(): Promise<void> {
         Base64Image.value = '';
         imageUrl.value = '';
-        if (props.submodelElementData.modelType == 'File') {
+        if (props.submodelElementData.modelType === 'File') {
             Base64Image.value = await valueBlob(props.submodelElementData);
         } else if (props.submodelElementData.modelType == 'Blob') {
             getDecodedImageBlob();
