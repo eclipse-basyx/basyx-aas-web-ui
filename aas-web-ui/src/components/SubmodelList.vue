@@ -98,7 +98,14 @@
                                                         : '')
                                                 }}
                                             </div>
-                                            <v-divider v-if="item?.semanticId?.keys[0]?.value" class="my-1" />
+                                            <v-divider
+                                                v-if="
+                                                    smts.find(
+                                                        (smt: any) => item.semanticId.keys[0].value === smt.semanticId
+                                                    ) ||
+                                                    extractVersionRevision(item?.semanticId?.keys[0]?.value).version
+                                                "
+                                                class="my-1" />
                                             <!-- Submodel Template name -->
                                             <div
                                                 v-if="
