@@ -1,6 +1,4 @@
-import { useAASHandling } from '@/composables/AAS/AASHandling';
 import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
-import { useSMHandling } from '@/composables/AAS/SMHandling';
 import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
 import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement';
 import { firstLangStringSetText } from '@/utils/AAS/SubmodelElements/MultiLanguagePropertyUtils';
@@ -8,11 +6,9 @@ import { getCountryName } from '@/utils/LocaleUtils';
 import { firstLetterToLowerCase } from '@/utils/StringUtils';
 
 export function useContactInformation_v1_0Utils() {
-    const { getSmIdOfAasIdBySemanticId } = useAASHandling();
-    const { fetchSmById } = useSMHandling();
+    // Composables
     const { checkIdShort, getSubmodelElementByIdShort } = useReferableUtils();
     const { hasValue, valueToDisplay } = useSME();
-
     const { valueUrl } = useSMEFile();
 
     const semanticId = 'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations';
@@ -103,31 +99,6 @@ export function useContactInformation_v1_0Utils() {
             value: 'Home',
         },
     ];
-
-    /**
-     * Retrieves Technical Data Submodel (SM) of an Asset Administration Shell (AAS).
-     *
-     * @async
-     * @param {string} aasId - The ID of the AAS to retrieve its Technical Data SM.
-     * @param {boolean} withConceptDescriptions - Flag to specify if SM should be fetched with ConceptDescriptions (CDs)
-     * @returns {string} A promise that resolves to a Technical Data SM.
-     */
-    async function getSm(aasId: string, withConceptDescriptions: boolean = false): Promise<any> {
-        const failResponse = {};
-
-        if (!aasId) return failResponse;
-
-        aasId = aasId.trim();
-
-        if (aasId === '') return failResponse;
-
-        aasId = aasId.trim();
-
-        const smTechnicalDataId = await getSmIdOfAasIdBySemanticId(aasId, semanticId);
-        const smTechnicalData = await fetchSmById(smTechnicalDataId, withConceptDescriptions);
-
-        return smTechnicalData;
-    }
 
     function getRoleOfContactPerson(valueId: string): string {
         // console.log('getRoleOfContactPerson()', 'valueId:', valueId);
@@ -592,7 +563,6 @@ export function useContactInformation_v1_0Utils() {
         getTypeOfEmailAddress,
         getTypeOfFaxNumber,
         getTypeOfTelephone,
-        getSm,
         rolesOfContactPerson,
         typesOfEmailAddress,
         typesOfFaxNumber,

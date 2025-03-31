@@ -1,7 +1,7 @@
 <template>
     <v-container fluid class="pa-0">
         <v-card color="card" elevation="0">
-            <!-- Title Bar in the AAS List -->
+            <!-- Title bar -->
             <template v-if="!singleAas">
                 <v-card-title>
                     <v-row align="center">
@@ -142,17 +142,29 @@
                                 @click="selectAAS(item)">
                                 <!-- Tooltip with idShort and id -->
                                 <v-tooltip
+                                    v-if="!isMobile"
                                     activator="parent"
                                     open-delay="600"
                                     transition="slide-x-transition"
                                     :disabled="isMobile">
-                                    <div class="text-caption">
+                                    <!-- AAS ID -->
+                                    <div v-if="item.id" class="text-caption">
+                                        <span class="font-weight-bold">{{ 'ID: ' }}</span>
+                                        {{ item.id }}
+                                    </div>
+                                    <!-- AAS idShort -->
+                                    <div v-if="item.idShort" class="text-caption">
                                         <span class="font-weight-bold"> {{ 'idShort: ' }}</span>
                                         {{ item.idShort }}
                                     </div>
-                                    <div class="text-caption">
-                                        <span class="font-weight-bold">{{ 'ID: ' }}</span>
-                                        {{ item.id }}
+                                    <v-divider v-if="item.administration?.version" class="my-1" />
+                                    <!-- AAS administrative information -->
+                                    <div v-if="item.administration?.version" class="text-caption">
+                                        <span class="font-weight-bold">{{ 'Version: ' }}</span>
+                                        {{
+                                            item.administration.version +
+                                            (item.administration.revision ? '.' + item.administration.revision : '')
+                                        }}
                                     </div>
                                 </v-tooltip>
                                 <template #title>
@@ -194,13 +206,15 @@
                                                     <v-list-item-subtitle>Download AAS</v-list-item-subtitle>
                                                 </v-list-item>
                                                 <v-divider></v-divider>
-                                                <!-- Copy SM endpoint to clipboard -->
+                                                <!-- Copy AAS Endpoint to clipboard -->
                                                 <v-list-item
-                                                    @click="copyToClipboard(item.path, 'SM endpoint', copyIconAsRef)">
+                                                    @click.stop="
+                                                        copyToClipboard(item.path, 'AAS Endpoint', copyIconAsRef)
+                                                    ">
                                                     <template #prepend>
                                                         <v-icon size="x-small">{{ copyIcon }} </v-icon>
                                                     </template>
-                                                    <v-list-item-subtitle>Copy AAS endpoint</v-list-item-subtitle>
+                                                    <v-list-item-subtitle>Copy AAS Endpoint</v-list-item-subtitle>
                                                 </v-list-item>
                                                 <v-divider></v-divider>
                                                 <!-- Open AAS edit dialog -->
@@ -440,8 +454,8 @@
             // Precompute lowercase search fields
             const processedList = sortedList.map((item) => ({
                 ...item,
-                idLower: item.id.toLowerCase(),
-                idShortLower: item.idShort.toLowerCase(),
+                idLower: item?.id?.toLowerCase() || '',
+                idShortLower: item?.idShort?.toLowerCase() || '',
                 nameLower: nameToDisplay(item).toLowerCase(),
                 descLower: descriptionToDisplay(item).toLowerCase(),
             }));

@@ -1,154 +1,132 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-card color="rgba(0,0,0,0)" elevation="0">
-            <template v-if="!singleAas">
-                <!-- Title Bar in the Submodel Element View -->
-                <v-card-title style="padding: 15px 16px 16px">Element Details</v-card-title>
-                <v-divider />
-            </template>
-            <v-card-text
-                style="overflow-y: auto"
-                :style="singleAas ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 170px)'">
-                <!-- Detailed View of the selected Submodel/SubmodelElement (e.g. Property, Operation, etc.) -->
-                <template
-                    v-if="
-                        selectedAAS &&
-                        Object.keys(selectedAAS).length > 0 &&
-                        selectedNode &&
-                        Object.keys(selectedNode).length > 0 &&
-                        submodelElementData &&
-                        Object.keys(submodelElementData).length > 0
-                    ">
-                    <!-- Detailed View of the selected SubmodelElement (e.g. Property, Operation, etc.) -->
-                    <v-card>
-                        <v-list nav class="pb-0">
-                            <!-- SubmodelELement Identification -->
-                            <IdentificationElement :identification-object="submodelElementData" />
-                            <v-divider
-                                v-if="
-                                    submodelElementData.administration &&
-                                    (submodelElementData.administration.revision != '' ||
-                                        submodelElementData.administration.version != '')
-                                " />
-                            <!-- Submodel Administrative Information-->
-                            <AdministrativeInformationPanel
-                                v-if="submodelElementData.administration"
-                                :administrative-information-object="submodelElementData.administration"
-                                :title="'Administrative Information'" />
-                            <v-divider
-                                v-if="
-                                    submodelElementData.displayName &&
-                                    Array.isArray(submodelElementData.displayName) &&
-                                    submodelElementData.displayName.length > 0
-                                " />
-                            <!-- SubmodelELement DisplayName -->
-                            <LangStringsPanel
-                                :lang-strings-array="submodelElementData.displayName"
-                                :title="'Display Name'" />
-                            <v-divider
-                                v-if="
-                                    submodelElementData.description &&
-                                    Array.isArray(submodelElementData.description) &&
-                                    submodelElementData.description.length > 0
-                                " />
-                            <!-- SubmodelELement Description -->
-                            <LangStringsPanel
-                                :lang-strings-array="submodelElementData.description"
-                                :title="'Description'"
-                                :opened="true" />
-                            <v-divider
-                                v-if="
-                                    submodelElementData.semanticId &&
-                                    Object.keys(submodelElementData.semanticId).length > 0 &&
-                                    submodelElementData.semanticId.keys &&
-                                    Array.isArray(submodelElementData.semanticId.keys) &&
-                                    submodelElementData.semanticId.keys.length > 0
-                                " />
-                            <!-- SubmodelELement SemanticID -->
-                            <ReferencePanel :reference-object="submodelElementData.semanticId" :title="'Semantic ID'" />
-                            <v-divider
-                                v-if="
-                                    submodelElementData.supplementalSemanticIds &&
-                                    Array.isArray(submodelElementData.supplementalSemanticIds) &&
-                                    submodelElementData.supplementalSemanticIds.length > 0
-                                " />
-                            <!-- SubmodelELement SupplementalSemanticID -->
-                            <SupplementalSemanticID
-                                :supplemental-semantic-ids-array="submodelElementData.supplementalSemanticIds"
-                                :supplemental-semantic-ids-title="'Supplemental Semantic ID'" />
-                        </v-list>
-                        <v-divider />
-                        <v-list nav class="px-4 pt-0 pb-5">
-                            <!-- SubmodelELement Representation for different modelTypes -->
-                            <Submodel
-                                v-if="submodelElementData.modelType === 'Submodel'"
-                                :submodel-object="submodelElementData"></Submodel>
-                            <SubmodelElementCollection
-                                v-else-if="submodelElementData.modelType === 'SubmodelElementCollection'"
-                                :submodel-element-collection-object="submodelElementData"></SubmodelElementCollection>
-                            <SubmodelElementList
-                                v-else-if="submodelElementData.modelType === 'SubmodelElementList'"
-                                :submodel-element-list-object="submodelElementData"></SubmodelElementList>
-                            <Property
-                                v-else-if="submodelElementData.modelType === 'Property'"
-                                :property-object="submodelElementData"
-                                :is-editable="editMode"></Property>
-                            <MultiLanguageProperty
-                                v-else-if="submodelElementData.modelType === 'MultiLanguageProperty'"
-                                :multi-language-property-object="submodelElementData"
-                                :is-editable="editMode"></MultiLanguageProperty>
-                            <Operation
-                                v-else-if="submodelElementData.modelType === 'Operation'"
-                                :operation-object="submodelElementData"
-                                :is-editable="editMode"></Operation>
-                            <File
-                                v-else-if="submodelElementData.modelType === 'File'"
-                                :file-object="submodelElementData"
-                                :is-editable="editMode"></File>
-                            <Blob
-                                v-else-if="submodelElementData.modelType === 'Blob'"
-                                :blob-object="submodelElementData"
-                                :is-editable="editMode"></Blob>
-                            <ReferenceElement
-                                v-else-if="submodelElementData.modelType === 'ReferenceElement'"
-                                :reference-element-object="submodelElementData"
-                                :is-editable="editMode"></ReferenceElement>
-                            <Range
-                                v-else-if="submodelElementData.modelType === 'Range'"
-                                :range-object="submodelElementData"></Range>
-                            <Entity
-                                v-else-if="submodelElementData.modelType === 'Entity'"
-                                :entity-object="submodelElementData"></Entity>
-                            <RelationshipElement
-                                v-else-if="submodelElementData.modelType === 'RelationshipElement'"
-                                :relationship-element-object="submodelElementData"></RelationshipElement>
-                            <AnnotatedRelationshipElement
-                                v-else-if="submodelElementData.modelType === 'AnnotatedRelationshipElement'"
-                                :annotated-relationship-element-object="submodelElementData"
-                                :is-editable="editMode"></AnnotatedRelationshipElement>
-                            <InvalidElement v-else :invalid-element-object="submodelElementData"></InvalidElement>
-                        </v-list>
-                        <!-- Last Sync -->
-                        <v-divider />
-                        <LastSync :timestamp="submodelElementData.timestamp"></LastSync>
-                    </v-card>
-                    <template v-if="Array.isArray(conceptDescriptions) && conceptDescriptions.length > 0">
-                        <template v-for="cd in conceptDescriptions" :key="cd.id">
-                            <ConceptDescription :concept-description-object="cd" class="mt-4"></ConceptDescription>
-                        </template>
-                    </template>
+        <!-- Detailed View of the selected Submodel/SubmodelElement (e.g. Property, Operation, etc.) -->
+        <template
+            v-if="
+                selectedAAS &&
+                Object.keys(selectedAAS).length > 0 &&
+                selectedNode &&
+                Object.keys(selectedNode).length > 0 &&
+                submodelElementData &&
+                Object.keys(submodelElementData).length > 0
+            ">
+            <!-- Detailed View of the selected SubmodelElement (e.g. Property, Operation, etc.) -->
+            <v-card>
+                <v-list nav class="pb-0">
+                    <!-- SubmodelELement Identification -->
+                    <IdentificationElement :identification-object="submodelElementData" />
+                    <!-- Submodel Administrative Information-->
+                    <v-divider
+                        v-if="
+                            submodelElementData.administration &&
+                            (submodelElementData.administration.revision != '' ||
+                                submodelElementData.administration.version != '')
+                        " />
+                    <AdministrativeInformationPanel
+                        v-if="submodelElementData.administration"
+                        :administrative-information-object="submodelElementData.administration"
+                        :title="'Administrative Information'" />
+                    <v-divider
+                        v-if="
+                            submodelElementData.displayName &&
+                            Array.isArray(submodelElementData.displayName) &&
+                            submodelElementData.displayName.length > 0
+                        " />
+                    <!-- SubmodelELement DisplayName -->
+                    <LangStringsPanel :lang-strings-array="submodelElementData.displayName" :title="'Display Name'" />
+                    <v-divider
+                        v-if="
+                            submodelElementData.description &&
+                            Array.isArray(submodelElementData.description) &&
+                            submodelElementData.description.length > 0
+                        " />
+                    <!-- SubmodelELement Description -->
+                    <LangStringsPanel
+                        :lang-strings-array="submodelElementData.description"
+                        :title="'Description'"
+                        :opened="true" />
+                    <v-divider
+                        v-if="
+                            submodelElementData.semanticId &&
+                            Object.keys(submodelElementData.semanticId).length > 0 &&
+                            submodelElementData.semanticId.keys &&
+                            Array.isArray(submodelElementData.semanticId.keys) &&
+                            submodelElementData.semanticId.keys.length > 0
+                        " />
+                    <!-- SubmodelELement SemanticID -->
+                    <ReferencePanel :reference-object="submodelElementData.semanticId" :title="'Semantic ID'" />
+                    <v-divider
+                        v-if="
+                            submodelElementData.supplementalSemanticIds &&
+                            Array.isArray(submodelElementData.supplementalSemanticIds) &&
+                            submodelElementData.supplementalSemanticIds.length > 0
+                        " />
+                    <!-- SubmodelELement SupplementalSemanticID -->
+                    <SupplementalSemanticID
+                        :supplemental-semantic-ids-array="submodelElementData.supplementalSemanticIds"
+                        :supplemental-semantic-ids-title="'Supplemental Semantic ID'" />
+                </v-list>
+                <v-divider></v-divider>
+                <v-list nav class="px-4 pt-0 pb-5">
+                    <!-- SubmodelELement Representation for different modelTypes -->
+                    <Submodel
+                        v-if="submodelElementData.modelType === 'Submodel'"
+                        :submodel-object="submodelElementData"></Submodel>
+                    <SubmodelElementCollection
+                        v-else-if="submodelElementData.modelType === 'SubmodelElementCollection'"
+                        :submodel-element-collection-object="submodelElementData"></SubmodelElementCollection>
+                    <SubmodelElementList
+                        v-else-if="submodelElementData.modelType === 'SubmodelElementList'"
+                        :submodel-element-list-object="submodelElementData"></SubmodelElementList>
+                    <Property
+                        v-else-if="submodelElementData.modelType === 'Property'"
+                        :property-object="submodelElementData"
+                        :is-editable="aasEditorMode"></Property>
+                    <MultiLanguageProperty
+                        v-else-if="submodelElementData.modelType === 'MultiLanguageProperty'"
+                        :multi-language-property-object="submodelElementData"
+                        :is-editable="aasEditorMode"></MultiLanguageProperty>
+                    <Operation
+                        v-else-if="submodelElementData.modelType === 'Operation'"
+                        :operation-object="submodelElementData"
+                        :is-editable="aasEditorMode"></Operation>
+                    <File
+                        v-else-if="submodelElementData.modelType === 'File'"
+                        :file-object="submodelElementData"
+                        :is-editable="aasEditorMode"></File>
+                    <Blob
+                        v-else-if="submodelElementData.modelType === 'Blob'"
+                        :blob-object="submodelElementData"
+                        :is-editable="aasEditorMode"></Blob>
+                    <ReferenceElement
+                        v-else-if="submodelElementData.modelType === 'ReferenceElement'"
+                        :reference-element-object="submodelElementData"
+                        :is-editable="aasEditorMode"></ReferenceElement>
+                    <Range
+                        v-else-if="submodelElementData.modelType === 'Range'"
+                        :range-object="submodelElementData"></Range>
+                    <Entity
+                        v-else-if="submodelElementData.modelType === 'Entity'"
+                        :entity-object="submodelElementData"></Entity>
+                    <RelationshipElement
+                        v-else-if="submodelElementData.modelType === 'RelationshipElement'"
+                        :relationship-element-object="submodelElementData"></RelationshipElement>
+                    <AnnotatedRelationshipElement
+                        v-else-if="submodelElementData.modelType === 'AnnotatedRelationshipElement'"
+                        :annotated-relationship-element-object="submodelElementData"
+                        :is-editable="aasEditorMode"></AnnotatedRelationshipElement>
+                    <InvalidElement v-else :invalid-element-object="submodelElementData"></InvalidElement>
+                </v-list>
+                <!-- Last Sync -->
+                <v-divider></v-divider>
+                <LastSync :timestamp="submodelElementData.timestamp"></LastSync>
+            </v-card>
+            <template v-if="Array.isArray(conceptDescriptions) && conceptDescriptions.length > 0">
+                <template v-for="cd in conceptDescriptions" :key="cd.id">
+                    <ConceptDescription :concept-description-object="cd" class="mt-4"></ConceptDescription>
                 </template>
-                <v-empty-state
-                    v-else-if="!selectedAAS || Object.keys(selectedAAS).length === 0"
-                    title="No selected AAS"
-                    class="text-divider"></v-empty-state>
-                <v-empty-state
-                    v-else-if="!selectedNode || Object.keys(selectedNode).length === 0"
-                    title="No selected Submodel / Submodel Element"
-                    text="Select a Submodel / Submodel Element to view"
-                    class="text-divider"></v-empty-state>
-            </v-card-text>
-        </v-card>
+            </template>
+        </template>
     </v-container>
 </template>
 
@@ -158,7 +136,6 @@
     import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useAASStore } from '@/store/AASDataStore';
-    import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     // Vue Router
@@ -167,7 +144,6 @@
     // Stores
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
-    const envStore = useEnvStore();
 
     // Composables
     const { fetchCds } = useConceptDescriptionHandling();
@@ -184,8 +160,7 @@
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
     const selectedNode = computed(() => aasStore.getSelectedNode);
     const autoSync = computed(() => navigationStore.getAutoSync);
-    const editMode = computed(() => route.name === 'AASEditor');
-    const singleAas = computed(() => envStore.getSingleAas);
+    const aasEditorMode = computed(() => route.name === 'AASEditor');
 
     // Watchers
     watch(

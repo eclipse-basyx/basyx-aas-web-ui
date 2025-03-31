@@ -43,7 +43,7 @@
                                                     v-if="valueToDisplay(productProperty).startsWith('http')"
                                                     :href="valueToDisplay(productProperty)"
                                                     target="_blank"
-                                                    class="text-caption">
+                                                    class="text-caption text-primary">
                                                     {{ valueToDisplay(productProperty) }}
                                                 </a>
                                                 <span v-else class="text-caption">
@@ -148,7 +148,7 @@
                                                     v-if="valueToDisplay(manufacturerProperty).startsWith('http')"
                                                     :href="valueToDisplay(manufacturerProperty)"
                                                     target="_blank"
-                                                    class="text-caption">
+                                                    class="text-caption text-primary">
                                                     {{ valueToDisplay(manufacturerProperty) }}
                                                 </a>
                                                 <span v-else class="text-caption">
@@ -194,12 +194,15 @@
                                                         isMobile
                                                     ">
                                                     <a
-                                                        :href="`tel:${valueToDisplay(manufacturerProperty).replaceAll(' ', '')}`">
+                                                        :href="`tel:${valueToDisplay(manufacturerProperty).replaceAll(' ', '')}`"
+                                                        class="text-caption text-primary">
                                                         {{ valueToDisplay(manufacturerProperty) }}
                                                     </a>
                                                 </template>
                                                 <template v-else-if="checkIdShort(manufacturerProperty, 'Email')">
-                                                    <a :href="`mailto:${valueToDisplay(manufacturerProperty)}`">
+                                                    <a
+                                                        :href="`mailto:${valueToDisplay(manufacturerProperty)}`"
+                                                        class="text-caption text-primary">
                                                         {{ valueToDisplay(manufacturerProperty) }}
                                                     </a>
                                                 </template>

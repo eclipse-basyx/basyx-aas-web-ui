@@ -56,7 +56,7 @@
                                                         "
                                                         :href="valueToDisplay(contactInformationProperty)"
                                                         target="_blank"
-                                                        class="text-caption">
+                                                        class="text-caption text-primary">
                                                         {{ valueToDisplay(contactInformationProperty) }}
                                                     </a>
                                                     <span v-else class="text-caption">{{
@@ -163,14 +163,16 @@
                                                             checkIdShort(contactInformationProperty, 'TelephoneNumber')
                                                         ">
                                                         <a
-                                                            :href="`tel:${valueToDisplay(contactInformationProperty).replaceAll(' ', '')}`">
+                                                            :href="`tel:${valueToDisplay(contactInformationProperty).replaceAll(' ', '')}`"
+                                                            class="text-caption text-primary">
                                                             {{ valueToDisplay(contactInformationProperty) }}
                                                         </a>
                                                     </template>
                                                     <template
                                                         v-else-if="checkIdShort(contactInformationProperty, 'Email')">
                                                         <a
-                                                            :href="`mailto:${valueToDisplay(contactInformationProperty)}`">
+                                                            :href="`mailto:${valueToDisplay(contactInformationProperty)}`"
+                                                            class="text-caption text-primary">
                                                             {{ valueToDisplay(contactInformationProperty) }}
                                                         </a>
                                                     </template>
@@ -236,7 +238,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
     import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement';
@@ -252,6 +254,7 @@
         semanticId: [
             'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations', // Visualization for the SMT ContactInformations
             'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation', // Visualization for the SMC ContactInformation, e.g. in the SMT Nameplate v2
+            'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/AddressInformation', // Visualization for the SMC ContactInformation, e.g. in the SMT Nameplate v3
         ],
     });
 
@@ -284,12 +287,24 @@
     const panel = ref(0);
     const contactInformations = ref([] as Array<any>);
 
+    //Watchers
+    watch(
+        // Watcher to ensure data is initialized in case of switching between a SM 'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations' and a SMC 'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation'
+        () => props.submodelElementData,
+        () => {
+            initializeVisualization();
+        }
+    );
+
     onMounted(() => {
         initializeVisualization();
     });
 
     async function initializeVisualization(): Promise<void> {
         loading.value = true;
+        // Reset contactInformations because it is filled by .push()
+        // Otherwise in case of switching between a SM 'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations' and a SMC 'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation' wrong data will be displayed
+        contactInformations.value = [];
 
         if (!props.submodelElementData || Object.keys(props.submodelElementData).length === 0) {
             contactInformations.value = [];
@@ -316,7 +331,7 @@
             });
         } else if (submodelElementData.value) {
             // For SMC ContactInformation
-            contactInformationSMCs = [submodelElementData.value];
+            contactInformationSMCs = [submodelElementData];
         }
 
         contactInformationSMCs.forEach((contactInformationSMC: any) => {
