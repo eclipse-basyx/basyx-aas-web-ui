@@ -5,7 +5,7 @@
                 :style="{ 'padding-left': depth * 22 + 'px' }"
                 density="compact"
                 class="py-0"
-                :class="editMode && item.modelType === 'Submodel' ? 'pr-0' : ''"
+                :class="editMode ? 'pr-0' : ''"
                 nav
                 slim
                 color="primary"
@@ -62,7 +62,7 @@
                     <v-chip v-if="item.modelType" color="primary" size="x-small">{{ item.modelType }}</v-chip>
                     <!-- Button to Copy the Path to the clipboard -->
                     <v-tooltip
-                        v-if="isSelected(item) && (!editMode || (editMode && item.modelType !== 'Submodel'))"
+                        v-if="isSelected(item) && !editMode"
                         text="Copy Path to Clipboard"
                         :open-delay="600"
                         location="bottom">
@@ -137,7 +137,7 @@
                                     <template #prepend>
                                         <v-icon size="x-small">{{ copyIcon }} </v-icon>
                                     </template>
-                                    <v-list-item-subtitle>Copy Submodel Element endpoint</v-list-item-subtitle>
+                                    <v-list-item-subtitle>Copy {{ item.modelType }} Endpoint</v-list-item-subtitle>
                                 </v-list-item>
                                 <v-divider></v-divider>
                                 <!-- Open Add SubmodelElement dialog -->
@@ -181,9 +181,9 @@
                 :key="innerItem.id"
                 :item="innerItem"
                 :depth="depth + 1"
-                @open-add-submodel-element-dialog="$emit('openAddSubmodelElementDialog', innerItem)"
-                @open-edit-submodel-element-dialog="$emit('openEditSubmodelElementDialog', innerItem)"
-                @show-delete-dialog="$emit('showDeleteDialog', innerItem)"></vTreeview>
+                @open-add-submodel-element-dialog="$emit('openAddSubmodelElementDialog', $event)"
+                @open-edit-submodel-element-dialog="$emit('openEditSubmodelElementDialog', $event)"
+                @show-delete-dialog="$emit('showDeleteDialog', $event)"></vTreeview>
         </template>
     </div>
 </template>

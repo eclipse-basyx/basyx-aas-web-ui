@@ -109,7 +109,7 @@
                 }
 
                 // Check if the selected Submodel is the deleted one
-                if (aasStore.getSelectedNode?.id === props.element.id) {
+                if (props.element.path === route.query.path) {
                     router.push({ query: { aas: route.query.aas } });
                     aasStore.dispatchSelectedNode({});
                 }
@@ -124,7 +124,7 @@
                 await deleteRequest(props.element.path, 'removing Submodel Element', false);
 
                 // Check if the selected Submodel Element is the deleted one
-                if (aasStore.getSelectedNode?.id === props.element.id) {
+                if (props.element.path === route.query.path) {
                     router.push({ query: { aas: route.query.aas, path: props.element.parent.path } });
                     aasStore.dispatchSelectedNode(props.element.parent);
                 }

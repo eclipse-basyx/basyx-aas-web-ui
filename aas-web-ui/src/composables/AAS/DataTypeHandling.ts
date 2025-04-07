@@ -48,7 +48,3 @@ export function getDataTypes(): DataTypeArrayElement[] {
         { title: 'UnsignedShort', value: aasTypes.DataTypeDefXsd.UnsignedShort, text: 'xs:unsignedShort' },
     ];
 }
-
-export function getIndexOfDataTypeText(dataTypeAsText: string): number {
-    return getDataTypes().findIndex((dataType) => dataType.text === dataTypeAsText);
-}

@@ -189,9 +189,9 @@
     // Data
     const submodelTree = ref([] as Array<any>); // Treeview Data
     const treeLoading = ref(false); // Variable to store if the AAS List is loading
-    const selectSMETypeToAddDialog = ref(false); // // Variable to store if the Add SubmodelElement Dialog should be shown
-    const propertyDialog = ref(false); // // Variable to store if the PropertyForm Dialog should be shown
-    const editDialog = ref(false); // // Variable to store if the Edit Dialog should be shown
+    const selectSMETypeToAddDialog = ref(false); // Variable to store if the Add SubmodelElement Dialog should be shown
+    const propertyDialog = ref(false); // Variable to store if the PropertyForm Dialog should be shown
+    const editDialog = ref(false); // Variable to store if the Edit Dialog should be shown
     const newProperty = ref(false); // Variable to store if a new Property should be created
     const newSubmodel = ref(false); // Variable to store if a new Submodel should be created
     const submodelToEdit = ref<any | undefined>(undefined); // Variable to store the Submodel to be edited

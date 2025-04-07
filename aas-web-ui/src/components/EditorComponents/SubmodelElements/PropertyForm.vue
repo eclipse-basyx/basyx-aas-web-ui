@@ -2,7 +2,7 @@
     <v-dialog v-model="editPropertyDialog" width="860" persistent>
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{ isNewProperty ? 'Create a new Property' : 'Edit Property' }}</span>
+                <span class="text-subtile-1">{{ props.newProperty ? 'Create a new Property' : 'Edit Property' }}</span>
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
@@ -70,21 +70,34 @@
 <script setup lang="ts">
     import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { computed, ref, watch } from 'vue';
-    import { useRouter } from 'vue-router';
+    import { useRoute, useRouter } from 'vue-router';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
-    import { base64Decode, base64Encode } from '@/utils/EncodeDecodeUtils';
+    import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
+    const props = defineProps<{
+        modelValue: boolean;
+        newProperty: boolean;
+        parentElement: any;
+        path?: string;
+        property?: any;
+    }>();
+
+    // Stores
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
 
+    // Composables
+    const { fetchSme, putSubmodelElement, postSubmodelElement } = useSMRepositoryClient();
+
+    // Vue Router
     const router = useRouter();
+    const route = useRoute();
 
     const editPropertyDialog = ref(false);
     const openPanels = ref<number[]>([0]);
-    const isNewProperty = ref<boolean>(false);
 
     const propertyIdShort = ref<string | null>(null);
 
@@ -98,19 +111,9 @@
 
     const errors = ref<Map<string, string>>(new Map());
 
-    const client = useSMRepositoryClient();
-
     const rules = {
         required: (value: any) => !!value || 'Required.',
     };
-
-    const props = defineProps<{
-        modelValue: boolean;
-        newProperty: boolean;
-        parentElement: any;
-        path?: string;
-        property?: any;
-    }>();
 
     const emit = defineEmits<{
         (event: 'update:modelValue', value: boolean): void;
@@ -130,16 +133,6 @@
         () => editPropertyDialog.value,
         (value) => {
             emit('update:modelValue', value);
-        }
-    );
-    watch(
-        () => props.newProperty,
-        (value) => {
-            console.warn(value);
-            isNewProperty.value = value;
-            if (value) {
-                initializeInputs();
-            }
         }
     );
 
@@ -220,15 +213,32 @@
         if (propertyCategory.value !== null) {
             property.category = propertyCategory.value;
         }
-        if (isNewProperty.value) {
+        if (props.newProperty) {
             if (props.parentElement.modelType === 'Submodel') {
-                await client.postSubmodelElement(property, props.parentElement.id);
+                // Create the property on the parent Submodel
+                await postSubmodelElement(property, props.parentElement.id);
+
+                const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
+
+                // Navigate to the new property
+                router.push({
+                    query: {
+                        aas: aasEndpoint,
+                        path: props.parentElement.path + '/submodel-elements/' + property.idShort,
+                    },
+                });
             } else {
+                // Extract the submodel ID and the idShortPath from the parentElement path
                 const splitted = props.parentElement.path.split('/submodel-elements/');
                 const submodelId = base64Decode(splitted[0].split('/submodels/')[1]);
                 const idShortPath = splitted[1];
-                await client.postSubmodelElement(property, submodelId, idShortPath);
+
+                // Create the property on the parent element
+                await postSubmodelElement(property, submodelId, idShortPath);
+
                 const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
+
+                // Navigate to the new property
                 if (props.parentElement.modelType === 'SubmodelElementCollection') {
                     router.push({
                         query: { aas: aasEndpoint, path: props.parentElement.path + '.' + property.idShort },
@@ -240,7 +250,44 @@
                 console.error('Property Path is missing');
                 return;
             }
-            await client.putSubmodelElement(property, props.path);
+
+            const editedElementSelected = route.query.path === props.path;
+            const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
+
+            // Update the property
+            if (props.parentElement.modelType === 'Submodel') {
+                await putSubmodelElement(property, props.path);
+
+                if (editedElementSelected) {
+                    router.push({
+                        query: {
+                            aas: aasEndpoint,
+                            path: props.parentElement.path + '/submodel-elements/' + property.idShort,
+                        },
+                    });
+                }
+            } else if (props.parentElement.modelType === 'SubmodelElementList') {
+                const index = props.parentElement.value.indexOf(
+                    props.parentElement.value.find((el: any) => el.id === props.property.id)
+                );
+                const path = props.parentElement.path + `%5B${index}%5D`;
+                await putSubmodelElement(property, path);
+
+                if (editedElementSelected) {
+                    router.push({
+                        query: { aas: aasEndpoint, path: path },
+                    });
+                }
+            } else {
+                // Submodel Element Collection or Entity
+                await putSubmodelElement(property, props.property.path);
+
+                if (editedElementSelected) {
+                    router.push({
+                        query: { aas: aasEndpoint, path: props.parentElement.path + '.' + property.idShort },
+                    });
+                }
+            }
         }
         closeDialog();
         navigationStore.dispatchTriggerTreeviewReload();
@@ -251,14 +298,8 @@
     }
 
     async function initializeInputs(): Promise<void> {
-        if (!isNewProperty.value && props.property) {
-            const propertyJSON = await client.fetchSme(
-                navigationStore.getSubmodelRepoURL +
-                    '/' +
-                    base64Encode(props.parentElement.id) +
-                    '/submodel-elements/' +
-                    props.property.idShort
-            );
+        if (!props.newProperty && props.property) {
+            const propertyJSON = await fetchSme(props.property.path);
             const instanceOrError = jsonization.propertyFromJsonable(propertyJSON);
             const property = instanceOrError.mustValue();
             propertyIdShort.value = property.idShort;
