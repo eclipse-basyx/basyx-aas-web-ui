@@ -342,7 +342,7 @@ export function useSMRepositoryClient() {
     async function postSubmodelElement(
         submodelElement: aasTypes.ISubmodelElement,
         submodelId: string,
-        idShortPath?: string,
+        idShortPath?: string
     ): Promise<boolean> {
         const failResponse = false;
 
@@ -357,7 +357,8 @@ export function useSMRepositoryClient() {
 
         const context = 'creating Submodel Element';
         const disableMessage = false;
-        const path = smRepoUrl + '/' + base64Encode(submodelId) + '/submodel-elements' + (idShortPath ? ('/' + idShortPath) : '');
+        const path =
+            smRepoUrl + '/' + base64Encode(submodelId) + '/submodel-elements' + (idShortPath ? '/' + idShortPath : '');
         const headers = new Headers();
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(jsonSubmodelElement);

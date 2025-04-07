@@ -120,12 +120,8 @@
             }
         } else {
             // delete Submodel Element
-            try { 
-                await deleteRequest(
-                    props.element.path,
-                    'removing Submodel Element',
-                    false
-                );
+            try {
+                await deleteRequest(props.element.path, 'removing Submodel Element', false);
 
                 // Check if the selected Submodel Element is the deleted one
                 if (aasStore.getSelectedNode?.id === props.element.id) {

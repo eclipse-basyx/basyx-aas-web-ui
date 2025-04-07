@@ -61,22 +61,21 @@
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn @click="closeDialog">Cancel</v-btn>
-                <v-btn @click="saveProperty" color="primary">Save</v-btn>
+                <v-btn color="primary" @click="saveProperty">Save</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
 
 <script setup lang="ts">
-    import { jsonization, types as aasTypes } from "@aas-core-works/aas-core3.0-typescript";
+    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { computed, ref, watch } from 'vue';
-    import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
-    import { useNavigationStore } from '@/store/NavigationStore';
-    import { getIndexOfDataTypeText } from '@/composables/AAS/DataTypeHandling';
-    import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
-    import { base64Decode, base64Encode } from "@/utils/EncodeDecodeUtils";
-    import { useAASStore } from '@/store/AASDataStore';
     import { useRouter } from 'vue-router';
+    import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+    import { useAASStore } from '@/store/AASDataStore';
+    import { useNavigationStore } from '@/store/NavigationStore';
+    import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
+    import { base64Decode, base64Encode } from '@/utils/EncodeDecodeUtils';
 
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
@@ -222,16 +221,18 @@
             property.category = propertyCategory.value;
         }
         if (isNewProperty.value) {
-            if(props.parentElement.modelType === 'Submodel'){
+            if (props.parentElement.modelType === 'Submodel') {
                 await client.postSubmodelElement(property, props.parentElement.id);
-            }else{
-                const splitted = props.parentElement.path.split("/submodel-elements/");
-                const submodelId = base64Decode(splitted[0].split("/submodels/")[1]);
+            } else {
+                const splitted = props.parentElement.path.split('/submodel-elements/');
+                const submodelId = base64Decode(splitted[0].split('/submodels/')[1]);
                 const idShortPath = splitted[1];
                 await client.postSubmodelElement(property, submodelId, idShortPath);
                 const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
-                if(props.parentElement.modelType === 'SubmodelElementCollection'){
-                    router.push({ query: { aas: aasEndpoint, path: props.parentElement.path+"."+property.idShort } });
+                if (props.parentElement.modelType === 'SubmodelElementCollection') {
+                    router.push({
+                        query: { aas: aasEndpoint, path: props.parentElement.path + '.' + property.idShort },
+                    });
                 }
             }
         } else {

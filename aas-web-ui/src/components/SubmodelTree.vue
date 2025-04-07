@@ -149,12 +149,15 @@
         </v-card>
     </v-container>
     <!-- Dialog for creating SubmodelElements -->
-    <SubmodelElementForm
-        v-model="selectSMETypeToAddDialog"
-        @open-create-s-m-e-dialog="openSMEFormDialog">
+    <SubmodelElementForm v-model="selectSMETypeToAddDialog" @open-create-s-m-e-dialog="openSMEFormDialog">
     </SubmodelElementForm>
     <!-- Dialog for creating/editing Properties -->
-    <PropertyForm v-model="propertyDialog" :new-property="newProperty" :parentElement="elementToAddSME" :path="submodelElementPath" :property="submodelElementToEdit"></PropertyForm>
+    <PropertyForm
+        v-model="propertyDialog"
+        :new-property="newProperty"
+        :parent-element="elementToAddSME"
+        :path="submodelElementPath"
+        :property="submodelElementToEdit"></PropertyForm>
     <!-- Dialog for creating/editing Submodel -->
     <SubmodelForm v-model="editDialog" :new-sm="newSubmodel" :submodel="submodelToEdit"></SubmodelForm>
     <!-- Dialog for deleting SM/SME -->
@@ -346,7 +349,7 @@
     }
 
     function openDeleteDialog(element: any): void {
-        console.log("Hallo")
+        console.log('Hallo');
         deleteDialog.value = true;
         elementToDelete.value = element;
     }

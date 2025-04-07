@@ -28,8 +28,16 @@ export function getDataTypes(): DataTypeArrayElement[] {
         { title: 'Integer', value: aasTypes.DataTypeDefXsd.Integer, text: 'xs:integer' },
         { title: 'Long', value: aasTypes.DataTypeDefXsd.Long, text: 'xs:long' },
         { title: 'NegativeInteger', value: aasTypes.DataTypeDefXsd.NegativeInteger, text: 'xs:negativeInteger' },
-        { title: 'NonNegativeInteger', value: aasTypes.DataTypeDefXsd.NonNegativeInteger, text: 'xs:nonNegativeInteger' },
-        { title: 'NonPositiveInteger', value: aasTypes.DataTypeDefXsd.NonPositiveInteger, text: 'xs:nonPositiveInteger' },
+        {
+            title: 'NonNegativeInteger',
+            value: aasTypes.DataTypeDefXsd.NonNegativeInteger,
+            text: 'xs:nonNegativeInteger',
+        },
+        {
+            title: 'NonPositiveInteger',
+            value: aasTypes.DataTypeDefXsd.NonPositiveInteger,
+            text: 'xs:nonPositiveInteger',
+        },
         { title: 'PositiveInteger', value: aasTypes.DataTypeDefXsd.PositiveInteger, text: 'xs:positiveInteger' },
         { title: 'Short', value: aasTypes.DataTypeDefXsd.Short, text: 'xs:short' },
         { title: 'String', value: aasTypes.DataTypeDefXsd.String, text: 'xs:string' },

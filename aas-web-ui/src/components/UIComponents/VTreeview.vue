@@ -141,7 +141,13 @@
                                 </v-list-item>
                                 <v-divider></v-divider>
                                 <!-- Open Add SubmodelElement dialog -->
-                                <v-list-item v-if="item.modelType === 'SubmodelElementCollection' || item.modelType === 'SubmodelElementList' || item.modelType === 'Entity'" @click="$emit('openAddSubmodelElementDialog', item)">
+                                <v-list-item
+                                    v-if="
+                                        item.modelType === 'SubmodelElementCollection' ||
+                                        item.modelType === 'SubmodelElementList' ||
+                                        item.modelType === 'Entity'
+                                    "
+                                    @click="$emit('openAddSubmodelElementDialog', item)">
                                     <template #prepend>
                                         <v-icon size="x-small">mdi-plus</v-icon>
                                     </template>
@@ -174,10 +180,10 @@
                 v-for="innerItem in item.children"
                 :key="innerItem.id"
                 :item="innerItem"
+                :depth="depth + 1"
                 @open-add-submodel-element-dialog="$emit('openAddSubmodelElementDialog', innerItem)"
                 @open-edit-submodel-element-dialog="$emit('openEditSubmodelElementDialog', innerItem)"
-                @show-delete-dialog="$emit('showDeleteDialog', innerItem)"
-                :depth="depth + 1"></vTreeview>
+                @show-delete-dialog="$emit('showDeleteDialog', innerItem)"></vTreeview>
         </template>
     </div>
 </template>
@@ -215,7 +221,7 @@
     });
 
     // Emits
-    const emit = defineEmits<{
+    defineEmits<{
         (event: 'openEditDialog', item: any): void;
         (event: 'showDeleteDialog', item: any): void;
         (event: 'openAddSubmodelElementDialog', item: any): void;
@@ -224,7 +230,6 @@
 
     // Data
     const copyIcon = ref<string>('mdi-clipboard-file-outline');
-    const editIcon = ref<string>('mdi-pen');
 
     // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode);

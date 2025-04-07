@@ -5,13 +5,20 @@
                 <span class="text-subtile-1">Create new Submodel Element</span>
             </v-card-title>
             <v-divider></v-divider>
-            <v-select class="px-4 pt-4" v-model="selectedSME" :items="availableSMEs" label="Select Submodel Element Type" required variant="outlined" density="compact">
+            <v-select
+                v-model="selectedSME"
+                class="px-4 pt-4"
+                :items="availableSMEs"
+                label="Select Submodel Element Type"
+                required
+                variant="outlined"
+                density="compact">
             </v-select>
             <v-divider></v-divider>
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn @click="closeDialog">Cancel</v-btn>
-                <v-btn @click="openCreateSMEDialog()" color="primary" :disabled="selectedSME == ''">Next</v-btn>
+                <v-btn color="primary" :disabled="selectedSME == ''" @click="openCreateSMEDialog()">Next</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
