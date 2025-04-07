@@ -11,12 +11,14 @@
 <script lang="ts" setup>
     import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { computed, ref, watch } from 'vue';
+    import { getDataTypes } from '@/composables/AAS/DataTypeHandling';
 
     // Type Map for supported types
     type ValueMap = {
         category: string;
         assetKind: aasTypes.AssetKind;
         modellingKind: aasTypes.ModellingKind;
+        dataType: aasTypes.DataTypeDefXsd;
     };
 
     type ValueType<T extends keyof ValueMap> = ValueMap[T];
@@ -58,6 +60,8 @@
                     { title: 'Instance', value: aasTypes.ModellingKind.Instance },
                     { title: 'Template', value: aasTypes.ModellingKind.Template },
                 ];
+            case 'dataType':
+                return getDataTypes();
             default:
                 return [];
         }

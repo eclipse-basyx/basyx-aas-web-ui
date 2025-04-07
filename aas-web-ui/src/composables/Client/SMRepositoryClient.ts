@@ -339,6 +339,55 @@ export function useSMRepositoryClient() {
         return response.success;
     }
 
+    async function postSubmodelElement(
+        submodelElement: aasTypes.ISubmodelElement,
+        submodelId: string,
+        idShortPath?: string
+    ): Promise<boolean> {
+        const failResponse = false;
+
+        let smRepoUrl = submodelRepoUrl.value.trim();
+        if (smRepoUrl === '') return failResponse;
+        if (smRepoUrl.endsWith('/')) smRepoUrl = stripLastCharacter(smRepoUrl);
+        if (!smRepoUrl.endsWith(endpointPath)) smRepoUrl += endpointPath;
+
+        // Convert SME to JSON
+        const jsonSubmodelElement = jsonization.toJsonable(submodelElement);
+        // console.log('postSubmodel()', jsonSubmodel);
+
+        const context = 'creating Submodel Element';
+        const disableMessage = false;
+        const path =
+            smRepoUrl + '/' + base64Encode(submodelId) + '/submodel-elements' + (idShortPath ? '/' + idShortPath : '');
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const body = JSON.stringify(jsonSubmodelElement);
+
+        const response = await postRequest(path, body, headers, context, disableMessage);
+        return response.success;
+    }
+
+    async function putSubmodelElement(submodelElement: aasTypes.ISubmodelElement, path: string): Promise<boolean> {
+        const failResponse = false;
+
+        let smRepoUrl = submodelRepoUrl.value.trim();
+        if (smRepoUrl === '') return failResponse;
+        if (smRepoUrl.endsWith('/')) smRepoUrl = stripLastCharacter(smRepoUrl);
+        if (!smRepoUrl.endsWith(endpointPath)) smRepoUrl += endpointPath;
+
+        // Convert SME to JSON
+        const jsonSubmodelElement = jsonization.toJsonable(submodelElement);
+
+        const context = 'updating Submodel Element';
+        const disableMessage = false;
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const body = JSON.stringify(jsonSubmodelElement);
+
+        const response = await putRequest(path, body, headers, context, disableMessage);
+        return response.success;
+    }
+
     return {
         endpointPath,
         fetchSmList,
@@ -352,5 +401,7 @@ export function useSMRepositoryClient() {
         postSubmodel,
         putSubmodel,
         deleteSubmodel,
+        postSubmodelElement,
+        putSubmodelElement,
     };
 }

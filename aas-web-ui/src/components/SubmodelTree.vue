@@ -125,6 +125,8 @@
                                 class="root"
                                 :item="item"
                                 :depth="0"
+                                @open-edit-submodel-element-dialog="openEditSubmodelElementDialogForElement"
+                                @open-add-submodel-element-dialog="openAddSubmodelElementDialog"
                                 @open-edit-dialog="openEditDialog(false, $event)"
                                 @show-delete-dialog="openDeleteDialog"></VTreeview>
                         </template>
@@ -146,6 +148,16 @@
             </v-card-text>
         </v-card>
     </v-container>
+    <!-- Dialog for creating SubmodelElements -->
+    <SubmodelElementForm v-model="selectSMETypeToAddDialog" @open-create-s-m-e-dialog="openSMEFormDialog">
+    </SubmodelElementForm>
+    <!-- Dialog for creating/editing Properties -->
+    <PropertyForm
+        v-model="propertyDialog"
+        :new-property="newProperty"
+        :parent-element="elementToAddSME"
+        :path="submodelElementPath"
+        :property="submodelElementToEdit"></PropertyForm>
     <!-- Dialog for creating/editing Submodel -->
     <SubmodelForm v-model="editDialog" :new-sm="newSubmodel" :submodel="submodelToEdit"></SubmodelForm>
     <!-- Dialog for deleting SM/SME -->
@@ -177,11 +189,17 @@
     // Data
     const submodelTree = ref([] as Array<any>); // Treeview Data
     const treeLoading = ref(false); // Variable to store if the AAS List is loading
-    const editDialog = ref(false); // // Variable to store if the Edit Dialog should be shown
+    const selectSMETypeToAddDialog = ref(false); // Variable to store if the Add SubmodelElement Dialog should be shown
+    const propertyDialog = ref(false); // Variable to store if the PropertyForm Dialog should be shown
+    const editDialog = ref(false); // Variable to store if the Edit Dialog should be shown
+    const newProperty = ref(false); // Variable to store if a new Property should be created
     const newSubmodel = ref(false); // Variable to store if a new Submodel should be created
     const submodelToEdit = ref<any | undefined>(undefined); // Variable to store the Submodel to be edited
     const deleteDialog = ref(false); // Variable to store if the Delete Dialog should be shown
     const elementToDelete = ref<any | undefined>(undefined); // Variable to store the Element to be deleted
+    const elementToAddSME = ref<any | undefined>(undefined); // Variable to store the Element where the new SME is added inside
+    const submodelElementPath = ref<string | undefined>(undefined); // Variable to store the Element where the new SME is added inside
+    const submodelElementToEdit = ref<any | undefined>(undefined); // Variable to store the Element where the new SME is added inside
 
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
@@ -351,6 +369,35 @@
             selectedNode.value.path.startsWith(nodePath) &&
             selectedNode.value.path !== nodePath
         );
+    }
+
+    function openAddSubmodelElementDialog(element: any): void {
+        elementToAddSME.value = element;
+        selectSMETypeToAddDialog.value = true;
+    }
+
+    function openEditSubmodelElementDialogForElement(element: any): void {
+        if (element.modelType === 'Property') {
+            propertyDialog.value = true;
+            newProperty.value = false;
+            submodelElementPath.value = element.path;
+            elementToAddSME.value = element.parent;
+            submodelElementToEdit.value = element;
+        }
+    }
+
+    function openSMEFormDialog(smeType: string): void {
+        switch (smeType) {
+            case 'Property':
+                newProperty.value = true;
+                submodelElementPath.value = undefined;
+                submodelElementToEdit.value = undefined;
+                propertyDialog.value = true;
+                break;
+            default:
+                console.error(`Specified invalid SubmodelElement Type "${smeType}"`);
+                break;
+        }
     }
 </script>
 
