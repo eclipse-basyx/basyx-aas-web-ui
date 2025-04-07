@@ -4,6 +4,7 @@ import prettier from 'eslint-plugin-prettier';
 import pluginPromise from 'eslint-plugin-promise';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import vue from 'eslint-plugin-vue';
+import browserGlobals from 'globals';
 import ts from 'typescript-eslint';
 
 export default [
@@ -15,6 +16,7 @@ export default [
         languageOptions: {
             ecmaVersion: 'latest',
             globals: {
+                ...browserGlobals.browser,
                 process: 'readonly',
             },
         },

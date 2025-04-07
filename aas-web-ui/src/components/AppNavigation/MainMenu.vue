@@ -10,9 +10,9 @@
                             :active="false"
                             nav
                             :border="isActiveRoutePath('/')"
-                            subtitle="Visualize Asset Administration Shells"
+                            subtitle="View Asset Administration Shells"
                             title="AAS Viewer"
-                            to="/"
+                            :to="isActiveRoutePath('/') ? '' : '/'"
                             @click="closeMenu">
                             <template #prepend>
                                 <v-avatar color="surface-light" icon="custom:aasIcon" rounded>
@@ -28,7 +28,7 @@
                             :border="isActiveRoutePath('/aaseditor')"
                             subtitle="Edit Asset Administration Shells"
                             title="AAS Editor"
-                            to="/aaseditor"
+                            :to="isActiveRoutePath('/aaseditor') ? '' : '/aaseditor'"
                             @click="closeMenu">
                             <template #prepend>
                                 <v-avatar color="surface-light" icon="mdi-pencil" rounded>
@@ -41,9 +41,25 @@
                             nav
                             :active="false"
                             :border="isActiveRoutePath('/submodelviewer')"
-                            subtitle="Visualize Submodels"
+                            subtitle="View Submodels"
                             title="Submodel Viewer"
-                            to="/submodelviewer"
+                            :to="isActiveRoutePath('/submodelviewer') ? '' : '/submodelviewer'"
+                            @click="closeMenu">
+                            <template #prepend>
+                                <v-avatar color="surface-light" icon="mdi-group" rounded>
+                                    <v-icon color="medium-emphasis" />
+                                </v-avatar>
+                            </template>
+                        </v-list-item>
+                        <v-list-item
+                            v-if="selectedNode && Object.keys(selectedNode).length > 0"
+                            class="mt-3 py-2"
+                            nav
+                            :active="false"
+                            :border="isActiveRoutePath('/visu')"
+                            subtitle="Visualize Submodels/Submodel Elements"
+                            title="Visualization"
+                            :to="isActiveRoutePath('/visu') ? '' : '/visu'"
                             @click="closeMenu">
                             <template #prepend>
                                 <v-avatar color="surface-light" icon="mdi-chart-line" rounded>
@@ -97,7 +113,12 @@
                 </v-row>
             </v-container>
             <template #actions>
-                <v-btn class="text-none" color="primary" text="About" to="/about" @click="closeMenu" />
+                <v-btn
+                    class="text-none"
+                    color="primary"
+                    text="About"
+                    :to="isActiveRoutePath('/about') ? '' : '/about'"
+                    @click="closeMenu" />
 
                 <v-divider inset vertical />
 

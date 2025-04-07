@@ -26,78 +26,51 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-    import { useTheme } from 'vuetify';
+<script lang="ts" setup>
+    import { onMounted, ref, watch } from 'vue';
     import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
-    import { useRequestHandling } from '@/composables/RequestHandling';
-    import { useAASStore } from '@/store/AASDataStore';
 
-    export default defineComponent({
-        name: 'ImagePreview',
-        props: ['submodelElementData'],
+    // Composables
+    const { valueBlob } = useSMEFile();
 
-        setup() {
-            const theme = useTheme();
-            const aasStore = useAASStore();
-
-            const { valueBlob } = useSMEFile();
-            const { getRequest } = useRequestHandling();
-
-            return {
-                theme, // Theme Object
-                aasStore, // AASStore Object
-                valueBlob,
-                getRequest,
-            };
-        },
-
-        data() {
-            return {
-                Base64Image: '', // Base64 Image String
-                imageUrl: '', // Image URL
-                errorLoadingImage: false,
-            };
-        },
-
-        computed: {
-            // Get the selected Treeview Node (SubmodelElement) from the store
-            SelectedNode() {
-                return this.aasStore.getSelectedNode;
-            },
-        },
-
-        watch: {
-            async submodelElementData() {
-                this.Base64Image = '';
-                this.imageUrl = '';
-                if (this.submodelElementData.modelType == 'File') {
-                    this.Base64Image = await this.valueBlob(this.submodelElementData);
-                } else if (this.submodelElementData.modelType == 'Blob') {
-                    this.getDecodedImageBlob();
-                }
-                this.errorLoadingImage = false;
-            },
-        },
-
-        async mounted() {
-            this.Base64Image = '';
-            this.imageUrl = '';
-            if (this.submodelElementData.modelType == 'File') {
-                // console.log('SubmodelElementData: ', this.submodelElementData);
-                this.Base64Image = await this.valueBlob(this.submodelElementData);
-            } else if (this.submodelElementData.modelType == 'Blob') {
-                this.getDecodedImageBlob();
-            }
-            this.errorLoadingImage = false;
-        },
-
-        methods: {
-            getDecodedImageBlob() {
-                let decodedValue = atob(this.submodelElementData.value);
-                this.Base64Image = `data:${this.submodelElementData.contentType};base64,${decodedValue}`;
-            },
+    // Properties
+    const props = defineProps({
+        submodelElementData: {
+            type: Object as any,
+            default: {} as any,
         },
     });
+
+    // Data
+    const Base64Image = ref(''); // Base64 Image String
+    const imageUrl = ref(''); // Image URL
+    const errorLoadingImage = ref(false);
+
+    // Watchers
+    watch(
+        () => props.submodelElementData,
+        () => {
+            initialize();
+        }
+    );
+
+    onMounted(() => {
+        initialize();
+    });
+
+    async function initialize(): Promise<void> {
+        Base64Image.value = '';
+        imageUrl.value = '';
+        if (props.submodelElementData.modelType === 'File') {
+            Base64Image.value = await valueBlob(props.submodelElementData);
+        } else if (props.submodelElementData.modelType == 'Blob') {
+            getDecodedImageBlob();
+        }
+        errorLoadingImage.value = false;
+    }
+
+    function getDecodedImageBlob(): void {
+        let decodedValue = atob(props.submodelElementData.value);
+        Base64Image.value = `data:${props.submodelElementData.contentType};base64,${decodedValue}`;
+    }
 </script>
