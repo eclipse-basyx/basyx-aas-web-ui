@@ -60,6 +60,22 @@
                 </template>
                 <template #append>
                     <v-chip v-if="item.modelType" color="primary" size="x-small">{{ item.modelType }}</v-chip>
+                    <!-- Button to Copy the Path to the clipboard -->
+                    <v-tooltip
+                        v-if="isSelected(item) && (!editMode || (editMode && item.modelType !== 'Submodel'))"
+                        text="Copy Path to Clipboard"
+                        :open-delay="600"
+                        location="bottom">
+                        <template #activator="{ props }">
+                            <v-icon
+                                color="subtitleText"
+                                v-bind="props"
+                                class="ml-1"
+                                @click.stop="copyToClipboard(item.path, 'Path', copyIconAsRef)">
+                                {{ copyIcon }}
+                            </v-icon>
+                        </template>
+                    </v-tooltip>
                     <!-- Context menu for Submodels -->
                     <v-menu v-if="editMode && item.modelType === 'Submodel'">
                         <template #activator="{ props }">
@@ -72,12 +88,12 @@
                         </template>
                         <v-sheet border>
                             <v-list dense density="compact" class="py-0" slim>
-                                <!-- Copy SM endpoint to clipboard -->
-                                <v-list-item @click="copyToClipboard(item.path, 'SM endpoint', copyIconAsRef)">
+                                <!-- Copy SM Endpoint to clipboard -->
+                                <v-list-item @click.stop="copyToClipboard(item.path, 'SM Endpoint', copyIconAsRef)">
                                     <template #prepend>
                                         <v-icon size="x-small">{{ copyIcon }} </v-icon>
                                     </template>
-                                    <v-list-item-subtitle>Copy Submodel endpoint</v-list-item-subtitle>
+                                    <v-list-item-subtitle>Copy Submodel Endpoint</v-list-item-subtitle>
                                 </v-list-item>
                                 <v-divider></v-divider>
                                 <!-- Open Add SubmodelElement dialog -->

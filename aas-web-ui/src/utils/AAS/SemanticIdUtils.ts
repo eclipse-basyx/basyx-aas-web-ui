@@ -1,3 +1,5 @@
+const versionRevisionRegex = /\/(\d{1,})\/(\d{1,})(\/|$)/; // This regex matches the version/revision string of a semanticId ".../version/revision"
+
 /**
  * Checks if the `semanticId` of a SubmodelElement (SME) matches the given `semanticId`.
  * The function verifies that the `semanticId` is non-empty and that the SubmodelElement
@@ -10,6 +12,7 @@
  */
 export function checkSemanticId(submodelElement: any, semanticId: string): boolean {
     if (semanticId.trim() == '') return false;
+    semanticId = semanticId.trim();
 
     if (!Array.isArray(submodelElement?.semanticId?.keys) || submodelElement.semanticId.keys.length == 0) return false;
 
@@ -43,6 +46,7 @@ export function checkSemanticId(submodelElement: any, semanticId: string): boole
  */
 export function checkSemanticIdEclassIrdi(keyValue: string, semanticId: string): boolean {
     if (semanticId.trim() == '') return false;
+    semanticId = semanticId.trim();
 
     if (!keyValue.startsWith('0173-1#') && !keyValue.startsWith('0173/1///')) return false;
 
@@ -91,6 +95,7 @@ export function checkSemanticIdEclassIrdi(keyValue: string, semanticId: string):
  */
 export function checkSemanticIdEclassIrdiUrl(keyValue: string, semanticId: string): boolean {
     if (semanticId.trim() == '') return false;
+    semanticId = semanticId.trim();
 
     if (!keyValue.startsWith('https://api.eclass-cdp.com/0173-1')) return false;
 
@@ -119,6 +124,7 @@ export function checkSemanticIdEclassIrdiUrl(keyValue: string, semanticId: strin
  */
 export function checkSemanticIdIecCdd(keyValue: string, semanticId: string): boolean {
     if (semanticId.trim() == '') return false;
+    semanticId = semanticId.trim();
 
     if (!semanticId.startsWith('0112/')) return false;
     if (!keyValue.startsWith('0112/')) return false;
@@ -150,6 +156,7 @@ export function checkSemanticIdIecCdd(keyValue: string, semanticId: string): boo
  */
 export function checkSemanticIdIri(keyValue: string, semanticId: string): boolean {
     if (semanticId.trim() == '') return false;
+    semanticId = semanticId.trim();
 
     if (!semanticId.startsWith('http://') && !semanticId.startsWith('https://')) return false;
     if (!keyValue.startsWith('http://') && !keyValue.startsWith('https://')) return false;
@@ -198,8 +205,10 @@ export function getEquivalentEclassSemanticIds(semanticId: string): any[] {
         (!semanticId.startsWith('0173-1#') &&
             !semanticId.startsWith('0173/1///') &&
             !semanticId.startsWith('https://api.eclass-cdp.com/0173-1'))
-    )
+    ) {
         return [];
+    }
+    semanticId = semanticId.trim();
 
     const semanticIds: any[] = [semanticId];
 
@@ -245,7 +254,10 @@ export function getEquivalentEclassSemanticIds(semanticId: string): any[] {
  *                  or an empty array if the input is invalid.
  */
 export function getEquivalentIriSemanticIds(semanticId: string): any[] {
-    if (semanticId.trim() === '' || !(semanticId.startsWith('http://') || semanticId.startsWith('https://'))) return [];
+    if (semanticId.trim() === '' || !(semanticId.startsWith('http://') || semanticId.startsWith('https://'))) {
+        return [];
+    }
+    semanticId = semanticId.trim();
 
     const semanticIds: any[] = [semanticId];
 
@@ -275,6 +287,7 @@ export function getSubmodelElementBySemanticId(semanticId: string, submodelEleme
     const failResponse = {} as any;
 
     if (semanticId.trim() == '') return failResponse;
+    semanticId = semanticId.trim();
 
     if (!submodelElement?.modelType || submodelElement?.modelType.trim() === '') return failResponse;
 
@@ -319,6 +332,7 @@ export function getSubmodelElementsBySemanticId(semanticId: string, submodelElem
     const failResponse = [] as any[];
 
     if (semanticId.trim() == '') return failResponse;
+    semanticId = semanticId.trim();
 
     if (!submodelElement?.modelType || submodelElement?.modelType.trim() === '') return failResponse;
 
@@ -342,6 +356,26 @@ export function getSubmodelElementsBySemanticId(semanticId: string, submodelElem
                 });
             }
             break;
+    }
+
+    return failResponse;
+}
+
+export function extractVersionRevision(semanticId: string): { version: string; revision: string } {
+    const failResponse = { version: '', revision: '' };
+
+    if (semanticId.trim() == '') return failResponse;
+    semanticId = semanticId.trim();
+
+    const match = semanticId.match(versionRevisionRegex);
+
+    if (match) {
+        const response = {
+            version: match && match[1] ? match[1] : '',
+            revision: match && match[2] ? match[2] : '',
+        };
+
+        return response;
     }
 
     return failResponse;
