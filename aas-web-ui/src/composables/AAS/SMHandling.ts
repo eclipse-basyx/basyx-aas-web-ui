@@ -306,6 +306,7 @@ export function useSMHandling() {
         getSmEndpointById,
         smIsAvailableById,
         fetchSm,
+        fetchSmeFromRepo,
         fetchSmById,
         fetchSmDescriptorList,
         fetchSmDescriptor,

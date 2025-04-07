@@ -60,22 +60,6 @@
                 </template>
                 <template #append>
                     <v-chip v-if="item.modelType" color="primary" size="x-small">{{ item.modelType }}</v-chip>
-                    <!-- Button to Copy the Path to the clipboard -->
-                    <v-tooltip
-                        v-if="isSelected(item) && (!editMode || (editMode && item.modelType !== 'Submodel'))"
-                        text="Copy Path to Clipboard"
-                        :open-delay="600"
-                        location="bottom">
-                        <template #activator="{ props }">
-                            <v-icon
-                                color="subtitleText"
-                                v-bind="props"
-                                class="ml-1"
-                                @click="copyToClipboard(item.path, 'Path', copyIconAsRef)">
-                                {{ copyIcon }}
-                            </v-icon>
-                        </template>
-                    </v-tooltip>
                     <!-- Context menu for Submodels -->
                     <v-menu v-if="editMode && item.modelType === 'Submodel'">
                         <template #activator="{ props }">
@@ -120,6 +104,50 @@
                             </v-list>
                         </v-sheet>
                     </v-menu>
+                    <!-- Context menu for Submodel Elements -->
+                    <v-menu v-if="editMode && item.modelType !== 'Submodel'">
+                        <template #activator="{ props }">
+                            <v-btn
+                                icon="mdi-dots-vertical"
+                                size="small"
+                                variant="plain"
+                                color="subtitleText"
+                                v-bind="props"></v-btn>
+                        </template>
+                        <v-sheet border>
+                            <v-list dense density="compact" class="py-0" slim>
+                                <!-- Copy SM endpoint to clipboard -->
+                                <v-list-item @click="copyToClipboard(item.path, 'Path', copyIconAsRef)">
+                                    <template #prepend>
+                                        <v-icon size="x-small">{{ copyIcon }} </v-icon>
+                                    </template>
+                                    <v-list-item-subtitle>Copy Submodel Element endpoint</v-list-item-subtitle>
+                                </v-list-item>
+                                <v-divider></v-divider>
+                                <!-- Open Add SubmodelElement dialog -->
+                                <v-list-item v-if="item.modelType === 'SubmodelElementCollection' || item.modelType === 'SubmodelElementList' || item.modelType === 'Entity'" @click="$emit('openAddSubmodelElementDialog', item)">
+                                    <template #prepend>
+                                        <v-icon size="x-small">mdi-plus</v-icon>
+                                    </template>
+                                    <v-list-item-subtitle>Add Submodel Element</v-list-item-subtitle>
+                                </v-list-item>
+                                <!-- Open Submodel Element edit dialog -->
+                                <v-list-item @click="$emit('openEditSubmodelElementDialog', item)">
+                                    <template #prepend>
+                                        <v-icon size="x-small">mdi-pencil</v-icon>
+                                    </template>
+                                    <v-list-item-subtitle>Edit {{ item.modelType }}</v-list-item-subtitle>
+                                </v-list-item>
+                                <!-- Delete Submodel Element -->
+                                <v-list-item @click="$emit('showDeleteDialog', item)">
+                                    <template #prepend>
+                                        <v-icon size="x-small">mdi-delete</v-icon>
+                                    </template>
+                                    <v-list-item-subtitle>Delete {{ item.modelType }}</v-list-item-subtitle>
+                                </v-list-item>
+                            </v-list>
+                        </v-sheet>
+                    </v-menu>
                     <template v-else-if="editMode"></template>
                 </template>
             </v-list-item>
@@ -130,6 +158,9 @@
                 v-for="innerItem in item.children"
                 :key="innerItem.id"
                 :item="innerItem"
+                @open-add-submodel-element-dialog="$emit('openAddSubmodelElementDialog', innerItem)"
+                @open-edit-submodel-element-dialog="$emit('openEditSubmodelElementDialog', innerItem)"
+                @show-delete-dialog="$emit('showDeleteDialog', innerItem)"
                 :depth="depth + 1"></vTreeview>
         </template>
     </div>
@@ -168,10 +199,16 @@
     });
 
     // Emits
-    defineEmits(['openEditDialog', 'showDeleteDialog', 'openAddSubmodelElementDialog']);
+    const emit = defineEmits<{
+        (event: 'openEditDialog', item: any): void;
+        (event: 'showDeleteDialog', item: any): void;
+        (event: 'openAddSubmodelElementDialog', item: any): void;
+        (event: 'openEditSubmodelElementDialog', item: any): void;
+    }>();
 
     // Data
     const copyIcon = ref<string>('mdi-clipboard-file-outline');
+    const editIcon = ref<string>('mdi-pen');
 
     // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode);

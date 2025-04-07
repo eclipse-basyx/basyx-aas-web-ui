@@ -28,14 +28,11 @@
         (event: 'openCreateSMEDialog', value: string): void;
     }>();
     const availableSMEs = ref(['Property']);
-    const selectedSME = ref('');
+    const selectedSME = ref('Property');
     watch(
         () => props.modelValue,
         (value) => {
             addSMEDialog.value = value;
-            if (value) {
-                //initializeInputs();
-            }
         }
     );
     watch(

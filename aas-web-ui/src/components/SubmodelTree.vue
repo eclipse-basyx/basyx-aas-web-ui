@@ -129,6 +129,7 @@
                                 class="root"
                                 :item="item"
                                 :depth="0"
+                                @open-edit-submodel-element-dialog="openEditSubmodelElementDialogForElement"
                                 @open-add-submodel-element-dialog="openAddSubmodelElementDialog"
                                 @open-edit-dialog="openEditDialog(false, $event)"
                                 @show-delete-dialog="openDeleteDialog"></VTreeview>
@@ -157,7 +158,7 @@
         @open-create-s-m-e-dialog="openSMEFormDialog">
     </SubmodelElementForm>
     <!-- Dialog for creating/editing Properties -->
-    <PropertyForm v-model="propertyDialog" :new-property="newProperty" :submodel="submodelToAddSME"></PropertyForm>
+    <PropertyForm v-model="propertyDialog" :new-property="newProperty" :parentElement="elementToAddSME" :path="submodelElementPath" :property="submodelElementToEdit"></PropertyForm>
     <!-- Dialog for creating/editing Submodel -->
     <SubmodelForm v-model="editDialog" :new-sm="newSubmodel" :submodel="submodelToEdit"></SubmodelForm>
     <!-- Dialog for deleting SM/SME -->
@@ -197,7 +198,9 @@
     const submodelToEdit = ref<any | undefined>(undefined); // Variable to store the Submodel to be edited
     const deleteDialog = ref(false); // Variable to store if the Delete Dialog should be shown
     const elementToDelete = ref<any | undefined>(undefined); // Variable to store the Element to be deleted
-    const submodelToAddSME = ref<any | undefined>(undefined); // Variable to store the Element where the new SME is added inside
+    const elementToAddSME = ref<any | undefined>(undefined); // Variable to store the Element where the new SME is added inside
+    const submodelElementPath = ref<string | undefined>(undefined); // Variable to store the Element where the new SME is added inside
+    const submodelElementToEdit = ref<any | undefined>(undefined); // Variable to store the Element where the new SME is added inside
 
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
@@ -347,6 +350,7 @@
     }
 
     function openDeleteDialog(element: any): void {
+        console.log("Hallo")
         deleteDialog.value = true;
         elementToDelete.value = element;
     }
@@ -370,16 +374,28 @@
     }
 
     function openAddSubmodelElementDialog(element: any): void {
-        submodelToAddSME.value = element;
+        elementToAddSME.value = element;
         selectSMETypeToAddDialog.value = true;
+    }
+
+    function openEditSubmodelElementDialogForElement(element: any): void {
+        if (element.modelType === 'Property') {
+            propertyDialog.value = true;
+            newProperty.value = false;
+            submodelElementPath.value = element.path;
+            elementToAddSME.value = element.parent;
+            submodelElementToEdit.value = element;
+        }
     }
 
     function openSMEFormDialog(smeType: string): void {
         switch (smeType) {
             case 'Property':
-                propertyDialog.value = true;
                 newProperty.value = true;
-                console.log(submodelToAddSME.value);
+                submodelElementPath.value = undefined;
+                submodelElementToEdit.value = undefined;
+                propertyDialog.value = true;
+                console.log(elementToAddSME.value);
                 break;
             default:
                 console.error(`Specified invalid SubmodelElement Type "${smeType}"`);

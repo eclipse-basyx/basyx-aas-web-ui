@@ -118,6 +118,24 @@
             } catch (error) {
                 console.error('Error while deleting Submodel: ', error);
             }
+        } else {
+            // delete Submodel Element
+            try { 
+                await deleteRequest(
+                    props.element.path,
+                    'removing Submodel Element',
+                    false
+                );
+
+                // Check if the selected Submodel Element is the deleted one
+                if (aasStore.getSelectedNode?.id === props.element.id) {
+                    router.push({ query: { aas: route.query.aas, path: props.element.parent.path } });
+                    aasStore.dispatchSelectedNode(props.element.parent);
+                }
+                navigationStore.dispatchTriggerTreeviewReload();
+            } catch (error) {
+                console.error('Error while deleting Submodel Element: ', error);
+            }
         }
         deleteLoading.value = false;
         // close the dialog
