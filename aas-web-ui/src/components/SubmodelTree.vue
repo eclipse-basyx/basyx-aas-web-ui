@@ -349,7 +349,6 @@
     }
 
     function openDeleteDialog(element: any): void {
-        console.log('Hallo');
         deleteDialog.value = true;
         elementToDelete.value = element;
     }
@@ -394,7 +393,6 @@
                 submodelElementPath.value = undefined;
                 submodelElementToEdit.value = undefined;
                 propertyDialog.value = true;
-                console.log(elementToAddSME.value);
                 break;
             default:
                 console.error(`Specified invalid SubmodelElement Type "${smeType}"`);
