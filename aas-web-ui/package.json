@@ -62,7 +62,7 @@
     "jsdom": "^26.0.0",
     "prettier": "^3.5.3",
     "sass": "^1.86.3",
-    "typescript": "^5.8.2",
+    "typescript": "^5.8.3",
     "typescript-eslint": "^8.29.0",
     "unplugin-auto-import": "^19.1.2",
     "unplugin-vue-components": "^28.4.1",
