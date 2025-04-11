@@ -462,14 +462,14 @@
                             const time = timeEntry ? timeEntry.value : null;
 
                             // Extract the yVariable value
-                            const yVarEntry = item.value.find((entry: any) => entry, yVar.idShort);
+                            const yVarEntry = item.value.find((entry: any) => this.checkIdShort(entry, yVar.idShort));
                             const yVarValue = yVarEntry ? yVarEntry.value : null;
 
                             // Return an object with time and the yVariable value
                             return { time, value: yVarValue };
                         });
                     });
-                // console.log('Transformed Array: ', transformedArray);
+
                 this.timeSeriesValues = transformedArray;
             },
 
