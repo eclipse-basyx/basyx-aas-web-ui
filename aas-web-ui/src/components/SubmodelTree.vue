@@ -164,7 +164,7 @@
         :new-smc="newSMC"
         :parent-element="elementToAddSME"
         :path="submodelElementPath"
-        :property="submodelElementToEdit"></CollectionForm>
+        :smc="submodelElementToEdit"></CollectionForm>
     <!-- Dialog for creating/editing Submodel -->
     <SubmodelForm v-model="editDialog" :new-sm="newSubmodel" :submodel="submodelToEdit"></SubmodelForm>
     <!-- Dialog for deleting SM/SME -->
