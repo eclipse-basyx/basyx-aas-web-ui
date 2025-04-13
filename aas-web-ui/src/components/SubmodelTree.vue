@@ -158,6 +158,13 @@
         :parent-element="elementToAddSME"
         :path="submodelElementPath"
         :property="submodelElementToEdit"></PropertyForm>
+        <!-- Dialog for creating/editing Properties -->
+    <CollectionForm
+        v-model="smcDialog"
+        :new-smc="newSMC"
+        :parent-element="elementToAddSME"
+        :path="submodelElementPath"
+        :property="submodelElementToEdit"></CollectionForm>
     <!-- Dialog for creating/editing Submodel -->
     <SubmodelForm v-model="editDialog" :new-sm="newSubmodel" :submodel="submodelToEdit"></SubmodelForm>
     <!-- Dialog for deleting SM/SME -->
@@ -191,8 +198,10 @@
     const treeLoading = ref(false); // Variable to store if the AAS List is loading
     const selectSMETypeToAddDialog = ref(false); // Variable to store if the Add SubmodelElement Dialog should be shown
     const propertyDialog = ref(false); // Variable to store if the PropertyForm Dialog should be shown
+    const smcDialog = ref(false); // Variable to store if the PropertyForm Dialog should be shown
     const editDialog = ref(false); // Variable to store if the Edit Dialog should be shown
     const newProperty = ref(false); // Variable to store if a new Property should be created
+    const newSMC = ref(false); // Variable to store if a new SubmodelElementCollection should be created
     const newSubmodel = ref(false); // Variable to store if a new Submodel should be created
     const submodelToEdit = ref<any | undefined>(undefined); // Variable to store the Submodel to be edited
     const deleteDialog = ref(false); // Variable to store if the Delete Dialog should be shown
@@ -383,6 +392,12 @@
             submodelElementPath.value = element.path;
             elementToAddSME.value = element.parent;
             submodelElementToEdit.value = element;
+        }else if (element.modelType === 'SubmodelElementCollection') {
+            smcDialog.value = true;
+            newSMC.value = false;
+            submodelElementPath.value = element.path;
+            elementToAddSME.value = element.parent;
+            submodelElementToEdit.value = element;
         }
     }
 
@@ -393,6 +408,12 @@
                 submodelElementPath.value = undefined;
                 submodelElementToEdit.value = undefined;
                 propertyDialog.value = true;
+                break;
+            case 'SubmodelElementCollection':
+                newSMC.value = true;
+                submodelElementPath.value = undefined;
+                submodelElementToEdit.value = undefined;
+                smcDialog.value = true;
                 break;
             default:
                 console.error(`Specified invalid SubmodelElement Type "${smeType}"`);
