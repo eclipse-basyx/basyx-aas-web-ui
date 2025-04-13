@@ -86,6 +86,7 @@
     const route = useRoute();
 
     const editSMCDialog = ref(false);
+    const smcObject = ref<aasTypes.SubmodelElementCollection | undefined>(undefined);
     const openPanels = ref<number[]>([0]);
 
     const smcIdShort = ref<string | null>(null);
@@ -179,29 +180,37 @@
     }
 
     async function saveSMC(): Promise<void> {
-        const smc: aasTypes.SubmodelElementCollection = new aasTypes.SubmodelElementCollection();
+        if (props.newSmc || smcObject.value === undefined) {
+            smcObject.value = new aasTypes.SubmodelElementCollection();
+        }
+
         if (smcIdShort.value !== null) {
-            smc.idShort = smcIdShort.value;
+            smcObject.value.idShort = smcIdShort.value;
         } else {
             errors.value.set('idShort', 'SubmodelElementCollection IdShort is required');
             return;
         }
+
         if (semanticId.value !== null) {
-            smc.semanticId = semanticId.value;
+            smcObject.value.semanticId = semanticId.value;
         }
+
         if (displayName.value !== null) {
-            smc.displayName = displayName.value;
+            smcObject.value.displayName = displayName.value;
         }
+
         if (description.value !== null) {
-            smc.description = description.value;
+            smcObject.value.description = description.value;
         }
+
         if (smcCategory.value !== null) {
-            smc.category = smcCategory.value;
+            smcObject.value.category = smcCategory.value;
         }
+
         if (props.newSmc) {
             if (props.parentElement.modelType === 'Submodel') {
                 // Create the smc on the parent Submodel
-                await postSubmodelElement(smc, props.parentElement.id);
+                await postSubmodelElement(smcObject.value, props.parentElement.id);
 
                 const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
@@ -209,7 +218,7 @@
                 router.push({
                     query: {
                         aas: aasEndpoint,
-                        path: props.parentElement.path + '/submodel-elements/' + smc.idShort,
+                        path: props.parentElement.path + '/submodel-elements/' + smcObject.value.idShort,
                     },
                 });
             } else {
@@ -219,14 +228,14 @@
                 const idShortPath = splitted[1];
 
                 // Create the smc on the parent element
-                await postSubmodelElement(smc, submodelId, idShortPath);
+                await postSubmodelElement(smcObject.value, submodelId, idShortPath);
 
                 const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
                 // Navigate to the new smc
                 if (props.parentElement.modelType === 'SubmodelElementCollection') {
                     router.push({
-                        query: { aas: aasEndpoint, path: props.parentElement.path + '.' + smc.idShort },
+                        query: { aas: aasEndpoint, path: props.parentElement.path + '.' + smcObject.value.idShort },
                     });
                 }
             }
@@ -241,13 +250,13 @@
 
             // Update the smc
             if (props.parentElement.modelType === 'Submodel') {
-                await putSubmodelElement(smc, props.path);
+                await putSubmodelElement(smcObject.value, props.path);
 
                 if (editedElementSelected) {
                     router.push({
                         query: {
                             aas: aasEndpoint,
-                            path: props.parentElement.path + '/submodel-elements/' + smc.idShort,
+                            path: props.parentElement.path + '/submodel-elements/' + smcObject.value.idShort,
                         },
                     });
                 }
@@ -256,7 +265,7 @@
                     props.parentElement.value.find((el: any) => el.id === props.smc.id)
                 );
                 const path = props.parentElement.path + `%5B${index}%5D`;
-                await putSubmodelElement(smc, path);
+                await putSubmodelElement(smcObject.value, path);
 
                 if (editedElementSelected) {
                     router.push({
@@ -265,11 +274,11 @@
                 }
             } else {
                 // Submodel Element Collection or Entity
-                await putSubmodelElement(smc, props.smc.path);
+                await putSubmodelElement(smcObject.value, props.smc.path);
 
                 if (editedElementSelected) {
                     router.push({
-                        query: { aas: aasEndpoint, path: props.parentElement.path + '.' + smc.idShort },
+                        query: { aas: aasEndpoint, path: props.parentElement.path + '.' + smcObject.value.idShort },
                     });
                 }
             }
@@ -285,20 +294,26 @@
     async function initializeInputs(): Promise<void> {
         if (!props.newSmc && props.smc) {
             const smcJSON = await fetchSme(props.smc.path);
+
             const instanceOrError = jsonization.submodelElementCollectionFromJsonable(smcJSON);
-            const smc = instanceOrError.mustValue();
-            smcIdShort.value = smc.idShort;
-            if (smc.displayName) {
-                displayName.value = smc.displayName;
+            if (instanceOrError.error !== null) {
+                console.error('Error parsing SubmodelElementCollection: ', instanceOrError.error);
+                return;
             }
-            if (smc.description) {
-                description.value = smc.description;
+            smcObject.value = instanceOrError.mustValue();
+
+            smcIdShort.value = smcObject.value.idShort;
+            if (smcObject.value.displayName) {
+                displayName.value = smcObject.value.displayName;
             }
-            if (smc.category) {
-                smcCategory.value = smc.category;
+            if (smcObject.value.description) {
+                description.value = smcObject.value.description;
             }
-            if (smc.semanticId) {
-                semanticId.value = smc.semanticId;
+            if (smcObject.value.category) {
+                smcCategory.value = smcObject.value.category;
+            }
+            if (smcObject.value.semanticId) {
+                semanticId.value = smcObject.value.semanticId;
             }
             openPanels.value = [0];
         } else {
