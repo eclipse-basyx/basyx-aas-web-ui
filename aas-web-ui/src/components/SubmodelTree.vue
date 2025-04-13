@@ -158,7 +158,7 @@
         :parent-element="elementToAddSME"
         :path="submodelElementPath"
         :property="submodelElementToEdit"></PropertyForm>
-        <!-- Dialog for creating/editing Properties -->
+    <!-- Dialog for creating/editing Properties -->
     <CollectionForm
         v-model="smcDialog"
         :new-smc="newSMC"
@@ -392,7 +392,7 @@
             submodelElementPath.value = element.path;
             elementToAddSME.value = element.parent;
             submodelElementToEdit.value = element;
-        }else if (element.modelType === 'SubmodelElementCollection') {
+        } else if (element.modelType === 'SubmodelElementCollection') {
             smcDialog.value = true;
             newSMC.value = false;
             submodelElementPath.value = element.path;
