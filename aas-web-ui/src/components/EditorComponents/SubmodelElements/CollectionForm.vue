@@ -2,7 +2,9 @@
     <v-dialog v-model="editSMCDialog" width="860" persistent>
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{ props.newSmc ? 'Create a new Submodel Element Collection' : 'Edit Submodel Element Collection' }}</span>
+                <span class="text-subtile-1">{{
+                    props.newSmc ? 'Create a new Submodel Element Collection' : 'Edit Submodel Element Collection'
+                }}</span>
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
@@ -19,11 +21,7 @@
                                 :error-messages="getError('idShort')" />
                             <MultiLanguageTextInput v-model="displayName" label="Display Name" type="displayName" />
                             <MultiLanguageTextInput v-model="description" label="Description" type="description" />
-                            <SelectInput
-                                v-model="smcCategory"
-                                label="Category"
-                                type="category"
-                                :clearable="true" />
+                            <SelectInput v-model="smcCategory" label="Category" type="category" :clearable="true" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Semantic ID -->
@@ -32,7 +30,7 @@
                         <v-expansion-panel-text>
                             <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" />
                         </v-expansion-panel-text>
-                    </v-expansion-panel>                   
+                    </v-expansion-panel>
                     <!-- TODO: What are Extensions?  -->
                     <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
                         <v-expansion-panel-title>Extensions</v-expansion-panel-title>
@@ -73,7 +71,7 @@
         newSmc: boolean;
         parentElement: any;
         path?: string;
-        property?: any;
+        smc?: any;
     }>();
 
     // Stores
@@ -185,7 +183,7 @@
         if (smcIdShort.value !== null) {
             smc.idShort = smcIdShort.value;
         } else {
-            errors.value.set('idShort', 'Property IdShort is required');
+            errors.value.set('idShort', 'SubmodelElementCollection IdShort is required');
             return;
         }
         if (semanticId.value !== null) {
@@ -202,12 +200,12 @@
         }
         if (props.newSmc) {
             if (props.parentElement.modelType === 'Submodel') {
-                // Create the property on the parent Submodel
+                // Create the smc on the parent Submodel
                 await postSubmodelElement(smc, props.parentElement.id);
 
                 const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
-                // Navigate to the new property
+                // Navigate to the new smc
                 router.push({
                     query: {
                         aas: aasEndpoint,
@@ -220,12 +218,12 @@
                 const submodelId = base64Decode(splitted[0].split('/submodels/')[1]);
                 const idShortPath = splitted[1];
 
-                // Create the property on the parent element
+                // Create the smc on the parent element
                 await postSubmodelElement(smc, submodelId, idShortPath);
 
                 const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
-                // Navigate to the new property
+                // Navigate to the new smc
                 if (props.parentElement.modelType === 'SubmodelElementCollection') {
                     router.push({
                         query: { aas: aasEndpoint, path: props.parentElement.path + '.' + smc.idShort },
@@ -241,7 +239,7 @@
             const editedElementSelected = route.query.path === props.path;
             const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
-            // Update the property
+            // Update the smc
             if (props.parentElement.modelType === 'Submodel') {
                 await putSubmodelElement(smc, props.path);
 
@@ -255,7 +253,7 @@
                 }
             } else if (props.parentElement.modelType === 'SubmodelElementList') {
                 const index = props.parentElement.value.indexOf(
-                    props.parentElement.value.find((el: any) => el.id === props.property.id)
+                    props.parentElement.value.find((el: any) => el.id === props.smc.id)
                 );
                 const path = props.parentElement.path + `%5B${index}%5D`;
                 await putSubmodelElement(smc, path);
@@ -267,7 +265,7 @@
                 }
             } else {
                 // Submodel Element Collection or Entity
-                await putSubmodelElement(smc, props.property.path);
+                await putSubmodelElement(smc, props.smc.path);
 
                 if (editedElementSelected) {
                     router.push({
@@ -285,9 +283,9 @@
     }
 
     async function initializeInputs(): Promise<void> {
-        if (!props.newSmc && props.property) {
-            const smcJSON = await fetchSme(props.property.path);
-            const instanceOrError = jsonization.propertyFromJsonable(smcJSON);
+        if (!props.newSmc && props.smc) {
+            const smcJSON = await fetchSme(props.smc.path);
+            const instanceOrError = jsonization.submodelElementCollectionFromJsonable(smcJSON);
             const smc = instanceOrError.mustValue();
             smcIdShort.value = smc.idShort;
             if (smc.displayName) {
