@@ -326,7 +326,6 @@
         }
     }
 
-    
     let isValidEnter = false;
     let keyAlreadyDown = false;
 
