@@ -19,8 +19,16 @@
                                 :error="hasError('idShort')"
                                 :rules="[rules.required]"
                                 :error-messages="getError('idShort')" />
-                            <MultiLanguageTextInput v-model="displayName" label="Display Name" type="displayName" />
-                            <MultiLanguageTextInput v-model="description" label="Description" type="description" />
+                            <MultiLanguageTextInput
+                                v-model="displayName"
+                                :show-label="true"
+                                label="Display Name"
+                                type="displayName" />
+                            <MultiLanguageTextInput
+                                v-model="description"
+                                :show-label="true"
+                                label="Description"
+                                type="description" />
                             <SelectInput v-model="smcCategory" label="Category" type="category" :clearable="true" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
@@ -31,14 +39,8 @@
                             <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
-                    <!-- TODO: What are Extensions?  -->
-                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
-                        <v-expansion-panel-title>Extensions</v-expansion-panel-title>
-                        <v-expansion-panel-text>
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
-                        </v-expansion-panel-text>
-                    </v-expansion-panel>
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
+                    <!-- Data Specification -->
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(2)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
@@ -146,22 +148,6 @@
             case 2:
                 if (openPanels.value.includes(1) || openPanels.value.includes(2)) {
                     border += ' border-t-thin';
-                }
-                if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
-                    border += ' border-b-thin';
-                }
-                break;
-            case 3:
-                if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
-                    border += 'border-t-thin';
-                }
-                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
-                    border += ' border-b-thin';
-                }
-                break;
-            case 4:
-                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
-                    border = 'border-t-thin';
                 }
                 break;
         }
