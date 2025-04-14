@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="editSMCDialog" width="860" persistent>
+    <v-dialog v-model="editSMCDialog" width="860" persistent @keyup="keyUp" @keydown="keyDown">
         <v-card>
             <v-card-title>
                 <span class="text-subtile-1">{{
@@ -323,6 +323,35 @@
             smcCategory.value = null;
             semanticId.value = null;
             openPanels.value = [0];
+        }
+    }
+
+    
+    let isValidEnter = false;
+    let keyAlreadyDown = false;
+
+    /*
+        This Method prepares the saveProperty function.
+        It has a QoL function where you can 'abort' a save through holding the Enter key longer than 500ms.
+    */
+    function keyDown(event: KeyboardEvent): void {
+        if (event.key == 'Enter' && !keyAlreadyDown) {
+            keyAlreadyDown = true;
+            isValidEnter = true;
+            setTimeout(() => {
+                isValidEnter = false;
+            }, 500);
+        }
+    }
+
+    /*
+        This Method executes the saveProperty function.
+        It only executes when the 'Enter' key is lifted within 500ms since pressing it.
+    */
+    function keyUp(event: KeyboardEvent): void {
+        keyAlreadyDown = false;
+        if (event.key == 'Enter' && isValidEnter) {
+            saveSMC();
         }
     }
 </script>
