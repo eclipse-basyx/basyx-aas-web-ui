@@ -158,7 +158,14 @@
         :parent-element="elementToAddSME"
         :path="submodelElementPath"
         :property="submodelElementToEdit"></PropertyForm>
-    <!-- Dialog for creating/editing Properties -->
+    <!-- Dialog for creating/editing MultiLanguageProperties -->
+    <MLPForm
+        v-model="mlpDialog"
+        :new-mlp="newMLP"
+        :parent-element="elementToAddSME"
+        :path="submodelElementPath"
+        :mlp="submodelElementToEdit"></MLPForm>
+    <!-- Dialog for creating/editing SubmodelElementCollections -->
     <CollectionForm
         v-model="smcDialog"
         :new-smc="newSMC"
@@ -198,9 +205,11 @@
     const treeLoading = ref(false); // Variable to store if the AAS List is loading
     const selectSMETypeToAddDialog = ref(false); // Variable to store if the Add SubmodelElement Dialog should be shown
     const propertyDialog = ref(false); // Variable to store if the PropertyForm Dialog should be shown
+    const mlpDialog = ref(false); // Variable to store if the MultiLanguagePropertyForm Dialog should be shown
     const smcDialog = ref(false); // Variable to store if the PropertyForm Dialog should be shown
     const editDialog = ref(false); // Variable to store if the Edit Dialog should be shown
     const newProperty = ref(false); // Variable to store if a new Property should be created
+    const newMLP = ref(false); // Variable to store if a new MultiLanguageProperty should be created
     const newSMC = ref(false); // Variable to store if a new SubmodelElementCollection should be created
     const newSubmodel = ref(false); // Variable to store if a new Submodel should be created
     const submodelToEdit = ref<any | undefined>(undefined); // Variable to store the Submodel to be edited
@@ -392,6 +401,12 @@
             submodelElementPath.value = element.path;
             elementToAddSME.value = element.parent;
             submodelElementToEdit.value = element;
+        } else if (element.modelType === 'MultiLanguageProperty') {
+            mlpDialog.value = true;
+            newMLP.value = false;
+            submodelElementPath.value = element.path;
+            elementToAddSME.value = element.parent;
+            submodelElementToEdit.value = element;
         } else if (element.modelType === 'SubmodelElementCollection') {
             smcDialog.value = true;
             newSMC.value = false;
@@ -408,6 +423,12 @@
                 submodelElementPath.value = undefined;
                 submodelElementToEdit.value = undefined;
                 propertyDialog.value = true;
+                break;
+            case 'MultiLanguageProperty':
+                newMLP.value = true;
+                submodelElementPath.value = undefined;
+                submodelElementToEdit.value = undefined;
+                mlpDialog.value = true;
                 break;
             case 'SubmodelElementCollection':
                 newSMC.value = true;
