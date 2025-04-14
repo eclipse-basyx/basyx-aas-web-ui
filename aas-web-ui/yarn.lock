@@ -3182,10 +3182,10 @@ katex@^0.16.9:
   dependencies:
     commander "^8.3.0"
 
-keycloak-js@^26.1.4:
-  version "26.1.4"
-  resolved "https://registry.yarnpkg.com/keycloak-js/-/keycloak-js-26.1.4.tgz#d279ec2b0e4d0805bfa6f08ae1499f2332f86802"
-  integrity sha512-4h2RicCzIAtsjKIG8DIO+8NKlpWX2fiNkbS0jlbtjZFbIGGjbQBzjS/5NkyWlzxamXVow9prHTIgIiwfo3GAmQ==
+keycloak-js@^26.1.5:
+  version "26.1.5"
+  resolved "https://registry.yarnpkg.com/keycloak-js/-/keycloak-js-26.1.5.tgz#a5b593d754d66c9230ac23bcda054eabd02835e1"
+  integrity sha512-5m8DQceKgBD+iVyy8GYeOiH3Hu12q6azAxhBRabVnZANt5BEi9r/qEXyOeye9yzrjqPF6RlH48TTTYNd1iXZMQ==
 
 keyv@^4.5.4:
   version "4.5.4"
