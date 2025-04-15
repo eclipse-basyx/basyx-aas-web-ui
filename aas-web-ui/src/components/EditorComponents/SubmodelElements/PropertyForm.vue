@@ -1,5 +1,10 @@
 <template>
-    <v-dialog v-model="editPropertyDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp">
+    <v-dialog
+        v-model="editPropertyDialog"
+        width="860"
+        persistent
+        @keydown="keyDown"
+        @keyup="keyUp($event, saveProperty)">
         <v-card>
             <v-card-title>
                 <span class="text-subtile-1">{{ props.newProperty ? 'Create a new Property' : 'Edit Property' }}</span>
@@ -81,6 +86,7 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
+    import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
     const props = defineProps<{
@@ -355,34 +361,6 @@
             valueType.value = aasTypes.DataTypeDefXsd.String;
             semanticId.value = null;
             openPanels.value = [0];
-        }
-    }
-
-    let isValidEnter = false;
-    let keyAlreadyDown = false;
-
-    /*
-        This Method prepares the saveProperty function.
-        It has a QoL function where you can 'abort' a save through holding the Enter key longer than 500ms.
-    */
-    function keyDown(event: KeyboardEvent): void {
-        if (event.key == 'Enter' && !keyAlreadyDown) {
-            keyAlreadyDown = true;
-            isValidEnter = true;
-            setTimeout(() => {
-                isValidEnter = false;
-            }, 500);
-        }
-    }
-
-    /*
-        This Method executes the saveProperty function.
-        It only executes when the 'Enter' key is lifted within 500ms since pressing it.
-    */
-    function keyUp(event: KeyboardEvent): void {
-        keyAlreadyDown = false;
-        if (event.key == 'Enter' && isValidEnter) {
-            saveProperty();
         }
     }
 </script>
