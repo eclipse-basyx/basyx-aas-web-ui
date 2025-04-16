@@ -1,13 +1,10 @@
 <template>
-    <v-dialog
-        v-model="editPropertyDialog"
-        width="860"
-        persistent
-        @keydown="keyDown"
-        @keyup="keyUp($event, saveProperty)">
+    <v-dialog v-model="editMLPDialog" width="860" persistent>
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{ props.newProperty ? 'Create a new Property' : 'Edit Property' }}</span>
+                <span class="text-subtile-1">{{
+                    props.newMlp ? 'Create a new Multi Language Property' : 'Edit Multi Language Property'
+                }}</span>
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
@@ -17,7 +14,7 @@
                         <v-expansion-panel-title>Details</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <TextInput
-                                v-model="propertyIdShort"
+                                v-model="mlpIdShort"
                                 label="IdShort"
                                 :error="hasError('idShort')"
                                 :rules="[rules.required]"
@@ -32,11 +29,7 @@
                                 :show-label="true"
                                 label="Description"
                                 type="description" />
-                            <SelectInput
-                                v-model="propertyCategory"
-                                label="Category"
-                                type="category"
-                                :clearable="true" />
+                            <SelectInput v-model="mlpCategory" label="Category" type="category" :clearable="true" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- TODO: Value ID -->
@@ -44,8 +37,7 @@
                     <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(1)">
                         <v-expansion-panel-title>Value</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <SelectInput v-model="valueType" label="Data Type" type="dataType" :clearable="true" />
-                            <TextInput v-model="propertyValue" label="Value" />
+                            <MultiLanguageTextInput v-model="mlpValue" :show-label="false" type="text" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Semantic ID -->
@@ -68,19 +60,13 @@
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn @click="closeDialog">Cancel</v-btn>
-                <v-btn color="primary" @click="saveProperty">Save</v-btn>
+                <v-btn color="primary" @click="saveMLP">Save</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
 
 <script setup lang="ts">
-    /*
-        NOTE: This component uses Keyboard events (keyUp,keyDown) in the root element v-dialog.
-        It saves the changes after pressing the 'Enter' Key. When creating additional Form Inputs that require or support the
-        usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not execute when in such form fields.
-    */
-
     import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
@@ -88,15 +74,14 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
-    import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
     const props = defineProps<{
         modelValue: boolean;
-        newProperty: boolean;
+        newMlp: boolean;
         parentElement: any;
         path?: string;
-        property?: any;
+        mlp?: any;
     }>();
 
     // Stores
@@ -110,19 +95,18 @@
     const router = useRouter();
     const route = useRoute();
 
-    const editPropertyDialog = ref(false);
-    const propertyObject = ref<aasTypes.Property | undefined>(undefined);
+    const editMLPDialog = ref(false);
+    const mlpObject = ref<aasTypes.MultiLanguageProperty | undefined>(undefined);
     const openPanels = ref<number[]>([0]);
 
-    const propertyIdShort = ref<string | null>(null);
+    const mlpIdShort = ref<string | null>(null);
 
     const displayName = ref<Array<aasTypes.LangStringNameType> | null>(null);
     const description = ref<Array<aasTypes.LangStringTextType> | null>(null);
-    const propertyCategory = ref<string | null>(null);
+    const mlpCategory = ref<string | null>(null);
 
     const semanticId = ref<aasTypes.Reference | null>(null);
-    const propertyValue = ref<string | null>(null);
-    const valueType = ref<aasTypes.DataTypeDefXsd>(aasTypes.DataTypeDefXsd.String);
+    const mlpValue = ref<Array<aasTypes.LangStringTextType> | null>(null);
 
     const errors = ref<Map<string, string>>(new Map());
 
@@ -137,7 +121,7 @@
     watch(
         () => props.modelValue,
         (value) => {
-            editPropertyDialog.value = value;
+            editMLPDialog.value = value;
             if (value) {
                 initializeInputs();
             }
@@ -145,7 +129,7 @@
     );
 
     watch(
-        () => editPropertyDialog.value,
+        () => editMLPDialog.value,
         (value) => {
             emit('update:modelValue', value);
         }
@@ -197,44 +181,50 @@
         return errors.value.get(field);
     }
 
-    async function saveProperty(): Promise<void> {
-        if (props.newProperty || propertyObject.value === undefined) {
-            propertyObject.value = new aasTypes.Property(valueType.value);
+    async function saveMLP(): Promise<void> {
+        if (props.newMlp || mlpObject.value === undefined) {
+            mlpObject.value = new aasTypes.MultiLanguageProperty();
         }
 
-        if (propertyIdShort.value !== null) {
-            propertyObject.value.idShort = propertyIdShort.value;
+        if (mlpIdShort.value !== null) {
+            mlpObject.value.idShort = mlpIdShort.value;
         } else {
-            errors.value.set('idShort', 'Property IdShort is required');
+            errors.value.set('idShort', 'MultiLanguageProperty IdShort is required');
             return;
         }
-        if (propertyValue.value !== null) {
-            propertyObject.value.value = propertyValue.value;
-        }
+
         if (semanticId.value !== null) {
-            propertyObject.value.semanticId = semanticId.value;
+            mlpObject.value.semanticId = semanticId.value;
         }
+
         if (displayName.value !== null) {
-            propertyObject.value.displayName = displayName.value;
+            mlpObject.value.displayName = displayName.value;
         }
+
         if (description.value !== null) {
-            propertyObject.value.description = description.value;
+            mlpObject.value.description = description.value;
         }
-        if (propertyCategory.value !== null) {
-            propertyObject.value.category = propertyCategory.value;
+
+        if (mlpCategory.value !== null) {
+            mlpObject.value.category = mlpCategory.value;
         }
-        if (props.newProperty) {
+
+        if (mlpValue.value !== null) {
+            mlpObject.value.value = mlpValue.value;
+        }
+
+        if (props.newMlp) {
             if (props.parentElement.modelType === 'Submodel') {
-                // Create the property on the parent Submodel
-                await postSubmodelElement(propertyObject.value, props.parentElement.id);
+                // Create the MLP on the parent Submodel
+                await postSubmodelElement(mlpObject.value, props.parentElement.id);
 
                 const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
-                // Navigate to the new property
+                // Navigate to the new MLP
                 router.push({
                     query: {
                         aas: aasEndpoint,
-                        path: props.parentElement.path + '/submodel-elements/' + propertyObject.value.idShort,
+                        path: props.parentElement.path + '/submodel-elements/' + mlpObject.value.idShort,
                     },
                 });
             } else {
@@ -243,48 +233,45 @@
                 const submodelId = base64Decode(splitted[0].split('/submodels/')[1]);
                 const idShortPath = splitted[1];
 
-                // Create the property on the parent element
-                await postSubmodelElement(propertyObject.value, submodelId, idShortPath);
+                // Create the MLP on the parent element
+                await postSubmodelElement(mlpObject.value, submodelId, idShortPath);
 
                 const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
-                // Navigate to the new property
+                // Navigate to the new MLP
                 if (props.parentElement.modelType === 'SubmodelElementCollection') {
                     router.push({
-                        query: {
-                            aas: aasEndpoint,
-                            path: props.parentElement.path + '.' + propertyObject.value.idShort,
-                        },
+                        query: { aas: aasEndpoint, path: props.parentElement.path + '.' + mlpObject.value.idShort },
                     });
                 }
             }
         } else {
             if (props.path == undefined) {
-                console.error('Property Path is missing');
+                console.error('MLP Path is missing');
                 return;
             }
 
             const editedElementSelected = route.query.path === props.path;
             const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
-            // Update the property
+            // Update the MLP
             if (props.parentElement.modelType === 'Submodel') {
-                await putSubmodelElement(propertyObject.value, props.path);
+                await putSubmodelElement(mlpObject.value, props.path);
 
                 if (editedElementSelected) {
                     router.push({
                         query: {
                             aas: aasEndpoint,
-                            path: props.parentElement.path + '/submodel-elements/' + propertyObject.value.idShort,
+                            path: props.parentElement.path + '/submodel-elements/' + mlpObject.value.idShort,
                         },
                     });
                 }
             } else if (props.parentElement.modelType === 'SubmodelElementList') {
                 const index = props.parentElement.value.indexOf(
-                    props.parentElement.value.find((el: any) => el.id === props.property.id)
+                    props.parentElement.value.find((el: any) => el.id === props.mlp.id)
                 );
                 const path = props.parentElement.path + `%5B${index}%5D`;
-                await putSubmodelElement(propertyObject.value, path);
+                await putSubmodelElement(mlpObject.value, path);
 
                 if (editedElementSelected) {
                     router.push({
@@ -293,14 +280,11 @@
                 }
             } else {
                 // Submodel Element Collection or Entity
-                await putSubmodelElement(propertyObject.value, props.property.path);
+                await putSubmodelElement(mlpObject.value, props.mlp.path);
 
                 if (editedElementSelected) {
                     router.push({
-                        query: {
-                            aas: aasEndpoint,
-                            path: props.parentElement.path + '.' + propertyObject.value.idShort,
-                        },
+                        query: { aas: aasEndpoint, path: props.parentElement.path + '.' + mlpObject.value.idShort },
                     });
                 }
             }
@@ -310,49 +294,43 @@
     }
 
     function closeDialog(): void {
-        editPropertyDialog.value = false;
+        editMLPDialog.value = false;
     }
 
     async function initializeInputs(): Promise<void> {
-        if (!props.newProperty && props.property) {
-            const propertyJSON = await fetchSme(props.property.path);
-            const instanceOrError = jsonization.propertyFromJsonable(propertyJSON);
+        if (!props.newMlp && props.mlp) {
+            const mlpJSON = await fetchSme(props.mlp.path);
 
+            const instanceOrError = jsonization.multiLanguagePropertyFromJsonable(mlpJSON);
             if (instanceOrError.error !== null) {
-                console.error('Error parsing Property: ', instanceOrError.error);
+                console.error('Error parsing MultiLanguageProperty: ', instanceOrError.error);
                 return;
             }
+            mlpObject.value = instanceOrError.mustValue();
 
-            propertyObject.value = instanceOrError.mustValue();
-
-            propertyIdShort.value = propertyObject.value.idShort;
-
-            if (propertyObject.value.displayName) {
-                displayName.value = propertyObject.value.displayName;
+            mlpIdShort.value = mlpObject.value.idShort;
+            if (mlpObject.value.displayName) {
+                displayName.value = mlpObject.value.displayName;
             }
-            if (propertyObject.value.description) {
-                description.value = propertyObject.value.description;
+            if (mlpObject.value.description) {
+                description.value = mlpObject.value.description;
             }
-            if (propertyObject.value.category) {
-                propertyCategory.value = propertyObject.value.category;
+            if (mlpObject.value.category) {
+                mlpCategory.value = mlpObject.value.category;
             }
-            if (propertyObject.value.value) {
-                propertyValue.value = propertyObject.value.value;
+            if (mlpObject.value.value) {
+                mlpValue.value = mlpObject.value.value;
             }
-            if (propertyObject.value.valueType) {
-                valueType.value = propertyObject.value.valueType;
-            }
-            if (propertyObject.value.semanticId) {
-                semanticId.value = propertyObject.value.semanticId;
+            if (mlpObject.value.semanticId) {
+                semanticId.value = mlpObject.value.semanticId;
             }
             openPanels.value = [0, 1];
         } else {
-            propertyIdShort.value = null;
+            mlpIdShort.value = null;
             displayName.value = null;
             description.value = null;
-            propertyCategory.value = null;
-            propertyValue.value = null;
-            valueType.value = aasTypes.DataTypeDefXsd.String;
+            mlpCategory.value = null;
+            mlpValue.value = null;
             semanticId.value = null;
             openPanels.value = [0, 1];
         }
