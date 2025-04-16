@@ -286,9 +286,7 @@
         }
 
         // Add optional parameter category
-        if (AASCategory.value !== null) {
-            AASObject.value.category = AASCategory.value;
-        }
+        AASObject.value.category = AASCategory.value;
 
         // Add optional parameter idShort
         if (AASIdShort.value !== null) {

@@ -1,5 +1,10 @@
 <template>
-    <v-dialog v-model="editPropertyDialog" width="860" persistent>
+    <v-dialog
+        v-model="editPropertyDialog"
+        width="860"
+        persistent
+        @keydown="keyDown"
+        @keyup="keyUp($event, saveProperty)">
         <v-card>
             <v-card-title>
                 <span class="text-subtile-1">{{ props.newProperty ? 'Create a new Property' : 'Edit Property' }}</span>
@@ -70,6 +75,12 @@
 </template>
 
 <script setup lang="ts">
+    /*
+        NOTE: This component uses Keyboard events (keyUp,keyDown) in the root element v-dialog.
+        It saves the changes after pressing the 'Enter' Key. When creating additional Form Inputs that require or support the
+        usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not execute when in such form fields.
+    */
+
     import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
@@ -77,6 +88,7 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
+    import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
     const props = defineProps<{
@@ -99,6 +111,7 @@
     const route = useRoute();
 
     const editPropertyDialog = ref(false);
+    const propertyObject = ref<aasTypes.Property | undefined>(undefined);
     const openPanels = ref<number[]>([0]);
 
     const propertyIdShort = ref<string | null>(null);
@@ -185,32 +198,37 @@
     }
 
     async function saveProperty(): Promise<void> {
-        const property: aasTypes.Property = new aasTypes.Property(valueType.value);
+        if (props.newProperty || propertyObject.value === undefined) {
+            propertyObject.value = new aasTypes.Property(valueType.value);
+        }
+
         if (propertyIdShort.value !== null) {
-            property.idShort = propertyIdShort.value;
+            propertyObject.value.idShort = propertyIdShort.value;
         } else {
             errors.value.set('idShort', 'Property IdShort is required');
             return;
         }
-        if (propertyValue.value !== null) {
-            property.value = propertyValue.value;
-        }
+
+        propertyObject.value.value = propertyValue.value;
+
         if (semanticId.value !== null) {
-            property.semanticId = semanticId.value;
+            propertyObject.value.semanticId = semanticId.value;
         }
+
         if (displayName.value !== null) {
-            property.displayName = displayName.value;
+            propertyObject.value.displayName = displayName.value;
         }
+
         if (description.value !== null) {
-            property.description = description.value;
+            propertyObject.value.description = description.value;
         }
-        if (propertyCategory.value !== null) {
-            property.category = propertyCategory.value;
-        }
+
+        propertyObject.value.category = propertyCategory.value;
+
         if (props.newProperty) {
             if (props.parentElement.modelType === 'Submodel') {
                 // Create the property on the parent Submodel
-                await postSubmodelElement(property, props.parentElement.id);
+                await postSubmodelElement(propertyObject.value, props.parentElement.id);
 
                 const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
@@ -218,7 +236,7 @@
                 router.push({
                     query: {
                         aas: aasEndpoint,
-                        path: props.parentElement.path + '/submodel-elements/' + property.idShort,
+                        path: props.parentElement.path + '/submodel-elements/' + propertyObject.value.idShort,
                     },
                 });
             } else {
@@ -228,14 +246,17 @@
                 const idShortPath = splitted[1];
 
                 // Create the property on the parent element
-                await postSubmodelElement(property, submodelId, idShortPath);
+                await postSubmodelElement(propertyObject.value, submodelId, idShortPath);
 
                 const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
                 // Navigate to the new property
                 if (props.parentElement.modelType === 'SubmodelElementCollection') {
                     router.push({
-                        query: { aas: aasEndpoint, path: props.parentElement.path + '.' + property.idShort },
+                        query: {
+                            aas: aasEndpoint,
+                            path: props.parentElement.path + '.' + propertyObject.value.idShort,
+                        },
                     });
                 }
             }
@@ -250,13 +271,13 @@
 
             // Update the property
             if (props.parentElement.modelType === 'Submodel') {
-                await putSubmodelElement(property, props.path);
+                await putSubmodelElement(propertyObject.value, props.path);
 
                 if (editedElementSelected) {
                     router.push({
                         query: {
                             aas: aasEndpoint,
-                            path: props.parentElement.path + '/submodel-elements/' + property.idShort,
+                            path: props.parentElement.path + '/submodel-elements/' + propertyObject.value.idShort,
                         },
                     });
                 }
@@ -265,7 +286,7 @@
                     props.parentElement.value.find((el: any) => el.id === props.property.id)
                 );
                 const path = props.parentElement.path + `%5B${index}%5D`;
-                await putSubmodelElement(property, path);
+                await putSubmodelElement(propertyObject.value, path);
 
                 if (editedElementSelected) {
                     router.push({
@@ -274,11 +295,14 @@
                 }
             } else {
                 // Submodel Element Collection or Entity
-                await putSubmodelElement(property, props.property.path);
+                await putSubmodelElement(propertyObject.value, props.property.path);
 
                 if (editedElementSelected) {
                     router.push({
-                        query: { aas: aasEndpoint, path: props.parentElement.path + '.' + property.idShort },
+                        query: {
+                            aas: aasEndpoint,
+                            path: props.parentElement.path + '.' + propertyObject.value.idShort,
+                        },
                     });
                 }
             }
@@ -295,25 +319,33 @@
         if (!props.newProperty && props.property) {
             const propertyJSON = await fetchSme(props.property.path);
             const instanceOrError = jsonization.propertyFromJsonable(propertyJSON);
-            const property = instanceOrError.mustValue();
-            propertyIdShort.value = property.idShort;
-            if (property.displayName) {
-                displayName.value = property.displayName;
+
+            if (instanceOrError.error !== null) {
+                console.error('Error parsing Property: ', instanceOrError.error);
+                return;
             }
-            if (property.description) {
-                description.value = property.description;
+
+            propertyObject.value = instanceOrError.mustValue();
+
+            propertyIdShort.value = propertyObject.value.idShort;
+
+            if (propertyObject.value.displayName) {
+                displayName.value = propertyObject.value.displayName;
             }
-            if (property.category) {
-                propertyCategory.value = property.category;
+            if (propertyObject.value.description) {
+                description.value = propertyObject.value.description;
             }
-            if (property.value) {
-                propertyValue.value = property.value;
+            if (propertyObject.value.category) {
+                propertyCategory.value = propertyObject.value.category;
             }
-            if (property.valueType) {
-                valueType.value = property.valueType;
+            if (propertyObject.value.value) {
+                propertyValue.value = propertyObject.value.value;
             }
-            if (property.semanticId) {
-                semanticId.value = property.semanticId;
+            if (propertyObject.value.valueType) {
+                valueType.value = propertyObject.value.valueType;
+            }
+            if (propertyObject.value.semanticId) {
+                semanticId.value = propertyObject.value.semanticId;
             }
             openPanels.value = [0, 1];
         } else {

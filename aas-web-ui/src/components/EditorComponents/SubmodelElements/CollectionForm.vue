@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="editSMCDialog" width="860" persistent>
+    <v-dialog v-model="editSMCDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp($event, saveSMC)">
         <v-card>
             <v-card-title>
                 <span class="text-subtile-1">{{
@@ -66,6 +66,7 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
+    import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
     const props = defineProps<{
@@ -189,9 +190,7 @@
             smcObject.value.description = description.value;
         }
 
-        if (smcCategory.value !== null) {
-            smcObject.value.category = smcCategory.value;
-        }
+        smcObject.value.category = smcCategory.value;
 
         if (props.newSmc) {
             if (props.parentElement.modelType === 'Submodel') {

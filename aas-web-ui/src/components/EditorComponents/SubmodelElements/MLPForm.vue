@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="editMLPDialog" width="860" persistent>
+    <v-dialog v-model="editMLPDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp($event, saveMLP)">
         <v-card>
             <v-card-title>
                 <span class="text-subtile-1">{{
@@ -74,6 +74,7 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
+    import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
     const props = defineProps<{
@@ -205,9 +206,7 @@
             mlpObject.value.description = description.value;
         }
 
-        if (mlpCategory.value !== null) {
-            mlpObject.value.category = mlpCategory.value;
-        }
+        mlpObject.value.category = mlpCategory.value;
 
         if (mlpValue.value !== null) {
             mlpObject.value.value = mlpValue.value;
