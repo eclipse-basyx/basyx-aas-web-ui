@@ -59,6 +59,7 @@ declare module 'vue' {
     LastSync: typeof import('./components/UIComponents/LastSync.vue')['default']
     LineChart: typeof import('./components/Widgets/LineChart.vue')['default']
     MainMenu: typeof import('./components/AppNavigation/MainMenu.vue')['default']
+    MLPForm: typeof import('./components/EditorComponents/SubmodelElements/MLPForm.vue')['default']
     MultiLanguageProperty: typeof import('./components/SubmodelElements/MultiLanguageProperty.vue')['default']
     MultiLanguageTextInput: typeof import('./components/EditorComponents/InputTypes/MultiLanguageTextInput.vue')['default']
     Nameplate_v2_0: typeof import('./components/Plugins/Submodels/Nameplate_v2_0.vue')['default']

@@ -19,8 +19,16 @@
                                 :disabled="!newSm" />
                             <TextInput v-model="submodelIdShort" label="IdShort" />
                             <SelectInput v-model="submodelKind" label="Modelling Kind" type="modellingKind" />
-                            <MultiLanguageTextInput v-model="displayName" label="Display Name" type="displayName" />
-                            <MultiLanguageTextInput v-model="description" label="Description" type="description" />
+                            <MultiLanguageTextInput
+                                v-model="displayName"
+                                :show-label="true"
+                                label="Display Name"
+                                type="displayName" />
+                            <MultiLanguageTextInput
+                                v-model="description"
+                                :show-label="true"
+                                label="Description"
+                                type="description" />
                             <SelectInput
                                 v-model="submodelCategory"
                                 label="Category"
@@ -243,9 +251,7 @@
         }
 
         // Add optional parameter category
-        if (submodelCategory.value !== null) {
-            submodelObject.value.category = submodelCategory.value;
-        }
+        submodelObject.value.category = submodelCategory.value;
 
         // Add optional parameter idShort
         if (submodelIdShort.value !== null) {
