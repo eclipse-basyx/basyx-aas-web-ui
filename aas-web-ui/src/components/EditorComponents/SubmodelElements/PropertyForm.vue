@@ -208,21 +208,23 @@
             errors.value.set('idShort', 'Property IdShort is required');
             return;
         }
-        if (propertyValue.value !== null) {
-            propertyObject.value.value = propertyValue.value;
-        }
+
+        propertyObject.value.value = propertyValue.value;
+
         if (semanticId.value !== null) {
             propertyObject.value.semanticId = semanticId.value;
         }
+
         if (displayName.value !== null) {
             propertyObject.value.displayName = displayName.value;
         }
+
         if (description.value !== null) {
             propertyObject.value.description = description.value;
         }
-        if (propertyCategory.value !== null) {
-            propertyObject.value.category = propertyCategory.value;
-        }
+
+        propertyObject.value.category = propertyCategory.value;
+
         if (props.newProperty) {
             if (props.parentElement.modelType === 'Submodel') {
                 // Create the property on the parent Submodel

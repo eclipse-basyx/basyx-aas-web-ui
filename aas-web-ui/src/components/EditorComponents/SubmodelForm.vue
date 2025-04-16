@@ -251,9 +251,7 @@
         }
 
         // Add optional parameter category
-        if (submodelCategory.value !== null) {
-            submodelObject.value.category = submodelCategory.value;
-        }
+        submodelObject.value.category = submodelCategory.value;
 
         // Add optional parameter idShort
         if (submodelIdShort.value !== null) {

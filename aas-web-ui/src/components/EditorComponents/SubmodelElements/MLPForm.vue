@@ -206,9 +206,7 @@
             mlpObject.value.description = description.value;
         }
 
-        if (mlpCategory.value !== null) {
-            mlpObject.value.category = mlpCategory.value;
-        }
+        mlpObject.value.category = mlpCategory.value;
 
         if (mlpValue.value !== null) {
             mlpObject.value.value = mlpValue.value;

@@ -190,9 +190,7 @@
             smcObject.value.description = description.value;
         }
 
-        if (smcCategory.value !== null) {
-            smcObject.value.category = smcCategory.value;
-        }
+        smcObject.value.category = smcCategory.value;
 
         if (props.newSmc) {
             if (props.parentElement.modelType === 'Submodel') {
