@@ -1,8 +1,8 @@
 <template>
     <div class="VTreeview">
-        <v-lazy transition="fade-transition">
-            <v-hover>
-                <template #default="{ isHovering, props }">
+        <v-hover>
+            <template #default="{ isHovering, props }">
+                <v-lazy transition="fade-transition">
                     <v-list-item
                         :style="{ 'padding-left': depth * 22 + 'px' }"
                         density="compact"
@@ -221,9 +221,9 @@
                             <template v-else-if="editMode"></template>
                         </template>
                     </v-list-item>
-                </template>
-            </v-hover>
-        </v-lazy>
+                </v-lazy>
+            </template>
+        </v-hover>
         <!-- Recursive Treeview -->
         <template v-if="item.showChildren">
             <vTreeview
