@@ -1,6 +1,6 @@
 <template>
-    <v-divider></v-divider>
-    <v-list-item class="pl-0 pt-0">
+    <v-divider v-if="showLabel"></v-divider>
+    <v-list-item v-if="showLabel" class="pl-0 pt-0">
         <template #title>
             <div class="text-subtitle-2">{{ label }}</div>
         </template>
@@ -19,6 +19,7 @@
                 :return-object="false"
                 single-line
                 :width="200"
+                :custom-filter="langFilter"
                 class="mr-3">
                 <template #selection="{ item }">
                     <span>{{ item.value }}</span>
@@ -57,30 +58,35 @@
     type ValueMap = {
         displayName: Array<aasTypes.LangStringNameType>;
         description: Array<aasTypes.LangStringTextType>;
+        text: Array<aasTypes.LangStringTextType>;
     };
 
     type ValueType<T extends keyof ValueMap> = ValueMap[T];
 
-    const props = defineProps<{
+    type PropsWithLabel = {
+        showLabel: true;
         label: string;
         type: keyof ValueMap;
         modelValue: ValueType<keyof ValueMap> | null;
-    }>();
+    };
+
+    type PropsWithoutLabel = {
+        showLabel: false;
+        label?: string;
+        type: keyof ValueMap;
+        modelValue: ValueType<keyof ValueMap> | null;
+    };
+
+    const props = defineProps<PropsWithLabel | PropsWithoutLabel>();
 
     const emit = defineEmits<{
         (event: 'update:modelValue', value: ValueType<typeof props.type> | null): void;
     }>();
 
     const langStringValue = ref<ValueType<typeof props.type> | null>(props.modelValue);
-    const filter = ref(<string | null>null);
 
     const languageOptions = computed(() => {
-        let languages = ISO6391.getLanguages(ISO6391.getAllCodes());
-        if (filter.value !== null && filter.value !== '') {
-            const currentFilter = filter.value;
-            languages = languages.filter((lang) => lang.name.toLowerCase().includes(currentFilter.toLowerCase()));
-        }
-        return languages;
+        return ISO6391.getLanguages(ISO6391.getAllCodes());
     });
 
     watch(langStringValue, (newValue) => {
@@ -103,6 +109,8 @@
             langStringValue.value.push(new aasTypes.LangStringNameType('', ''));
         } else if (props.type === 'description') {
             langStringValue.value.push(new aasTypes.LangStringTextType('', ''));
+        } else if (props.type === 'text') {
+            langStringValue.value.push(new aasTypes.LangStringTextType('', ''));
         }
     }
 
@@ -111,5 +119,46 @@
         if (index !== undefined && index !== null) {
             langStringValue.value?.splice(index, 1);
         }
+    }
+
+    function langFilter(value: string, query: string): boolean {
+        // First make sure there's a query
+        if (!query || query === '') return true;
+
+        const queryLower = query.toLowerCase();
+
+        // For the ISO language items (searching through all options)
+        const matchingLanguage = languageOptions.value.find((lang) => {
+            const nameMatch = lang.name.toLowerCase().includes(queryLower);
+            const codeMatch = lang.code.toLowerCase().includes(queryLower);
+            return nameMatch || codeMatch;
+        });
+
+        if (matchingLanguage) {
+            // If the current value matches one of our matches, return true
+            if (
+                typeof value === 'string' &&
+                (value.toLowerCase() === matchingLanguage.code.toLowerCase() ||
+                    value.toLowerCase() === matchingLanguage.name.toLowerCase())
+            ) {
+                return true;
+            }
+
+            // If we're still typing and our input might match
+            // Return true if value includes the query or query includes value
+            if (
+                typeof value === 'string' &&
+                (value.toLowerCase().includes(queryLower) || queryLower.includes(value.toLowerCase()))
+            ) {
+                return true;
+            }
+        }
+
+        // Default fallback to the simple string matching
+        if (typeof value === 'string') {
+            return value.toLowerCase().includes(queryLower);
+        }
+
+        return false;
     }
 </script>

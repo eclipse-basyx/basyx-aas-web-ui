@@ -18,8 +18,16 @@
                                 type="AssetAdministrationShell"
                                 :disabled="!newShell" />
                             <TextInput v-model="AASIdShort" label="IdShort" />
-                            <MultiLanguageTextInput v-model="displayName" label="Display Name" type="displayName" />
-                            <MultiLanguageTextInput v-model="description" label="Description" type="description" />
+                            <MultiLanguageTextInput
+                                v-model="displayName"
+                                :show-label="true"
+                                label="Display Name"
+                                type="displayName" />
+                            <MultiLanguageTextInput
+                                v-model="description"
+                                :show-label="true"
+                                label="Description"
+                                type="description" />
                             <SelectInput v-model="AASCategory" label="Category" type="category" :clearable="true" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
@@ -278,9 +286,7 @@
         }
 
         // Add optional parameter category
-        if (AASCategory.value !== null) {
-            AASObject.value.category = AASCategory.value;
-        }
+        AASObject.value.category = AASCategory.value;
 
         // Add optional parameter idShort
         if (AASIdShort.value !== null) {

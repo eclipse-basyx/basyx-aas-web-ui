@@ -1,9 +1,9 @@
 <template>
-    <v-dialog v-model="editSMCDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp($event, saveSMC)">
+    <v-dialog v-model="editMLPDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp($event, saveMLP)">
         <v-card>
             <v-card-title>
                 <span class="text-subtile-1">{{
-                    props.newSmc ? 'Create a new Submodel Element Collection' : 'Edit Submodel Element Collection'
+                    props.newMlp ? 'Create a new Multi Language Property' : 'Edit Multi Language Property'
                 }}</span>
             </v-card-title>
             <v-divider></v-divider>
@@ -14,7 +14,7 @@
                         <v-expansion-panel-title>Details</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <TextInput
-                                v-model="smcIdShort"
+                                v-model="mlpIdShort"
                                 label="IdShort"
                                 :error="hasError('idShort')"
                                 :rules="[rules.required]"
@@ -29,18 +29,26 @@
                                 :show-label="true"
                                 label="Description"
                                 type="description" />
-                            <SelectInput v-model="smcCategory" label="Category" type="category" :clearable="true" />
+                            <SelectInput v-model="mlpCategory" label="Category" type="category" :clearable="true" />
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
+                    <!-- TODO: Value ID -->
+                    <!-- Property Value -->
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(1)">
+                        <v-expansion-panel-title>Value</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <MultiLanguageTextInput v-model="mlpValue" :show-label="false" type="text" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Semantic ID -->
-                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(1)">
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(2)">
                         <v-expansion-panel-title>Semantic ID</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Data Specification -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(2)">
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
@@ -52,7 +60,7 @@
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn @click="closeDialog">Cancel</v-btn>
-                <v-btn color="primary" @click="saveSMC">Save</v-btn>
+                <v-btn color="primary" @click="saveMLP">Save</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -71,10 +79,10 @@
 
     const props = defineProps<{
         modelValue: boolean;
-        newSmc: boolean;
+        newMlp: boolean;
         parentElement: any;
         path?: string;
-        smc?: any;
+        mlp?: any;
     }>();
 
     // Stores
@@ -88,18 +96,18 @@
     const router = useRouter();
     const route = useRoute();
 
-    const editSMCDialog = ref(false);
-    const smcObject = ref<aasTypes.SubmodelElementCollection | undefined>(undefined);
+    const editMLPDialog = ref(false);
+    const mlpObject = ref<aasTypes.MultiLanguageProperty | undefined>(undefined);
     const openPanels = ref<number[]>([0]);
 
-    const smcIdShort = ref<string | null>(null);
+    const mlpIdShort = ref<string | null>(null);
 
     const displayName = ref<Array<aasTypes.LangStringNameType> | null>(null);
     const description = ref<Array<aasTypes.LangStringTextType> | null>(null);
-    const smcCategory = ref<string | null>(null);
+    const mlpCategory = ref<string | null>(null);
 
     const semanticId = ref<aasTypes.Reference | null>(null);
-    //const smcValue = ref<string | null>(null);
+    const mlpValue = ref<Array<aasTypes.LangStringTextType> | null>(null);
 
     const errors = ref<Map<string, string>>(new Map());
 
@@ -114,7 +122,7 @@
     watch(
         () => props.modelValue,
         (value) => {
-            editSMCDialog.value = value;
+            editMLPDialog.value = value;
             if (value) {
                 initializeInputs();
             }
@@ -122,7 +130,7 @@
     );
 
     watch(
-        () => editSMCDialog.value,
+        () => editMLPDialog.value,
         (value) => {
             emit('update:modelValue', value);
         }
@@ -150,6 +158,14 @@
                 if (openPanels.value.includes(1) || openPanels.value.includes(2)) {
                     border += ' border-t-thin';
                 }
+                if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 3:
+                if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+                    border += 'border-t-thin';
+                }
                 break;
         }
         return border;
@@ -166,44 +182,48 @@
         return errors.value.get(field);
     }
 
-    async function saveSMC(): Promise<void> {
-        if (props.newSmc || smcObject.value === undefined) {
-            smcObject.value = new aasTypes.SubmodelElementCollection();
+    async function saveMLP(): Promise<void> {
+        if (props.newMlp || mlpObject.value === undefined) {
+            mlpObject.value = new aasTypes.MultiLanguageProperty();
         }
 
-        if (smcIdShort.value !== null) {
-            smcObject.value.idShort = smcIdShort.value;
+        if (mlpIdShort.value !== null) {
+            mlpObject.value.idShort = mlpIdShort.value;
         } else {
-            errors.value.set('idShort', 'SubmodelElementCollection IdShort is required');
+            errors.value.set('idShort', 'MultiLanguageProperty IdShort is required');
             return;
         }
 
         if (semanticId.value !== null) {
-            smcObject.value.semanticId = semanticId.value;
+            mlpObject.value.semanticId = semanticId.value;
         }
 
         if (displayName.value !== null) {
-            smcObject.value.displayName = displayName.value;
+            mlpObject.value.displayName = displayName.value;
         }
 
         if (description.value !== null) {
-            smcObject.value.description = description.value;
+            mlpObject.value.description = description.value;
         }
 
-        smcObject.value.category = smcCategory.value;
+        mlpObject.value.category = mlpCategory.value;
 
-        if (props.newSmc) {
+        if (mlpValue.value !== null) {
+            mlpObject.value.value = mlpValue.value;
+        }
+
+        if (props.newMlp) {
             if (props.parentElement.modelType === 'Submodel') {
-                // Create the smc on the parent Submodel
-                await postSubmodelElement(smcObject.value, props.parentElement.id);
+                // Create the MLP on the parent Submodel
+                await postSubmodelElement(mlpObject.value, props.parentElement.id);
 
                 const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
-                // Navigate to the new smc
+                // Navigate to the new MLP
                 router.push({
                     query: {
                         aas: aasEndpoint,
-                        path: props.parentElement.path + '/submodel-elements/' + smcObject.value.idShort,
+                        path: props.parentElement.path + '/submodel-elements/' + mlpObject.value.idShort,
                     },
                 });
             } else {
@@ -212,45 +232,45 @@
                 const submodelId = base64Decode(splitted[0].split('/submodels/')[1]);
                 const idShortPath = splitted[1];
 
-                // Create the smc on the parent element
-                await postSubmodelElement(smcObject.value, submodelId, idShortPath);
+                // Create the MLP on the parent element
+                await postSubmodelElement(mlpObject.value, submodelId, idShortPath);
 
                 const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
-                // Navigate to the new smc
+                // Navigate to the new MLP
                 if (props.parentElement.modelType === 'SubmodelElementCollection') {
                     router.push({
-                        query: { aas: aasEndpoint, path: props.parentElement.path + '.' + smcObject.value.idShort },
+                        query: { aas: aasEndpoint, path: props.parentElement.path + '.' + mlpObject.value.idShort },
                     });
                 }
             }
         } else {
             if (props.path == undefined) {
-                console.error('SMC Path is missing');
+                console.error('MLP Path is missing');
                 return;
             }
 
             const editedElementSelected = route.query.path === props.path;
             const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
-            // Update the smc
+            // Update the MLP
             if (props.parentElement.modelType === 'Submodel') {
-                await putSubmodelElement(smcObject.value, props.path);
+                await putSubmodelElement(mlpObject.value, props.path);
 
                 if (editedElementSelected) {
                     router.push({
                         query: {
                             aas: aasEndpoint,
-                            path: props.parentElement.path + '/submodel-elements/' + smcObject.value.idShort,
+                            path: props.parentElement.path + '/submodel-elements/' + mlpObject.value.idShort,
                         },
                     });
                 }
             } else if (props.parentElement.modelType === 'SubmodelElementList') {
                 const index = props.parentElement.value.indexOf(
-                    props.parentElement.value.find((el: any) => el.id === props.smc.id)
+                    props.parentElement.value.find((el: any) => el.id === props.mlp.id)
                 );
                 const path = props.parentElement.path + `%5B${index}%5D`;
-                await putSubmodelElement(smcObject.value, path);
+                await putSubmodelElement(mlpObject.value, path);
 
                 if (editedElementSelected) {
                     router.push({
@@ -259,11 +279,11 @@
                 }
             } else {
                 // Submodel Element Collection or Entity
-                await putSubmodelElement(smcObject.value, props.smc.path);
+                await putSubmodelElement(mlpObject.value, props.mlp.path);
 
                 if (editedElementSelected) {
                     router.push({
-                        query: { aas: aasEndpoint, path: props.parentElement.path + '.' + smcObject.value.idShort },
+                        query: { aas: aasEndpoint, path: props.parentElement.path + '.' + mlpObject.value.idShort },
                     });
                 }
             }
@@ -273,41 +293,45 @@
     }
 
     function closeDialog(): void {
-        editSMCDialog.value = false;
+        editMLPDialog.value = false;
     }
 
     async function initializeInputs(): Promise<void> {
-        if (!props.newSmc && props.smc) {
-            const smcJSON = await fetchSme(props.smc.path);
+        if (!props.newMlp && props.mlp) {
+            const mlpJSON = await fetchSme(props.mlp.path);
 
-            const instanceOrError = jsonization.submodelElementCollectionFromJsonable(smcJSON);
+            const instanceOrError = jsonization.multiLanguagePropertyFromJsonable(mlpJSON);
             if (instanceOrError.error !== null) {
-                console.error('Error parsing SubmodelElementCollection: ', instanceOrError.error);
+                console.error('Error parsing MultiLanguageProperty: ', instanceOrError.error);
                 return;
             }
-            smcObject.value = instanceOrError.mustValue();
+            mlpObject.value = instanceOrError.mustValue();
 
-            smcIdShort.value = smcObject.value.idShort;
-            if (smcObject.value.displayName) {
-                displayName.value = smcObject.value.displayName;
+            mlpIdShort.value = mlpObject.value.idShort;
+            if (mlpObject.value.displayName) {
+                displayName.value = mlpObject.value.displayName;
             }
-            if (smcObject.value.description) {
-                description.value = smcObject.value.description;
+            if (mlpObject.value.description) {
+                description.value = mlpObject.value.description;
             }
-            if (smcObject.value.category) {
-                smcCategory.value = smcObject.value.category;
+            if (mlpObject.value.category) {
+                mlpCategory.value = mlpObject.value.category;
             }
-            if (smcObject.value.semanticId) {
-                semanticId.value = smcObject.value.semanticId;
+            if (mlpObject.value.value) {
+                mlpValue.value = mlpObject.value.value;
             }
-            openPanels.value = [0];
+            if (mlpObject.value.semanticId) {
+                semanticId.value = mlpObject.value.semanticId;
+            }
+            openPanels.value = [0, 1];
         } else {
-            smcIdShort.value = null;
+            mlpIdShort.value = null;
             displayName.value = null;
             description.value = null;
-            smcCategory.value = null;
+            mlpCategory.value = null;
+            mlpValue.value = null;
             semanticId.value = null;
-            openPanels.value = [0];
+            openPanels.value = [0, 1];
         }
     }
 </script>
