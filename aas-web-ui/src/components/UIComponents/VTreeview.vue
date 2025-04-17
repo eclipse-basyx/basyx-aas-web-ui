@@ -68,7 +68,41 @@
                             <v-icon v-else color="primary">mdi-file-code</v-icon>
                         </template>
                         <template #append>
-                            <v-chip v-if="item.modelType" color="primary" size="x-small">{{ item.modelType }}</v-chip>
+                            <div class="d-flex align-center" style="position: relative; min-height: 24px">
+                                <v-chip
+                                    v-if="item.modelType"
+                                    color="primary"
+                                    size="x-small"
+                                    :style="{
+                                        marginRight: isHovering && canElementAddSubmodelElement(item) ? '8px' : '-16px',
+                                        transition: 'margin 0.3s ease',
+                                    }"
+                                    >{{ item.modelType }}</v-chip
+                                >
+                                <!-- Platzhalter für das Icon, immer gerendert -->
+                                <div class="icon-placeholder">
+                                    <v-tooltip
+                                        v-if="editMode && canElementAddSubmodelElement(item)"
+                                        text="Add Submodel Element"
+                                        :open-delay="600"
+                                        location="bottom">
+                                        <template #activator="{ props }">
+                                            <v-icon
+                                                color="subtitleText"
+                                                v-bind="props"
+                                                class="ml-1"
+                                                :style="{
+                                                    opacity: isHovering ? 1 : 0,
+                                                    transition: 'opacity 0.2s ease',
+                                                    pointerEvents: isHovering ? 'auto' : 'none',
+                                                }"
+                                                @click.stop="$emit('openAddSubmodelElementDialog', item)">
+                                                mdi-plus
+                                            </v-icon>
+                                        </template>
+                                    </v-tooltip>
+                                </div>
+                            </div>
                             <!-- Button to Copy the Path to the clipboard -->
                             <v-tooltip
                                 v-if="isSelected(item) && !editMode"
@@ -185,29 +219,6 @@
                                 </v-sheet>
                             </v-menu>
                             <template v-else-if="editMode"></template>
-                            <!-- Button to Add a submodel element -->
-                            <v-tooltip
-                                v-if="
-                                    isHovering &&
-                                    editMode &&
-                                    (item.modelType === 'Submodel' ||
-                                        item.modelType === 'SubmodelElementCollection' ||
-                                        item.modelType === 'SubmodelElementList' ||
-                                        item.modelType === 'Entity')
-                                "
-                                text="Add Submodel Element"
-                                :open-delay="600"
-                                location="bottom">
-                                <template #activator="{ props }">
-                                    <v-icon
-                                        color="subtitleText"
-                                        v-bind="props"
-                                        class="mr-2"
-                                        @click.stop="$emit('openAddSubmodelElementDialog', item)">
-                                        mdi-plus
-                                    </v-icon>
-                                </template>
-                            </v-tooltip>
                         </template>
                     </v-list-item>
                 </template>
@@ -317,4 +328,31 @@
         }
         return selectedNode.value.path === smOrSme.path;
     }
+
+    function canElementAddSubmodelElement(item: any): boolean {
+        return (
+            item.modelType === 'Submodel' ||
+            item.modelType === 'SubmodelElementCollection' ||
+            item.modelType === 'SubmodelElementList' ||
+            item.modelType === 'Entity'
+        );
+    }
 </script>
+
+<style scoped>
+    .fade-enter-active,
+    .fade-leave-active {
+        transition: opacity 0.3s ease;
+    }
+    .fade-enter-from,
+    .fade-leave-to {
+        opacity: 0;
+    }
+    .icon-placeholder {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
