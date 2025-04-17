@@ -74,7 +74,10 @@
                                     color="primary"
                                     size="x-small"
                                     :style="{
-                                        marginRight: isHovering && canElementAddSubmodelElement(item) ? '8px' : '-16px',
+                                        marginRight:
+                                            isHovering && (!editMode || canElementAddSubmodelElement(item))
+                                                ? '8px'
+                                                : '-24px',
                                         transition: 'margin 0.3s ease',
                                     }"
                                     >{{ item.modelType }}</v-chip
@@ -101,24 +104,29 @@
                                             </v-icon>
                                         </template>
                                     </v-tooltip>
+                                    <!-- Button to Copy the Path to the clipboard -->
+                                    <v-tooltip
+                                        v-if="!editMode"
+                                        text="Copy Path to Clipboard"
+                                        :open-delay="600"
+                                        location="bottom">
+                                        <template #activator="{ props }">
+                                            <v-icon
+                                                color="subtitleText"
+                                                v-bind="props"
+                                                class="ml-1"
+                                                :style="{
+                                                    opacity: isHovering ? 1 : 0,
+                                                    transition: 'opacity 0.2s ease',
+                                                    pointerEvents: isHovering ? 'auto' : 'none',
+                                                }"
+                                                @click.stop="copyToClipboard(item.path, 'Path', copyIconAsRef)">
+                                                {{ copyIcon }}
+                                            </v-icon>
+                                        </template>
+                                    </v-tooltip>
                                 </div>
                             </div>
-                            <!-- Button to Copy the Path to the clipboard -->
-                            <v-tooltip
-                                v-if="isSelected(item) && !editMode"
-                                text="Copy Path to Clipboard"
-                                :open-delay="600"
-                                location="bottom">
-                                <template #activator="{ props }">
-                                    <v-icon
-                                        color="subtitleText"
-                                        v-bind="props"
-                                        class="ml-1"
-                                        @click.stop="copyToClipboard(item.path, 'Path', copyIconAsRef)">
-                                        {{ copyIcon }}
-                                    </v-icon>
-                                </template>
-                            </v-tooltip>
                             <!-- Context menu for Submodels -->
                             <v-menu v-if="editMode && item.modelType === 'Submodel'">
                                 <template #activator="{ props }">
