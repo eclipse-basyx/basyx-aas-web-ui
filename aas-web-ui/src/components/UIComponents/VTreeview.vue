@@ -113,18 +113,19 @@
                                         :open-delay="600"
                                         location="bottom">
                                         <template #activator="{ props }">
-                                            <v-icon
+                                            <v-btn
+                                                :icon="copyIcon"
+                                                size="small"
+                                                variant="plain"
                                                 color="subtitleText"
                                                 v-bind="props"
-                                                class="mr-1"
+                                                class="ml-1"
                                                 :style="{
-                                                    opacity: isHovering ? 1 : 0,
-                                                    transition: 'opacity 0.2s ease',
+                                                    display: isHovering ? 'block' : 'none',
+                                                    transition: '0.2s ease',
                                                     pointerEvents: isHovering ? 'auto' : 'none',
                                                 }"
-                                                @click.stop="copyToClipboard(item.path, 'Path', copyIconAsRef)">
-                                                {{ copyIcon }}
-                                            </v-icon>
+                                                @click.stop="copyToClipboard(item.path, 'Path', copyIconAsRef)" />
                                         </template>
                                     </v-tooltip>
                                 </div>
