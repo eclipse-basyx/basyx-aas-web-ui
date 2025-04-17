@@ -82,8 +82,9 @@
                                     }"
                                     >{{ item.modelType }}</v-chip
                                 >
-                                <!-- Platzhalter für das Icon, immer gerendert -->
+                                <!-- Icon Placeholder that is always rendered -->
                                 <div class="icon-placeholder">
+                                    <!-- Button to add a submodel Element -->
                                     <v-tooltip
                                         v-if="editMode && canElementAddSubmodelElement(item)"
                                         text="Add Submodel Element"
@@ -114,7 +115,7 @@
                                             <v-icon
                                                 color="subtitleText"
                                                 v-bind="props"
-                                                class="ml-1"
+                                                class="mr-1"
                                                 :style="{
                                                     opacity: isHovering ? 1 : 0,
                                                     transition: 'opacity 0.2s ease',
