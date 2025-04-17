@@ -43,6 +43,8 @@ declare module 'vue' {
     DonutChart: typeof import('./components/Widgets/DonutChart.vue')['default']
     Entity: typeof import('./components/SubmodelElements/Entity.vue')['default']
     File: typeof import('./components/SubmodelElements/File.vue')['default']
+    FileForm: typeof import('./components/EditorComponents/SubmodelElements/FileForm.vue')['default']
+    FileInput: typeof import('./components/EditorComponents/InputTypes/FileInput.vue')['default']
     Gauge: typeof import('./components/Widgets/Gauge.vue')['default']
     GenericDataTableView: typeof import('./components/UIComponents/GenericDataTableView.vue')['default']
     GenericDataVisu: typeof import('./components/UIComponents/GenericDataVisu.vue')['default']

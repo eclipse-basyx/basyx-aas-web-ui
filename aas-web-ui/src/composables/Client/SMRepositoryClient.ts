@@ -388,6 +388,29 @@ export function useSMRepositoryClient() {
         return response.success;
     }
 
+    async function putAttachmentFile(file: File, path: string): Promise<boolean> {
+        const failResponse = false;
+
+        let smRepoUrl = submodelRepoUrl.value.trim();
+        if (smRepoUrl === '') return failResponse;
+        if (smRepoUrl.endsWith('/')) smRepoUrl = stripLastCharacter(smRepoUrl);
+        if (!smRepoUrl.endsWith(endpointPath)) smRepoUrl += endpointPath;
+
+        // Create formData
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const context = 'uploading file attachment';
+        const disableMessage = false;
+        const requestPath = path + '/attachment' + '?fileName=' + file.name;
+        const headers = new Headers();
+        const body = formData;
+
+        // Send Request to upload the file
+        const response = await putRequest(requestPath, body, headers, context, disableMessage);
+        return response.success;
+    }
+
     return {
         endpointPath,
         fetchSmList,
@@ -403,5 +426,6 @@ export function useSMRepositoryClient() {
         deleteSubmodel,
         postSubmodelElement,
         putSubmodelElement,
+        putAttachmentFile,
     };
 }
