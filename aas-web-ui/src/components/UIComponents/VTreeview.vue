@@ -91,18 +91,19 @@
                                         :open-delay="600"
                                         location="bottom">
                                         <template #activator="{ props }">
-                                            <v-icon
+                                            <v-btn
+                                                icon="mdi-plus"
+                                                size="small"
+                                                variant="plain"
                                                 color="subtitleText"
                                                 v-bind="props"
                                                 class="ml-1"
                                                 :style="{
-                                                    opacity: isHovering ? 1 : 0,
-                                                    transition: 'opacity 0.2s ease',
+                                                    display: isHovering ? 'block' : 'none',
+                                                    transition: '0.2s ease',
                                                     pointerEvents: isHovering ? 'auto' : 'none',
                                                 }"
-                                                @click.stop="$emit('openAddSubmodelElementDialog', item)">
-                                                mdi-plus
-                                            </v-icon>
+                                                @click.stop="$emit('openAddSubmodelElementDialog', item)" />
                                         </template>
                                     </v-tooltip>
                                     <!-- Button to Copy the Path to the clipboard -->
