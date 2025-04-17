@@ -34,7 +34,7 @@
         (event: 'update:modelValue', value: boolean): void;
         (event: 'openCreateSMEDialog', value: string): void;
     }>();
-    const availableSMEs = ref(['Property', 'SubmodelElementCollection', 'MultiLanguageProperty']);
+    const availableSMEs = ref(['Property', 'SubmodelElementCollection', 'MultiLanguageProperty', 'Range']);
     const selectedSME = ref('Property');
     watch(
         () => props.modelValue,

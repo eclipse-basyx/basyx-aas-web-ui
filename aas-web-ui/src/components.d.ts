@@ -71,6 +71,8 @@ declare module 'vue' {
     PropertyForm: typeof import('./components/EditorComponents/SubmodelElements/PropertyForm.vue')['default']
     RadialChart: typeof import('./components/Widgets/RadialChart.vue')['default']
     Range: typeof import('./components/SubmodelElements/Range.vue')['default']
+    RangeForm: typeof import('./components/EditorComponents/SubmodelElements/RangeForm.vue')['default']
+    RangeInput: typeof import('./components/EditorComponents/InputTypes/RangeInput.vue')['default']
     ReferenceElement: typeof import('./components/SubmodelElements/ReferenceElement.vue')['default']
     ReferenceInput: typeof import('./components/EditorComponents/InputTypes/ReferenceInput.vue')['default']
     RelationshipElement: typeof import('./components/SubmodelElements/RelationshipElement.vue')['default']
