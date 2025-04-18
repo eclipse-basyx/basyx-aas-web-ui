@@ -261,6 +261,8 @@
 
         if (contenType.value !== null) {
             fileObject.value.contentType = contenType.value;
+        } else if (fileElement.value !== undefined) {
+            fileObject.value.contentType = fileElement.value.type;
         } else {
             errors.value.set('contentType', 'File Element Content Type is required');
             return;
@@ -285,9 +287,11 @@
                 // Create the File Element on the parent Submodel
                 await postSubmodelElement(fileObject.value, props.parentElement.id);
 
+                const newElementPath = props.parentElement.path + '/submodel-elements/' + fileObject.value.idShort;
+
                 // Upload the file
-                if (fileElement.value !== undefined && props.path !== undefined) {
-                    await putAttachmentFile(fileElement.value, props.path);
+                if (fileElement.value !== undefined) {
+                    await putAttachmentFile(fileElement.value, newElementPath);
                 }
 
                 const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
@@ -296,7 +300,7 @@
                 router.push({
                     query: {
                         aas: aasEndpoint,
-                        path: props.parentElement.path + '/submodel-elements/' + fileObject.value.idShort,
+                        path: newElementPath,
                     },
                 });
             } else {
@@ -308,9 +312,11 @@
                 // Create the File Element on the parent element
                 await postSubmodelElement(fileObject.value, submodelId, idShortPath);
 
+                const newElementPath = props.parentElement.path + '.' + fileObject.value.idShort;
+
                 // Upload the file
-                if (fileElement.value !== undefined && props.path !== undefined) {
-                    await putAttachmentFile(fileElement.value, props.path);
+                if (fileElement.value !== undefined) {
+                    await putAttachmentFile(fileElement.value, newElementPath);
                 }
 
                 const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
@@ -320,7 +326,7 @@
                     router.push({
                         query: {
                             aas: aasEndpoint,
-                            path: props.parentElement.path + '.' + fileObject.value.idShort,
+                            path: newElementPath,
                         },
                     });
                 }
@@ -370,6 +376,11 @@
                         },
                     });
                 }
+            }
+
+            // Upload the file
+            if (fileElement.value !== undefined) {
+                await putAttachmentFile(fileElement.value, props.path);
             }
         }
         closeDialog();
