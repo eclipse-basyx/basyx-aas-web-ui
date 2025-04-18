@@ -106,6 +106,7 @@
     import { defineComponent } from 'vue';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
+    import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
@@ -126,16 +127,16 @@
             const aasStore = useAASStore();
 
             const { fetchAndDispatchSme } = useSMEHandling();
-            const { valueUrl, valueBlob } = useSMEFile();
-            const { patchRequest, putRequest } = useRequestHandling();
+            const { valueBlob } = useSMEFile();
+            const { patchRequest } = useRequestHandling();
+            const { putAttachmentFile } = useSMRepositoryClient();
 
             return {
                 aasStore, // AASStore Object
                 fetchAndDispatchSme,
-                valueUrl,
                 valueBlob,
                 patchRequest,
-                putRequest,
+                putAttachmentFile,
             };
         },
 
@@ -218,22 +219,9 @@
                 // console.log("Upload File: ", this.newFile);
                 // check if a file is selected
                 if (this.newFile.length == 0) return;
-                let context =
-                    'uploading ' +
-                    this.fileObject.modelType +
-                    '-SubmodelElement' +
-                    ' "' +
-                    this.fileObject.idShort +
-                    '"';
-                let disableMessage = false;
-                let path = this.SelectedNode.path + '/attachment?fileName=' + this.newFile.name;
-                var headers = new Headers();
-                var formData = new FormData();
-                formData.append('file', this.newFile);
-                // Send Request to upload the file
-                this.putRequest(path, formData, headers, context, disableMessage).then((response: any) => {
-                    // TODO: Add success response handling including updating the File SubmodelElement -> mimeType (+ value)
-                    if (response.success) {
+
+                this.putAttachmentFile(this.newFile, this.SelectedNode.path).then((response: any) => {
+                    if (response) {
                         location.reload(); // reload the page to update the file preview
                     }
                 });

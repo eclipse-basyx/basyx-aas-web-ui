@@ -201,7 +201,12 @@
                                             </template>
                                             <v-list-item-subtitle>Add Submodel Element</v-list-item-subtitle>
                                         </v-list-item>
-                                        <v-divider></v-divider>
+                                        <v-divider
+                                            v-if="
+                                                item.modelType === 'SubmodelElementCollection' ||
+                                                item.modelType === 'SubmodelElementList' ||
+                                                item.modelType === 'Entity'
+                                            "></v-divider>
                                         <!-- Open Submodel Element edit dialog -->
                                         <v-list-item @click="$emit('openEditSubmodelElementDialog', item)">
                                             <template #prepend>

@@ -64,7 +64,7 @@
                                 label="Default Thumbnail"
                                 :new-shell="newShell"
                                 :aas="aas"
-                                @update:file-thumbnail="handleFileSthumbnail" />
+                                @update:file-thumbnail="handleFileThumbnail" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -367,7 +367,7 @@
         openPanels.value = [0, 3];
     }
 
-    function handleFileSthumbnail(file: File | undefined): void {
+    function handleFileThumbnail(file: File | undefined): void {
         fileThumbnail.value = file;
     }
 </script>
