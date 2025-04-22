@@ -71,10 +71,16 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 
-    const props = defineProps<{
-        blobObject: Record<string, any>;
-        isEditable: boolean;
-    }>();
+    const props = defineProps({
+        blobObject: {
+            type: Object as any,
+            default: {} as any,
+        },
+        isEditable: {
+            type: Boolean,
+            default: true,
+        },
+    });
 
     // Stores
     const aasStore = useAASStore();
