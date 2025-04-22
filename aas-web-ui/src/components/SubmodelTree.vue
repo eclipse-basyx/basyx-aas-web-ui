@@ -179,6 +179,13 @@
         :parent-element="elementToAddSME"
         :path="submodelElementPath"
         :file="submodelElementToEdit"></FileForm>
+    <!-- Dialog for creating/editing Blob SubmodelElements -->
+    <BlobForm
+        v-model="blobDialog"
+        :new-blob="newBlob"
+        :parent-element="elementToAddSME"
+        :path="submodelElementPath"
+        :blob="submodelElementToEdit"></BlobForm>
     <!-- Dialog for creating/editing SubmodelElementCollections -->
     <CollectionForm
         v-model="smcDialog"
@@ -222,12 +229,14 @@
     const mlpDialog = ref(false); // Variable to store if the MultiLanguagePropertyForm Dialog should be shown
     const rangeDialog = ref(false); // Variable to store if the RangeForm Dialog should be shown
     const fileDialog = ref(false); // Variable to store if the FileForm Dialog should be shown
+    const blobDialog = ref(false); // Variable to store if the BlobForm Dialog should be shown
     const smcDialog = ref(false); // Variable to store if the PropertyForm Dialog should be shown
     const editDialog = ref(false); // Variable to store if the Edit Dialog should be shown
     const newProperty = ref(false); // Variable to store if a new Property should be created
     const newMLP = ref(false); // Variable to store if a new MultiLanguageProperty should be created
     const newRange = ref(false); // Variable to store if a new Range should be created
     const newFile = ref(false); // Variable to store if a new File should be created
+    const newBlob = ref(false); // Variable to store if a new Blob should be created
     const newSMC = ref(false); // Variable to store if a new SubmodelElementCollection should be created
     const newSubmodel = ref(false); // Variable to store if a new Submodel should be created
     const submodelToEdit = ref<any | undefined>(undefined); // Variable to store the Submodel to be edited
@@ -437,6 +446,12 @@
             submodelElementPath.value = element.path;
             elementToAddSME.value = element.parent;
             submodelElementToEdit.value = element;
+        } else if (element.modelType === 'Blob') {
+            blobDialog.value = true;
+            newBlob.value = false;
+            submodelElementPath.value = element.path;
+            elementToAddSME.value = element.parent;
+            submodelElementToEdit.value = element;
         } else if (element.modelType === 'SubmodelElementCollection') {
             smcDialog.value = true;
             newSMC.value = false;
@@ -471,6 +486,12 @@
                 submodelElementPath.value = undefined;
                 submodelElementToEdit.value = undefined;
                 fileDialog.value = true;
+                break;
+            case 'Blob':
+                newBlob.value = true;
+                submodelElementPath.value = undefined;
+                submodelElementToEdit.value = undefined;
+                blobDialog.value = true;
                 break;
             case 'SubmodelElementCollection':
                 newSMC.value = true;

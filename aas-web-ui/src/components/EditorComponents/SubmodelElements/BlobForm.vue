@@ -1,9 +1,9 @@
 <template>
-    <v-dialog v-model="editFileDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp($event, saveFile)">
+    <v-dialog v-model="editBlobDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp($event, saveBlob)">
         <v-card>
             <v-card-title>
                 <span class="text-subtile-1">{{
-                    props.newFile ? 'Create a new File Element' : 'Edit File Element'
+                    props.newBlob ? 'Create a new Blob Element' : 'Edit Blob Element'
                 }}</span>
             </v-card-title>
             <v-divider></v-divider>
@@ -14,7 +14,7 @@
                         <v-expansion-panel-title>Details</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <TextInput
-                                v-model="fileIdShort"
+                                v-model="blobIdShort"
                                 label="IdShort"
                                 :error="hasError('idShort')"
                                 :rules="[rules.required]"
@@ -29,19 +29,18 @@
                                 :show-label="true"
                                 label="Description"
                                 type="description" />
-                            <SelectInput v-model="fileCategory" label="Category" type="category" :clearable="true" />
+                            <SelectInput v-model="blobCategory" label="Category" type="category" :clearable="true" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
-                    <!-- File Value -->
+                    <!-- Blob Value -->
                     <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(1)">
                         <v-expansion-panel-title>Value</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <FileInput
-                                v-model:path="filePath"
+                            <BlobInput
+                                v-model:content="blobContent"
                                 v-model:content-type="contentType"
-                                :new-file="newFile"
-                                :sme-path="path"
-                                @update:file="handleFile" />
+                                :new-blob="newBlob"
+                                @update:blob="handleBlob" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Semantic ID -->
@@ -64,7 +63,7 @@
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn @click="closeDialog">Cancel</v-btn>
-                <v-btn color="primary" @click="saveFile">Save</v-btn>
+                <v-btn color="primary" @click="saveBlob">Save</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -72,9 +71,9 @@
 
 <script setup lang="ts">
     /*
-    NOTE: This component uses Keyboard events (keyUp,keyDown) in the root element v-dialog.
-    It saves the changes after pressing the 'Enter' Key. When creating additional Form Inputs that require or support the
-    usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not execute when in such form fields.
+NOTE: This component uses Keyboard events (keyUp,keyDown) in the root element v-dialog.
+It saves the changes after pressing the 'Enter' Key. When creating additional Form Inputs that require or support the
+usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not execute when in such form fields.
 */
 
     import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
@@ -89,10 +88,10 @@
 
     const props = defineProps<{
         modelValue: boolean;
-        newFile: boolean;
+        newBlob: boolean;
         parentElement: any;
         path?: string;
-        file?: any;
+        blob?: any;
     }>();
 
     // Stores
@@ -100,26 +99,27 @@
     const aasStore = useAASStore();
 
     // Composables
-    const { fetchSme, putSubmodelElement, postSubmodelElement, putAttachmentFile } = useSMRepositoryClient();
+    const { fetchSme, putSubmodelElement, postSubmodelElement } = useSMRepositoryClient();
 
     // Vue Router
     const router = useRouter();
     const route = useRoute();
 
-    const editFileDialog = ref(false);
-    const fileObject = ref<aasTypes.File | undefined>(undefined);
-    const fileElement = ref<File | undefined>(undefined);
+    const editBlobDialog = ref(false);
+    const blobObject = ref<aasTypes.Blob | undefined>(undefined);
+    const blobElement = ref<File | undefined>(undefined);
     const openPanels = ref<number[]>([0]);
 
-    const fileIdShort = ref<string | null>(null);
+    const blobIdShort = ref<string | null>(null);
 
     const displayName = ref<Array<aasTypes.LangStringNameType> | null>(null);
     const description = ref<Array<aasTypes.LangStringTextType> | null>(null);
-    const fileCategory = ref<string | null>(null);
+    const blobCategory = ref<string | null>(null);
+
+    const blobContent = ref<Uint8Array | null>(null);
+    const contentType = ref<string>('application/unknown');
 
     const semanticId = ref<aasTypes.Reference | null>(null);
-    const filePath = ref<string | null>(null);
-    const contentType = ref<string>('application/unknown');
 
     const errors = ref<Map<string, string>>(new Map());
 
@@ -134,7 +134,7 @@
     watch(
         () => props.modelValue,
         (value) => {
-            editFileDialog.value = value;
+            editBlobDialog.value = value;
             if (value) {
                 initializeInputs();
             }
@@ -142,7 +142,7 @@
     );
 
     watch(
-        () => editFileDialog.value,
+        () => editBlobDialog.value,
         (value) => {
             emit('update:modelValue', value);
         }
@@ -184,50 +184,50 @@
     });
 
     async function initializeInputs(): Promise<void> {
-        if (!props.newFile && props.file) {
-            const fileJSON = await fetchSme(props.file.path);
-            const instanceOrError = jsonization.fileFromJsonable(fileJSON);
+        if (!props.newBlob && props.blob) {
+            const blobJSON = await fetchSme(props.blob.path);
+            const instanceOrError = jsonization.blobFromJsonable(blobJSON);
 
             if (instanceOrError.error !== null) {
-                console.error('Error parsing File SME: ', instanceOrError.error);
+                console.error('Error parsing Blob SME: ', instanceOrError.error);
                 return;
             }
 
-            fileObject.value = instanceOrError.mustValue();
+            blobObject.value = instanceOrError.mustValue();
 
-            fileIdShort.value = fileObject.value.idShort;
+            blobIdShort.value = blobObject.value.idShort;
 
-            if (fileObject.value.displayName) {
-                displayName.value = fileObject.value.displayName;
+            if (blobObject.value.displayName) {
+                displayName.value = blobObject.value.displayName;
             }
 
-            if (fileObject.value.description) {
-                description.value = fileObject.value.description;
+            if (blobObject.value.description) {
+                description.value = blobObject.value.description;
             }
 
-            if (fileObject.value.category) {
-                fileCategory.value = fileObject.value.category;
+            if (blobObject.value.category) {
+                blobCategory.value = blobObject.value.category;
             }
 
-            if (fileObject.value.value) {
-                filePath.value = fileObject.value.value;
+            if (blobObject.value.value) {
+                blobContent.value = blobObject.value.value;
             }
 
-            if (fileObject.value.contentType) {
-                contentType.value = fileObject.value.contentType;
+            if (blobObject.value.contentType) {
+                contentType.value = blobObject.value.contentType;
             }
 
-            if (fileObject.value.semanticId) {
-                semanticId.value = fileObject.value.semanticId;
+            if (blobObject.value.semanticId) {
+                semanticId.value = blobObject.value.semanticId;
             }
 
             openPanels.value = [0, 1];
         } else {
-            fileIdShort.value = null;
+            blobIdShort.value = null;
             displayName.value = null;
             description.value = null;
-            fileCategory.value = null;
-            filePath.value = null;
+            blobCategory.value = null;
+            blobContent.value = null;
             contentType.value = 'application/unknown';
             semanticId.value = null;
             openPanels.value = [0, 1];
@@ -245,58 +245,53 @@
         return errors.value.get(field);
     }
 
-    async function saveFile(): Promise<void> {
-        if (props.newFile || fileObject.value === undefined) {
-            fileObject.value = new aasTypes.File('application/unknown');
+    async function saveBlob(): Promise<void> {
+        if (props.newBlob || blobObject.value === undefined) {
+            blobObject.value = new aasTypes.Blob('application/unknown');
         }
 
-        if (fileIdShort.value !== null) {
-            fileObject.value.idShort = fileIdShort.value;
+        if (blobIdShort.value !== null) {
+            blobObject.value.idShort = blobIdShort.value;
         } else {
-            errors.value.set('idShort', 'File Element IdShort is required');
+            errors.value.set('idShort', 'Blob Element IdShort is required');
             return;
         }
 
-        fileObject.value.value = filePath.value;
+        blobObject.value.value = blobContent.value;
 
         if (contentType.value !== null) {
-            fileObject.value.contentType = contentType.value;
-        } else if (fileElement.value !== undefined) {
-            fileObject.value.contentType = fileElement.value.type;
+            blobObject.value.contentType = contentType.value;
+        } else if (blobElement.value !== undefined) {
+            blobObject.value.contentType = blobElement.value.type;
         } else {
-            errors.value.set('contentType', 'File Element Content Type is required');
+            errors.value.set('contentType', 'Blob Element Content Type is required');
             return;
         }
 
         if (semanticId.value !== null) {
-            fileObject.value.semanticId = semanticId.value;
+            blobObject.value.semanticId = semanticId.value;
         }
 
         if (displayName.value !== null) {
-            fileObject.value.displayName = displayName.value;
+            blobObject.value.displayName = displayName.value;
         }
 
         if (description.value !== null) {
-            fileObject.value.description = description.value;
+            blobObject.value.description = description.value;
         }
 
-        fileObject.value.category = fileCategory.value;
+        blobObject.value.category = blobCategory.value;
 
-        if (props.newFile) {
+        if (props.newBlob) {
             if (props.parentElement.modelType === 'Submodel') {
-                // Create the File Element on the parent Submodel
-                await postSubmodelElement(fileObject.value, props.parentElement.id);
+                // Create the Blob Element on the parent Submodel
+                await postSubmodelElement(blobObject.value, props.parentElement.id);
 
-                const newElementPath = props.parentElement.path + '/submodel-elements/' + fileObject.value.idShort;
-
-                // Upload the file
-                if (fileElement.value !== undefined) {
-                    await putAttachmentFile(fileElement.value, newElementPath);
-                }
+                const newElementPath = props.parentElement.path + '/submodel-elements/' + blobObject.value.idShort;
 
                 const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
-                // Navigate to the new File Element
+                // Navigate to the new Blob Element
                 router.push({
                     query: {
                         aas: aasEndpoint,
@@ -309,19 +304,14 @@
                 const submodelId = base64Decode(splitted[0].split('/submodels/')[1]);
                 const idShortPath = splitted[1];
 
-                // Create the File Element on the parent element
-                await postSubmodelElement(fileObject.value, submodelId, idShortPath);
+                // Create the Blob Element on the parent element
+                await postSubmodelElement(blobObject.value, submodelId, idShortPath);
 
-                const newElementPath = props.parentElement.path + '.' + fileObject.value.idShort;
-
-                // Upload the file
-                if (fileElement.value !== undefined) {
-                    await putAttachmentFile(fileElement.value, newElementPath);
-                }
+                const newElementPath = props.parentElement.path + '.' + blobObject.value.idShort;
 
                 const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
-                // Navigate to the new File Element
+                // Navigate to the new Blob Element
                 if (props.parentElement.modelType === 'SubmodelElementCollection') {
                     router.push({
                         query: {
@@ -333,31 +323,31 @@
             }
         } else {
             if (props.path == undefined) {
-                console.error('File Element Path is missing');
+                console.error('Blob Element Path is missing');
                 return;
             }
 
             const editedElementSelected = route.query.path === props.path;
             const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
-            // Update the File Element
+            // Update the Blob Element
             if (props.parentElement.modelType === 'Submodel') {
-                await putSubmodelElement(fileObject.value, props.path);
+                await putSubmodelElement(blobObject.value, props.path);
 
                 if (editedElementSelected) {
                     router.push({
                         query: {
                             aas: aasEndpoint,
-                            path: props.parentElement.path + '/submodel-elements/' + fileObject.value.idShort,
+                            path: props.parentElement.path + '/submodel-elements/' + blobObject.value.idShort,
                         },
                     });
                 }
             } else if (props.parentElement.modelType === 'SubmodelElementList') {
                 const index = props.parentElement.value.indexOf(
-                    props.parentElement.value.find((el: any) => el.id === props.file.id)
+                    props.parentElement.value.find((el: any) => el.id === props.blob.id)
                 );
                 const path = props.parentElement.path + `%5B${index}%5D`;
-                await putSubmodelElement(fileObject.value, path);
+                await putSubmodelElement(blobObject.value, path);
 
                 if (editedElementSelected) {
                     router.push({
@@ -366,21 +356,16 @@
                 }
             } else {
                 // Submodel Element Collection or Entity
-                await putSubmodelElement(fileObject.value, props.file.path);
+                await putSubmodelElement(blobObject.value, props.blob.path);
 
                 if (editedElementSelected) {
                     router.push({
                         query: {
                             aas: aasEndpoint,
-                            path: props.parentElement.path + '.' + fileObject.value.idShort,
+                            path: props.parentElement.path + '.' + blobObject.value.idShort,
                         },
                     });
                 }
-            }
-
-            // Upload the file
-            if (fileElement.value !== undefined) {
-                await putAttachmentFile(fileElement.value, props.path);
             }
         }
         closeDialog();
@@ -388,10 +373,10 @@
     }
 
     function closeDialog(): void {
-        editFileDialog.value = false;
+        editBlobDialog.value = false;
     }
 
-    function handleFile(file: File | undefined): void {
-        fileElement.value = file;
+    function handleBlob(file: File | undefined): void {
+        blobElement.value = file;
     }
 </script>

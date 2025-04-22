@@ -133,15 +133,21 @@
                             <!-- Blob -->
                             <v-text-field
                                 v-else-if="SubmodelElement.modelType == 'Blob'"
-                                v-model="SubmodelElement.value"
+                                :placeholder="formatBlobSize(SubmodelElement.value)"
                                 :label="nameToDisplay(SubmodelElement)"
                                 density="compact"
                                 variant="outlined"
                                 readonly
+                                persistent-placeholder
                                 hide-details>
                                 <template #prepend-inner>
                                     <v-chip label size="x-small" border color="primary">{{
                                         SubmodelElement.modelType
+                                    }}</v-chip>
+                                </template>
+                                <template v-if="SubmodelElement.contentType" #append-inner>
+                                    <v-chip size="x-small" density="compact" color="grey-lighten-3">{{
+                                        SubmodelElement.contentType
                                     }}</v-chip>
                                 </template>
                             </v-text-field>
@@ -302,5 +308,31 @@
             return keys[keys.length - 1].value;
         }
         return '';
+    }
+
+    function formatBlobSize(base64Value: string): string {
+        if (!base64Value) return 'No content';
+
+        try {
+            // Calculate size based on base64 string
+            // Base64 uses 4 characters to represent 3 bytes of data
+            const padding = base64Value.endsWith('==') ? 2 : base64Value.endsWith('=') ? 1 : 0;
+            const byteLength = (base64Value.length * 3) / 4 - padding;
+
+            return formatFileSize(byteLength);
+        } catch (error) {
+            console.error('Error calculating blob size:', error);
+            return 'Unknown size';
+        }
+    }
+
+    function formatFileSize(bytes: number): string {
+        if (bytes === 0) return '0 Bytes';
+
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 </script>
