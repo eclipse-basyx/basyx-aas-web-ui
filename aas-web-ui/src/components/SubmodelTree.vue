@@ -193,6 +193,13 @@
         :parent-element="elementToAddSME"
         :path="submodelElementPath"
         :smc="submodelElementToEdit"></CollectionForm>
+    <!-- Dialog for creating/editing SubmodelElementLists -->
+    <ListForm
+        v-model="smlDialog"
+        :new-sml="newSML"
+        :parent-element="elementToAddSME"
+        :path="submodelElementPath"
+        :sml="submodelElementToEdit"></ListForm>
     <!-- Dialog for creating/editing Submodel -->
     <SubmodelForm v-model="editDialog" :new-sm="newSubmodel" :submodel="submodelToEdit"></SubmodelForm>
     <!-- Dialog for deleting SM/SME -->
@@ -231,6 +238,7 @@
     const fileDialog = ref(false); // Variable to store if the FileForm Dialog should be shown
     const blobDialog = ref(false); // Variable to store if the BlobForm Dialog should be shown
     const smcDialog = ref(false); // Variable to store if the PropertyForm Dialog should be shown
+    const smlDialog = ref(false); // Variable to store if the SubmodelElementListForm Dialog should be shown
     const editDialog = ref(false); // Variable to store if the Edit Dialog should be shown
     const newProperty = ref(false); // Variable to store if a new Property should be created
     const newMLP = ref(false); // Variable to store if a new MultiLanguageProperty should be created
@@ -238,6 +246,7 @@
     const newFile = ref(false); // Variable to store if a new File should be created
     const newBlob = ref(false); // Variable to store if a new Blob should be created
     const newSMC = ref(false); // Variable to store if a new SubmodelElementCollection should be created
+    const newSML = ref(false); // Variable to store if a new SubmodelElementList should be created
     const newSubmodel = ref(false); // Variable to store if a new Submodel should be created
     const submodelToEdit = ref<any | undefined>(undefined); // Variable to store the Submodel to be edited
     const deleteDialog = ref(false); // Variable to store if the Delete Dialog should be shown
@@ -458,6 +467,14 @@
             submodelElementPath.value = element.path;
             elementToAddSME.value = element.parent;
             submodelElementToEdit.value = element;
+        } else if (element.modelType === 'SubmodelElementList') {
+            smlDialog.value = true;
+            newSML.value = false;
+            submodelElementPath.value = element.path;
+            elementToAddSME.value = element.parent;
+            submodelElementToEdit.value = element;
+        } else {
+            console.error(`Specified invalid SubmodelElement Type "${element.modelType}"`);
         }
     }
 
@@ -498,6 +515,12 @@
                 submodelElementPath.value = undefined;
                 submodelElementToEdit.value = undefined;
                 smcDialog.value = true;
+                break;
+            case 'SubmodelElementList':
+                newSML.value = true;
+                submodelElementPath.value = undefined;
+                submodelElementToEdit.value = undefined;
+                smlDialog.value = true;
                 break;
             default:
                 console.error(`Specified invalid SubmodelElement Type "${smeType}"`);
