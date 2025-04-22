@@ -34,7 +34,14 @@
         (event: 'update:modelValue', value: boolean): void;
         (event: 'openCreateSMEDialog', value: string): void;
     }>();
-    const availableSMEs = ref(['Property', 'SubmodelElementCollection', 'MultiLanguageProperty', 'Range', 'File']);
+    const availableSMEs = ref([
+        'Property',
+        'SubmodelElementCollection',
+        'MultiLanguageProperty',
+        'Range',
+        'File',
+        'Blob',
+    ]);
     const selectedSME = ref('Property');
     watch(
         () => props.modelValue,

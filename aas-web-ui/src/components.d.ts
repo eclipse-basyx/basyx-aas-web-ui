@@ -20,6 +20,8 @@ declare module 'vue' {
     BackendConfig: typeof import('./components/AppNavigation/Settings/BackendConfig.vue')['default']
     BarChart: typeof import('./components/Widgets/BarChart.vue')['default']
     Blob: typeof import('./components/SubmodelElements/Blob.vue')['default']
+    BlobForm: typeof import('./components/EditorComponents/SubmodelElements/BlobForm.vue')['default']
+    BlobInput: typeof import('./components/EditorComponents/InputTypes/BlobInput.vue')['default']
     BooleanType: typeof import('./components/SubmodelElements/ValueTypes/BooleanType.vue')['default']
     Button: typeof import('./components/Widgets/Button.vue')['default']
     CADPreview: typeof import('./components/Plugins/CADPreview.vue')['default']
