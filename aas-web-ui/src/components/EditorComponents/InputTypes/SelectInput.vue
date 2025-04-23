@@ -19,6 +19,7 @@
         assetKind: aasTypes.AssetKind;
         modellingKind: aasTypes.ModellingKind;
         dataType: aasTypes.DataTypeDefXsd;
+        elementType: aasTypes.AasSubmodelElements;
     };
 
     type ValueType<T extends keyof ValueMap> = ValueMap[T];
@@ -62,6 +63,32 @@
                 ];
             case 'dataType':
                 return getDataTypes();
+            case 'elementType':
+                return [
+                    {
+                        title: 'SubmodelElementCollection',
+                        value: aasTypes.AasSubmodelElements.SubmodelElementCollection,
+                    },
+                    { title: 'SubmodelElementList', value: aasTypes.AasSubmodelElements.SubmodelElementList },
+                    { title: 'Property', value: aasTypes.AasSubmodelElements.Property },
+                    { title: 'MultiLanguageProperty', value: aasTypes.AasSubmodelElements.MultiLanguageProperty },
+                    { title: 'Range', value: aasTypes.AasSubmodelElements.Range },
+                    { title: 'File', value: aasTypes.AasSubmodelElements.File },
+                    { title: 'Blob', value: aasTypes.AasSubmodelElements.Blob },
+                    { title: 'ReferenceElement', value: aasTypes.AasSubmodelElements.ReferenceElement },
+                    { title: 'RelationshipElement', value: aasTypes.AasSubmodelElements.RelationshipElement },
+                    {
+                        title: 'AnnotatedRelationshipElement',
+                        value: aasTypes.AasSubmodelElements.AnnotatedRelationshipElement,
+                    },
+                    { title: 'Entity', value: aasTypes.AasSubmodelElements.Entity },
+                    { title: 'EventElement', value: aasTypes.AasSubmodelElements.EventElement },
+                    { title: 'BasicEventElement', value: aasTypes.AasSubmodelElements.BasicEventElement },
+                    { title: 'Operation', value: aasTypes.AasSubmodelElements.Operation },
+                    { title: 'Capability', value: aasTypes.AasSubmodelElements.Capability },
+                    { title: 'DataElement', value: aasTypes.AasSubmodelElements.DataElement },
+                    { title: 'SubmodelElement', value: aasTypes.AasSubmodelElements.SubmodelElement },
+                ];
             default:
                 return [];
         }

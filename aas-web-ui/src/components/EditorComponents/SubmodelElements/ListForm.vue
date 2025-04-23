@@ -1,13 +1,10 @@
 <template>
-    <v-dialog
-        v-model="editPropertyDialog"
-        width="860"
-        persistent
-        @keydown="keyDown"
-        @keyup="keyUp($event, saveProperty)">
+    <v-dialog v-model="editSMLDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp($event, saveSML)">
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{ props.newProperty ? 'Create a new Property' : 'Edit Property' }}</span>
+                <span class="text-subtile-1">{{
+                    props.newSml ? 'Create a new Submodel Element List' : 'Edit Submodel Element List'
+                }}</span>
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
@@ -17,7 +14,7 @@
                         <v-expansion-panel-title>Details</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <TextInput
-                                v-model="propertyIdShort"
+                                v-model="smlIdShort"
                                 label="IdShort"
                                 :error="hasError('idShort')"
                                 :rules="[rules.required]"
@@ -32,20 +29,24 @@
                                 :show-label="true"
                                 label="Description"
                                 type="description" />
-                            <SelectInput
-                                v-model="propertyCategory"
-                                label="Category"
-                                type="category"
-                                :clearable="true" />
+                            <SelectInput v-model="smlCategory" label="Category" type="category" :clearable="true" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
-                    <!-- TODO: Value ID -->
-                    <!-- Property Value -->
+                    <!-- Options -->
                     <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(1)">
-                        <v-expansion-panel-title>Value</v-expansion-panel-title>
+                        <v-expansion-panel-title>Options</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <SelectInput v-model="valueType" label="Data Type" type="dataType" :clearable="true" />
-                            <TextInput v-model="propertyValue" label="Value" />
+                            <BooleanInput v-model="orderRelevant" label="Order Relevant"></BooleanInput>
+                            <SelectInput
+                                v-model="typeValueListElement"
+                                label="Element Type"
+                                type="elementType"
+                                :clearable="true" />
+                            <SelectInput
+                                v-model="valueTypeListElement"
+                                label="Data Type"
+                                type="dataType"
+                                :clearable="true" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Semantic ID -->
@@ -68,19 +69,13 @@
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn @click="closeDialog">Cancel</v-btn>
-                <v-btn color="primary" @click="saveProperty">Save</v-btn>
+                <v-btn color="primary" @click="saveSML">Save</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
 
 <script setup lang="ts">
-    /*
-        NOTE: This component uses Keyboard events (keyUp,keyDown) in the root element v-dialog.
-        It saves the changes after pressing the 'Enter' Key. When creating additional Form Inputs that require or support the
-        usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not execute when in such form fields.
-    */
-
     import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
@@ -93,10 +88,10 @@
 
     const props = defineProps<{
         modelValue: boolean;
-        newProperty: boolean;
+        newSml: boolean;
         parentElement: any;
         path?: string;
-        property?: any;
+        sml?: any;
     }>();
 
     // Stores
@@ -110,19 +105,21 @@
     const router = useRouter();
     const route = useRoute();
 
-    const editPropertyDialog = ref(false);
-    const propertyObject = ref<aasTypes.Property | undefined>(undefined);
-    const openPanels = ref<number[]>([0]);
+    const editSMLDialog = ref(false);
+    const smlObject = ref<aasTypes.SubmodelElementList | undefined>(undefined);
+    const openPanels = ref<number[]>([0, 1]);
 
-    const propertyIdShort = ref<string | null>(null);
+    const smlIdShort = ref<string | null>(null);
 
     const displayName = ref<Array<aasTypes.LangStringNameType> | null>(null);
     const description = ref<Array<aasTypes.LangStringTextType> | null>(null);
-    const propertyCategory = ref<string | null>(null);
+    const smlCategory = ref<string | null>(null);
+
+    const orderRelevant = ref<boolean>(false);
+    const valueTypeListElement = ref<aasTypes.DataTypeDefXsd>(aasTypes.DataTypeDefXsd.String);
+    const typeValueListElement = ref<aasTypes.AasSubmodelElements | null>(null);
 
     const semanticId = ref<aasTypes.Reference | null>(null);
-    const propertyValue = ref<string | null>(null);
-    const valueType = ref<aasTypes.DataTypeDefXsd>(aasTypes.DataTypeDefXsd.String);
 
     const errors = ref<Map<string, string>>(new Map());
 
@@ -137,7 +134,7 @@
     watch(
         () => props.modelValue,
         (value) => {
-            editPropertyDialog.value = value;
+            editSMLDialog.value = value;
             if (value) {
                 initializeInputs();
             }
@@ -145,7 +142,7 @@
     );
 
     watch(
-        () => editPropertyDialog.value,
+        () => editSMLDialog.value,
         (value) => {
             emit('update:modelValue', value);
         }
@@ -179,7 +176,7 @@
                 break;
             case 3:
                 if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
-                    border += 'border-t-thin';
+                    border += ' border-t-thin';
                 }
                 break;
         }
@@ -197,48 +194,112 @@
         return errors.value.get(field);
     }
 
-    async function saveProperty(): Promise<void> {
-        if (props.newProperty || propertyObject.value === undefined) {
-            propertyObject.value = new aasTypes.Property(valueType.value);
+    async function initializeInputs(): Promise<void> {
+        if (!props.newSml && props.sml) {
+            const smlJSON = await fetchSme(props.sml.path);
+
+            const instanceOrError = jsonization.submodelElementListFromJsonable(smlJSON);
+
+            if (instanceOrError.error !== null) {
+                console.error('Error parsing SubmodelElementList: ', instanceOrError.error);
+                return;
+            }
+            smlObject.value = instanceOrError.mustValue();
+
+            smlIdShort.value = smlObject.value.idShort;
+
+            if (smlObject.value.displayName) {
+                displayName.value = smlObject.value.displayName;
+            }
+
+            if (smlObject.value.description) {
+                description.value = smlObject.value.description;
+            }
+
+            if (smlObject.value.category) {
+                smlCategory.value = smlObject.value.category;
+            }
+
+            if (smlObject.value.orderRelevant !== null) {
+                orderRelevant.value = smlObject.value.orderRelevant;
+            } else {
+                orderRelevant.value = false;
+            }
+
+            if (smlObject.value.typeValueListElement) {
+                typeValueListElement.value = smlObject.value.typeValueListElement;
+            }
+
+            if (smlObject.value.valueTypeListElement) {
+                valueTypeListElement.value = smlObject.value.valueTypeListElement;
+            }
+
+            if (smlObject.value.semanticId) {
+                semanticId.value = smlObject.value.semanticId;
+            }
+
+            openPanels.value = [0, 1];
+        } else {
+            smlIdShort.value = null;
+            displayName.value = null;
+            description.value = null;
+            smlCategory.value = null;
+            orderRelevant.value = false;
+            typeValueListElement.value = null;
+            valueTypeListElement.value = aasTypes.DataTypeDefXsd.String;
+            semanticId.value = null;
+            openPanels.value = [0, 1];
+        }
+    }
+
+    async function saveSML(): Promise<void> {
+        if (props.newSml || smlObject.value === undefined) {
+            smlObject.value = new aasTypes.SubmodelElementList(aasTypes.AasSubmodelElements.SubmodelElement);
         }
 
-        if (propertyIdShort.value !== null) {
-            propertyObject.value.idShort = propertyIdShort.value;
+        if (smlIdShort.value !== null) {
+            smlObject.value.idShort = smlIdShort.value;
         } else {
-            errors.value.set('idShort', 'Property IdShort is required');
+            errors.value.set('idShort', 'SubmodelElementList IdShort is required');
             return;
         }
 
-        propertyObject.value.value = propertyValue.value;
-
-        propertyObject.value.valueType = valueType.value;
-
         if (semanticId.value !== null) {
-            propertyObject.value.semanticId = semanticId.value;
+            smlObject.value.semanticId = semanticId.value;
         }
 
         if (displayName.value !== null) {
-            propertyObject.value.displayName = displayName.value;
+            smlObject.value.displayName = displayName.value;
         }
 
         if (description.value !== null) {
-            propertyObject.value.description = description.value;
+            smlObject.value.description = description.value;
         }
 
-        propertyObject.value.category = propertyCategory.value;
+        smlObject.value.category = smlCategory.value;
 
-        if (props.newProperty) {
+        smlObject.value.orderRelevant = orderRelevant.value;
+
+        if (typeValueListElement.value !== null) {
+            smlObject.value.typeValueListElement = typeValueListElement.value;
+        }
+
+        if (valueTypeListElement.value !== null) {
+            smlObject.value.valueTypeListElement = valueTypeListElement.value;
+        }
+
+        if (props.newSml) {
             if (props.parentElement.modelType === 'Submodel') {
-                // Create the property on the parent Submodel
-                await postSubmodelElement(propertyObject.value, props.parentElement.id);
+                // Create the SML on the parent Submodel
+                await postSubmodelElement(smlObject.value, props.parentElement.id);
 
                 const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
-                // Navigate to the new property
+                // Navigate to the new SML
                 router.push({
                     query: {
                         aas: aasEndpoint,
-                        path: props.parentElement.path + '/submodel-elements/' + propertyObject.value.idShort,
+                        path: props.parentElement.path + '/submodel-elements/' + smlObject.value.idShort,
                     },
                 });
             } else {
@@ -247,48 +308,45 @@
                 const submodelId = base64Decode(splitted[0].split('/submodels/')[1]);
                 const idShortPath = splitted[1];
 
-                // Create the property on the parent element
-                await postSubmodelElement(propertyObject.value, submodelId, idShortPath);
+                // Create the SML on the parent element
+                await postSubmodelElement(smlObject.value, submodelId, idShortPath);
 
                 const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
-                // Navigate to the new property
+                // Navigate to the new SML
                 if (props.parentElement.modelType === 'SubmodelElementCollection') {
                     router.push({
-                        query: {
-                            aas: aasEndpoint,
-                            path: props.parentElement.path + '.' + propertyObject.value.idShort,
-                        },
+                        query: { aas: aasEndpoint, path: props.parentElement.path + '.' + smlObject.value.idShort },
                     });
                 }
             }
         } else {
             if (props.path == undefined) {
-                console.error('Property Path is missing');
+                console.error('SML Path is missing');
                 return;
             }
 
             const editedElementSelected = route.query.path === props.path;
             const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
-            // Update the property
+            // Update the SML
             if (props.parentElement.modelType === 'Submodel') {
-                await putSubmodelElement(propertyObject.value, props.path);
+                await putSubmodelElement(smlObject.value, props.path);
 
                 if (editedElementSelected) {
                     router.push({
                         query: {
                             aas: aasEndpoint,
-                            path: props.parentElement.path + '/submodel-elements/' + propertyObject.value.idShort,
+                            path: props.parentElement.path + '/submodel-elements/' + smlObject.value.idShort,
                         },
                     });
                 }
             } else if (props.parentElement.modelType === 'SubmodelElementList') {
                 const index = props.parentElement.value.indexOf(
-                    props.parentElement.value.find((el: any) => el.id === props.property.id)
+                    props.parentElement.value.find((el: any) => el.id === props.sml.id)
                 );
                 const path = props.parentElement.path + `%5B${index}%5D`;
-                await putSubmodelElement(propertyObject.value, path);
+                await putSubmodelElement(smlObject.value, path);
 
                 if (editedElementSelected) {
                     router.push({
@@ -297,14 +355,11 @@
                 }
             } else {
                 // Submodel Element Collection or Entity
-                await putSubmodelElement(propertyObject.value, props.property.path);
+                await putSubmodelElement(smlObject.value, props.sml.path);
 
                 if (editedElementSelected) {
                     router.push({
-                        query: {
-                            aas: aasEndpoint,
-                            path: props.parentElement.path + '.' + propertyObject.value.idShort,
-                        },
+                        query: { aas: aasEndpoint, path: props.parentElement.path + '.' + smlObject.value.idShort },
                     });
                 }
             }
@@ -314,51 +369,6 @@
     }
 
     function closeDialog(): void {
-        editPropertyDialog.value = false;
-    }
-
-    async function initializeInputs(): Promise<void> {
-        if (!props.newProperty && props.property) {
-            const propertyJSON = await fetchSme(props.property.path);
-            const instanceOrError = jsonization.propertyFromJsonable(propertyJSON);
-
-            if (instanceOrError.error !== null) {
-                console.error('Error parsing Property: ', instanceOrError.error);
-                return;
-            }
-
-            propertyObject.value = instanceOrError.mustValue();
-
-            propertyIdShort.value = propertyObject.value.idShort;
-
-            if (propertyObject.value.displayName) {
-                displayName.value = propertyObject.value.displayName;
-            }
-            if (propertyObject.value.description) {
-                description.value = propertyObject.value.description;
-            }
-            if (propertyObject.value.category) {
-                propertyCategory.value = propertyObject.value.category;
-            }
-            if (propertyObject.value.value) {
-                propertyValue.value = propertyObject.value.value;
-            }
-            if (propertyObject.value.valueType) {
-                valueType.value = propertyObject.value.valueType;
-            }
-            if (propertyObject.value.semanticId) {
-                semanticId.value = propertyObject.value.semanticId;
-            }
-            openPanels.value = [0, 1];
-        } else {
-            propertyIdShort.value = null;
-            displayName.value = null;
-            description.value = null;
-            propertyCategory.value = null;
-            propertyValue.value = null;
-            valueType.value = aasTypes.DataTypeDefXsd.String;
-            semanticId.value = null;
-            openPanels.value = [0, 1];
-        }
+        editSMLDialog.value = false;
     }
 </script>

@@ -37,6 +37,7 @@
     const availableSMEs = ref([
         'Property',
         'SubmodelElementCollection',
+        'SubmodelElementList',
         'MultiLanguageProperty',
         'Range',
         'File',
