@@ -259,7 +259,7 @@
         }
 
         // Add optional parameter kind
-        if (submodelObject.value.kind === null) {
+        if (submodelObject.value.kind !== null) {
             submodelObject.value.kind = submodelKind.value;
         }
 
