@@ -114,7 +114,6 @@ export function useRequestHandling() {
                 }
             })
             .then((data) => {
-                console.log('Data: ', data);
                 //Check if data is array and has at least one element
                 if (Array.isArray(data) && data.length > 0) {
                     // Check if the Server responded with an error
