@@ -15,13 +15,13 @@
                             <v-row align="center">
                                 <v-col cols="0">
                                     <TextInput
-                                    v-model="AASId"
-                                    label="ID"
-                                    :show-generate-iri-button="true"
-                                    type="AssetAdministrationShell"
-                                    :disabled="!newShell" />
+                                        v-model="AASId"
+                                        label="ID"
+                                        :show-generate-iri-button="true"
+                                        type="AssetAdministrationShell"
+                                        :disabled="!newShell" />
                                 </v-col>
-                                    <v-col cols="1" class="d-flex align-center">
+                                <v-col cols="1" class="d-flex align-center">
                                     <HelpInfoButtonPlugin help-type="aas-General" />
                                 </v-col>
                             </v-row>
@@ -29,39 +29,43 @@
                                 <v-col cols="0">
                                     <TextInput v-model="AASIdShort" label="IdShort" />
                                 </v-col>
-                                    <v-col cols="1" class="d-flex align-center">
+                                <v-col cols="1" class="d-flex align-center">
                                     <HelpInfoButtonPlugin help-type="aas-General" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
                                 <v-col cols="0">
                                     <MultiLanguageTextInput
-                                    v-model="displayName"
-                                    :show-label="true"
-                                    label="Display Name"
-                                    type="displayName" />
+                                        v-model="displayName"
+                                        :show-label="true"
+                                        label="Display Name"
+                                        type="displayName" />
                                 </v-col>
-                                    <v-col cols="1" class="d-flex align-center">
+                                <v-col cols="1" class="d-flex align-center">
                                     <HelpInfoButtonPlugin help-type="aas-General" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
                                 <v-col cols="0">
                                     <MultiLanguageTextInput
-                                    v-model="description"
-                                    :show-label="true"
-                                    label="Description"
-                                    type="description" />
+                                        v-model="description"
+                                        :show-label="true"
+                                        label="Description"
+                                        type="description" />
                                 </v-col>
-                                    <v-col cols="1" class="d-flex align-center">
+                                <v-col cols="1" class="d-flex align-center">
                                     <HelpInfoButtonPlugin help-type="aas-General" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
                                 <v-col cols="0">
-                                    <SelectInput v-model="AASCategory" label="Category" type="category" :clearable="true" />
+                                    <SelectInput
+                                        v-model="AASCategory"
+                                        label="Category"
+                                        type="category"
+                                        :clearable="true" />
                                 </v-col>
-                                    <v-col cols="1" class="d-flex align-center">
+                                <v-col cols="1" class="d-flex align-center">
                                     <HelpInfoButtonPlugin help-type="aas-General" />
                                 </v-col>
                             </v-row>
@@ -77,7 +81,7 @@
                                 <v-col cols="0">
                                     <TextInput v-model="version" label="Version" />
                                 </v-col>
-                                    <v-col cols="1" class="d-flex align-center">
+                                <v-col cols="1" class="d-flex align-center">
                                     <HelpInfoButtonPlugin help-type="aas-General" />
                                 </v-col>
                             </v-row>
@@ -85,7 +89,7 @@
                                 <v-col cols="0">
                                     <TextInput v-model="revision" label="Revision" />
                                 </v-col>
-                                    <v-col cols="1" class="d-flex align-center">
+                                <v-col cols="1" class="d-flex align-center">
                                     <HelpInfoButtonPlugin help-type="aas-General" />
                                 </v-col>
                             </v-row>
@@ -93,7 +97,7 @@
                                 <v-col cols="0">
                                     <ReferenceInput v-model="creator" label="Creator" />
                                 </v-col>
-                                    <v-col cols="1" class="d-flex align-center">
+                                <v-col cols="1" class="d-flex align-center">
                                     <HelpInfoButtonPlugin help-type="aas-General" />
                                 </v-col>
                             </v-row>
@@ -101,7 +105,7 @@
                                 <v-col cols="0">
                                     <TextInput v-model="templateId" label="Template ID" />
                                 </v-col>
-                                    <v-col cols="1" class="d-flex align-center">
+                                <v-col cols="1" class="d-flex align-center">
                                     <HelpInfoButtonPlugin help-type="aas-General" />
                                 </v-col>
                             </v-row>
@@ -124,19 +128,19 @@
                                 <v-col cols="0">
                                     <SelectInput v-model="assetKind" label="Asset Kind" type="assetKind"></SelectInput>
                                 </v-col>
-                                    <v-col cols="1" class="d-flex align-center">
+                                <v-col cols="1" class="d-flex align-center">
                                     <HelpInfoButtonPlugin help-type="aas-General" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
                                 <v-col cols="0">
                                     <TextInput
-                                    v-model="globalAssetId"
-                                    label="Global Asset ID"
-                                    :show-generate-iri-button="true"
-                                    type="Asset" />
+                                        v-model="globalAssetId"
+                                        label="Global Asset ID"
+                                        :show-generate-iri-button="true"
+                                        type="Asset" />
                                 </v-col>
-                                    <v-col cols="1" class="d-flex align-center">
+                                <v-col cols="1" class="d-flex align-center">
                                     <HelpInfoButtonPlugin help-type="aas-General" />
                                 </v-col>
                             </v-row>
@@ -144,20 +148,20 @@
                                 <v-col cols="0">
                                     <TextInput v-model="assetType" label="Asset Type" />
                                 </v-col>
-                                    <v-col cols="1" class="d-flex align-center">
+                                <v-col cols="1" class="d-flex align-center">
                                     <HelpInfoButtonPlugin help-type="aas-General" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
                                 <v-col cols="0">
                                     <ResourceInput
-                                v-model="defaultThumbnail"
-                                label="Default Thumbnail"
-                                :new-shell="newShell"
-                                :aas="aas"
-                                @update:file-thumbnail="handleFileThumbnail" />
+                                        v-model="defaultThumbnail"
+                                        label="Default Thumbnail"
+                                        :new-shell="newShell"
+                                        :aas="aas"
+                                        @update:file-thumbnail="handleFileThumbnail" />
                                 </v-col>
-                                    <v-col cols="1" class="d-flex align-center">
+                                <v-col cols="1" class="d-flex align-center">
                                     <HelpInfoButtonPlugin help-type="aas-General" />
                                 </v-col>
                             </v-row>
@@ -196,7 +200,7 @@
     const props = defineProps<{
         modelValue: boolean;
         newShell: boolean;
-        aas?: any;
+        aas?: aasTypes.AssetAdministrationShell;
     }>();
 
     // Vue Router
@@ -430,7 +434,7 @@
             await putAas(AASObject.value);
             // Update AAS Descriptor
             const jsonAAS = jsonization.toJsonable(AASObject.value);
-            const descriptor = createDescriptorFromAAS(jsonAAS, props.aas.endpoints);
+            const descriptor = createDescriptorFromAAS(jsonAAS, []);
             await putAasDescriptor(descriptor);
             // Upload default thumbnail
             if (fileThumbnail.value !== undefined) {
