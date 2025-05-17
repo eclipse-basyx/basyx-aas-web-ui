@@ -114,20 +114,23 @@ export function useRequestHandling() {
                 }
             })
             .then((data) => {
-                // Check if the Server responded with an error
-                if (data && Object.prototype.hasOwnProperty.call(data, 'status') && data.status >= 400) {
-                    // Error response from the server
-                    if (!disableMessage) errorHandler(data, context); // Call the error handler
-                    return { success: false };
-                } else if (data) {
-                    // Successful response from the server
-                    return { success: true, data: data };
-                } else if (data === null || data === undefined) {
-                    // in this case no content is expected
-                    return { success: true };
-                } else {
-                    // Unexpected response format
-                    throw new Error('Unexpected response format');
+                //Check if data is array and has at least one element
+                if (Array.isArray(data) && data.length > 0) {
+                    // Check if the Server responded with an error
+                    if (data && Object.prototype.hasOwnProperty.call(data[0], 'code') && data[0].code >= 400) {
+                        // Error response from the server
+                        if (!disableMessage) errorHandler(data, context); // Call the error handler
+                        return { success: false };
+                    } else if (data) {
+                        // Successful response from the server
+                        return { success: true, data: data };
+                    } else if (data === null || data === undefined) {
+                        // in this case no content is expected
+                        return { success: true };
+                    } else {
+                        // Unexpected response format
+                        throw new Error('Unexpected response format');
+                    }
                 }
             })
             .catch((error) => {
@@ -307,20 +310,23 @@ export function useRequestHandling() {
         // console.log('Error: ', errorData, 'Context: ', context)
         const initialErrorMessage = 'Error ' + context + '!';
         let errorMessage = '';
-
+        const error = errorData[0];
         // Building error message based on the new error response structure
-        if (errorData.status) {
-            errorMessage += '\nStatus: ' + errorData.status;
+        if (error.code) {
+            errorMessage += 'Status: ' + error.code;
         }
-        if (errorData.error) {
-            errorMessage += '\nError: ' + errorData.error;
+        if (error.messageType) {
+            errorMessage += '\nMessage Type: ' + error.messageType;
         }
-        if (errorData.timestamp) {
-            const errorDate = new Date(errorData.timestamp).toLocaleString();
+        if (error.correlationId) {
+            errorMessage += '\nCorrelation ID: ' + error.correlationId;
+        }
+        if (error.timestamp) {
+            const errorDate = new Date(error.timestamp).toLocaleString();
             errorMessage += '\nTimestamp: ' + errorDate;
         }
-        if (errorData.path) {
-            errorMessage += '\nPath: ' + errorData.path;
+        if (error.text) {
+            errorMessage += '\nText: ' + error.text;
         }
 
         navigationStore.dispatchSnackbar({
