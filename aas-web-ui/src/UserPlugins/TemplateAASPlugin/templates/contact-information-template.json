@@ -1,0 +1,255 @@
+{
+    "id": "contact-information-template",
+    "name": "Contact Information Template",
+    "description": "[JSON] Template for company and product contact information following ZVEI nameplate specification",
+    "version": "1.0",
+    "aasVersion": "3.0",
+    "category": "Submodel",
+    "tags": ["contact", "business", "company", "ZVEI", "nameplate"],
+    "defaults": {
+        "idShort": "ContactInformation",
+        "semanticId": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations"
+    },
+    "submodels": [
+        {
+            "id": "contact-information",
+            "name": "ContactInformation",
+            "semanticId": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations",
+            "version": "1.0",
+            "required": true,
+            "elements": [
+                {
+                    "idShort": "ContactInformation",
+                    "type": "SubmodelElementCollection",
+                    "required": true,
+                    "description": "Detailed contact information",
+                    "semanticId": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation",
+                    "children": [
+                        {
+                            "idShort": "CompanyName",
+                            "type": "MultiLanguageProperty",
+                            "required": true,
+                            "description": "Name of the company"
+                        },
+                        {
+                            "idShort": "Department",
+                            "type": "MultiLanguageProperty",
+                            "required": false,
+                            "description": "Department name"
+                        },
+                        {
+                            "idShort": "NameOfContact",
+                            "type": "MultiLanguageProperty",
+                            "required": false,
+                            "description": "Surname of the contact person"
+                        },
+                        {
+                            "idShort": "FirstName",
+                            "type": "MultiLanguageProperty",
+                            "required": false,
+                            "description": "First name of the contact person"
+                        },
+                        {
+                            "idShort": "MiddleNames",
+                            "type": "MultiLanguageProperty",
+                            "required": false,
+                            "description": "Middle names of the contact person"
+                        },
+                        {
+                            "idShort": "Title",
+                            "type": "MultiLanguageProperty",
+                            "required": false,
+                            "description": "Title of the contact person (e.g., Mr., Ms.)"
+                        },
+                        {
+                            "idShort": "AcademicTitle",
+                            "type": "MultiLanguageProperty",
+                            "required": false,
+                            "description": "Academic title of the contact person (e.g., Dr., Prof.)"
+                        },
+                        {
+                            "idShort": "RoleOfContactPerson",
+                            "type": "Property",
+                            "valueType": "xs:string",
+                            "required": false,
+                            "description": "Role of the contact person",
+                            "valueConstraints": [
+                                {"valueId": "0173-1#07-AAS927#001", "value": "Administrative contact"},
+                                {"valueId": "0173-1#07-AAS928#001", "value": "Commercial contact"},
+                                {"valueId": "0173-1#07-AAS929#001", "value": "Other contact"},
+                                {"valueId": "0173-1#07-AAS930#001", "value": "Hazardous goods contact"},
+                                {"valueId": "0173-1#07-AAS931#001", "value": "Technical contact"}
+                            ]
+                        },
+                        {
+                            "idShort": "Language",
+                            "type": "MultiLanguageProperty",
+                            "required": false,
+                            "description": "Preferred language of the contact"
+                        },
+                        {
+                            "idShort": "AddressOfAdditionalLink",
+                            "type": "Property",
+                            "valueType": "xs:string",
+                            "required": false,
+                            "description": "URL for additional contact information"
+                        },
+                        {
+                            "idShort": "CompanyLogo",
+                            "type": "File",
+                            "valueType": "image/*",
+                            "required": false,
+                            "description": "Company logo file"
+                        },
+                        {
+                            "idShort": "Phone",
+                            "type": "SubmodelElementCollection",
+                            "required": false,
+                            "description": "Phone contact details",
+                            "children": [
+                                {
+                                    "idShort": "TelephoneNumber",
+                                    "type": "MultiLanguageProperty",
+                                    "required": true,
+                                    "description": "Phone number"
+                                },
+                                {
+                                    "idShort": "TypeOfTelephone",
+                                    "type": "Property",
+                                    "valueType": "xs:string",
+                                    "required": false,
+                                    "description": "Type of phone number",
+                                    "valueConstraints": [
+                                        {"valueId": "0173-1#07-AAS754#001", "value": "Office"},
+                                        {"valueId": "0173-1#07-AAS755#001", "value": "Office mobile"},
+                                        {"valueId": "0173-1#07-AAS756#001", "value": "Secretary"},
+                                        {"valueId": "0173-1#07-AAS757#001", "value": "Substitute"},
+                                        {"valueId": "0173-1#07-AAS758#001", "value": "Home"},
+                                        {"valueId": "0173-1#07-AAS759#001", "value": "Private mobile"}
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "idShort": "Fax",
+                            "type": "SubmodelElementCollection",
+                            "required": false,
+                            "description": "Fax contact details",
+                            "children": [
+                                {
+                                    "idShort": "FaxNumber",
+                                    "type": "MultiLanguageProperty",
+                                    "required": true,
+                                    "description": "Fax number"
+                                },
+                                {
+                                    "idShort": "TypeOfFaxNumber",
+                                    "type": "Property",
+                                    "valueType": "xs:string",
+                                    "required": false,
+                                    "description": "Type of fax number",
+                                    "valueConstraints": [
+                                        {"valueId": "0173-1#07-AAS754#001", "value": "Office"},
+                                        {"valueId": "0173-1#07-AAS756#001", "value": "Secretary"},
+                                        {"valueId": "0173-1#07-AAS758#001", "value": "Home"}
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "idShort": "Email",
+                            "type": "SubmodelElementCollection",
+                            "required": false,
+                            "description": "Email contact details",
+                            "children": [
+                                {
+                                    "idShort": "EmailAddress",
+                                    "type": "MultiLanguageProperty",
+                                    "required": true,
+                                    "description": "Email address"
+                                },
+                                {
+                                    "idShort": "TypeOfEmailAddress",
+                                    "type": "Property",
+                                    "valueType": "xs:string",
+                                    "required": false,
+                                    "description": "Type of email address",
+                                    "valueConstraints": [
+                                        {"valueId": "0173-1#07-AAS754#001", "value": "Office"},
+                                        {"valueId": "0173-1#07-AAS756#001", "value": "Secretary"},
+                                        {"valueId": "0173-1#07-AAS757#001", "value": "Substitute"},
+                                        {"valueId": "0173-1#07-AAS758#001", "value": "Home"}
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "idShort": "Address",
+                            "type": "SubmodelElementCollection",
+                            "required": true,
+                            "description": "Postal address",
+                            "children": [
+                                {
+                                    "idShort": "Street",
+                                    "type": "Property",
+                                    "valueType": "xs:string",
+                                    "required": false,
+                                    "description": "Street name and number"
+                                },
+                                {
+                                    "idShort": "Zipcode",
+                                    "type": "Property",
+                                    "valueType": "xs:string",
+                                    "required": false,
+                                    "description": "Postal code"
+                                },
+                                {
+                                    "idShort": "CityTown",
+                                    "type": "Property",
+                                    "valueType": "xs:string",
+                                    "required": false,
+                                    "description": "City name"
+                                },
+                                {
+                                    "idShort": "StateCounty",
+                                    "type": "Property",
+                                    "valueType": "xs:string",
+                                    "required": false,
+                                    "description": "State or county"
+                                },
+                                {
+                                    "idShort": "NationalCode",
+                                    "type": "Property",
+                                    "valueType": "xs:string",
+                                    "required": false,
+                                    "description": "Country code"
+                                },
+                                {
+                                    "idShort": "Country",
+                                    "type": "Property",
+                                    "valueType": "xs:string",
+                                    "required": false,
+                                    "description": "Country name"
+                                },
+                                {
+                                    "idShort": "POBox",
+                                    "type": "Property",
+                                    "valueType": "xs:string",
+                                    "required": false,
+                                    "description": "Post office box"
+                                },
+                                {
+                                    "idShort": "ZipCodeOfPOBox",
+                                    "type": "Property",
+                                    "valueType": "xs:string",
+                                    "required": false,
+                                    "description": "Postal code for PO box"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
