@@ -115,5 +115,6 @@ declare module 'vue' {
     VTreeview: typeof import('./components/UIComponents/VTreeview.vue')['default']
     NameplateVisu: typeof import('./components/UIComponents/NameplateVisu.vue')['default']
     TechnicalDataVisu: typeof import('./components/UIComponents/TechnicalDataVisu.vue')['default']
+    
   }
 }
