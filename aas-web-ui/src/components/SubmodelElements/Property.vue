@@ -1,11 +1,8 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-list-item v-if="!isOperationVariable" class="px-1 pb-1 pt-0">
-            <v-list-item-title class="text-subtitle-2 mt-2">{{ 'Value: ' }}</v-list-item-title>
-        </v-list-item>
         <v-card v-if="propertyObject" color="elevatedCard">
             <!-- Value of the Property -->
-            <v-list nav class="pt-0" :class="isOperationVariable ? '' : 'bg-elevatedCard'">
+            <v-list nav class="pt-5" :class="isOperationVariable ? '' : 'bg-elevatedCard'">
                 <!-- valueId -->
                 <v-list-item
                     v-if="
@@ -34,56 +31,49 @@
                     </template>
                 </v-list-item>
                 <!-- valueType -->
-                <v-list-item v-if="!isOperationVariable" class="pb-0">
+                <v-list-item v-if="!isOperationVariable && !navigationStore.getEasyViewState" class="pb-0">
                     <v-list-item-title>
                         <span class="text-caption">{{ 'Value Type: ' }}</span>
                         <v-chip label size="x-small" border color="primary">{{ propertyObject.valueType }}</v-chip>
                     </v-list-item-title>
                 </v-list-item>
-                <!-- Value Representation depending on the valueType -->
-                <NumberType
-                    v-if="isNumber(propertyObject.valueType)"
-                    :number-value="propertyObject"
-                    :is-operation-variable="isOperationVariable"
-                    :variable-type="variableType"
-                    :is-editable="isEditable"
+            <!-- Value Representation depending on the valueType -->
+            
+            <div class="d-flex" style="width: 100%;">
+                <span v-if="easyViewState" class="mr-5 pt-3" style="font-weight: bolder">{{ nameToDisplay(propertyObject) }}</span>
+
+                <NumberType v-if="isNumber(propertyObject.valueType)" :number-value="propertyObject"
+                    :is-operation-variable="isOperationVariable" :variable-type="variableType" :is-editable="isEditable"
                     @update-value="updateValue"></NumberType>
-                <BooleanType
-                    v-else-if="propertyObject.valueType == 'xs:boolean'"
-                    :boolean-value="propertyObject"
-                    :is-operation-variable="isOperationVariable"
-                    :variable-type="variableType"
-                    :is-editable="isEditable"
+                <BooleanType v-else-if="propertyObject.valueType == 'xs:boolean'" :boolean-value="propertyObject"
+                    :is-operation-variable="isOperationVariable" :variable-type="variableType" :is-editable="isEditable"
                     @update-value="updateValue"></BooleanType>
-                <DateType
-                    v-else-if="propertyObject.valueType == 'xs:date'"
-                    :date-value="propertyObject"
-                    :is-operation-variable="isOperationVariable"
-                    :variable-type="variableType"
-                    :is-editable="isEditable"
+                <DateType v-else-if="propertyObject.valueType == 'xs:date'" :date-value="propertyObject"
+                    :is-operation-variable="isOperationVariable" :variable-type="variableType" :is-editable="isEditable"
                     @update-value="updateValue"></DateType>
-                <DateTimeStampType
-                    v-else-if="propertyObject.valueType == 'xs:dateTime'"
-                    :date-time-stamp-value="propertyObject"
-                    :is-operation-variable="isOperationVariable"
-                    :variable-type="variableType"
-                    :is-editable="isEditable"
-                    @update-value="updateValue"></DateTimeStampType>
-                <StringType
-                    v-else
-                    :string-value="propertyObject"
-                    :is-operation-variable="isOperationVariable"
-                    :variable-type="variableType"
-                    :is-editable="isEditable"
-                    @update-value="updateValue"></StringType>
-            </v-list>
-        </v-card>
+                <DateTimeStampType v-else-if="propertyObject.valueType == 'xs:dateTime'"
+                    :date-time-stamp-value="propertyObject" :is-operation-variable="isOperationVariable"
+                    :variable-type="variableType" :is-editable="isEditable" @update-value="updateValue">
+                </DateTimeStampType>
+                <StringType v-else :string-value="propertyObject" :is-operation-variable="isOperationVariable"
+                    :variable-type="variableType" :is-editable="isEditable" @update-value="updateValue"></StringType>
+            </div>
+            
+        </v-list></v-card>
+
     </v-container>
 </template>
 
 <script lang="ts" setup>
     import { computed } from 'vue';
     import { isNumber } from '@/utils/generalUtils';
+    import { useNavigationStore } from '@/store/NavigationStore';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
+
+    const navigationStore = useNavigationStore();
+    const easyViewState = computed(() => navigationStore.getEasyViewState)
+
+    const { nameToDisplay } = useReferableUtils();
 
     const props = defineProps({
         propertyObject: {
