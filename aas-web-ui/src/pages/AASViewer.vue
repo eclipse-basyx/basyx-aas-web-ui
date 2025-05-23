@@ -1,32 +1,61 @@
 <template>
     <v-container fluid class="pa-0">
-        <!-- Horizontal Flexbox for the three main components (SubmodelTree, PropertyView, ComponentVisualization) -->
+        <!-- Horizontal Flexbox for the two main components (SubmodelTree, Details & Visualization Tabs) -->
         <div style="display: flex">
             <!-- SubmodelTree Component -->
             <div class="pa-0 window" style="width: 35%">
                 <SubmodelTree />
             </div>
-            <!-- Divider -->
+            <!-- Divider between SubmodelTree and Details & Visualization Tabs -->
             <div style="position: relative; height: calc(100vh - 106px); z-index: 1">
                 <v-icon style="position: absolute; top: -3px; left: -16.5px">mdi-pan-left</v-icon>
                 <v-divider vertical style="position: absolute; height: calc(100vh - 106px); z-index: 1"></v-divider>
                 <v-icon style="position: absolute; top: -3px; right: -16.5px">mdi-pan-right</v-icon>
             </div>
-            <!-- SM/SME view and visualization Component -->
+            <!-- Details & Visualization Tabs -->
             <div class="pa-0 window" style="width: 65%">
-                <SubmodelElementViewAndVisualization />
+
+
+                <v-card>
+                    <v-tabs v-model="activeTab" bg-color="primary" dark>
+                        <v-tab value="details">Element Details</v-tab>
+                        <v-tab value="visual">Visualization</v-tab>
+                    </v-tabs>
+
+                    <v-card-text>
+                        <v-tabs-window v-model="activeTab">
+                            <v-tabs-window-item value="details">
+                                <SubmodelElementView />
+                            </v-tabs-window-item>
+
+                            <v-tabs-window-item value="visual">
+                                <ComponentVisualization />
+                            </v-tabs-window-item>
+                        </v-tabs-window>
+                    </v-card-text>
+                </v-card>
             </div>
         </div>
     </v-container>
 </template>
 
 <script lang="ts" setup>
-    import { computed, onBeforeUnmount, onMounted } from 'vue';
-    import { useTheme } from 'vuetify';
 
-    const theme = useTheme();
+import { ref, computed, onBeforeUnmount, onMounted } from 'vue';
+import { useTheme } from 'vuetify';
+import { useNavigationStore } from '@/store/NavigationStore';
+import SubmodelTree from '@/components/SubmodelTree.vue';
+import SubmodelElementView from '@/components/SubmodelElementView.vue';
+import ComponentVisualization from '@/components/ComponentVisualization.vue';
 
-    // Computed Properties
+
+    const navigationStore = useNavigationStore();
+    const easyMode = computed(() => navigationStore.getEasyViewState);
+    
+const theme = useTheme();
+const activeTab = ref<number>(0); // 0 = details, 1 = visualization
+
+
     const primaryColor = computed(() => theme.current.value.colors.primary);
 
     onMounted(() => {
@@ -51,7 +80,7 @@
     });
 
     // creates a div element (Resize Bar) on each Divider between Windows to allow the user to resize the windows
-    function resizableWindow(window: any): void {
+    function resizableWindow(window: any) {
         window.style.position = 'relative';
         let div = createDiv(); // create div element (Resize Bar) on each Divider between Windows
         window.appendChild(div); // append the div to the Window
@@ -59,7 +88,7 @@
     }
 
     // creates Event Listeners for the Resize Bars to allow the user to resize the windows
-    function setListeners(div: HTMLDivElement): void {
+    function setListeners(div: HTMLDivElement) {
         let pageX: number, curCol: any, nxtCol: any, curColWidth: number, nxtColWidth: number;
 
         // highlight Resize Bar when mouse is over it
@@ -109,7 +138,7 @@
     }
 
     // creates the div element (Resize Bar) on each Divider between Windows
-    function createDiv(): HTMLDivElement {
+    function createDiv() {
         let div = document.createElement('div');
         div.style.top = '0';
         div.style.right = '-1px';

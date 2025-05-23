@@ -44,6 +44,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const ConceptDescriptionRepoURL = ref('');
     const Snackbar = ref<SnackbarType>({} as SnackbarType);
     const autoSync = ref<AutoSyncType>({ state: false, interval: 3000 } as AutoSyncType);
+    const easyViewState = ref(false);
     const statusCheck = ref<StatusCheckType>({ state: false, interval: 10000 } as StatusCheckType);
     const isMobile = ref(false);
     const platform = ref<PlatformType>({} as PlatformType);
@@ -122,6 +123,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const getConceptDescriptionRepoURL = computed(() => ConceptDescriptionRepoURL.value);
     const getSnackbar = computed(() => Snackbar.value);
     const getAutoSync = computed(() => autoSync.value);
+    const getEasyViewState = computed(() => easyViewState.value)	
     const getStatusCheck = computed(() => statusCheck.value);
     const getIsMobile = computed(() => isMobile.value);
     const getPlatform = computed(() => platform.value);
@@ -144,6 +146,10 @@ export const useNavigationStore = defineStore('navigationStore', () => {
 
     function dispatchAutoSync(updatedAutoSync: AutoSyncType): void {
         autoSync.value = updatedAutoSync;
+    }
+
+    function dispatchEasyView(updatedEasyViewState: boolean): void {
+        easyViewState.value = updatedEasyViewState;
     }
 
     function dispatchStatusCheck(updatedStatusCheck: StatusCheckType): void {
@@ -387,6 +393,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         getSnackbar,
         getAutoSync,
         getStatusCheck,
+        getEasyViewState,
         getIsMobile,
         getPlatform,
         getPlugins,
@@ -403,6 +410,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         dispatchSnackbar,
         dispatchAutoSync,
         dispatchStatusCheck,
+        dispatchEasyView,
         dispatchIsMobile,
         dispatchPlatform,
         dispatchPlugins,

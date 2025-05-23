@@ -6,15 +6,25 @@
             <div class="pa-0 window" style="width: 35%">
                 <SubmodelTree />
             </div>
-            <!-- Divider -->
+            <!-- Divider between SubmodelTree and PropertyView -->
             <div style="position: relative; height: calc(100vh - 106px); z-index: 1">
                 <v-icon style="position: absolute; top: -3px; left: -16.5px">mdi-pan-left</v-icon>
                 <v-divider vertical style="position: absolute; height: calc(100vh - 106px); z-index: 1"></v-divider>
                 <v-icon style="position: absolute; top: -3px; right: -16.5px">mdi-pan-right</v-icon>
             </div>
-            <!-- SM/SME view and visualization Component -->
-            <div class="pa-0 window" style="width: 65%">
-                <SubmodelElementViewAndVisualization />
+            <!-- SubmodelElementView Component -->
+            <div class="pa-0 window" :style="{ width: !easyMode ? '30%' : '65%'}">
+                <SubmodelElementView />
+            </div>
+            <!-- Divider between PropertyView and ComponentVisualization -->
+            <div v-if="!easyMode" style="position: relative; height: calc(100vh - 106px); z-index: 1">
+                <v-icon style="position: absolute; top: -3px; left: -16.5px">mdi-pan-left</v-icon>
+                <v-divider vertical style="position: absolute; height: calc(100vh - 106px); z-index: 1"></v-divider>
+                <v-icon style="position: absolute; top: -3px; right: -16.5px">mdi-pan-right</v-icon>
+            </div>
+            <!-- ComponentVisualization Component -->
+            <div v-if="!easyMode" class="pa-0 window" style="width: 35%">
+                <ComponentVisualization />
             </div>
         </div>
     </v-container>
@@ -23,8 +33,13 @@
 <script lang="ts" setup>
     import { computed, onBeforeUnmount, onMounted } from 'vue';
     import { useTheme } from 'vuetify';
+    import { useNavigationStore } from '@/store/NavigationStore';
+
+    // Stores
+    const navigationStore = useNavigationStore();
 
     const theme = useTheme();
+    const easyMode = computed(() => navigationStore.getEasyViewState);
 
     const primaryColor = computed(() => theme.current.value.colors.primary);
 
@@ -50,7 +65,7 @@
     });
 
     // creates a div element (Resize Bar) on each Divider between Windows to allow the user to resize the windows
-    function resizableWindow(window: any): void {
+    function resizableWindow(window: any) {
         window.style.position = 'relative';
         let div = createDiv(); // create div element (Resize Bar) on each Divider between Windows
         window.appendChild(div); // append the div to the Window
@@ -58,7 +73,7 @@
     }
 
     // creates Event Listeners for the Resize Bars to allow the user to resize the windows
-    function setListeners(div: HTMLDivElement): void {
+    function setListeners(div: HTMLDivElement) {
         let pageX: number, curCol: any, nxtCol: any, curColWidth: number, nxtColWidth: number;
 
         // highlight Resize Bar when mouse is over it
@@ -108,7 +123,7 @@
     }
 
     // creates the div element (Resize Bar) on each Divider between Windows
-    function createDiv(): HTMLDivElement {
+    function createDiv() {
         let div = document.createElement('div');
         div.style.top = '0';
         div.style.right = '-1px';

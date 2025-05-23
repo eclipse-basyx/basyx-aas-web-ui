@@ -1,15 +1,14 @@
 <template>
-    <v-list-item class="pt-0">
+    <v-list-item class="pt-0" style="flex-grow: 1" >
         <v-list-item-title :class="isOperationVariable ? 'pt-2' : ''">
             <v-text-field
                 v-model="newStringValue"
-                variant="outlined"
+                variant="plain"
                 density="compact"
                 :clearable="(isFocused || stringValue.value != newStringValue) && !isOperationVariable && isEditable"
                 :readonly="isOutputVariable || !isEditable"
                 :hint="stringValue.value == newStringValue ? '' : 'Current value not yet saved.'"
-                auto-grow
-                :rows="1"
+                :rows="2"
                 :label="isOperationVariable ? stringValue.idShort : ''"
                 :hide-details="isOperationVariable ? true : false"
                 :focused="isFocused"
@@ -33,7 +32,14 @@
         </v-list-item-title>
     </v-list-item>
 </template>
-
+<style scoped>
+.break-word {
+    white-space: pre-wrap; /* Preserve whitespace and allow wrapping */
+    word-wrap: break-word; /* Break long words */
+    word-break: break-word; /* Break long words */
+    overflow-wrap: anywhere; /* Break text at any point if necessary */
+}
+</style>
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
