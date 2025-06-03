@@ -31,7 +31,7 @@ async function initialize(): Promise<void> {
     app.use(pinia);
 
     // ApexCharts
-    app.use(VueApexCharts);
+    app.component('ApexChart', VueApexCharts);
 
     // Stores
     const envStore = useEnvStore();
