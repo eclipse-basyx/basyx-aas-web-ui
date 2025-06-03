@@ -4710,16 +4710,16 @@ unpipe@1.0.0:
   resolved "https://registry.yarnpkg.com/unpipe/-/unpipe-1.0.0.tgz#b2bf4ee8514aae6165b4817829d21b2ef49904ec"
   integrity sha512-pjy2bYhSsufwWlKwPc+l3cN7+wuJlK6uz0YdJEOlQDbl6jo/YlPi4mb8agUkVC8BF7V8NuzeyPNqRksA3hztKQ==
 
-unplugin-auto-import@^19.2.0:
-  version "19.2.0"
-  resolved "https://registry.yarnpkg.com/unplugin-auto-import/-/unplugin-auto-import-19.2.0.tgz#f90c46a639f39cea184feadc17cc350f84cc6a5c"
-  integrity sha512-DGRHg86nUDKEYpny1p2kFZjeLg7kHQmknsPQ8krAshvpeypps7dFxNBsAqhBaxYINjetbgQilF8wbjuZxpdomg==
+unplugin-auto-import@^19.3.0:
+  version "19.3.0"
+  resolved "https://registry.yarnpkg.com/unplugin-auto-import/-/unplugin-auto-import-19.3.0.tgz#4fbfef17c87919889f5ba2167afac50f50a015f4"
+  integrity sha512-iIi0u4Gq2uGkAOGqlPJOAMI8vocvjh1clGTfSK4SOrJKrt+tirrixo/FjgBwXQNNdS7ofcr7OxzmOb/RjWxeEQ==
   dependencies:
     local-pkg "^1.1.1"
     magic-string "^0.30.17"
     picomatch "^4.0.2"
     unimport "^4.2.0"
-    unplugin "^2.3.2"
+    unplugin "^2.3.4"
     unplugin-utils "^0.2.4"
 
 unplugin-utils@^0.2.4:
@@ -4744,10 +4744,10 @@ unplugin-vue-components@^28.5.0:
     unplugin "^2.3.2"
     unplugin-utils "^0.2.4"
 
-unplugin@^2.2.2, unplugin@^2.3.2:
-  version "2.3.2"
-  resolved "https://registry.yarnpkg.com/unplugin/-/unplugin-2.3.2.tgz#36c93a1662b70c97a2e2fc45c0e78fa09f7a4984"
-  integrity sha512-3n7YA46rROb3zSj8fFxtxC/PqoyvYQ0llwz9wtUPUutr9ig09C8gGo5CWCwHrUzlqC1LLR43kxp5vEIyH1ac1w==
+unplugin@^2.2.2, unplugin@^2.3.2, unplugin@^2.3.4:
+  version "2.3.5"
+  resolved "https://registry.yarnpkg.com/unplugin/-/unplugin-2.3.5.tgz#c689d806e2a15c95aeb794f285356c6bcdea4a2e"
+  integrity sha512-RyWSb5AHmGtjjNQ6gIlA67sHOsWpsbWpwDokLwTcejVdOjEkJZh7QKu14J00gDDVSh8kGH4KYC/TNBceXFZhtw==
   dependencies:
     acorn "^8.14.1"
     picomatch "^4.0.2"
