@@ -4933,10 +4933,10 @@ vue@^3.2.25, vue@^3.5.13:
     "@vue/server-renderer" "3.5.13"
     "@vue/shared" "3.5.13"
 
-vuetify@^3.8.5:
-  version "3.8.5"
-  resolved "https://registry.yarnpkg.com/vuetify/-/vuetify-3.8.5.tgz#9bd2f7afa4ac9ea39be6b154358e209d864c1bf1"
-  integrity sha512-W/mTaNDyO6NRqAQmnkMUn9TYvRb//BPF/vk7h3+2xNJOyI9ev90JmYjrihOtb+6QDrB79wVUH0Y+0OjYK73GsA==
+vuetify@^3.8.7:
+  version "3.8.7"
+  resolved "https://registry.yarnpkg.com/vuetify/-/vuetify-3.8.7.tgz#59377e406551c92f5d532694095462c9ee2bc6fa"
+  integrity sha512-Xid5za36cOA9We0QShcjiI4qoWXcwABhlhDHi8/0qpjSrBgJ63GobQdZ9YYyRvjMT3XXJqgbkdis1RS/oGL8Bw==
 
 w3c-xmlserializer@^5.0.0:
   version "5.0.0"
