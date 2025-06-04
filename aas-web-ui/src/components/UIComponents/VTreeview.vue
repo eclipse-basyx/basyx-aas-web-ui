@@ -32,6 +32,17 @@
                             <v-icon v-else-if="item.modelType === 'Submodel' && !item.children" color="primary">
                                 mdi-folder-alert
                             </v-icon>
+                            <!-- Icon for Submodel Template with children -->
+                            <v-icon
+                                v-else-if="
+                                    item.modelType === 'Submodel' &&
+                                    item.kind &&
+                                    item.kind === 'Template' &&
+                                    item.children
+                                "
+                                color="primary">
+                                mdi-folder-pound
+                            </v-icon>
                             <!-- Icon for Submodel with children (open/closed) -->
                             <v-icon v-else-if="item.modelType === 'Submodel' && item.children" color="primary">
                                 {{ item.showChildren ? 'mdi-folder-open' : 'mdi-folder' }}
@@ -80,8 +91,9 @@
                                                 : '-24px',
                                         transition: 'margin 0.3s ease',
                                     }"
-                                    >{{ item.modelType }}</v-chip
-                                >
+                                    >{{ item.modelType }}
+                                    {{ item.kind && item.kind === 'Template' ? 'Template' : '' }}
+                                </v-chip>
                                 <!-- Icon Placeholder that is always rendered -->
                                 <div class="icon-placeholder">
                                     <!-- Button to add a submodel Element -->
