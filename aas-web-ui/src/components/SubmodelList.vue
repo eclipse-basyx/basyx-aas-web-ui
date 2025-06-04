@@ -64,7 +64,9 @@
                                         }"
                                         @click="selectSM(item)">
                                         <template #prepend>
-                                            <v-chip label border color="primary" size="x-small" class="mr-3">SM</v-chip>
+                                            <v-chip label border color="primary" size="x-small" class="mr-3">
+                                                {{ item.kind && item.kind === 'Template' ? 'SMT' : 'SM' }}
+                                            </v-chip>
                                         </template>
                                         <v-tooltip
                                             v-if="!isMobile"
