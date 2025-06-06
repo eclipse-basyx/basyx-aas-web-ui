@@ -1,105 +1,109 @@
 <template>
     <v-container fluid class="pa-0">
         <v-card color="rgba(0,0,0,0)" elevation="0">
-            <!-- Title bar -->
-            <v-card-title
-                :style="
-                    selectedAAS && Object.keys(selectedAAS).length > 0
-                        ? 'padding: 7px 0px 8px'
-                        : 'padding: 15px 0px 16px'
-                ">
-                <div class="d-flex align-center">
-                    <v-tooltip
-                        v-if="selectedAAS && Object.keys(selectedAAS).length > 0"
-                        open-delay="600"
-                        location="bottom"
-                        :disabled="isMobile">
-                        <template #activator="{ props }">
-                            <v-btn
-                                icon="mdi-reload"
-                                variant="plain"
-                                :loading="treeLoading"
-                                v-bind="props"
-                                @click="initialize()">
-                                <template #loader>
-                                    <span class="custom-loader"><v-icon light>mdi-cached</v-icon></span>
-                                </template>
-                            </v-btn>
-                        </template>
-                        <span>Reload Submodel tree</span>
-                    </v-tooltip>
-                    <span v-if="!selectedAAS || Object.keys(selectedAAS).length === 0 || singleAas" class="pl-4">
-                        Submodel tree
-                    </span>
-                    <template v-else-if="!singleAas">
-                        <v-icon icon="custom:aasIcon" color="primary" size="small" class="" />
-                        <span class="text-truncate ml-2">
-                            {{ nameToDisplay(selectedAAS) }}
+            <template v-if="!singleAas">
+                <!-- Title Bar  -->
+                <v-card-title
+                    :style="
+                        selectedAAS && Object.keys(selectedAAS).length > 0
+                            ? 'padding: 7px 0px 8px'
+                            : 'padding: 15px 0px 16px'
+                    ">
+                    <div class="d-flex align-center">
+                        <v-tooltip
+                            v-if="selectedAAS && Object.keys(selectedAAS).length > 0"
+                            open-delay="600"
+                            location="bottom"
+                            :disabled="isMobile">
+                            <template #activator="{ props }">
+                                <v-btn
+                                    icon="mdi-reload"
+                                    variant="plain"
+                                    :loading="treeLoading"
+                                    v-bind="props"
+                                    @click="initialize()">
+                                    <template #loader>
+                                        <span class="custom-loader"><v-icon light>mdi-cached</v-icon></span>
+                                    </template>
+                                </v-btn>
+                            </template>
+                            <span>Reload Submodel tree</span>
+                        </v-tooltip>
+                        <span v-if="!selectedAAS || Object.keys(selectedAAS).length === 0" class="pl-4">
+                            Submodel tree
                         </span>
-                    </template>
-                    <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
-                        <v-spacer></v-spacer>
-                        <v-tooltip
-                            v-if="selectedAAS && Object.keys(selectedAAS).length > 0"
-                            open-delay="600"
-                            location="bottom"
-                            :disabled="isMobile">
-                            <template #activator="{ props }">
-                                <v-btn
-                                    icon="mdi-expand-all"
-                                    variant="plain"
-                                    v-bind="props"
-                                    class="ml-1"
-                                    :disabled="!selectedNode || Object.keys(selectedNode).length === 0"
-                                    @click="expandTree()">
-                                </v-btn>
-                            </template>
-                            <span>Expand Submodel tree with selected element</span>
-                        </v-tooltip>
-                        <v-tooltip
-                            v-if="selectedAAS && Object.keys(selectedAAS).length > 0"
-                            open-delay="600"
-                            location="bottom"
-                            :disabled="isMobile">
-                            <template #activator="{ props }">
-                                <v-btn
-                                    icon="mdi-collapse-all"
-                                    variant="plain"
-                                    v-bind="props"
-                                    class="ml-n3"
-                                    :class="editMode ? 'mr-n3' : ''"
-                                    @click="collapseTree()">
-                                </v-btn>
-                            </template>
-                            <span>Collapse Submodel trees</span>
-                        </v-tooltip>
-                        <v-menu v-if="editMode">
-                            <template #activator="{ props }">
-                                <v-btn icon="mdi-dots-vertical" variant="plain" v-bind="props" class="mr-2"></v-btn>
-                            </template>
-                            <v-sheet border>
-                                <v-list density="compact" class="py-0">
-                                    <!-- Open SM dialog -->
-                                    <v-tooltip open-delay="600" location="end">
-                                        <template #activator="{ props }">
-                                            <v-list-item slim v-bind="props" @click="openEditDialog(true)">
-                                                <template #prepend>
-                                                    <v-icon size="small">mdi-plus</v-icon>
-                                                </template>
-                                                Create Submodel
-                                            </v-list-item>
-                                        </template>
-                                        <span>Create a new Submodel</span>
-                                    </v-tooltip></v-list
-                                >
-                            </v-sheet>
-                        </v-menu>
-                    </template>
-                </div>
-                <!-- TODO: Add Searchfield - https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/148 -->
-            </v-card-title>
-            <v-divider></v-divider>
-            <v-card-text style="overflow-y: auto; height: calc(100svh - 170px)">
+                        <template v-else>
+                            <v-icon icon="custom:aasIcon" color="primary" size="small" class="" />
+                            <span class="text-truncate ml-2">
+                                {{ nameToDisplay(selectedAAS) }}
+                            </span>
+                        </template>
+                        <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
+                            <v-spacer></v-spacer>
+                            <v-tooltip
+                                v-if="selectedAAS && Object.keys(selectedAAS).length > 0"
+                                open-delay="600"
+                                location="bottom"
+                                :disabled="isMobile">
+                                <template #activator="{ props }">
+                                    <v-btn
+                                        icon="mdi-expand-all"
+                                        variant="plain"
+                                        v-bind="props"
+                                        class="ml-1"
+                                        :disabled="!selectedNode || Object.keys(selectedNode).length === 0"
+                                        @click="expandTree()">
+                                    </v-btn>
+                                </template>
+                                <span>Expand Submodel tree with selected element</span>
+                            </v-tooltip>
+                            <v-tooltip
+                                v-if="selectedAAS && Object.keys(selectedAAS).length > 0"
+                                open-delay="600"
+                                location="bottom"
+                                :disabled="isMobile">
+                                <template #activator="{ props }">
+                                    <v-btn
+                                        icon="mdi-collapse-all"
+                                        variant="plain"
+                                        v-bind="props"
+                                        class="ml-n3"
+                                        :class="editMode ? 'mr-n3' : ''"
+                                        @click="collapseTree()">
+                                    </v-btn>
+                                </template>
+                                <span>Collapse Submodel trees</span>
+                            </v-tooltip>
+                            <v-menu v-if="editMode">
+                                <template #activator="{ props }">
+                                    <v-btn icon="mdi-dots-vertical" variant="plain" v-bind="props" class="mr-2"></v-btn>
+                                </template>
+                                <v-sheet border>
+                                    <v-list density="compact" class="py-0">
+                                        <!-- Open SM dialog -->
+                                        <v-tooltip open-delay="600" location="end">
+                                            <template #activator="{ props }">
+                                                <v-list-item slim v-bind="props" @click="openEditDialog(true)">
+                                                    <template #prepend>
+                                                        <v-icon size="small">mdi-plus</v-icon>
+                                                    </template>
+                                                    Create Submodel
+                                                </v-list-item>
+                                            </template>
+                                            <span>Create a new Submodel</span>
+                                        </v-tooltip></v-list
+                                    >
+                                </v-sheet>
+                            </v-menu>
+                        </template>
+                    </div>
+                    <!-- TODO: Add Searchfield - https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/148 -->
+                </v-card-title>
+                <v-divider></v-divider>
+            </template>
+            <v-card-text
+                style="overflow-y: auto"
+                :style="singleAas ? 'height: calc(100svh - 105px)' : 'height: calc(100svh - 170px)'">
                 <!-- Show Skeleton Loader when the tree is loading -->
                 <template v-if="treeLoading">
                     <v-list-item v-for="i in 6" :key="i" density="compact" nav class="pa-0">
@@ -125,8 +129,6 @@
                                 class="root"
                                 :item="item"
                                 :depth="0"
-                                @open-edit-submodel-element-dialog="openEditSubmodelElementDialogForElement"
-                                @open-add-submodel-element-dialog="openAddSubmodelElementDialog"
                                 @open-edit-dialog="openEditDialog(false, $event)"
                                 @show-delete-dialog="openDeleteDialog"></VTreeview>
                         </template>
@@ -148,58 +150,6 @@
             </v-card-text>
         </v-card>
     </v-container>
-    <!-- Dialog for creating SubmodelElements -->
-    <SubmodelElementForm v-model="selectSMETypeToAddDialog" @open-create-s-m-e-dialog="openSMEFormDialog">
-    </SubmodelElementForm>
-    <!-- Dialog for creating/editing Properties -->
-    <PropertyForm
-        v-model="propertyDialog"
-        :new-property="newProperty"
-        :parent-element="elementToAddSME"
-        :path="submodelElementPath"
-        :property="submodelElementToEdit"></PropertyForm>
-    <!-- Dialog for creating/editing MultiLanguageProperties -->
-    <MLPForm
-        v-model="mlpDialog"
-        :new-mlp="newMLP"
-        :parent-element="elementToAddSME"
-        :path="submodelElementPath"
-        :mlp="submodelElementToEdit"></MLPForm>
-    <!-- Dialog for creating/editing Range SubmodelElements -->
-    <RangeForm
-        v-model="rangeDialog"
-        :new-range="newRange"
-        :parent-element="elementToAddSME"
-        :path="submodelElementPath"
-        :range="submodelElementToEdit"></RangeForm>
-    <!-- Dialog for creating/editing File SubmodelElements -->
-    <FileForm
-        v-model="fileDialog"
-        :new-file="newFile"
-        :parent-element="elementToAddSME"
-        :path="submodelElementPath"
-        :file="submodelElementToEdit"></FileForm>
-    <!-- Dialog for creating/editing Blob SubmodelElements -->
-    <BlobForm
-        v-model="blobDialog"
-        :new-blob="newBlob"
-        :parent-element="elementToAddSME"
-        :path="submodelElementPath"
-        :blob="submodelElementToEdit"></BlobForm>
-    <!-- Dialog for creating/editing SubmodelElementCollections -->
-    <CollectionForm
-        v-model="smcDialog"
-        :new-smc="newSMC"
-        :parent-element="elementToAddSME"
-        :path="submodelElementPath"
-        :smc="submodelElementToEdit"></CollectionForm>
-    <!-- Dialog for creating/editing SubmodelElementLists -->
-    <ListForm
-        v-model="smlDialog"
-        :new-sml="newSML"
-        :parent-element="elementToAddSME"
-        :path="submodelElementPath"
-        :sml="submodelElementToEdit"></ListForm>
     <!-- Dialog for creating/editing Submodel -->
     <SubmodelForm v-model="editDialog" :new-sm="newSubmodel" :submodel="submodelToEdit"></SubmodelForm>
     <!-- Dialog for deleting SM/SME -->
@@ -231,29 +181,11 @@
     // Data
     const submodelTree = ref([] as Array<any>); // Treeview Data
     const treeLoading = ref(false); // Variable to store if the AAS List is loading
-    const selectSMETypeToAddDialog = ref(false); // Variable to store if the Add SubmodelElement Dialog should be shown
-    const propertyDialog = ref(false); // Variable to store if the PropertyForm Dialog should be shown
-    const mlpDialog = ref(false); // Variable to store if the MultiLanguagePropertyForm Dialog should be shown
-    const rangeDialog = ref(false); // Variable to store if the RangeForm Dialog should be shown
-    const fileDialog = ref(false); // Variable to store if the FileForm Dialog should be shown
-    const blobDialog = ref(false); // Variable to store if the BlobForm Dialog should be shown
-    const smcDialog = ref(false); // Variable to store if the PropertyForm Dialog should be shown
-    const smlDialog = ref(false); // Variable to store if the SubmodelElementListForm Dialog should be shown
-    const editDialog = ref(false); // Variable to store if the Edit Dialog should be shown
-    const newProperty = ref(false); // Variable to store if a new Property should be created
-    const newMLP = ref(false); // Variable to store if a new MultiLanguageProperty should be created
-    const newRange = ref(false); // Variable to store if a new Range should be created
-    const newFile = ref(false); // Variable to store if a new File should be created
-    const newBlob = ref(false); // Variable to store if a new Blob should be created
-    const newSMC = ref(false); // Variable to store if a new SubmodelElementCollection should be created
-    const newSML = ref(false); // Variable to store if a new SubmodelElementList should be created
+    const editDialog = ref(false); // // Variable to store if the Edit Dialog should be shown
     const newSubmodel = ref(false); // Variable to store if a new Submodel should be created
     const submodelToEdit = ref<any | undefined>(undefined); // Variable to store the Submodel to be edited
     const deleteDialog = ref(false); // Variable to store if the Delete Dialog should be shown
     const elementToDelete = ref<any | undefined>(undefined); // Variable to store the Element to be deleted
-    const elementToAddSME = ref<any | undefined>(undefined); // Variable to store the Element where the new SME is added inside
-    const submodelElementPath = ref<string | undefined>(undefined); // Variable to store the Element where the new SME is added inside
-    const submodelElementToEdit = ref<any | undefined>(undefined); // Variable to store the Element where the new SME is added inside
 
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
@@ -266,6 +198,13 @@
     const triggerTreeviewReload = computed(() => navigationStore.getTriggerTreeviewReload); // Reload the Treeview
 
     // Watchers
+    watch(
+        () => navigationStore.getEasyViewState,
+        () => {
+            initialize();
+        }
+    );
+
     watch(
         () => aasRegistryURL.value,
         () => {
@@ -311,9 +250,15 @@
 
         try {
             const submodels: Array<any> = await fetchAasSmListById(selectedAAS.value.id);
+            const predefinedOrder = ['ArticleInformation', 'TechnicalData', 'ContactInformation', 'GeneralInformation'];
+            const orderedSubmodels = predefinedOrder.map((id) => submodels.find((sm) => sm.idShort === id)).filter(Boolean);
+            const otherSubmodels = submodels.filter((sm) => !predefinedOrder.includes(sm.idShort));
+            const definedSubmodels = orderedSubmodels.concat(otherSubmodels);
             const sortedSubmodels = submodels.sort((a, b) => a.id.localeCompare(b.id));
 
-            submodelTree.value = sortedSubmodels.map((submodel: any) => {
+            // Use easyViewState to determine the mode
+            const selectedSubmodels = navigationStore.getEasyViewState ? definedSubmodels : sortedSubmodels;
+            submodelTree.value = selectedSubmodels.map((submodel: any) => {
                 // Assumes submodel.path is already set for top-level nodes
                 if (Array.isArray(submodel.submodelElements) && submodel.submodelElements.length) {
                     submodel.children = prepareForTree(submodel.submodelElements, submodel);
@@ -423,109 +368,6 @@
             selectedNode.value.path.startsWith(nodePath) &&
             selectedNode.value.path !== nodePath
         );
-    }
-
-    function openAddSubmodelElementDialog(element: any): void {
-        elementToAddSME.value = element;
-        selectSMETypeToAddDialog.value = true;
-    }
-
-    function openEditSubmodelElementDialogForElement(element: any): void {
-        if (element.modelType === 'Property') {
-            propertyDialog.value = true;
-            newProperty.value = false;
-            submodelElementPath.value = element.path;
-            elementToAddSME.value = element.parent;
-            submodelElementToEdit.value = element;
-        } else if (element.modelType === 'MultiLanguageProperty') {
-            mlpDialog.value = true;
-            newMLP.value = false;
-            submodelElementPath.value = element.path;
-            elementToAddSME.value = element.parent;
-            submodelElementToEdit.value = element;
-        } else if (element.modelType === 'Range') {
-            rangeDialog.value = true;
-            newRange.value = false;
-            submodelElementPath.value = element.path;
-            elementToAddSME.value = element.parent;
-            submodelElementToEdit.value = element;
-        } else if (element.modelType === 'File') {
-            fileDialog.value = true;
-            newFile.value = false;
-            submodelElementPath.value = element.path;
-            elementToAddSME.value = element.parent;
-            submodelElementToEdit.value = element;
-        } else if (element.modelType === 'Blob') {
-            blobDialog.value = true;
-            newBlob.value = false;
-            submodelElementPath.value = element.path;
-            elementToAddSME.value = element.parent;
-            submodelElementToEdit.value = element;
-        } else if (element.modelType === 'SubmodelElementCollection') {
-            smcDialog.value = true;
-            newSMC.value = false;
-            submodelElementPath.value = element.path;
-            elementToAddSME.value = element.parent;
-            submodelElementToEdit.value = element;
-        } else if (element.modelType === 'SubmodelElementList') {
-            smlDialog.value = true;
-            newSML.value = false;
-            submodelElementPath.value = element.path;
-            elementToAddSME.value = element.parent;
-            submodelElementToEdit.value = element;
-        } else {
-            console.error(`Specified invalid SubmodelElement Type "${element.modelType}"`);
-        }
-    }
-
-    function openSMEFormDialog(smeType: string): void {
-        switch (smeType) {
-            case 'Property':
-                newProperty.value = true;
-                submodelElementPath.value = undefined;
-                submodelElementToEdit.value = undefined;
-                propertyDialog.value = true;
-                break;
-            case 'MultiLanguageProperty':
-                newMLP.value = true;
-                submodelElementPath.value = undefined;
-                submodelElementToEdit.value = undefined;
-                mlpDialog.value = true;
-                break;
-            case 'Range':
-                newRange.value = true;
-                submodelElementPath.value = undefined;
-                submodelElementToEdit.value = undefined;
-                rangeDialog.value = true;
-                break;
-            case 'File':
-                newFile.value = true;
-                submodelElementPath.value = undefined;
-                submodelElementToEdit.value = undefined;
-                fileDialog.value = true;
-                break;
-            case 'Blob':
-                newBlob.value = true;
-                submodelElementPath.value = undefined;
-                submodelElementToEdit.value = undefined;
-                blobDialog.value = true;
-                break;
-            case 'SubmodelElementCollection':
-                newSMC.value = true;
-                submodelElementPath.value = undefined;
-                submodelElementToEdit.value = undefined;
-                smcDialog.value = true;
-                break;
-            case 'SubmodelElementList':
-                newSML.value = true;
-                submodelElementPath.value = undefined;
-                submodelElementToEdit.value = undefined;
-                smlDialog.value = true;
-                break;
-            default:
-                console.error(`Specified invalid SubmodelElement Type "${smeType}"`);
-                break;
-        }
     }
 </script>
 
