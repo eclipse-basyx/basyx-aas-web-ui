@@ -2,10 +2,14 @@
     <v-container fluid class="pa-0">
         <v-card color="elevatedCard" :class="topMargin">
             <v-list
-                v-if="smeObject[smeLocator] && Array.isArray(smeObject[smeLocator]) && smeObject[smeLocator].length > 0"
+                v-if="
+                    submodelElementData[smeLocator] &&
+                    Array.isArray(submodelElementData[smeLocator]) &&
+                    submodelElementData[smeLocator].length > 0
+                "
                 nav
                 class="bg-elevatedCard">
-                <div v-for="(SubmodelElement, i) in smeObject[smeLocator]" :key="i">
+                <div v-for="(SubmodelElement, i) in submodelElementData[smeLocator]" :key="i">
                     <v-list-item class="pt-0">
                         <v-list-item-title class="pt-2">
                             <!-- SubmodelElementCollection -->
@@ -273,15 +277,18 @@
 </template>
 
 <script lang="ts" setup>
+    import { onMounted, ref, watch } from 'vue';
     import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
+    import { useSMHandling } from '@/composables/AAS/SMHandling';
 
     // Composables
+    const { setData } = useSMHandling();
     const { unitSuffix } = useConceptDescriptionHandling();
     const { nameToDisplay } = useReferableUtils();
 
     // Properties
-    defineProps({
+    const props = defineProps({
         smeObject: {
             type: Object as any,
             default: {} as any,
@@ -295,6 +302,33 @@
             default: '',
         },
     });
+
+    // Data
+    const submodelElementData = ref({} as any);
+
+    // Watchers
+    watch(
+        () => props.smeObject,
+        () => {
+            initialize();
+        }
+    );
+
+    onMounted(async () => {
+        initialize();
+    });
+
+    async function initialize(): Promise<void> {
+        if (!props.smeObject || Object.keys(props.smeObject).length === 0) {
+            return;
+        }
+
+        // First: set data (to view quickly the SMEs without units)
+        submodelElementData.value = props.smeObject;
+
+        // Second: fetch ConceptDescriptions to view the SMEs with units
+        submodelElementData.value = await setData(props.smeObject, props.smeObject.path, true);
+    }
 
     function referenceKeyTypeToDisplay(keys: any): string {
         if (keys?.length > 0) {
