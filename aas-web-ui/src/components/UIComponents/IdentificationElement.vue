@@ -19,19 +19,21 @@
                             >{{ identificationObject['idShort'] }}
                         </div>
                     </v-tooltip>
-                    <v-list-item-title>
-                        <div class="text-primary text-subtitle-1">
-                            {{ nameToDisplay(identificationObject) }}
-                        </div>
-                    </v-list-item-title>
-                    <!-- modelType -->
-                    <v-chip v-if="vChipContent" size="x-small" color="primary">{{ vChipContent }}</v-chip>
-                    <v-chip
-                        v-else-if="identificationObject?.modelType && identificationObject.modelType.trim() !== ''"
-                        size="x-small"
-                        color="primary"
-                        >{{ identificationObject.modelType }}</v-chip
-                    >
+                    <template v-if="identificationObject.modelType !== 'ConceptDescription'">
+                        <v-list-item-title>
+                            <div class="text-primary text-subtitle-1">
+                                {{ nameToDisplay(identificationObject) }}
+                            </div>
+                        </v-list-item-title>
+                        <!-- modelType -->
+                        <v-chip v-if="vChipContent" size="x-small" color="primary">{{ vChipContent }}</v-chip>
+                        <v-chip
+                            v-else-if="identificationObject?.modelType && identificationObject.modelType.trim() !== ''"
+                            size="x-small"
+                            color="primary">
+                            {{ identificationObject.modelType }}
+                        </v-chip>
+                    </template>
                 </div>
                 <!-- ID -->
                 <v-hover v-slot="{ isHovering, props }">

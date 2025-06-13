@@ -133,11 +133,33 @@
                 <v-divider></v-divider>
                 <LastSync :timestamp="submodelElementData.timestamp"></LastSync>
             </v-card>
-            <template v-if="Array.isArray(conceptDescriptions) && conceptDescriptions.length > 0">
-                <template v-for="cd in conceptDescriptions" :key="cd.id">
-                    <ConceptDescription :concept-description-object="cd" class="mt-4"></ConceptDescription>
-                </template>
-            </template>
+            <v-expansion-panels
+                v-if="Array.isArray(conceptDescriptions) && conceptDescriptions.length > 0"
+                v-model="cdspanel"
+                class="mt-4">
+                <v-expansion-panel v-for="(conceptDescription, index) in conceptDescriptions" :key="index">
+                    <v-expansion-panel-title>
+                        <v-list-item class="pa-0">
+                            <template #append>
+                                <v-chip size="x-small" color="primary" class="ml-5">{{
+                                    conceptDescription.modelType
+                                }}</v-chip>
+                            </template>
+                            <v-list-item-title>
+                                <div class="text-primary text-subtitle-1">
+                                    {{ nameToDisplay(conceptDescription) }}
+                                </div>
+                            </v-list-item-title>
+                        </v-list-item>
+                    </v-expansion-panel-title>
+                    <v-divider v-if="cdspanel === index"></v-divider>
+                    <v-expansion-panel-text class="">
+                        <ConceptDescription
+                            :concept-description-object="conceptDescription"
+                            class="mt-4"></ConceptDescription>
+                    </v-expansion-panel-text>
+                </v-expansion-panel>
+            </v-expansion-panels>
         </template>
     </v-container>
 </template>
@@ -146,10 +168,10 @@
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-
     // Vue Router
     const route = useRoute();
 
@@ -160,11 +182,13 @@
     // Composables
     const { fetchCds } = useConceptDescriptionHandling();
     const { fetchSme } = useSMEHandling();
+    const { nameToDisplay } = useReferableUtils();
 
     // Data
     const submodelElementData = ref({} as any);
     const conceptDescriptions = ref([] as Array<any>);
     const autoSyncInterval = ref<number | undefined>(undefined); // interval to send requests to the AAS
+    const cdspanel = ref(0);
 
     // Computed Properties
     const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL);
@@ -320,3 +344,10 @@
         conceptDescriptions.value = [];
     }
 </script>
+
+<style lang="css" scoped>
+    .v-expansion-panel--active,
+    .v-expansion-panel--active + .v-expansion-panel {
+        margin-top: 1px !important;
+    }
+</style>
