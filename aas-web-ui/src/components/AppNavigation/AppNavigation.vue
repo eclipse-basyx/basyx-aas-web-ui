@@ -75,28 +75,8 @@
                 </v-dialog>
                 <!-- Settings Menu -->
                 <Settings v-if="!isMobile"></Settings>
-                <!-- Auth Status -->
-                <v-tooltip text="Authorization Status" location="bottom" :open-delay="600">
-                    <template #activator="{ props }">
-                        <v-icon v-bind="props" class="mr-3">{{
-                            isAuthEnabled ? (authStatus ? 'mdi-lock-check' : 'mdi-lock-remove') : 'mdi-lock-off'
-                        }}</v-icon>
-                    </template>
-                    <span>{{
-                        isAuthEnabled ? (authStatus ? 'Authenticated' : 'Not Authenticated') : 'Authentication disabled'
-                    }}</span>
-                </v-tooltip>
-                <!-- Logout Button -->
-                <v-tooltip
-                    v-if="isAuthEnabled && authStatus && !preconfiguredAuth"
-                    text="Authorization Status"
-                    location="bottom"
-                    :open-delay="600">
-                    <template #activator="{ props }">
-                        <v-icon v-bind="props" @click="logout">mdi-logout</v-icon>
-                    </template>
-                    <span>Logout</span>
-                </v-tooltip>
+                <!-- Auth Status with user Menu -->
+                <User v-if="!isMobile" />
             </v-row>
         </v-app-bar>
 
@@ -273,7 +253,6 @@
     import { useTheme } from 'vuetify';
     import { useDashboardHandling } from '@/composables/DashboardHandling';
     import { useAASStore } from '@/store/AASDataStore';
-    import { useAuthStore } from '@/store/AuthStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { AutoSyncType, StatusCheckType } from '@/types/Application';
@@ -287,7 +266,6 @@
     // Stores
     const navigationStore = useNavigationStore();
     const envStore = useEnvStore();
-    const authStore = useAuthStore();
     const aasStore = useAASStore();
 
     // Vuetify
@@ -354,9 +332,6 @@
             'SubmodelViewer',
         ].includes(route.name as string);
     });
-    const authStatus = computed(() => (authStore.getAuthStatus ? 'Authenticated' : 'Not Authenticated'));
-    const isAuthEnabled = computed(() => authStore.getAuthEnabled);
-    const preconfiguredAuth = computed(() => envStore.getPreconfiguredAuth);
 
     // Watch for changes in the Snackbar Object and close it after the Timeout
     watch(
@@ -428,13 +403,5 @@
     function updateDrawerState(value: boolean) {
         // console.log('updateDrawerState: ', value);
         navigationStore.dispatchDrawerState(value);
-    }
-
-    function logout() {
-        authStore.getKeycloak?.logout();
-        const refreshIntervalId = authStore.getRefreshIntervalId;
-        if (refreshIntervalId) {
-            window.clearInterval(refreshIntervalId);
-        }
     }
 </script>
