@@ -206,17 +206,6 @@
                                                     <v-list-item-subtitle>Download AAS</v-list-item-subtitle>
                                                 </v-list-item>
                                                 <v-divider></v-divider>
-                                                <!-- Copy AAS Endpoint to clipboard -->
-                                                <v-list-item
-                                                    @click.stop="
-                                                        copyToClipboard(item.path, 'AAS Endpoint', copyIconAsRef)
-                                                    ">
-                                                    <template #prepend>
-                                                        <v-icon size="x-small">{{ copyIcon }} </v-icon>
-                                                    </template>
-                                                    <v-list-item-subtitle>Copy AAS Endpoint</v-list-item-subtitle>
-                                                </v-list-item>
-                                                <v-divider></v-divider>
                                                 <!-- Open AAS edit dialog -->
                                                 <v-list-item @click="openEditDialog(false, item)">
                                                     <template #prepend>
@@ -230,6 +219,17 @@
                                                         <v-icon size="x-small">mdi-delete</v-icon>
                                                     </template>
                                                     <v-list-item-subtitle>Delete AAS</v-list-item-subtitle>
+                                                </v-list-item>
+                                                <v-divider></v-divider>
+                                                <!-- Copy AAS Endpoint to clipboard -->
+                                                <v-list-item
+                                                    @click.stop="
+                                                        copyToClipboard(item.path, 'AAS Endpoint', copyIconAsRef)
+                                                    ">
+                                                    <template #prepend>
+                                                        <v-icon size="x-small">{{ copyIcon }} </v-icon>
+                                                    </template>
+                                                    <v-list-item-subtitle>Copy AAS Endpoint</v-list-item-subtitle>
                                                 </v-list-item>
                                             </v-list>
                                         </v-sheet>
