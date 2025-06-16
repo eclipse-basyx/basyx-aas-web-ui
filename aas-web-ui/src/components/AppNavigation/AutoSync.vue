@@ -1,4 +1,12 @@
 <template>
+    <!-- Easy Mode Button-->
+    <v-btn class="multiline-button mr-6" @click="toggleView()" variant="outlined">
+        <div class="text-left">
+            <p>
+                <span class="mr-1" style="font-size: 0.75em">{{ easyViewState ? 'Advanced-Mode' : 'Easy-Mode' }}</span>
+            </p>
+        </div>
+    </v-btn>
     <!-- Mobile Autosync Toggle -->
     <v-badge
         v-if="isMobile"
@@ -90,6 +98,7 @@
 
     // Stores
     const navigationStore = useNavigationStore();
+    const easyViewState = computed(() => navigationStore.getEasyViewState)
 
     // Computed properties
     const isMobile = computed(() => navigationStore.getIsMobile);
@@ -111,5 +120,9 @@
     function toggleAutoSync() {
         autoSync.value.state = !autoSync.value.state;
         updateAutoSync();
+    }
+
+    function toggleView(){
+        navigationStore.dispatchEasyView(!easyViewState.value);
     }
 </script>
