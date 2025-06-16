@@ -114,23 +114,26 @@ export function useRequestHandling() {
                 }
             })
             .then((data) => {
-                //Check if data is array and has at least one element
-                if (Array.isArray(data) && data.length > 0) {
-                    // Check if the Server responded with an error
-                    if (data && Object.prototype.hasOwnProperty.call(data[0], 'code') && data[0].code >= 400) {
-                        // Error response from the server
-                        if (!disableMessage) errorHandler(data, context); // Call the error handler
-                        return { success: false };
-                    } else if (data) {
-                        // Successful response from the server
-                        return { success: true, data: data };
-                    } else if (data === null || data === undefined) {
-                        // in this case no content is expected
-                        return { success: true };
-                    } else {
-                        // Unexpected response format
-                        throw new Error('Unexpected response format');
-                    }
+                // Check if the Server responded with an error
+                if (
+                    data &&
+                    Array.isArray(data) &&
+                    data.length > 0 &&
+                    Object.prototype.hasOwnProperty.call(data[0], 'code') &&
+                    data[0].code >= 400
+                ) {
+                    // Error response from the server
+                    if (!disableMessage) errorHandler(data, context); // Call the error handler
+                    return { success: false };
+                } else if (data) {
+                    // Successful response from the server
+                    return { success: true, data: data };
+                } else if (data === null || data === undefined) {
+                    // in this case no content is expected
+                    return { success: true };
+                } else {
+                    // Unexpected response format
+                    throw new Error('Unexpected response format');
                 }
             })
             .catch((error) => {
