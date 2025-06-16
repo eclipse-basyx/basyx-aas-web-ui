@@ -315,7 +315,7 @@
     );
 
     onMounted(async () => {
-        initialize();
+        await initialize();
     });
 
     async function initialize(): Promise<void> {
