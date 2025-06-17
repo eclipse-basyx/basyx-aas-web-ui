@@ -159,9 +159,7 @@ export function useConceptDescriptionHandling() {
 
         const combinedSemanticIdsToFetch = [...semanticIdsToFetch, ...supplementalSemanticIdsToFetch];
 
-        const semanticIdsUniqueToFetch = combinedSemanticIdsToFetch.filter(
-            (value: string, index: number, self: Array<string>) => self.indexOf(value) === index
-        );
+        const semanticIdsUniqueToFetch = Array.from(new Set(combinedSemanticIdsToFetch));
 
         const cdPromises = semanticIdsUniqueToFetch.map(async (semanticId: string) => {
             return await fetchCdById(semanticId);

@@ -135,9 +135,11 @@
             </v-card>
             <v-expansion-panels
                 v-if="Array.isArray(conceptDescriptions) && conceptDescriptions.length > 0"
-                v-model="cdspanel"
+                v-model="expandedCdIndex"
                 class="mt-4">
-                <v-expansion-panel v-for="(conceptDescription, index) in conceptDescriptions" :key="index">
+                <v-expansion-panel
+                    v-for="(conceptDescription, index) in conceptDescriptions"
+                    :key="conceptDescription.id">
                     <v-expansion-panel-title>
                         <v-list-item class="pa-0">
                             <template #append>
@@ -152,7 +154,7 @@
                             </v-list-item-title>
                         </v-list-item>
                     </v-expansion-panel-title>
-                    <v-divider v-if="cdspanel === index"></v-divider>
+                    <v-divider v-if="expandedCdIndex === index"></v-divider>
                     <v-expansion-panel-text class="pa-0 ma-0">
                         <ConceptDescription
                             :concept-description-object="conceptDescription"
@@ -188,7 +190,7 @@
     const submodelElementData = ref({} as any);
     const conceptDescriptions = ref([] as Array<any>);
     const autoSyncInterval = ref<number | undefined>(undefined); // interval to send requests to the AAS
-    const cdspanel = ref(0);
+    const expandedCdIndex = ref(0);
 
     // Computed Properties
     const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL);
