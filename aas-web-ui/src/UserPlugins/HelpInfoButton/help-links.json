@@ -1,0 +1,24 @@
+{
+  "external-files": "https://example.com/help/external-files",
+  "parseKblVec": "https://example.com/help/parseKblVec",
+  "settings": "https://example.com/help/settings",
+  "general": "https://example.com/help/general",
+  "default": "https://example.com/help/default",
+
+  "aas-General": "https://admin-shell-io.github.io/aas-specs-antora/IDTA-01001/v3.1/spec-metamodel/overview.html",
+
+  "sub-General": "https://admin-shell-io.github.io/aas-specs-antora/IDTA-01001/v3.1/spec-metamodel/submodel-elements.html",
+  "sub-ID": "https://admin-shell-io.github.io/aas-specs-antora/IDTA-01001/v3.1/spec-metamodel/submodel-elements.html#entity-attributes",
+  "sub-IdShort": "https://admin-shell-io.github.io/aas-specs-antora/IDTA-01001/v3.1/spec-metamodel/submodel-elements.html#submodel-element-collection-attributes",
+  "sub-instance": "https://admin-shell-io.github.io/aas-specs-antora/IDTA-01001/v3.1/spec-metamodel/submodel-elements.html#property-attributes",
+  "sub-displayname": "https://example.com/help/sub-displayname",
+  "sub-description": "https://admin-shell-io.github.io/aas-specs-antora/IDTA-01001/v3.1/spec-metamodel/submodel-elements.html#_capability_attributes",
+  "sub-category": "https://admin-shell-io.github.io/aas-specs-antora/IDTA-01001/v3.1/spec-metamodel/submodel-elements.html#data-element-and-overview-of-data-element-types",
+  "sub-version": "https://admin-shell-io.github.io/aas-specs-antora/IDTA-01001/v3.1/spec-metamodel/submodel-elements.html#submodel-element-collection-attributes",
+  "sub-revision": "https://admin-shell-io.github.io/aas-specs-antora/IDTA-01001/v3.1/spec-metamodel/submodel-elements.html#submodel-element-collection-attributes",
+  "sub-creator": "https://admin-shell-io.github.io/aas-specs-antora/IDTA-01001/v3.1/spec-metamodel/submodel-elements.html#event-payload-attributes",
+  "sub-templateId": "https://admin-shell-io.github.io/aas-specs-antora/IDTA-01001/v3.1/spec-metamodel/submodel-elements.html#_general",
+  "sub-semanticId": "https://admin-shell-io.github.io/aas-specs-antora/IDTA-01001/v3.1/spec-metamodel/submodel-elements.html#event-payload-attributes",
+  "sub-DataType": "https://admin-shell-io.github.io/aas-specs-antora/IDTA-01001/v3.1/spec-metamodel/datatypes.html"
+}
+
