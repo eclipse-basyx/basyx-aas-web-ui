@@ -138,6 +138,7 @@ export async function initKeycloak(
                     authStore.setToken(keycloak.token);
                     authStore.setRefreshToken(keycloak.refreshToken);
                     authStore.setAuthStatus(true);
+                    authStore.setUsername(keycloak?.tokenParsed?.preferred_username);
                     const refreshIntervalId = window.setInterval(() => {
                         keycloak
                             .updateToken(70)
@@ -146,12 +147,14 @@ export async function initKeycloak(
                                     // console.log('Token refreshed');
                                     authStore.setToken(keycloak.token);
                                     authStore.setRefreshToken(keycloak.refreshToken);
+                                    authStore.setUsername(keycloak?.tokenParsed?.preferred_username);
                                 }
                                 authStore.setAuthStatus(true);
                             })
                             .catch(() => {
                                 console.error('Failed to refresh token');
                                 authStore.setAuthStatus(false);
+                                authStore.setUsername('');
                             });
                     }, 60000);
 
@@ -163,6 +166,7 @@ export async function initKeycloak(
                 console.error('Failed to authenticate with Keycloak', error);
                 const authStore = useAuthStore();
                 authStore.setAuthStatus(false);
+                authStore.setUsername('');
                 reject();
             });
     });
