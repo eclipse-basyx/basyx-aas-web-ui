@@ -116,33 +116,50 @@ export function useConceptDescriptionHandling() {
     async function fetchCds(sme: any): Promise<Array<any>> {
         const failResponse = [] as Array<any>;
 
-        if (!sme || !sme.semanticId || !sme.semanticId.keys || sme.semanticId.keys.length == 0) {
+        if (
+            !sme ||
+            ((!sme.semanticId || !sme.semanticId.keys || sme.semanticId.keys.length === 0) &&
+                (!sme.supplementalSemanticIds ||
+                    !Array.isArray(sme.supplementalSemanticIds) ||
+                    sme.supplementalSemanticIds.length === 0))
+        ) {
             return failResponse;
         }
 
-        const semanticIdsToFetch = sme.semanticId.keys.map((key: any) => {
-            return key.value;
-        });
+        const semanticIdsToFetch = sme?.semanticId?.keys
+            ? sme.semanticId.keys.map((key: any) => {
+                  return key.value;
+              })
+            : ([] as Array<string>);
 
+        const supplementalSemanticIdsToFetch = sme.supplementalSemanticIds
+            ? sme.supplementalSemanticIds
+                  .map((supplementalSemanticId: any) => {
+                      return supplementalSemanticId.keys.map((key: any) => {
+                          return key.value;
+                      });
+                  })
+                  .flat()
+            : ([] as Array<string>);
+
+        // NOTE deactivated till improvement is implemented to avoid /massive request to CD repo
         // Push equivalent semanticIds (e.g. to take into account the possible spellings of an Eclass IRDI)
         // IMPROVE This leads to multiple requests to the CD repo. Most of them get failed, which leads to a bad performance; Possible solution: Prefetched and stored list of all available CD IDs in the store + precheck which semanticId exist in the CD ID list
-        semanticIdsToFetch.forEach((semanticId: string) => {
-            if (
-                semanticId.startsWith('0173-1#') ||
-                semanticId.startsWith('0173/1///') ||
-                semanticId.startsWith('https://api.eclass-cdp.com/0173-1')
-            ) {
-                // NOTE deactivated till improvement is implemented to avoid /massive request to CD repo
-                // semanticIdsToFetch.push(...getEquivalentEclassSemanticIds(semanticId));
-            } else if (semanticId.startsWith('http://') || semanticId.startsWith('https://')) {
-                // NOTE deactivated till improvement is implemented to avoid /massive request to CD repo
-                // semanticIdsToFetch.push(...getEquivalentIriSemanticIds(semanticId));
-            }
-        });
+        // semanticIdsToFetch.forEach((semanticId: string) => {
+        //     if (
+        //         semanticId.startsWith('0173-1#') ||
+        //         semanticId.startsWith('0173/1///') ||
+        //         semanticId.startsWith('https://api.eclass-cdp.com/0173-1')
+        //     ) {
+        //         semanticIdsToFetch.push(...getEquivalentEclassSemanticIds(semanticId));
+        //     } else if (semanticId.startsWith('http://') || semanticId.startsWith('https://')) {
+        //         semanticIdsToFetch.push(...getEquivalentIriSemanticIds(semanticId));
+        //     }
+        // });
 
-        const semanticIdsUniqueToFetch = semanticIdsToFetch.filter(
-            (value: string, index: number, self: string) => self.indexOf(value) === index
-        );
+        const combinedSemanticIdsToFetch = [...semanticIdsToFetch, ...supplementalSemanticIdsToFetch];
+
+        const semanticIdsUniqueToFetch = Array.from(new Set(combinedSemanticIdsToFetch));
 
         const cdPromises = semanticIdsUniqueToFetch.map(async (semanticId: string) => {
             return await fetchCdById(semanticId);
