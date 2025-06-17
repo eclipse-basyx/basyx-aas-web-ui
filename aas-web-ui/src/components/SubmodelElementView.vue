@@ -153,10 +153,10 @@
                         </v-list-item>
                     </v-expansion-panel-title>
                     <v-divider v-if="cdspanel === index"></v-divider>
-                    <v-expansion-panel-text class="">
+                    <v-expansion-panel-text class="pa-0 ma-0">
                         <ConceptDescription
                             :concept-description-object="conceptDescription"
-                            class="mt-4"></ConceptDescription>
+                            class="mt-2"></ConceptDescription>
                     </v-expansion-panel-text>
                 </v-expansion-panel>
             </v-expansion-panels>
@@ -345,9 +345,8 @@
     }
 </script>
 
-<style lang="css" scoped>
-    .v-expansion-panel--active,
-    .v-expansion-panel--active + .v-expansion-panel {
-        margin-top: 1px !important;
+<style scoped>
+    :deep(.v-expansion-panel-text__wrapper) {
+        padding: 0 !important;
     }
 </style>
