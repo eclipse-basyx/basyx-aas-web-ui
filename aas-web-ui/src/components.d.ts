@@ -60,6 +60,7 @@ declare module 'vue' {
     InputField: typeof import('./components/Widgets/InputField.vue')['default']
     InvalidElement: typeof import('./components/SubmodelElements/InvalidElement.vue')['default']
     JSONArrayProperty: typeof import('./components/Plugins/SubmodelElements/JSONArrayProperty.vue')['default']
+    JSONPreview: typeof import('./components/Plugins/JSONPreview.vue')['default']
     Lamp: typeof import('./components/Widgets/Lamp.vue')['default']
     LastSync: typeof import('./components/UIComponents/LastSync.vue')['default']
     LineChart: typeof import('./components/Widgets/LineChart.vue')['default']

@@ -25,7 +25,13 @@ export function useUrlUtils() {
         const disableMessage = false;
         const response = await getRequest(url, context, disableMessage);
         if (response.success) {
-            return URL.createObjectURL(response.data as Blob);
+            if (response.data instanceof Blob) {
+                return URL.createObjectURL(response.data);
+            } else {
+                const jsonString = JSON.stringify(response.data);
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                return URL.createObjectURL(blob);
+            }
         }
 
         return failResponse;
