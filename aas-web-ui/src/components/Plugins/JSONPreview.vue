@@ -2,24 +2,24 @@
     <v-container fluid class="pa-0">
         <v-card>
             <v-card-title class="d-flex align-center">
-                <v-icon class="mr-2">mdi-xml</v-icon>
-                XML Preview
+                <v-icon class="mr-2">mdi-code-json</v-icon>
+                JSON Preview
                 <v-spacer></v-spacer>
                 <!-- Search input -->
                 <v-text-field
-                    v-if="xmlContent"
+                    v-if="jsonContent"
                     v-model="searchQuery"
-                    placeholder="Search in XML"
+                    placeholder="Search in JSON"
                     density="compact"
                     hide-details
                     class="mx-2"
                     style="max-width: 200px"
                     prepend-inner-icon="mdi-magnify"
                     clearable
-                    @update:model-value="searchInXml"></v-text-field>
+                    @update:model-value="searchInJson"></v-text-field>
                 <!-- Line wrap toggle -->
                 <v-btn
-                    v-if="xmlContent"
+                    v-if="jsonContent"
                     icon
                     variant="text"
                     :title="wordWrapEnabled ? 'Disable word wrap' : 'Enable word wrap'"
@@ -28,7 +28,7 @@
                 </v-btn>
                 <!-- Line numbers toggle -->
                 <v-btn
-                    v-if="xmlContent"
+                    v-if="jsonContent"
                     icon
                     variant="text"
                     :title="showLineNumbers ? 'Hide line numbers' : 'Show line numbers'"
@@ -36,11 +36,11 @@
                     <v-icon>mdi-format-list-numbered</v-icon>
                 </v-btn>
                 <!-- Download button -->
-                <v-btn v-if="xmlContent" icon variant="text" title="Download XML" @click="downloadXml">
+                <v-btn v-if="jsonContent" icon variant="text" title="Download JSON" @click="downloadJson">
                     <v-icon>mdi-download</v-icon>
                 </v-btn>
                 <!-- Copy button -->
-                <v-btn v-if="xmlContent" icon variant="text" title="Copy to clipboard" @click="copyToClipboard">
+                <v-btn v-if="jsonContent" icon variant="text" title="Copy to clipboard" @click="copyToClipboard">
                     <v-icon>{{ hasCopied ? 'mdi-check' : 'mdi-content-copy' }}</v-icon>
                 </v-btn>
             </v-card-title>
@@ -75,8 +75,8 @@
                     <v-icon color="error" size="large" class="mb-2">mdi-alert-circle</v-icon>
                     <div>{{ error }}</div>
                 </div>
-                <div v-else-if="!xmlContent" class="no-content pa-4 text-center">No XML content available</div>
-                <div v-else class="xml-container" :class="{ 'word-wrap-enabled': wordWrapEnabled }">
+                <div v-else-if="!jsonContent" class="no-content pa-4 text-center">No JSON content available</div>
+                <div v-else class="json-container" :class="{ 'word-wrap-enabled': wordWrapEnabled }">
                     <!-- Line numbers column -->
                     <div v-if="showLineNumbers" ref="lineNumbersContainer" class="line-numbers">
                         <div
@@ -86,13 +86,13 @@
                             {{ n }}
                         </div>
                     </div>
-                    <!-- XML content with highlighting -->
+                    <!-- JSON content with highlighting -->
                     <pre
-                        ref="xmlContainer"
-                        class="xml-content"
+                        ref="jsonContainer"
+                        class="json-content"
                         :class="{ 'with-line-numbers': showLineNumbers }"
                         @scroll="syncScroll">
-                        <code ref="codeElement" class="language-xml" v-html="formattedXml"></code>
+                        <code ref="codeElement" class="language-json" v-html="formattedJson"></code>
                     </pre>
                 </div>
             </v-card-text>
@@ -104,7 +104,7 @@
     /* eslint-disable simple-import-sort/imports */
     import Prism from 'prismjs';
     import 'prismjs/themes/prism.css';
-    import 'prismjs/components/prism-markup';
+    import 'prismjs/components/prism-json';
     /* eslint-enable simple-import-sort/imports */
     import { computed, nextTick, onMounted, ref, watch } from 'vue';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
@@ -116,12 +116,12 @@
         },
     });
 
-    const xmlContent = ref<string>('');
-    const formattedXml = ref<string>('');
+    const jsonContent = ref<string>('');
+    const formattedJson = ref<string>('');
     const loading = ref<boolean>(false);
     const error = ref<string | null>(null);
     const hasCopied = ref<boolean>(false);
-    const xmlContainer = ref<HTMLElement | null>(null);
+    const jsonContainer = ref<HTMLElement | null>(null);
     const codeElement = ref<HTMLElement | null>(null);
     const wordWrapEnabled = ref<boolean>(true);
     const showLineNumbers = ref<boolean>(true);
@@ -133,8 +133,8 @@
 
     // Computed properties
     const lineCount = computed(() => {
-        if (!formattedXml.value) return 0;
-        return formattedXml.value.split('\n').length;
+        if (!formattedJson.value) return 0;
+        return formattedJson.value.split('\n').length;
     });
 
     // Composables
@@ -156,13 +156,13 @@
         }
     );
 
-    // Apply highlighting whenever xmlContent changes
-    watch(xmlContent, () => {
-        highlightXml();
+    // Apply highlighting whenever jsonContent changes
+    watch(jsonContent, () => {
+        highlightJson();
     });
 
-    // Reset search when XML content changes
-    watch(xmlContent, () => {
+    // Reset search when JSON content changes
+    watch(jsonContent, () => {
         searchQuery.value = '';
         searchResults.value = [];
         highlightedLineNumbers.value = [];
@@ -174,7 +174,7 @@
             searchResults.value = [];
             highlightedLineNumbers.value = [];
         } else {
-            searchInXml();
+            searchInJson();
         }
     });
 
@@ -182,14 +182,14 @@
         wordWrapEnabled.value = !wordWrapEnabled.value;
     }
 
-    function searchInXml(): void {
+    function searchInJson(): void {
         searchResults.value = [];
         highlightedLineNumbers.value = [];
         currentSearchIndex.value = 0;
 
-        if (!searchQuery.value || !xmlContent.value) return;
+        if (!searchQuery.value || !jsonContent.value) return;
 
-        const lines = xmlContent.value.split('\n');
+        const lines = jsonContent.value.split('\n');
         const query = searchQuery.value.toLowerCase();
 
         lines.forEach((line: string, index: number) => {
@@ -222,104 +222,84 @@
 
     function scrollToLine(lineNumber: number): void {
         nextTick(() => {
-            if (!xmlContainer.value) return;
+            if (!jsonContainer.value) return;
 
             const lineHeight = 21;
-            const containerTop = xmlContainer.value.getBoundingClientRect().top;
+            const containerTop = jsonContainer.value.getBoundingClientRect().top;
             const scrollTo = (lineNumber - 1) * lineHeight;
 
-            xmlContainer.value.scrollTop = scrollTo - containerTop - 100;
+            jsonContainer.value.scrollTop = scrollTo - containerTop - 100;
         });
     }
 
-    function formatXML(xml: string): string {
+    function formatJSON(json: string): string {
         try {
-            if (!xml || typeof xml !== 'string') {
+            // Check if input is valid
+            if (!json || typeof json !== 'string') {
                 return '';
             }
 
-            const trimmedXml = xml.trim();
-
-            if (!trimmedXml) {
+            const trimmedJson = json.trim();
+            if (!trimmedJson) {
                 return '';
             }
 
-            const hasXmlDeclaration = trimmedXml.startsWith('<?xml');
-
-            let formatted = '';
-            let indent = '';
-
-            const xmlNodes = trimmedXml.split(/>\s*</);
-            xmlNodes.forEach(function (node, index) {
-                if (index === 0 && node.includes('?xml') && !hasXmlDeclaration) {
-                    return;
-                }
-
-                if (node.match(/^\/\w/)) {
-                    indent = indent.substring(2);
-                }
-
-                if (index === 0) {
-                    formatted += '<' + node + '>\n';
-                } else {
-                    formatted += indent + '<' + node + '>\n';
-                }
-
-                if (node.match(/^<?\w[^>]*[^/]$/) && !node.startsWith('?')) {
-                    indent += '  ';
-                }
-            });
-
-            return formatted.substring(1, formatted.length - 2);
+            try {
+                const obj = JSON.parse(trimmedJson);
+                return JSON.stringify(obj, null, 2);
+            } catch (parseError) {
+                console.warn('JSON parsing warning:', parseError);
+                return trimmedJson;
+            }
         } catch (e) {
-            console.error('Error formatting XML:', e);
-            return xml;
+            console.error('Error formatting JSON:', e);
+            return json;
         }
     }
 
-    function highlightXml(): void {
-        if (!xmlContent.value) {
-            formattedXml.value = '';
+    function highlightJson(): void {
+        if (!jsonContent.value) {
+            formattedJson.value = '';
             return;
         }
 
         try {
-            const formatted = formatXML(xmlContent.value);
+            const formatted = formatJSON(jsonContent.value);
 
             // Apply syntax highlighting using Prism
             if (Prism && Prism.highlight) {
-                formattedXml.value = Prism.highlight(formatted, Prism.languages.markup || {}, 'markup').trimStart();
+                formattedJson.value = Prism.highlight(formatted, Prism.languages.json || {}, 'json');
             } else {
-                formattedXml.value = formatted;
+                formattedJson.value = formatted;
                 console.warn('Prism highlighting not available');
             }
         } catch (e) {
-            console.error('Error highlighting XML:', e);
-            formattedXml.value = xmlContent.value || '';
+            console.error('Error highlighting JSON:', e);
+            formattedJson.value = jsonContent.value || '';
         }
     }
 
     async function copyToClipboard(): Promise<void> {
-        if (xmlContent.value) {
+        if (jsonContent.value) {
             try {
-                await navigator.clipboard.writeText(xmlContent.value);
+                await navigator.clipboard.writeText(jsonContent.value);
                 hasCopied.value = true;
                 setTimeout(() => {
                     hasCopied.value = false;
                 }, 2000);
             } catch (err) {
-                console.error('Failed to copy XML to clipboard', err);
+                console.error('Failed to copy JSON to clipboard', err);
             }
         }
     }
 
-    function downloadXml(): void {
-        if (xmlContent.value) {
-            const blob = new Blob([xmlContent.value], { type: 'application/xml' });
+    function downloadJson(): void {
+        if (jsonContent.value) {
+            const blob = new Blob([jsonContent.value], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${props.submodelElementData.idShort || 'download'}.xml`;
+            a.download = `${props.submodelElementData.idShort || 'download'}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -329,50 +309,48 @@
 
     async function initialize(): Promise<void> {
         if (!props.submodelElementData || !props.submodelElementData.path) {
-            xmlContent.value = '';
+            jsonContent.value = '';
             error.value = 'No file path provided';
             return;
         }
 
         loading.value = true;
         error.value = null;
-        xmlContent.value = '';
+        jsonContent.value = '';
 
         try {
             const fileBlob = await fetchAttachmentFile(props.submodelElementData.path);
 
             if (!fileBlob) {
-                error.value = 'Failed to load XML file';
+                error.value = 'Failed to load JSON file';
                 return;
             }
 
-            // Convert blob to text
             if (fileBlob instanceof Blob) {
-                // Read the blob as text
                 const text = await fileBlob.text();
-                xmlContent.value = text;
+                jsonContent.value = text;
             } else {
-                console.error('Expected a Blob, but received:', fileBlob);
+                jsonContent.value = JSON.stringify(fileBlob, null, 2);
             }
 
-            highlightXml();
+            highlightJson();
         } catch (e) {
-            console.error('Error loading XML file:', e);
-            error.value = `Error loading XML file: ${e instanceof Error ? e.message : 'Unknown error'}`;
+            console.error('Error loading JSON file:', e);
+            error.value = `Error loading JSON file: ${e instanceof Error ? e.message : 'Unknown error'}`;
         } finally {
             loading.value = false;
         }
     }
 
     function syncScroll(): void {
-        if (showLineNumbers.value && lineNumbersContainer.value && xmlContainer.value) {
-            lineNumbersContainer.value.scrollTop = xmlContainer.value.scrollTop;
+        if (showLineNumbers.value && lineNumbersContainer.value && jsonContainer.value) {
+            lineNumbersContainer.value.scrollTop = jsonContainer.value.scrollTop;
         }
     }
 </script>
 
 <style scoped>
-    .xml-container {
+    .json-container {
         max-height: 600px;
         height: 600px;
         border-radius: 4px;
@@ -400,7 +378,7 @@
         box-sizing: border-box;
     }
 
-    .line-numbers > div {
+    .line-numbers div {
         height: 21px;
         line-height: 21px;
         padding: 0;
@@ -420,7 +398,7 @@
         line-height: 21px;
     }
 
-    .xml-content {
+    .json-content {
         margin: 0;
         padding: 0px 16px 0px 16px;
         white-space: pre;
@@ -434,12 +412,12 @@
         box-sizing: border-box;
     }
 
-    .word-wrap-enabled .xml-content {
+    .word-wrap-enabled .json-content {
         white-space: pre-wrap;
         word-wrap: break-word;
     }
 
-    .xml-content code {
+    .json-content code {
         display: block;
         height: 100%;
         box-sizing: border-box;
@@ -452,23 +430,27 @@
         color: #f44336;
     }
 
-    :deep(.token.tag) {
+    :deep(.token.punctuation) {
+        color: #999;
+    }
+
+    :deep(.token.property) {
         color: #905;
     }
 
-    :deep(.token.attr-name) {
+    :deep(.token.string) {
         color: #690;
     }
 
-    :deep(.token.attr-value) {
+    :deep(.token.number) {
         color: #07a;
     }
 
-    :deep(.token.string) {
+    :deep(.token.boolean) {
         color: #07a;
     }
 
-    :deep(.token.comment) {
+    :deep(.token.null) {
         color: #999;
     }
 </style>

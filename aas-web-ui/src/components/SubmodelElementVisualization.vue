@@ -30,6 +30,9 @@
                 <XMLPreview
                     v-if="submodelElementData?.contentType && submodelElementData.contentType.includes('xml')"
                     :submodel-element-data="submodelElementData"></XMLPreview>
+                <JSONPreview
+                    v-if="submodelElementData?.contentType && submodelElementData.contentType.includes('json')"
+                    :submodel-element-data="submodelElementData"></JSONPreview>
             </template>
             <!-- Plugin Visualizations -->
             <template v-else>
