@@ -1,165 +1,198 @@
 <template>
     <v-container fluid class="pa-0">
         <v-card class="pa-3">
-            <apexchart ref="areachart" type="area" height="350" :options="chartOptions" :series="chartData"></apexchart>
+            <div class="chart-container">
+                <div ref="jsonChart"></div>
+            </div>
         </v-card>
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent, ref } from 'vue';
+<script lang="ts" setup>
+    import ApexCharts from 'apexcharts';
+    import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
     import { useTheme } from 'vuetify';
-    import { useAASStore } from '@/store/AASDataStore';
 
-    export default defineComponent({
+    interface ChartSeries {
+        name: string;
+        data: any[];
+    }
+
+    // Options
+    defineOptions({
         name: 'JSONArrayProperty',
         semanticId: 'http://iese.fraunhofer.de/prop_jsonarray',
-        props: ['submodelElementData'],
+    });
 
-        setup() {
-            const theme = useTheme();
-            const aasStore = useAASStore();
+    const props = defineProps<{
+        submodelElementData: any;
+    }>();
 
-            const chartData = ref([
-                {
-                    name: 'series1',
-                    data: [],
-                },
-            ]);
+    const theme = useTheme();
 
-            const chartOptions = ref({
+    const jsonChart = ref<HTMLElement | null>(null);
+    let chartInstance: ApexCharts | null = null;
+
+    const currentTheme = computed(() => {
+        return theme.global.current.value.dark;
+    });
+
+    onMounted(async () => {
+        await nextTick(); // Ensure the DOM is updated
+        if (jsonChart.value) {
+            renderChart();
+        } else {
+            console.error('JsonChart element is not available.');
+        }
+    });
+
+    onUnmounted(() => {
+        if (chartInstance) {
+            chartInstance.destroy();
+            chartInstance = null;
+        }
+    });
+
+    watch(
+        () => props.submodelElementData,
+        () => {
+            if (chartInstance) {
+                updateChartData();
+            } else {
+                renderChart();
+            }
+        },
+        { deep: true }
+    );
+
+    // Watch for theme changes and update the chart
+    watch(
+        () => currentTheme.value,
+        (newVal) => {
+            if (chartInstance) {
+                chartInstance.updateOptions(
+                    {
+                        markers: {
+                            strokeColors: newVal ? '#1E1E1E' : '#FFFFFF',
+                        },
+                        theme: {
+                            mode: newVal ? 'dark' : 'light',
+                        },
+                        title: {
+                            style: {
+                                color: newVal ? '#FFFFFF' : '#1E1E1E',
+                            },
+                        },
+                    },
+                    false,
+                    true
+                );
+            }
+        }
+    );
+
+    function renderChart(): void {
+        if (Object.keys(props.submodelElementData).length === 0) {
+            return;
+        }
+
+        if (jsonChart.value) {
+            const series = prepareSeries();
+
+            // Create chartOptions inside renderChart to use the latest data
+            const chartOptions = {
                 chart: {
-                    id: 'chartMain',
-                    type: 'area',
-                    height: 350,
-                    background: '#ffffff00',
-                },
-                // colors: ['#1e8567'],
-                dataLabels: {
-                    enabled: false,
+                    id: 'line-chart',
+                    height: 320,
+                    type: 'line',
+                    background: '#00000000',
+                    zoom: {
+                        enabled: false,
+                    },
                 },
                 stroke: {
+                    width: 3,
                     curve: 'smooth',
                 },
                 markers: {
-                    size: 0,
-                },
-                xaxis: {
-                    type: 'numeric',
-                    decimalsInFloat: 0,
-                },
-                yaxis: {
-                    decimalsInFloat: 2,
+                    size: 3,
+                    strokeColors: currentTheme.value ? '#1E1E1E' : '#FFFFFF',
+                    strokeWidth: 2,
+                    hover: {
+                        size: undefined,
+                        sizeOffset: 2,
+                    },
                 },
                 theme: {
-                    mode: 'dark',
+                    mode: currentTheme.value ? 'dark' : 'light',
                 },
-            });
-
-            return {
-                theme, // Theme Object
-                aasStore, // AASStore Object
-                chartData,
-                chartOptions,
+                series: series,
             };
-        },
 
-        data() {
-            return {};
-        },
+            // Create and render the chart
+            chartInstance = new ApexCharts(jsonChart.value, chartOptions);
+            chartInstance.render();
+        }
+    }
 
-        computed: {
-            // get selected AAS from Store
-            SelectedAAS() {
-                return this.aasStore.getSelectedAAS;
-            },
+    function prepareSeries(): ChartSeries[] {
+        if (!props.submodelElementData || !props.submodelElementData.value) {
+            return [];
+        }
 
-            // Get the selected Treeview Node (SubmodelElement) from the store
-            SelectedNode() {
-                return this.aasStore.getSelectedNode;
-            },
+        let chartData;
+        try {
+            chartData = JSON.parse(props.submodelElementData.value); // parse the value of the SubmodelElement
+        } catch (error) {
+            console.error('Failed to parse JSON data:', error);
+            return [];
+        }
 
-            // Check if the current Theme is dark
-            isDark() {
-                return this.theme.global.current.value.dark;
-            },
-        },
+        const seriesName = props.submodelElementData.idShort;
+        let series: ChartSeries[] = [];
 
-        watch: {
-            // watch for changes in the vuetify theme and update the chart options
-            isDark() {
-                this.applyTheme();
-            },
+        try {
+            // check if the value is an array or an object
+            if (Array.isArray(chartData)) {
+                // array in form of [y1, y2, y3, ..., yn ]
+                series = [
+                    {
+                        name: seriesName,
+                        data: chartData,
+                    },
+                ];
+            } else if (typeof chartData === 'object' && chartData !== null) {
+                // object in form of { title1: [y11, y12, y13, ..., y1n], title2: [y21, y22, y23, ..., y2n] }
+                series = Object.keys(chartData).map((key) => {
+                    if (!Array.isArray(chartData[key])) {
+                        throw new Error(`Expected array data for key "${key}"`);
+                    }
+                    return {
+                        name: key,
+                        data: chartData[key],
+                    };
+                });
+            } else {
+                throw new Error('Invalid data format: expected array or object with array values');
+            }
+        } catch (error) {
+            console.error('Failed to process chart data:', error);
+            return [
+                {
+                    name: seriesName || 'Error',
+                    data: [],
+                },
+            ];
+        }
 
-            // watch for changes in the selected node and update the chart data
-            submodelElementData() {
-                // console.log('submodelElementData changed: ', this.submodelElementData);
-                this.initChart();
-            },
-        },
+        return series;
+    }
 
-        mounted() {
-            this.$nextTick(() => {
-                const chart = (this.$refs.areachart as any).chart;
-                if (chart && this.submodelElementData && Object.keys(this.submodelElementData).length > 0) {
-                    // console.log('Chart has rendered')
-                    // apply the theme on component mount
-                    this.applyTheme();
-                    // append the series to the chart
-                    this.initChart();
-                }
-            });
-        },
-
-        methods: {
-            initChart() {
-                if (Object.keys(this.submodelElementData).length === 0) {
-                    return;
-                }
-
-                let chartData = JSON.parse(this.submodelElementData.value); // parse the value of the SubmodelElement
-                let seriesName = this.submodelElementData.idShort; // get the idShort of the SubmodelElement
-                // check if the value is an array or an object
-                if (Array.isArray(chartData)) {
-                    // array in form of [y1, y2, y3, ..., yn ]
-                    // set/update the chart data
-                    (this.$refs.areachart as any).updateSeries([
-                        {
-                            name: seriesName,
-                            data: chartData,
-                        },
-                    ]);
-                } else if (typeof chartData === 'object') {
-                    // object in form of { title1: [y11, y12, y13, ..., y1n], title2: [y21, y22, y23, ..., y2n] }
-                    // set/update the chart data
-                    (this.$refs.areachart as any).updateSeries(
-                        Object.keys(chartData).map((key) => {
-                            return {
-                                name: key,
-                                data: chartData[key],
-                            };
-                        })
-                    );
-                }
-            },
-
-            // Function to apply the selected theme to the chart
-            applyTheme() {
-                if (this.isDark) {
-                    (this.$refs.areachart as any).updateOptions({
-                        theme: {
-                            mode: 'dark',
-                        },
-                    });
-                } else {
-                    (this.$refs.areachart as any).updateOptions({
-                        theme: {
-                            mode: 'light',
-                        },
-                    });
-                }
-            },
-        },
-    });
+    function updateChartData(): void {
+        if (chartInstance) {
+            const series = prepareSeries();
+            // Update series data
+            chartInstance.updateSeries(series, true);
+        }
+    }
 </script>
