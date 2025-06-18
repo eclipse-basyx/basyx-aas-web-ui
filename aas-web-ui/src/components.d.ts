@@ -114,5 +114,6 @@ declare module 'vue' {
     User: typeof import('./components/AppNavigation/User.vue')['default']
     VisualizationHeader: typeof import('./components/UIComponents/VisualizationHeader.vue')['default']
     VTreeview: typeof import('./components/UIComponents/VTreeview.vue')['default']
+    XMLPreview: typeof import('./components/Plugins/XMLPreview.vue')['default']
   }
 }
