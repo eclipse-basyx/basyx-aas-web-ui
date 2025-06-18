@@ -411,6 +411,31 @@ export function useSMRepositoryClient() {
         return response.success;
     }
 
+    async function fetchAttachmentFile(path: string): Promise<Blob | undefined> {
+        const failResponse = undefined;
+
+        let smRepoUrl = submodelRepoUrl.value.trim();
+        if (smRepoUrl === '') return failResponse;
+        if (smRepoUrl.endsWith('/')) smRepoUrl = stripLastCharacter(smRepoUrl);
+        if (!smRepoUrl.endsWith(endpointPath)) smRepoUrl += endpointPath;
+
+        const context = 'fetching file attachment';
+        const disableMessage = true;
+        const requestPath = path + '/attachment';
+
+        try {
+            const response = await getRequest(requestPath, context, disableMessage);
+            if (response.success && response.data) {
+                return response.data;
+            }
+        } catch (e) {
+            console.warn(e);
+            return failResponse;
+        }
+
+        return failResponse;
+    }
+
     return {
         endpointPath,
         fetchSmList,
@@ -427,5 +452,6 @@ export function useSMRepositoryClient() {
         postSubmodelElement,
         putSubmodelElement,
         putAttachmentFile,
+        fetchAttachmentFile,
     };
 }

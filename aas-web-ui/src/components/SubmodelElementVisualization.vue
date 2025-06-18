@@ -27,6 +27,9 @@
                             submodelElementData.contentType.includes('gltf'))
                     "
                     :submodel-element-data="submodelElementData"></CADPreview>
+                <XMLPreview
+                    v-if="submodelElementData?.contentType && submodelElementData.contentType.includes('xml')"
+                    :submodel-element-data="submodelElementData"></XMLPreview>
             </template>
             <!-- Plugin Visualizations -->
             <template v-else>
