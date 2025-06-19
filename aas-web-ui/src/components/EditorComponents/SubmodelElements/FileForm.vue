@@ -259,10 +259,10 @@
 
         fileObject.value.value = filePath.value;
 
-        if (contentType.value !== null) {
-            fileObject.value.contentType = contentType.value;
-        } else if (fileElement.value !== undefined) {
+        if (fileElement.value !== undefined) {
             fileObject.value.contentType = fileElement.value.type;
+        } else if (contentType.value !== null) {
+            fileObject.value.contentType = contentType.value;
         } else {
             errors.value.set('contentType', 'File Element Content Type is required');
             return;
