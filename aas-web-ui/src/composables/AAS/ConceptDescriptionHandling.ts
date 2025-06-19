@@ -167,9 +167,11 @@ export function useConceptDescriptionHandling() {
 
         let conceptDescriptions = await Promise.all(cdPromises);
 
+        // Filter empty objects and errors
         conceptDescriptions = conceptDescriptions.filter(
-            (conceptDescription: any) => Object.keys(conceptDescription).length !== 0
-        ); // Filter empty Objects
+            (conceptDescription: any) =>
+                conceptDescription && Object.keys(conceptDescription).length !== 0 && !Array.isArray(conceptDescription)
+        );
 
         return conceptDescriptions;
     }
