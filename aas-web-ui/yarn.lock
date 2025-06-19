@@ -4528,10 +4528,10 @@ vue@^3.2.25, vue@^3.5.17:
     "@vue/server-renderer" "3.5.17"
     "@vue/shared" "3.5.17"
 
-vuetify@^3.8.9:
-  version "3.8.9"
-  resolved "https://registry.yarnpkg.com/vuetify/-/vuetify-3.8.9.tgz#cc31bd2bf8695ac4788316c449ff67fac68a1f35"
-  integrity sha512-X9kCxeqf7w5sca2Mfn4NCVsDDimi81jxKyqsZHjW0XG/rTdtwRFKttxOcv0Mmi+67ulPjDZywA7pBFK0rxoafA==
+vuetify@^3.8.10:
+  version "3.8.10"
+  resolved "https://registry.yarnpkg.com/vuetify/-/vuetify-3.8.10.tgz#73a33f900a9ad483e6c73b9b5a05851988e3e513"
+  integrity sha512-3BETdCGh3eB1cV5+dA+L5CYi62Q/Jb09H512GImeYzMHd2R+LntO0F5pNCqVB4KoxymQ4Jej3Q0J6AYmf0KD8w==
 
 w3c-xmlserializer@^5.0.0:
   version "5.0.0"
