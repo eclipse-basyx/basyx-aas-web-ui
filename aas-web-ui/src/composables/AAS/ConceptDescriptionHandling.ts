@@ -173,8 +173,6 @@ export function useConceptDescriptionHandling() {
                 conceptDescription && Object.keys(conceptDescription).length !== 0 && !Array.isArray(conceptDescription)
         );
 
-        console.log('fetched conceptDescriptions', conceptDescriptions);
-
         return conceptDescriptions;
     }
 
