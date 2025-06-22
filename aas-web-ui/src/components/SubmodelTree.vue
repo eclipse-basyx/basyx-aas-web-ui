@@ -38,12 +38,18 @@
                         </span>
                     </template>
                     <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
-                        <v-spacer></v-spacer>
-                        <v-tooltip
-                            v-if="selectedAAS && Object.keys(selectedAAS).length > 0"
-                            open-delay="600"
-                            location="bottom"
-                            :disabled="isMobile">
+                        <v-col class="pl-2 pr-0">
+                            <v-text-field
+                                variant="outlined"
+                                density="compact"
+                                hide-details
+                                label="Search for SM/SME..."
+                                clearable
+                                :placeholder="submodelTree.length.toString() + ' Shells'"
+                                persistent-placeholder
+                                @update:model-value="debouncedFilterSubmodelTree"></v-text-field>
+                        </v-col>
+                        <v-tooltip open-delay="600" location="bottom" :disabled="isMobile">
                             <template #activator="{ props }">
                                 <v-btn
                                     icon="mdi-expand-all"
@@ -56,11 +62,7 @@
                             </template>
                             <span>Expand Submodel tree with selected element</span>
                         </v-tooltip>
-                        <v-tooltip
-                            v-if="selectedAAS && Object.keys(selectedAAS).length > 0"
-                            open-delay="600"
-                            location="bottom"
-                            :disabled="isMobile">
+                        <v-tooltip open-delay="600" location="bottom" :disabled="isMobile">
                             <template #activator="{ props }">
                                 <v-btn
                                     icon="mdi-collapse-all"
@@ -96,7 +98,6 @@
                         </v-menu>
                     </template>
                 </div>
-                <!-- TODO: Add Searchfield - https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/148 -->
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto; height: calc(100svh - 170px)">
@@ -117,7 +118,12 @@
                 <!-- Show the Submodel Tree -->
                 <template v-else>
                     <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
-                        <template v-if="submodelTree && Array.isArray(submodelTree) && submodelTree.length > 0">
+                        <template
+                            v-if="
+                                submodelTreeUnfiltered &&
+                                Array.isArray(submodelTreeUnfiltered) &&
+                                submodelTreeUnfiltered.length > 0
+                            ">
                             <!-- TODO: Evaluate and Replace with Vuetify Treeview Component when it gets fully released in Q1 2025 -->
                             <VTreeview
                                 v-for="item in submodelTree"
@@ -207,7 +213,8 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, onMounted, ref, watch } from 'vue';
+    import { chain, debounce, has, isEmpty, omit } from 'lodash';
+    import { computed, onMounted, Ref, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
@@ -221,7 +228,7 @@
 
     // Composables
     const { fetchAasSmListById } = useAASHandling();
-    const { nameToDisplay } = useReferableUtils();
+    const { nameToDisplay, descriptionToDisplay } = useReferableUtils();
 
     // Stores
     const navigationStore = useNavigationStore();
@@ -229,7 +236,9 @@
     const envStore = useEnvStore();
 
     // Data
-    const submodelTree = ref([] as Array<any>); // Treeview Data
+    const submodelTree = ref([] as Array<any>) as Ref<Array<any>>; // Submodel Treeview Data
+    const submodelTreeUnfiltered = ref([] as Array<any>) as Ref<Array<any>>; // Variable to store the unfiltere Submodel Treeview Data before filtering
+    const debouncedFilterSubmodelTree = debounce(filterSubmodelTree, 300); // Debounced function to filter the AAS List
     const treeLoading = ref(false); // Variable to store if the AAS List is loading
     const selectSMETypeToAddDialog = ref(false); // Variable to store if the Add SubmodelElement Dialog should be shown
     const propertyDialog = ref(false); // Variable to store if the PropertyForm Dialog should be shown
@@ -313,7 +322,9 @@
             const submodels: Array<any> = await fetchAasSmListById(selectedAAS.value.id);
             const sortedSubmodels = submodels.sort((a, b) => a.id.localeCompare(b.id));
 
-            submodelTree.value = sortedSubmodels.map((submodel: any) => {
+            let processedList = [] as Array<any>;
+
+            processedList = sortedSubmodels.map((submodel: any) => {
                 // Assumes submodel.path is already set for top-level nodes
                 if (Array.isArray(submodel.submodelElements) && submodel.submodelElements.length) {
                     submodel.children = prepareForTree(submodel.submodelElements, submodel);
@@ -322,9 +333,51 @@
                 }
                 return submodel;
             });
+
+            // Precompute lowercase search fields
+            processedList = deepMap(processedList, (item: any) => ({
+                ...item,
+                idLower: item?.id?.toLowerCase() || '',
+                idShortLower: item?.idShort?.toLowerCase() || '',
+                nameLower: nameToDisplay(item).toLowerCase(),
+                descLower: descriptionToDisplay(item).toLowerCase(),
+            }));
+
+            submodelTree.value = processedList;
+            submodelTreeUnfiltered.value = processedList;
         } finally {
             treeLoading.value = false;
         }
+    }
+
+    function deepMap(array: Array<any>, fn: (arg0: any) => any): Array<any> {
+        return array.map((item: any) => {
+            if (
+                item.modelType === 'Submodel' &&
+                item.submodelElements &&
+                Array.isArray(item.submodelElements) &&
+                item.submodelElements.length > 0
+            ) {
+                item.submodelElements = deepMap(item.submodelElements, fn); // Recursively map SM Elements
+            } else if (
+                ['SubmodelElementCollection', 'SubmodelElementList'].includes(item.modelType) &&
+                item.value &&
+                Array.isArray(item.value) &&
+                item.value.length > 0
+            ) {
+                item.value = deepMap(item.value, fn); // Recursively map SMC/SML elements
+            } else if (
+                item.modelType == 'Entity' &&
+                item.statements &&
+                Array.isArray(item.statements) &&
+                item.statements.length > 0
+            ) {
+                item.statements = deepMap(item.statements, fn); // Recursively map entity statements
+            }
+            return Array.isArray(item)
+                ? deepMap(item, fn) // Recursively map nested arrays
+                : fn(item);
+        });
     }
 
     // Prepare tree structure recursively
@@ -380,15 +433,19 @@
         submodelElements.forEach((sme: any) => {
             sme.showChildren = shouldExpandNode(sme.path);
 
-            if (sme.modelType === 'Submodel' && Array.isArray(sme.submodelElements) && sme.submodelElements.length) {
+            if (
+                sme.modelType === 'Submodel' &&
+                Array.isArray(sme.submodelElements) &&
+                sme.submodelElements.length > 0
+            ) {
                 expandTree(sme.submodelElements);
             } else if (
                 ['SubmodelElementCollection', 'SubmodelElementList'].includes(sme.modelType) &&
                 Array.isArray(sme.value) &&
-                sme.value.length
+                sme.value.length > 0
             ) {
                 expandTree(sme.value);
-            } else if (sme.modelType === 'Entity' && Array.isArray(sme.statements) && sme.statements.length) {
+            } else if (sme.modelType === 'Entity' && Array.isArray(sme.statements) && sme.statements.length > 0) {
                 expandTree(sme.statements);
             }
         });
@@ -419,9 +476,9 @@
     function shouldExpandNode(nodePath: string): boolean {
         return (
             selectedNode.value &&
+            Object.keys(selectedNode.value).length > 0 &&
             !isEmptyString(selectedNode.value.path) &&
-            selectedNode.value.path.startsWith(nodePath) &&
-            selectedNode.value.path !== nodePath
+            selectedNode.value.path.startsWith(nodePath)
         );
     }
 
@@ -526,6 +583,69 @@
                 console.error(`Specified invalid SubmodelElement Type "${smeType}"`);
                 break;
         }
+    }
+
+    function filterSubmodelTree(value: string): void {
+        if (!value || value.trim() === '') {
+            submodelTree.value = submodelTreeUnfiltered.value;
+        } else {
+            const search = value.toLowerCase();
+            submodelTree.value = deepFilter(
+                submodelTreeUnfiltered.value,
+                (item: any) =>
+                    item.idLower.includes(search) ||
+                    item.idShortLower.includes(search) ||
+                    item.nameLower.includes(search) ||
+                    item.descLower.includes(search)
+            );
+        }
+    }
+
+    function deepFilter(array: Array<any>, predicate: { (item: any): any; (arg0: any): any }): Array<any> {
+        return chain(array)
+            .map((item: any) => {
+                let childrenKey = '';
+                if (
+                    item.modelType === 'Submodel' &&
+                    item.submodelElements &&
+                    Array.isArray(item.submodelElements) &&
+                    item.submodelElements.length > 0
+                ) {
+                    childrenKey = 'submodelElements';
+                } else if (
+                    ['SubmodelElementCollection', 'SubmodelElementList'].includes(item.modelType) &&
+                    item.value &&
+                    Array.isArray(item.value) &&
+                    item.value.length > 0
+                ) {
+                    childrenKey = 'value';
+                } else if (
+                    item.modelType == 'Entity' &&
+                    item.statements &&
+                    Array.isArray(item.statements) &&
+                    item.statements.length > 0
+                ) {
+                    childrenKey = 'statements';
+                }
+
+                if (childrenKey !== '') {
+                    if (has(item, childrenKey)) {
+                        const filteredChildren = deepFilter(item[childrenKey], predicate);
+                        // Return item with filtered children if any children match
+                        if (!isEmpty(filteredChildren)) return { ...item, [childrenKey]: filteredChildren };
+                    }
+                }
+
+                // If item matches predicate, return it (without children if none matched)
+                if (predicate(item)) {
+                    return omit(item, [childrenKey]);
+                }
+
+                // Otherwise, discard
+                return null;
+            })
+            .filter(Boolean)
+            .value();
     }
 </script>
 
