@@ -93,6 +93,7 @@
     import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
+    import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -114,6 +115,7 @@
 
     // Composables
     const { fetchSme, putSubmodelElement, postSubmodelElement } = useSMRepositoryClient();
+    const { fetchAndDispatchSme } = useSMEHandling();
 
     // Vue Router
     const router = useRouter();
@@ -633,21 +635,19 @@
             }
 
             const editedElementSelected = route.query.path === props.path;
-            const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
             // Update the property
             if (props.parentElement.modelType === 'Submodel') {
+                // Update Submodel
                 await putSubmodelElement(propertyObject.value, props.path);
 
                 if (editedElementSelected) {
-                    router.push({
-                        query: {
-                            aas: aasEndpoint,
-                            path: props.parentElement.path + '/submodel-elements/' + propertyObject.value.idShort,
-                        },
-                    });
+                    fetchAndDispatchSme(
+                        props.parentElement.path + '/submodel-elements/' + propertyObject.value.idShort
+                    );
                 }
             } else if (props.parentElement.modelType === 'SubmodelElementList') {
+                // Update SML
                 const index = props.parentElement.value.indexOf(
                     props.parentElement.value.find((el: any) => el.id === props.property.id)
                 );
@@ -655,21 +655,14 @@
                 await putSubmodelElement(propertyObject.value, path);
 
                 if (editedElementSelected) {
-                    router.push({
-                        query: { aas: aasEndpoint, path: path },
-                    });
+                    fetchAndDispatchSme(path);
                 }
             } else {
-                // Submodel Element Collection or Entity
+                // Update SMC resp. SME
                 await putSubmodelElement(propertyObject.value, props.property.path);
 
                 if (editedElementSelected) {
-                    router.push({
-                        query: {
-                            aas: aasEndpoint,
-                            path: props.parentElement.path + '.' + propertyObject.value.idShort,
-                        },
-                    });
+                    fetchAndDispatchSme(props.parentElement.path + '.' + propertyObject.value.idShort);
                 }
             }
         }
