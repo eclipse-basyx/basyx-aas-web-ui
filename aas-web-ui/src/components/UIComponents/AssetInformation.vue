@@ -2,10 +2,21 @@
     <v-container class="pa-0" fluid>
         <v-list lines="one" nav class="bg-detailsCard">
             <IdentificationElement
-                id="assetInformationIdentification"
                 :identification-object="assetInfo"
                 :v-chip-content="assetObject.assetKind"
                 :identification-title="'Global Asset ID'"></IdentificationElement>
+            <v-expansion-panels
+                v-if="assetInfo.id && assetInfo.id.trim() !== '' && assetInfo.id.match(new RegExp(urlRegex))">
+                <v-expansion-panel elevation="0" tile static color="detailsCard">
+                    <v-expansion-panel-title class="px-2">
+                        <span class="text-subtitle-2"> Global Asset ID QR-Code </span>
+                    </v-expansion-panel-title>
+                    <v-expansion-panel-text class="py-2 bg-detailsCard">
+                        <img v-if="assetInfo.id.includes('?.') && qrCodeUrl" :src="qrCodeUrl" contain class="qr" />
+                        <img v-else-if="qrCodeUrl" :src="qrCodeUrl" class="qr" />
+                    </v-expansion-panel-text>
+                </v-expansion-panel>
+            </v-expansion-panels>
             <v-divider
                 v-if="
                     assetObject.specificAssetIds &&
@@ -32,9 +43,11 @@
 </template>
 
 <script lang="ts" setup>
+    import QRCode from 'qrcode';
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
     import { useTechnicalData_v1_2Utils } from '@/composables/AAS/SubmodelTemplates/TechnicalData_v1_2Utils';
     import { useUrlUtils } from '@/composables/UrlUtils';
+    import { urlRegex } from '@/composables/UrlUtils';
     import { useAASStore } from '@/store/AASDataStore';
 
     // Composables
@@ -56,6 +69,7 @@
     const thumbnailSrc = ref('' as string);
     const thumbnailMaxHeight = ref(0 as number);
     const thumbnailCaption = ref('' as string);
+    const qrCodeUrl = ref('');
 
     // Computed
     const assetInfo = computed(() => {
@@ -92,6 +106,18 @@
             thumbnailCaption.value = '';
             return;
         }
+
+        try {
+            qrCodeUrl.value = await QRCode.toDataURL(assetInfo.value.id, {
+                errorCorrectionLevel: 'Q',
+                margin: 4,
+                scale: 4,
+                // type: 'png',
+            });
+        } catch (err) {
+            console.error(err);
+        }
+
         if (
             props.assetObject.defaultThumbnail &&
             Object.keys(props.assetObject.defaultThumbnail).length > 0 &&
@@ -149,3 +175,15 @@
         }
     }
 </script>
+
+<style lang="css" scoped>
+    .qr {
+        border: 4px solid black;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    :deep(.v-expansion-panel-text__wrapper) {
+        padding: 0 !important;
+    }
+</style>
