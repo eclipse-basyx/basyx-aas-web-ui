@@ -12,8 +12,11 @@
                         <span class="text-subtitle-2"> Global Asset ID QR-Code </span>
                     </v-expansion-panel-title>
                     <v-expansion-panel-text class="py-2 bg-detailsCard">
-                        <img v-if="assetInfo.id.includes('?.') && qrCodeUrl" :src="qrCodeUrl" contain class="qr" />
-                        <img v-else-if="qrCodeUrl" :src="qrCodeUrl" class="qr" />
+                        <div class="qr-container">
+                            <div class="qr-61406-1-container">
+                                <img v-if="qrCodeUrl" :src="qrCodeUrl" class="qr-61406-1" />
+                            </div>
+                        </div>
                     </v-expansion-panel-text>
                 </v-expansion-panel>
             </v-expansion-panels>
@@ -110,7 +113,7 @@
         try {
             qrCodeUrl.value = await QRCode.toDataURL(assetInfo.value.id, {
                 errorCorrectionLevel: 'Q',
-                margin: 4,
+                margin: 3,
                 scale: 4,
                 // type: 'png',
             });
@@ -177,12 +180,32 @@
 </script>
 
 <style lang="css" scoped>
-    .qr {
-        border: 4px solid black;
-        display: block;
+    .qr-container {
         margin-left: auto;
         margin-right: auto;
+        width: fit-content;
     }
+
+    .qr-61406-1-container {
+        background-color: black;
+        height: 100%;
+        width: 100%;
+    }
+
+    .qr-61406-1 {
+        height: 100%;
+        width: 100%;
+        display: block;
+        border: 4px solid black;
+        clip-path: polygon(
+            0 0,
+            /* top left */ 100% 0,
+            /* top right */ 100% calc(100% - 24px),
+            /* near bottom right */ calc(100% - 24px) 100%,
+            /* a bit left from bottom right */ 0 100% /* bottom left */
+        );
+    }
+
     :deep(.v-expansion-panel-text__wrapper) {
         padding: 0 !important;
     }
