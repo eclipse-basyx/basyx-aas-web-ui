@@ -13,7 +13,14 @@
                     </v-expansion-panel-title>
                     <v-expansion-panel-text class="py-2 bg-detailsCard">
                         <div class="qr-container">
-                            <div class="qr-61406-1-container">
+                            <div v-if="assetInfo.id.includes('?.') && qrCodeUrl" class="qr-61406-2-container">
+                                <div class="qr-61406-2">
+                                    <div class="qr-61406-1-container">
+                                        <img v-if="qrCodeUrl" :src="qrCodeUrl" class="qr-61406-1" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else class="qr-61406-1-container">
                                 <img v-if="qrCodeUrl" :src="qrCodeUrl" class="qr-61406-1" />
                             </div>
                         </div>
@@ -202,6 +209,24 @@
             /* top left */ 100% 0,
             /* top right */ 100% calc(100% - 24px),
             /* near bottom right */ calc(100% - 24px) 100%,
+            /* a bit left from bottom right */ 0 100% /* bottom left */
+        );
+    }
+
+    .qr-61406-2-container {
+        height: 100%;
+        width: 100%;
+    }
+
+    .qr-61406-2 {
+        height: 100%;
+        width: 100%;
+        display: block;
+        clip-path: polygon(
+            0 0,
+            /* top left */ 100% 0,
+            /* top right */ 100% calc(100% - 18px),
+            /* near bottom right */ calc(100% - 18px) 100%,
             /* a bit left from bottom right */ 0 100% /* bottom left */
         );
     }
