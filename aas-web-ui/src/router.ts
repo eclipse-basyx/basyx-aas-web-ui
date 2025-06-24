@@ -221,7 +221,7 @@ export async function createAppRouter(): Promise<Router> {
                 if (Object.keys(from.query).length > 0) {
                     const queryToDispatch = from.query;
 
-                    // Strip idShortPath in case of switching to Submodel Viewer
+                    // Strip idShortPath in case of switching to AAS Submodel Viewer
                     const queryPathToDispatch = queryToDispatch?.path as string;
                     if (to.name === 'AASSubmodelViewer' && queryPathToDispatch && queryPathToDispatch.trim() !== '') {
                         queryToDispatch.path = queryPathToDispatch.trim().split('/submodel-elements/')[0];
@@ -348,7 +348,11 @@ export async function createAppRouter(): Promise<Router> {
         }
 
         // Fetch and dispatch SM/SME
-        if (to.query.path && to.query.path !== '' && from.query.path !== to.query.path) {
+        if (
+            to.query.path &&
+            to.query.path !== '' &&
+            (from.query.path !== to.query.path || ['SMViewer', 'SMEditor'].includes(to.name as string))
+        ) {
             const sme = await fetchAndDispatchSme(to.query.path as string, true);
             if (!sme || Object.keys(sme).length === 0) {
                 // Remove path query for not available SME path
