@@ -83,6 +83,10 @@
         'image/vnd.microsoft.icon',
         'image/heic',
         'image/heif',
+        'application/json',
+        'application/xml',
+        'text/xml',
+        'application/pdf',
     ]);
 
     watch(pathValue, (newValue) => {
