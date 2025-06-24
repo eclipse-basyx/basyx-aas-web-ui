@@ -279,7 +279,9 @@
     watch(
         () => aasRegistryURL.value,
         () => {
-            submodelTree.value = [];
+            if (!['SMViewer', 'SMEditor'].includes(route.name as string)) {
+                submodelTree.value = [];
+            }
         }
     );
 
@@ -293,8 +295,10 @@
     watch(
         () => selectedAAS.value,
         () => {
-            submodelTree.value = [];
-            initialize();
+            if (!['SMViewer', 'SMEditor'].includes(route.name as string)) {
+                submodelTree.value = [];
+                initialize();
+            }
         }
     );
 
@@ -312,6 +316,7 @@
     });
 
     async function initialize(): Promise<void> {
+        // console.log(selectedNode.value);
         if (
             !['SMEditor', 'SMViewer'].includes(route.name as string) &&
             (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0)
@@ -334,7 +339,11 @@
 
             submodelTree.value = sortedSubmodels.map((submodel: any) => {
                 // Assumes submodel.path is already set for top-level nodes
-                if (Array.isArray(submodel.submodelElements) && submodel.submodelElements.length) {
+                if (
+                    submodel.submodelElements &&
+                    Array.isArray(submodel.submodelElements) &&
+                    submodel.submodelElements.length > 0
+                ) {
                     submodel.children = prepareForTree(submodel.submodelElements, submodel);
                     submodel.showChildren = shouldExpandNode(submodel.path);
                     return submodel;
