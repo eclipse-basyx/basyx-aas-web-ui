@@ -164,9 +164,7 @@
                     </v-expansion-panel-title>
                     <v-divider v-if="expandedCdIndex === index"></v-divider>
                     <v-expansion-panel-text class="pa-0 ma-0">
-                        <ConceptDescription
-                            :concept-description-object="conceptDescription"
-                            class="mt-2"></ConceptDescription>
+                        <ConceptDescription :concept-description-object="conceptDescription"></ConceptDescription>
                     </v-expansion-panel-text>
                 </v-expansion-panel>
             </v-expansion-panels>
