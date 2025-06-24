@@ -40,10 +40,10 @@
                             class="mt-3 py-2"
                             nav
                             :active="false"
-                            :border="isActiveRoutePath('/submodelviewer')"
-                            subtitle="View Submodels"
-                            title="Submodel Viewer"
-                            :to="isActiveRoutePath('/submodelviewer') ? '' : '/submodelviewer'"
+                            :border="isActiveRoutePath('/aassmviewer')"
+                            subtitle="View Submodel Visualizations of Asset Administration Shells"
+                            title="AAS Submodel Visualizations"
+                            :to="isActiveRoutePath('/aassmviewer') ? '' : '/aassmviewer'"
                             @click="closeMenu">
                             <template #prepend>
                                 <v-avatar color="surface-light" icon="mdi-group" rounded>

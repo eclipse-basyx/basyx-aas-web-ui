@@ -59,7 +59,9 @@
                         v-else
                         fluid
                         class="pa-0 ma-0 d-flex justify-center align-center"
-                        :style="submodelViewerMode ? 'height: calc(100svh - 137px)' : 'height: calc(100svh - 202px)'">
+                        :style="
+                            aasSubmodelViewerMode ? 'height: calc(100svh - 137px)' : 'height: calc(100svh - 202px)'
+                        ">
                         <v-empty-state title="No available visualization" class="text-divider"></v-empty-state>
                     </v-container>
                 </template>
@@ -149,7 +151,7 @@
         return plugins;
     });
     const visualizationMode = computed(() => routesToVisualization.includes(route.name));
-    const submodelViewerMode = computed(() => route.name === 'SubmodelViewer');
+    const aasSubmodelViewerMode = computed(() => route.name === 'AASSubmodelViewer');
 
     // Watchers
     watch(

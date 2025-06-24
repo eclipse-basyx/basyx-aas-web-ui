@@ -7,12 +7,12 @@ import { useAASHandling } from '@/composables/AAS/AASHandling';
 import { useSMEHandling } from '@/composables/AAS/SMEHandling';
 import { useRouteHandling } from '@/composables/routeHandling';
 import AASEditor from '@/pages/AASEditor.vue';
+import AASSubmodelViewer from '@/pages/AASSubmodelViewer.vue';
 import AASViewer from '@/pages/AASViewer.vue';
 import About from '@/pages/About.vue';
 import Dashboard from '@/pages/Dashboard.vue';
 import DashboardGroup from '@/pages/DashboardGroup.vue';
 import Page404 from '@/pages/Page404.vue';
-import SubmodelViewer from '@/pages/SubmodelViewer.vue';
 import { useAASStore } from '@/store/AASDataStore';
 import { useEnvStore } from '@/store/EnvironmentStore';
 import { useNavigationStore } from '@/store/NavigationStore';
@@ -36,10 +36,10 @@ const staticRoutes: Array<RouteRecordRaw> = [
     { path: '/componentvisualization', name: 'ComponentVisualization', component: ComponentVisualization },
     { path: '/visu', name: 'Visualization', component: ComponentVisualization, meta: { name: 'Visualization' } },
     {
-        path: '/submodelviewer',
-        name: 'SubmodelViewer',
-        component: SubmodelViewer,
-        meta: { name: 'Submodel Viewer', subtitle: 'Visualize Submodels' },
+        path: '/aassmviewer',
+        name: 'AASSubmodelViewer',
+        component: AASSubmodelViewer,
+        meta: { name: 'AAS Submodel Viewer', subtitle: 'Visualize Submodels of AAS' },
     },
     {
         path: '/about',
@@ -130,19 +130,19 @@ export async function createAppRouter(): Promise<Router> {
     const routesForDesktop: Array<RouteRecordNameGeneric> = [
         'AASViewer',
         'AASEditor',
-        'SubmodelViewer',
+        'AASSubmodelViewer',
         'Visualization',
     ];
     const routesToSaveAndLoadUrlQuery: Array<RouteRecordNameGeneric> = [
         'AASList',
         'AASEditor',
         'AASViewer',
-        'SubmodelViewer',
+        'AASSubmodelViewer',
         'Visualization',
     ];
     const routesStayOnPages: Array<RouteRecordNameGeneric> = ['About', 'NotFound404'];
     const routesDesktopToAASViewer: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList'];
-    const routesMobileToAASList: Array<RouteRecordNameGeneric> = ['AASViewer', 'AASEditor', 'SubmodelViewer'];
+    const routesMobileToAASList: Array<RouteRecordNameGeneric> = ['AASViewer', 'AASEditor', 'AASSubmodelViewer'];
     const routesToVisualization: Array<RouteRecordNameGeneric> = ['ComponentVisualization'];
 
     const possibleGloBalAssetIdQueryParameter = ['globalAssetId', 'globalassetid'];
@@ -201,7 +201,7 @@ export async function createAppRouter(): Promise<Router> {
 
                     // Strip idShortPath in case of switching to Submodel Viewer
                     const queryPathToDispatch = queryToDispatch?.path as string;
-                    if (to.name === 'SubmodelViewer' && queryPathToDispatch && queryPathToDispatch.trim() !== '') {
+                    if (to.name === 'AASSubmodelViewer' && queryPathToDispatch && queryPathToDispatch.trim() !== '') {
                         queryToDispatch.path = queryPathToDispatch.trim().split('/submodel-elements/')[0];
                     }
 

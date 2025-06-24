@@ -33,7 +33,7 @@
                 :style="
                     isMobile
                         ? 'height: calc(100svh - 154px)'
-                        : submodelViewerMode || visualizationMode
+                        : aasSubmodelViewerMode || visualizationMode
                           ? 'height: calc(100svh - 105px)'
                           : 'height: calc(100svh - 170px)'
                 ">
@@ -76,7 +76,7 @@
     const isMobile = computed(() => navigationStore.getIsMobile);
     const singleAas = computed(() => envStore.getSingleAas);
     const visualizationMode = computed(() => routesToVisualization.includes(route.name));
-    const submodelViewerMode = computed(() => route.name === 'SubmodelViewer');
+    const aasSubmodelViewerMode = computed(() => route.name === 'AASSubmodelViewer');
 
     // Watchers
     watch(

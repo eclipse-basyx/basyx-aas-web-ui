@@ -311,7 +311,7 @@
         );
         return filteredAndOrderedModuleRoutes;
     });
-    const showAASList = computed(() => ['AASViewer', 'AASEditor', 'SubmodelViewer'].includes(route.name as string));
+    const showAASList = computed(() => ['AASViewer', 'AASEditor', 'AASSubmodelViewer'].includes(route.name as string));
     const drawerState = computed(() => navigationStore.getDrawerState);
     const LogoPath = computed(() => {
         if (isDark.value && envStore.getEnvLogoDarkPath.trim().length > 0) {
@@ -329,7 +329,7 @@
             'ComponentVisualization',
             'Visualization',
             'AASEditor',
-            'SubmodelViewer',
+            'AASSubmodelViewer',
         ].includes(route.name as string);
     });
 
