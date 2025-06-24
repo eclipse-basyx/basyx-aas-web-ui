@@ -367,7 +367,7 @@
             ) {
                 item.value = deepMap(item.value, fn); // Recursively map SMC/SML elements
             } else if (
-                item.modelType == 'Entity' &&
+                item.modelType === 'Entity' &&
                 item.statements &&
                 Array.isArray(item.statements) &&
                 item.statements.length > 0
