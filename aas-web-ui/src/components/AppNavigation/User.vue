@@ -36,12 +36,15 @@
 
 <script lang="ts" setup>
     import { computed } from 'vue';
+    import { useRoute } from 'vue-router';
     import { useAuthStore } from '@/store/AuthStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
 
     // Stores
     const envStore = useEnvStore();
     const authStore = useAuthStore();
+
+    const route = useRoute();
 
     // Computed properties
     const authStatus = computed(() =>
@@ -57,10 +60,24 @@
     );
 
     function logout(): void {
-        authStore.getKeycloak?.logout();
+        // Store the clean path to redirect to after logout
+        const cleanPath = {
+            path: route.path,
+            hash: route.hash,
+        };
+        sessionStorage.setItem('logout_redirect', JSON.stringify(cleanPath));
+
+        // Clear any refresh interval
         const refreshIntervalId = authStore.getRefreshIntervalId;
         if (refreshIntervalId) {
             window.clearInterval(refreshIntervalId);
+        }
+
+        // Trigger Keycloak logout
+        if (authStore.getKeycloak) {
+            authStore.getKeycloak.logout({
+                redirectUri: window.location.origin + route.path,
+            });
         }
     }
 </script>
