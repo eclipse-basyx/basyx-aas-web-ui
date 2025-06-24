@@ -27,8 +27,8 @@
             <v-card-text style="overflow-y: auto; height: calc(100svh - 170px)">
                 <template
                     v-if="
-                        selectedAAS &&
-                        Object.keys(selectedAAS).length > 0 &&
+                        ((selectedAAS && Object.keys(selectedAAS).length > 0) ||
+                            ['SMViewer', 'SMEditor'].includes(route.name as string)) &&
                         selectedNode &&
                         Object.keys(selectedNode).length > 0
                     ">
@@ -36,7 +36,10 @@
                     <SubmodelElementVisualization v-else-if="componentToShow === 'Visualization'" />
                 </template>
                 <v-empty-state
-                    v-else-if="!selectedAAS || Object.keys(selectedAAS).length === 0"
+                    v-else-if="
+                        !['SMViewer', 'SMEditor'].includes(route.name as string) &&
+                        (!selectedAAS || Object.keys(selectedAAS).length === 0)
+                    "
                     title="No selected AAS"
                     class="text-divider"></v-empty-state>
                 <v-empty-state
@@ -51,7 +54,11 @@
 
 <script lang="ts" setup>
     import { computed, ref } from 'vue';
+    import { useRoute } from 'vue-router';
     import { useAASStore } from '@/store/AASDataStore';
+
+    // Vue Router
+    const route = useRoute();
 
     //Stores
     const aasStore = useAASStore();

@@ -4,7 +4,7 @@
         <div style="display: flex">
             <!-- SubmodelTree Component -->
             <div class="pa-0 window" style="width: 35%">
-                <SMTree />
+                <SubmodelTree />
             </div>
             <!-- Divider -->
             <div style="position: relative; height: calc(100vh - 106px); z-index: 1">

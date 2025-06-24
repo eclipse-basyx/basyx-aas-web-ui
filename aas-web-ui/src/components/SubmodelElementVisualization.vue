@@ -2,8 +2,8 @@
     <v-container fluid class="pa-0">
         <template
             v-if="
-                selectedAAS &&
-                Object.keys(selectedAAS).length > 0 &&
+                ((selectedAAS && Object.keys(selectedAAS).length > 0) ||
+                    ['SMViewer', 'SMEditor'].includes(route.name as string)) &&
                 selectedNode &&
                 Object.keys(selectedNode).length > 0 &&
                 submodelElementData &&

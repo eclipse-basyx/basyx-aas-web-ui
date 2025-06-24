@@ -45,7 +45,7 @@ const staticRoutes: Array<RouteRecordRaw> = [
     },
     {
         path: '/smviewer',
-        name: 'SubmodelViewer',
+        name: 'SMViewer',
         component: SMViewer,
         meta: { name: 'Submodel Viewer', subtitle: 'Visualize Submodels' },
     },
