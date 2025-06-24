@@ -352,31 +352,32 @@
 
     function deepMap(array: Array<any>, fn: (arg0: any) => any): Array<any> {
         return array.map((item: any) => {
+            let newItem = { ...item }; // Create a copy of the item
             if (
-                item.modelType === 'Submodel' &&
-                item.submodelElements &&
-                Array.isArray(item.submodelElements) &&
-                item.submodelElements.length > 0
+                newItem.modelType === 'Submodel' &&
+                newItem.submodelElements &&
+                Array.isArray(newItem.submodelElements) &&
+                newItem.submodelElements.length > 0
             ) {
-                item.submodelElements = deepMap(item.submodelElements, fn); // Recursively map SM Elements
+                newItem.submodelElements = deepMap(newItem.submodelElements, fn); // Recursively map SM Elements
             } else if (
-                ['SubmodelElementCollection', 'SubmodelElementList'].includes(item.modelType) &&
-                item.value &&
-                Array.isArray(item.value) &&
-                item.value.length > 0
+                ['SubmodelElementCollection', 'SubmodelElementList'].includes(newItem.modelType) &&
+                newItem.value &&
+                Array.isArray(newItem.value) &&
+                newItem.value.length > 0
             ) {
-                item.value = deepMap(item.value, fn); // Recursively map SMC/SML elements
+                newItem.value = deepMap(newItem.value, fn); // Recursively map SMC/SML elements
             } else if (
-                item.modelType === 'Entity' &&
-                item.statements &&
-                Array.isArray(item.statements) &&
-                item.statements.length > 0
+                newItem.modelType == 'Entity' &&
+                newItem.statements &&
+                Array.isArray(newItem.statements) &&
+                newItem.statements.length > 0
             ) {
-                item.statements = deepMap(item.statements, fn); // Recursively map entity statements
+                newItem.statements = deepMap(newItem.statements, fn); // Recursively map entity statements
             }
-            return Array.isArray(item)
-                ? deepMap(item, fn) // Recursively map nested arrays
-                : fn(item);
+            return Array.isArray(newItem)
+                ? deepMap(newItem, fn) // Recursively map nested arrays
+                : fn(newItem);
         });
     }
 
