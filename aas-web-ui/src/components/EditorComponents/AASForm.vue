@@ -11,34 +11,105 @@
                     <v-expansion-panel class="border-t-thin border-s-thin border-e-thin" :class="bordersToShow(0)">
                         <v-expansion-panel-title>Details</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <TextInput
-                                v-model="AASId"
-                                label="ID"
-                                :show-generate-iri-button="true"
-                                type="AssetAdministrationShell"
-                                :disabled="!newShell" />
-                            <TextInput v-model="AASIdShort" label="IdShort" />
-                            <MultiLanguageTextInput
-                                v-model="displayName"
-                                :show-label="true"
-                                label="Display Name"
-                                type="displayName" />
-                            <MultiLanguageTextInput
-                                v-model="description"
-                                :show-label="true"
-                                label="Description"
-                                type="description" />
-                            <SelectInput v-model="AASCategory" label="Category" type="category" :clearable="true" />
+                            <!--ADDED Buttons by columns-->
+                            <v-row align="center">
+                                <v-col cols="0">
+                                    <TextInput
+                                        v-model="AASId"
+                                        label="ID"
+                                        :show-generate-iri-button="true"
+                                        type="AssetAdministrationShell"
+                                        :disabled="!newShell" />
+                                </v-col>
+                                <v-col cols="1" class="d-flex align-center">
+                                    <HelpInfoButtonPlugin help-type="aas-General" />
+                                </v-col>
+                            </v-row>
+                            <v-row align="center">
+                                <v-col cols="0">
+                                    <TextInput v-model="AASIdShort" label="IdShort" />
+                                </v-col>
+                                <v-col cols="1" class="d-flex align-center">
+                                    <HelpInfoButtonPlugin help-type="aas-General" />
+                                </v-col>
+                            </v-row>
+                            <v-row align="center">
+                                <v-col cols="0">
+                                    <MultiLanguageTextInput
+                                        v-model="displayName"
+                                        :show-label="true"
+                                        label="Display Name"
+                                        type="displayName" />
+                                </v-col>
+                                <v-col cols="1" class="d-flex align-center">
+                                    <HelpInfoButtonPlugin help-type="aas-General" />
+                                </v-col>
+                            </v-row>
+                            <v-row align="center">
+                                <v-col cols="0">
+                                    <MultiLanguageTextInput
+                                        v-model="description"
+                                        :show-label="true"
+                                        label="Description"
+                                        type="description" />
+                                </v-col>
+                                <v-col cols="1" class="d-flex align-center">
+                                    <HelpInfoButtonPlugin help-type="aas-General" />
+                                </v-col>
+                            </v-row>
+                            <v-row align="center">
+                                <v-col cols="0">
+                                    <SelectInput
+                                        v-model="AASCategory"
+                                        label="Category"
+                                        type="category"
+                                        :clearable="true" />
+                                </v-col>
+                                <v-col cols="1" class="d-flex align-center">
+                                    <HelpInfoButtonPlugin help-type="aas-General" />
+                                </v-col>
+                            </v-row>
+                            <!--ADDED Buttons by columns-->
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Administrative Information -->
                     <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(1)">
                         <v-expansion-panel-title>Administrative Information</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <TextInput v-model="version" label="Version" />
-                            <TextInput v-model="revision" label="Revision" />
-                            <ReferenceInput v-model="creator" label="Creator" />
-                            <TextInput v-model="templateId" label="Template ID" />
+                            <!--ADDED Buttons by columns-->
+                            <v-row align="center">
+                                <v-col cols="0">
+                                    <TextInput v-model="version" label="Version" />
+                                </v-col>
+                                <v-col cols="1" class="d-flex align-center">
+                                    <HelpInfoButtonPlugin help-type="aas-General" />
+                                </v-col>
+                            </v-row>
+                            <v-row align="center">
+                                <v-col cols="0">
+                                    <TextInput v-model="revision" label="Revision" />
+                                </v-col>
+                                <v-col cols="1" class="d-flex align-center">
+                                    <HelpInfoButtonPlugin help-type="aas-General" />
+                                </v-col>
+                            </v-row>
+                            <v-row align="center">
+                                <v-col cols="0">
+                                    <ReferenceInput v-model="creator" label="Creator" />
+                                </v-col>
+                                <v-col cols="1" class="d-flex align-center">
+                                    <HelpInfoButtonPlugin help-type="aas-General" />
+                                </v-col>
+                            </v-row>
+                            <v-row align="center">
+                                <v-col cols="0">
+                                    <TextInput v-model="templateId" label="Template ID" />
+                                </v-col>
+                                <v-col cols="1" class="d-flex align-center">
+                                    <HelpInfoButtonPlugin help-type="aas-General" />
+                                </v-col>
+                            </v-row>
+                            <!--ADDED Buttons by columns-->
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Derivation -->
@@ -52,19 +123,49 @@
                     <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
                         <v-expansion-panel-title>Asset</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <SelectInput v-model="assetKind" label="Asset Kind" type="assetKind"></SelectInput>
-                            <TextInput
-                                v-model="globalAssetId"
-                                label="Global Asset ID"
-                                :show-generate-iri-button="true"
-                                type="Asset" />
-                            <TextInput v-model="assetType" label="Asset Type" />
-                            <ResourceInput
-                                v-model="defaultThumbnail"
-                                label="Default Thumbnail"
-                                :new-shell="newShell"
-                                :aas="aas"
-                                @update:file-thumbnail="handleFileThumbnail" />
+                            <!--ADDED Buttons by columns-->
+                            <v-row align="center">
+                                <v-col cols="0">
+                                    <SelectInput v-model="assetKind" label="Asset Kind" type="assetKind"></SelectInput>
+                                </v-col>
+                                <v-col cols="1" class="d-flex align-center">
+                                    <HelpInfoButtonPlugin help-type="aas-General" />
+                                </v-col>
+                            </v-row>
+                            <v-row align="center">
+                                <v-col cols="0">
+                                    <TextInput
+                                        v-model="globalAssetId"
+                                        label="Global Asset ID"
+                                        :show-generate-iri-button="true"
+                                        type="Asset" />
+                                </v-col>
+                                <v-col cols="1" class="d-flex align-center">
+                                    <HelpInfoButtonPlugin help-type="aas-General" />
+                                </v-col>
+                            </v-row>
+                            <v-row align="center">
+                                <v-col cols="0">
+                                    <TextInput v-model="assetType" label="Asset Type" />
+                                </v-col>
+                                <v-col cols="1" class="d-flex align-center">
+                                    <HelpInfoButtonPlugin help-type="aas-General" />
+                                </v-col>
+                            </v-row>
+                            <v-row align="center">
+                                <v-col cols="0">
+                                    <ResourceInput
+                                        v-model="defaultThumbnail"
+                                        label="Default Thumbnail"
+                                        :new-shell="newShell"
+                                        :aas="aas"
+                                        @update:file-thumbnail="handleFileThumbnail" />
+                                </v-col>
+                                <v-col cols="1" class="d-flex align-center">
+                                    <HelpInfoButtonPlugin help-type="aas-General" />
+                                </v-col>
+                            </v-row>
+                            <!--ADDED Buttons by columns-->
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -90,11 +191,16 @@
     import { useIDUtils } from '@/composables/IDUtils';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    // Added Reference
+    // You may adjust the text inside the plugin
+    // And the context by adding the links in the help-links.json
+    // For implementation you adjust the type based on the context
+    import HelpInfoButtonPlugin from '@/UserPlugins/HelpInfoButton/HelpInfoButtonPlugin.vue';
 
     const props = defineProps<{
         modelValue: boolean;
         newShell: boolean;
-        aas?: any;
+        aas?: aasTypes.AssetAdministrationShell;
     }>();
 
     // Vue Router
@@ -328,7 +434,7 @@
             await putAas(AASObject.value);
             // Update AAS Descriptor
             const jsonAAS = jsonization.toJsonable(AASObject.value);
-            const descriptor = createDescriptorFromAAS(jsonAAS, props.aas.endpoints);
+            const descriptor = createDescriptorFromAAS(jsonAAS, []);
             await putAasDescriptor(descriptor);
             // Upload default thumbnail
             if (fileThumbnail.value !== undefined) {
