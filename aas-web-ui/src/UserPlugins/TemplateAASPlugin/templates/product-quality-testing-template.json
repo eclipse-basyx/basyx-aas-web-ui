@@ -1,0 +1,122 @@
+{
+    "id": "product-quality-testing-template",
+    "name": "Product Quality Testing Template",
+    "description": "[JSON] Template for product quality testing data following IDTA specification",
+    "version": "1.0",
+    "aasVersion": "3.0",
+    "category": "Submodel",
+    "tags": ["quality", "testing", "product", "IDTA"],
+    "defaults": {
+        "idShort": "ProductQualityTesting",
+        "semanticId": "https://admin-shell.io/idta/ProductQualityTesting/ProductQualityTesting/1/0"
+    },
+    "submodels": [
+        {
+            "id": "product-quality-testing",
+            "name": "ProductQualityTesting",
+            "semanticId": "https://admin-shell.io/idta/ProductQualityTesting/ProductQualityTesting/1/0",
+            "version": "1.0",
+            "required": true,
+            "elements": [
+                {
+                    "idShort": "QualityTestResults",
+                    "type": "SubmodelElementCollection",
+                    "required": true,
+                    "description": "Product quality test results data",
+                    "semanticId": "https://admin-shell.io/idta/ProductQualityTesting/QualityTestResults/1/0",
+                    "children": [
+                        {
+                            "idShort": "TestId",
+                            "type": "Property",
+                            "valueType": "xs:string",
+                            "required": true,
+                            "description": "Unique identifier for the test"
+                        },
+                        {
+                            "idShort": "TestType",
+                            "type": "Property",
+                            "valueType": "xs:string",
+                            "required": true,
+                            "description": "Type of quality test performed",
+                            "valueConstraints": [
+                                {"valueId": "0173-1#07-AQX101#001", "value": "Dimensional Accuracy", "identifier": "DA"},
+                                {"valueId": "0173-1#07-AQX102#001", "value": "Material Strength", "identifier": "MS"},
+                                {"valueId": "0173-1#07-AQX103#001", "value": "Surface Finish", "identifier": "SF"},
+                                {"valueId": "0173-1#07-AQX104#001", "value": "Durability", "identifier": "DU"},
+                                {"valueId": "0173-1#07-AQX105#001", "value": "Functional Performance", "identifier": "FP"}
+                            ]
+                        },
+                        {
+                            "idShort": "TestResult",
+                            "type": "Property",
+                            "valueType": "xs:string",
+                            "required": true,
+                            "description": "Result of the quality test",
+                            "valueConstraints": [
+                                {"valueId": "0173-1#07-AQX106#001", "value": "Pass", "identifier": "P"},
+                                {"valueId": "0173-1#07-AQX107#001", "value": "Fail", "identifier": "F"},
+                                {"valueId": "0173-1#07-AQX108#001", "value": "Conditional Pass", "identifier": "CP"}
+                            ]
+                        },
+                        {
+                            "idShort": "MeasurementValue",
+                            "type": "Property",
+                            "valueType": "xs:double",
+                            "required": false,
+                            "description": "Quantitative measurement value (if applicable)"
+                        },
+                        {
+                            "idShort": "TestDateTime",
+                            "type": "Property",
+                            "valueType": "xs:dateTime",
+                            "required": true,
+                            "description": "Date and time when the test was conducted"
+                        }
+                    ]
+                },
+                {
+                    "idShort": "TestEquipment",
+                    "type": "SubmodelElementCollection",
+                    "required": false,
+                    "description": "Details about the equipment used for testing",
+                    "semanticId": "https://admin-shell.io/idta/ProductQualityTesting/TestEquipment/1/0",
+                    "children": [
+                        {
+                            "idShort": "EquipmentId",
+                            "type": "Property",
+                            "valueType": "xs:string",
+                            "required": true,
+                            "description": "Unique identifier of the testing equipment"
+                        },
+                        {
+                            "idShort": "EquipmentType",
+                            "type": "Property",
+                            "valueType": "xs:string",
+                            "required": true,
+                            "description": "Type of testing equipment used"
+                        },
+                        {
+                            "idShort": "CalibrationStatus",
+                            "type": "Property",
+                            "valueType": "xs:string",
+                            "required": true,
+                            "description": "Calibration status of the equipment",
+                            "valueConstraints": [
+                                {"valueId": "0173-1#07-AQX109#001", "value": "Calibrated", "identifier": "CAL"},
+                                {"valueId": "0173-1#07-AQX110#001", "value": "Not Calibrated", "identifier": "NCAL"},
+                                {"valueId": "0173-1#07-AQX111#001", "value": "Calibration Expired", "identifier": "CEXP"}
+                            ]
+                        },
+                        {
+                            "idShort": "LastCalibrationDate",
+                            "type": "Property",
+                            "valueType": "xs:date",
+                            "required": false,
+                            "description": "Date of the last calibration"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
