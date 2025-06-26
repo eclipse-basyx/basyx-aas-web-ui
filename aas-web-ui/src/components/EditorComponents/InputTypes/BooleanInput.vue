@@ -7,23 +7,26 @@
 
     const props = defineProps<{
         label: string;
-        modelValue: boolean;
+        modelValue: boolean | string;
     }>();
 
     const emit = defineEmits<{
         (event: 'update:modelValue', value: boolean): void;
     }>();
 
-    const booleanValue = ref<boolean>(props.modelValue);
+    const booleanValue = ref<boolean>(
+        typeof props.modelValue === 'string' ? props.modelValue.toLowerCase() === 'true' : props.modelValue
+    );
 
     watch(booleanValue, (newValue) => {
         emit('update:modelValue', newValue);
+        // emit('update:modelValue', typeof props.modelValue === 'string' ? newValue.toString() : newValue);
     });
 
     watch(
         () => props.modelValue,
         (newValue) => {
-            booleanValue.value = newValue;
+            booleanValue.value = typeof newValue === 'string' ? newValue.toLowerCase() === 'true' : newValue;
         }
     );
 </script>
