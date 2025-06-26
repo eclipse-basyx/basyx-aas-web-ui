@@ -120,8 +120,7 @@
             qrCodeUrl.value = await QRCode.toDataURL(assetInfo.value.id, {
                 errorCorrectionLevel: 'Q',
                 margin: 3,
-                scale: 4,
-                // type: 'png',
+                scale: 4, // module size
             });
         } catch (err) {
             console.error(err);
@@ -199,16 +198,17 @@
     }
 
     .qr-61406-1 {
+        --module-size: 4;
         height: 100%;
         width: 100%;
         display: block;
-        border: 4px solid black;
+        border: calc(var(--module-size) * 1px) solid black;
         clip-path: polygon(
             0 0,
-            /* top left */ 100% 0,
-            /* top right */ 100% calc(100% - 24px),
-            /* near bottom right */ calc(100% - 24px) 100%,
-            /* a bit left from bottom right */ 0 100% /* bottom left */
+            /* <-- top left */ 100% 0,
+            /* <-- top right */ 100% calc(100% - 24px),
+            /* <-- near bottom right */ calc(100% - 24px) 100%,
+            /* <-- a bit left from bottom right */ 0 100% /* <-- bottom left */
         );
     }
 
@@ -223,10 +223,10 @@
         display: block;
         clip-path: polygon(
             0 0,
-            /* top left */ 100% 0,
-            /* top right */ 100% calc(100% - 18px),
-            /* near bottom right */ calc(100% - 18px) 100%,
-            /* a bit left from bottom right */ 0 100% /* bottom left */
+            /* <-- top left */ 100% 0,
+            /* <-- top right */ 100% calc(100% - 18px),
+            /* <-- near bottom right */ calc(100% - 18px) 100%,
+            /* <-- a bit left from bottom right */ 0 100% /* <-- bottom left */
         );
     }
 
