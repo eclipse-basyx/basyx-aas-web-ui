@@ -47,7 +47,7 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             if (valueType === 'Int') {
                 const num = Number(value.trim());
                 if (num < -2147483648 || num > 2147483647) {
-                    errorMessage = valueType + "' range: [-2147483648, 2147483647]!";
+                    errorMessage = "'" + valueType + "' range: [-2147483648, 2147483647]!";
                     return [false, errorMessage];
                 }
             }
@@ -56,6 +56,7 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
                 const num = BigInt(value.trim());
                 if (num < -9223372036854775808n || num > 9223372036854775807n) {
                     errorMessage =
+                        "'" +
                         valueType +
                         "' range: [" +
                         (-9223372036854775808n).toString() +
@@ -69,7 +70,7 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             if (valueType === 'Short') {
                 const num = Number(value.trim());
                 if (num < -32768 || num > 32767) {
-                    errorMessage = valueType + "' range: [-32768, 32767]!";
+                    errorMessage = "'" + valueType + "' range: [-32768, 32767]!";
                     return [false, errorMessage];
                 }
             }
@@ -77,7 +78,7 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             if (valueType === 'Byte') {
                 const num = Number(value.trim());
                 if (num < -128 || num > 127) {
-                    errorMessage = valueType + "' range: [-128, 127]!";
+                    errorMessage = "'" + valueType + "' range: [-128, 127]!";
                     return [false, errorMessage];
                 }
             }
@@ -96,7 +97,7 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             if (valueType === 'UnsignedInt') {
                 const num = Number(value.trim());
                 if (num < 0 || num > 4294967295) {
-                    errorMessage = valueType + "' range: [0, 4294967295]!";
+                    errorMessage = "'" + valueType + "' range: [0, 4294967295]!";
                     return [false, errorMessage];
                 }
             }
@@ -104,7 +105,7 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             if (valueType === 'UnsignedLong') {
                 const num = BigInt(value.trim());
                 if (num < 0n || num > 18446744073709551615n) {
-                    errorMessage = valueType + "' range: [0, " + 18446744073709551615n.toString() + ']!';
+                    errorMessage = "'" + valueType + "' range: [0, " + 18446744073709551615n.toString() + ']!';
                     return [false, errorMessage];
                 }
             }
@@ -112,7 +113,7 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             if (valueType === 'UnsignedShort') {
                 const num = Number(value.trim());
                 if (num < 0 || num > 65535) {
-                    errorMessage = valueType + "' range: [0, 65535]!";
+                    errorMessage = "'" + valueType + "' range: [0, 65535]!";
                     return [false, errorMessage];
                 }
             }
@@ -120,7 +121,7 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             if (valueType === 'UnsignedByte') {
                 const num = Number(value.trim());
                 if (num < 0 || num > 255) {
-                    errorMessage = valueType + "' range: [0, 255]!";
+                    errorMessage = "'" + valueType + "' range: [0, 255]!";
                     return [false, errorMessage];
                 }
             }
@@ -190,12 +191,12 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             }
 
             if (Number(match[2]) < 1 || Number(match[2]) > 12) {
-                errorMessage = valueType + "' month range: [1, 12]!";
+                errorMessage = "'" + valueType + "' month range: [1, 12]!";
                 return [false, errorMessage];
             }
 
             if (Number(match[3]) < 1 || Number(match[3]) > 31) {
-                errorMessage = valueType + "' day range: [1, 31]!";
+                errorMessage = "'" + valueType + "' day range: [1, 31]!";
                 return [false, errorMessage];
             }
 
@@ -233,17 +234,17 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             }
 
             if (Number(match[1]) < 0 || Number(match[1]) > 23) {
-                errorMessage = valueType + "' hour range: [0, 23]!";
+                errorMessage = "'" + valueType + "' hour range: [0, 23]!";
                 return [false, errorMessage];
             }
 
             if (Number(match[2]) < 0 || Number(match[2]) > 59) {
-                errorMessage = valueType + "' minutes range: [0, 59]!";
+                errorMessage = "'" + valueType + "' minutes range: [0, 59]!";
                 return [false, errorMessage];
             }
 
             if (Number(match[3]) < 0 || Number(match[3]) > 59) {
-                errorMessage = valueType + "' second range: [0, 59]!";
+                errorMessage = "'" + valueType + "' second range: [0, 59]!";
                 return [false, errorMessage];
             }
 
@@ -259,12 +260,12 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             }
 
             if (Number(match[2]) < 1 || Number(match[2]) > 12) {
-                errorMessage = valueType + "' month range: [1, 12]!";
+                errorMessage = "'" + valueType + "' month range: [1, 12]!";
                 return [false, errorMessage];
             }
 
             if (Number(match[3]) < 1 || Number(match[3]) > 31) {
-                errorMessage = valueType + "' day range: [1, 31]!";
+                errorMessage = "'" + valueType + "' day range: [1, 31]!";
                 return [false, errorMessage];
             }
 
@@ -291,17 +292,17 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             }
 
             if (Number(match[4]) < 0 || Number(match[4]) > 23) {
-                errorMessage = valueType + "' hour range: [0, 23]!";
+                errorMessage = "'" + valueType + "' hour range: [0, 23]!";
                 return [false, errorMessage];
             }
 
             if (Number(match[5]) < 0 || Number(match[5]) > 59) {
-                errorMessage = valueType + "' minutes range: [0, 59]!";
+                errorMessage = "'" + valueType + "' minutes range: [0, 59]!";
                 return [false, errorMessage];
             }
 
             if (Number(match[6]) < 0 || Number(match[6]) > 59) {
-                errorMessage = valueType + "' second range: [0, 59]!";
+                errorMessage = "'" + valueType + "' second range: [0, 59]!";
                 return [false, errorMessage];
             }
 
