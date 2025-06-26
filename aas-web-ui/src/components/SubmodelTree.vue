@@ -45,7 +45,7 @@
                                 hide-details
                                 label="Search for SM/SME..."
                                 clearable
-                                :placeholder="submodelTree.length.toString() + ' Shells'"
+                                :placeholder="submodelTree.length.toString() + ' Submodels'"
                                 persistent-placeholder
                                 @update:model-value="debouncedFilterSubmodelTree"></v-text-field>
                         </v-col>
