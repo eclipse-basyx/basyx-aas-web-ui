@@ -55,7 +55,13 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             if (valueType === 'Long') {
                 const num = BigInt(value.trim());
                 if (num < -9223372036854775808n || num > 9223372036854775807n) {
-                    errorMessage = valueType + "' range: [-9223372036854775808n, 9223372036854775807n]!";
+                    errorMessage =
+                        valueType +
+                        "' range: [" +
+                        (-9223372036854775808n).toString() +
+                        ', ' +
+                        9223372036854775807n.toString() +
+                        ']!';
                     return [false, errorMessage];
                 }
             }
@@ -98,7 +104,7 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             if (valueType === 'UnsignedLong') {
                 const num = BigInt(value.trim());
                 if (num < 0n || num > 18446744073709551615n) {
-                    errorMessage = valueType + "' range: [0, 18446744073709551615n]!";
+                    errorMessage = valueType + "' range: [0, " + 18446744073709551615n.toString() + ']!';
                     return [false, errorMessage];
                 }
             }
