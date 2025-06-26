@@ -5,8 +5,7 @@
                 :identification-object="assetInfo"
                 :v-chip-content="assetObject.assetKind"
                 :identification-title="'Global Asset ID'"></IdentificationElement>
-            <v-expansion-panels
-                v-if="assetInfo.id && assetInfo.id.trim() !== '' && assetInfo.id.match(new RegExp(urlRegex))">
+            <v-expansion-panels v-if="assetInfo.id && assetInfo.id.trim() !== '' && urlRegex.test(assetInfo.id)">
                 <v-expansion-panel elevation="0" tile static color="detailsCard">
                     <v-expansion-panel-title class="px-2">
                         <span class="text-subtitle-2"> Global Asset ID QR-Code </span>

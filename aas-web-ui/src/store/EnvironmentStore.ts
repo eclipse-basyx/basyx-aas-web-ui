@@ -117,8 +117,7 @@ export const useEnvStore = defineStore('envStore', () => {
     const getSingleAas = computed(() => singleAas.value === 'true');
     const getSingleAasRedirect = computed(() => {
         if (singleAas.value === 'true' && singleAasRedirect.value) {
-            const regex = new RegExp(urlRegex);
-            if (singleAasRedirect.value.match(regex)) {
+            if (urlRegex.test(singleAasRedirect.value)) {
                 return singleAasRedirect.value;
             }
             return undefined;
