@@ -12,7 +12,8 @@
                 <v-expansion-panel-text>
                     <v-divider class="mb-1" opacity="0.05"></v-divider>
                     <v-list nav class="px-0">
-                        <v-list-item v-for="(qualifier, i) in qualifierArray" :key="i">
+                        <v-list-item v-for="(qualifier, index) in qualifierArray" :key="index">
+                            {{ index }}
                             <v-list-item-subtitle v-if="qualifier.kind && !isEmptyString(qualifier.kind)">
                                 <span class="text-caption">
                                     {{ 'Kind: ' }}
@@ -66,7 +67,7 @@
                                 </v-chip>
                                 <span>{{ qualifier.value }}</span>
                             </v-list-item-subtitle>
-                            <v-divider v-if="i <= qualifierArray.length - 1" class="mt-3" />
+                            <v-divider v-if="index < qualifierArray.length - 1" class="mt-3" />
                         </v-list-item>
                     </v-list>
                 </v-expansion-panel-text>
