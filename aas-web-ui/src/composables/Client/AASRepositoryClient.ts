@@ -378,11 +378,11 @@ export function useAASRepositoryClient() {
         // Create formData
         const formData = new FormData();
         formData.append('file', thumbnail);
+        formData.append('fileName', thumbnail.name);
 
         const context = 'uploading thumbnail';
         const disableMessage = false;
-        const path =
-            aasRepoUrl + '/' + base64Encode(aasId) + '/asset-information/thumbnail' + '?fileName=' + thumbnail.name;
+        const path = aasRepoUrl + '/' + base64Encode(aasId) + '/asset-information/thumbnail';
         const headers = new Headers();
         const body = formData;
 
