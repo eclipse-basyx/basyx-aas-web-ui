@@ -2,10 +2,31 @@
     <v-container class="pa-0" fluid>
         <v-list lines="one" nav class="bg-detailsCard">
             <IdentificationElement
-                id="assetInformationIdentification"
                 :identification-object="assetInfo"
                 :v-chip-content="assetObject.assetKind"
                 :identification-title="'Global Asset ID'"></IdentificationElement>
+            <v-expansion-panels v-if="assetInfo.id && assetInfo.id.trim() !== '' && urlRegex.test(assetInfo.id)">
+                <v-expansion-panel elevation="0" tile static color="detailsCard">
+                    <v-expansion-panel-title class="px-2">
+                        <v-icon icon="mdi-qrcode" size="small" class="mr-2"></v-icon>
+                        <span class="text-subtitle-2"> Global Asset ID QR-Code </span>
+                    </v-expansion-panel-title>
+                    <v-expansion-panel-text class="py-2 bg-detailsCard">
+                        <div class="qr-container">
+                            <div v-if="assetInfo.id.includes('?.') && qrCodeUrl" class="qr-61406-2-container">
+                                <div class="qr-61406-2">
+                                    <div class="qr-61406-1-container">
+                                        <img v-if="qrCodeUrl" :src="qrCodeUrl" class="qr-61406-1" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else class="qr-61406-1-container">
+                                <img v-if="qrCodeUrl" :src="qrCodeUrl" class="qr-61406-1" />
+                            </div>
+                        </div>
+                    </v-expansion-panel-text>
+                </v-expansion-panel>
+            </v-expansion-panels>
             <v-divider
                 v-if="
                     assetObject.specificAssetIds &&
@@ -32,9 +53,11 @@
 </template>
 
 <script lang="ts" setup>
+    import QRCode from 'qrcode';
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
     import { useTechnicalData_v1_2Utils } from '@/composables/AAS/SubmodelTemplates/TechnicalData_v1_2Utils';
     import { useUrlUtils } from '@/composables/UrlUtils';
+    import { urlRegex } from '@/composables/UrlUtils';
     import { useAASStore } from '@/store/AASDataStore';
 
     // Composables
@@ -56,6 +79,7 @@
     const thumbnailSrc = ref('' as string);
     const thumbnailMaxHeight = ref(0 as number);
     const thumbnailCaption = ref('' as string);
+    const qrCodeUrl = ref('');
 
     // Computed
     const assetInfo = computed(() => {
@@ -92,6 +116,17 @@
             thumbnailCaption.value = '';
             return;
         }
+
+        try {
+            qrCodeUrl.value = await QRCode.toDataURL(assetInfo.value.id, {
+                errorCorrectionLevel: 'Q',
+                margin: 3,
+                scale: 4, // module size
+            });
+        } catch (err) {
+            console.error(err);
+        }
+
         if (
             props.assetObject.defaultThumbnail &&
             Object.keys(props.assetObject.defaultThumbnail).length > 0 &&
@@ -149,3 +184,54 @@
         }
     }
 </script>
+
+<style lang="css" scoped>
+    .qr-container {
+        margin-left: auto;
+        margin-right: auto;
+        width: fit-content;
+    }
+
+    .qr-61406-1-container {
+        background-color: black;
+        height: 100%;
+        width: 100%;
+    }
+
+    .qr-61406-1 {
+        --module-size: 4;
+        height: 100%;
+        width: 100%;
+        display: block;
+        border: calc(var(--module-size) * 1px) solid black;
+        clip-path: polygon(
+            0 0,
+            /* <-- top left */ 100% 0,
+            /* <-- top right */ 100% calc(100% - 24px),
+            /* <-- near bottom right */ calc(100% - 24px) 100%,
+            /* <-- a bit left from bottom right */ 0 100% /* <-- bottom left */
+        );
+    }
+
+    .qr-61406-2-container {
+        height: 100%;
+        width: 100%;
+    }
+
+    .qr-61406-2 {
+        height: 100%;
+        width: 100%;
+        display: block;
+        clip-path: polygon(
+            0 0,
+            /* <-- top left */ 100% 0,
+            /* <-- top right */ 100% calc(100% - 18px),
+            /* <-- near bottom right */ calc(100% - 18px) 100%,
+            /* <-- a bit left from bottom right */ 0 100% /* <-- bottom left */
+        );
+    }
+
+    :deep(.v-expansion-panel-text__wrapper) {
+        padding: 0 !important;
+    }
+</style>
