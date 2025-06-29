@@ -8,6 +8,7 @@
             <v-expansion-panels v-if="assetInfo.id && assetInfo.id.trim() !== '' && urlRegex.test(assetInfo.id)">
                 <v-expansion-panel elevation="0" tile static color="detailsCard">
                     <v-expansion-panel-title class="px-2">
+                        <v-icon icon="mdi-qrcode" size="small" class="mr-2"></v-icon>
                         <span class="text-subtitle-2"> Global Asset ID QR-Code </span>
                     </v-expansion-panel-title>
                     <v-expansion-panel-text class="py-2 bg-detailsCard">
