@@ -4420,10 +4420,10 @@ unplugin-utils@^0.2.4:
     pathe "^2.0.2"
     picomatch "^4.0.2"
 
-unplugin-vue-components@^28.7.0:
-  version "28.7.0"
-  resolved "https://registry.yarnpkg.com/unplugin-vue-components/-/unplugin-vue-components-28.7.0.tgz#e61e5a267a951fbace3190e0dfc61268a00f1b3a"
-  integrity sha512-3SuWAHlTjOiZckqRBGXRdN/k6IMmKyt2Ch5/+DKwYaT321H0ItdZDvW4r8/YkEKQpN9TN3F/SZ0W342gQROC3Q==
+unplugin-vue-components@^28.8.0:
+  version "28.8.0"
+  resolved "https://registry.yarnpkg.com/unplugin-vue-components/-/unplugin-vue-components-28.8.0.tgz#3ccabfee1f4d2bdec38ef76634b6924001a5b671"
+  integrity sha512-2Q6ZongpoQzuXDK0ZsVzMoshH0MWZQ1pzVL538G7oIDKRTVzHjppBDS8aB99SADGHN3lpGU7frraCG6yWNoL5Q==
   dependencies:
     chokidar "^3.6.0"
     debug "^4.4.1"
@@ -4431,10 +4431,10 @@ unplugin-vue-components@^28.7.0:
     magic-string "^0.30.17"
     mlly "^1.7.4"
     tinyglobby "^0.2.14"
-    unplugin "^2.3.4"
+    unplugin "^2.3.5"
     unplugin-utils "^0.2.4"
 
-unplugin@^2.2.2, unplugin@^2.3.4:
+unplugin@^2.2.2, unplugin@^2.3.4, unplugin@^2.3.5:
   version "2.3.5"
   resolved "https://registry.yarnpkg.com/unplugin/-/unplugin-2.3.5.tgz#c689d806e2a15c95aeb794f285356c6bcdea4a2e"
   integrity sha512-RyWSb5AHmGtjjNQ6gIlA67sHOsWpsbWpwDokLwTcejVdOjEkJZh7QKu14J00gDDVSh8kGH4KYC/TNBceXFZhtw==
