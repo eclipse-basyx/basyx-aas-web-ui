@@ -73,7 +73,7 @@
     "vite": "^7.0.0",
     "vite-plugin-vuetify": "^2.1.1",
     "vitest": "^3.2.4",
-    "vue-eslint-parser": "^10.1.4",
+    "vue-eslint-parser": "^10.2.0",
     "vue-tsc": "^3.0.1"
   }
 }
