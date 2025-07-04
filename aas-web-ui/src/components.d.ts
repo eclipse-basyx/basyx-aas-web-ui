@@ -76,6 +76,7 @@ declare module 'vue' {
     PDFPreview: typeof import('./components/Plugins/PDFPreview.vue')['default']
     Property: typeof import('./components/SubmodelElements/Property.vue')['default']
     PropertyForm: typeof import('./components/EditorComponents/SubmodelElements/PropertyForm.vue')['default']
+    QualifierElement: typeof import('./components/UIComponents/QualifierElement.vue')['default']
     RadialChart: typeof import('./components/Widgets/RadialChart.vue')['default']
     Range: typeof import('./components/SubmodelElements/Range.vue')['default']
     RangeForm: typeof import('./components/EditorComponents/SubmodelElements/RangeForm.vue')['default']
