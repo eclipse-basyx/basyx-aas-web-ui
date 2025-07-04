@@ -13,6 +13,7 @@ export function useSMHandling() {
         getSmEndpointById: getSmEndpointByIdFromRegistry,
     } = useSMRegistryClient();
     const {
+        fetchSmList: fetchSmListFromRepo,
         fetchSm: fetchSmFromRepo,
         getSmEndpointById: getSmEndpointByIdFromRepo,
         fetchSme: fetchSmeFromRepo,
@@ -42,6 +43,29 @@ export function useSMHandling() {
         });
 
         return smDescriptors;
+    }
+
+    /**
+     * Fetches a list of all available Submodels (SM).
+     *
+     * @async
+     * @returns {Promise<Array<any>>} A promise that resolves to an array of SM.
+     * An empty array is returned if the request fails or no AAS Descriptors are found.
+     */
+    async function fetchSmList(): Promise<Array<any>> {
+        const failResponse = [] as Array<any>;
+
+        let smList = await fetchSmListFromRepo();
+
+        if (!smList || !Array.isArray(smList) || smList.length === 0) return failResponse;
+
+        smList = smList.map((aas: any) => {
+            aas.timestamp = formatDate(new Date());
+            aas.path = getSmEndpointByIdFromRepo(aas.id);
+            return aas;
+        });
+
+        return smList;
     }
 
     /**
@@ -309,6 +333,7 @@ export function useSMHandling() {
         fetchSmById,
         fetchSmDescriptorList,
         fetchSmDescriptor,
+        fetchSmList,
         setData,
     };
 }
