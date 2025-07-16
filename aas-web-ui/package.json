@@ -49,7 +49,7 @@
     "@types/node": "^24.0.14",
     "@types/prismjs": "^1.26.5",
     "@types/qrcode": "^1.5.5",
-    "@types/three": "^0.178.0",
+    "@types/three": "^0.178.1",
     "@types/uuid": "^10.0.0",
     "@types/webfontloader": "^1.6.38",
     "@vitejs/plugin-vue": "^6.0.0",
