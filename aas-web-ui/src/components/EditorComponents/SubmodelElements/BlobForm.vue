@@ -79,6 +79,7 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
     import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
+    import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -100,6 +101,7 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
 
     // Composables
     const { fetchSme, putSubmodelElement, postSubmodelElement } = useSMRepositoryClient();
+    const { fetchAndDispatchSme } = useSMEHandling();
 
     // Vue Router
     const router = useRouter();
@@ -328,19 +330,13 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
             }
 
             const editedElementSelected = route.query.path === props.path;
-            const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
             // Update the Blob Element
             if (props.parentElement.modelType === 'Submodel') {
                 await putSubmodelElement(blobObject.value, props.path);
 
                 if (editedElementSelected) {
-                    router.push({
-                        query: {
-                            aas: aasEndpoint,
-                            path: props.parentElement.path + '/submodel-elements/' + blobObject.value.idShort,
-                        },
-                    });
+                    fetchAndDispatchSme(props.parentElement.path + '/submodel-elements/' + blobObject.value.idShort);
                 }
             } else if (props.parentElement.modelType === 'SubmodelElementList') {
                 const index = props.parentElement.value.indexOf(
@@ -350,21 +346,14 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
                 await putSubmodelElement(blobObject.value, path);
 
                 if (editedElementSelected) {
-                    router.push({
-                        query: { aas: aasEndpoint, path: path },
-                    });
+                    fetchAndDispatchSme(path);
                 }
             } else {
                 // Submodel Element Collection or Entity
                 await putSubmodelElement(blobObject.value, props.blob.path);
 
                 if (editedElementSelected) {
-                    router.push({
-                        query: {
-                            aas: aasEndpoint,
-                            path: props.parentElement.path + '.' + blobObject.value.idShort,
-                        },
-                    });
+                    fetchAndDispatchSme(props.parentElement.path + '.' + blobObject.value.idShort);
                 }
             }
         }
