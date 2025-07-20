@@ -38,7 +38,6 @@
 
     const props = defineProps<{
         chartData: Array<Array<ChartDataPoint>>;
-        timeVariable: aasTypes.Property;
         yVariables: Array<aasTypes.Property>;
     }>();
 
