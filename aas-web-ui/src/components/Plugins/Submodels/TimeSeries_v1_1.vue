@@ -115,7 +115,8 @@
                     <template #title>
                         <div class="text-subtitle-2">{{ 'Preview Chart: ' }}</div>
                     </template>
-                    <template #append>
+                    <!-- TODO: Decide if we want to keep the dashboard integration -->
+                    <!-- <template #append>
                         <v-btn
                             v-if="selectedChartType && !hideSettings"
                             color="primary"
@@ -126,7 +127,7 @@
                             @click="createObject()"
                             >Dashboard</v-btn
                         >
-                    </template>
+                    </template> -->
                 </v-list-item>
             </v-list>
             <v-card-text class="pt-1">
@@ -187,571 +188,519 @@
                 <DisplayField
                     v-if="selectedChartType && selectedChartType.id == 6"
                     :chart-data="timeSeriesValues"
-                    :time-variable="timeVariable"
                     :y-variables="yVariables"></DisplayField>
             </v-card-text>
         </v-card>
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
+<script lang="ts" setup>
+    import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
-    import { useTheme } from 'vuetify';
     import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
-    import { useDashboardHandling } from '@/composables/DashboardHandling';
+    // import { useDashboardHandling } from '@/composables/DashboardHandling';
     import { useRequestHandling } from '@/composables/RequestHandling';
-    import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
-    export default defineComponent({
+    defineOptions({
         name: 'TimeSeriesData',
         semanticId: 'https://admin-shell.io/idta/TimeSeries/1/1',
-        props: ['submodelElementData', 'configData', 'editDialog', 'loadTrigger'],
-        emits: ['timeVal', 'YVal', 'newOptions'],
+    });
 
-        setup() {
-            const aasStore = useAASStore();
-            const envStore = useEnvStore();
-            const navigationStore = useNavigationStore();
+    const props = withDefaults(
+        defineProps<{
+            submodelElementData: any; // TODO: Convert SubmodelElementData to SubmodelElement Type of AAS Core Works
+            configData?: any;
+            editDialog?: boolean;
+            loadTrigger?: any;
+        }>(),
+        {
+            configData: null,
+            editDialog: false,
+            loadTrigger: null,
+        }
+    );
 
-            const theme = useTheme();
-            const route = useRoute();
+    const emit = defineEmits<{
+        (event: 'timeVal', value: any): void;
+        (event: 'YVal', value: any): void;
+        (event: 'segment', value: any): void;
+        (event: 'chartOptions', value: any): void;
+        (event: 'newOptions', value: any): void;
+    }>();
 
-            const { fetchCds } = useConceptDescriptionHandling();
-            const { checkIdShort, descriptionToDisplay, nameToDisplay } = useReferableUtils();
-            const { getRequest, postRequest } = useRequestHandling();
-            const { dashboardAdd } = useDashboardHandling();
+    // Stores
+    const envStore = useEnvStore();
+    const navigationStore = useNavigationStore();
 
-            return {
-                theme, // Theme Object
-                aasStore, // AASStore Object
-                envStore, // EnvironmentStore Object
-                navigationStore, // NavigationStore Object
-                route, // Route Object
-                descriptionToDisplay,
-                nameToDisplay,
-                checkIdShort,
-                fetchCds,
-                getRequest,
-                postRequest,
-                dashboardAdd,
-            };
+    // Composables
+    const { fetchCds } = useConceptDescriptionHandling();
+    const { checkIdShort, descriptionToDisplay, nameToDisplay } = useReferableUtils();
+    const { getRequest, postRequest } = useRequestHandling();
+    // const { dashboardAdd } = useDashboardHandling();
+
+    // vue-router
+    const route = useRoute();
+
+    const timeSeriesData = ref({} as any); // Object to store the data of the time series smt
+    const segments = ref([] as Array<any>); // Array to store the segments of the time series smt
+    const selectedSegment = ref(null as any); // Object to store the selected segment of the time series smt
+    const records = ref([] as Array<any>); // Array to store the records of the time series smt
+    const timeVariable = ref(null as any); // Object to store the selected time variable of the time series smt
+    const yVariables = ref([] as Array<any>); // Array to store the selected y variables of the time series smt
+    const yVariableTemplate = ref('{{y-value}}'); // String that is used to inject y-variable in linkedSeg Query
+    const apiToken = ref(''); // API Token for the Time Series Database
+    const showTokenInput = ref(true); // Boolean to show the API Token Input
+    const timeSeriesValues = ref([] as Array<any>); // Array to store the values of the time series smt
+    const chartTypes = ref<Array<{ id: number; name: string }>>([
+        { id: 1, name: 'Line Chart' },
+        { id: 2, name: 'Area Chart' },
+        { id: 3, name: 'Scatter Chart' },
+        { id: 4, name: 'Histogram' },
+        { id: 5, name: 'Gauge' },
+        { id: 6, name: 'Display Field' },
+    ]); // Array to store the chart types
+    const selectedChartType = ref(null as any); // Object to store the selected chart type
+    const chartOptions = ref({} as any); // Object to store the chart options
+
+    // Computed properties
+    const segmentType = computed(() => {
+        if (!selectedSegment.value) {
+            return null;
+        }
+
+        // create an array of semanticIds from the selected Segment (selectedSegment.value.semanticId.keys)
+        let semanticIds = selectedSegment.value.semanticId.keys.map((semanticId: any) => semanticId.value);
+
+        // check if the semanticIds contain the semanticId for InternalSegment
+        if (semanticIds.includes('https://admin-shell.io/idta/TimeSeries/Segments/InternalSegment/1/1')) {
+            return 'InternalSegment';
+        }
+
+        // check if the semanticIds contain the semanticId for LinkedSegment
+        if (semanticIds.includes('https://admin-shell.io/idta/TimeSeries/Segments/LinkedSegment/1/1')) {
+            return 'LinkedSegment';
+        }
+
+        // check if the semanticIds contain the semanticId for ExternalSegment
+        if (semanticIds.includes('https://admin-shell.io/idta/TimeSeries/Segments/ExternalSegment/1/1')) {
+            return 'ExternalSegment';
+        }
+
+        // return null if no Segment Type was found
+        return null;
+    });
+
+    const hideSettings = computed(() => {
+        return route.name === 'DashboardGroup';
+    });
+
+    watch(
+        () => props.loadTrigger,
+        () => {
+            initComponent();
         },
+        { immediate: true }
+    );
 
-        data() {
-            return {
-                timeSeriesData: {} as any, // Object to store the data of the time series smt
-                segments: [] as Array<any>, // Array to store the segments of the time series smt
-                selectedSegment: null as any, // Object to store the selected segment of the time series smt
-                records: [] as Array<any>, // Array to store the records of the time series smt
-                timeVariable: null as any, // Object to store the selected time variable of the time series smt
-                yVariables: [] as Array<any>, // Array to store the selected y variables of the time series smt
-                yVariableTemplate: '{{y-value}}' as string, // String that is used to inject y-variable in linkedSeg Query
-                apiToken: '', // API Token for the Time Series Database
-                showTokenInput: true, // Boolean to show the API Token Input
-                timeSeriesValues: [] as Array<any>, // Array to store the values of the time series smt
-                chartTypes: [
-                    { id: 1, name: 'Line Chart' },
-                    { id: 2, name: 'Area Chart' },
-                    { id: 3, name: 'Scatter Chart' },
-                    { id: 4, name: 'Histogram' },
-                    { id: 5, name: 'Gauge' },
-                    { id: 6, name: 'Display Field' },
-                ] as Array<any>, // Array to store the chart types
-                selectedChartType: null as any, // Object to store the selected chart type
-                chartOptions: {} as any, // Object to store the chart options
-            };
-        },
+    onMounted(() => {
+        initComponent();
+    });
 
-        computed: {
-            // get selected AAS from Store
-            SelectedAAS() {
-                return this.aasStore.getSelectedAAS;
-            },
+    function initComponent(): void {
+        initializeTimeSeriesData();
+        initDashboardTSD();
+        const influxDBToken = envStore.getEnvInfluxdbToken;
+        if (influxDBToken && influxDBToken !== '') {
+            apiToken.value = influxDBToken;
+            showTokenInput.value = false;
+        }
+    }
 
-            // Get the selected Treeview Node (SubmodelElement) from the store
-            SelectedNode() {
-                return this.aasStore.getSelectedNode;
-            },
+    function initializeTimeSeriesData(): void {
+        if (Object.keys(props.submodelElementData).length === 0) {
+            timeSeriesData.value = {};
+            return;
+        }
 
-            // Check if the current Theme is dark
-            isDark() {
-                return this.theme.global.current.value.dark;
-            },
-
-            // Determine Segment Type of the selected Segment
-            segmentType() {
-                if (!this.selectedSegment) {
-                    return null;
+        timeSeriesData.value = { ...props.submodelElementData }; // create local copy of the TimeSeriesData
+        // get the collection for segments
+        const segmentsSMC = timeSeriesData.value.submodelElements.find((smc: any) => checkIdShort(smc, 'Segments'));
+        // create an array of segments
+        segments.value = segmentsSMC.value;
+        // console.log('Segments: ', segments.value);
+        // get the collection for metadata
+        const metadataSMC = timeSeriesData.value.submodelElements.find((smc: any) => checkIdShort(smc, 'Metadata'));
+        // get the collection for records
+        const recordsSMC = metadataSMC.value.find((smc: any) => checkIdShort(smc, 'Record'));
+        // create an array of records
+        const recordsArray = recordsSMC.value;
+        // request the concept descriptions for the records (if they have semanticIds)
+        // Create a list of promises
+        let promises = recordsArray.map((record: any) => {
+            return fetchCds(record).then((response: any) => {
+                // add ConceptDescription to the record
+                if (response) {
+                    record.conceptDescriptions = response;
                 }
-                // create an array of semanticIds from the selected Segment (this.selectedSegment.semanticId.keys)
-                let semanticIds = this.selectedSegment.semanticId.keys.map((semanticId: any) => semanticId.value);
-                // check if the semanticIds contain the semanticId for InternalSegment
-                if (semanticIds.includes('https://admin-shell.io/idta/TimeSeries/Segments/InternalSegment/1/1')) {
-                    return 'InternalSegment';
-                }
-                // check if the semanticIds contain the semanticId for LinkedSegment
-                if (semanticIds.includes('https://admin-shell.io/idta/TimeSeries/Segments/LinkedSegment/1/1')) {
-                    return 'LinkedSegment';
-                }
-                // check if the semanticIds contain the semanticId for ExternalSegment
-                if (semanticIds.includes('https://admin-shell.io/idta/TimeSeries/Segments/ExternalSegment/1/1')) {
-                    return 'ExternalSegment';
-                }
-                // return null if no Segment Type was found
-                return null;
-            },
+                return record;
+            });
+        });
 
-            // check if plugin is in dashboard
-            hideSettings() {
-                if (this.route.name === 'DashboardGroup') {
-                    return true;
-                } else {
-                    return false;
-                }
-            },
-        },
+        // Wait for all promises to resolve and then update the reactive records
+        Promise.all(promises).then((updatedRecords) => {
+            // console.log('Updated Records: ', updatedRecords);
+            records.value = updatedRecords;
+        });
+    }
 
-        watch: {
-            loadTrigger() {
-                this.initializeTimeSeriesData();
-                this.initDashboardTSD();
-                const influxDBToken = this.envStore.getEnvInfluxdbToken;
-                if (influxDBToken && influxDBToken !== '') {
-                    this.apiToken = influxDBToken;
-                    this.showTokenInput = false;
-                }
-            },
-        },
+    function initDashboardTSD(): void {
+        if (!hideSettings.value) return;
+        selectedChartType.value = props.configData.configObject.chartType;
+        selectedSegment.value = props.configData.configObject.segment;
+        timeVariable.value = props.configData.configObject.timeVal;
+        // console.log(timeVariable.value);
+        yVariables.value = props.configData.configObject.yvals;
+        // add the chart type specific options to the chartOptions
+        chartOptions.value = props.configData.configObject.chartOptions;
+        // add the API Token to the API Token field if it is available
+        if (props.configData.configObject.apiToken && props.configData.configObject.apiToken !== '') {
+            apiToken.value = props.configData.configObject.apiToken;
+            showTokenInput.value = false;
+        }
+        if (checkIdShort(selectedSegment.value, 'InternalSegment')) fetchInternalData();
+        if (checkIdShort(selectedSegment.value, 'ExternalSegment')) fetchExternalData();
+        if (checkIdShort(selectedSegment.value, 'LinkedSegment')) fetchLinkedData();
+    }
 
-        mounted() {
-            this.initializeTimeSeriesData(); // initialize TimeSeriesData Plugin
-            this.initDashboardTSD();
-            const influxDBToken = this.envStore.getEnvInfluxdbToken;
-            if (influxDBToken && influxDBToken !== '') {
-                this.apiToken = influxDBToken;
-                this.showTokenInput = false;
-            }
-        },
+    function fetchInternalData(): void {
+        if (!selectedSegment.value || !timeVariable.value || yVariables.value.length === 0) {
+            return;
+        }
 
-        methods: {
-            // Function to initialize the TimeSeriesData Plugin
-            initializeTimeSeriesData() {
-                if (Object.keys(this.submodelElementData).length === 0) {
-                    this.timeSeriesData = {};
-                    return;
-                }
+        getRecordValues();
+    }
 
-                let timeSeriesData = { ...this.submodelElementData }; // create local copy of the TimeSeriesData
-                this.timeSeriesData = timeSeriesData; // set the local copy to the data object
-                // get the collection for segments
-                const segmentsSMC = timeSeriesData.submodelElements.find((smc: any) =>
-                    this.checkIdShort(smc, 'Segments')
-                );
-                // create an array of segments
-                this.segments = segmentsSMC.value;
-                // console.log('Segments: ', this.segments)
-                // get the collection for metadata
-                const metadataSMC = timeSeriesData.submodelElements.find((smc: any) =>
-                    this.checkIdShort(smc, 'Metadata')
-                );
-                // get the collection for records
-                const recordsSMC = metadataSMC.value.find((smc: any) => this.checkIdShort(smc, 'Record'));
-                // create an array of records
-                let records = recordsSMC.value;
-                // request the concept descriptions for the records (if they have semanticIds)
-                // Create a list of promises
-                let promises = records.map((record: any) => {
-                    return this.fetchCds(record).then((response: any) => {
-                        // add ConceptDescription to the record
-                        if (response) {
-                            record.conceptDescriptions = response;
-                        }
-                        return record;
-                    });
-                });
-
-                // Wait for all promises to resolve and then update this.records
-                Promise.all(promises).then((updatedRecords) => {
-                    // console.log('Updated Records: ', updatedRecords)
-                    this.records = updatedRecords;
-                });
-            },
-
-            initDashboardTSD() {
-                if (!this.hideSettings) return;
-                this.selectedChartType = this.configData.configObject.chartType;
-                // console.log(this.selectedChartType)
-                this.selectedSegment = this.configData.configObject.segment;
-                this.timeVariable = this.configData.configObject.timeVal;
-                // console.log(this.timeVariable)
-                this.yVariables = this.configData.configObject.yvals;
-                // add the chart type specific options to the chartOptions
-                this.chartOptions = this.configData.configObject.chartOptions;
-                // add the API Token to the API Token field if it is available
-                if (this.configData.configObject.apiToken && this.configData.configObject.apiToken !== '') {
-                    this.apiToken = this.configData.configObject.apiToken;
-                    this.showTokenInput = false;
-                }
-                if (this.checkIdShort(this.selectedSegment, 'LinkedSegment')) this.fetchLinkedData();
-                if (this.checkIdShort(this.selectedSegment, 'InternalSegment')) this.fetchInternalData();
-                if (this.checkIdShort(this.selectedSegment, 'ExternalSegment')) this.fetchExternalData();
-            },
-
-            fetchInternalData() {
-                if (!this.selectedSegment) {
-                    return;
-                }
-                if (!this.timeVariable) {
-                    return;
-                }
-                if (this.yVariables.length == 0) {
-                    return;
-                }
-                this.getRecordValues();
-            },
-
-            // Function to get the record values of an InternalSegment
-            getRecordValues() {
-                // console.log('Selected Segment: ', this.selectedSegment);
-                // get the records submodel element collection
-                const recordsSMC = this.selectedSegment.value.find((smc: any) => this.checkIdShort(smc, 'Records'));
-                // save the records in an array
-                const records = recordsSMC.value;
-                // console.log('Records: ', records, ' Time Variable: ', this.timeVariable, ' Y Variables: ', this.yVariables);
-                let transformedArray = this.yVariables
-                    .filter(
-                        (yVar) =>
-                            // Check if yVarEntry exists in all records
-                            records.every((item: any) =>
-                                item.value.some((entry: any) => this.checkIdShort(entry, yVar.idShort))
-                            ) ||
-                            // display an alert if the yVariable is not available in the records (specify the yVariable name)
-                            this.navigationStore.dispatchSnackbar({
-                                status: true,
-                                timeout: 4000,
-                                color: 'warning',
-                                btnColor: 'buttonText',
-                                text: 'y-value ' + yVar.idShort + ' not available in InternalSegment Records!',
-                            })
-                    )
-                    .map((yVar) => {
-                        // For each yVariable, go through each item in the original array
-                        return records.map((item: any) => {
-                            // Extract the time value
-                            const timeEntry = item.value.find((entry: any) =>
-                                this.checkIdShort(entry, this.timeVariable.idShort)
-                            );
-                            // display an alert if the timeVariable is not available the Records
-                            if (!timeEntry) {
-                                this.navigationStore.dispatchSnackbar({
-                                    status: true,
-                                    timeout: 4000,
-                                    color: 'warning',
-                                    btnColor: 'buttonText',
-                                    text:
-                                        'time-value ' +
-                                        this.timeVariable.idShort +
-                                        ' not available in InternalSegment Records!',
-                                });
-                            }
-                            const time = timeEntry ? timeEntry.value : null;
-
-                            // Extract the yVariable value
-                            const yVarEntry = item.value.find((entry: any) => this.checkIdShort(entry, yVar.idShort));
-                            const yVarValue = yVarEntry ? yVarEntry.value : null;
-
-                            // Return an object with time and the yVariable value
-                            return { time, value: yVarValue };
-                        });
-                    });
-
-                this.timeSeriesValues = transformedArray;
-            },
-
-            // Function to fetch the data from the API of the Time Series Database
-            fetchLinkedData() {
-                // check if a segment is selected
-                if (!this.selectedSegment || Object.keys(this.selectedSegment).length === 0) {
-                    console.warn('No Segment selected');
-                    return;
-                }
-                // get the Endpoint from the selected Segment
-                const endpoint = this.selectedSegment.value.find((smc: any) =>
-                    this.checkIdShort(smc, 'Endpoint')
-                ).value;
-                // get the query from the selected Segment
-                let query = this.selectedSegment.value.find((smc: any) => this.checkIdShort(smc, 'Query')).value;
-                if (this.yVariables.length > 0)
-                    query = query.replace(this.yVariableTemplate, this.yVariables[0].idShort);
-
-                // console.log('Endpoint: ', endpoint, ' Query: ', query);
-                // construct the headers for the request
-                let requestHeaders = new Headers();
-                requestHeaders.append('Authorization', 'Token ' + this.apiToken);
-                requestHeaders.append('Accept', 'application/csv');
-                requestHeaders.append('Content-Type', 'application/vnd.flux');
-                // construct the request
-                let path = endpoint;
-                let content = query;
-                let headers = requestHeaders;
-                let context = 'fetching data from Time Series Database';
-                let disableMessage = false;
-                // send the request
-                this.postRequest(path, content, headers, context, disableMessage, true).then((response: any) => {
-                    if (response.success) {
-                        // this.navigationStore.dispatchSnackbar({ status: true, timeout: 2000, color: 'success', btnColor: 'buttonText', text: 'Succesfully retrieved data!' });
-                        this.convertInfluxCSVtoArray(response.data);
-                    }
-                });
-            },
-
-            convertInfluxCSVtoArray(csvData: any) {
-                const lines = csvData.trim().split('\n');
-                const datasets = {} as any;
-                let currentDataset = [] as Array<any>;
-                let currentTable = null as any;
-                let headerLine = '';
-
-                lines.forEach((line: any) => {
-                    const columns = line.split(',');
-
-                    // Skip the header line (because it's not including data)
-                    if (columns[1] === 'result') {
-                        headerLine = line;
-                        return;
-                    }
-
-                    const table = columns[2];
-                    if (currentTable === null) {
-                        // this handles the first line after the header
-                        currentTable = table;
-                        currentDataset.push(line);
-                    } else if (table !== currentTable) {
-                        // this handles the first line of a new table
-                        const topic = this.extractTopic(currentDataset[0]);
-                        datasets[topic] = this.processDataset(headerLine, currentDataset);
-                        currentDataset = [line];
-                        currentTable = table;
-                    } else {
-                        // this handles all other lines
-                        currentDataset.push(line);
-                    }
-                });
-
-                if (currentDataset.length > 0) {
-                    // this handles the last dataset
-                    const topic = this.extractTopic(currentDataset[0]);
-                    datasets[topic] = this.processDataset(headerLine, currentDataset);
-                }
-
-                // console.log('Datasets: ', datasets);
-
-                // remove the keys from the datasets based on the yVariables
-                const datasetsKeys = Object.keys(datasets);
-                const datasetsFiltered = datasetsKeys.filter((key) =>
-                    this.yVariables.some((yVar) => key.includes(yVar.idShort))
-                );
-
-                // Find yVariables that are not in the datasets
-                const missingYVars = this.yVariables.filter(
-                    (yVar) => !datasetsFiltered.some((key) => key.includes(yVar.idShort))
-                );
-
-                // If there are any missing yVariables, display a warning snackbar
-                if (missingYVars.length > 0) {
-                    const missingYVarNames = missingYVars.map((yVar) => yVar.idShort).join(', ');
-                    this.navigationStore.dispatchSnackbar({
+    function getRecordValues(): void {
+        // console.log('Selected Segment: ', selectedSegment.value);
+        // get the records submodel element collection
+        const recordsSMC = selectedSegment.value.value.find((smc: any) => checkIdShort(smc, 'Records'));
+        // save the records in an array
+        const records = recordsSMC.value;
+        // console.log('Records: ', records, ' Time Variable: ', timeVariable.value, ' Y Variables: ', yVariables.value);
+        let transformedArray = yVariables.value
+            .filter(
+                (yVar) =>
+                    // Check if yVarEntry exists in all records
+                    records.every((item: any) => item.value.some((entry: any) => checkIdShort(entry, yVar.idShort))) ||
+                    // display an alert if the yVariable is not available in the records (specify the yVariable name)
+                    navigationStore.dispatchSnackbar({
                         status: true,
                         timeout: 4000,
                         color: 'warning',
                         btnColor: 'buttonText',
-                        text: 'y-values "' + missingYVarNames + '" not available in LinkedSegment Data!',
-                    });
-                }
-
-                // Order the datasets based on the yVariables
-                const newDatasets = this.yVariables
-                    .map((yVar) => datasetsFiltered.find((key) => key.includes(yVar.idShort)))
-                    .filter((key) => key !== undefined)
-                    .map((key: any) => datasets[key]);
-
-                // console.log('Filtered and Ordered Datasets: ', newDatasets);
-                this.timeSeriesValues = newDatasets;
-            },
-
-            extractTopic(headerLine: string) {
-                // Implement this method to extract the topic from the header line
-                // This is a placeholder implementation
-                const columns = headerLine.split(',');
-                return columns[columns.length - 1];
-            },
-
-            processDataset(headerLine: string, datasetLines: any) {
-                // console.log('Dataset Lines: ', datasetLines, ' Header Line: ', headerLine)
-                const headers = headerLine.split(',');
-                const valueIndex = headers.indexOf('_value');
-                const timeIndex = headers.indexOf('_time');
-
-                return datasetLines.slice(1).map((line: any) => {
-                    const columns = line.split(',');
-                    return {
-                        time: columns[timeIndex],
-                        value: parseFloat(columns[valueIndex]),
-                    };
-                });
-            },
-
-            fetchExternalData() {
-                if (!this.selectedSegment) {
-                    return;
-                }
-                if (!this.timeVariable) {
-                    return;
-                }
-                if (this.yVariables.length == 0) {
-                    return;
-                }
-                this.getFileData();
-            },
-
-            // Function to get the file contents of an ExternalSegments File
-            getFileData() {
-                // console.log('Selected Segment: ', this.selectedSegment);
-                // get the Data File/Blob submodel element
-                const dataFile = this.selectedSegment.value.find((smc: any) => this.checkIdShort(smc, 'Data'));
-                // determine the path to the file
-                let path = dataFile.value;
-                if (path.startsWith('/')) {
-                    path =
-                        this.submodelElementData.path +
-                        '/submodel-elements/Segments.' +
-                        this.selectedSegment.idShort +
-                        '.Data/attachment';
-                }
-                // console.log('Path: ', path);
-                // get the file contents
-                let context = 'retrieving File Contents';
-                let disableMessage = true;
-                this.getRequest(path, context, disableMessage).then((response: any) => {
-                    if (response.success) {
-                        // console.log('File Contents: ', response.data);
-                        this.convertPlainCSVtoArray(response.data);
-                    }
-                });
-            },
-
-            convertPlainCSVtoArray(csvData: any) {
-                const { headers, data } = this.parseCSV(csvData);
-                const timeIndex = headers.indexOf(this.timeVariable.idShort);
-                // handle the case where timeIndex is -1
-                if (timeIndex === -1) {
-                    this.navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 4000,
-                        color: 'warning',
-                        btnColor: 'buttonText',
-                        text: 'time-value ' + this.timeVariable.idShort + ' not available in ExternalSegment Data!',
-                    });
-                    return;
-                }
-                let yIndexes = this.yVariables.map((yVar) => headers.indexOf(yVar.idShort));
-                // display an alert if the yVariable is not available in the records (specify the yVariable name)
-                yIndexes.forEach((yIndex, index) => {
-                    if (yIndex === -1) {
-                        this.navigationStore.dispatchSnackbar({
+                        text: 'y-value ' + yVar.idShort + ' not available in InternalSegment Records!',
+                    })
+            )
+            .map((yVar) => {
+                // For each yVariable, go through each item in the original array
+                return records.map((item: any) => {
+                    // Extract the time value
+                    const timeEntry = item.value.find((entry: any) => checkIdShort(entry, timeVariable.value.idShort));
+                    // display an alert if the timeVariable is not available the Records
+                    if (!timeEntry) {
+                        navigationStore.dispatchSnackbar({
                             status: true,
                             timeout: 4000,
                             color: 'warning',
                             btnColor: 'buttonText',
                             text:
-                                'y-value ' + this.yVariables[index].idShort + ' not available in ExternalSegment Data!',
+                                'time-value ' +
+                                timeVariable.value.idShort +
+                                ' not available in InternalSegment Records!',
                         });
                     }
+                    const time = timeEntry ? timeEntry.value : null;
+
+                    // Extract the yVariable value
+                    const yVarEntry = item.value.find((entry: any) => checkIdShort(entry, yVar.idShort));
+                    const yVarValue = yVarEntry ? yVarEntry.value : null;
+
+                    // Return an object with time and the yVariable value
+                    return { time, value: yVarValue };
                 });
-                // handle the case where yIndexes contains -1 (remove only the -1 values)
-                yIndexes = yIndexes.filter((index) => index !== -1);
-                const datasets = yIndexes.map((yIndex) =>
-                    data.map((row) => ({
-                        time: row[timeIndex],
-                        value: Number(row[yIndex]),
-                    }))
-                );
-                // console.log('Datasets: ', datasets);
-                this.timeSeriesValues = datasets;
-            },
+            });
 
-            parseCSV(csvString: string) {
-                // Splitting by a regular expression to handle both \n and \r\n
-                const lines = csvString.split(/\r?\n/);
-                const headers = lines[0].split(',').map((header) => header.trim()); // Trimming to remove any trailing \r
-                // Filter out empty lines and then split each line into columns
-                const data = lines
-                    .slice(1)
-                    .filter((line) => line)
-                    .map((line) => line.split(','));
-                // console.log('Headers: ', headers, ' Data: ', data);
-                return { headers, data };
-            },
+        timeSeriesValues.value = transformedArray;
+    }
 
-            createObject() {
-                let dashboardElement = {} as any;
-                dashboardElement.title = this.submodelElementData.idShort;
-                dashboardElement.segment = this.selectedSegment;
-                dashboardElement.timeValue = this.timeVariable;
-                dashboardElement.yValues = this.yVariables;
-                if (this.apiToken && this.apiToken !== '') dashboardElement.apiToken = this.apiToken;
-                dashboardElement.chartType = this.selectedChartType;
-                dashboardElement.chartOptions = this.chartOptions;
-                this.dashboardAdd(dashboardElement);
-            },
+    function fetchExternalData(): void {
+        if (!selectedSegment.value || !timeVariable.value || yVariables.value.length === 0) {
+            return;
+        }
 
-            getChartOptions(options: any) {
-                // console.log('Chart Options: ', options);
-                this.chartOptions = options;
-                let chartOptionsObject = {
-                    chartOptions: options,
-                };
-                // Emit the new chart options to the Edit Element Dialog
-                this.$emit('newOptions', chartOptionsObject);
-            },
+        getFileData();
+    }
 
-            clearChartOptions(event: any) {
-                this.chartOptions = {};
-                let chartType = {
-                    chartType: event,
-                };
-                // Emit the new chart type to the Edit Element Dialog
-                this.$emit('newOptions', chartType);
-            },
+    function getFileData(): void {
+        // console.log('Selected Segment: ', selectedSegment.value);
+        // get the Data File/Blob submodel element
+        const dataFile = selectedSegment.value.value.find((smc: any) => checkIdShort(smc, 'Data'));
+        // determine the path to the file
+        let path = dataFile.value;
+        if (path.startsWith('/')) {
+            path =
+                props.submodelElementData.path +
+                '/submodel-elements/Segments.' +
+                selectedSegment.value.idShort +
+                '.Data/attachment';
+        }
+        // console.log('Path: ', path);
+        // get the file contents
+        let context = 'retrieving File Contents';
+        let disableMessage = true;
+        getRequest(path, context, disableMessage).then((response: any) => {
+            if (response.success) {
+                // console.log('File Contents: ', response.data);
+                convertPlainCSVtoArray(response.data);
+            }
+        });
+    }
 
-            emitSegment(event: any) {
-                let segmentObject = {
-                    segment: event,
-                };
-                // Emit the new segment to the Edit Element Dialog
-                this.$emit('newOptions', segmentObject);
-            },
+    function convertPlainCSVtoArray(csvData: any): void {
+        const { headers, data } = parseCSV(csvData);
+        const timeIndex = headers.indexOf(timeVariable.value.idShort);
+        // handle the case where timeIndex is -1
+        if (timeIndex === -1) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'warning',
+                btnColor: 'buttonText',
+                text: 'time-value ' + timeVariable.value.idShort + ' not available in ExternalSegment Data!',
+            });
+            return;
+        }
+        let yIndexes = yVariables.value.map((yVar) => headers.indexOf(yVar.idShort));
+        // display an alert if the yVariable is not available in the records (specify the yVariable name)
+        yIndexes.forEach((yIndex, index) => {
+            if (yIndex === -1) {
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 4000,
+                    color: 'warning',
+                    btnColor: 'buttonText',
+                    text: 'y-value ' + yVariables.value[index].idShort + ' not available in ExternalSegment Data!',
+                });
+            }
+        });
+        // handle the case where yIndexes contains -1 (remove only the -1 values)
+        yIndexes = yIndexes.filter((index) => index !== -1);
+        const datasets = yIndexes.map((yIndex) =>
+            data.map((row: any) => ({
+                time: row[timeIndex],
+                value: Number(row[yIndex]),
+            }))
+        );
+        // console.log('Datasets: ', datasets);
+        timeSeriesValues.value = datasets;
+    }
 
-            emitTimeValue(event: any) {
-                let timeValObject = {
-                    timeVal: event,
-                };
-                // Emit the new time value to the Edit Element Dialog
-                this.$emit('newOptions', timeValObject);
-            },
+    function parseCSV(csvString: string): { headers: Array<string>; data: Array<Array<string>> } {
+        // Splitting by a regular expression to handle both \n and \r\n
+        const lines = csvString.split(/\r?\n/);
+        const headers = lines[0].split(',').map((header) => header.trim()); // Trimming to remove any trailing \r
+        // Filter out empty lines and then split each line into columns
+        const data = lines
+            .slice(1)
+            .filter((line) => line)
+            .map((line) => line.split(','));
+        // console.log('Headers: ', headers, ' Data: ', data);
+        return { headers, data };
+    }
 
-            emitYValue(event: any) {
-                let yValObject = {
-                    yvals: event,
-                };
-                // Emit the new y values to the Edit Element Dialog
-                this.$emit('newOptions', yValObject);
-            },
-        },
-    });
+    function fetchLinkedData(): void {
+        // check if a segment is selected
+        if (!selectedSegment.value || Object.keys(selectedSegment.value).length === 0) {
+            console.warn('No Segment selected');
+            return;
+        }
+        // get the Endpoint from the selected Segment
+        const endpoint = selectedSegment.value.value.find((smc: any) => checkIdShort(smc, 'Endpoint')).value;
+        // get the query from the selected Segment
+        let query = selectedSegment.value.value.find((smc: any) => checkIdShort(smc, 'Query')).value;
+        if (yVariables.value.length > 0) query = query.replace(yVariableTemplate.value, yVariables.value[0].idShort);
+
+        // console.log('Endpoint: ', endpoint, ' Query: ', query);
+        // construct the headers for the request
+        let requestHeaders = new Headers();
+        requestHeaders.append('Authorization', 'Token ' + apiToken.value);
+        requestHeaders.append('Accept', 'application/csv');
+        requestHeaders.append('Content-Type', 'application/vnd.flux');
+        // construct the request
+        const path = endpoint;
+        const content = query;
+        const headers = requestHeaders;
+        const context = 'fetching data from Time Series Database';
+        const disableMessage = false;
+        // send the request
+        postRequest(path, content, headers, context, disableMessage, true).then((response: any) => {
+            if (response.success) {
+                convertInfluxCSVtoArray(response.data);
+            }
+        });
+    }
+
+    function convertInfluxCSVtoArray(csvData: any): void {
+        const lines = csvData.trim().split('\n');
+        const datasets = {} as any;
+        let currentDataset = [] as Array<any>;
+        let currentTable = null as any;
+        let headerLine = '';
+
+        lines.forEach((line: any) => {
+            const columns = line.split(',');
+
+            // Skip the header line (because it's not including data)
+            if (columns[1] === 'result') {
+                headerLine = line;
+                return;
+            }
+
+            const table = columns[2];
+            if (currentTable === null) {
+                // this handles the first line after the header
+                currentTable = table;
+                currentDataset.push(line);
+            } else if (table !== currentTable) {
+                // this handles the first line of a new table
+                const topic = extractTopic(currentDataset[0]);
+                datasets[topic] = processDataset(headerLine, currentDataset);
+                currentDataset = [line];
+                currentTable = table;
+            } else {
+                // this handles all other lines
+                currentDataset.push(line);
+            }
+        });
+
+        if (currentDataset.length > 0) {
+            // this handles the last dataset
+            const topic = extractTopic(currentDataset[0]);
+            datasets[topic] = processDataset(headerLine, currentDataset);
+        }
+
+        // console.log('Datasets: ', datasets);
+
+        // remove the keys from the datasets based on the yVariables
+        const datasetsKeys = Object.keys(datasets);
+        const datasetsFiltered = datasetsKeys.filter((key) =>
+            yVariables.value.some((yVar) => key.includes(yVar.idShort))
+        );
+
+        // Find yVariables that are not in the datasets
+        const missingYVars = yVariables.value.filter(
+            (yVar) => !datasetsFiltered.some((key) => key.includes(yVar.idShort))
+        );
+
+        // If there are any missing yVariables, display a warning snackbar
+        if (missingYVars.length > 0) {
+            const missingYVarNames = missingYVars.map((yVar) => yVar.idShort).join(', ');
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'warning',
+                btnColor: 'buttonText',
+                text: 'y-values "' + missingYVarNames + '" not available in LinkedSegment Data!',
+            });
+        }
+
+        // Order the datasets based on the yVariables
+        const newDatasets = yVariables.value
+            .map((yVar) => datasetsFiltered.find((key) => key.includes(yVar.idShort)))
+            .filter((key) => key !== undefined)
+            .map((key: any) => datasets[key]);
+
+        // console.log('Filtered and Ordered Datasets: ', newDatasets);
+        timeSeriesValues.value = newDatasets;
+    }
+
+    function extractTopic(headerLine: string): string {
+        // Implement this method to extract the topic from the header line
+        // This is a placeholder implementation
+        const columns = headerLine.split(',');
+        return columns[columns.length - 1];
+    }
+
+    function processDataset(headerLine: string, datasetLines: any): Array<{ time: string; value: number }> {
+        // console.log('Dataset Lines: ', datasetLines, ' Header Line: ', headerLine)
+        const headers = headerLine.split(',');
+        const valueIndex = headers.indexOf('_value');
+        const timeIndex = headers.indexOf('_time');
+
+        return datasetLines.slice(1).map((line: any) => {
+            const columns = line.split(',');
+            return {
+                time: columns[timeIndex],
+                value: parseFloat(columns[valueIndex]),
+            };
+        });
+    }
+
+    // function createObject(): void {
+    //     let dashboardElement = {} as any;
+    //     dashboardElement.title = props.submodelElementData.idShort;
+    //     dashboardElement.segment = selectedSegment.value;
+    //     dashboardElement.timeValue = timeVariable.value;
+    //     dashboardElement.yValues = yVariables.value;
+    //     if (apiToken.value && apiToken.value !== '') dashboardElement.apiToken = apiToken.value;
+    //     dashboardElement.chartType = selectedChartType.value;
+    //     dashboardElement.chartOptions = chartOptions.value;
+    //     dashboardAdd(dashboardElement);
+    // }
+
+    function getChartOptions(options: any): void {
+        // console.log('Chart Options: ', options);
+        chartOptions.value = options;
+        let chartOptionsObject = {
+            chartOptions: options,
+        };
+        // Emit the new chart options to the Edit Element Dialog
+        emit('newOptions', chartOptionsObject);
+    }
+
+    function clearChartOptions(event: any): void {
+        chartOptions.value = {};
+        let chartType = {
+            chartType: event,
+        };
+        // Emit the new chart type to the Edit Element Dialog
+        emit('newOptions', chartType);
+    }
+
+    function emitSegment(event: any): void {
+        let segmentObject = {
+            segment: event,
+        };
+        // Emit the new segment to the Edit Element Dialog
+        emit('newOptions', segmentObject);
+    }
+
+    function emitTimeValue(event: any): void {
+        let timeValObject = {
+            timeVal: event,
+        };
+        // Emit the new time value to the Edit Element Dialog
+        emit('newOptions', timeValObject);
+    }
+
+    function emitYValue(event: any): void {
+        let yValObject = {
+            yvals: event,
+        };
+        // Emit the new y values to the Edit Element Dialog
+        emit('newOptions', yValObject);
+    }
 </script>
