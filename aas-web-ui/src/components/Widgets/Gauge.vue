@@ -1,178 +1,237 @@
 <template>
     <v-container fluid class="pa-0">
-        <apexchart ref="gauge" height="350" :options="chartOptions" :series="chartSeries"></apexchart>
+        <div class="chart-container">
+            <div ref="gaugeChart"></div>
+        </div>
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-    import { useRoute } from 'vue-router';
+<script lang="ts" setup>
+    import ApexCharts from 'apexcharts';
+    import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
     import { useTheme } from 'vuetify';
-    import { useNavigationStore } from '@/store/NavigationStore';
+    import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
 
-    export default defineComponent({
-        name: 'Gauge',
-        props: ['chartData', 'timeVariable', 'yVariables', 'chartOptionsExternal', 'editDialog'],
+    const props = defineProps<{
+        chartData: any;
+        timeVariable: any;
+        yVariables: any;
+        chartOptionsExternal: any;
+        editDialog: boolean;
+    }>();
 
-        setup() {
-            const theme = useTheme();
-            const navigationStore = useNavigationStore();
-            const route = useRoute();
+    const emit = defineEmits<{
+        (event: 'chartOptions', value: any): void;
+    }>();
 
-            return {
-                theme, // Theme Object
-                navigationStore,
-                route, // Route Object
-            };
-        },
+    const theme = useTheme();
 
-        data() {
-            return {
-                chartSeries: [] as Array<any>,
-                chartOptions: {
-                    chart: {
-                        id: 'histogram',
-                        type: 'radialBar',
-                        height: 350,
-                        background: '#ffffff00',
-                    },
-                    plotOptions: {
-                        radialBar: {
-                            offsetY: 0,
-                            startAngle: -140,
-                            endAngle: 140,
-                            hollow: {
-                                margin: 5,
-                                size: '40%',
-                                background: 'transparent',
-                                image: undefined,
-                            },
-                            dataLabels: {
-                                name: {
-                                    fontSize: '16px',
-                                    color: undefined,
-                                    offsetY: 120,
-                                },
-                                value: {
-                                    offsetY: 76,
-                                    fontSize: '22px',
-                                    color: undefined,
-                                    formatter: function (val: any) {
-                                        return val;
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    theme: {
-                        mode: 'dark',
-                    },
-                } as any,
-                localChartOptions: {} as any,
-            };
-        },
+    // Composables
+    const { unitSuffix } = useConceptDescriptionHandling();
+    const { nameToDisplay } = useReferableUtils();
 
-        computed: {
-            // Check if the current Theme is dark
-            isDark() {
-                return this.theme.global.current.value.dark;
-            },
+    const gaugeChart = ref<HTMLElement | null>(null);
+    let chartInstance: ApexCharts | null = null;
 
-            // check if plugin is in dashboard
-            hideSettings() {
-                if (this.route.name === 'DashboardGroup') {
-                    return true;
-                } else {
-                    return false;
-                }
-            },
-        },
+    const localChartOptions = ref({} as any);
+    const currentUnits = ref<string[]>([]); // Store units for each gauge
 
-        watch: {
-            chartData: {
-                handler() {
-                    this.initializeSeries();
-                },
-                deep: true,
-            },
-
-            isDark() {
-                this.applyTheme();
-            },
-        },
-
-        mounted() {
-            this.$nextTick(() => {
-                const chart = (this.$refs.gauge as any).chart;
-                if (chart) {
-                    // console.log('Chart has rendered')
-                    // apply the theme on component mount
-                    this.applyTheme();
-                    // append the series to the chart
-                    this.initializeSeries();
-                }
-            });
-        },
-
-        methods: {
-            // Function to initialize the chart (by appending the series)
-            initializeSeries() {
-                // console.log('initializeSeries: ', this.chartData);
-                // extract the last object of each array in the chartData array
-                let values = this.chartData.map((data: any) => {
-                    return data[data.length - 1];
-                });
-                // extract the values from the objects
-                let chartValues = values.map((element: any) => {
-                    return Number(element.value).toFixed(2);
-                });
-                // determine the labels for each value
-                let chartLabels = values.map((element: any, index: number) => {
-                    let name = 'Value ' + Number(index + 1);
-                    // check if the yVariable exists
-                    if (this.yVariables.length > index) {
-                        // check if the yVariable has an idShort
-                        if (this.yVariables[index] && this.yVariables[index].idShort) {
-                            name = this.yVariables[index].idShort;
-                        }
-                    }
-                    return name;
-                });
-                // console.log('chartValues: ', chartValues);
-                // update the series
-                (this.$refs.gauge as any).updateSeries(chartValues);
-                // initialize the chartOptions in the Dashboard
-                if (this.hideSettings) {
-                    (this.$refs.gauge as any).updateOptions(this.chartOptionsExternal);
-                    this.localChartOptions = { ...this.chartOptionsExternal };
-                }
-                // update the labels
-                (this.$refs.gauge as any).updateOptions({
-                    labels: chartLabels,
-                });
-                // emit the chartOptions to the parent component
-                this.$emit('chartOptions', this.localChartOptions);
-            },
-
-            // Function to apply the selected theme to the chart
-            applyTheme() {
-                if (this.isDark) {
-                    // apply the dark theme to the chart options
-                    (this.$refs.gauge as any).updateOptions({
-                        theme: {
-                            mode: 'dark',
-                        },
-                    });
-                } else {
-                    // apply the light theme to the chart options
-                    (this.$refs.gauge as any).updateOptions({
-                        theme: {
-                            mode: 'light',
-                        },
-                    });
-                }
-            },
-        },
+    // Computed properties
+    const currentTheme = computed(() => {
+        return theme.global.current.value.dark;
     });
+
+    onMounted(async () => {
+        await nextTick(); // Ensure the DOM is updated
+        if (gaugeChart.value) {
+            renderChart();
+        } else {
+            console.error('Gauge element is not available.');
+        }
+    });
+
+    onUnmounted(() => {
+        if (chartInstance) {
+            chartInstance.destroy();
+            chartInstance = null;
+        }
+    });
+
+    watch(
+        () => props.chartData,
+        () => {
+            if (chartInstance) {
+                updateChartData();
+            } else {
+                renderChart();
+            }
+        },
+        { deep: true }
+    );
+
+    // Watch for theme changes and update the chart
+    watch(
+        () => currentTheme.value,
+        (newVal) => {
+            if (chartInstance) {
+                chartInstance.updateOptions(
+                    {
+                        theme: {
+                            mode: newVal ? 'dark' : 'light',
+                        },
+                    },
+                    false,
+                    true
+                );
+            }
+        }
+    );
+
+    function prepareGaugeData(): { values: number[]; labels: string[]; units: string[] } {
+        if (!props.chartData || !Array.isArray(props.chartData)) {
+            return { values: [], labels: [], units: [] };
+        }
+
+        // Extract the last object of each array in the chartData array
+        const values = props.chartData.map((data: any) => {
+            return data[data.length - 1];
+        });
+
+        // Extract the values from the objects
+        const chartValues = values.map((element: any) => {
+            return Number(element.value);
+        });
+
+        // Determine the labels for each value
+        const chartLabels = values.map((element: any, index: number) => {
+            let name = 'Value ' + Number(index + 1);
+            // Check if the yVariable exists
+            if (props.yVariables.length > index) {
+                name = nameToDisplay(props.yVariables[index]);
+            }
+            return name;
+        });
+
+        // Extract units for each value
+        const chartUnits = values.map((_element: any, index: number) => {
+            let unit = '';
+            if (props.yVariables.length > index && props.yVariables[index]) {
+                unit = unitSuffix(props.yVariables[index]);
+            }
+            return unit;
+        });
+
+        return { values: chartValues, labels: chartLabels, units: chartUnits };
+    }
+
+    function renderChart(): void {
+        if (!props.chartData || props.chartData.length === 0) {
+            console.warn('No chart data available to render.');
+            return;
+        }
+
+        if (gaugeChart.value) {
+            const { values, labels, units } = prepareGaugeData();
+
+            if (values.length === 0) {
+                console.warn('No gauge data available to render.');
+                return;
+            }
+
+            // Store units for use in formatter
+            currentUnits.value = units;
+
+            const chartOptions = {
+                chart: {
+                    id: 'gauge',
+                    type: 'radialBar',
+                    height: 350,
+                    background: '#ffffff00',
+                },
+                plotOptions: {
+                    radialBar: {
+                        offsetY: 0,
+                        startAngle: -140,
+                        endAngle: 140,
+                        hollow: {
+                            margin: 5,
+                            size: '40%',
+                            background: 'transparent',
+                            image: undefined,
+                        },
+                        dataLabels: {
+                            name: {
+                                fontSize: '16px',
+                                color: undefined,
+                                offsetY: 120,
+                            },
+                            value: {
+                                offsetY: 76,
+                                fontSize: '22px',
+                                color: undefined,
+                                formatter: function (val: any) {
+                                    let index = 0;
+                                    const currentVal = Number(val);
+
+                                    // Find the index by matching the value with the stored values
+                                    for (let i = 0; i < values.length; i++) {
+                                        if (Math.abs(values[i] - currentVal) < 0.001) {
+                                            index = i;
+                                            break;
+                                        }
+                                    }
+
+                                    const unit = currentUnits.value[index] || '';
+                                    const unitDisplay = unit ? ' ' + unit : '';
+                                    return Number(val).toFixed(2) + unitDisplay;
+                                },
+                            },
+                        },
+                    },
+                },
+                labels: labels,
+                theme: {
+                    mode: currentTheme.value ? 'dark' : 'light',
+                },
+                series: values,
+            };
+
+            // Override chart options with external options
+            if (props.chartOptionsExternal) {
+                Object.assign(chartOptions, props.chartOptionsExternal);
+            }
+
+            // Create and render the chart
+            chartInstance = new ApexCharts(gaugeChart.value, chartOptions);
+            chartInstance.render();
+
+            // Store the chart options
+            localChartOptions.value = { ...chartOptions };
+
+            // Emit the initial chart options
+            emit('chartOptions', localChartOptions.value);
+        }
+    }
+
+    function updateChartData(): void {
+        if (chartInstance) {
+            const { values, labels, units } = prepareGaugeData();
+
+            if (values.length === 0) {
+                return;
+            }
+
+            // Update stored units
+            currentUnits.value = units;
+
+            // Update series data
+            chartInstance.updateSeries(values, true);
+
+            // Update labels
+            chartInstance.updateOptions({
+                labels: labels,
+            });
+        }
+    }
 </script>
