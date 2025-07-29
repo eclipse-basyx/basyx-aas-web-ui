@@ -52,7 +52,7 @@
     "@types/three": "^0.178.1",
     "@types/uuid": "^10.0.0",
     "@types/webfontloader": "^1.6.38",
-    "@vitejs/plugin-vue": "^6.0.0",
+    "@vitejs/plugin-vue": "^6.0.1",
     "@vitest/coverage-istanbul": "3.2.4",
     "@vitest/ui": "^3.2.4",
     "@vue/test-utils": "^2.4.6",
