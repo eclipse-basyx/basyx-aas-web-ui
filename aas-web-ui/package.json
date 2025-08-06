@@ -36,7 +36,7 @@
     "vue": "^3.5.18",
     "vue-router": "^4.5.1",
     "vue3-apexcharts": "^1.8.0",
-    "vuetify": "^3.9.3",
+    "vuetify": "^3.9.4",
     "webfontloader": "^1.0.0"
   },
   "devDependencies": {
