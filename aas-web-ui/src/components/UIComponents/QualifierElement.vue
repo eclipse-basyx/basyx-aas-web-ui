@@ -9,19 +9,15 @@
                         {{ qualifierTitle }}
                     </span>
                 </v-expansion-panel-title>
-                <v-expansion-panel-text>
+                <v-expansion-panel-text class="mx-2 mb-2">
                     <v-divider class="mb-1" opacity="0.05"></v-divider>
-                    <v-list nav class="px-0">
-                        <v-list-item v-for="(qualifier, index) in qualifierArray" :key="index">
-                            {{ index }}
-                            <v-list-item-subtitle v-if="qualifier.kind && !isEmptyString(qualifier.kind)">
-                                <span class="text-caption">
-                                    {{ 'Kind: ' }}
-                                </span>
-                                <v-chip label size="x-small" border color="primary">
-                                    {{ qualifier.kind }}
-                                </v-chip>
-                            </v-list-item-subtitle>
+                    <v-list>
+                        <v-list-item
+                            v-for="(qualifier, index) in qualifierArray"
+                            :key="index"
+                            class="bg-elevatedCard mt-2"
+                            rounded>
+                            <!-- Qualifier SemanticId -->
                             <v-list-item-subtitle
                                 v-if="
                                     qualifier.semanticId &&
@@ -43,6 +39,23 @@
                                 :semantic-title="''"
                                 :small="true"
                                 class="mt-n4 mb-n2 ml-2" />
+                            <v-divider
+                                v-if="
+                                    qualifier.semanticId &&
+                                    qualifier.semanticId.keys &&
+                                    qualifier.semanticId.keys.length > 0
+                                "
+                                class="mt-2 mb-3"></v-divider>
+                            <!-- Qualifier Type -->
+                            <v-list-item-subtitle v-if="qualifier.type && !isEmptyString(qualifier.type)" class="pt-1">
+                                <span class="text-caption">
+                                    {{ 'Type: ' }}
+                                </span>
+                                <v-chip label size="x-small" border color="primary">
+                                    {{ qualifier.type }}
+                                </v-chip>
+                            </v-list-item-subtitle>
+                            <!-- Qualifier Value Type -->
                             <v-list-item-subtitle
                                 v-if="qualifier.valueType && !isEmptyString(qualifier.valueType)"
                                 class="pt-1">
@@ -53,21 +66,26 @@
                                     {{ qualifier.valueType }}
                                 </v-chip>
                             </v-list-item-subtitle>
-                            <v-list-item-subtitle class="pt-1">
-                                <span class="text-caption">
-                                    {{ 'Value: ' }}
-                                </span>
-                                <v-chip
-                                    v-if="qualifier.type && !isEmptyString(qualifier.type)"
-                                    label
-                                    size="x-small"
-                                    border
-                                    class="mr-2">
-                                    {{ qualifier.type }}
-                                </v-chip>
-                                <span>{{ qualifier.value }}</span>
+                            <!-- Qualifier Value -->
+                            <v-list-item-subtitle class="pt-4 pb-3">
+                                <v-text-field
+                                    :model-value="qualifier.value"
+                                    readonly
+                                    label="value"
+                                    variant="outlined"
+                                    density="compact"
+                                    hide-details></v-text-field>
                             </v-list-item-subtitle>
-                            <v-divider v-if="index < qualifierArray.length - 1" class="mt-3" />
+                            <template #append>
+                                <!-- Qualifier Kind -->
+                                <v-chip
+                                    v-if="qualifier.kind && !isEmptyString(qualifier.kind)"
+                                    class="ml-3"
+                                    size="x-small"
+                                    color="primary">
+                                    {{ qualifier.kind }}
+                                </v-chip>
+                            </template>
                         </v-list-item>
                     </v-list>
                 </v-expansion-panel-text>
