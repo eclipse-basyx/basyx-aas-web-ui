@@ -76,7 +76,7 @@
         // Trigger Keycloak logout
         if (authStore.getKeycloak) {
             authStore.getKeycloak.logout({
-                redirectUri: window.location.origin + route.path,
+                redirectUri: window.location.origin + window.location.pathname,
             });
         }
     }
