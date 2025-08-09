@@ -29,7 +29,7 @@ The username and password for InfluxDB are `admin` and `influxpassword`.
 1. Open the AAS Web UI in your browser (http://localhost:3000)
 2. Select the `TimeSeriesDemo` AAS and click on the `TimeSeriesTest` submodel in the treeview
 3. In the `Visualization`-window select the `InternalSegment` in the Segment dropdown
-4. Select `time` as time-value and `speed` as y-value
+4. Select `time` as time-value and for example`temperature` as y-value
 5. Click on `Fetch Data`
 6. In the `Preview Chart`-window select a chart type
 7. You should now see a chart with the time series data
@@ -39,7 +39,7 @@ The username and password for InfluxDB are `admin` and `influxpassword`.
 1. Open the AAS Web UI in your browser (http://localhost:3000)
 2. Select the `TimeSeriesDemo` AAS and click on the `TimeSeriesTest` submodel in the treeview
 3. In the `Visualization`-window select the `ExternalSegment` in the Segment dropdown
-4. Select `time` as time-value and `speed` and `temperature` as y-values
+4. Select `time` as time-value and for example `temperature` as y-value
 5. Click on `Fetch Data`
 6. In the `Preview Chart`-window select a chart type
 7. You should now see a chart with the time series data
@@ -56,7 +56,7 @@ Prerequisites:
 1. Open the AAS Web UI in your browser (http://localhost:3000)
 2. Select the `TimeSeriesDemo` AAS and click on the `TimeSeriesTest` submodel in the treeview
 3. In the `Visualization`-window select the `LinkedSegment` in the Segment dropdown
-4. Select `time` as time-value and `speed` and `temperature` as y-values
+4. Select `time` as time-value and for example `temperature` as y-value
 5. If you see an input field for the InfluxDB Token, copy the token from the docker.compose.yml file
 6. Click on `Fetch Data`
 7. In the `Preview Chart`-window select a chart type
