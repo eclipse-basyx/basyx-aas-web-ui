@@ -46,16 +46,16 @@
 
     function toggleTheme() {
         if (themeOption.value === 'dark') {
-            theme.global.name.value = 'dark';
+            theme.change('dark');
         } else if (themeOption.value === 'system') {
             // sets the Theme according to the Users preferred Theme
             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                theme.global.name.value = 'dark';
+                theme.change('dark');
             } else {
-                theme.global.name.value = 'light';
+                theme.change('light');
             }
         } else {
-            theme.global.name.value = 'light';
+            theme.change('light');
         }
         // save theme preference in local storage
         localStorage.setItem('theme', themeOption.value);

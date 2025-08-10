@@ -125,7 +125,7 @@
                                 submodelTreeUnfiltered.length > 0
                             ">
                             <!-- TODO: Evaluate and Replace with Vuetify Treeview Component when it gets fully released in Q1 2025 -->
-                            <VTreeview
+                            <Treeview
                                 v-for="item in submodelTree"
                                 :key="item.id"
                                 class="root"
@@ -134,7 +134,7 @@
                                 @open-edit-submodel-element-dialog="openEditSubmodelElementDialogForElement"
                                 @open-add-submodel-element-dialog="openAddSubmodelElementDialog"
                                 @open-edit-dialog="openEditDialog(false, $event)"
-                                @show-delete-dialog="openDeleteDialog"></VTreeview>
+                                @show-delete-dialog="openDeleteDialog"></Treeview>
                         </template>
                         <v-empty-state
                             v-else

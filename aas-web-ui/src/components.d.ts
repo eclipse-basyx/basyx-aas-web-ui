@@ -76,6 +76,7 @@ declare module 'vue' {
     PDFPreview: typeof import('./components/Plugins/PDFPreview.vue')['default']
     Property: typeof import('./components/SubmodelElements/Property.vue')['default']
     PropertyForm: typeof import('./components/EditorComponents/SubmodelElements/PropertyForm.vue')['default']
+    QualifierElement: typeof import('./components/UIComponents/QualifierElement.vue')['default']
     RadialChart: typeof import('./components/Widgets/RadialChart.vue')['default']
     Range: typeof import('./components/SubmodelElements/Range.vue')['default']
     RangeForm: typeof import('./components/EditorComponents/SubmodelElements/RangeForm.vue')['default']
@@ -111,10 +112,10 @@ declare module 'vue' {
     TextInput: typeof import('./components/EditorComponents/InputTypes/TextInput.vue')['default']
     ThemeSwitch: typeof import('./components/AppNavigation/Settings/ThemeSwitch.vue')['default']
     TimeSeries_v1_1: typeof import('./components/Plugins/Submodels/TimeSeries_v1_1.vue')['default']
+    Treeview: typeof import('./components/UIComponents/Treeview.vue')['default']
     UploadAAS: typeof import('./components/AppNavigation/UploadAAS.vue')['default']
     User: typeof import('./components/AppNavigation/User.vue')['default']
     VisualizationHeader: typeof import('./components/UIComponents/VisualizationHeader.vue')['default']
-    VTreeview: typeof import('./components/UIComponents/VTreeview.vue')['default']
     XMLPreview: typeof import('./components/Plugins/XMLPreview.vue')['default']
   }
 }
