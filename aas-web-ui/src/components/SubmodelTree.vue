@@ -633,7 +633,13 @@
                     if (has(item, childrenKey)) {
                         const filteredChildren = deepFilter(item[childrenKey], predicate);
                         // Return item with filtered children if any children match
-                        if (!isEmpty(filteredChildren)) return { ...item, [childrenKey]: filteredChildren };
+                        if (!isEmpty(filteredChildren)) {
+                            return {
+                                ...item,
+                                [childrenKey]: filteredChildren,
+                                ['children']: filteredChildren,
+                            };
+                        }
                     }
                 }
 
