@@ -385,10 +385,11 @@ export function useSMRepositoryClient() {
         // Create formData
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('fileName', file.name);
 
         const context = 'uploading file attachment';
         const disableMessage = false;
-        const requestPath = path + '/attachment' + '?fileName=' + file.name;
+        const requestPath = path + '/attachment';
         const headers = new Headers();
         const body = formData;
 

@@ -29,190 +29,216 @@
                     @change="changeVariant()"></v-switch>
             </v-col>
         </v-row>
-        <apexchart ref="histogram" height="350" :options="chartOptions" :series="chartSeries"></apexchart>
+        <div class="chart-container">
+            <div ref="histogramChart"></div>
+        </div>
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import _ from 'lodash';
-    import { defineComponent } from 'vue';
+<script lang="ts" setup>
+    import ApexCharts from 'apexcharts';
+    import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
     import { useChartHandling } from '@/composables/ChartHandling';
-    import { useNavigationStore } from '@/store/NavigationStore';
 
-    export default defineComponent({
-        name: 'Histogram',
-        props: ['chartData', 'timeVariable', 'yVariables', 'chartOptionsExternal', 'editDialog'],
+    const props = defineProps<{
+        chartData: any;
+        timeVariable: any;
+        yVariables: any;
+        chartOptionsExternal: any;
+        editDialog: boolean;
+    }>();
 
-        setup() {
-            const theme = useTheme();
-            const navigationStore = useNavigationStore();
-            const route = useRoute();
+    const emit = defineEmits<{
+        (event: 'chartOptions', value: any): void;
+    }>();
 
-            const { prepareHistogramData } = useChartHandling();
+    const theme = useTheme();
+    const route = useRoute();
 
-            return {
-                theme, // Theme Object
-                navigationStore,
-                route, // Route Object
-                prepareHistogramData,
-            };
-        },
+    const { prepareHistogramData } = useChartHandling();
 
-        data() {
-            return {
-                chartSeries: [] as Array<any>,
-                chartOptions: {
-                    chart: {
-                        id: 'histogram',
-                        type: 'bar',
-                        height: 350,
-                        stacked: false,
-                        background: '#ffffff00',
-                    },
-                    plotOptions: {
-                        bar: {
-                            borderRadius: 4,
-                            horizontal: false,
-                            dataLabels: {
-                                position: 'top',
-                            },
-                        },
-                    },
-                    legend: {
-                        show: false,
-                    },
-                    dataLabels: {
-                        enabled: true,
-                        offsetX: -6,
-                    },
-                    xaxis: {
-                        categories: [],
-                    },
-                    theme: {
-                        mode: 'dark',
-                    },
-                } as any,
-                localChartOptions: {} as any,
-                stacked: false,
-                numberOfCategories: 20,
-            };
-        },
+    const histogramChart = ref<HTMLElement | null>(null);
+    let chartInstance: ApexCharts | null = null;
 
-        computed: {
-            // Check if the current Theme is dark
-            isDark() {
-                return this.theme.global.current.value.dark;
-            },
+    const localChartOptions = ref({} as any);
+    const numberOfCategories = ref(20); // Default number of bins
+    const stacked = ref(false); // Default stacked state
 
-            // check if plugin is in dashboard
-            hideSettings() {
-                if (this.route.name === 'DashboardGroup') {
-                    return true;
-                } else {
-                    return false;
-                }
-            },
-        },
-
-        watch: {
-            chartData: {
-                handler() {
-                    this.initializeSeries();
-                },
-                deep: true,
-            },
-
-            isDark() {
-                this.applyTheme();
-            },
-        },
-
-        mounted() {
-            this.$nextTick(() => {
-                const chart = (this.$refs.histogram as any).chart;
-                if (chart) {
-                    // console.log('Chart has rendered')
-                    // apply the theme on component mount
-                    this.applyTheme();
-                    // append the series to the chart
-                    this.initializeSeries();
-                }
-            });
-        },
-
-        methods: {
-            // Function to initialize the chart (by appending the series)
-            initializeSeries() {
-                // console.log('initializeSeries: ', this.chartData);
-                let { histograms, categories } = this.prepareHistogramData(this.chartData, this.numberOfCategories);
-                // console.log('histograms: ', histograms, ' categories: ', categories);
-                if (!histograms || !categories || histograms.length === 0 || categories.length === 0) {
-                    return;
-                }
-                // initialize the chartOptions in the Dashboard
-                if (this.hideSettings) {
-                    (this.$refs.histogram as any).updateOptions(this.chartOptionsExternal);
-                    this.localChartOptions = { ...this.chartOptionsExternal };
-                    let completeOptions = _.merge({}, this.chartOptions, this.chartOptionsExternal);
-                    this.stacked = completeOptions.chart.stacked;
-                }
-                let newSeries = histograms.map((histogram: any) => {
-                    return {
-                        name: 'Number of values in bin',
-                        data: histogram,
-                    };
-                });
-                let chartOptions = {
-                    xaxis: {
-                        categories: categories,
-                    },
-                } as any;
-                // Update the chartOptions
-                (this.$refs.histogram as any).updateOptions(chartOptions);
-                // update the series
-                // console.log('chartSeries: ', newSeries);
-                (this.$refs.histogram as any).updateSeries(newSeries);
-                // emit the chartOptions to the parent component
-                this.$emit('chartOptions', this.localChartOptions);
-            },
-
-            changeVariant() {
-                let newOptions = {
-                    chart: {
-                        stacked: this.stacked,
-                    },
-                };
-                // update the chart options
-                (this.$refs.histogram as any).updateOptions(newOptions);
-                // create a complete chartOptions object
-                let completeOptions = _.merge({}, this.localChartOptions, newOptions);
-                // emit the chartOptions to the parent component
-                this.$emit('chartOptions', completeOptions);
-                // update the local chartOptions
-                this.localChartOptions = completeOptions;
-            },
-
-            // Function to apply the selected theme to the chart
-            applyTheme() {
-                if (this.isDark) {
-                    // apply the dark theme to the chart options
-                    (this.$refs.histogram as any).updateOptions({
-                        theme: {
-                            mode: 'dark',
-                        },
-                    });
-                } else {
-                    // apply the light theme to the chart options
-                    (this.$refs.histogram as any).updateOptions({
-                        theme: {
-                            mode: 'light',
-                        },
-                    });
-                }
-            },
-        },
+    // Computed properties
+    const currentTheme = computed(() => {
+        return theme.global.current.value.dark;
     });
+    const hideSettings = computed(() => {
+        return route.name === 'DashboardGroup';
+    });
+
+    onMounted(async () => {
+        await nextTick(); // Ensure the DOM is updated
+        if (histogramChart.value) {
+            renderChart();
+        } else {
+            console.error('Histogram element is not available.');
+        }
+    });
+
+    onUnmounted(() => {
+        if (chartInstance) {
+            chartInstance.destroy();
+            chartInstance = null;
+        }
+    });
+
+    watch(
+        () => props.chartData,
+        () => {
+            if (chartInstance) {
+                updateChartData();
+            } else {
+                renderChart();
+            }
+        },
+        { deep: true }
+    );
+
+    // Watch for theme changes and update the chart
+    watch(
+        () => currentTheme.value,
+        (newVal) => {
+            if (chartInstance) {
+                chartInstance.updateOptions(
+                    {
+                        theme: {
+                            mode: newVal ? 'dark' : 'light',
+                        },
+                    },
+                    false,
+                    true
+                );
+            }
+        }
+    );
+
+    function renderChart(): void {
+        if (Object.keys(props.chartData).length === 0) {
+            console.warn('No chart data available to render.');
+            return;
+        }
+
+        if (histogramChart.value) {
+            const { histograms, categories } = prepareHistogramData(props.chartData, numberOfCategories.value);
+
+            if (!histograms || !categories || histograms.length === 0 || categories.length === 0) {
+                console.warn('No histogram data available to render.');
+                return;
+            }
+
+            const series = histograms.map((histogram: any) => ({
+                name: 'Number of values in bin',
+                data: histogram,
+            }));
+
+            const chartOptions = {
+                chart: {
+                    id: 'histogram',
+                    type: 'bar',
+                    height: 350,
+                    stacked: false,
+                    background: '#ffffff00',
+                    zoom: {
+                        enabled: false,
+                    },
+                },
+                plotOptions: {
+                    bar: {
+                        borderRadius: 4,
+                        horizontal: false,
+                        dataLabels: {
+                            position: 'top',
+                        },
+                    },
+                },
+                legend: {
+                    show: false,
+                },
+                dataLabels: {
+                    enabled: true,
+                    offsetX: -6,
+                },
+                xaxis: {
+                    categories: categories,
+                },
+                theme: {
+                    mode: currentTheme.value ? 'dark' : 'light',
+                },
+                series: series,
+            };
+
+            // Override chart options with external options
+            if (props.chartOptionsExternal) {
+                Object.assign(chartOptions, props.chartOptionsExternal);
+
+                // Save the stacked state from external options
+                stacked.value = chartOptions.chart.stacked || false;
+            }
+
+            // Create and render the chart
+            chartInstance = new ApexCharts(histogramChart.value, chartOptions);
+            chartInstance.render();
+
+            // Store the chart options
+            localChartOptions.value = { ...chartOptions };
+
+            // Emit the initial chart options
+            emit('chartOptions', localChartOptions.value);
+        }
+    }
+
+    function updateChartData(): void {
+        if (chartInstance) {
+            const { histograms, categories } = prepareHistogramData(props.chartData, numberOfCategories.value);
+
+            if (!histograms || !categories || histograms.length === 0 || categories.length === 0) {
+                return;
+            }
+
+            const series = histograms.map((histogram: any) => ({
+                name: 'Number of values in bin',
+                data: histogram,
+            }));
+
+            // Update series data
+            chartInstance.updateSeries(series, true);
+
+            // Update categories
+            chartInstance.updateOptions({
+                xaxis: {
+                    categories: categories,
+                },
+            });
+        }
+    }
+
+    function initializeSeries(): void {
+        updateChartData();
+    }
+
+    function changeVariant(): void {
+        if (chartInstance) {
+            chartInstance.updateOptions({
+                chart: {
+                    stacked: stacked.value,
+                },
+            });
+
+            localChartOptions.value = {
+                ...localChartOptions.value,
+                chart: { ...localChartOptions.value.chart, stacked: stacked.value },
+            };
+
+            // Emit the updated options
+            emit('chartOptions', localChartOptions.value);
+        }
+    }
 </script>
