@@ -77,6 +77,14 @@
                         "
                         :supplemental-semantic-ids-array="submodelElementData.supplementalSemanticIds"
                         :supplemental-semantic-ids-title="'Supplemental Semantic ID'"></SupplementalSemanticID>
+                    <v-divider
+                        v-if="submodelElementData.qualifiers && submodelElementData.qualifiers.length > 0"
+                        class="mt-2"></v-divider>
+                    <QualifierElement
+                        v-if="submodelElementData.qualifiers && submodelElementData.qualifiers.length > 0"
+                        :qualifier-array="submodelElementData.qualifiers"
+                        :qualifier-title="'Qualifiers'"
+                        :small="false"></QualifierElement>
                 </v-list>
                 <v-divider></v-divider>
                 <v-list nav class="px-4 pt-0 pb-5">
@@ -156,9 +164,7 @@
                     </v-expansion-panel-title>
                     <v-divider v-if="expandedCdIndex === index"></v-divider>
                     <v-expansion-panel-text class="pa-0 ma-0">
-                        <ConceptDescription
-                            :concept-description-object="conceptDescription"
-                            class="mt-2"></ConceptDescription>
+                        <ConceptDescription :concept-description-object="conceptDescription"></ConceptDescription>
                     </v-expansion-panel-text>
                 </v-expansion-panel>
             </v-expansion-panels>

@@ -48,9 +48,7 @@ export default defineConfig(({ mode }) => {
         },
         css: {
             preprocessorOptions: {
-                sass: {
-                    api: 'modern-compiler',
-                },
+                sass: {},
             },
         },
     };

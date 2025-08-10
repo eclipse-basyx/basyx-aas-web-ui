@@ -376,21 +376,21 @@
         const storedTheme = localStorage.getItem('theme');
         if (storedTheme) {
             if (storedTheme === 'dark' || storedTheme === 'light') {
-                theme.global.name.value = storedTheme;
+                theme.change(storedTheme);
             } else {
                 // sets the Theme according to the Users preferred Theme
                 if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    theme.global.name.value = 'dark';
+                    theme.change('dark');
                 } else {
-                    theme.global.name.value = 'light';
+                    theme.change('light');
                 }
             }
         } else {
             // sets the Theme according to the Users preferred Theme
             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                theme.global.name.value = 'dark';
+                theme.change('dark');
             } else {
-                theme.global.name.value = 'light';
+                theme.change('light');
             }
         }
     }

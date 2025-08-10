@@ -22,226 +22,223 @@
                     @keydown.enter="changeRange()"></v-text-field>
             </v-col>
         </v-row>
-        <apexchart
-            ref="scatterchart"
-            type="scatter"
-            height="350"
-            :options="chartOptions"
-            :series="chartSeries"></apexchart>
+        <div class="chart-container">
+            <div ref="scatterChart"></div>
+        </div>
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import _ from 'lodash';
-    import { defineComponent } from 'vue';
+<script lang="ts" setup>
+    import ApexCharts from 'apexcharts';
+    import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
     import { useChartHandling } from '@/composables/ChartHandling';
 
-    export default defineComponent({
-        name: 'AreaChart',
-        props: ['chartData', 'timeVariable', 'yVariables', 'chartOptionsExternal', 'editDialog'],
+    const props = defineProps<{
+        chartData: any;
+        timeVariable: any;
+        yVariables: any;
+        chartOptionsExternal: any;
+        editDialog: boolean;
+    }>();
 
-        setup() {
-            const theme = useTheme();
-            const route = useRoute();
+    const emit = defineEmits<{
+        (event: 'chartOptions', value: any): void;
+    }>();
 
-            const { prepareSeriesValues, prepareYValueTooltip, prepareLegend } = useChartHandling();
+    const theme = useTheme();
+    const route = useRoute();
 
-            return {
-                theme, // Theme Object
-                route, // Route Object
-                prepareSeriesValues,
-                prepareYValueTooltip,
-                prepareLegend,
-            };
+    const { prepareSeriesValues, prepareYValueTooltip, prepareLegend } = useChartHandling();
+
+    const scatterChart = ref<HTMLElement | null>(null);
+    let chartInstance: ApexCharts | null = null;
+
+    const localChartOptions = ref({} as any);
+    const range = ref(60000); // Default range in milliseconds
+
+    // Computed properties
+    const currentTheme = computed(() => {
+        return theme.global.current.value.dark;
+    });
+    const hideSettings = computed(() => {
+        return route.name === 'DashboardGroup';
+    });
+
+    onMounted(async () => {
+        await nextTick(); // Ensure the DOM is updated
+        if (scatterChart.value) {
+            renderChart();
+        } else {
+            console.error('ScatterChart element is not available.');
+        }
+    });
+
+    onUnmounted(() => {
+        if (chartInstance) {
+            chartInstance.destroy();
+            chartInstance = null;
+        }
+    });
+
+    watch(
+        () => props.chartData,
+        () => {
+            if (chartInstance) {
+                updateChartData();
+            } else {
+                renderChart();
+            }
         },
+        { deep: true }
+    );
 
-        data() {
-            return {
-                chartSeries: [] as Array<any>,
-                chartOptions: {
-                    chart: {
-                        id: 'scatter',
-                        type: 'scatter',
-                        height: 350,
-                        background: '#ffffff00',
+    // Watch for theme changes and update the chart
+    watch(
+        () => currentTheme.value,
+        (newVal) => {
+            if (chartInstance) {
+                chartInstance.updateOptions(
+                    {
+                        markers: {
+                            strokeColors: newVal ? '#1E1E1E' : '#FFFFFF',
+                        },
+                        theme: {
+                            mode: newVal ? 'dark' : 'light',
+                        },
                     },
-                    legend: {
-                        show: true,
-                        showForSingleSeries: true,
-                    },
-                    dataLabels: {
+                    false,
+                    true
+                );
+            }
+        }
+    );
+
+    function renderChart(): void {
+        if (Object.keys(props.chartData).length === 0) {
+            console.warn('No chart data available to render.');
+            return;
+        }
+
+        if (scatterChart.value) {
+            const series = prepareSeriesValues(props.chartData, props.yVariables);
+            const tooltipY = prepareYValueTooltip(props.chartData, props.yVariables);
+            const legend = prepareLegend(props.yVariables);
+
+            const chartOptions = {
+                chart: {
+                    id: 'scatter',
+                    type: 'scatter',
+                    height: 350,
+                    background: '#ffffff00',
+                    zoom: {
                         enabled: false,
                     },
-                    xaxis: {
-                        type: 'datetime',
-                        range: 60000,
-                        tickAmount: 10,
-                        labels: {
-                            datetimeFormatter: {
-                                year: 'yyyy',
-                                month: "MMM 'yy",
-                                day: 'dd MMM',
-                                hour: 'HH:mm',
-                            },
-                            datetimeUTC: false,
-                        },
-                        tickPlacement: 'on',
-                    },
-                    yaxis: {
-                        decimalsInFloat: 2,
-                    },
-                    markers: {
-                        size: 4,
-                        strokeColors: '#ffffff',
-                    },
-                    grid: {
-                        xaxis: {
-                            lines: {
-                                show: false,
-                            },
-                        },
-                    },
-                    tooltip: {
-                        x: {
-                            format: 'dd MMM yyyy HH:mm:ss',
-                        },
-                    },
-                    theme: {
-                        mode: 'dark',
-                    },
-                } as any,
-                localChartOptions: {} as any,
-                range: 60000,
-            };
-        },
-
-        computed: {
-            // Check if the current Theme is dark
-            isDark() {
-                return this.theme.global.current.value.dark;
-            },
-
-            // check if plugin is in dashboard
-            hideSettings() {
-                if (this.route.name === 'DashboardGroup') {
-                    return true;
-                } else {
-                    return false;
-                }
-            },
-        },
-
-        watch: {
-            // appendData to the chart if the submodelElementData changed
-            chartData: {
-                handler() {
-                    this.initializeSeries();
                 },
-                deep: true,
-            },
-
-            // apply the chart-theme if the theme changed
-            isDark() {
-                this.applyTheme();
-            },
-        },
-
-        mounted() {
-            this.$nextTick(() => {
-                const chart = (this.$refs.scatterchart as any).chart;
-                if (chart) {
-                    // console.log('Chart has rendered')
-                    // apply the theme on component mount
-                    this.applyTheme();
-                    // append the series to the chart
-                    this.initializeSeries();
-                }
-            });
-        },
-
-        methods: {
-            // Function to initialize the chart (by appending the series)
-            initializeSeries() {
-                // console.log('initializeSeries: ', this.chartData, this.timeVariable, this.yVariables);
-                // Prepare new series values
-                let newSeries = this.prepareSeriesValues(this.chartData, this.yVariables);
-                // prepare the tooltip for the y-axis
-                let tooltip_y = this.prepareYValueTooltip(this.chartData, this.yVariables);
-                // prepare the legend for the series
-                let legend = this.prepareLegend(this.yVariables);
-                // console.log('newSeries: ', newSeries);
-                // update the series
-                (this.$refs.scatterchart as any).updateSeries(newSeries);
-                // initialize the chartOptions in the Dashboard
-                if (this.hideSettings) {
-                    (this.$refs.scatterchart as any).updateOptions(this.chartOptionsExternal);
-                    this.localChartOptions = { ...this.chartOptionsExternal };
-                    let completeOptions = _.merge({}, this.chartOptions, this.chartOptionsExternal);
-                    this.range = completeOptions.xaxis.range;
-                }
-                // console.log('tooltip y: ', tooltip_y);
-                // update the tooltip
-                (this.$refs.scatterchart as any).updateOptions({
-                    tooltip: {
-                        y: tooltip_y,
+                legend: legend,
+                dataLabels: {
+                    enabled: false,
+                },
+                xaxis: {
+                    type: 'datetime',
+                    range: 60000,
+                    tickAmount: 10,
+                    labels: {
+                        datetimeFormatter: {
+                            year: 'yyyy',
+                            month: "MMM 'yy",
+                            day: 'dd MMM',
+                            hour: 'HH:mm',
+                        },
+                        datetimeUTC: false,
                     },
-                    legend: legend,
-                });
-                // emit the chartOptions to the parent component
-                this.$emit('chartOptions', this.localChartOptions);
-            },
-
-            changeRange() {
-                let range = Number(this.range);
-                if (!range) {
-                    this.range = 60000;
-                    return;
-                }
-                if (range <= 0) {
-                    return;
-                }
-                let newOptions = {
+                    tickPlacement: 'on',
+                },
+                yaxis: {
+                    decimalsInFloat: 2,
+                },
+                markers: {
+                    size: 4,
+                    strokeColors: currentTheme.value ? '#1E1E1E' : '#FFFFFF',
+                },
+                grid: {
                     xaxis: {
-                        range: this.range,
+                        lines: {
+                            show: false,
+                        },
                     },
-                };
-                // update the chart options
-                (this.$refs.scatterchart as any).updateOptions(newOptions);
-                // create a complete chartOptions object
-                let completeOptions = _.merge({}, this.localChartOptions, newOptions);
-                // emit the chartOptions to the parent component
-                this.$emit('chartOptions', completeOptions);
-                // update the local chartOptions
-                this.localChartOptions = completeOptions;
-            },
+                },
+                tooltip: {
+                    x: {
+                        format: 'dd MMM yyyy HH:mm:ss',
+                    },
+                    y: tooltipY,
+                },
+                theme: {
+                    mode: currentTheme.value ? 'dark' : 'light',
+                },
+                series: series,
+            };
 
-            // Function to apply the selected theme to the chart
-            applyTheme() {
-                if (this.isDark) {
-                    // apply the dark theme to the chart options
-                    (this.$refs.scatterchart as any).updateOptions({
-                        theme: {
-                            mode: 'dark',
-                        },
-                        markers: {
-                            strokeColors: '#1E1E1E',
-                        },
-                    });
-                } else {
-                    // apply the light theme to the chart options
-                    (this.$refs.scatterchart as any).updateOptions({
-                        theme: {
-                            mode: 'light',
-                        },
-                        markers: {
-                            strokeColors: '#ffffff',
-                        },
-                    });
-                }
-            },
-        },
-    });
+            // Override chart options with external options
+            if (props.chartOptionsExternal) {
+                Object.assign(chartOptions, props.chartOptionsExternal);
+
+                // Save the range from external options
+                range.value = chartOptions.xaxis.range || 60000;
+            }
+
+            // Create and render the chart
+            chartInstance = new ApexCharts(scatterChart.value, chartOptions);
+            chartInstance.render();
+
+            // Store the chart options
+            localChartOptions.value = { ...chartOptions };
+
+            // Emit the initial chart options
+            emit('chartOptions', localChartOptions.value);
+        }
+    }
+
+    function updateChartData(): void {
+        if (chartInstance) {
+            const series = prepareSeriesValues(props.chartData, props.yVariables);
+            const tooltipY = prepareYValueTooltip(props.chartData, props.yVariables);
+            const legend = prepareLegend(props.yVariables);
+
+            // Update series data
+            chartInstance.updateSeries(series, true);
+
+            // Update options
+            chartInstance.updateOptions({
+                tooltip: {
+                    y: tooltipY,
+                },
+                legend: legend,
+            });
+        }
+    }
+
+    function changeRange(): void {
+        let rangeValue = Number(range.value);
+
+        if (!rangeValue || rangeValue <= 0) {
+            range.value = 60000; // Reset to default if invalid
+            return;
+        }
+
+        if (chartInstance) {
+            chartInstance.updateOptions({
+                xaxis: {
+                    range: rangeValue,
+                },
+            });
+
+            localChartOptions.value = { ...localChartOptions.value, xaxis: { range: rangeValue } };
+
+            // Emit the updated options
+            emit('chartOptions', localChartOptions.value);
+        }
+    }
 </script>

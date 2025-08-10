@@ -215,16 +215,20 @@
             },
 
             // Function to upload a File
-            uploadFile() {
+            async uploadFile() {
                 // console.log("Upload File: ", this.newFile);
                 // check if a file is selected
                 if (this.newFile.length == 0) return;
 
-                this.putAttachmentFile(this.newFile, this.SelectedNode.path).then((response: any) => {
+                try {
+                    const response = await this.putAttachmentFile(this.newFile, this.SelectedNode.path);
                     if (response) {
-                        location.reload(); // reload the page to update the file preview
+                        await this.fetchAndDispatchSme(this.SelectedNode.path, false);
+                        this.newFile = [];
                     }
-                });
+                } catch (error) {
+                    console.error('Error uploading file:', error);
+                }
             },
 
             // Function to set the focus on the input field
