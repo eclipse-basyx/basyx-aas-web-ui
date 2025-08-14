@@ -76,6 +76,18 @@
                                             </template>
                                             <span>Create a new AAS</span>
                                         </v-tooltip>
+                                        <!-- Create from Template -->
+                                        <v-tooltip open-delay="600" location="end">
+                                            <template #activator="{ props }">
+                                                <v-list-item slim v-bind="props" @click="openTemplateDialog">
+                                                    <template #prepend>
+                                                        <v-icon size="small">mdi-file-document-plus</v-icon>
+                                                    </template>
+                                                    Create from Template
+                                                </v-list-item>
+                                            </template>
+                                            <span>Create a new AAS from a template</span>
+                                        </v-tooltip>
                                     </v-list>
                                 </v-sheet>
                             </v-menu>
@@ -282,12 +294,23 @@
     <UploadAAS v-model="uploadAASDialog"></UploadAAS>
     <!-- Dialog for deleting AAS -->
     <DeleteAAS v-model="deleteDialog" :aas="aasToDelete" :list-loading-state="listLoading"></DeleteAAS>
+    <!-- Template dialogs -->
+    <TemplateSelectionDialog
+        v-model="templateDialog"
+        :loading="templateTransitionLoading"
+        @selected="handleTemplateSelected" />
+    <TemplateBasedAASCreator
+        v-if="selectedTemplate"
+        v-model="showTemplateCreator"
+        :template="selectedTemplate"
+        @created="handleTemplateCreated"
+        @closed="handleTemplateCreatorClosed" />
 </template>
 
 <script lang="ts" setup>
     import type { ComponentPublicInstance } from 'vue';
     import debounce from 'lodash/debounce';
-    import { computed, onActivated, onBeforeUnmount, onMounted, Ref, ref, watch } from 'vue';
+    import { computed, nextTick, onActivated, onBeforeUnmount, onMounted, Ref, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
@@ -297,6 +320,11 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    //import AASCreationFlow from '@/UserPlugins/TemplateAASPlugin/components/AASCreationFlow.vue';
+    import TemplateBasedAASCreator from '@/UserPlugins/TemplateAASPlugin/components/TemplateBasedAASCreator.vue';
+    import TemplateSelectionDialog from '@/UserPlugins/TemplateAASPlugin/components/TemplateSelectionDialog.vue';
+    import { AASTemplate } from '@/UserPlugins/TemplateAASPlugin/types/templates/TemplateTypes';
+    import DeleteAAS from './DeleteAAS.vue';
 
     // Extend the ComponentPublicInstance type to include scrollToIndex
     interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -309,7 +337,7 @@
 
     // Composables
     const { downloadAasx } = useAASRepositoryClient();
-    const { fetchAasDescriptorList, fetchAasList, aasIsAvailableById } = useAASHandling();
+    const { fetchAasDescriptorList, fetchAasList, aasIsAvailableById, getAasEndpointById } = useAASHandling();
     const { nameToDisplay, descriptionToDisplay } = useReferableUtils();
     const { copyToClipboard } = useClipboardUtil();
 
@@ -335,6 +363,12 @@
     const aasToEdit = ref<any | undefined>(undefined); // Variable to store the AAS to be edited
     const statusCheckInterval = ref<number | undefined>(undefined);
     const copyIcon = ref<string>('mdi-clipboard-file-outline');
+
+    // Template Dialog
+    const templateDialog = ref(false);
+    const templateTransitionLoading = ref(false);
+    const selectedTemplate = ref<AASTemplate | null>(null);
+    const showTemplateCreator = ref(false);
 
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
@@ -585,6 +619,69 @@
         if (createNew === false && aasOrAasDescriptor) {
             aasToEdit.value = aasOrAasDescriptor;
         }
+    }
+
+    function openTemplateDialog(): void {
+        templateDialog.value = true;
+    }
+
+    async function handleTemplateSelected(template: AASTemplate): Promise<void> {
+        try {
+            templateTransitionLoading.value = true;
+            selectedTemplate.value = template;
+            templateDialog.value = false;
+            await nextTick();
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 2000,
+                color: 'info',
+                text: 'Loading template configuration...',
+                btnColor: 'buttonText',
+            });
+            await new Promise((resolve) => setTimeout(resolve, 300));
+            showTemplateCreator.value = true;
+            await nextTick();
+            if (!showTemplateCreator.value) {
+                throw new Error('Failed to open template configuration');
+            }
+        } catch (error) {
+            console.error('Template selection error:', error);
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'error',
+                text: 'Failed to open template configuration. Please try again.',
+                btnColor: 'buttonText',
+            });
+            selectedTemplate.value = null;
+            showTemplateCreator.value = false;
+        } finally {
+            templateTransitionLoading.value = false;
+        }
+    }
+
+    async function handleTemplateCreated(aasId: string): Promise<void> {
+        showTemplateCreator.value = false;
+        selectedTemplate.value = null;
+        navigationStore.dispatchSnackbar({
+            status: true,
+            timeout: 4000,
+            text: 'Successfully created AAS from template',
+            color: 'success',
+        });
+        router.push({ query: { aas: await getAasEndpointById(aasId) } });
+    }
+
+    function handleTemplateCreatorClosed(): void {
+        selectedTemplate.value = null;
+        showTemplateCreator.value = false;
+        navigationStore.dispatchSnackbar({
+            status: true,
+            timeout: 4000,
+            color: 'info',
+            text: 'Template configuration cancelled. You can try again by selecting "Create from Template".',
+            btnColor: 'buttonText',
+        });
     }
 </script>
 
