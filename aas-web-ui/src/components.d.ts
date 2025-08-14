@@ -56,6 +56,7 @@ declare module 'vue' {
     Histogram: typeof import('./components/Widgets/Histogram.vue')['default']
     HTWFuehrungskomponente: typeof import('./components/Plugins/SubmodelElements/HTWFuehrungskomponente.vue')['default']
     IdentificationElement: typeof import('./components/UIComponents/IdentificationElement.vue')['default']
+    IfcPreview: typeof import('./components/Plugins/IfcPreview.vue')['default']
     ImagePreview: typeof import('./components/Plugins/ImagePreview.vue')['default']
     InputField: typeof import('./components/Widgets/InputField.vue')['default']
     InvalidElement: typeof import('./components/SubmodelElements/InvalidElement.vue')['default']
