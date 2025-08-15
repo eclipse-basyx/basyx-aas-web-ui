@@ -239,6 +239,9 @@
                         btnColor: 'buttonText',
                         text: 'Operation executed successfully.',
                     });
+
+                    // Check if refreshWebUi qualifier is set (to true) and reload AASList and SubmodelTreeview
+                    refreshWebUi();
                 }
             }
         });
@@ -247,5 +250,17 @@
     function updateOperationVariable(e: any, variable: any): void {
         // console.log('updateOperationVariable: ', 'new Value: ', e, ' Variable: ', variable);
         variable.value = e;
+    }
+
+    function refreshWebUi(): void {
+        if (localOperationObject.value.qualifiers) {
+            const refreshQualifier = localOperationObject.value.qualifiers.find(
+                (qualifier: any) => qualifier.type === 'refreshWebUi'
+            );
+            if (refreshQualifier && refreshQualifier.value === 'true') {
+                navigationStore.dispatchTriggerAASListReload();
+                navigationStore.dispatchTriggerTreeviewReload();
+            }
+        }
     }
 </script>
