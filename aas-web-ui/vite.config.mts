@@ -8,7 +8,6 @@ import Components from 'unplugin-vue-components/vite';
 import { defineConfig, loadEnv } from 'vite';
 import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify';
 
-// Custom plugin to copy web-ifc WASM files
 function copyWebIfcWasmPlugin() {
     return {
         name: 'copy-web-ifc-wasm',
@@ -17,12 +16,10 @@ function copyWebIfcWasmPlugin() {
             const sourceDir = 'node_modules/web-ifc';
             const targetDir = 'public/wasm';
 
-            // Ensure target directory exists
             if (!existsSync(targetDir)) {
                 mkdirSync(targetDir, { recursive: true });
             }
 
-            // Files to copy
             const wasmFiles = ['web-ifc.wasm', 'web-ifc-mt.wasm', 'web-ifc-node.wasm'];
 
             wasmFiles.forEach((file) => {
@@ -31,9 +28,6 @@ function copyWebIfcWasmPlugin() {
 
                 if (existsSync(sourcePath)) {
                     copyFileSync(sourcePath, targetPath);
-                    console.log(`✓ Copied ${file} to public/wasm/`);
-                } else {
-                    console.warn(`⚠ Could not find ${sourcePath}`);
                 }
             });
         },
