@@ -1,50 +1,41 @@
 <template>
-    <v-row>
-        <v-col cols="12">
-            <v-card title="3D Viewer">
-                <v-divider></v-divider>
-                <v-card-text>
-                    <div id="ifcContainer" style="min-height: 400px; width: 100%"></div>
-                </v-card-text>
-            </v-card>
-        </v-col>
-    </v-row>
-    <v-row>
-        <v-col cols="12">
-            <v-card>
-                <v-card-title class="d-flex align-center">
-                    <span>Element Properties</span>
-                    <v-spacer></v-spacer>
-                    <v-btn icon @click="toggleProperties">
-                        <v-icon>mdi-close</v-icon>
-                    </v-btn>
-                </v-card-title>
-                <v-card-text>
-                    <v-alert v-if="selectedElementInfo" color="info" class="mb-4" density="compact">
-                        Selected: {{ selectedElementInfo }}
-                    </v-alert>
-                    <v-text-field
-                        v-model="propertySearchQuery"
-                        label="Search Properties"
-                        variant="outlined"
-                        density="compact"
-                        hide-details
-                        class="mb-4"
-                        @input="filterProperties"></v-text-field>
-                    <v-btn class="mb-4 me-2" size="small" color="primary" variant="outlined" @click="toggleExpansion">
-                        {{ propertiesExpanded ? 'Collapse' : 'Expand' }}
-                    </v-btn>
-                    <v-btn class="mb-4" size="small" color="primary" variant="outlined" @click="copyAsTSV">
-                        Copy as TSV
-                    </v-btn>
-                    <div
-                        id="properties-container"
-                        ref="propertiesTableContainer"
-                        class="properties-table-container"></div>
-                </v-card-text>
-            </v-card>
-        </v-col>
-    </v-row>
+    <v-container fluid class="pa-0">
+        <v-card title="3D Viewer" class="mb-4">
+            <v-divider></v-divider>
+            <v-card-text>
+                <div id="ifcContainer" style="min-height: 400px; width: 100%" class="border rounded"></div>
+            </v-card-text>
+        </v-card>
+        <v-card>
+            <v-card-title class="d-flex align-center">
+                <span>Element Properties</span>
+            </v-card-title>
+            <v-divider></v-divider>
+            <v-card-text>
+                <v-alert v-if="selectedElementInfo" color="info" class="mb-4" density="compact">
+                    Selected: {{ selectedElementInfo }}
+                </v-alert>
+                <v-text-field
+                    v-model="propertySearchQuery"
+                    label="Search Properties"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    class="mb-4"
+                    @input="filterProperties"></v-text-field>
+                <v-btn class="mb-4 me-2" size="small" color="primary" variant="outlined" @click="toggleExpansion">
+                    {{ propertiesExpanded ? 'Collapse' : 'Expand' }}
+                </v-btn>
+                <v-btn class="mb-4" size="small" color="primary" variant="outlined" @click="copyAsTSV">
+                    Copy as TSV
+                </v-btn>
+                <div
+                    id="properties-container"
+                    ref="propertiesTableContainer"
+                    class="properties-table-container"></div>
+            </v-card-text>
+        </v-card>
+    </v-container>
 </template>
 
 <script lang="ts" setup>
@@ -368,7 +359,7 @@
 
             // Load the IFC file using the official pattern
             // console.log('Loading IFC using ifcLoader.load...');
-            await ifcLoader.load(buffer, false, 'bridge-model', {
+            await ifcLoader.load(buffer, false, props.submodelElementData.idShort as string, {
                 processData: {
                     progressCallback: (progress: number) => console.warn('Loading progress:', progress),
                 },
@@ -405,7 +396,7 @@
                 }
             }
 
-            return { success: true, name: 'bridge-model' };
+            return { success: true, name: props.submodelElementData.idShort as string };
         } catch (error: any) {
             console.error('Error in loadIfcModel:', error);
 
@@ -590,26 +581,6 @@
         errorMessage.value = `${message}: ${error.message || 'Unknown error'}`;
         showError.value = true;
         isLoading.value = false;
-    }
-
-    // Property panel functions
-    function toggleProperties(): void {
-        if (!showProperties.value) {
-            // First set the flag to show the panel
-            showProperties.value = true;
-
-            // Then use nextTick to ensure DOM is updated
-            nextTick(() => {
-                // Always reinitialize the properties table when opening manually
-                setupPropertiesTable();
-            });
-        } else {
-            // When hiding the panel, reset the table state
-            showProperties.value = false;
-            propertiesTableInitialized.value = false;
-            propertiesTable = null;
-            updatePropertiesTable = null;
-        }
     }
 
     function toggleExpansion(): void {
