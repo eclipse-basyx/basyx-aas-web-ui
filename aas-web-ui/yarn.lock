@@ -4882,7 +4882,7 @@ vue@^3.2.25, vue@^3.5.18:
     "@vue/server-renderer" "3.5.18"
     "@vue/shared" "3.5.18"
 
-vuetify@^3.9.4:
+vuetify@^3.9.5:
   version "3.9.5"
   resolved "https://registry.yarnpkg.com/vuetify/-/vuetify-3.9.5.tgz#7f5c79d3789051606f99f2e330ea3a2339ad7bb7"
   integrity sha512-rJBSo1FeKcJJaqTfVHbOdpFXCmgeEIGzrh6HBEMGjSflan6voPIMSiK2dTCUU4t9JeghwvJtoAE5eBuqYIkFVA==
