@@ -47,15 +47,14 @@
     </v-row>
 </template>
 
-
 <script lang="ts" setup>
-    import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
-import * as OBC from '@thatopen/components';
+    import * as OBC from '@thatopen/components';
     import * as OBCF from '@thatopen/components-front';
     import * as BUI from '@thatopen/ui';
     import * as BUIC from '@thatopen/ui-obc';
     import * as THREE from 'three';
-    import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
+    import { nextTick, onMounted, onUnmounted, ref } from 'vue';
+    import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
 
     const props = defineProps({
         submodelElementData: {
@@ -152,7 +151,7 @@ import * as OBC from '@thatopen/components';
             await ifcLoader.setup({
                 autoSetWasm: false,
                 wasm: {
-                    path: 'https://unpkg.com/web-ifc@0.0.70/',
+                    path: '/wasm/',
                     absolute: true,
                 },
             });
@@ -358,7 +357,7 @@ import * as OBC from '@thatopen/components';
             if (!fileBlob) {
                 throw new Error('Failed to fetch IFC file');
             }
-            
+
             const data = await fileBlob.arrayBuffer();
             const buffer = new Uint8Array(data);
 
@@ -371,11 +370,11 @@ import * as OBC from '@thatopen/components';
             // console.log('Loading IFC using ifcLoader.load...');
             await ifcLoader.load(buffer, false, 'bridge-model', {
                 processData: {
-                    progressCallback: (progress: number) => console.log('Loading progress:', progress),
+                    progressCallback: (progress: number) => console.warn('Loading progress:', progress),
                 },
             });
 
-            console.log('IFC model loaded successfully');
+            console.warn('IFC model loaded successfully');
 
             // Update the camera to better frame the model
             if (world.camera && world.camera.controls) {
@@ -632,4 +631,3 @@ import * as OBC from '@thatopen/components';
         }
     }
 </script>
-
