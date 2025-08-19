@@ -29,10 +29,7 @@
                 <v-btn class="mb-4" size="small" color="primary" variant="outlined" @click="copyAsTSV">
                     Copy as TSV
                 </v-btn>
-                <div
-                    id="properties-container"
-                    ref="propertiesTableContainer"
-                    class="properties-table-container"></div>
+                <div id="properties-container" ref="propertiesTableContainer" class="properties-table-container"></div>
             </v-card-text>
         </v-card>
     </v-container>
