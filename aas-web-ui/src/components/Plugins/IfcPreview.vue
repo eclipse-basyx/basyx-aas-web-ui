@@ -142,7 +142,7 @@
             await ifcLoader.setup({
                 autoSetWasm: false,
                 wasm: {
-                    path: '/wasm/',
+                    path: './wasm/',
                     absolute: true,
                 },
             });
