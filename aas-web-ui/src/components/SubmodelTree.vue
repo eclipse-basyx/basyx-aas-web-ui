@@ -38,12 +38,13 @@
                         </span>
                     </template>
                     <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
-                        <v-col class="pl-2 pr-0">
+                        <v-col class="pl-2 pr-0 py-0">
                             <v-text-field
                                 variant="outlined"
                                 density="compact"
                                 hide-details
                                 label="Search for SM/SME..."
+                                :min-width="200"
                                 clearable
                                 :placeholder="submodelTree.length.toString() + ' Submodels'"
                                 persistent-placeholder
