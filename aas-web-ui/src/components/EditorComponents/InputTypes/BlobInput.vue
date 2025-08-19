@@ -208,7 +208,8 @@
         if (contentValue.value === null || !contentTypeValue.value.includes('image')) {
             return '';
         }
-        const blob = new Blob([contentValue.value], { type: contentTypeValue.value });
+        const uint8Array = new Uint8Array(contentValue.value);
+        const blob = new Blob([uint8Array], { type: contentTypeValue.value });
         return URL.createObjectURL(blob);
     });
 

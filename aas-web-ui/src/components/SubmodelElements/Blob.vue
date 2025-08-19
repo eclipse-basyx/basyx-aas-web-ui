@@ -255,8 +255,8 @@
         if (!blobData.value || !props.blobObject.contentType) return;
 
         try {
-            // Create blob object
-            const blob = new Blob([blobData.value], { type: props.blobObject.contentType });
+            const uint8Array = new Uint8Array(blobData.value);
+            const blob = new Blob([uint8Array], { type: props.blobObject.contentType });
             const url = URL.createObjectURL(blob);
 
             // Create download link
