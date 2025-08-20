@@ -2,18 +2,18 @@
 FROM node:lts-slim AS build-stage
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
-ARG NODE_OPTIONS=--max-old-space-size=4096
+ARG NODE_OPTIONS=--max-old-space-size=8192
 ENV NODE_OPTIONS=$NODE_OPTIONS
 # Set working directory
 WORKDIR /app
 # Copy the package.json and yarn.lock files
 COPY package.json yarn.lock ./
 # Install dependencies
-RUN NODE_OPTIONS="--max-old-space-size=4096" yarn install
+RUN NODE_OPTIONS="--max-old-space-size=8192" yarn install
 # Copy project files
 COPY . .
 # Build the application and remove node_modules
-RUN NODE_OPTIONS="--max-old-space-size=4096" yarn build && rm -rf node_modules
+RUN NODE_OPTIONS="--max-old-space-size=8192" yarn build && rm -rf node_modules
 
 # Production Stage
 FROM nginx:mainline-alpine-slim AS production-stage
