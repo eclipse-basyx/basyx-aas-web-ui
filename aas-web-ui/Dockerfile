@@ -2,6 +2,8 @@
 FROM node:lts-slim AS build-stage
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
+ARG NODE_OPTIONS=--max-old-space-size=4096
+ENV NODE_OPTIONS=$NODE_OPTIONS
 # Set working directory
 WORKDIR /app
 # Copy the package.json and yarn.lock files
