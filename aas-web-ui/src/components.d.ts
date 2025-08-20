@@ -49,7 +49,6 @@ declare module 'vue' {
     GenericDataVisu: typeof import('./components/UIComponents/GenericDataVisu.vue')['default']
     HandoverDocumentation_v1_2: typeof import('./components/Plugins/Submodels/HandoverDocumentation_v1_2.vue')['default']
     HelpInfoButton: typeof import('./components/EditorComponents/HelpInfoButton.vue')['default']
-    HelpInfoButtonPlugin: typeof import('./components/EditorComponents/HelpInfoButtonPlugin.vue')['default']
     HierarchicalStructures_v1_x: typeof import('./components/Plugins/Submodels/HierarchicalStructures_v1_x.vue')['default']
     Histogram: typeof import('./components/Widgets/Histogram.vue')['default']
     HTWFuehrungskomponente: typeof import('./components/Plugins/SubmodelElements/HTWFuehrungskomponente.vue')['default']
