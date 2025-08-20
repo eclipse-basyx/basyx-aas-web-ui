@@ -20,7 +20,6 @@
 
     watch(booleanValue, (newValue) => {
         emit('update:modelValue', newValue);
-        // emit('update:modelValue', typeof props.modelValue === 'string' ? newValue.toString() : newValue);
     });
 
     watch(
