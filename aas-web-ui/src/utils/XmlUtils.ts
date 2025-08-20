@@ -27,6 +27,8 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
 
     switch (valueType) {
         case 'Decimal':
+            if (!value || value.length === 0) return [true, ''];
+
             if (!/^[+-]?(\d+(\.\d*)?|\.\d+)$/.test(value.trim())) {
                 errorMessage = "Invalid '" + valueType + "' value!";
                 return [false, errorMessage];
@@ -39,6 +41,8 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
         case 'Long':
         case 'Short':
         case 'Byte':
+            if (!value || value.length === 0) return [true, ''];
+
             if (!/^[+-]?\d+$/.test(value.trim())) {
                 errorMessage = "Invalid '" + valueType + "' value!";
                 return [false, errorMessage];
@@ -89,6 +93,8 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
         case 'UnsignedLong':
         case 'UnsignedShort':
         case 'UnsignedByte':
+            if (!value || value.length === 0) return [true, ''];
+
             if (!/^\d+$/.test(value.trim())) {
                 errorMessage = "Invalid '" + valueType + "' value!";
                 return [false, errorMessage];
@@ -129,6 +135,8 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             break;
 
         case 'PositiveInteger':
+            if (!value || value.length === 0) return [true, ''];
+
             if (!/^\+?[1-9]\d*$/.test(value.trim())) {
                 errorMessage = "Invalid '" + valueType + "' value!";
                 return [false, errorMessage];
@@ -136,6 +144,8 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             break;
 
         case 'NegativeInteger':
+            if (!value || value.length === 0) return [true, ''];
+
             if (!/^-[1-9]\d*$/.test(value.trim())) {
                 errorMessage = "Invalid '" + valueType + "' value!";
                 return [false, errorMessage];
@@ -144,6 +154,8 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             break;
 
         case 'NonPositiveInteger':
+            if (!value || value.length === 0) return [true, ''];
+
             if (!/^(0|-\d+)$/.test(value.trim())) {
                 errorMessage = "Invalid '" + valueType + "' value!";
                 return [false, errorMessage];
@@ -151,6 +163,8 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             break;
 
         case 'NonNegativeInteger':
+            if (!value || value.length === 0) return [true, ''];
+
             if (!/^\+?(0|[1-9]\d*)$/.test(value.trim())) {
                 errorMessage = "Invalid '" + valueType + "' value!";
                 return [false, errorMessage];
@@ -159,6 +173,8 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             break;
 
         case 'Double':
+            if (!value || value.length === 0) return [true, ''];
+
             if (!/^[+-]?((\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?|INF|NaN)$/.test(value.trim())) {
                 errorMessage = "Invalid '" + valueType + "' value!";
                 return [false, errorMessage];
@@ -167,6 +183,8 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             break;
 
         case 'Float':
+            if (!value || value.length === 0) return [true, ''];
+
             if (!/^[+-]?((\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?|INF|NaN)$/.test(value.trim())) {
                 errorMessage = "Invalid '" + valueType + "' value!";
                 return [false, errorMessage];
@@ -175,6 +193,8 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             break;
 
         case 'Boolean':
+            if (!value || value.length === 0) return [true, ''];
+
             if (!/^(true|false|1|0)$/.test(value.trim())) {
                 errorMessage = "Invalid '" + valueType + "' value! [true, false, 0, 1]";
                 return [false, errorMessage];
@@ -183,6 +203,8 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             break;
 
         case 'Date':
+            if (!value || value.length === 0) return [true, ''];
+
             regex = /^(-?\d{4,})-(\d{2})-(\d{2})(Z|[+-]\d{2}:\d{2})?$/;
             match = value.trim().match(regex);
             if (!match) {
@@ -225,6 +247,8 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             break;
 
         case 'Time':
+            if (!value || value.length === 0) return [true, ''];
+
             regex = /^(\d{2}):(\d{2}):(\d{2})(\.\d+)?(Z|[+-]\d{2}:\d{2})?$/;
             match = value.trim().match(regex);
 
@@ -251,6 +275,8 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
             break;
 
         case 'DateTime':
+            if (!value || value.length === 0) return [true, ''];
+
             regex = /^(-?\d{4,})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.\d+)?(Z|[+-]\d{2}:\d{2})?$/;
             match = value.trim().match(regex);
 
@@ -310,23 +336,23 @@ export function checkXsDataTypeValue(value: string, valueType: string): [valid: 
 
             break;
 
-        //TODO Check property value input regarding AnyUri
+        // TODO: Check property value input regarding AnyUri
         // case 'AnyUri':
-        //TODO Check property value input regarding Base64Binary
+        // TODO: Check property value input regarding Base64Binary
         // case 'Base64Binary':
-        //TODO Check property value input regarding Duration
+        // TODO: Check property value input regarding Duration
         // case 'Duration':
-        //TODO Check property value input regarding GDay
+        // TODO: Check property value input regarding GDay
         // case 'GDay':
-        //TODO Check property value input regarding GMonth
+        // TODO: Check property value input regarding GMonth
         // case 'GMonth':
-        //TODO Check property value input regarding GMonthDay
+        // TODO: Check property value input regarding GMonthDay
         // case 'GMonthDay':
-        //TODO Check property value input regarding GYear
+        // TODO: Check property value input regarding GYear
         // case 'GYear':
-        //TODO Check property value input regarding GYearMonth
+        // TODO: Check property value input regarding GYearMonth
         // case 'GYearMonth':
-        //TODO Check property value input regarding HexBinary
+        // TODO: Check property value input regarding HexBinary
         // case 'HexBinary':
 
         case 'String':
