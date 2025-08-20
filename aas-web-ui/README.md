@@ -39,6 +39,32 @@ npm run build
 pnpm build
 ```
 
+### Check for linting errors
+
+```
+# yarn
+yarn lint:check
+
+# npm
+npm run lint:check
+
+# pnpm
+pnpm lint:check
+```
+
+### Fix linting errors
+
+```
+# yarn
+yarn lint:fix
+
+# npm
+npm run lint:fix
+
+# pnpm
+pnpm lint:fix
+```
+
 ### Customize configuration
 
 See [Configuration Reference](https://vitejs.dev/config/).
