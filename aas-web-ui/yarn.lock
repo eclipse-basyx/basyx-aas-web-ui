@@ -881,10 +881,10 @@
     "@testing-library/dom" "^9.3.3"
     "@vue/test-utils" "^2.4.1"
 
-"@thatopen/components-front@^3.1.3":
-  version "3.1.3"
-  resolved "https://registry.yarnpkg.com/@thatopen/components-front/-/components-front-3.1.3.tgz#6adb3482ca388abd57798c29acafdab7cfe36d41"
-  integrity sha512-TfsEwnd10avK+CJkIpJLWSosPJXnBzUfIRKTdbesIbWcroWOBgz+FhfEBx6VE2T0RI1kCj/HpbPH8sitsjcuNQ==
+"@thatopen/components-front@^3.1.6":
+  version "3.1.6"
+  resolved "https://registry.yarnpkg.com/@thatopen/components-front/-/components-front-3.1.6.tgz#2eb9adb5dfa12b1ada5387fdfef820c1e7e369a5"
+  integrity sha512-ActMURdeRtmVdDFksAp7kFNIiKAKTErm2rmwHH/T09Sj+nslABgH2N4S4nx6UDL2xJ83ktdxvrOBw/jCW+vdIA==
   dependencies:
     "@thatopen/components" "~3.1.0"
 
