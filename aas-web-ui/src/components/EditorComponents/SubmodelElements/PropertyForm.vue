@@ -45,7 +45,16 @@
                         <v-expansion-panel-title>Value</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <SelectInput v-model="valueType" label="Data Type" type="dataType" :clearable="true" />
-                            <TextInput v-model="propertyValue" label="Value" />
+                            <BooleanInput
+                                v-if="valueTypeString === 'Boolean'"
+                                v-model="propertyValue"
+                                :label="propertyValue ? propertyValue : 'false'" />
+                            <TextInput
+                                v-else
+                                v-model="propertyValue"
+                                label="Value"
+                                placeholder="Enter value"
+                                :error-messages="propertyValueErrorMessage" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Semantic ID -->
@@ -84,12 +93,15 @@
     import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
+    import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
+    import { isEmptyString } from '@/utils/StringUtils';
+    import { checkXsDataTypeValue } from '@/utils/XmlUtils';
 
     const props = defineProps<{
         modelValue: boolean;
@@ -105,6 +117,7 @@
 
     // Composables
     const { fetchSme, putSubmodelElement, postSubmodelElement } = useSMRepositoryClient();
+    const { fetchAndDispatchSme } = useSMEHandling();
 
     // Vue Router
     const router = useRouter();
@@ -121,7 +134,8 @@
     const propertyCategory = ref<string | null>(null);
 
     const semanticId = ref<aasTypes.Reference | null>(null);
-    const propertyValue = ref<string | null>(null);
+    const propertyValue = ref<string>('');
+    const propertyValueErrorMessage = ref<string | null>(null);
     const valueType = ref<aasTypes.DataTypeDefXsd>(aasTypes.DataTypeDefXsd.String);
 
     const errors = ref<Map<string, string>>(new Map());
@@ -151,7 +165,22 @@
         }
     );
 
+    watch(
+        () => valueType.value,
+        () => {
+            validateAndCorrectInput();
+        }
+    );
+
+    watch(
+        () => propertyValue.value,
+        () => {
+            validateAndCorrectInput();
+        }
+    );
+
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
+    const valueTypeString = computed(() => aasTypes.DataTypeDefXsd[valueType.value]);
 
     const bordersToShow = computed(() => (panel: number) => {
         let border = '';
@@ -197,7 +226,35 @@
         return errors.value.get(field);
     }
 
+    function validateAndCorrectInput(): boolean {
+        if (valueTypeString.value === 'Boolean' && typeof propertyValue.value === 'boolean') {
+            // Always use string representative of boolean value
+            propertyValue.value = propertyValue.value ? 'true' : 'false';
+        }
+
+        if (
+            valueTypeString.value === 'Boolean' &&
+            typeof propertyValue.value === 'string' &&
+            ['1', '0'].includes(propertyValue.value.trim())
+        ) {
+            // Always use string representative of boolean value
+            propertyValue.value = propertyValue.value.trim() === '1' ? 'true' : 'false';
+        }
+
+        const [valid, errorMessage] = checkXsDataTypeValue(propertyValue.value, valueTypeString.value);
+
+        propertyValueErrorMessage.value = null;
+
+        if (errorMessage && !isEmptyString(errorMessage)) propertyValueErrorMessage.value = errorMessage;
+
+        return valid;
+    }
+
     async function saveProperty(): Promise<void> {
+        if (!validateAndCorrectInput()) {
+            return;
+        }
+
         if (props.newProperty || propertyObject.value === undefined) {
             propertyObject.value = new aasTypes.Property(valueType.value);
         }
@@ -269,21 +326,19 @@
             }
 
             const editedElementSelected = route.query.path === props.path;
-            const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
             // Update the property
             if (props.parentElement.modelType === 'Submodel') {
+                // Update Submodel
                 await putSubmodelElement(propertyObject.value, props.path);
 
                 if (editedElementSelected) {
-                    router.push({
-                        query: {
-                            aas: aasEndpoint,
-                            path: props.parentElement.path + '/submodel-elements/' + propertyObject.value.idShort,
-                        },
-                    });
+                    fetchAndDispatchSme(
+                        props.parentElement.path + '/submodel-elements/' + propertyObject.value.idShort
+                    );
                 }
             } else if (props.parentElement.modelType === 'SubmodelElementList') {
+                // Update SML
                 const index = props.parentElement.value.indexOf(
                     props.parentElement.value.find((el: any) => el.id === props.property.id)
                 );
@@ -291,21 +346,14 @@
                 await putSubmodelElement(propertyObject.value, path);
 
                 if (editedElementSelected) {
-                    router.push({
-                        query: { aas: aasEndpoint, path: path },
-                    });
+                    fetchAndDispatchSme(path);
                 }
             } else {
-                // Submodel Element Collection or Entity
+                // Update SMC resp. SME
                 await putSubmodelElement(propertyObject.value, props.property.path);
 
                 if (editedElementSelected) {
-                    router.push({
-                        query: {
-                            aas: aasEndpoint,
-                            path: props.parentElement.path + '.' + propertyObject.value.idShort,
-                        },
-                    });
+                    fetchAndDispatchSme(props.parentElement.path + '.' + propertyObject.value.idShort);
                 }
             }
         }
@@ -355,7 +403,7 @@
             displayName.value = null;
             description.value = null;
             propertyCategory.value = null;
-            propertyValue.value = null;
+            propertyValue.value = '';
             valueType.value = aasTypes.DataTypeDefXsd.String;
             semanticId.value = null;
             openPanels.value = [0, 1];

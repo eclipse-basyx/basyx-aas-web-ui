@@ -70,6 +70,7 @@
     import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
+    import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -91,6 +92,7 @@
 
     // Composables
     const { fetchSme, putSubmodelElement, postSubmodelElement } = useSMRepositoryClient();
+    const { fetchAndDispatchSme } = useSMEHandling();
 
     // Vue Router
     const router = useRouter();
@@ -251,19 +253,13 @@
             }
 
             const editedElementSelected = route.query.path === props.path;
-            const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
             // Update the MLP
             if (props.parentElement.modelType === 'Submodel') {
                 await putSubmodelElement(mlpObject.value, props.path);
 
                 if (editedElementSelected) {
-                    router.push({
-                        query: {
-                            aas: aasEndpoint,
-                            path: props.parentElement.path + '/submodel-elements/' + mlpObject.value.idShort,
-                        },
-                    });
+                    fetchAndDispatchSme(props.parentElement.path + '/submodel-elements/' + mlpObject.value.idShort);
                 }
             } else if (props.parentElement.modelType === 'SubmodelElementList') {
                 const index = props.parentElement.value.indexOf(
@@ -273,18 +269,14 @@
                 await putSubmodelElement(mlpObject.value, path);
 
                 if (editedElementSelected) {
-                    router.push({
-                        query: { aas: aasEndpoint, path: path },
-                    });
+                    fetchAndDispatchSme(path);
                 }
             } else {
                 // Submodel Element Collection or Entity
                 await putSubmodelElement(mlpObject.value, props.mlp.path);
 
                 if (editedElementSelected) {
-                    router.push({
-                        query: { aas: aasEndpoint, path: props.parentElement.path + '.' + mlpObject.value.idShort },
-                    });
+                    fetchAndDispatchSme(props.parentElement.path + '.' + mlpObject.value.idShort);
                 }
             }
         }
