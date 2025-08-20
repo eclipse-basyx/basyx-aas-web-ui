@@ -33,6 +33,9 @@
                 <JSONPreview
                     v-if="submodelElementData?.contentType && submodelElementData.contentType.includes('json')"
                     :submodel-element-data="submodelElementData"></JSONPreview>
+                <IfcPreview
+                    v-if="submodelElementData?.contentType && submodelElementData.contentType.includes('x-step')"
+                    :submodel-element-data="submodelElementData"></IfcPreview>
             </template>
             <!-- Plugin Visualizations -->
             <template v-else>
