@@ -9,11 +9,11 @@ WORKDIR /app
 # Copy the package.json and yarn.lock files
 COPY package.json yarn.lock ./
 # Install dependencies
-RUN yarn install
+RUN NODE_OPTIONS="--max-old-space-size=4096" yarn install
 # Copy project files
 COPY . .
 # Build the application and remove node_modules
-RUN yarn build && rm -rf node_modules
+RUN NODE_OPTIONS="--max-old-space-size=4096" yarn build && rm -rf node_modules
 
 # Production Stage
 FROM nginx:mainline-alpine-slim AS production-stage
