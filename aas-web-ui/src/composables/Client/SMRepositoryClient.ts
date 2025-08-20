@@ -368,13 +368,6 @@ export function useSMRepositoryClient() {
     }
 
     async function putSubmodelElement(submodelElement: aasTypes.ISubmodelElement, path: string): Promise<boolean> {
-        const failResponse = false;
-
-        let smRepoUrl = submodelRepoUrl.value.trim();
-        if (smRepoUrl === '') return failResponse;
-        if (smRepoUrl.endsWith('/')) smRepoUrl = stripLastCharacter(smRepoUrl);
-        if (!smRepoUrl.endsWith(endpointPath)) smRepoUrl += endpointPath;
-
         // Convert SME to JSON
         const jsonSubmodelElement = jsonization.toJsonable(submodelElement);
 
@@ -389,26 +382,40 @@ export function useSMRepositoryClient() {
     }
 
     async function putAttachmentFile(file: File, path: string): Promise<boolean> {
-        const failResponse = false;
-
-        let smRepoUrl = submodelRepoUrl.value.trim();
-        if (smRepoUrl === '') return failResponse;
-        if (smRepoUrl.endsWith('/')) smRepoUrl = stripLastCharacter(smRepoUrl);
-        if (!smRepoUrl.endsWith(endpointPath)) smRepoUrl += endpointPath;
-
         // Create formData
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('fileName', file.name);
 
         const context = 'uploading file attachment';
         const disableMessage = false;
-        const requestPath = path + '/attachment' + '?fileName=' + file.name;
+        const requestPath = path + '/attachment';
         const headers = new Headers();
         const body = formData;
 
         // Send Request to upload the file
         const response = await putRequest(requestPath, body, headers, context, disableMessage);
         return response.success;
+    }
+
+    async function fetchAttachmentFile(path: string): Promise<Blob | undefined> {
+        const failResponse = undefined;
+
+        const context = 'fetching file attachment';
+        const disableMessage = true;
+        const requestPath = path + '/attachment';
+
+        try {
+            const response = await getRequest(requestPath, context, disableMessage);
+            if (response.success && response.data) {
+                return response.data;
+            }
+        } catch (e) {
+            console.warn(e);
+            return failResponse;
+        }
+
+        return failResponse;
     }
 
     return {
@@ -427,5 +434,6 @@ export function useSMRepositoryClient() {
         postSubmodelElement,
         putSubmodelElement,
         putAttachmentFile,
+        fetchAttachmentFile,
     };
 }

@@ -1,10 +1,38 @@
 // Plugins
 import Vue from '@vitejs/plugin-vue';
+import { copyFileSync, existsSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
 import AutoImport from 'unplugin-auto-import/vite';
 import Components from 'unplugin-vue-components/vite';
 import { defineConfig, loadEnv } from 'vite';
 import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify';
+
+function copyWebIfcWasmPlugin() {
+    return {
+        name: 'copy-web-ifc-wasm',
+        buildStart() {
+            // Copy WASM files from web-ifc to public/wasm directory
+            const sourceDir = 'node_modules/web-ifc';
+            const targetDir = 'public/wasm';
+
+            if (!existsSync(targetDir)) {
+                mkdirSync(targetDir, { recursive: true });
+            }
+
+            const wasmFiles = ['web-ifc.wasm', 'web-ifc-mt.wasm', 'web-ifc-node.wasm'];
+
+            wasmFiles.forEach((file) => {
+                const sourcePath = join(sourceDir, file);
+                const targetPath = join(targetDir, file);
+
+                if (existsSync(sourcePath)) {
+                    copyFileSync(sourcePath, targetPath);
+                }
+            });
+        },
+    };
+}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -13,6 +41,7 @@ export default defineConfig(({ mode }) => {
     const base = isProduction ? process.env.BASE || '/__BASE_PATH_PLACEHOLDER__/' : '/';
     return {
         plugins: [
+            copyWebIfcWasmPlugin(),
             AutoImport({
                 imports: ['vue'],
                 dts: 'src/auto-imports.d.ts',
@@ -48,9 +77,7 @@ export default defineConfig(({ mode }) => {
         },
         css: {
             preprocessorOptions: {
-                sass: {
-                    api: 'modern-compiler',
-                },
+                sass: {},
             },
         },
     };

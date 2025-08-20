@@ -1,7 +1,9 @@
 import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
+import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
 
 export function useChartHandling() {
     const { unitSuffix } = useConceptDescriptionHandling();
+    const { nameToDisplay } = useReferableUtils();
 
     function prepareSeriesValues(chartData: any, yVariables: any) {
         const newSeries = chartData.map((series: any, index: number) => {
@@ -12,10 +14,7 @@ export function useChartHandling() {
             let name = 'Value ' + Number(index + 1);
             // check if the yVariable exists
             if (yVariables.length > index) {
-                // check if the yVariable has an idShort
-                if (yVariables[index] && yVariables[index].idShort) {
-                    name = yVariables[index].idShort;
-                }
+                name = nameToDisplay(yVariables[index]);
             }
             return {
                 name: name,

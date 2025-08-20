@@ -1,5 +1,5 @@
 <template>
-    <div class="VTreeview">
+    <div class="Treeview">
         <v-hover>
             <template #default="{ isHovering, props }">
                 <v-lazy transition="fade-transition">
@@ -31,6 +31,17 @@
                             <!-- Empty Submodel Icon -->
                             <v-icon v-else-if="item.modelType === 'Submodel' && !item.children" color="primary">
                                 mdi-folder-alert
+                            </v-icon>
+                            <!-- Icon for Submodel Template with children -->
+                            <v-icon
+                                v-else-if="
+                                    item.modelType === 'Submodel' &&
+                                    item.kind &&
+                                    item.kind === 'Template' &&
+                                    item.children
+                                "
+                                color="primary">
+                                mdi-folder-pound
                             </v-icon>
                             <!-- Icon for Submodel with children (open/closed) -->
                             <v-icon v-else-if="item.modelType === 'Submodel' && item.children" color="primary">
@@ -80,8 +91,9 @@
                                                 : '-24px',
                                         transition: 'margin 0.3s ease',
                                     }"
-                                    >{{ item.modelType }}</v-chip
-                                >
+                                    >{{ item.modelType }}
+                                    {{ item.kind && item.kind === 'Template' ? 'Template' : '' }}
+                                </v-chip>
                                 <!-- Icon Placeholder that is always rendered -->
                                 <div class="icon-placeholder">
                                     <!-- Button to add a submodel Element -->
@@ -242,14 +254,14 @@
         </v-hover>
         <!-- Recursive Treeview -->
         <template v-if="item.showChildren">
-            <vTreeview
+            <Treeview
                 v-for="innerItem in item.children"
                 :key="innerItem.id"
                 :item="innerItem"
                 :depth="depth + 1"
                 @open-add-submodel-element-dialog="$emit('openAddSubmodelElementDialog', $event)"
                 @open-edit-submodel-element-dialog="$emit('openEditSubmodelElementDialog', $event)"
-                @show-delete-dialog="$emit('showDeleteDialog', $event)"></vTreeview>
+                @show-delete-dialog="$emit('showDeleteDialog', $event)"></Treeview>
         </template>
     </div>
 </template>

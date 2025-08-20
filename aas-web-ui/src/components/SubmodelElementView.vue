@@ -77,6 +77,14 @@
                         "
                         :supplemental-semantic-ids-array="submodelElementData.supplementalSemanticIds"
                         :supplemental-semantic-ids-title="'Supplemental Semantic ID'"></SupplementalSemanticID>
+                    <v-divider
+                        v-if="submodelElementData.qualifiers && submodelElementData.qualifiers.length > 0"
+                        class="mt-2"></v-divider>
+                    <QualifierElement
+                        v-if="submodelElementData.qualifiers && submodelElementData.qualifiers.length > 0"
+                        :qualifier-array="submodelElementData.qualifiers"
+                        :qualifier-title="'Qualifiers'"
+                        :small="false"></QualifierElement>
                 </v-list>
                 <v-divider></v-divider>
                 <v-list nav class="px-4 pt-0 pb-5">
@@ -133,11 +141,33 @@
                 <v-divider></v-divider>
                 <LastSync :timestamp="submodelElementData.timestamp"></LastSync>
             </v-card>
-            <template v-if="Array.isArray(conceptDescriptions) && conceptDescriptions.length > 0">
-                <template v-for="cd in conceptDescriptions" :key="cd.id">
-                    <ConceptDescription :concept-description-object="cd" class="mt-4"></ConceptDescription>
-                </template>
-            </template>
+            <v-expansion-panels
+                v-if="Array.isArray(conceptDescriptions) && conceptDescriptions.length > 0"
+                v-model="expandedCdIndex"
+                class="mt-4">
+                <v-expansion-panel
+                    v-for="(conceptDescription, index) in conceptDescriptions"
+                    :key="conceptDescription.id">
+                    <v-expansion-panel-title>
+                        <v-list-item class="pa-0">
+                            <template #append>
+                                <v-chip size="x-small" color="primary" class="ml-5">{{
+                                    conceptDescription.modelType
+                                }}</v-chip>
+                            </template>
+                            <v-list-item-title>
+                                <div class="text-primary text-subtitle-1">
+                                    {{ nameToDisplay(conceptDescription) }}
+                                </div>
+                            </v-list-item-title>
+                        </v-list-item>
+                    </v-expansion-panel-title>
+                    <v-divider v-if="expandedCdIndex === index"></v-divider>
+                    <v-expansion-panel-text class="pa-0 ma-0">
+                        <ConceptDescription :concept-description-object="conceptDescription"></ConceptDescription>
+                    </v-expansion-panel-text>
+                </v-expansion-panel>
+            </v-expansion-panels>
         </template>
     </v-container>
 </template>
@@ -146,10 +176,10 @@
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
+    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-
     // Vue Router
     const route = useRoute();
 
@@ -160,11 +190,13 @@
     // Composables
     const { fetchCds } = useConceptDescriptionHandling();
     const { fetchSme } = useSMEHandling();
+    const { nameToDisplay } = useReferableUtils();
 
     // Data
     const submodelElementData = ref({} as any);
     const conceptDescriptions = ref([] as Array<any>);
     const autoSyncInterval = ref<number | undefined>(undefined); // interval to send requests to the AAS
+    const expandedCdIndex = ref(0);
 
     // Computed Properties
     const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL);
@@ -320,3 +352,9 @@
         conceptDescriptions.value = [];
     }
 </script>
+
+<style scoped>
+    :deep(.v-expansion-panel-text__wrapper) {
+        padding: 0 !important;
+    }
+</style>

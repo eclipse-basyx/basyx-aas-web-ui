@@ -1,5 +1,11 @@
 <template>
-    <v-text-field v-model="textValue" :label="label" variant="outlined" density="comfortable" bg-color="surface">
+    <v-text-field
+        v-model="textValue"
+        :label="label"
+        variant="outlined"
+        density="comfortable"
+        bg-color="surface"
+        :error-messages="errorMessages">
         <template #append-inner>
             <v-btn
                 v-if="showGenerateIriButton"
@@ -25,6 +31,7 @@
     type Props = {
         label: string;
         modelValue: string | null;
+        errorMessages?: string | string[] | null;
     } & ({ showGenerateIriButton: true; type: string } | { showGenerateIriButton?: false; type?: never });
 
     const props = defineProps<Props>();

@@ -80,6 +80,7 @@
     import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
+    import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -101,6 +102,7 @@
 
     // Composables
     const { fetchSme, putSubmodelElement, postSubmodelElement, putAttachmentFile } = useSMRepositoryClient();
+    const { fetchAndDispatchSme } = useSMEHandling();
 
     // Vue Router
     const router = useRouter();
@@ -259,10 +261,10 @@
 
         fileObject.value.value = filePath.value;
 
-        if (contentType.value !== null) {
-            fileObject.value.contentType = contentType.value;
-        } else if (fileElement.value !== undefined) {
+        if (fileElement.value !== undefined) {
             fileObject.value.contentType = fileElement.value.type;
+        } else if (contentType.value !== null) {
+            fileObject.value.contentType = contentType.value;
         } else {
             errors.value.set('contentType', 'File Element Content Type is required');
             return;
@@ -338,19 +340,13 @@
             }
 
             const editedElementSelected = route.query.path === props.path;
-            const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
             // Update the File Element
             if (props.parentElement.modelType === 'Submodel') {
                 await putSubmodelElement(fileObject.value, props.path);
 
                 if (editedElementSelected) {
-                    router.push({
-                        query: {
-                            aas: aasEndpoint,
-                            path: props.parentElement.path + '/submodel-elements/' + fileObject.value.idShort,
-                        },
-                    });
+                    fetchAndDispatchSme(props.parentElement.path + '/submodel-elements/' + fileObject.value.idShort);
                 }
             } else if (props.parentElement.modelType === 'SubmodelElementList') {
                 const index = props.parentElement.value.indexOf(
@@ -360,21 +356,14 @@
                 await putSubmodelElement(fileObject.value, path);
 
                 if (editedElementSelected) {
-                    router.push({
-                        query: { aas: aasEndpoint, path: path },
-                    });
+                    fetchAndDispatchSme(path);
                 }
             } else {
                 // Submodel Element Collection or Entity
                 await putSubmodelElement(fileObject.value, props.file.path);
 
                 if (editedElementSelected) {
-                    router.push({
-                        query: {
-                            aas: aasEndpoint,
-                            path: props.parentElement.path + '.' + fileObject.value.idShort,
-                        },
-                    });
+                    fetchAndDispatchSme(props.parentElement.path + '.' + fileObject.value.idShort);
                 }
             }
 
