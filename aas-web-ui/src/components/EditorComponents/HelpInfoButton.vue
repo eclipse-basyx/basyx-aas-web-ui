@@ -1,15 +1,13 @@
 <template>
-    <v-tooltip location="right">
+    <v-tooltip :open-delay="600" location="right">
         <template #activator="{ props }">
             <v-btn
                 v-bind="props"
-                color="gray"
-                variant="tonal"
-                size="40px"
-                density="compact"
-                style="top: -10px; right: 0"
+                icon="mdi-help-circle"
+                variant="plain"
+                size="small"
+                style="top: -10px"
                 @click="openHelpLink">
-                <v-icon>mdi-help-circle</v-icon>
             </v-btn>
         </template>
         <span>{{ tooltipContent }}</span>
@@ -18,7 +16,7 @@
 
 <script lang="ts">
     import { defineComponent } from 'vue';
-    import helpLinks from '@/UserPlugins/HelpInfoButton/help-links.json'; // Adjust path as needed
+    import helpLinks from './help-links.json';
 
     export default defineComponent({
         name: 'HelpInfoButtonPlugin',

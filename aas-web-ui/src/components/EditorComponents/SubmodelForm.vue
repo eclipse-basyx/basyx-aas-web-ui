@@ -11,9 +11,8 @@
                     <v-expansion-panel class="border-t-thin border-s-thin border-e-thin" :class="bordersToShow(0)">
                         <v-expansion-panel-title>Details</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <!--ADDED Buttons by columns-->
                             <v-row align="center">
-                                <v-col cols="0">
+                                <v-col class="py-0">
                                     <TextInput
                                         v-model="submodelId"
                                         label="ID"
@@ -21,119 +20,114 @@
                                         type="Submodel"
                                         :disabled="!newSm" />
                                 </v-col>
-                                <v-col cols="1" class="d-flex align-center">
-                                    <HelpInfoButtonPlugin help-type="sub-ID" />
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="sub-ID" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
-                                <v-col cols="0">
+                                <v-col class="py-0">
                                     <TextInput v-model="submodelIdShort" label="IdShort" />
                                 </v-col>
-                                <v-col cols="1" class="d-flex align-center">
-                                    <HelpInfoButtonPlugin help-type="sub-IdShort" />
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="sub-IdShort" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
-                                <v-col cols="0">
+                                <v-col class="py-0">
                                     <SelectInput v-model="submodelKind" label="Modelling Kind" type="modellingKind" />
                                 </v-col>
-                                <v-col cols="1" class="d-flex align-center">
-                                    <HelpInfoButtonPlugin help-type="sub-instance" />
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="sub-instance" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
-                                <v-col cols="0">
+                                <v-col class="py-0">
                                     <MultiLanguageTextInput
                                         v-model="displayName"
                                         :show-label="true"
                                         label="Display Name"
                                         type="displayName" />
                                 </v-col>
-                                <v-col cols="1" class="d-flex align-center">
-                                    <HelpInfoButtonPlugin help-type="sub-displayname" />
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="sub-displayname" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
-                                <v-col cols="0">
+                                <v-col class="py-0">
                                     <MultiLanguageTextInput
                                         v-model="description"
                                         :show-label="true"
                                         label="Description"
                                         type="description" />
                                 </v-col>
-                                <v-col cols="1" class="d-flex align-center">
-                                    <HelpInfoButtonPlugin help-type="sub-description" />
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="sub-description" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
-                                <v-col cols="0">
+                                <v-col class="py-0">
                                     <SelectInput
                                         v-model="submodelCategory"
                                         label="Category"
                                         type="category"
                                         :clearable="true" />
                                 </v-col>
-                                <v-col cols="1" class="d-flex align-center">
-                                    <HelpInfoButtonPlugin help-type="sub-category" />
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="sub-category" />
                                 </v-col>
                             </v-row>
-                            <!--ADDED Buttons by columns-->
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Administrative Information -->
                     <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(1)">
                         <v-expansion-panel-title>Administrative Information</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <!--ADDED Buttons by columns-->
                             <v-row align="center">
-                                <v-col cols="0">
+                                <v-col class="py-0">
                                     <TextInput v-model="version" label="Version" />
                                 </v-col>
-                                <v-col cols="1" class="d-flex align-center">
-                                    <HelpInfoButtonPlugin help-type="sub-version" />
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="sub-version" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
-                                <v-col cols="0">
+                                <v-col class="py-0">
                                     <TextInput v-model="revision" label="Revision" />
                                 </v-col>
-                                <v-col cols="1" class="d-flex align-center">
-                                    <HelpInfoButtonPlugin help-type="sub-revision" />
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="sub-revision" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
-                                <v-col cols="0">
+                                <v-col class="py-0">
                                     <ReferenceInput v-model="creator" label="Creator" />
                                 </v-col>
-                                <v-col cols="1" class="d-flex align-center">
-                                    <HelpInfoButtonPlugin help-type="sub-creator" />
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="sub-creator" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
-                                <v-col cols="0">
+                                <v-col class="py-0">
                                     <TextInput v-model="templateId" label="Template ID" />
                                 </v-col>
-                                <v-col cols="1" class="d-flex align-center">
-                                    <HelpInfoButtonPlugin help-type="sub-templateId" />
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="sub-templateId" />
                                 </v-col>
                             </v-row>
-                            <!--ADDED Buttons by columns-->
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Semantic ID -->
                     <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(2)">
                         <v-expansion-panel-title>Semantic ID</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <!--ADDED Buttons by columns-->
                             <v-row align="center">
-                                <v-col cols="0">
+                                <v-col class="py-0">
                                     <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" />
                                 </v-col>
-                                <v-col cols="1" class="d-flex align-center">
-                                    <HelpInfoButtonPlugin help-type="sub-semanticId" />
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="sub-semanticId" />
                                 </v-col>
                             </v-row>
-                            <!--ADDED Buttons by columns-->
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Data Specification -->
@@ -167,11 +161,6 @@
     import { useIDUtils } from '@/composables/IDUtils';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    // Added Reference
-    // You may adjust the text inside the plugin
-    // And the context by adding the links in the help-links.json
-    // For implementation you adjust the type based on the context
-    import HelpInfoButtonPlugin from '@/UserPlugins/HelpInfoButton/HelpInfoButtonPlugin.vue';
     import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
     import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
