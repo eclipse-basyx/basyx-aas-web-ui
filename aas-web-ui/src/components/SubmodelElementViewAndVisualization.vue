@@ -20,7 +20,6 @@
                             <v-icon start>mdi-folder-star-outline</v-icon>
                             <span class="hidden-sm-and-down">Visualization</span>
                         </v-btn>
-                        <!--BS3 - JSON OPTION-->
                         <v-btn value="JSONView" class="ma-0">
                             <v-icon start>mdi-folder-star-outline</v-icon>
                             <span class="hidden-sm-and-down">JSON</span>
@@ -39,7 +38,6 @@
                     ">
                     <SubmodelElementView v-if="componentToShow === 'SMEView'" />
                     <SubmodelElementVisualization v-else-if="componentToShow === 'Visualization'" />
-                    <!--BS3 - JSON OPTION-->
                     <SubmodelElementJSONView v-if="componentToShow === 'JSONView'" />
                 </template>
                 <v-empty-state
@@ -59,8 +57,6 @@
 <script lang="ts" setup>
     import { computed, ref } from 'vue';
     import { useAASStore } from '@/store/AASDataStore';
-    //BS3 - Add
-    import SubmodelElementJSONView from '@/UserPlugins/JSONViewPlugin/SubmodelElementJSONView.vue';
 
     //Stores
     const aasStore = useAASStore();

@@ -92,6 +92,7 @@ declare module 'vue' {
     SubmodelElementCollection: typeof import('./components/SubmodelElements/SubmodelElementCollection.vue')['default']
     SubmodelElementForm: typeof import('./components/EditorComponents/SubmodelElementForm.vue')['default']
     SubmodelElementGroup: typeof import('./components/UIComponents/SubmodelElementGroup.vue')['default']
+    SubmodelElementJSONView: typeof import('./components/SubmodelElementJSONView.vue')['default']
     SubmodelElementList: typeof import('./components/SubmodelElements/SubmodelElementList.vue')['default']
     SubmodelElementView: typeof import('./components/SubmodelElementView.vue')['default']
     SubmodelElementViewAndVisualization: typeof import('./components/SubmodelElementViewAndVisualization.vue')['default']
