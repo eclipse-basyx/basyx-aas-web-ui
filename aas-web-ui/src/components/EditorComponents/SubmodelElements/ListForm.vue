@@ -13,47 +13,107 @@
                     <v-expansion-panel class="border-t-thin border-s-thin border-e-thin" :class="bordersToShow(0)">
                         <v-expansion-panel-title>Details</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <TextInput
-                                v-model="smlIdShort"
-                                label="IdShort"
-                                :error="hasError('idShort')"
-                                :rules="[rules.required]"
-                                :error-messages="getError('idShort')" />
-                            <MultiLanguageTextInput
-                                v-model="displayName"
-                                :show-label="true"
-                                label="Display Name"
-                                type="displayName" />
-                            <MultiLanguageTextInput
-                                v-model="description"
-                                :show-label="true"
-                                label="Description"
-                                type="description" />
-                            <SelectInput v-model="smlCategory" label="Category" type="category" :clearable="true" />
+                            <v-row align="center">
+                                <v-col class="py-0">
+                                    <TextInput
+                                        v-model="smlIdShort"
+                                        label="IdShort"
+                                        :error="hasError('idShort')"
+                                        :rules="[rules.required]"
+                                        :error-messages="getError('idShort')" />
+                                </v-col>
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="idShort" />
+                                </v-col>
+                            </v-row>
+                            <v-row align="center">
+                                <v-col class="py-0">
+                                    <MultiLanguageTextInput
+                                        v-model="displayName"
+                                        :show-label="true"
+                                        label="Display Name"
+                                        type="displayName" />
+                                </v-col>
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="displayName" />
+                                </v-col>
+                            </v-row>
+                            <v-row align="center">
+                                <v-col class="py-0">
+                                    <MultiLanguageTextInput
+                                        v-model="description"
+                                        :show-label="true"
+                                        label="Description"
+                                        type="description" />
+                                </v-col>
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="description" />
+                                </v-col>
+                            </v-row>
+                            <v-row align="center">
+                                <v-col class="py-0">
+                                    <SelectInput
+                                        v-model="smlCategory"
+                                        label="Category"
+                                        type="category"
+                                        :clearable="true" />
+                                </v-col>
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="category" />
+                                </v-col>
+                            </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Options -->
                     <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(1)">
                         <v-expansion-panel-title>Options</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <BooleanInput v-model="orderRelevant" label="Order Relevant"></BooleanInput>
-                            <SelectInput
-                                v-model="typeValueListElement"
-                                label="Element Type"
-                                type="elementType"
-                                :clearable="true" />
-                            <SelectInput
-                                v-model="valueTypeListElement"
-                                label="Data Type"
-                                type="dataType"
-                                :clearable="true" />
+                            <v-row align="center">
+                                <v-col class="py-0">
+                                    <BooleanInput v-model="orderRelevant" label="Order Relevant"></BooleanInput>
+                                </v-col>
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="sml-orderRelevant" />
+                                </v-col>
+                            </v-row>
+                            <v-row align="center">
+                                <v-col class="py-0">
+                                    <SelectInput
+                                        v-model="typeValueListElement"
+                                        label="Element Type"
+                                        type="elementType"
+                                        :clearable="true" />
+                                </v-col>
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="sml-typeValueListElement" />
+                                </v-col>
+                            </v-row>
+                            <v-row align="center">
+                                <v-col class="py-0">
+                                    <SelectInput
+                                        v-model="valueTypeListElement"
+                                        label="Data Type"
+                                        type="dataType"
+                                        :clearable="true" />
+                                </v-col>
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="sml-valueTypeListElement" />
+                                </v-col>
+                            </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Semantic ID -->
                     <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(2)">
                         <v-expansion-panel-title>Semantic ID</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" />
+                            <v-row align="center">
+                                <v-col class="py-0">
+                                    <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" />
+                                </v-col>
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="semanticId" />
+                                </v-col>
+                            </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Data Specification -->

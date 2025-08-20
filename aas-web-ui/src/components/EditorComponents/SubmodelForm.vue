@@ -21,7 +21,7 @@
                                         :disabled="!newSm" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="sub-ID" />
+                                    <HelpInfoButton help-type="identifier" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
@@ -29,7 +29,7 @@
                                     <TextInput v-model="submodelIdShort" label="IdShort" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="sub-IdShort" />
+                                    <HelpInfoButton help-type="idShort" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
@@ -37,7 +37,7 @@
                                     <SelectInput v-model="submodelKind" label="Modelling Kind" type="modellingKind" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="sub-instance" />
+                                    <HelpInfoButton help-type="modellingKind" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
@@ -49,7 +49,7 @@
                                         type="displayName" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="sub-displayname" />
+                                    <HelpInfoButton help-type="displayName" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
@@ -61,7 +61,7 @@
                                         type="description" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="sub-description" />
+                                    <HelpInfoButton help-type="description" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
@@ -73,7 +73,7 @@
                                         :clearable="true" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="sub-category" />
+                                    <HelpInfoButton help-type="category" />
                                 </v-col>
                             </v-row>
                         </v-expansion-panel-text>
@@ -87,7 +87,7 @@
                                     <TextInput v-model="version" label="Version" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="sub-version" />
+                                    <HelpInfoButton help-type="version" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
@@ -95,7 +95,7 @@
                                     <TextInput v-model="revision" label="Revision" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="sub-revision" />
+                                    <HelpInfoButton help-type="revision" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
@@ -103,7 +103,7 @@
                                     <ReferenceInput v-model="creator" label="Creator" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="sub-creator" />
+                                    <HelpInfoButton help-type="creator" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
@@ -111,7 +111,7 @@
                                     <TextInput v-model="templateId" label="Template ID" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="sub-templateId" />
+                                    <HelpInfoButton help-type="templateId" />
                                 </v-col>
                             </v-row>
                         </v-expansion-panel-text>
@@ -125,7 +125,7 @@
                                     <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="sub-semanticId" />
+                                    <HelpInfoButton help-type="semanticId" />
                                 </v-col>
                             </v-row>
                         </v-expansion-panel-text>

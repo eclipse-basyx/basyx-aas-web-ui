@@ -21,7 +21,7 @@
                                         :disabled="!newShell" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="aas-General" />
+                                    <HelpInfoButton help-type="identifier" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
@@ -29,7 +29,7 @@
                                     <TextInput v-model="AASIdShort" label="IdShort" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="aas-General" />
+                                    <HelpInfoButton help-type="idShort" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
@@ -41,7 +41,7 @@
                                         type="displayName" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="aas-General" />
+                                    <HelpInfoButton help-type="displayName" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
@@ -53,7 +53,7 @@
                                         type="description" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="aas-General" />
+                                    <HelpInfoButton help-type="description" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
@@ -65,7 +65,7 @@
                                         :clearable="true" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="aas-General" />
+                                    <HelpInfoButton help-type="category" />
                                 </v-col>
                             </v-row>
                         </v-expansion-panel-text>
@@ -79,7 +79,7 @@
                                     <TextInput v-model="version" label="Version" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="aas-General" />
+                                    <HelpInfoButton help-type="version" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
@@ -87,7 +87,7 @@
                                     <TextInput v-model="revision" label="Revision" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="aas-General" />
+                                    <HelpInfoButton help-type="revision" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
@@ -95,7 +95,7 @@
                                     <ReferenceInput v-model="creator" label="Creator" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="aas-General" />
+                                    <HelpInfoButton help-type="creator" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
@@ -103,7 +103,7 @@
                                     <TextInput v-model="templateId" label="Template ID" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="aas-General" />
+                                    <HelpInfoButton help-type="templateId" />
                                 </v-col>
                             </v-row>
                         </v-expansion-panel-text>
@@ -124,7 +124,7 @@
                                     <SelectInput v-model="assetKind" label="Asset Kind" type="assetKind"></SelectInput>
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="aas-General" />
+                                    <HelpInfoButton help-type="assetKind" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
@@ -136,7 +136,7 @@
                                         type="Asset" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="aas-General" />
+                                    <HelpInfoButton help-type="globalAssetId" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
@@ -144,7 +144,7 @@
                                     <TextInput v-model="assetType" label="Asset Type" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="aas-General" />
+                                    <HelpInfoButton help-type="assetType" />
                                 </v-col>
                             </v-row>
                             <v-row align="center">
@@ -157,7 +157,7 @@
                                         @update:file-thumbnail="handleFileThumbnail" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="aas-General" />
+                                    <HelpInfoButton help-type="defaultThumbnail" />
                                 </v-col>
                             </v-row>
                         </v-expansion-panel-text>
