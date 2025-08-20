@@ -1,0 +1,82 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": ["id", "name", "version", "aasVersion", "submodels"],
+    "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "version": { 
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+$"
+        },
+        "aasVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+$"
+        },
+        "category": { "type": "string" },
+        "tags": {
+            "type": "array",
+            "items": { "type": "string" }
+        },
+        "extends": { "type": "string" },
+        "defaults": {
+            "type": "object",
+            "properties": {
+                "idShort": { "type": "string" },
+                "semanticId": { "type": "string" }
+            },
+            "additionalProperties": true
+        },
+        "submodels": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["id", "name", "semanticId", "version"],
+                "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "semanticId": { "type": "string" },
+                    "version": {
+                        "type": "string",
+                        "pattern": "^\\d+\\.\\d+$"
+                    },
+                    "required": { "type": "boolean" },
+                    "elements": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "required": ["idShort", "type"],
+                            "properties": {
+                                "idShort": { "type": "string" },
+                                "type": { 
+                                    "type": "string", 
+                                    "enum": [
+                                        "Property",
+                                        "MultiLanguageProperty",
+                                        "Range",
+                                        "File",
+                                        "Blob",
+                                        "SubmodelElementCollection",
+                                        "SubmodelElementList"
+                                    ]
+                                },
+                                "required": { "type": "boolean" },
+                                "description": { "type": "string" },
+                                "semanticId": { "type": "string" },
+                                "valueType": { "type": "string" },
+                                "value": { "type": ["string", "number", "boolean", "object", "array"] },
+                                "min": { "type": ["string", "number"] },
+                                "max": { "type": ["string", "number"] },
+                                "children": { 
+                                    "type": "array",
+                                    "items": { "$ref": "#/properties/submodels/items/properties/elements/items" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+} 

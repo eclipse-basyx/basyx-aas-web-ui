@@ -1,0 +1,121 @@
+{
+    "id": "carbon-footprint-template",
+    "name": "Carbon Footprint Template",
+    "description": "[JSON] Template for product and transport carbon footprint data following IDTA specification",
+    "version": "0.9",
+    "aasVersion": "3.0",
+    "category": "Submodel",
+    "tags": ["carbon", "footprint", "sustainability", "IDTA"],
+    "defaults": {
+        "idShort": "CarbonFootprint",
+        "semanticId": "https://admin-shell.io/idta/CarbonFootprint/CarbonFootprint/0/9"
+    },
+    "submodels": [
+        {
+            "id": "carbon-footprint",
+            "name": "CarbonFootprint",
+            "semanticId": "https://admin-shell.io/idta/CarbonFootprint/CarbonFootprint/0/9",
+            "version": "0.9",
+            "required": true,
+            "elements": [
+                {
+                    "idShort": "ProductCarbonFootprint",
+                    "type": "SubmodelElementCollection",
+                    "required": true,
+                    "description": "Product carbon footprint data",
+                    "semanticId": "https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/0/9",
+                    "children": [
+                        {
+                            "idShort": "TotalCO2Equivalent",
+                            "type": "Property",
+                            "valueType": "xs:double",
+                            "required": true,
+                            "description": "Total CO2 equivalent in kg"
+                        },
+                        {
+                            "idShort": "LifeCyclePhase",
+                            "type": "Property",
+                            "valueType": "xs:string",
+                            "required": true,
+                            "description": "Life cycle phase of the product",
+                            "valueConstraints": [
+                                {"valueId": "0173-1#07-ABU208#001", "value": "A1 - raw material supply (and upstream production)", "identifier": "A1"},
+                                {"valueId": "0173-1#07-ABU209#001", "value": "A2 - cradle-to-gate transport to factory", "identifier": "A2"},
+                                {"valueId": "0173-1#07-ABU210#001", "value": "A3 - production", "identifier": "A3"},
+                                {"valueId": "0173-1#07-ABU211#001", "value": "A4 - transport to final destination", "identifier": "A4"},
+                                {"valueId": "0173-1#07-ABU212#001", "value": "B1 - usage phase", "identifier": "B1"},
+                                {"valueId": "0173-1#07-ABV498#001", "value": "B2 - maintenance", "identifier": "B2"},
+                                {"valueId": "0173-1#07-ABV497#001", "value": "B3 - repair", "identifier": "B3"},
+                                {"valueId": "0173-1#07-ABV499#001", "value": "B5 - update/upgrade, refurbishing", "identifier": "B5"},
+                                {"valueId": "0173-1#07-ABV500#001", "value": "B6 - usage energy consumption", "identifier": "B6"},
+                                {"valueId": "0173-1#07-ABV501#001", "value": "B7 - usage water consumption", "identifier": "B7"},
+                                {"valueId": "0173-1#07-ABV502#001", "value": "C1 - reassembly", "identifier": "C1"},
+                                {"valueId": "0173-1#07-ABU213#001", "value": "C2 - transport to recycler", "identifier": "C2"},
+                                {"valueId": "0173-1#07-ABV503#001", "value": "C3 - recycling, waste treatment", "identifier": "C3"},
+                                {"valueId": "0173-1#07-ABV504#001", "value": "C4 - landfill", "identifier": "C4"},
+                                {"valueId": "0173-1#07-ABU214#001", "value": "D - reuse", "identifier": "D"},
+                                {"valueId": "0173-1#07-ABZ789#001", "value": "A1-A3 - raw material supply, transport, production", "identifier": "A1-A3"}
+                            ]
+                        },
+                        {
+                            "idShort": "CalculationMethod",
+                            "type": "Property",
+                            "valueType": "xs:string",
+                            "required": true,
+                            "description": "Method used for carbon footprint calculation"
+                        },
+                        {
+                            "idShort": "VerificationStatus",
+                            "type": "Property",
+                            "valueType": "xs:string",
+                            "required": true,
+                            "description": "Verification status of the carbon footprint data"
+                        }
+                    ]
+                },
+                {
+                    "idShort": "TransportCarbonFootprint",
+                    "type": "SubmodelElementCollection",
+                    "required": false,
+                    "description": "Transport carbon footprint data",
+                    "semanticId": "https://admin-shell.io/idta/CarbonFootprint/TransportCarbonFootprint/0/9",
+                    "children": [
+                        {
+                            "idShort": "TransportCO2Equivalent",
+                            "type": "Property",
+                            "valueType": "xs:double",
+                            "required": true,
+                            "description": "CO2 equivalent for transport in kg"
+                        },
+                        {
+                            "idShort": "TransportMode",
+                            "type": "Property",
+                            "valueType": "xs:string",
+                            "required": true,
+                            "description": "Mode of transport"
+                        },
+                        {
+                            "idShort": "Distance",
+                            "type": "Property",
+                            "valueType": "xs:double",
+                            "required": true,
+                            "description": "Transport distance in km"
+                        },
+                        {
+                            "idShort": "ProcessForGreenhouseGasEmission",
+                            "type": "Property",
+                            "valueType": "xs:string",
+                            "required": false,
+                            "description": "Process for greenhouse gas emission in transport",
+                            "valueConstraints": [
+                                {"valueId": "0173-1#07-ABU216#001", "value": "Well-to-Tank", "identifier": "WTT"},
+                                {"valueId": "0173-1#07-ABU215#001", "value": "Tank-to-Wheel", "identifier": "TTW"},
+                                {"valueId": "0173-1#07-ABU217#001", "value": "Well-to-Wheel", "identifier": "WTW"}
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
