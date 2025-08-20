@@ -1,5 +1,5 @@
 # Build Stage
-FROM node:lts-slim AS build-stage
+FROM --platform=$BUILDPLATFORM node:lts-slim AS build-stage
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
 ARG NODE_OPTIONS=--max-old-space-size=8192
@@ -9,11 +9,13 @@ WORKDIR /app
 # Copy the package.json and yarn.lock files
 COPY package.json yarn.lock ./
 # Install dependencies
-RUN NODE_OPTIONS="--max-old-space-size=8192" yarn install
+RUN --mount=type=cache,target=/root/.cache/yarn \
+    yarn install --frozen-lockfile --non-interactive --network-timeout 600000
 # Copy project files
 COPY . .
-# Build the application and remove node_modules
-RUN NODE_OPTIONS="--max-old-space-size=8192" yarn build && rm -rf node_modules
+# Build the application
+ENV NODE_OPTIONS=--max-old-space-size=4096
+RUN yarn build
 
 # Production Stage
 FROM nginx:mainline-alpine-slim AS production-stage
