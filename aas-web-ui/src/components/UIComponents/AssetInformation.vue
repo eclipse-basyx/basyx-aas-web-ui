@@ -118,13 +118,18 @@
         }
 
         try {
-            qrCodeUrl.value = await QRCode.toDataURL(assetInfo.value.id, {
-                errorCorrectionLevel: 'Q',
-                margin: 3,
-                scale: 4, // module size
-            });
+            if (assetInfo.value.id && assetInfo.value.id.trim() !== '') {
+                qrCodeUrl.value = await QRCode.toDataURL(assetInfo.value.id, {
+                    errorCorrectionLevel: 'Q',
+                    margin: 3,
+                    scale: 4, // module size
+                });
+            } else {
+                qrCodeUrl.value = '';
+            }
         } catch (err) {
             console.error(err);
+            qrCodeUrl.value = '';
         }
 
         if (
@@ -133,10 +138,17 @@
             props.assetObject.defaultThumbnail?.path &&
             props.assetObject.defaultThumbnail?.path.trim() !== ''
         ) {
-            thumbnailSrc.value = await getBlobUrl(
-                props.assetObject.defaultThumbnail.path.trim(),
-                props.assetObject.defaultThumbnail.isExternal
-            );
+            const thumbnailPath = props.assetObject.defaultThumbnail.path.trim();
+            let isExternal = false;
+            try {
+                new URL(thumbnailPath);
+                // If no error is thrown, path is a valid URL
+                isExternal = true;
+            } catch {
+                // Path is not a valid URL, so it's internal
+                isExternal = false;
+            }
+            thumbnailSrc.value = await getBlobUrl(thumbnailPath, isExternal);
             thumbnailCaption.value = '';
         } else {
             const productImageUrlFromSmTechnicalData = await getProductImageUrlByAasIdFromSmTechnicalData(
