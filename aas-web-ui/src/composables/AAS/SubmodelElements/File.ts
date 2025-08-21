@@ -191,16 +191,15 @@ export function useSMEFile() {
      */
     const CUSTOM_MIME_MAPPINGS: Record<string, string> = {
         // CAD file types
-        stl: 'model/stl', // STL files
-        sla: 'application/sla', // SLA files
-        obj: 'model/obj', // OBJ 3D model files
+        stl: 'application/sla', // STL files
+        obj: 'text/obj', // OBJ 3D model files
         gltf: 'model/gltf+json', // glTF files
         glb: 'model/gltf-binary', // Binary glTF files
 
         // IFC files
-        ifc: 'application/x-step', // IFC files -> x-step content type for IFC preview
-        step: 'application/x-step', // STEP files
-        stp: 'application/x-step', // STEP files (alternative extension)
+        ifc: 'application/x-step', // IFC files
+        ifcXML: 'application/xml', // IFC XML files
+        ifcZIP: 'application/zip', // IFC ZIP files (alternative extension)
 
         // Additional formats if needed
         ply: 'application/ply', // PLY files

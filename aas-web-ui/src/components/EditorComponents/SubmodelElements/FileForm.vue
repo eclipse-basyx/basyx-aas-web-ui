@@ -481,7 +481,7 @@
                 if (parentElement.modelType === 'Submodel') {
                     await putSubmodelElement(fileSME, elementPath);
                 } else if (parentElement.modelType === 'SubmodelElementList') {
-                    const index = parentElement.value.indexOf(parentElement.value.find((el: any) => el.id === file.id));
+                    const index = parentElement.value.findIndex((el: any) => el.id === file.id);
                     const path = parentElement.path + `%5B${index}%5D`;
                     await putSubmodelElement(fileSME, path);
                 } else {
