@@ -41,9 +41,9 @@
                             @click:clear="clearPath()"
                             @update:focused="setFocus">
                             <!-- Update Path Button -->
-                            <template #append-inner="{ isFocused }">
+                            <template #append-inner="{ isFocused: isInputFocused }">
                                 <v-btn
-                                    v-if="isFocused && isEditable"
+                                    v-if="isInputFocused && isEditable"
                                     size="small"
                                     variant="elevated"
                                     color="primary"
@@ -101,141 +101,143 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
+<script lang="ts" setup>
+    import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
+    import { computed, onMounted, ref, watch } from 'vue';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
-    export default defineComponent({
-        name: 'File',
-        props: {
-            fileObject: {
-                type: Object,
-                default: () => ({}),
-            },
-            isEditable: {
-                type: Boolean,
-                default: true,
-            },
+    const props = defineProps({
+        fileObject: {
+            type: Object,
+            default: () => ({}),
         },
-
-        setup() {
-            const aasStore = useAASStore();
-
-            const { fetchAndDispatchSme } = useSMEHandling();
-            const { valueBlob } = useSMEFile();
-            const { patchRequest } = useRequestHandling();
-            const { putAttachmentFile } = useSMRepositoryClient();
-
-            return {
-                aasStore, // AASStore Object
-                fetchAndDispatchSme,
-                valueBlob,
-                patchRequest,
-                putAttachmentFile,
-            };
-        },
-
-        data() {
-            return {
-                newPathValue: '',
-                newFile: [] as any, // File Object to Upload
-                localPathValue: '', // Path to the File when it is embedded to the AAS
-                isFocused: false, // boolean to check if the input field is focused
-            };
-        },
-
-        computed: {
-            // get selected AAS from Store
-            SelectedAAS() {
-                return this.aasStore.getSelectedAAS;
-            },
-
-            // Get the selected Treeview Node (SubmodelElement) from the store
-            SelectedNode() {
-                return this.aasStore.getSelectedNode;
-            },
-        },
-
-        watch: {
-            // Watch for changes in the selected Node and reset input
-            SelectedNode: {
-                deep: true,
-                handler() {
-                    this.newPathValue = '';
-                    this.localPathValue = '';
-                },
-            },
-
-            // watch for changes in the fileObject and set the newPathValue
-            fileObject: {
-                deep: true,
-                async handler() {
-                    if (!this.isFocused) {
-                        this.newPathValue = this.fileObject.value;
-                        this.localPathValue = await this.valueBlob(this.fileObject);
-                    }
-                },
-            },
-        },
-
-        async mounted() {
-            this.newPathValue = this.fileObject.value;
-            this.localPathValue = await this.valueBlob(this.fileObject);
-        },
-
-        methods: {
-            // Function to update the Path of the File Element
-            updatePath() {
-                // console.log("Update Path: " + this.newPathValue);
-                let updateObject = { value: this.newPathValue, contentType: this.fileObject.contentType };
-                let path = this.fileObject.path + '/$value';
-                let content = JSON.stringify(updateObject);
-                let context = 'updating ' + this.fileObject.modelType + ' "' + this.fileObject.idShort + '"';
-                let disableMessage = false;
-                const headers = new Headers();
-                headers.append('Content-Type', 'application/json');
-
-                // Send Request to update the path of the file element
-                this.patchRequest(path, content, headers, context, disableMessage).then((response: any) => {
-                    if (response.success) {
-                        // After successful patch request fetch and dispatch updated SME
-                        this.fetchAndDispatchSme(this.SelectedNode.path, false);
-                    }
-                });
-            },
-
-            // Function to clear the Path of the File Element
-            clearPath() {
-                this.newPathValue = '';
-            },
-
-            // Function to upload a File
-            async uploadFile() {
-                // console.log("Upload File: ", this.newFile);
-                // check if a file is selected
-                if (this.newFile.length == 0) return;
-
-                try {
-                    const response = await this.putAttachmentFile(this.newFile, this.SelectedNode.path);
-                    if (response) {
-                        await this.fetchAndDispatchSme(this.SelectedNode.path, false);
-                        this.newFile = [];
-                    }
-                } catch (error) {
-                    console.error('Error uploading file:', error);
-                }
-            },
-
-            // Function to set the focus on the input field
-            setFocus(e: boolean) {
-                this.isFocused = e;
-                if (!e) this.newPathValue = this.fileObject.value; // set input to current value in the AAS if the input field is not focused
-            },
+        isEditable: {
+            type: Boolean,
+            default: true,
         },
     });
+
+    const aasStore = useAASStore();
+
+    const { fetchAndDispatchSme } = useSMEHandling();
+    const { valueBlob, determineContentType } = useSMEFile();
+    const { patchRequest } = useRequestHandling();
+    const { putAttachmentFile, putSubmodelElement, fetchSme } = useSMRepositoryClient();
+
+    const newPathValue = ref<string>('');
+    const newFile = ref<File | null>(null); // File Object to Upload
+    const localPathValue = ref<string>(''); // Path to the File when it is embedded to the AAS
+    const isFocused = ref<boolean>(false); // boolean to check if the input field is focused
+
+    const selectedNode = computed(() => aasStore.getSelectedNode);
+
+    watch(
+        selectedNode,
+        (newNode) => {
+            if (newNode) {
+                localPathValue.value = newNode.path;
+                // Reset input values when selectedNode changes
+                newPathValue.value = '';
+                localPathValue.value = '';
+            }
+        },
+        { deep: true }
+    );
+
+    watch(
+        () => props.fileObject,
+        async (newFileObject) => {
+            if (newFileObject && !isFocused.value) {
+                newPathValue.value = newFileObject.value;
+                localPathValue.value = await valueBlob(newFileObject);
+            }
+        },
+        { deep: true, immediate: true }
+    );
+
+    onMounted(async () => {
+        if (props.fileObject) {
+            newPathValue.value = props.fileObject.value;
+            localPathValue.value = await valueBlob(props.fileObject);
+        }
+    });
+
+    async function updatePath(): Promise<void> {
+        // console.log("Update Path: " + this.newPathValue);
+        const updateObject = { value: newPathValue.value, contentType: props.fileObject.contentType };
+        const path = props.fileObject.path + '/$value';
+        const content = JSON.stringify(updateObject);
+        const context = 'updating ' + props.fileObject.modelType + ' "' + props.fileObject.idShort + '"';
+        const disableMessage = false;
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+
+        // Send Request to update the path of the file element
+        const response = await patchRequest(path, content, headers, context, disableMessage);
+
+        if (response.success) {
+            // After successful patch request fetch and dispatch updated SME
+            fetchAndDispatchSme(selectedNode.value.path, false);
+        }
+    }
+
+    function clearPath(): void {
+        newPathValue.value = '';
+    }
+
+    async function uploadFile(): Promise<void> {
+        // console.log("Upload File: ", newFile.value);
+        // check if a file is selected
+        if (!newFile.value) return;
+
+        try {
+            // First upload the file (this will set the path automatically)
+            const response = await putAttachmentFile(newFile.value, selectedNode.value.path);
+            if (response) {
+                // Second, fetch the updated SME to get the current state with the new path
+                const updatedSmeData = await fetchSme(selectedNode.value.path);
+
+                if (updatedSmeData) {
+                    // Third, update only the contentType
+                    const updatedFileObject = { ...updatedSmeData };
+
+                    // remove unwanted properties
+                    delete updatedFileObject.id;
+                    delete updatedFileObject.timestamp;
+                    delete updatedFileObject.conceptDescriptions;
+                    delete updatedFileObject.path;
+
+                    updatedFileObject.contentType = determineContentType(newFile.value, props.fileObject.contentType);
+
+                    // Convert to core works File type
+                    const instanceOrError = jsonization.fileFromJsonable(updatedFileObject);
+
+                    if (instanceOrError.error !== null) {
+                        console.error('Error parsing File SME: ', instanceOrError.error);
+                        return;
+                    }
+
+                    const fileSME = instanceOrError.mustValue();
+
+                    // Update the file SME with the correct content type
+                    await putSubmodelElement(fileSME, selectedNode.value.path);
+                }
+
+                // Refresh the SME data
+                await fetchAndDispatchSme(selectedNode.value.path, false);
+                newFile.value = null;
+            }
+        } catch (error) {
+            console.error('Error uploading file:', error);
+        }
+    }
+
+    function setFocus(e: boolean): void {
+        isFocused.value = e;
+        if (!e) newPathValue.value = props.fileObject.value; // set input to current value in the AAS if the input field is not focused
+    }
 </script>
