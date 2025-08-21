@@ -191,7 +191,7 @@ export function useSMEFile() {
      */
     const CUSTOM_MIME_MAPPINGS: Record<string, string> = {
         // CAD file types
-        stl: 'application/sla', // STL files -> SLA content type for CAD preview
+        stl: 'model/stl', // STL files
         sla: 'application/sla', // SLA files
         obj: 'model/obj', // OBJ 3D model files
         gltf: 'model/gltf+json', // glTF files

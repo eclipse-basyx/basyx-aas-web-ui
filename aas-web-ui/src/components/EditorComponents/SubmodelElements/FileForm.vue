@@ -339,23 +339,12 @@
                     // After file upload, fetch the updated SME and update only the contentType
                     const updatedSmeData = await fetchSme(newElementPath);
                     if (updatedSmeData) {
-                        const updatedFileObject = { ...updatedSmeData };
-
-                        // remove unwanted properties
-                        delete updatedFileObject.id;
-                        delete updatedFileObject.timestamp;
-                        delete updatedFileObject.conceptDescriptions;
-                        delete updatedFileObject.path;
-
-                        updatedFileObject.contentType = determineContentType(fileElement.value, contentType.value);
-
-                        // Convert to core works File type
-                        const instanceOrError = jsonization.fileFromJsonable(updatedFileObject);
-
-                        if (instanceOrError.error === null) {
-                            const fileSME = instanceOrError.mustValue();
-                            await putSubmodelElement(fileSME, newElementPath);
-                        }
+                        await parseAndUpdateSubmodelElement(
+                            updatedSmeData,
+                            fileElement.value,
+                            contentType.value,
+                            newElementPath
+                        );
                     }
                 }
 
@@ -386,23 +375,12 @@
                     // After file upload, fetch the updated SME and update only the contentType
                     const updatedSmeData = await fetchSme(newElementPath);
                     if (updatedSmeData) {
-                        const updatedFileObject = { ...updatedSmeData };
-
-                        // remove unwanted properties
-                        delete updatedFileObject.id;
-                        delete updatedFileObject.timestamp;
-                        delete updatedFileObject.conceptDescriptions;
-                        delete updatedFileObject.path;
-
-                        updatedFileObject.contentType = determineContentType(fileElement.value, contentType.value);
-
-                        // Convert to core works File type
-                        const instanceOrError = jsonization.fileFromJsonable(updatedFileObject);
-
-                        if (instanceOrError.error === null) {
-                            const fileSME = instanceOrError.mustValue();
-                            await putSubmodelElement(fileSME, newElementPath);
-                        }
+                        await parseAndUpdateSubmodelElement(
+                            updatedSmeData,
+                            fileElement.value,
+                            contentType.value,
+                            newElementPath
+                        );
                     }
                 }
 
@@ -459,41 +437,62 @@
                 // After file upload, fetch the updated SME and update only the contentType
                 const updatedSmeData = await fetchSme(props.path);
                 if (updatedSmeData) {
-                    const updatedFileObject = { ...updatedSmeData };
-
-                    // remove unwanted properties
-                    delete updatedFileObject.id;
-                    delete updatedFileObject.timestamp;
-                    delete updatedFileObject.conceptDescriptions;
-                    delete updatedFileObject.path;
-
-                    updatedFileObject.contentType = determineContentType(fileElement.value, contentType.value);
-
-                    // Convert to core works File type
-                    const instanceOrError = jsonization.fileFromJsonable(updatedFileObject);
-
-                    if (instanceOrError.error === null) {
-                        const fileSME = instanceOrError.mustValue();
-
-                        // Update the SME with the correct content type
-                        if (props.parentElement.modelType === 'Submodel') {
-                            await putSubmodelElement(fileSME, props.path);
-                        } else if (props.parentElement.modelType === 'SubmodelElementList') {
-                            const index = props.parentElement.value.indexOf(
-                                props.parentElement.value.find((el: any) => el.id === props.file.id)
-                            );
-                            const path = props.parentElement.path + `%5B${index}%5D`;
-                            await putSubmodelElement(fileSME, path);
-                        } else {
-                            // Submodel Element Collection or Entity
-                            await putSubmodelElement(fileSME, props.file.path);
-                        }
-                    }
+                    await parseAndUpdateSubmodelElement(
+                        updatedSmeData,
+                        fileElement.value,
+                        contentType.value,
+                        props.path,
+                        props.parentElement,
+                        props.file
+                    );
                 }
             }
         }
         closeDialog();
         navigationStore.dispatchTriggerTreeviewReload();
+    }
+
+    async function parseAndUpdateSubmodelElement(
+        updatedSmeData: any,
+        fileElement: File,
+        contentTypeValue: string,
+        elementPath: string,
+        parentElement?: any,
+        file?: any
+    ): Promise<void> {
+        const updatedFileObject = { ...updatedSmeData };
+
+        // remove unwanted properties
+        delete updatedFileObject.id;
+        delete updatedFileObject.timestamp;
+        delete updatedFileObject.conceptDescriptions;
+        delete updatedFileObject.path;
+
+        updatedFileObject.contentType = determineContentType(fileElement, contentTypeValue);
+
+        // Convert to core works File type
+        const instanceOrError = jsonization.fileFromJsonable(updatedFileObject);
+
+        if (instanceOrError.error === null) {
+            const fileSME = instanceOrError.mustValue();
+
+            // Handle different parent element types for edit case
+            if (parentElement && file) {
+                if (parentElement.modelType === 'Submodel') {
+                    await putSubmodelElement(fileSME, elementPath);
+                } else if (parentElement.modelType === 'SubmodelElementList') {
+                    const index = parentElement.value.indexOf(parentElement.value.find((el: any) => el.id === file.id));
+                    const path = parentElement.path + `%5B${index}%5D`;
+                    await putSubmodelElement(fileSME, path);
+                } else {
+                    // Submodel Element Collection or Entity
+                    await putSubmodelElement(fileSME, file.path);
+                }
+            } else {
+                // Simple case for new files
+                await putSubmodelElement(fileSME, elementPath);
+            }
+        }
     }
 
     function closeDialog(): void {

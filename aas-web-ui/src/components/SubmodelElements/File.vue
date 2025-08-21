@@ -139,7 +139,6 @@
         selectedNode,
         (newNode) => {
             if (newNode) {
-                localPathValue.value = newNode.path;
                 // Reset input values when selectedNode changes
                 newPathValue.value = '';
                 localPathValue.value = '';
