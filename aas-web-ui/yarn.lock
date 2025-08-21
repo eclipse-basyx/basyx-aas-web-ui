@@ -888,10 +888,10 @@
   dependencies:
     "@thatopen/components" "~3.1.0"
 
-"@thatopen/components@^3.1.1", "@thatopen/components@~3.1.0":
-  version "3.1.1"
-  resolved "https://registry.yarnpkg.com/@thatopen/components/-/components-3.1.1.tgz#3e9d473f9bcc9efa70decb51c62fb2db8b683ca7"
-  integrity sha512-iZYrEOhbnYfb9+GNpQK48IFrJ8IBqfO8CYSLQjahjTlV5iErjMHiMvlfFNSBzuukTgrLU6Feyx4aUX7rUfF++g==
+"@thatopen/components@^3.1.2", "@thatopen/components@~3.1.0":
+  version "3.1.2"
+  resolved "https://registry.yarnpkg.com/@thatopen/components/-/components-3.1.2.tgz#1f82e9c233fa5b8e7c2dcd3950db5754773e835e"
+  integrity sha512-timqgcq7B7cc8JlwHfIeVeXK4MLIzU+j/C4npBdOQfJZbmA/qNwbZwSa4ZwWsoMtb/EWR7hO6u0G2h1EKNwwRA==
   dependencies:
     camera-controls "^2.9.0"
     fast-xml-parser "4.4.1"
