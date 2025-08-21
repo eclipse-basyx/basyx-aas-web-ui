@@ -20,6 +20,10 @@
                             <v-icon start>mdi-folder-star-outline</v-icon>
                             <span class="hidden-sm-and-down">Visualization</span>
                         </v-btn>
+                        <v-btn value="JSONView" class="ma-0">
+                            <v-icon start>mdi-folder-star-outline</v-icon>
+                            <span class="hidden-sm-and-down">JSON</span>
+                        </v-btn>
                     </v-btn-toggle>
                 </div>
             </v-card-title>
@@ -34,6 +38,7 @@
                     ">
                     <SubmodelElementView v-if="componentToShow === 'SMEView'" />
                     <SubmodelElementVisualization v-else-if="componentToShow === 'Visualization'" />
+                    <SubmodelElementJSONView v-if="componentToShow === 'JSONView'" />
                 </template>
                 <v-empty-state
                     v-else-if="!selectedAAS || Object.keys(selectedAAS).length === 0"

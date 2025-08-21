@@ -13,23 +13,55 @@
                     <v-expansion-panel class="border-t-thin border-s-thin border-e-thin" :class="bordersToShow(0)">
                         <v-expansion-panel-title>Details</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <TextInput
-                                v-model="mlpIdShort"
-                                label="IdShort"
-                                :error="hasError('idShort')"
-                                :rules="[rules.required]"
-                                :error-messages="getError('idShort')" />
-                            <MultiLanguageTextInput
-                                v-model="displayName"
-                                :show-label="true"
-                                label="Display Name"
-                                type="displayName" />
-                            <MultiLanguageTextInput
-                                v-model="description"
-                                :show-label="true"
-                                label="Description"
-                                type="description" />
-                            <SelectInput v-model="mlpCategory" label="Category" type="category" :clearable="true" />
+                            <v-row align="center">
+                                <v-col class="py-0">
+                                    <TextInput
+                                        v-model="mlpIdShort"
+                                        label="IdShort"
+                                        :error="hasError('idShort')"
+                                        :rules="[rules.required]"
+                                        :error-messages="getError('idShort')" />
+                                </v-col>
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="idShort" />
+                                </v-col>
+                            </v-row>
+                            <v-row align="center">
+                                <v-col class="py-0">
+                                    <MultiLanguageTextInput
+                                        v-model="displayName"
+                                        :show-label="true"
+                                        label="Display Name"
+                                        type="displayName" />
+                                </v-col>
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="displayName" />
+                                </v-col>
+                            </v-row>
+                            <v-row align="center">
+                                <v-col class="py-0">
+                                    <MultiLanguageTextInput
+                                        v-model="description"
+                                        :show-label="true"
+                                        label="Description"
+                                        type="description" />
+                                </v-col>
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="description" />
+                                </v-col>
+                            </v-row>
+                            <v-row align="center">
+                                <v-col class="py-0">
+                                    <SelectInput
+                                        v-model="mlpCategory"
+                                        label="Category"
+                                        type="category"
+                                        :clearable="true" />
+                                </v-col>
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="category" />
+                                </v-col>
+                            </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- TODO: Value ID -->
@@ -37,14 +69,28 @@
                     <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(1)">
                         <v-expansion-panel-title>Value</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <MultiLanguageTextInput v-model="mlpValue" :show-label="false" type="text" />
+                            <v-row align="center">
+                                <v-col class="py-0">
+                                    <MultiLanguageTextInput v-model="mlpValue" :show-label="false" type="text" />
+                                </v-col>
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="mlp-value" />
+                                </v-col>
+                            </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Semantic ID -->
                     <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(2)">
                         <v-expansion-panel-title>Semantic ID</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" />
+                            <v-row align="center">
+                                <v-col class="py-0">
+                                    <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" />
+                                </v-col>
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="semanticId" />
+                                </v-col>
+                            </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Data Specification -->
@@ -70,6 +116,7 @@
     import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
+    import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -91,6 +138,7 @@
 
     // Composables
     const { fetchSme, putSubmodelElement, postSubmodelElement } = useSMRepositoryClient();
+    const { fetchAndDispatchSme } = useSMEHandling();
 
     // Vue Router
     const router = useRouter();
@@ -251,19 +299,13 @@
             }
 
             const editedElementSelected = route.query.path === props.path;
-            const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
 
             // Update the MLP
             if (props.parentElement.modelType === 'Submodel') {
                 await putSubmodelElement(mlpObject.value, props.path);
 
                 if (editedElementSelected) {
-                    router.push({
-                        query: {
-                            aas: aasEndpoint,
-                            path: props.parentElement.path + '/submodel-elements/' + mlpObject.value.idShort,
-                        },
-                    });
+                    fetchAndDispatchSme(props.parentElement.path + '/submodel-elements/' + mlpObject.value.idShort);
                 }
             } else if (props.parentElement.modelType === 'SubmodelElementList') {
                 const index = props.parentElement.value.indexOf(
@@ -273,18 +315,14 @@
                 await putSubmodelElement(mlpObject.value, path);
 
                 if (editedElementSelected) {
-                    router.push({
-                        query: { aas: aasEndpoint, path: path },
-                    });
+                    fetchAndDispatchSme(path);
                 }
             } else {
                 // Submodel Element Collection or Entity
                 await putSubmodelElement(mlpObject.value, props.mlp.path);
 
                 if (editedElementSelected) {
-                    router.push({
-                        query: { aas: aasEndpoint, path: props.parentElement.path + '.' + mlpObject.value.idShort },
-                    });
+                    fetchAndDispatchSme(props.parentElement.path + '.' + mlpObject.value.idShort);
                 }
             }
         }
