@@ -21,7 +21,7 @@
                             <span class="hidden-sm-and-down">Visualization</span>
                         </v-btn>
                         <v-btn value="JSONView" class="ma-0">
-                            <v-icon start>mdi-folder-star-outline</v-icon>
+                            <v-icon start>mdi-code-block-braces</v-icon>
                             <span class="hidden-sm-and-down">JSON</span>
                         </v-btn>
                     </v-btn-toggle>

@@ -124,6 +124,14 @@
             if (newValue === 'none') {
                 pathValue.value = null;
                 contentTypeValue.value = 'application/unknown';
+                file.value = undefined;
+                emit('update:file', undefined);
+            } else if (newValue === 'url') {
+                file.value = undefined;
+                emit('update:file', undefined);
+            } else if (newValue === 'file') {
+                pathValue.value = null;
+                emit('update:path', null);
             }
         }
     );

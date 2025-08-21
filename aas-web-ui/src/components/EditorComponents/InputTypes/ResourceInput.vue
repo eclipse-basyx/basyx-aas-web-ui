@@ -118,6 +118,26 @@
         }
     );
 
+    watch(
+        () => toggle.value,
+        (newValue) => {
+            if (newValue === 'none') {
+                resourceValue.value = null;
+                fileThumbnail.value = undefined;
+                emit('update:fileThumbnail', undefined);
+            } else if (newValue === 'url') {
+                fileThumbnail.value = undefined;
+                emit('update:fileThumbnail', undefined);
+                if (resourceValue.value === null) {
+                    resourceValue.value = new aasTypes.Resource('', '');
+                }
+            } else if (newValue === 'file') {
+                resourceValue.value = null;
+                emit('update:modelValue', null);
+            }
+        }
+    );
+
     onMounted(() => {
         if (!props.newShell) {
             toggle.value = 'url';
