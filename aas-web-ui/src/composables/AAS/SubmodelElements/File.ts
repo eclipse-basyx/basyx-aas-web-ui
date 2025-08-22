@@ -186,5 +186,110 @@ export function useSMEFile() {
         }
     }
 
-    return { isFile, hasValue, valueToDisplay, valueUrl, valueBlob, getFilename, downloadFile };
+    /**
+     * Custom MIME type mappings for specific file types used in visualizations
+     */
+    const CUSTOM_MIME_MAPPINGS: Record<string, string> = {
+        // CAD file types
+        stl: 'application/sla', // STL files
+        obj: 'text/obj', // OBJ 3D model files
+        gltf: 'model/gltf+json', // glTF files
+        glb: 'model/gltf-binary', // Binary glTF files
+
+        // IFC files
+        ifc: 'application/x-step', // IFC files
+        ifcXML: 'application/xml', // IFC XML files
+        ifcZIP: 'application/zip', // IFC ZIP files (alternative extension)
+
+        // Additional formats if needed
+        ply: 'application/ply', // PLY files
+        '3mf': 'model/3mf', // 3MF files
+    };
+
+    /**
+     * Determines the content type of a file based on various properties.
+     * @param file - The file object to check.
+     * @param fallbackType - The fallback content type to use if none is found.
+     * @returns The determined content type or the fallback type.
+     */
+    function determineContentType(file: any, fallbackType: string = 'application/octet-stream'): string {
+        if (!file) {
+            return fallbackType;
+        }
+
+        // Priority 1: Use explicitly set content type
+        if (file.contentType && typeof file.contentType === 'string' && file.contentType.trim()) {
+            return file.contentType.trim();
+        }
+
+        // Priority 2: Use file type property (for File objects)
+        if (file.type && typeof file.type === 'string' && file.type.trim()) {
+            return file.type.trim();
+        }
+
+        // Priority 3: Determine from file value (URL or path)
+        if (file.value && typeof file.value === 'string' && file.value.trim()) {
+            const contentTypeFromValue = getContentTypeFromPath(file.value.trim());
+            if (contentTypeFromValue) {
+                return contentTypeFromValue;
+            }
+        }
+
+        // Priority 4: Determine from file name
+        if (file.name && typeof file.name === 'string' && file.name.trim()) {
+            const contentTypeFromName = getContentTypeFromPath(file.name.trim());
+            if (contentTypeFromName) {
+                return contentTypeFromName;
+            }
+        }
+
+        // Priority 5: Use fallback
+        return fallbackType;
+    }
+
+    /**
+     * Extracts content type from a file path or URL based on its extension
+     * @param path - The file path or URL
+     * @returns The MIME type or null if not determinable
+     */
+    function getContentTypeFromPath(path: string): string | null {
+        if (!path || typeof path !== 'string') {
+            return null;
+        }
+
+        // Extract filename from URL or path
+        const filename = path.split('/').pop() || path;
+
+        // Find the last dot to get the extension
+        const lastDotIndex = filename.lastIndexOf('.');
+        if (lastDotIndex === -1 || lastDotIndex === filename.length - 1) {
+            return null; // No extension found or ends with dot
+        }
+
+        const extension = filename.substring(lastDotIndex + 1).toLowerCase();
+
+        // Validate extension (should be 1-10 characters, alphanumeric)
+        if (!/^[a-z0-9]{1,10}$/.test(extension)) {
+            return null;
+        }
+
+        // Priority 1: Check custom mappings first
+        if (CUSTOM_MIME_MAPPINGS[extension]) {
+            return CUSTOM_MIME_MAPPINGS[extension];
+        }
+
+        // Priority 2: Use standard MIME type library
+        return mime.getType(extension) || null;
+    }
+
+    return {
+        isFile,
+        hasValue,
+        valueToDisplay,
+        valueUrl,
+        valueBlob,
+        getFilename,
+        downloadFile,
+        determineContentType,
+    };
 }

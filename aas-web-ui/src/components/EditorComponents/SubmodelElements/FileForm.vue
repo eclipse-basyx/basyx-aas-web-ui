@@ -127,6 +127,7 @@
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
+    import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -149,6 +150,7 @@
     // Composables
     const { fetchSme, putSubmodelElement, postSubmodelElement, putAttachmentFile } = useSMRepositoryClient();
     const { fetchAndDispatchSme } = useSMEHandling();
+    const { determineContentType } = useSMEFile();
 
     // Vue Router
     const router = useRouter();
@@ -307,14 +309,7 @@
 
         fileObject.value.value = filePath.value;
 
-        if (fileElement.value !== undefined) {
-            fileObject.value.contentType = fileElement.value.type;
-        } else if (contentType.value !== null) {
-            fileObject.value.contentType = contentType.value;
-        } else {
-            errors.value.set('contentType', 'File Element Content Type is required');
-            return;
-        }
+        fileObject.value.contentType = determineContentType(fileElement.value, contentType.value);
 
         if (semanticId.value !== null) {
             fileObject.value.semanticId = semanticId.value;
@@ -337,9 +332,20 @@
 
                 const newElementPath = props.parentElement.path + '/submodel-elements/' + fileObject.value.idShort;
 
-                // Upload the file
+                // Upload the file first if there is one
                 if (fileElement.value !== undefined) {
                     await putAttachmentFile(fileElement.value, newElementPath);
+
+                    // After file upload, fetch the updated SME and update only the contentType
+                    const updatedSmeData = await fetchSme(newElementPath);
+                    if (updatedSmeData) {
+                        await parseAndUpdateSubmodelElement(
+                            updatedSmeData,
+                            fileElement.value,
+                            contentType.value,
+                            newElementPath
+                        );
+                    }
                 }
 
                 const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
@@ -362,9 +368,20 @@
 
                 const newElementPath = props.parentElement.path + '.' + fileObject.value.idShort;
 
-                // Upload the file
+                // Upload the file first if there is one
                 if (fileElement.value !== undefined) {
                     await putAttachmentFile(fileElement.value, newElementPath);
+
+                    // After file upload, fetch the updated SME and update only the contentType
+                    const updatedSmeData = await fetchSme(newElementPath);
+                    if (updatedSmeData) {
+                        await parseAndUpdateSubmodelElement(
+                            updatedSmeData,
+                            fileElement.value,
+                            contentType.value,
+                            newElementPath
+                        );
+                    }
                 }
 
                 const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
@@ -413,13 +430,69 @@
                 }
             }
 
-            // Upload the file
+            // Upload the file first if there is one
             if (fileElement.value !== undefined) {
                 await putAttachmentFile(fileElement.value, props.path);
+
+                // After file upload, fetch the updated SME and update only the contentType
+                const updatedSmeData = await fetchSme(props.path);
+                if (updatedSmeData) {
+                    await parseAndUpdateSubmodelElement(
+                        updatedSmeData,
+                        fileElement.value,
+                        contentType.value,
+                        props.path,
+                        props.parentElement,
+                        props.file
+                    );
+                }
             }
         }
         closeDialog();
         navigationStore.dispatchTriggerTreeviewReload();
+    }
+
+    async function parseAndUpdateSubmodelElement(
+        updatedSmeData: any,
+        fileElement: File,
+        contentTypeValue: string,
+        elementPath: string,
+        parentElement?: any,
+        file?: any
+    ): Promise<void> {
+        const updatedFileObject = { ...updatedSmeData };
+
+        // remove unwanted properties
+        delete updatedFileObject.id;
+        delete updatedFileObject.timestamp;
+        delete updatedFileObject.conceptDescriptions;
+        delete updatedFileObject.path;
+
+        updatedFileObject.contentType = determineContentType(fileElement, contentTypeValue);
+
+        // Convert to core works File type
+        const instanceOrError = jsonization.fileFromJsonable(updatedFileObject);
+
+        if (instanceOrError.error === null) {
+            const fileSME = instanceOrError.mustValue();
+
+            // Handle different parent element types for edit case
+            if (parentElement && file) {
+                if (parentElement.modelType === 'Submodel') {
+                    await putSubmodelElement(fileSME, elementPath);
+                } else if (parentElement.modelType === 'SubmodelElementList') {
+                    const index = parentElement.value.findIndex((el: any) => el.id === file.id);
+                    const path = parentElement.path + `%5B${index}%5D`;
+                    await putSubmodelElement(fileSME, path);
+                } else {
+                    // Submodel Element Collection or Entity
+                    await putSubmodelElement(fileSME, file.path);
+                }
+            } else {
+                // Simple case for new files
+                await putSubmodelElement(fileSME, elementPath);
+            }
+        }
     }
 
     function closeDialog(): void {
