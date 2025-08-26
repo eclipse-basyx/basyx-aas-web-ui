@@ -30,12 +30,16 @@
             density="comfortable"
             label="Path"
             class="mt-2"
-            @update:model-value="errorLoadingImage = false"></v-text-field>
+            @update:model-value="
+                errorLoadingImage = false;
+                updateFilePreview();
+            "></v-text-field>
     </v-list-item>
     <!-- URL File Preview -->
     <v-sheet
         v-if="toggle === 'url' && pathValue && pathValue.length > 0 && contentTypeValue.includes('image')"
         border
+        class="mb-4"
         rounded>
         <v-img
             v-if="!errorLoadingImage"
@@ -51,7 +55,8 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, onMounted, ref, watch } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
+    import { useUrlUtils } from '@/composables/UrlUtils';
 
     const props = defineProps<{
         path: string | null;
@@ -66,11 +71,15 @@
         (event: 'update:file', value: File | undefined): void;
     }>();
 
+    // Composables
+    const { getBlobUrl } = useUrlUtils();
+
     const pathValue = ref<string | null>(props.path);
     const contentTypeValue = ref<string>(props.contentType);
     const file = ref<File | undefined>(undefined);
     const toggle = ref<string>('none');
     const errorLoadingImage = ref<boolean>(false);
+    const filePreviewPath = ref<string>('');
     const contentTypeOptions = ref<string[]>([
         'image/png',
         'image/jpeg',
@@ -95,6 +104,7 @@
             return;
         }
         emit('update:path', newValue);
+        updateFilePreview();
     });
 
     watch(contentTypeValue, (newValue) => {
@@ -102,12 +112,18 @@
             return;
         }
         emit('update:contentType', newValue);
+        updateFilePreview();
     });
 
     watch(
         () => props.path,
         (newValue) => {
             pathValue.value = newValue;
+            // Set toggle to 'url' if it's not a new file and has a valid path
+            if (!props.newFile && newValue && newValue.trim().length > 0) {
+                toggle.value = 'url';
+            }
+            updateFilePreview();
         }
     );
 
@@ -115,6 +131,7 @@
         () => props.contentType,
         (newValue) => {
             contentTypeValue.value = newValue;
+            updateFilePreview();
         }
     );
 
@@ -126,12 +143,15 @@
                 contentTypeValue.value = 'application/unknown';
                 file.value = undefined;
                 emit('update:file', undefined);
+                filePreviewPath.value = '';
             } else if (newValue === 'url') {
                 file.value = undefined;
                 emit('update:file', undefined);
+                updateFilePreview();
             } else if (newValue === 'file') {
                 pathValue.value = null;
                 emit('update:path', null);
+                filePreviewPath.value = '';
             }
         }
     );
@@ -144,22 +164,38 @@
     });
 
     onMounted(() => {
-        if (!props.newFile && props.path && props.path.length > 0 && props.contentType !== 'application/unknown') {
+        // Set toggle to 'url' if it's not a new file and has a valid path
+        if (!props.newFile && props.path && props.path.trim().length > 0) {
             toggle.value = 'url';
         }
+        updateFilePreview();
     });
 
-    const filePreviewPath = computed(() => {
-        if (pathValue.value === null || !contentTypeValue.value.includes('image')) {
-            return '';
+    async function updateFilePreview(): Promise<void> {
+        if (pathValue.value === null || !contentTypeValue.value.includes('image') || pathValue.value.trim() === '') {
+            filePreviewPath.value = '';
+            errorLoadingImage.value = false;
+            return;
         }
-        if (pathValue.value.startsWith('http')) {
-            return pathValue.value;
-        } else if (props.smePath) {
-            // TODO: This does not work with active keycloak because there the file would have to be fetched with a token
-            return props.smePath + '/attachment';
-        } else {
-            return '';
+
+        // Reset error state when updating preview
+        errorLoadingImage.value = false;
+
+        try {
+            if (pathValue.value.startsWith('http')) {
+                // External URL - return it directly for external URLs
+                filePreviewPath.value = pathValue.value;
+            } else if (props.smePath) {
+                // Internal path - construct the API endpoint and use getBlobUrl with authentication
+                const apiPath = props.smePath + '/attachment';
+                filePreviewPath.value = await getBlobUrl(apiPath, false);
+            } else {
+                filePreviewPath.value = '';
+            }
+        } catch (error) {
+            console.error('Error updating file preview:', error);
+            filePreviewPath.value = '';
+            errorLoadingImage.value = true;
         }
-    });
+    }
 </script>
