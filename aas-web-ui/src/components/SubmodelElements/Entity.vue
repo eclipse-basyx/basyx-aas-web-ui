@@ -76,7 +76,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { onMounted, Ref, ref } from 'vue';
+    import { onMounted, Ref, ref, watch } from 'vue';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
     import { useClipboardUtil } from '@/composables/ClipboardUtil';
@@ -102,6 +102,23 @@
     const getCopyIconAsRef = (): Ref => {
         return copyIcon;
     };
+
+    // Watchers
+    watch(
+        () => props.entityObject,
+        () => {
+            if (props.entityObject.globalAssetId) {
+                checkAndSetDisabledState(props.entityObject.globalAssetId);
+                loadingStates.value[props.entityObject.globalAssetId] = false;
+            }
+            if (props.entityObject.specificAssetIds) {
+                props.entityObject.specificAssetIds.forEach((specificAssetId: any) => {
+                    checkAndSetDisabledState(specificAssetId.name);
+                    loadingStates.value[specificAssetId.name] = false;
+                });
+            }
+        }
+    );
 
     onMounted(() => {
         // initialize disabledStates, loadingStates and
