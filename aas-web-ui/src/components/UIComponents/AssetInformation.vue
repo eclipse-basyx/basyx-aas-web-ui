@@ -140,17 +140,10 @@
             props.assetObject.defaultThumbnail?.path &&
             props.assetObject.defaultThumbnail?.path.trim() !== ''
         ) {
-            const thumbnailPath = props.assetObject.defaultThumbnail.path.trim();
-            let isExternal = false;
-            try {
-                new URL(thumbnailPath);
-                // If no error is thrown, path is a valid URL
-                isExternal = true;
-            } catch {
-                // Path is not a valid URL, so it's internal
-                isExternal = false;
-            }
-            thumbnailSrc.value = await getBlobUrl(thumbnailPath, isExternal);
+            thumbnailSrc.value = await getBlobUrl(
+                props.assetObject.defaultThumbnail.path.trim(),
+                props.assetObject.defaultThumbnail.isExternal
+            );
             thumbnailCaption.value = '';
         } else {
             const productImageUrlFromSmTechnicalData = await getProductImageUrlByAasIdFromSmTechnicalData(
