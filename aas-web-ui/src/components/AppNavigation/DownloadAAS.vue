@@ -7,15 +7,13 @@
                 <div>You selected the AAS with the ID</div>
                 <span class="text-primary font-weight-bold">{{ aas.id }}</span>
                 <span> for download.</span><br></br>
-                <div class="mt-4">It will be downloaded from</div>
-                <span class="text-primary font-weight-bold">{{ downloadEndpoint }}</span>
-                <v-data-table class="mt-4" :headers="headers" :items="submodelIds" item-value="smId" show-select v-model="selected"></v-data-table>
-                <v-checkbox v-model="downloadCDs" label="Also download Concept Descriptions" hide-details></v-checkbox>
+                <v-data-table-virtual density="compact" class="mt-4" :headers="headers" :items="submodelIds" style="overflow-y: auto;max-height: 300px;" item-value="smId" show-select v-model="selected"></v-data-table-virtual>
+                <v-checkbox v-model="downloadCDs" label="Also download Concept Descriptions" hide-details ></v-checkbox>
             </v-card-text>
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn @click="downloadDialog = false">Cancel</v-btn>
-                <v-btn variant="tonal" color="primary" :loading="deleteLoading" @click="download">Download</v-btn>
+                <v-btn variant="tonal" color="primary" :loading="downloadLoading" @click="download">Download</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -23,10 +21,7 @@
 
 <script lang="ts" setup>
     import { ref, watch } from 'vue';
-    import { useRouter } from 'vue-router';
     import { useRequestHandling } from '@/composables/RequestHandling';
-    import { useAASStore } from '@/store/AASDataStore';
-    import { useNavigationStore } from '@/store/NavigationStore';
     import { base64Encode } from '@/utils/EncodeDecodeUtils';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { downloadFile } from '@/utils/generalUtils';
@@ -47,11 +42,11 @@
     }>();
 
     const downloadDialog = ref(false);
-    const deleteLoading = ref(false);
+    const downloadLoading = ref(false);
 
     const headers = [
         { title: 'Submodel ID', align: 'start', sortable: false, key: 'smId' },
-    ]
+    ] as any;
 
     const selected = ref<string[]>([]);
     const submodelIds = ref<any[]>([]);
@@ -66,6 +61,7 @@
             submodelIds.value = [];
             downloadEndpoint.value = "";
             downloadCDs.value = true;
+            downloadLoading.value = false;
             if(!props.aas) return;
             const submodelRefs = await getSubmodelRefsById(props.aas.id);
             downloadEndpoint.value = props.aas.endpoints[0].protocolInformation.href.split("/shells")[0];
@@ -85,6 +81,7 @@
     );
 
     async function download(){
+        downloadLoading.value = true;
         let aasSerializationPath = downloadEndpoint.value;
         aasSerializationPath +=
                 '/serialization?aasIds=' +
@@ -116,6 +113,7 @@
                     '.aasx';
 
                 downloadFile(filename, aasSerialization);
+                downloadLoading.value = false;
             }
     }
 
