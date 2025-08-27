@@ -6,9 +6,17 @@
             <v-card-text class="pb-0">
                 <div>You selected the AAS with the ID</div>
                 <span class="text-primary font-weight-bold">{{ aas.id }}</span>
-                <span> for download.</span><br></br>
-                <v-data-table-virtual density="compact" class="mt-4" :headers="headers" :items="submodelIds" style="overflow-y: auto;max-height: 300px;" item-value="smId" show-select v-model="selected"></v-data-table-virtual>
-                <v-checkbox v-model="downloadCDs" label="Also download Concept Descriptions" hide-details ></v-checkbox>
+                <span> for download.</span><br />
+                <v-data-table-virtual
+                    v-model="selected"
+                    density="compact"
+                    class="mt-4"
+                    :headers="headers"
+                    :items="submodelIds"
+                    style="overflow-y: auto; max-height: 300px"
+                    item-value="smId"
+                    show-select></v-data-table-virtual>
+                <v-checkbox v-model="downloadCDs" label="Also download Concept Descriptions" hide-details></v-checkbox>
             </v-card-text>
             <v-card-actions>
                 <v-spacer></v-spacer>
@@ -21,11 +29,11 @@
 
 <script lang="ts" setup>
     import { ref, watch } from 'vue';
+    import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
+    import { useIDUtils } from '@/composables/IDUtils';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { base64Encode } from '@/utils/EncodeDecodeUtils';
-    import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { downloadFile } from '@/utils/generalUtils';
-    import { useIDUtils } from '@/composables/IDUtils';
 
     const { getSubmodelRefsById } = useAASRepositoryClient();
     const { generateUUIDFromString } = useIDUtils();
@@ -44,13 +52,11 @@
     const downloadDialog = ref(false);
     const downloadLoading = ref(false);
 
-    const headers = [
-        { title: 'Submodel ID', align: 'start', sortable: false, key: 'smId' },
-    ] as any;
+    const headers = [{ title: 'Submodel ID', align: 'start', sortable: false, key: 'smId' }] as any;
 
     const selected = ref<string[]>([]);
     const submodelIds = ref<any[]>([]);
-    const downloadEndpoint = ref<string>("");
+    const downloadEndpoint = ref<string>('');
     const downloadCDs = ref<boolean>(true);
 
     watch(
@@ -59,16 +65,15 @@
             downloadDialog.value = value;
             selected.value = [];
             submodelIds.value = [];
-            downloadEndpoint.value = "";
+            downloadEndpoint.value = '';
             downloadCDs.value = true;
             downloadLoading.value = false;
-            if(!props.aas) return;
+            if (!props.aas) return;
             const submodelRefs = await getSubmodelRefsById(props.aas.id);
-            downloadEndpoint.value = props.aas.endpoints[0].protocolInformation.href.split("/shells")[0];
-            console.log(props.aas)
-            for(const submodelRef of submodelRefs){
-                submodelIds.value.push({smId: submodelRef.keys[0].value});
-                selected.value.push(submodelRef.keys[0].value)
+            downloadEndpoint.value = props.aas.endpoints[0].protocolInformation.href.split('/shells')[0];
+            for (const submodelRef of submodelRefs) {
+                submodelIds.value.push({ smId: submodelRef.keys[0].value });
+                selected.value.push(submodelRef.keys[0].value);
             }
         }
     );
@@ -80,41 +85,39 @@
         }
     );
 
-    async function download(){
+    async function download() {
         downloadLoading.value = true;
         let aasSerializationPath = downloadEndpoint.value;
         aasSerializationPath +=
-                '/serialization?aasIds=' +
-                base64Encode(props.aas.id) +
-                '&submodelIds=' +
-                selected.value.map((submodelId: string) => base64Encode(submodelId)).join('&submodelIds=') +
-                '&includeConceptDescriptions='+(downloadCDs.value || true);
-        console.log(aasSerializationPath);
+            '/serialization?aasIds=' +
+            base64Encode(props.aas.id) +
+            '&submodelIds=' +
+            selected.value.map((submodelId: string) => base64Encode(submodelId)).join('&submodelIds=') +
+            '&includeConceptDescriptions=' +
+            (downloadCDs.value || true);
 
-        
-            const aasSerializationContext = 'retrieving AAS serialization';
-            const disableMessage = false;
-            const aasSerializationHeaders = new Headers();
-            aasSerializationHeaders.append('Accept', 'application/asset-administration-shell-package+xml');
+        const aasSerializationContext = 'retrieving AAS serialization';
+        const disableMessage = false;
+        const aasSerializationHeaders = new Headers();
+        aasSerializationHeaders.append('Accept', 'application/asset-administration-shell-package+xml');
 
-            const aasSerializationResponse = await getRequest(
-                aasSerializationPath,
-                aasSerializationContext,
-                disableMessage,
-                aasSerializationHeaders
-            );
-            if (aasSerializationResponse.success) {
-                const aasSerialization = aasSerializationResponse.data;
+        const aasSerializationResponse = await getRequest(
+            aasSerializationPath,
+            aasSerializationContext,
+            disableMessage,
+            aasSerializationHeaders
+        );
+        if (aasSerializationResponse.success) {
+            const aasSerialization = aasSerializationResponse.data;
 
-                const aasIdShort = props.aas.idShort;
+            const aasIdShort = props.aas.idShort;
 
-                const filename =
-                    (aasIdShort && aasIdShort.trim() !== '' ? aasIdShort.trim() : generateUUIDFromString(props.aas.id)) +
-                    '.aasx';
+            const filename =
+                (aasIdShort && aasIdShort.trim() !== '' ? aasIdShort.trim() : generateUUIDFromString(props.aas.id)) +
+                '.aasx';
 
-                downloadFile(filename, aasSerialization);
-                downloadLoading.value = false;
-            }
+            downloadFile(filename, aasSerialization);
+            downloadLoading.value = false;
+        }
     }
-
 </script>

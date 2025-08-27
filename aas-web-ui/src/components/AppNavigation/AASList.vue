@@ -294,7 +294,6 @@
     import { useTheme } from 'vuetify';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
-    import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useClipboardUtil } from '@/composables/ClipboardUtil';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
@@ -310,7 +309,6 @@
     const router = useRouter();
 
     // Composables
-    const { downloadAasx } = useAASRepositoryClient();
     const { fetchAasDescriptorList, fetchAasList, aasIsAvailableById } = useAASHandling();
     const { nameToDisplay, descriptionToDisplay } = useReferableUtils();
     const { copyToClipboard } = useClipboardUtil();
