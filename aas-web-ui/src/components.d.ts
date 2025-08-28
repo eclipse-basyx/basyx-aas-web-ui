@@ -102,6 +102,7 @@ declare module 'vue' {
     SubmodelElementWrapper: typeof import('./components/UIComponents/SubmodelElementWrapper.vue')['default']
     SubmodelForm: typeof import('./components/EditorComponents/SubmodelForm.vue')['default']
     SubmodelList: typeof import('./components/SubmodelList.vue')['default']
+    SubmodelSelection: typeof import('./components/AppNavigation/SubmodelSelection.vue')['default']
     SubmodelTree: typeof import('./components/SubmodelTree.vue')['default']
     SupplementalSemanticID: typeof import('./components/UIComponents/SupplementalSemanticID.vue')['default']
     TechnicalData_v1_2: typeof import('./components/Plugins/Submodels/TechnicalData_v1_2.vue')['default']
