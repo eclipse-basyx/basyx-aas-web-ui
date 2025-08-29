@@ -11,6 +11,11 @@
                 <v-alert v-if="deleteSubmodels" class="mb-2" variant="tonal" border color="warning">
                     Warning: If other shells refer to the same submodels, those references are not deleted!
                 </v-alert>
+                <SubmodelSelection
+                    v-if="deleteSubmodels"
+                    :selected="selected"
+                    :submodel-ids="submodelIds"
+                    @update:selected="updateSelectedSubmodels" />
             </v-card-text>
             <v-card-actions>
                 <v-spacer></v-spacer>
@@ -24,6 +29,8 @@
 <script lang="ts" setup>
     import { computed, ref, watch } from 'vue';
     import { useRouter } from 'vue-router';
+    import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
+    import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -36,6 +43,8 @@
     const navigationStore = useNavigationStore();
 
     const { getRequest, deleteRequest } = useRequestHandling();
+    const { getSubmodelRefsById } = useAASRepositoryClient();
+    const { fetchSmById } = useSMRepositoryClient();
 
     const props = defineProps<{
         modelValue: boolean;
@@ -50,13 +59,23 @@
     const deleteDialog = ref(false); // Variable to store if the delete dialog is open
     const deleteLoading = ref(false); // Variable to store if the AAS is being deleted
     const deleteSubmodels = ref(false); // Variable to store if the Submodels should be deleted
+    const submodelIds = ref<any[]>([]); // Variable to store the Submodel Ids of the AAS
+    const selected = ref<string[]>([]); // Variable to store the selected Submodel Ids
 
     const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL); // Get Submodel Registry URL from Store
 
     watch(
         () => props.modelValue,
-        (value) => {
+        async (value) => {
             deleteDialog.value = value;
+            const submodelRefs = await getSubmodelRefsById(props.aas.id);
+            submodelIds.value = [];
+            selected.value = [];
+            for (const submodelRef of submodelRefs) {
+                const submodel = await fetchSmById(submodelRef.keys[0].value);
+                submodelIds.value.push({ smId: submodelRef.keys[0].value, smIdShort: submodel.idShort, submodel });
+                selected.value.push(submodelRef.keys[0].value);
+            }
         }
     );
 
@@ -67,39 +86,34 @@
         }
     );
 
+    function updateSelectedSubmodels(value: string[]): void {
+        selected.value = value;
+    }
+
     async function confirmDelete() {
         deleteLoading.value = true;
         let error = false;
         try {
             if (deleteSubmodels.value) {
-                const aasEndpopint = extractEndpointHref(props.aas, 'AAS-3.0');
-                const aasRepoPath = aasEndpopint + '/submodel-refs';
-                const aasRepoContext = 'retrieving Submodel References';
+                // Extract all references in an array called submodelIds from each keys[0].value
+                const submodelIds = selected.value;
                 const disableMessage = false;
-                const aasRepoResponse = await getRequest(aasRepoPath, aasRepoContext, disableMessage);
-                if (aasRepoResponse.success) {
-                    const submodelRefs = aasRepoResponse.data.result;
-                    // Extract all references in an array called submodelIds from each keys[0].value
-                    const submodelIds = submodelRefs.map((ref: any) => ref.keys[0].value);
-                    await removeAAS(props.aas);
-                    // Remove each submodel
-                    for (const submodelId of submodelIds) {
-                        const submodelRegistryPath = `${submodelRegistryURL.value}/${base64Encode(submodelId)}`;
-                        const submodelRegistryResponse = await getRequest(
-                            submodelRegistryPath,
-                            'Removing Submodels',
-                            disableMessage
-                        );
-                        if (submodelRegistryResponse.success) {
-                            const submodelHref = extractEndpointHref(submodelRegistryResponse.data, 'SUBMODEL-3.0');
-                            const deletePath = submodelHref;
-                            await deleteRequest(deletePath, 'removing Submodel', disableMessage);
-                        } else {
-                            error = true;
-                        }
+                await removeAAS(props.aas);
+                // Remove each submodel
+                for (const submodelId of submodelIds) {
+                    const submodelRegistryPath = `${submodelRegistryURL.value}/${base64Encode(submodelId)}`;
+                    const submodelRegistryResponse = await getRequest(
+                        submodelRegistryPath,
+                        'Removing Submodels',
+                        disableMessage
+                    );
+                    if (submodelRegistryResponse.success) {
+                        const submodelHref = extractEndpointHref(submodelRegistryResponse.data, 'SUBMODEL-3.0');
+                        const deletePath = submodelHref;
+                        await deleteRequest(deletePath, 'removing Submodel', disableMessage);
+                    } else {
+                        error = true;
                     }
-                } else {
-                    error = true;
                 }
             } else {
                 await removeAAS(props.aas);
