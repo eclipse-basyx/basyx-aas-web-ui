@@ -161,6 +161,13 @@
                                             </template>
                                             <v-list-item-subtitle>Add Submodel Element</v-list-item-subtitle>
                                         </v-list-item>
+                                        <!-- Open Insert SubmodelElement from JSON dialog -->
+                                        <v-list-item @click="$emit('openJsonInsertDialog', item)">
+                                            <template #prepend>
+                                                <v-icon size="x-small">mdi-code-json</v-icon>
+                                            </template>
+                                            <v-list-item-subtitle>Submodel Element from JSON</v-list-item-subtitle>
+                                        </v-list-item>
                                         <v-divider></v-divider>
                                         <!-- Open Submodel edit dialog -->
                                         <v-list-item @click="$emit('openEditDialog', item)">
@@ -213,6 +220,19 @@
                                             </template>
                                             <v-list-item-subtitle>Add Submodel Element</v-list-item-subtitle>
                                         </v-list-item>
+                                        <!-- Open Insert SubmodelElement from JSON dialog -->
+                                        <v-list-item
+                                            v-if="
+                                                item.modelType === 'SubmodelElementCollection' ||
+                                                item.modelType === 'SubmodelElementList' ||
+                                                item.modelType === 'Entity'
+                                            "
+                                            @click="$emit('openJsonInsertDialog', item)">
+                                            <template #prepend>
+                                                <v-icon size="x-small">mdi-code-json</v-icon>
+                                            </template>
+                                            <v-list-item-subtitle>Submodel Element from JSON</v-list-item-subtitle>
+                                        </v-list-item>
                                         <v-divider
                                             v-if="
                                                 item.modelType === 'SubmodelElementCollection' ||
@@ -261,6 +281,7 @@
                 :depth="depth + 1"
                 @open-add-submodel-element-dialog="$emit('openAddSubmodelElementDialog', $event)"
                 @open-edit-submodel-element-dialog="$emit('openEditSubmodelElementDialog', $event)"
+                @open-json-insert-dialog="$emit('openJsonInsertDialog', $event)"
                 @show-delete-dialog="$emit('showDeleteDialog', $event)"></Treeview>
         </template>
     </div>
@@ -303,6 +324,7 @@
         (event: 'openEditDialog', item: any): void;
         (event: 'showDeleteDialog', item: any): void;
         (event: 'openAddSubmodelElementDialog', item: any): void;
+        (event: 'openJsonInsertDialog', type: 'Submodel' | 'SubmodelElement'): void;
         (event: 'openEditSubmodelElementDialog', item: any): void;
     }>();
 

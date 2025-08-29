@@ -93,8 +93,20 @@
                                             </v-list-item>
                                         </template>
                                         <span>Create a new Submodel</span>
-                                    </v-tooltip></v-list
-                                >
+                                    </v-tooltip>
+                                    <!-- Open JSON insert dialog -->
+                                    <v-tooltip open-delay="600" location="end">
+                                        <template #activator="{ props }">
+                                            <v-list-item slim v-bind="props" @click="openJsonInsertDialog('Submodel')">
+                                                <template #prepend>
+                                                    <v-icon size="small">mdi-code-json</v-icon>
+                                                </template>
+                                                Submodel from JSON
+                                            </v-list-item>
+                                        </template>
+                                        <span>Create a new Submodel from JSON</span>
+                                    </v-tooltip>
+                                </v-list>
                             </v-sheet>
                         </v-menu>
                     </template>
@@ -139,6 +151,7 @@
                                 @open-edit-submodel-element-dialog="openEditSubmodelElementDialogForElement"
                                 @open-add-submodel-element-dialog="openAddSubmodelElementDialog"
                                 @open-edit-dialog="openEditDialog(false, $event)"
+                                @open-json-insert-dialog="openJsonInsertDialog('SubmodelElement', $event)"
                                 @show-delete-dialog="openDeleteDialog"></Treeview>
                         </template>
                         <v-empty-state
@@ -217,6 +230,8 @@
         :sml="submodelElementToEdit"></ListForm>
     <!-- Dialog for creating/editing Submodel -->
     <SubmodelForm v-model="editDialog" :new-sm="newSubmodel" :submodel="submodelToEdit"></SubmodelForm>
+    <!-- Dialog for inserting JSON -->
+    <JsonInsert v-model="jsonInsertDialog" :type="jsonInsertType" :parent-element="elementToAddSME"></JsonInsert>
     <!-- Dialog for deleting SM/SME -->
     <DeleteDialog v-model="deleteDialog" :element="elementToDelete"></DeleteDialog>
 </template>
@@ -274,6 +289,8 @@
     const elementToAddSME = ref<any | undefined>(undefined); // Variable to store the Element where the new SME is added inside
     const submodelElementPath = ref<string | undefined>(undefined); // Variable to store the Element where the new SME is added inside
     const submodelElementToEdit = ref<any | undefined>(undefined); // Variable to store the Element where the new SME is added inside
+    const jsonInsertDialog = ref(false); // Variable to store if the JSON Insert Dialog should be shown
+    const jsonInsertType = ref<'Submodel' | 'SubmodelElement'>('Submodel'); // Variable to store the ModelType of the JSON to be inserted
 
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
@@ -486,6 +503,14 @@
         newSubmodel.value = createNew;
         if (!createNew && submodel) {
             submodelToEdit.value = submodel;
+        }
+    }
+
+    function openJsonInsertDialog(type: 'Submodel' | 'SubmodelElement', element?: any): void {
+        jsonInsertDialog.value = true;
+        jsonInsertType.value = type;
+        if (type === 'SubmodelElement' && element) {
+            elementToAddSME.value = element;
         }
     }
 
