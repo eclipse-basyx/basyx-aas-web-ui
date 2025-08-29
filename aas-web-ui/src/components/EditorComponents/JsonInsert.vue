@@ -98,7 +98,13 @@
         // Parse JSON to Submodel
         const instanceOrError = jsonization.submodelFromJsonable(json);
         if (instanceOrError.error !== null) {
-            console.error('Error parsing Submodel: ', instanceOrError.error);
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Error parsing Submodel: ' + instanceOrError.error,
+            });
             return;
         }
         const submodel = instanceOrError.mustValue();
@@ -119,7 +125,13 @@
     async function insertSubmodelElement(json: JsonValue): Promise<void> {
         const instanceOrError = jsonization.submodelElementFromJsonable(json);
         if (instanceOrError.error !== null) {
-            console.error('Error parsing SubmodelElement: ', instanceOrError.error);
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Error parsing SubmodelElement: ' + instanceOrError.error,
+            });
             return;
         }
         const submodelElement = instanceOrError.mustValue();

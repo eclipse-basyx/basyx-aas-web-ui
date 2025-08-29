@@ -324,7 +324,7 @@
         (event: 'openEditDialog', item: any): void;
         (event: 'showDeleteDialog', item: any): void;
         (event: 'openAddSubmodelElementDialog', item: any): void;
-        (event: 'openJsonInsertDialog', type: 'Submodel' | 'SubmodelElement'): void;
+        (event: 'openJsonInsertDialog', item: any): void;
         (event: 'openEditSubmodelElementDialog', item: any): void;
     }>();
 
