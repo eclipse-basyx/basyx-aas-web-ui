@@ -35,10 +35,17 @@
             density="comfortable"
             label="Path"
             class="mt-2"
-            @update:model-value="errorLoadingImage = false"></v-text-field>
+            @update:model-value="
+                errorLoadingImage = false;
+                updateThumbnailPreview();
+            "></v-text-field>
     </v-list-item>
     <!-- URL thumbnail preview -->
-    <v-sheet v-if="toggle === 'url' && resourceValue?.path && resourceValue.path.length > 0" border rounded>
+    <v-sheet
+        v-if="toggle === 'url' && resourceValue?.path && resourceValue.path.length > 0"
+        border
+        rounded
+        class="mb-4">
         <v-img
             v-if="!errorLoadingImage"
             :src="thumbnailPreviewPath"
@@ -59,7 +66,8 @@
 
 <script lang="ts" setup>
     import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
-    import { computed, onMounted, ref, watch } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
+    import { useUrlUtils } from '@/composables/UrlUtils';
     import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 
     const props = defineProps<{
@@ -74,10 +82,14 @@
         (event: 'update:fileThumbnail', value: File | undefined): void;
     }>();
 
+    // Composables
+    const { getBlobUrl } = useUrlUtils();
+
     const resourceValue = ref<aasTypes.Resource | null>(props.modelValue);
     const toggle = ref<string>('none');
     const errorLoadingImage = ref<boolean>(false);
     const fileThumbnail = ref<File>();
+    const thumbnailPreviewPath = ref<string>('');
     const contentTypeOptions = ref<string[]>([
         'image/png',
         'image/jpeg',
@@ -98,6 +110,7 @@
             return;
         }
         emit('update:modelValue', newValue);
+        updateThumbnailPreview();
     });
 
     watch(fileThumbnail, (newValue) => {
@@ -114,30 +127,71 @@
                 resourceValue.value = new aasTypes.Resource('', '');
             } else {
                 resourceValue.value = newValue;
+                // Set toggle to 'url' if it's not a new shell and has a valid path
+                if (!props.newShell && newValue.path && newValue.path.trim().length > 0) {
+                    toggle.value = 'url';
+                }
+            }
+            updateThumbnailPreview();
+        }
+    );
+
+    watch(
+        () => toggle.value,
+        (newValue) => {
+            if (newValue === 'none') {
+                resourceValue.value = null;
+                fileThumbnail.value = undefined;
+                emit('update:fileThumbnail', undefined);
+                thumbnailPreviewPath.value = '';
+            } else if (newValue === 'url') {
+                fileThumbnail.value = undefined;
+                emit('update:fileThumbnail', undefined);
+                if (resourceValue.value === null) {
+                    resourceValue.value = new aasTypes.Resource('', '');
+                }
+                updateThumbnailPreview();
+            } else if (newValue === 'file') {
+                resourceValue.value = null;
+                emit('update:modelValue', null);
+                thumbnailPreviewPath.value = '';
             }
         }
     );
 
     onMounted(() => {
-        if (!props.newShell) {
-            toggle.value = 'url';
-        }
+        // Initialize resourceValue if modelValue is null
         if (props.modelValue === null) {
             resourceValue.value = new aasTypes.Resource('', '');
         }
+        updateThumbnailPreview();
     });
 
-    const thumbnailPreviewPath = computed(() => {
-        if (resourceValue.value === null) {
-            return '';
+    async function updateThumbnailPreview(): Promise<void> {
+        if (resourceValue.value === null || !resourceValue.value.path || resourceValue.value.path.trim() === '') {
+            thumbnailPreviewPath.value = '';
+            errorLoadingImage.value = false;
+            return;
         }
-        if (resourceValue.value.path.startsWith('http')) {
-            return resourceValue.value.path;
-        } else if (props.aas) {
-            // TODO: This does not work with active keycloak because there the thumbnail would have to be fetched with a token
-            return extractEndpointHref(props.aas, 'AAS-3.0') + '/asset-information/thumbnail';
-        } else {
-            return '';
+
+        // Reset error state when updating preview
+        errorLoadingImage.value = false;
+
+        try {
+            if (resourceValue.value.path.startsWith('http')) {
+                // External URL - return it directly for external URLs
+                thumbnailPreviewPath.value = resourceValue.value.path;
+            } else if (props.aas) {
+                // Internal path - construct the API endpoint and use getBlobUrl with authentication
+                const apiPath = extractEndpointHref(props.aas, 'AAS-3.0') + '/asset-information/thumbnail';
+                thumbnailPreviewPath.value = await getBlobUrl(apiPath, false);
+            } else {
+                thumbnailPreviewPath.value = '';
+            }
+        } catch (error) {
+            console.error('Error updating thumbnail preview:', error);
+            thumbnailPreviewPath.value = '';
+            errorLoadingImage.value = true;
         }
-    });
+    }
 </script>

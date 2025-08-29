@@ -5,6 +5,7 @@
                 :identification-object="assetInfo"
                 :v-chip-content="assetObject.assetKind"
                 :identification-title="'Global Asset ID'"></IdentificationElement>
+            <v-divider v-if="assetInfo.id && assetInfo.id.trim() !== '' && urlRegex.test(assetInfo.id)"></v-divider>
             <v-expansion-panels v-if="assetInfo.id && assetInfo.id.trim() !== '' && urlRegex.test(assetInfo.id)">
                 <v-expansion-panel elevation="0" tile static color="detailsCard">
                     <v-expansion-panel-title class="px-2">
@@ -35,6 +36,7 @@
                 "></v-divider>
             <!-- Specific Asset IDs -->
             <SpecificAssetIds :specific-asset-ids="assetObject.specificAssetIds"></SpecificAssetIds>
+            <v-divider v-if="thumbnailSrc"></v-divider>
             <v-img
                 v-if="thumbnailSrc"
                 :src="thumbnailSrc"
@@ -43,7 +45,7 @@
                 contain
                 class="mt-2 rounded"></v-img>
             <span
-                v-if="thumbnailCaption !== ''"
+                v-if="thumbnailSrc && thumbnailCaption !== ''"
                 class="font-weight-light text-medium-emphasis"
                 style="font-size: 0.5rem">
                 {{ thumbnailCaption }}
@@ -118,13 +120,18 @@
         }
 
         try {
-            qrCodeUrl.value = await QRCode.toDataURL(assetInfo.value.id, {
-                errorCorrectionLevel: 'Q',
-                margin: 3,
-                scale: 4, // module size
-            });
+            if (assetInfo.value.id && assetInfo.value.id.trim() !== '') {
+                qrCodeUrl.value = await QRCode.toDataURL(assetInfo.value.id, {
+                    errorCorrectionLevel: 'Q',
+                    margin: 3,
+                    scale: 4, // module size
+                });
+            } else {
+                qrCodeUrl.value = '';
+            }
         } catch (err) {
             console.error(err);
+            qrCodeUrl.value = '';
         }
 
         if (

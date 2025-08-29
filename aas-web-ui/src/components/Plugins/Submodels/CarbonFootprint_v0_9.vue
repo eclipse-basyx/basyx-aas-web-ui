@@ -28,14 +28,15 @@
                             icon="mdi-leaf"
                             icon-color="background">
                             <template #opposite>
-                                <template
+                                <div
                                     v-for="pcfLifeCyclePhase in pcfSMC.value.filter(
                                         (sme: any) =>
                                             checkIdShort(sme, 'PCFLifeCyclePhase', true) ||
                                             checkIdShort(sme, 'PCFLiveCyclePhase', true) || // just for compatibility cause of a typo in a previous specification document
                                             checkSemanticId(sme, '0173-1#02-ABG858#001')
                                     )"
-                                    :key="pcfLifeCyclePhase.idShort">
+                                    :key="pcfLifeCyclePhase.idShort"
+                                    class="pr-6">
                                     <p
                                         v-if="
                                             pcfLifeCyclePhase?.valueId?.keys &&
@@ -51,9 +52,9 @@
                                     <p v-else>
                                         {{ valueToDisplay(pcfLifeCyclePhase).replaceAll(', ', '\n') }}
                                     </p>
-                                </template>
+                                </div>
                             </template>
-                            <div>
+                            <div class="pl-6">
                                 <div class="text-h6">
                                     {{
                                         valueToDisplay(

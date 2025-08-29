@@ -199,7 +199,7 @@
                                         </template>
                                         <v-sheet border>
                                             <v-list dense slim density="compact" class="py-0">
-                                                <v-list-item @click="downloadAasx(item)">
+                                                <v-list-item @click="openDownloadDialog(item)">
                                                     <template #prepend>
                                                         <v-icon size="x-small">mdi-download</v-icon>
                                                     </template>
@@ -244,7 +244,7 @@
                                             color="listItemText"
                                             class="ml-n2"
                                             style="z-index: 9000"
-                                            @click.stop="downloadAasx(item)"></v-btn>
+                                            @click.stop="openDownloadDialog(item)"></v-btn>
                                         <!-- Remove from AAS Registry Button -->
                                         <v-btn
                                             icon="mdi-close"
@@ -282,6 +282,8 @@
     <UploadAAS v-model="uploadAASDialog"></UploadAAS>
     <!-- Dialog for deleting AAS -->
     <DeleteAAS v-model="deleteDialog" :aas="aasToDelete" :list-loading-state="listLoading"></DeleteAAS>
+    <!-- Dialog for downloading AAS -->
+    <DownloadAAS v-model="downloadAASDialog" :aas="aasToDownload"></DownloadAAS>
 </template>
 
 <script lang="ts" setup>
@@ -292,7 +294,6 @@
     import { useTheme } from 'vuetify';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
-    import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useClipboardUtil } from '@/composables/ClipboardUtil';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
@@ -308,7 +309,6 @@
     const router = useRouter();
 
     // Composables
-    const { downloadAasx } = useAASRepositoryClient();
     const { fetchAasDescriptorList, fetchAasList, aasIsAvailableById } = useAASHandling();
     const { nameToDisplay, descriptionToDisplay } = useReferableUtils();
     const { copyToClipboard } = useClipboardUtil();
@@ -327,7 +327,9 @@
     const debouncedFilterAasList = debounce(filterAasList, 300); // Debounced function to filter the AAS List
     const listLoading = ref(false); // Variable to store if the AAS List is loading
     const deleteDialog = ref(false); // Variable to store if the Delete Dialog should be shown
+    const downloadAASDialog = ref(false); // Variable to store if the DownloadAAS Dialog should be shown
     const aasToDelete = ref({}); // Variable to store the AAS to be deleted
+    const aasToDownload = ref({}); // Variable to store the AAS to be downloaded
     const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null); // Reference to the Virtual Scroll Component
     const uploadAASDialog = ref(false); // Variable to store if the Upload AAS Dialog should be shown
     const editDialog = ref(false); // Variable to store if the Edit Dialog should be shown
@@ -577,6 +579,11 @@
     function openDeleteDialog(aasOrAasDescriptor: any): void {
         deleteDialog.value = true;
         aasToDelete.value = aasOrAasDescriptor;
+    }
+
+    function openDownloadDialog(aasDescriptor: any): void {
+        downloadAASDialog.value = true;
+        aasToDownload.value = aasDescriptor;
     }
 
     function openEditDialog(createNew: boolean, aasOrAasDescriptor?: any): void {
