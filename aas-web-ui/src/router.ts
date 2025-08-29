@@ -7,12 +7,14 @@ import { useAASHandling } from '@/composables/AAS/AASHandling';
 import { useSMEHandling } from '@/composables/AAS/SMEHandling';
 import { useRouteHandling } from '@/composables/routeHandling';
 import AASEditor from '@/pages/AASEditor.vue';
+import AASSubmodelViewer from '@/pages/AASSubmodelViewer.vue';
 import AASViewer from '@/pages/AASViewer.vue';
 import About from '@/pages/About.vue';
 import Dashboard from '@/pages/Dashboard.vue';
 import DashboardGroup from '@/pages/DashboardGroup.vue';
 import Page404 from '@/pages/Page404.vue';
-import SubmodelViewer from '@/pages/SubmodelViewer.vue';
+import SMEditor from '@/pages/SMEditor.vue';
+import SMViewer from '@/pages/SMViewer.vue';
 import { useAASStore } from '@/store/AASDataStore';
 import { useEnvStore } from '@/store/EnvironmentStore';
 import { useNavigationStore } from '@/store/NavigationStore';
@@ -36,10 +38,22 @@ const staticRoutes: Array<RouteRecordRaw> = [
     { path: '/componentvisualization', name: 'ComponentVisualization', component: ComponentVisualization },
     { path: '/visu', name: 'Visualization', component: ComponentVisualization, meta: { name: 'Visualization' } },
     {
-        path: '/submodelviewer',
-        name: 'SubmodelViewer',
-        component: SubmodelViewer,
+        path: '/aassmviewer',
+        name: 'AASSubmodelViewer',
+        component: AASSubmodelViewer,
+        meta: { name: 'AAS Submodel Viewer', subtitle: 'Visualize Submodels of AAS' },
+    },
+    {
+        path: '/smviewer',
+        name: 'SMViewer',
+        component: SMViewer,
         meta: { name: 'Submodel Viewer', subtitle: 'Visualize Submodels' },
+    },
+    {
+        path: '/smeditor',
+        name: 'SMEditor',
+        component: SMEditor,
+        meta: { name: 'SM Editor', subtitle: 'Edit Submodels' },
     },
     {
         path: '/about',
@@ -126,23 +140,31 @@ export async function createAppRouter(): Promise<Router> {
     const { idRedirectHandled } = useRouteHandling();
 
     // Data
-    const routesForMobile: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList', 'Visualization'];
+    const routesForMobile: Array<RouteRecordNameGeneric> = ['AASList', 'SMList', 'SubmodelList', 'Visualization'];
     const routesForDesktop: Array<RouteRecordNameGeneric> = [
         'AASViewer',
         'AASEditor',
-        'SubmodelViewer',
+        'AASSubmodelViewer',
+        'SMViewer',
+        'SMEditor',
         'Visualization',
     ];
     const routesToSaveAndLoadUrlQuery: Array<RouteRecordNameGeneric> = [
-        'AASList',
-        'AASEditor',
         'AASViewer',
-        'SubmodelViewer',
+        'AASEditor',
+        'AASList',
+        'AASSubmodelViewer',
+        'SMViewer',
+        'SMEditor',
+        'SMList',
         'Visualization',
     ];
+    const routesSMViewerEditor: Array<RouteRecordNameGeneric> = ['SMViewer', 'SMEditor', 'SMList'];
     const routesStayOnPages: Array<RouteRecordNameGeneric> = ['About', 'NotFound404'];
     const routesDesktopToAASViewer: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList'];
-    const routesMobileToAASList: Array<RouteRecordNameGeneric> = ['AASViewer', 'AASEditor', 'SubmodelViewer'];
+    const routesDesktopToSMViewer: Array<RouteRecordNameGeneric> = ['SMList'];
+    const routesMobileToAASList: Array<RouteRecordNameGeneric> = ['AASViewer', 'AASEditor', 'AASSubmodelViewer'];
+    const routesMobileToSMList: Array<RouteRecordNameGeneric> = ['SMViewer', 'SMEditor'];
     const routesToVisualization: Array<RouteRecordNameGeneric> = ['ComponentVisualization'];
 
     const possibleGloBalAssetIdQueryParameter = ['globalAssetId', 'globalassetid'];
@@ -199,9 +221,9 @@ export async function createAppRouter(): Promise<Router> {
                 if (Object.keys(from.query).length > 0) {
                     const queryToDispatch = from.query;
 
-                    // Strip idShortPath in case of switching to Submodel Viewer
+                    // Strip idShortPath in case of switching to AAS Submodel Viewer
                     const queryPathToDispatch = queryToDispatch?.path as string;
-                    if (to.name === 'SubmodelViewer' && queryPathToDispatch && queryPathToDispatch.trim() !== '') {
+                    if (to.name === 'AASSubmodelViewer' && queryPathToDispatch && queryPathToDispatch.trim() !== '') {
                         queryToDispatch.path = queryPathToDispatch.trim().split('/submodel-elements/')[0];
                     }
 
@@ -255,6 +277,14 @@ export async function createAppRouter(): Promise<Router> {
                 // Redirect to 'AASList' with query
                 next({ name: 'AASList', query: to.query });
                 return;
+            } else if (
+                routesMobileToSMList.includes(to.name) ||
+                (to.path.includes('/modules/') && !to.meta.isMobileModule)
+            ) {
+                // Redirect to 'SMList' with query
+                if (to.query.aas) delete to.query.ass;
+                next({ name: 'SMList', query: to.query });
+                return;
             } else if (routesToVisualization.includes(to.name)) {
                 // Redirect to 'Visualization' with query
                 next({ name: 'Visualization', query: to.query });
@@ -276,6 +306,15 @@ export async function createAppRouter(): Promise<Router> {
                 // Redirect to 'AASViewer' with query
                 next({ name: 'AASViewer', query: to.query });
                 return;
+            } else if (
+                routesDesktopToSMViewer.includes(to.name) ||
+                (to.name === 'SMEditor' && !allowEditing.value) ||
+                (to.path.includes('/modules/') && !to.meta.isDesktopModule)
+            ) {
+                // Redirect to 'SMViewer' with query
+                if (to.query.aas) delete to.query.ass;
+                next({ name: 'SMViewer', query: to.query });
+                return;
             } else if (routesToVisualization.includes(to.name)) {
                 // Redirect to 'Visualization' with query
                 next({ name: 'Visualization', query: to.query });
@@ -283,13 +322,23 @@ export async function createAppRouter(): Promise<Router> {
             }
         }
 
+        if (to.query.aas && routesSMViewerEditor.includes(to.name)) {
+            delete to.query.aas;
+            const updatedRoute = Object.assign({}, to, {
+                query: to.query,
+            });
+            next(updatedRoute);
+            return;
+        }
+
         // Fetch and dispatch AAS
         if (to.query.aas && to.query.aas !== '' && from.query.aas !== to.query.aas) {
             const aas = await fetchAndDispatchAas(to.query.aas as string);
             if (!aas || Object.keys(aas).length === 0) {
                 // Remove aas query for not available AAS endpoint
+                if (to.query.ass) delete to.query.aas;
                 const updatedRoute = Object.assign({}, to, {
-                    query: {},
+                    query: to.query,
                 });
                 next(updatedRoute);
                 return;
@@ -299,12 +348,17 @@ export async function createAppRouter(): Promise<Router> {
         }
 
         // Fetch and dispatch SM/SME
-        if (to.query.path && to.query.path !== '' && from.query.path !== to.query.path) {
+        if (
+            to.query.path &&
+            to.query.path !== '' &&
+            (from.query.path !== to.query.path || ['SMViewer', 'SMEditor'].includes(to.name as string))
+        ) {
             const sme = await fetchAndDispatchSme(to.query.path as string, true);
             if (!sme || Object.keys(sme).length === 0) {
                 // Remove path query for not available SME path
+                if (to.query.path) delete to.query.path;
                 const updatedRoute = Object.assign({}, to, {
-                    query: { aas: to.query.aas },
+                    query: to.query,
                 });
                 next(updatedRoute);
                 return;

@@ -7,7 +7,7 @@
                         :style="{ 'padding-left': depth * 22 + 'px' }"
                         density="compact"
                         class="py-0"
-                        :class="editMode ? 'pr-0' : ''"
+                        :class="editorMode ? 'pr-0' : ''"
                         nav
                         slim
                         color="primary"
@@ -86,7 +86,7 @@
                                     size="x-small"
                                     :style="{
                                         marginRight:
-                                            isHovering && (!editMode || canElementAddSubmodelElement(item))
+                                            isHovering && (!editorMode || canElementAddSubmodelElement(item))
                                                 ? '8px'
                                                 : '-24px',
                                         transition: 'margin 0.3s ease',
@@ -98,7 +98,7 @@
                                 <div class="icon-placeholder">
                                     <!-- Button to add a submodel Element -->
                                     <v-tooltip
-                                        v-if="editMode && canElementAddSubmodelElement(item)"
+                                        v-if="editorMode && canElementAddSubmodelElement(item)"
                                         text="Add Submodel Element"
                                         :open-delay="600"
                                         location="bottom">
@@ -120,7 +120,7 @@
                                     </v-tooltip>
                                     <!-- Button to Copy the Path to the clipboard -->
                                     <v-tooltip
-                                        v-if="!editMode"
+                                        v-if="!editorMode"
                                         text="Copy Path to Clipboard"
                                         :open-delay="600"
                                         location="bottom">
@@ -143,7 +143,7 @@
                                 </div>
                             </div>
                             <!-- Context menu for Submodels -->
-                            <v-menu v-if="editMode && item.modelType === 'Submodel'">
+                            <v-menu v-if="editorMode && item.modelType === 'Submodel'">
                                 <template #activator="{ props }">
                                     <v-btn
                                         icon="mdi-dots-vertical"
@@ -189,7 +189,7 @@
                                 </v-sheet>
                             </v-menu>
                             <!-- Context menu for Submodel Elements -->
-                            <v-menu v-if="editMode && item.modelType !== 'Submodel'">
+                            <v-menu v-if="editorMode && item.modelType !== 'Submodel'">
                                 <template #activator="{ props }">
                                     <v-btn
                                         icon="mdi-dots-vertical"
@@ -246,7 +246,7 @@
                                     </v-list>
                                 </v-sheet>
                             </v-menu>
-                            <template v-else-if="editMode"></template>
+                            <template v-else-if="editorMode"></template>
                         </template>
                     </v-list-item>
                 </v-lazy>
@@ -311,7 +311,7 @@
 
     // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode);
-    const editMode = computed(() => route.name === 'AASEditor');
+    const editorMode = computed(() => ['AASEditor', 'SMEditor'].includes(route.name as string));
     const isMobile = computed(() => navigationStore.getIsMobile);
     const copyIconAsRef = computed(() => copyIcon);
 
