@@ -104,7 +104,6 @@ export function useClipboardUtil() {
 
     function pasteElement(item?: unknown): void {
         const clipboardElement = clipboardStore.getClipboardContent() as any;
-        console.log('Paste element on item:', item, '. Element:', clipboardElement);
 
         if (!clipboardElement) return;
 
