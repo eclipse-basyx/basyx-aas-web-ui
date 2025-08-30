@@ -3,8 +3,8 @@
         <!-- Detailed View of the selected Submodel/SubmodelElement (e.g. Property, Operation, etc.) -->
         <template
             v-if="
-                selectedAAS &&
-                Object.keys(selectedAAS).length > 0 &&
+                ((selectedAAS && Object.keys(selectedAAS).length > 0) ||
+                    ['SMViewer', 'SMEditor'].includes(route.name as string)) &&
                 selectedNode &&
                 Object.keys(selectedNode).length > 0 &&
                 submodelElementData &&
@@ -101,27 +101,27 @@
                     <Property
                         v-else-if="submodelElementData.modelType === 'Property'"
                         :property-object="submodelElementData"
-                        :is-editable="aasEditorMode"></Property>
+                        :is-editable="editorMode"></Property>
                     <MultiLanguageProperty
                         v-else-if="submodelElementData.modelType === 'MultiLanguageProperty'"
                         :multi-language-property-object="submodelElementData"
-                        :is-editable="aasEditorMode"></MultiLanguageProperty>
+                        :is-editable="editorMode"></MultiLanguageProperty>
                     <Operation
                         v-else-if="submodelElementData.modelType === 'Operation'"
                         :operation-object="submodelElementData"
-                        :is-editable="aasEditorMode"></Operation>
+                        :is-editable="editorMode"></Operation>
                     <File
                         v-else-if="submodelElementData.modelType === 'File'"
                         :file-object="submodelElementData"
-                        :is-editable="aasEditorMode"></File>
+                        :is-editable="editorMode"></File>
                     <Blob
                         v-else-if="submodelElementData.modelType === 'Blob'"
                         :blob-object="submodelElementData"
-                        :is-editable="aasEditorMode"></Blob>
+                        :is-editable="editorMode"></Blob>
                     <ReferenceElement
                         v-else-if="submodelElementData.modelType === 'ReferenceElement'"
                         :reference-element-object="submodelElementData"
-                        :is-editable="aasEditorMode"></ReferenceElement>
+                        :is-editable="editorMode"></ReferenceElement>
                     <Range
                         v-else-if="submodelElementData.modelType === 'Range'"
                         :range-object="submodelElementData"></Range>
@@ -134,7 +134,7 @@
                     <AnnotatedRelationshipElement
                         v-else-if="submodelElementData.modelType === 'AnnotatedRelationshipElement'"
                         :annotated-relationship-element-object="submodelElementData"
-                        :is-editable="aasEditorMode"></AnnotatedRelationshipElement>
+                        :is-editable="editorMode"></AnnotatedRelationshipElement>
                     <InvalidElement v-else :invalid-element-object="submodelElementData"></InvalidElement>
                 </v-list>
                 <!-- Last Sync -->
@@ -180,6 +180,7 @@
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+
     // Vue Router
     const route = useRoute();
 
@@ -204,7 +205,7 @@
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
     const selectedNode = computed(() => aasStore.getSelectedNode);
     const autoSync = computed(() => navigationStore.getAutoSync);
-    const aasEditorMode = computed(() => route.name === 'AASEditor');
+    const editorMode = computed(() => ['AASEditor', 'SMEditor'].includes(route.name as string));
 
     // Watchers
     watch(

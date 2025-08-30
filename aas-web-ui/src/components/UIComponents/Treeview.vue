@@ -7,7 +7,7 @@
                         :style="{ 'padding-left': depth * 22 + 'px' }"
                         density="compact"
                         class="py-0"
-                        :class="editMode ? 'pr-0' : ''"
+                        :class="editorMode ? 'pr-0' : ''"
                         nav
                         slim
                         color="primary"
@@ -86,7 +86,7 @@
                                     size="x-small"
                                     :style="{
                                         marginRight:
-                                            isHovering && (!editMode || canElementAddSubmodelElement(item))
+                                            isHovering && (!editorMode || canElementAddSubmodelElement(item))
                                                 ? '8px'
                                                 : '-24px',
                                         transition: 'margin 0.3s ease',
@@ -98,7 +98,7 @@
                                 <div class="icon-placeholder">
                                     <!-- Button to add a submodel Element -->
                                     <v-tooltip
-                                        v-if="editMode && canElementAddSubmodelElement(item)"
+                                        v-if="editorMode && canElementAddSubmodelElement(item)"
                                         text="Add Submodel Element"
                                         :open-delay="600"
                                         location="bottom">
@@ -120,7 +120,7 @@
                                     </v-tooltip>
                                     <!-- Button to Copy the Path to the clipboard -->
                                     <v-tooltip
-                                        v-if="!editMode"
+                                        v-if="!editorMode"
                                         text="Copy Path to Clipboard"
                                         :open-delay="600"
                                         location="bottom">
@@ -143,7 +143,7 @@
                                 </div>
                             </div>
                             <!-- Context menu for Submodels -->
-                            <v-menu v-if="editMode && item.modelType === 'Submodel'">
+                            <v-menu v-if="editorMode && item.modelType === 'Submodel'">
                                 <template #activator="{ props }">
                                     <v-btn
                                         icon="mdi-dots-vertical"
@@ -160,6 +160,13 @@
                                                 <v-icon size="x-small">mdi-plus</v-icon>
                                             </template>
                                             <v-list-item-subtitle>Add Submodel Element</v-list-item-subtitle>
+                                        </v-list-item>
+                                        <!-- Open Insert SubmodelElement from JSON dialog -->
+                                        <v-list-item @click="$emit('openJsonInsertDialog', item)">
+                                            <template #prepend>
+                                                <v-icon size="x-small">mdi-code-json</v-icon>
+                                            </template>
+                                            <v-list-item-subtitle>Submodel Element from JSON</v-list-item-subtitle>
                                         </v-list-item>
                                         <v-divider></v-divider>
                                         <!-- Open Submodel edit dialog -->
@@ -189,7 +196,7 @@
                                 </v-sheet>
                             </v-menu>
                             <!-- Context menu for Submodel Elements -->
-                            <v-menu v-if="editMode && item.modelType !== 'Submodel'">
+                            <v-menu v-if="editorMode && item.modelType !== 'Submodel'">
                                 <template #activator="{ props }">
                                     <v-btn
                                         icon="mdi-dots-vertical"
@@ -212,6 +219,19 @@
                                                 <v-icon size="x-small">mdi-plus</v-icon>
                                             </template>
                                             <v-list-item-subtitle>Add Submodel Element</v-list-item-subtitle>
+                                        </v-list-item>
+                                        <!-- Open Insert SubmodelElement from JSON dialog -->
+                                        <v-list-item
+                                            v-if="
+                                                item.modelType === 'SubmodelElementCollection' ||
+                                                item.modelType === 'SubmodelElementList' ||
+                                                item.modelType === 'Entity'
+                                            "
+                                            @click="$emit('openJsonInsertDialog', item)">
+                                            <template #prepend>
+                                                <v-icon size="x-small">mdi-code-json</v-icon>
+                                            </template>
+                                            <v-list-item-subtitle>Submodel Element from JSON</v-list-item-subtitle>
                                         </v-list-item>
                                         <v-divider
                                             v-if="
@@ -246,7 +266,7 @@
                                     </v-list>
                                 </v-sheet>
                             </v-menu>
-                            <template v-else-if="editMode"></template>
+                            <template v-else-if="editorMode"></template>
                         </template>
                     </v-list-item>
                 </v-lazy>
@@ -261,6 +281,7 @@
                 :depth="depth + 1"
                 @open-add-submodel-element-dialog="$emit('openAddSubmodelElementDialog', $event)"
                 @open-edit-submodel-element-dialog="$emit('openEditSubmodelElementDialog', $event)"
+                @open-json-insert-dialog="$emit('openJsonInsertDialog', $event)"
                 @show-delete-dialog="$emit('showDeleteDialog', $event)"></Treeview>
         </template>
     </div>
@@ -303,6 +324,7 @@
         (event: 'openEditDialog', item: any): void;
         (event: 'showDeleteDialog', item: any): void;
         (event: 'openAddSubmodelElementDialog', item: any): void;
+        (event: 'openJsonInsertDialog', item: any): void;
         (event: 'openEditSubmodelElementDialog', item: any): void;
     }>();
 
@@ -311,7 +333,7 @@
 
     // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode);
-    const editMode = computed(() => route.name === 'AASEditor');
+    const editorMode = computed(() => ['AASEditor', 'SMEditor'].includes(route.name as string));
     const isMobile = computed(() => navigationStore.getIsMobile);
     const copyIconAsRef = computed(() => copyIcon);
 

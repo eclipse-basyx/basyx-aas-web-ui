@@ -58,6 +58,7 @@ declare module 'vue' {
     ImagePreview: typeof import('./components/Plugins/ImagePreview.vue')['default']
     InvalidElement: typeof import('./components/SubmodelElements/InvalidElement.vue')['default']
     JSONArrayProperty: typeof import('./components/Plugins/SubmodelElements/JSONArrayProperty.vue')['default']
+    JsonInsert: typeof import('./components/EditorComponents/JsonInsert.vue')['default']
     JSONPreview: typeof import('./components/Plugins/JSONPreview.vue')['default']
     LastSync: typeof import('./components/UIComponents/LastSync.vue')['default']
     LineChart: typeof import('./components/Widgets/LineChart.vue')['default']

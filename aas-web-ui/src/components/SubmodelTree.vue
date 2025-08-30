@@ -70,13 +70,13 @@
                                     variant="plain"
                                     v-bind="props"
                                     class="ml-n3"
-                                    :class="editMode ? 'mr-n3' : ''"
+                                    :class="editorMode ? 'mr-n3' : ''"
                                     @click="collapseTree()">
                                 </v-btn>
                             </template>
                             <span>Collapse Submodel trees</span>
                         </v-tooltip>
-                        <v-menu v-if="editMode">
+                        <v-menu v-if="editorMode">
                             <template #activator="{ props }">
                                 <v-btn icon="mdi-dots-vertical" variant="plain" v-bind="props" class="mr-2"></v-btn>
                             </template>
@@ -93,8 +93,20 @@
                                             </v-list-item>
                                         </template>
                                         <span>Create a new Submodel</span>
-                                    </v-tooltip></v-list
-                                >
+                                    </v-tooltip>
+                                    <!-- Open JSON insert dialog -->
+                                    <v-tooltip open-delay="600" location="end">
+                                        <template #activator="{ props }">
+                                            <v-list-item slim v-bind="props" @click="openJsonInsertDialog('Submodel')">
+                                                <template #prepend>
+                                                    <v-icon size="small">mdi-code-json</v-icon>
+                                                </template>
+                                                Submodel from JSON
+                                            </v-list-item>
+                                        </template>
+                                        <span>Create a new Submodel from JSON</span>
+                                    </v-tooltip>
+                                </v-list>
                             </v-sheet>
                         </v-menu>
                     </template>
@@ -118,7 +130,11 @@
                 </template>
                 <!-- Show the Submodel Tree -->
                 <template v-else>
-                    <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
+                    <template
+                        v-if="
+                            (selectedAAS && Object.keys(selectedAAS).length > 0) ||
+                            ['SMViewer', 'SMEditor'].includes(route.name as string)
+                        ">
                         <template
                             v-if="
                                 submodelTreeUnfiltered &&
@@ -135,22 +151,27 @@
                                 @open-edit-submodel-element-dialog="openEditSubmodelElementDialogForElement"
                                 @open-add-submodel-element-dialog="openAddSubmodelElementDialog"
                                 @open-edit-dialog="openEditDialog(false, $event)"
+                                @open-json-insert-dialog="openJsonInsertDialog('SubmodelElement', $event)"
                                 @show-delete-dialog="openDeleteDialog"></Treeview>
                         </template>
+                        <v-empty-state
+                            v-else-if="['SMViewer', 'SMEditor'].includes(route.name as string)"
+                            title="No existing Submodels"
+                            text="The specified Submodel Repository does not contain any Submodels"
+                            class="text-divider"></v-empty-state>
                         <v-empty-state
                             v-else
                             title="No existing Submodels"
                             text="The selected AAS does not contain any Submodels"
-                            :action-text="editMode ? 'Create Submodel' : undefined"
+                            :action-text="editorMode ? 'Create Submodel' : undefined"
                             class="text-divider"
                             @click:action="openEditDialog(true)"></v-empty-state>
                     </template>
-                    <template v-else>
-                        <v-empty-state
-                            title="No selected AAS"
-                            text="Select an AAS to view its Submodels and Submodel Elements"
-                            class="text-divider"></v-empty-state>
-                    </template>
+                    <v-empty-state
+                        v-else
+                        title="No selected AAS"
+                        text="Select an AAS to view its Submodels and Submodel Elements"
+                        class="text-divider"></v-empty-state>
                 </template>
             </v-card-text>
         </v-card>
@@ -209,6 +230,8 @@
         :sml="submodelElementToEdit"></ListForm>
     <!-- Dialog for creating/editing Submodel -->
     <SubmodelForm v-model="editDialog" :new-sm="newSubmodel" :submodel="submodelToEdit"></SubmodelForm>
+    <!-- Dialog for inserting JSON -->
+    <JsonInsert v-model="jsonInsertDialog" :type="jsonInsertType" :parent-element="elementToAddSME"></JsonInsert>
     <!-- Dialog for deleting SM/SME -->
     <DeleteDialog v-model="deleteDialog" :element="elementToDelete"></DeleteDialog>
 </template>
@@ -219,6 +242,7 @@
     import { useRoute } from 'vue-router';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
+    import { useSMHandling } from '@/composables/AAS/SMHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -229,6 +253,7 @@
 
     // Composables
     const { fetchAasSmListById } = useAASHandling();
+    const { fetchSmList } = useSMHandling();
     const { nameToDisplay, descriptionToDisplay } = useReferableUtils();
 
     // Stores
@@ -264,6 +289,8 @@
     const elementToAddSME = ref<any | undefined>(undefined); // Variable to store the Element where the new SME is added inside
     const submodelElementPath = ref<string | undefined>(undefined); // Variable to store the Element where the new SME is added inside
     const submodelElementToEdit = ref<any | undefined>(undefined); // Variable to store the Element where the new SME is added inside
+    const jsonInsertDialog = ref(false); // Variable to store if the JSON Insert Dialog should be shown
+    const jsonInsertType = ref<'Submodel' | 'SubmodelElement'>('Submodel'); // Variable to store the ModelType of the JSON to be inserted
 
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
@@ -272,14 +299,16 @@
     const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL); // get Submodel Registry URL from Store
     const selectedNode = computed(() => aasStore.getSelectedNode); // get the updated Treeview Node from Store
     const singleAas = computed(() => envStore.getSingleAas); // Get the single AAS state from the Store
-    const editMode = computed(() => route.name === 'AASEditor'); // Check if the current Route is the AAS Editor
+    const editorMode = computed(() => ['AASEditor', 'SMEditor'].includes(route.name as string));
     const triggerTreeviewReload = computed(() => navigationStore.getTriggerTreeviewReload); // Reload the Treeview
 
     // Watchers
     watch(
         () => aasRegistryURL.value,
         () => {
-            submodelTree.value = [];
+            if (!['SMViewer', 'SMEditor'].includes(route.name as string)) {
+                submodelTree.value = [];
+            }
         }
     );
 
@@ -293,8 +322,10 @@
     watch(
         () => selectedAAS.value,
         () => {
-            submodelTree.value = [];
-            initialize();
+            if (!['SMViewer', 'SMEditor'].includes(route.name as string)) {
+                submodelTree.value = [];
+                initialize();
+            }
         }
     );
 
@@ -312,7 +343,11 @@
     });
 
     async function initialize(): Promise<void> {
-        if (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0) {
+        // console.log(selectedNode.value);
+        if (
+            !['SMEditor', 'SMViewer'].includes(route.name as string) &&
+            (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0)
+        ) {
             submodelTree.value = [];
             return;
         }
@@ -320,14 +355,24 @@
         treeLoading.value = true;
 
         try {
-            const submodels: Array<any> = await fetchAasSmListById(selectedAAS.value.id);
+            let submodels: Array<any> = [];
+
+            if (['SMEditor', 'SMViewer'].includes(route.name as string)) {
+                submodels = await fetchSmList();
+            } else {
+                submodels = await fetchAasSmListById(selectedAAS.value.id);
+            }
             const sortedSubmodels = submodels.sort((a, b) => a.id.localeCompare(b.id));
 
             let processedList = [] as Array<any>;
 
             processedList = sortedSubmodels.map((submodel: any) => {
                 // Assumes submodel.path is already set for top-level nodes
-                if (Array.isArray(submodel.submodelElements) && submodel.submodelElements.length) {
+                if (
+                    submodel.submodelElements &&
+                    Array.isArray(submodel.submodelElements) &&
+                    submodel.submodelElements.length > 0
+                ) {
                     submodel.children = prepareForTree(submodel.submodelElements, submodel);
                     submodel.showChildren = shouldExpandNode(submodel.path);
                     return submodel;
@@ -458,6 +503,14 @@
         newSubmodel.value = createNew;
         if (!createNew && submodel) {
             submodelToEdit.value = submodel;
+        }
+    }
+
+    function openJsonInsertDialog(type: 'Submodel' | 'SubmodelElement', element?: any): void {
+        jsonInsertDialog.value = true;
+        jsonInsertType.value = type;
+        if (type === 'SubmodelElement' && element) {
+            elementToAddSME.value = element;
         }
     }
 

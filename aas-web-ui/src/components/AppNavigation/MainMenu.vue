@@ -40,13 +40,44 @@
                             class="mt-3 py-2"
                             nav
                             :active="false"
-                            :border="isActiveRoutePath('/submodelviewer')"
-                            subtitle="View Submodels"
-                            title="Submodel Viewer"
-                            :to="isActiveRoutePath('/submodelviewer') ? '' : '/submodelviewer'"
+                            :border="isActiveRoutePath('/aassmviewer')"
+                            subtitle="View Submodel Visualizations of Asset Administration Shells"
+                            title="AAS SM Visualizations"
+                            :to="isActiveRoutePath('/aassmviewer') ? '' : '/aassmviewer'"
                             @click="closeMenu">
                             <template #prepend>
                                 <v-avatar color="surface-light" icon="mdi-group" rounded>
+                                    <v-icon color="medium-emphasis" />
+                                </v-avatar>
+                            </template>
+                        </v-list-item>
+                        <v-list-item
+                            class="mt-3 py-2"
+                            nav
+                            :active="false"
+                            :border="isActiveRoutePath('/smviewer')"
+                            subtitle="View Submodels"
+                            title="SM Viewer"
+                            :to="isActiveRoutePath('/smviewer') ? '' : '/smviewer'"
+                            @click="closeMenu">
+                            <template #prepend>
+                                <v-avatar color="surface-light" icon="mdi-ungroup" rounded>
+                                    <v-icon color="medium-emphasis" />
+                                </v-avatar>
+                            </template>
+                        </v-list-item>
+                        <v-list-item
+                            v-if="allowEditing"
+                            class="mt-3 py-2"
+                            :active="false"
+                            nav
+                            :border="isActiveRoutePath('/smeditor')"
+                            subtitle="Edit Submodels"
+                            title="SM Editor"
+                            :to="isActiveRoutePath('/smeditor') ? '' : '/smeditor'"
+                            @click="closeMenu">
+                            <template #prepend>
+                                <v-avatar color="surface-light" icon="mdi-pencil" rounded>
                                     <v-icon color="medium-emphasis" />
                                 </v-avatar>
                             </template>
