@@ -12,11 +12,21 @@ export const useClipboardStore = defineStore('clipboardStore', () => {
     function getClipboardContent() {
         return clipboardContent.value;
     }
+    function getClipboardElementModelType() {
+        const content = clipboardContent.value;
+        return content && typeof content === 'object' && 'modelType' in content
+            ? (content as { modelType?: string }).modelType || null
+            : null;
+    }
 
     // Actions
     function setClipboardContent(content: unknown) {
         clipboardContent.value = cleanObjectRecursively(content);
     }
 
-    return { getClipboardContent, setClipboardContent };
+    return {
+        getClipboardContent,
+        getClipboardElementModelType,
+        setClipboardContent,
+    };
 });

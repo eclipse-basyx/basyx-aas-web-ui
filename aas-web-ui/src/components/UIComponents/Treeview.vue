@@ -102,13 +102,13 @@
                                         text="Add Submodel Element"
                                         :open-delay="600"
                                         location="bottom">
-                                        <template #activator="{ props }">
+                                        <template #activator="{ props: addSubmodelElementTooltipProps }">
                                             <v-btn
                                                 icon="mdi-plus"
                                                 size="small"
                                                 variant="plain"
                                                 color="subtitleText"
-                                                v-bind="props"
+                                                v-bind="addSubmodelElementTooltipProps"
                                                 class="ml-1"
                                                 :style="{
                                                     display: isHovering ? 'block' : 'none',
@@ -124,13 +124,13 @@
                                         text="Copy Path to Clipboard"
                                         :open-delay="600"
                                         location="bottom">
-                                        <template #activator="{ props }">
+                                        <template #activator="{ props: copyPathTooltipProps }">
                                             <v-btn
                                                 :icon="copyIcon"
                                                 size="small"
                                                 variant="plain"
                                                 color="subtitleText"
-                                                v-bind="props"
+                                                v-bind="copyPathTooltipProps"
                                                 class="ml-1"
                                                 :style="{
                                                     display: isHovering ? 'block' : 'none',
@@ -208,6 +208,23 @@
                                                     <v-icon size="x-small">{{ copyJsonIcon }} </v-icon>
                                                 </template>
                                                 <v-list-item-subtitle>Copy Submodel as JSON</v-list-item-subtitle>
+                                            </v-list-item>
+                                            <v-divider></v-divider>
+                                            <!-- Paste SubmodelElement from internal clipboard -->
+                                            <v-list-item
+                                                :disabled="
+                                                    !clipboardElementContentType ||
+                                                    clipboardElementContentType === 'Submodel'
+                                                "
+                                                @click.stop="pasteElement(item)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">{{ pasteIcon }} </v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>
+                                                    {{
+                                                        `Paste ${!clipboardElementContentType || clipboardElementContentType === 'Submodel' ? '' : clipboardElementContentType}`
+                                                    }}
+                                                </v-list-item-subtitle>
                                             </v-list-item>
                                         </v-list>
                                     </v-sheet>
@@ -302,6 +319,33 @@
                                                     >Copy {{ item.modelType }} as JSON</v-list-item-subtitle
                                                 >
                                             </v-list-item>
+                                            <v-divider
+                                                v-if="
+                                                    item.modelType === 'SubmodelElementCollection' ||
+                                                    item.modelType === 'SubmodelElementList' ||
+                                                    item.modelType === 'Entity'
+                                                "></v-divider>
+                                            <!-- Paste SubmodelElement from internal clipboard -->
+                                            <v-list-item
+                                                v-if="
+                                                    item.modelType === 'SubmodelElementCollection' ||
+                                                    item.modelType === 'SubmodelElementList' ||
+                                                    item.modelType === 'Entity'
+                                                "
+                                                :disabled="
+                                                    !clipboardElementContentType ||
+                                                    clipboardElementContentType === 'Submodel'
+                                                "
+                                                @click="pasteElement(item)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">{{ pasteIcon }} </v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>
+                                                    {{
+                                                        `Paste ${!clipboardElementContentType || clipboardElementContentType === 'Submodel' ? '' : clipboardElementContentType}`
+                                                    }}
+                                                </v-list-item-subtitle>
+                                            </v-list-item>
                                         </v-list>
                                     </v-sheet>
                                 </template>
@@ -342,7 +386,7 @@
 
     // Composables
     const { nameToDisplay } = useReferableUtils();
-    const { copyToClipboard, copyJsonToClipboard } = useClipboardUtil();
+    const { copyToClipboard, copyJsonToClipboard, pasteElement } = useClipboardUtil();
 
     // Stores
     const navigationStore = useNavigationStore();
@@ -374,6 +418,7 @@
     const copyInternalIcon = ref<string>('mdi-clipboard-outline');
     const copyIcon = ref<string>('mdi-clipboard-file-outline');
     const copyJsonIcon = ref<string>('mdi-clipboard-text-outline');
+    const pasteIcon = ref<string>('mdi-file-document-multiple-outline');
 
     // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode);
@@ -382,6 +427,7 @@
     const copyInternalIconAsRef = computed(() => copyInternalIcon);
     const copyIconAsRef = computed(() => copyIcon);
     const copyJsonIconAsRef = computed(() => copyJsonIcon);
+    const clipboardElementContentType = computed(() => clipboardStore.getClipboardElementModelType());
 
     function toggleTree(smOrSme: any): void {
         smOrSme.showChildren = !smOrSme.showChildren;
