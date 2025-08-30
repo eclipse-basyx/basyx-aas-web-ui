@@ -1,8 +1,32 @@
+import type { JsonValue } from '@aas-core-works/aas-core3.0-typescript/jsonization';
+import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+import { useRouter } from 'vue-router';
+import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
+import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+import { useIDUtils } from '@/composables/IDUtils';
+import { useAASStore } from '@/store/AASDataStore';
+import { useClipboardStore } from '@/store/ClipboardStore';
 import { useNavigationStore } from '@/store/NavigationStore';
+import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
+import { base64Decode, base64Encode } from '@/utils/EncodeDecodeUtils';
 
 export function useClipboardUtil() {
+    // Vue Router
+    const router = useRouter();
+
     // Store
+    const aasStore = useAASStore();
+    const clipboardStore = useClipboardStore();
     const navigationStore = useNavigationStore();
+
+    // composables
+    const { postSubmodel, postSubmodelElement } = useSMRepositoryClient();
+    const { putAas } = useAASRepositoryClient();
+    const { generateIri } = useIDUtils();
+
+    // Computed properties
+    const selectedAAS = computed(() => aasStore.getSelectedAAS);
+    const submodelRepoUrl = computed(() => navigationStore.getSubmodelRepoURL);
 
     function copyToClipboard(value: string, valueName: string, iconReference: { value: string }): void {
         if (!value) return;
@@ -78,6 +102,134 @@ export function useClipboardUtil() {
         });
     }
 
+    function pasteElement(item?: unknown): void {
+        const clipboardElement = clipboardStore.getClipboardContent() as any;
+
+        if (!clipboardElement) return;
+
+        if (clipboardElement.modelType === 'Submodel') {
+            insertSubmodel(clipboardElement);
+        } else {
+            insertSubmodelElement(clipboardElement, item);
+        }
+    }
+
+    async function insertSubmodel(json: JsonValue): Promise<void> {
+        // Parse JSON to Submodel
+        const instanceOrError = jsonization.submodelFromJsonable(json);
+        if (instanceOrError.error !== null) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Error parsing Submodel: ' + instanceOrError.error,
+            });
+            return;
+        }
+        const submodel = instanceOrError.mustValue();
+
+        // Create new unique ID for the Submodel
+        submodel.id = generateIri('Submodel');
+
+        // Create Submodel
+        await postSubmodel(submodel);
+        // Add Submodel Reference to AAS
+        await addSubmodelReferenceToAas(submodel);
+        // Fetch and dispatch Submodel
+        const path = submodelRepoUrl.value + '/' + base64Encode(submodel.id);
+        const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
+        router.push({ query: { aas: aasEndpoint, path: path } });
+
+        navigationStore.dispatchTriggerTreeviewReload();
+    }
+
+    async function insertSubmodelElement(json: JsonValue, parentElement: any): Promise<void> {
+        if (!parentElement) return;
+
+        const instanceOrError = jsonization.submodelElementFromJsonable(json);
+        if (instanceOrError.error !== null) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Error parsing SubmodelElement: ' + instanceOrError.error,
+            });
+            return;
+        }
+        const submodelElement = instanceOrError.mustValue();
+
+        // In case the SubmodelElement has an idShort, add "_copy" to the end
+        if (submodelElement.idShort) {
+            submodelElement.idShort += '_copy';
+        }
+
+        if (parentElement.modelType === 'Submodel') {
+            // Create the property on the parent Submodel
+            await postSubmodelElement(submodelElement, parentElement.id);
+
+            const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
+
+            // Navigate to the new property
+            router.push({
+                query: {
+                    aas: aasEndpoint,
+                    path: parentElement.path + '/submodel-elements/' + submodelElement.idShort,
+                },
+            });
+        } else {
+            // Extract the submodel ID and the idShortPath from the parentElement path
+            const splitted = parentElement.path.split('/submodel-elements/');
+            const submodelId = base64Decode(splitted[0].split('/submodels/')[1]);
+            const idShortPath = splitted[1];
+
+            // Create the property on the parent element
+            await postSubmodelElement(submodelElement, submodelId, idShortPath);
+
+            const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
+
+            // Navigate to the new property
+            if (parentElement.modelType === 'SubmodelElementCollection') {
+                router.push({
+                    query: {
+                        aas: aasEndpoint,
+                        path: parentElement.path + '.' + submodelElement.idShort,
+                    },
+                });
+            }
+        }
+
+        navigationStore.dispatchTriggerTreeviewReload();
+    }
+
+    async function addSubmodelReferenceToAas(submodel: aasTypes.Submodel): Promise<void> {
+        if (selectedAAS.value === null) return;
+        const localAAS = { ...selectedAAS.value };
+        const instanceOrError = jsonization.assetAdministrationShellFromJsonable(localAAS);
+        if (instanceOrError.error !== null) {
+            console.error('Error parsing AAS: ', instanceOrError.error);
+            return;
+        }
+        const aas = instanceOrError.mustValue();
+        // Create new SubmodelReference
+        const submodelReference = new aasTypes.Reference(aasTypes.ReferenceTypes.ExternalReference, [
+            new aasTypes.Key(aasTypes.KeyTypes.Submodel, submodel.id),
+        ]);
+        // Check if Submodels are null
+        if (aas.submodels === null || aas.submodels === undefined) {
+            aas.submodels = [submodelReference];
+            localAAS.submodels = [jsonization.toJsonable(submodelReference)];
+        } else {
+            aas.submodels.push(submodelReference);
+            localAAS.submodels.push(jsonization.toJsonable(submodelReference));
+        }
+        await putAas(aas);
+
+        // Update AAS in Store
+        aasStore.dispatchSelectedAAS(localAAS);
+    }
+
     function cleanObjectRecursively(obj: unknown): unknown {
         if (obj === null || obj === undefined) {
             return obj;
@@ -144,5 +296,10 @@ export function useClipboardUtil() {
         return obj;
     }
 
-    return { copyToClipboard, copyJsonToClipboard, cleanObjectRecursively };
+    return {
+        copyToClipboard,
+        copyJsonToClipboard,
+        cleanObjectRecursively,
+        pasteElement,
+    };
 }
