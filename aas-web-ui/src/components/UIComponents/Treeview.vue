@@ -192,6 +192,14 @@
                                             </template>
                                             <v-list-item-subtitle>Copy Submodel Endpoint</v-list-item-subtitle>
                                         </v-list-item>
+                                        <!-- Copy SM as JSON -->
+                                        <v-list-item
+                                            @click.stop="copyJsonToClipboard(item, 'Submodel', copyJsonIconAsRef)">
+                                            <template #prepend>
+                                                <v-icon size="x-small">{{ copyJsonIcon }} </v-icon>
+                                            </template>
+                                            <v-list-item-subtitle>Copy Submodel as JSON</v-list-item-subtitle>
+                                        </v-list-item>
                                     </v-list>
                                 </v-sheet>
                             </v-menu>
@@ -254,13 +262,23 @@
                                             <v-list-item-subtitle>Delete {{ item.modelType }}</v-list-item-subtitle>
                                         </v-list-item>
                                         <v-divider></v-divider>
-                                        <!-- Copy SM endpoint to clipboard -->
+                                        <!-- Copy SME endpoint to clipboard -->
                                         <v-list-item @click="copyToClipboard(item.path, 'Path', copyIconAsRef)">
                                             <template #prepend>
                                                 <v-icon size="x-small">{{ copyIcon }} </v-icon>
                                             </template>
                                             <v-list-item-subtitle
                                                 >Copy {{ item.modelType }} Endpoint</v-list-item-subtitle
+                                            >
+                                        </v-list-item>
+                                        <!-- Copy SME as JSON -->
+                                        <v-list-item
+                                            @click.stop="copyJsonToClipboard(item, item.modelType, copyJsonIconAsRef)">
+                                            <template #prepend>
+                                                <v-icon size="x-small">{{ copyJsonIcon }} </v-icon>
+                                            </template>
+                                            <v-list-item-subtitle
+                                                >Copy {{ item.modelType }} as JSON</v-list-item-subtitle
                                             >
                                         </v-list-item>
                                     </v-list>
@@ -301,7 +319,7 @@
 
     // Composables
     const { nameToDisplay } = useReferableUtils();
-    const { copyToClipboard } = useClipboardUtil();
+    const { copyToClipboard, copyJsonToClipboard } = useClipboardUtil();
 
     // Stores
     const navigationStore = useNavigationStore();
@@ -330,12 +348,14 @@
 
     // Data
     const copyIcon = ref<string>('mdi-clipboard-file-outline');
+    const copyJsonIcon = ref<string>('mdi-clipboard-text-outline');
 
     // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode);
     const editorMode = computed(() => ['AASEditor', 'SMEditor'].includes(route.name as string));
     const isMobile = computed(() => navigationStore.getIsMobile);
     const copyIconAsRef = computed(() => copyIcon);
+    const copyJsonIconAsRef = computed(() => copyJsonIcon);
 
     function toggleTree(smOrSme: any): void {
         smOrSme.showChildren = !smOrSme.showChildren;
