@@ -10,7 +10,17 @@ export function useClipboardUtil() {
         iconReference.value = 'mdi-check';
 
         // copy value to clipboard
-        navigator.clipboard.writeText(value);
+        try {
+            navigator.clipboard.writeText(value);
+        } catch {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'false',
+                btnColor: 'buttonText',
+                text: 'Failed to copy JSON to Clipboard.',
+            });
+        }
 
         // set the clipboard tooltip to false after 1.5 seconds
         setTimeout(() => {
@@ -36,7 +46,17 @@ export function useClipboardUtil() {
         iconReference.value = 'mdi-check';
 
         // copy value to clipboard
-        navigator.clipboard.writeText(JSON.stringify(cleanedValue, null, 2));
+        try {
+            navigator.clipboard.writeText(JSON.stringify(cleanedValue, null, 2));
+        } catch {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'false',
+                btnColor: 'buttonText',
+                text: 'Failed to copy JSON to Clipboard.',
+            });
+        }
 
         // set the clipboard tooltip to false after 1.5 seconds
         setTimeout(() => {
@@ -50,8 +70,11 @@ export function useClipboardUtil() {
             color: 'success',
             btnColor: 'buttonText',
             text:
-                (valueName.trim() !== '' ? valueName : "'" + JSON.stringify(cleanedValue) + "'") +
-                ' copied to Clipboard.',
+                (valueName.trim() !== ''
+                    ? valueName
+                    : typeof cleanedValue === 'object' && cleanedValue !== null && 'modelType' in cleanedValue
+                      ? (cleanedValue as { modelType?: string }).modelType || 'JSON'
+                      : 'JSON') + ' copied to Clipboard.',
         });
     }
 
