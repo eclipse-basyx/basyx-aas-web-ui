@@ -106,6 +106,32 @@
                                         </template>
                                         <span>Create a new Submodel from JSON</span>
                                     </v-tooltip>
+                                    <v-divider></v-divider>
+                                    <!-- Paste Submodel from internal clipboard -->
+                                    <v-tooltip open-delay="600" location="end">
+                                        <template #activator="{ props }">
+                                            <v-list-item
+                                                :disabled="
+                                                    !clipboardElementContentType ||
+                                                    clipboardElementContentType !== 'Submodel'
+                                                "
+                                                slim
+                                                v-bind="props"
+                                                @click="pasteElement">
+                                                <template #prepend>
+                                                    <v-icon size="small">mdi-file-document-multiple-outline</v-icon>
+                                                </template>
+                                                {{
+                                                    `Paste ${!clipboardElementContentType || clipboardElementContentType !== 'Submodel' ? '' : clipboardElementContentType}`
+                                                }}
+                                            </v-list-item>
+                                        </template>
+                                        <span>
+                                            {{
+                                                `Paste ${!clipboardElementContentType || clipboardElementContentType !== 'Submodel' ? '' : 'copied ' + clipboardElementContentType}`
+                                            }}
+                                        </span>
+                                    </v-tooltip>
                                 </v-list>
                             </v-sheet>
                         </v-menu>
@@ -243,7 +269,9 @@
     import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
+    import { useClipboardUtil } from '@/composables/ClipboardUtil';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useClipboardStore } from '@/store/ClipboardStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { isEmptyString } from '@/utils/StringUtils';
@@ -255,11 +283,13 @@
     const { fetchAasSmListById } = useAASHandling();
     const { fetchSmList } = useSMHandling();
     const { nameToDisplay, descriptionToDisplay } = useReferableUtils();
+    const { pasteElement } = useClipboardUtil();
 
     // Stores
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
     const envStore = useEnvStore();
+    const clipboardStore = useClipboardStore();
 
     // Data
     const submodelTree = ref([] as Array<any>) as Ref<Array<any>>; // Submodel Treeview Data
@@ -301,6 +331,7 @@
     const singleAas = computed(() => envStore.getSingleAas); // Get the single AAS state from the Store
     const editorMode = computed(() => ['AASEditor', 'SMEditor'].includes(route.name as string));
     const triggerTreeviewReload = computed(() => navigationStore.getTriggerTreeviewReload); // Reload the Treeview
+    const clipboardElementContentType = computed(() => clipboardStore.getClipboardElementModelType()); // Get the Clipboard Element Content Type
 
     // Watchers
     watch(

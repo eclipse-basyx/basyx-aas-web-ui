@@ -120,9 +120,12 @@
     /* eslint-enable simple-import-sort/imports */
     import { computed, nextTick, onMounted, ref, watch } from 'vue';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useClipboardUtil } from '@/composables/ClipboardUtil';
 
     // Stores
     const aasStore = useAASStore();
+
+    const { cleanObjectRecursively } = useClipboardUtil();
 
     // Reactive variables
     const jsonContent = ref<string>('');
@@ -145,8 +148,8 @@
     const selectedNode = computed(() => aasStore.getSelectedNode);
 
     const lineCount = computed(() => {
-        if (!formattedJson.value) return 0;
-        return formattedJson.value.split('\n').length;
+        if (!jsonContent.value) return 0;
+        return jsonContent.value.split('\n').length;
     });
 
     onMounted(() => {
@@ -193,24 +196,6 @@
         }
     });
 
-    function removePathProperties(obj: unknown): unknown {
-        if (obj === null || typeof obj !== 'object') {
-            return obj;
-        }
-
-        if (Array.isArray(obj)) {
-            return obj.map((item) => removePathProperties(item));
-        }
-
-        const result: Record<string, unknown> = {};
-        for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
-            if (key !== 'path') {
-                result[key] = removePathProperties(value);
-            }
-        }
-        return result;
-    }
-
     function processSelectedNode(): void {
         loading.value = true;
         error.value = null;
@@ -229,23 +214,8 @@
             // Create a copy of the selected node
             const nodeCopy = JSON.parse(JSON.stringify(selectedNode.value));
 
-            // Remove timestamp property from top level
-            if ('timestamp' in nodeCopy) {
-                delete nodeCopy.timestamp;
-            }
-
-            // Remove conceptDescriptions property from top level
-            if ('conceptDescriptions' in nodeCopy) {
-                delete nodeCopy.conceptDescriptions;
-            }
-
-            // Remove endpoints property from top level
-            if ('endpoints' in nodeCopy) {
-                delete nodeCopy.endpoints;
-            }
-
-            // Remove all path properties recursively
-            const cleanedNode = removePathProperties(nodeCopy);
+            // Clean the selected node
+            const cleanedNode = cleanObjectRecursively(nodeCopy);
 
             jsonContent.value = JSON.stringify(cleanedNode, null, 2);
 
@@ -315,31 +285,6 @@
         });
     }
 
-    function formatJSON(json: string): string {
-        try {
-            // Check if input is valid
-            if (!json || typeof json !== 'string') {
-                return '';
-            }
-
-            const trimmedJson = json.trim();
-            if (!trimmedJson) {
-                return '';
-            }
-
-            try {
-                const obj = JSON.parse(trimmedJson);
-                return JSON.stringify(obj, null, 2);
-            } catch (parseError) {
-                console.warn('JSON parsing warning:', parseError);
-                return trimmedJson;
-            }
-        } catch (e) {
-            console.error('Error formatting JSON:', e);
-            return json;
-        }
-    }
-
     function highlightJson(): void {
         if (!jsonContent.value) {
             formattedJson.value = '';
@@ -347,21 +292,19 @@
         }
 
         try {
-            const formatted = formatJSON(jsonContent.value);
-
-            // Apply syntax highlighting using Prism
+            // Apply syntax highlighting using Prism directly on the already cleaned and formatted jsonContent
             if (
                 typeof window !== 'undefined' &&
                 window.Prism &&
                 window.Prism.highlight &&
                 window.Prism.languages.json
             ) {
-                formattedJson.value = window.Prism.highlight(formatted, window.Prism.languages.json, 'json');
+                formattedJson.value = window.Prism.highlight(jsonContent.value, window.Prism.languages.json, 'json');
             } else if (Prism && Prism.highlight && Prism.languages.json) {
-                formattedJson.value = Prism.highlight(formatted, Prism.languages.json, 'json');
+                formattedJson.value = Prism.highlight(jsonContent.value, Prism.languages.json, 'json');
             } else {
                 // Fallback to unformatted JSON if Prism is not available
-                formattedJson.value = formatted;
+                formattedJson.value = jsonContent.value;
                 console.warn('Prism highlighting not available, using plain text');
             }
         } catch (e) {

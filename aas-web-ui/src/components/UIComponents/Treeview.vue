@@ -102,13 +102,13 @@
                                         text="Add Submodel Element"
                                         :open-delay="600"
                                         location="bottom">
-                                        <template #activator="{ props }">
+                                        <template #activator="{ props: addSubmodelElementTooltipProps }">
                                             <v-btn
                                                 icon="mdi-plus"
                                                 size="small"
                                                 variant="plain"
                                                 color="subtitleText"
-                                                v-bind="props"
+                                                v-bind="addSubmodelElementTooltipProps"
                                                 class="ml-1"
                                                 :style="{
                                                     display: isHovering ? 'block' : 'none',
@@ -124,13 +124,13 @@
                                         text="Copy Path to Clipboard"
                                         :open-delay="600"
                                         location="bottom">
-                                        <template #activator="{ props }">
+                                        <template #activator="{ props: copyPathTooltipProps }">
                                             <v-btn
                                                 :icon="copyIcon"
                                                 size="small"
                                                 variant="plain"
                                                 color="subtitleText"
-                                                v-bind="props"
+                                                v-bind="copyPathTooltipProps"
                                                 class="ml-1"
                                                 :style="{
                                                     display: isHovering ? 'block' : 'none',
@@ -143,128 +143,212 @@
                                 </div>
                             </div>
                             <!-- Context menu for Submodels -->
-                            <v-menu v-if="editorMode && item.modelType === 'Submodel'">
-                                <template #activator="{ props }">
+                            <v-menu v-if="editorMode && item.modelType === 'Submodel'" :close-on-content-click="false">
+                                <template #activator="{ props: contextMenuProps }">
                                     <v-btn
                                         icon="mdi-dots-vertical"
                                         size="small"
                                         variant="plain"
                                         color="subtitleText"
-                                        v-bind="props"></v-btn>
+                                        v-bind="contextMenuProps"></v-btn>
                                 </template>
-                                <v-sheet border>
-                                    <v-list dense density="compact" class="py-0" slim>
-                                        <!-- Open Add SubmodelElement dialog -->
-                                        <v-list-item @click="$emit('openAddSubmodelElementDialog', item)">
-                                            <template #prepend>
-                                                <v-icon size="x-small">mdi-plus</v-icon>
-                                            </template>
-                                            <v-list-item-subtitle>Add Submodel Element</v-list-item-subtitle>
-                                        </v-list-item>
-                                        <!-- Open Insert SubmodelElement from JSON dialog -->
-                                        <v-list-item @click="$emit('openJsonInsertDialog', item)">
-                                            <template #prepend>
-                                                <v-icon size="x-small">mdi-code-json</v-icon>
-                                            </template>
-                                            <v-list-item-subtitle>Submodel Element from JSON</v-list-item-subtitle>
-                                        </v-list-item>
-                                        <v-divider></v-divider>
-                                        <!-- Open Submodel edit dialog -->
-                                        <v-list-item @click="$emit('openEditDialog', item)">
-                                            <template #prepend>
-                                                <v-icon size="x-small">mdi-pencil</v-icon>
-                                            </template>
-                                            <v-list-item-subtitle>Edit Submodel</v-list-item-subtitle>
-                                        </v-list-item>
-                                        <!-- Delete Submodel -->
-                                        <v-list-item @click="$emit('showDeleteDialog', item)">
-                                            <template #prepend>
-                                                <v-icon size="x-small">mdi-delete</v-icon>
-                                            </template>
-                                            <v-list-item-subtitle>Delete Submodel</v-list-item-subtitle>
-                                        </v-list-item>
-                                        <v-divider></v-divider>
-                                        <!-- Copy SM Endpoint to clipboard -->
-                                        <v-list-item
-                                            @click.stop="copyToClipboard(item.path, 'SM Endpoint', copyIconAsRef)">
-                                            <template #prepend>
-                                                <v-icon size="x-small">{{ copyIcon }} </v-icon>
-                                            </template>
-                                            <v-list-item-subtitle>Copy Submodel Endpoint</v-list-item-subtitle>
-                                        </v-list-item>
-                                    </v-list>
-                                </v-sheet>
+                                <template #default="{ isActive }">
+                                    <v-sheet border>
+                                        <v-list dense density="compact" class="py-0" slim>
+                                            <!-- Open Add SubmodelElement dialog -->
+                                            <v-list-item @click="openAddSubmodelElementDialog(item, isActive)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">mdi-plus</v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>Add Submodel Element</v-list-item-subtitle>
+                                            </v-list-item>
+                                            <!-- Open Insert SubmodelElement from JSON dialog -->
+                                            <v-list-item @click="openJsonInsertDialog(item, isActive)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">mdi-code-json</v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>Submodel Element from JSON</v-list-item-subtitle>
+                                            </v-list-item>
+                                            <v-divider></v-divider>
+                                            <!-- Open Submodel edit dialog -->
+                                            <v-list-item @click="openEditDialog(item, isActive)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">mdi-pencil</v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>Edit Submodel</v-list-item-subtitle>
+                                            </v-list-item>
+                                            <!-- Delete Submodel -->
+                                            <v-list-item @click="openDeleteDialog(item, isActive)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">mdi-delete</v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>Delete Submodel</v-list-item-subtitle>
+                                            </v-list-item>
+                                            <v-divider></v-divider>
+                                            <!-- Copy SM to internal clipboard -->
+                                            <v-list-item
+                                                @click.stop="copyElement(item, 'Submodel', copyInternalIconAsRef)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">{{ copyInternalIcon }} </v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>Copy Submodel</v-list-item-subtitle>
+                                            </v-list-item>
+                                            <!-- Copy SM Endpoint to clipboard -->
+                                            <v-list-item
+                                                @click.stop="copyToClipboard(item.path, 'SM Endpoint', copyIconAsRef)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">{{ copyIcon }} </v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>Copy Submodel Endpoint</v-list-item-subtitle>
+                                            </v-list-item>
+                                            <!-- Copy SM as JSON -->
+                                            <v-list-item
+                                                @click.stop="copyJsonToClipboard(item, 'Submodel', copyJsonIconAsRef)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">{{ copyJsonIcon }} </v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>Copy Submodel as JSON</v-list-item-subtitle>
+                                            </v-list-item>
+                                            <v-divider></v-divider>
+                                            <!-- Paste SubmodelElement from internal clipboard -->
+                                            <v-list-item
+                                                :disabled="
+                                                    !clipboardElementContentType ||
+                                                    clipboardElementContentType === 'Submodel'
+                                                "
+                                                @click.stop="pasteElement(item)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">{{ pasteIcon }} </v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>
+                                                    {{
+                                                        `Paste ${!clipboardElementContentType || clipboardElementContentType === 'Submodel' ? '' : clipboardElementContentType}`
+                                                    }}
+                                                </v-list-item-subtitle>
+                                            </v-list-item>
+                                        </v-list>
+                                    </v-sheet>
+                                </template>
                             </v-menu>
                             <!-- Context menu for Submodel Elements -->
-                            <v-menu v-if="editorMode && item.modelType !== 'Submodel'">
-                                <template #activator="{ props }">
+                            <v-menu v-if="editorMode && item.modelType !== 'Submodel'" :close-on-content-click="false">
+                                <template #activator="{ props: contextMenuProps }">
                                     <v-btn
                                         icon="mdi-dots-vertical"
                                         size="small"
                                         variant="plain"
                                         color="subtitleText"
-                                        v-bind="props"></v-btn>
+                                        v-bind="contextMenuProps"></v-btn>
                                 </template>
-                                <v-sheet border>
-                                    <v-list dense density="compact" class="py-0" slim>
-                                        <!-- Open Add SubmodelElement dialog -->
-                                        <v-list-item
-                                            v-if="
-                                                item.modelType === 'SubmodelElementCollection' ||
-                                                item.modelType === 'SubmodelElementList' ||
-                                                item.modelType === 'Entity'
-                                            "
-                                            @click="$emit('openAddSubmodelElementDialog', item)">
-                                            <template #prepend>
-                                                <v-icon size="x-small">mdi-plus</v-icon>
-                                            </template>
-                                            <v-list-item-subtitle>Add Submodel Element</v-list-item-subtitle>
-                                        </v-list-item>
-                                        <!-- Open Insert SubmodelElement from JSON dialog -->
-                                        <v-list-item
-                                            v-if="
-                                                item.modelType === 'SubmodelElementCollection' ||
-                                                item.modelType === 'SubmodelElementList' ||
-                                                item.modelType === 'Entity'
-                                            "
-                                            @click="$emit('openJsonInsertDialog', item)">
-                                            <template #prepend>
-                                                <v-icon size="x-small">mdi-code-json</v-icon>
-                                            </template>
-                                            <v-list-item-subtitle>Submodel Element from JSON</v-list-item-subtitle>
-                                        </v-list-item>
-                                        <v-divider
-                                            v-if="
-                                                item.modelType === 'SubmodelElementCollection' ||
-                                                item.modelType === 'SubmodelElementList' ||
-                                                item.modelType === 'Entity'
-                                            "></v-divider>
-                                        <!-- Open Submodel Element edit dialog -->
-                                        <v-list-item @click="$emit('openEditSubmodelElementDialog', item)">
-                                            <template #prepend>
-                                                <v-icon size="x-small">mdi-pencil</v-icon>
-                                            </template>
-                                            <v-list-item-subtitle>Edit {{ item.modelType }}</v-list-item-subtitle>
-                                        </v-list-item>
-                                        <!-- Delete Submodel Element -->
-                                        <v-list-item @click="$emit('showDeleteDialog', item)">
-                                            <template #prepend>
-                                                <v-icon size="x-small">mdi-delete</v-icon>
-                                            </template>
-                                            <v-list-item-subtitle>Delete {{ item.modelType }}</v-list-item-subtitle>
-                                        </v-list-item>
-                                        <v-divider></v-divider>
-                                        <!-- Copy SM endpoint to clipboard -->
-                                        <v-list-item @click="copyToClipboard(item.path, 'Path', copyIconAsRef)">
-                                            <template #prepend>
-                                                <v-icon size="x-small">{{ copyIcon }} </v-icon>
-                                            </template>
-                                            <v-list-item-subtitle
-                                                >Copy {{ item.modelType }} Endpoint</v-list-item-subtitle
-                                            >
-                                        </v-list-item>
-                                    </v-list>
-                                </v-sheet>
+                                <template #default="{ isActive }">
+                                    <v-sheet border>
+                                        <v-list dense density="compact" class="py-0" slim>
+                                            <!-- Open Add SubmodelElement dialog -->
+                                            <v-list-item
+                                                v-if="
+                                                    item.modelType === 'SubmodelElementCollection' ||
+                                                    item.modelType === 'SubmodelElementList' ||
+                                                    item.modelType === 'Entity'
+                                                "
+                                                @click="openAddSubmodelElementDialog(item, isActive)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">mdi-plus</v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>Add Submodel Element</v-list-item-subtitle>
+                                            </v-list-item>
+                                            <!-- Open Insert SubmodelElement from JSON dialog -->
+                                            <v-list-item
+                                                v-if="
+                                                    item.modelType === 'SubmodelElementCollection' ||
+                                                    item.modelType === 'SubmodelElementList' ||
+                                                    item.modelType === 'Entity'
+                                                "
+                                                @click="openJsonInsertDialog(item, isActive)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">mdi-code-json</v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>Submodel Element from JSON</v-list-item-subtitle>
+                                            </v-list-item>
+                                            <v-divider
+                                                v-if="
+                                                    item.modelType === 'SubmodelElementCollection' ||
+                                                    item.modelType === 'SubmodelElementList' ||
+                                                    item.modelType === 'Entity'
+                                                "></v-divider>
+                                            <!-- Open Submodel Element edit dialog -->
+                                            <v-list-item @click="openSubmodelElementEditDialog(item, isActive)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">mdi-pencil</v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>Edit {{ item.modelType }}</v-list-item-subtitle>
+                                            </v-list-item>
+                                            <!-- Delete Submodel Element -->
+                                            <v-list-item @click="openDeleteDialog(item, isActive)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">mdi-delete</v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>Delete {{ item.modelType }}</v-list-item-subtitle>
+                                            </v-list-item>
+                                            <v-divider></v-divider>
+                                            <!-- Copy SME to internal clipboard -->
+                                            <v-list-item
+                                                @click="copyElement(item, item.modelType, copyInternalIconAsRef)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">{{ copyInternalIcon }} </v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>Copy {{ item.modelType }}</v-list-item-subtitle>
+                                            </v-list-item>
+                                            <!-- Copy SME endpoint to clipboard -->
+                                            <v-list-item @click="copyToClipboard(item.path, 'Path', copyIconAsRef)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">{{ copyIcon }} </v-icon>
+                                                </template>
+                                                <v-list-item-subtitle
+                                                    >Copy {{ item.modelType }} Endpoint</v-list-item-subtitle
+                                                >
+                                            </v-list-item>
+                                            <!-- Copy SME as JSON -->
+                                            <v-list-item
+                                                @click.stop="
+                                                    copyJsonToClipboard(item, item.modelType, copyJsonIconAsRef)
+                                                ">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">{{ copyJsonIcon }} </v-icon>
+                                                </template>
+                                                <v-list-item-subtitle
+                                                    >Copy {{ item.modelType }} as JSON</v-list-item-subtitle
+                                                >
+                                            </v-list-item>
+                                            <v-divider
+                                                v-if="
+                                                    item.modelType === 'SubmodelElementCollection' ||
+                                                    item.modelType === 'SubmodelElementList' ||
+                                                    item.modelType === 'Entity'
+                                                "></v-divider>
+                                            <!-- Paste SubmodelElement from internal clipboard -->
+                                            <v-list-item
+                                                v-if="
+                                                    item.modelType === 'SubmodelElementCollection' ||
+                                                    item.modelType === 'SubmodelElementList' ||
+                                                    item.modelType === 'Entity'
+                                                "
+                                                :disabled="
+                                                    !clipboardElementContentType ||
+                                                    clipboardElementContentType === 'Submodel'
+                                                "
+                                                @click="pasteElement(item)">
+                                                <template #prepend>
+                                                    <v-icon size="x-small">{{ pasteIcon }} </v-icon>
+                                                </template>
+                                                <v-list-item-subtitle>
+                                                    {{
+                                                        `Paste ${!clipboardElementContentType || clipboardElementContentType === 'Submodel' ? '' : clipboardElementContentType}`
+                                                    }}
+                                                </v-list-item-subtitle>
+                                            </v-list-item>
+                                        </v-list>
+                                    </v-sheet>
+                                </template>
                             </v-menu>
                             <template v-else-if="editorMode"></template>
                         </template>
@@ -288,11 +372,12 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, ref } from 'vue';
+    import { computed, Ref, ref } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useClipboardUtil } from '@/composables/ClipboardUtil';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useClipboardStore } from '@/store/ClipboardStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     // Vue Router
@@ -301,11 +386,12 @@
 
     // Composables
     const { nameToDisplay } = useReferableUtils();
-    const { copyToClipboard } = useClipboardUtil();
+    const { copyToClipboard, copyJsonToClipboard, pasteElement } = useClipboardUtil();
 
     // Stores
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
+    const clipboardStore = useClipboardStore();
 
     // Props
     defineProps({
@@ -320,7 +406,7 @@
     });
 
     // Emits
-    defineEmits<{
+    const emit = defineEmits<{
         (event: 'openEditDialog', item: any): void;
         (event: 'showDeleteDialog', item: any): void;
         (event: 'openAddSubmodelElementDialog', item: any): void;
@@ -329,13 +415,19 @@
     }>();
 
     // Data
+    const copyInternalIcon = ref<string>('mdi-clipboard-outline');
     const copyIcon = ref<string>('mdi-clipboard-file-outline');
+    const copyJsonIcon = ref<string>('mdi-clipboard-text-outline');
+    const pasteIcon = ref<string>('mdi-file-document-multiple-outline');
 
     // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode);
     const editorMode = computed(() => ['AASEditor', 'SMEditor'].includes(route.name as string));
     const isMobile = computed(() => navigationStore.getIsMobile);
+    const copyInternalIconAsRef = computed(() => copyInternalIcon);
     const copyIconAsRef = computed(() => copyIcon);
+    const copyJsonIconAsRef = computed(() => copyJsonIcon);
+    const clipboardElementContentType = computed(() => clipboardStore.getClipboardElementModelType());
 
     function toggleTree(smOrSme: any): void {
         smOrSme.showChildren = !smOrSme.showChildren;
@@ -386,6 +478,51 @@
             item.modelType === 'SubmodelElementList' ||
             item.modelType === 'Entity'
         );
+    }
+
+    function copyElement(item: any, valueName: string, iconRef: any): void {
+        iconRef.value = 'mdi-check';
+        clipboardStore.setClipboardContent(item);
+        navigationStore.dispatchSnackbar({
+            status: true,
+            timeout: 2000,
+            color: 'success',
+            btnColor: 'buttonText',
+            text:
+                (valueName.trim() !== ''
+                    ? valueName
+                    : typeof item === 'object' && item !== null && 'modelType' in item
+                      ? (item as { modelType?: string }).modelType || 'JSON'
+                      : 'JSON') + ' copied to Clipboard.',
+        });
+        setTimeout(() => {
+            iconRef.value = 'mdi-clipboard-outline';
+        }, 2000);
+    }
+
+    function openAddSubmodelElementDialog(item: any, isActive: Ref<boolean>): void {
+        isActive.value = false;
+        emit('openAddSubmodelElementDialog', item);
+    }
+
+    function openJsonInsertDialog(item: any, isActive: Ref<boolean>): void {
+        isActive.value = false;
+        emit('openJsonInsertDialog', item);
+    }
+
+    function openEditDialog(item: any, isActive: Ref<boolean>): void {
+        isActive.value = false;
+        emit('openEditDialog', item);
+    }
+
+    function openSubmodelElementEditDialog(item: any, isActive: Ref<boolean>): void {
+        isActive.value = false;
+        emit('openEditSubmodelElementDialog', item);
+    }
+
+    function openDeleteDialog(item: any, isActive: Ref<boolean>): void {
+        isActive.value = false;
+        emit('showDeleteDialog', item);
     }
 </script>
 
