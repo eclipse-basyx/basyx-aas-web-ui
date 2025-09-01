@@ -7,8 +7,7 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
+<script setup lang="ts">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
     import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
@@ -16,288 +15,250 @@
     import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
     import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
     import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
-    import { defineComponent } from 'vue';
-    import { useTheme } from 'vuetify';
+    import { computed, onMounted, ref, watch } from 'vue';
     import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
-    import { useRequestHandling } from '@/composables/RequestHandling';
-    import { useAASStore } from '@/store/AASDataStore';
     import { useAuthStore } from '@/store/AuthStore';
-    import { useNavigationStore } from '@/store/NavigationStore';
 
-    export default defineComponent({
-        name: 'CADPreview',
-        props: ['submodelElementData'],
+    // Props
+    const props = defineProps<{
+        submodelElementData: any;
+    }>();
 
-        setup() {
-            const theme = useTheme();
-            const navigationStore = useNavigationStore();
-            const aasStore = useAASStore();
-            const authStore = useAuthStore();
+    // Template refs
+    const viewerContainer = ref<HTMLElement>();
 
-            const { valueUrl } = useSMEFile();
-            const { getRequest } = useRequestHandling();
+    // Composables and stores
+    const authStore = useAuthStore();
+    const { valueUrl } = useSMEFile();
 
-            return {
-                theme, // Theme Object
-                navigationStore, // NavigationStore Object
-                aasStore, // AASStore Object
-                authStore,
-                valueUrl,
-                getRequest,
-            };
-        },
+    // Reactive data
+    const localPathValue = ref('');
 
-        data() {
-            return {
-                localPathValue: '', // Path to the File when it is embedded to the AAS
-            };
-        },
+    // Computed properties
+    const authToken = computed(() => authStore.getToken);
 
-        computed: {
-            // Get the selected Treeview Node (SubmodelElement) from the store
-            SelectedNode() {
-                return this.aasStore.getSelectedNode;
-            },
-
-            authToken() {
-                return this.authStore.getToken;
-            },
-        },
-
-        watch: {
-            submodelElementData() {
-                if (this.submodelElementData.modelType == 'File') {
-                    this.localPathValue = this.valueUrl(this.submodelElementData).url;
-                    // this.initThree();
-                }
-            },
-        },
-
-        mounted() {
-            if (this.submodelElementData.modelType == 'File') {
-                this.localPathValue = this.valueUrl(this.submodelElementData).url;
-                this.initThree();
+    // Watchers
+    watch(
+        () => props.submodelElementData,
+        () => {
+            if (props.submodelElementData.modelType == 'File') {
+                localPathValue.value = valueUrl(props.submodelElementData).url;
             }
-        },
+        }
+    );
 
-        methods: {
-            // Function to initialize the Three.js Scene
-            initThree() {
-                // create a new Three.js scene
-                const scene = new THREE.Scene();
-                scene.background = new THREE.Color(0x343434);
+    onMounted(() => {
+        if (props.submodelElementData.modelType == 'File') {
+            localPathValue.value = valueUrl(props.submodelElementData).url;
+            initThree();
+        }
+    });
 
-                // get the container element
-                const container = this.$refs.viewerContainer as HTMLElement;
+    // Methods
+    function initThree(): void {
+        // create a new Three.js scene
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x343434);
 
-                // create a new Three.js camera
-                const camera = new THREE.PerspectiveCamera(
-                    75,
-                    container.clientWidth / container.clientHeight,
-                    0.1,
-                    1000
-                );
-                camera.position.set(0, 0, 5);
+        // get the container element
+        const container = viewerContainer.value as HTMLElement;
 
-                // create a new Three.js renderer
-                const renderer = new THREE.WebGLRenderer({ antialias: true });
-                renderer.setSize(container.clientWidth, container.clientHeight);
-                renderer.shadowMap.enabled = true;
-                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-                container.appendChild(renderer.domElement);
+        // create a new Three.js camera
+        const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(0, 0, 5);
 
-                // Get the v-card element
-                const vCard = document.getElementById('viewerCard') as HTMLElement;
+        // create a new Three.js renderer
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
 
-                // Add a resize observer to the v-card
-                new ResizeObserver(() => {
-                    // Update the size of the renderer
-                    renderer.setSize(vCard.clientWidth, vCard.clientHeight);
+        // Get the v-card element
+        const vCard = document.getElementById('viewerCard') as HTMLElement;
 
-                    // Update the aspect ratio of the camera
-                    camera.aspect = vCard.clientWidth / vCard.clientHeight;
-                    camera.updateProjectionMatrix();
-                }).observe(vCard);
+        // Add a resize observer to the v-card
+        new ResizeObserver(() => {
+            // Update the size of the renderer
+            renderer.setSize(vCard.clientWidth, vCard.clientHeight);
 
-                // create a new Three.js OrbitControls
-                const controls = new OrbitControls(camera, renderer.domElement);
-                controls.enableDamping = true;
-                controls.dampingFactor = 0.05;
+            // Update the aspect ratio of the camera
+            camera.aspect = vCard.clientWidth / vCard.clientHeight;
+            camera.updateProjectionMatrix();
+        }).observe(vCard);
 
-                // clock
-                const clock = new THREE.Clock();
+        // create a new Three.js OrbitControls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
 
-                // check the mime type of the file
-                let contentType = this.submodelElementData.contentType;
-                // check if the file is a STL file
-                if (
-                    contentType == 'application/sla' ||
-                    contentType == 'application/vnd.ms-pki.stl' ||
-                    contentType == 'application/stl' ||
-                    contentType == 'model/stl' ||
-                    contentType == 'text/stl' ||
-                    contentType == 'text/x-stl' ||
-                    contentType == 'text/x-sla'
-                ) {
-                    this.importSTL(scene);
-                    // check if the file is an obj file
-                } else if (contentType == 'application/obj') {
-                    this.importOBJ(scene);
-                    // check if the file is a gltf file
-                } else if (contentType == 'model/gltf+json') {
-                    this.importGLTF(scene);
-                } else {
-                    // console.log('Unsupported File Type');
-                    return;
-                }
+        // clock
+        const clock = new THREE.Clock();
 
-                // add a view cube with three.js view helper
-                const viewHelper = new ViewHelper(camera, renderer.domElement);
-                // add orbiatlcontrols to the view helper
-                viewHelper.center = controls.target;
+        // check the mime type of the file
+        let contentType = props.submodelElementData.contentType;
+        // check if the file is a STL file
+        if (
+            contentType == 'application/sla' ||
+            contentType == 'application/vnd.ms-pki.stl' ||
+            contentType == 'application/stl' ||
+            contentType == 'model/stl' ||
+            contentType == 'text/stl' ||
+            contentType == 'text/x-stl' ||
+            contentType == 'text/x-sla'
+        ) {
+            importSTL(scene);
+            // check if the file is an obj file
+        } else if (contentType == 'application/obj') {
+            importOBJ(scene);
+            // check if the file is a gltf file
+        } else if (contentType == 'model/gltf+json') {
+            importGLTF(scene);
+        } else {
+            // console.log('Unsupported File Type');
+            return;
+        }
 
-                const div = document.createElement('div');
-                div.id = 'viewHelper';
-                div.style.position = 'absolute';
-                div.style.right = String(0);
-                div.style.bottom = String(0);
-                div.style.height = `${128}px`;
-                div.style.width = `${128}px`;
+        // add a view cube with three.js view helper
+        const viewHelper = new ViewHelper(camera, renderer.domElement);
+        // add orbiatlcontrols to the view helper
+        viewHelper.center = controls.target;
 
-                container.appendChild(div);
+        const div = document.createElement('div');
+        div.id = 'viewHelper';
+        div.style.position = 'absolute';
+        div.style.right = String(0);
+        div.style.bottom = String(0);
+        div.style.height = `${128}px`;
+        div.style.width = `${128}px`;
 
-                div.addEventListener('pointerup', (event) => viewHelper.handleClick(event));
+        container.appendChild(div);
 
-                // add a directional light to the scene
-                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-                directionalLight.position.set(0, 10, 0);
-                directionalLight.castShadow = true;
-                directionalLight.shadow.mapSize.width = 1024;
-                directionalLight.shadow.mapSize.height = 1024;
-                directionalLight.shadow.camera.near = 0.1;
-                directionalLight.shadow.camera.far = 100;
-                scene.add(directionalLight);
+        div.addEventListener('pointerup', (event) => viewHelper.handleClick(event));
 
-                // add ambient light to the scene
-                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-                scene.add(ambientLight);
+        // add a directional light to the scene
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(0, 10, 0);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.mapSize.width = 1024;
+        directionalLight.shadow.mapSize.height = 1024;
+        directionalLight.shadow.camera.near = 0.1;
+        directionalLight.shadow.camera.far = 100;
+        scene.add(directionalLight);
 
-                // create an outline effect instance
-                const outline = new OutlineEffect(renderer, {
-                    defaultThickness: 0.003,
-                    defaultColor: new THREE.Color('black').toArray(),
-                });
+        // add ambient light to the scene
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
 
-                // render the scene
-                const animate = () => {
-                    // render main scene
-                    requestAnimationFrame(animate);
+        // create an outline effect instance
+        const outline = new OutlineEffect(renderer, {
+            defaultThickness: 0.003,
+            defaultColor: new THREE.Color('black').toArray(),
+        });
 
-                    const delta = clock.getDelta();
-                    if (viewHelper.animating) viewHelper.update(delta);
+        // render the scene
+        const animate = () => {
+            // render main scene
+            requestAnimationFrame(animate);
 
-                    // use the outline effect to render the scene
-                    outline.render(scene, camera);
+            const delta = clock.getDelta();
+            if (viewHelper.animating) viewHelper.update(delta);
 
-                    // save the current autoClear value
-                    const wasAutoClear = renderer.autoClear;
+            // use the outline effect to render the scene
+            outline.render(scene, camera);
 
-                    // disable autoClear
-                    renderer.autoClear = false;
+            // save the current autoClear value
+            const wasAutoClear = renderer.autoClear;
 
-                    // render view helper
-                    viewHelper.render(renderer);
+            // disable autoClear
+            renderer.autoClear = false;
 
-                    // restore the previous autoClear value
-                    renderer.autoClear = wasAutoClear;
+            // render view helper
+            viewHelper.render(renderer);
 
-                    controls.update();
-                };
-                animate();
+            // restore the previous autoClear value
+            renderer.autoClear = wasAutoClear;
+
+            controls.update();
+        };
+        animate();
+    }
+
+    // Function to import a STL file
+    function importSTL(scene: THREE.Scene): void {
+        fetch(localPathValue.value, {
+            headers: {
+                Authorization: `Bearer ${authToken.value}`,
             },
+        })
+            .then((response) => response.arrayBuffer())
+            .then((buffer) => {
+                const stlLoader = new STLLoader();
+                const geometry = stlLoader.parse(buffer);
+                const material = new THREE.MeshStandardMaterial({
+                    color: 0xffffff,
+                    metalness: 0.2,
+                    roughness: 0.5,
+                    envMapIntensity: 1.0,
+                    transparent: true,
+                    opacity: 0.5,
+                });
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.scale.multiplyScalar(0.03);
+                scene.add(mesh);
+            })
+            .catch((error) => console.error('Error loading STL:', error));
+    }
 
-            // Function to import a STL file
-            importSTL(scene: THREE.Scene) {
-                // Assuming authToken contains your authentication token
-
-                fetch(this.localPathValue, {
-                    headers: {
-                        Authorization: `Bearer ${this.authToken}`, // Adjust this according to your auth token type
-                    },
-                })
-                    .then((response) => response.arrayBuffer())
-                    .then((buffer) => {
-                        const stlLoader = new STLLoader();
-                        const geometry = stlLoader.parse(buffer);
-                        const material = new THREE.MeshStandardMaterial({
+    // Function to import a OBJ file
+    function importOBJ(scene: THREE.Scene): void {
+        fetch(localPathValue.value, {
+            headers: {
+                Authorization: `Bearer ${authToken.value}`,
+            },
+        })
+            .then((response) => response.text())
+            .then((text) => {
+                const objLoader = new OBJLoader();
+                const object = objLoader.parse(text);
+                object.traverse((child) => {
+                    if ((child as THREE.Mesh).isMesh) {
+                        const mesh = child as THREE.Mesh;
+                        mesh.material = new THREE.MeshStandardMaterial({
                             color: 0xffffff,
                             metalness: 0.2,
                             roughness: 0.5,
-                            envMapIntensity: 1.0,
-                            transparent: true,
-                            opacity: 0.5,
                         });
-                        const mesh = new THREE.Mesh(geometry, material);
                         mesh.scale.multiplyScalar(0.03);
-                        scene.add(mesh);
-                    })
-                    .catch((error) => console.error('Error loading STL:', error));
-            },
+                    }
+                });
+                scene.add(object);
+            })
+            .catch((error) => console.error('Error loading OBJ:', error));
+    }
 
-            // Function to import a OBJ file
-            importOBJ(scene: THREE.Scene) {
-                // Assuming authToken contains your authentication token
-                fetch(this.localPathValue, {
-                    headers: {
-                        Authorization: `Bearer ${this.authToken}`, // Adjust this according to your auth token type
-                    },
-                })
-                    .then((response) => response.text())
-                    .then((text) => {
-                        const objLoader = new OBJLoader();
-                        const object = objLoader.parse(text);
-                        object.traverse((child) => {
-                            if ((child as THREE.Mesh).isMesh) {
-                                const mesh = child as THREE.Mesh;
-                                mesh.material = new THREE.MeshStandardMaterial({
-                                    color: 0xffffff,
-                                    metalness: 0.2,
-                                    roughness: 0.5,
-                                });
-                                mesh.scale.multiplyScalar(0.03);
-                            }
-                        });
-                        scene.add(object);
-                    })
-                    .catch((error) => console.error('Error loading OBJ:', error));
+    // Function to import a GLTF file
+    function importGLTF(scene: THREE.Scene): void {
+        fetch(localPathValue.value, {
+            headers: {
+                Authorization: `Bearer ${authToken.value}`,
             },
-
-            // Function to import a glTF file
-            importGLTF(scene: THREE.Scene) {
-                // Assuming authToken contains your authentication token
-
-                fetch(this.localPathValue, {
-                    headers: {
-                        Authorization: `Bearer ${this.authToken}`, // Adjust this according to your auth token type
-                    },
-                })
-                    .then((response) => response.arrayBuffer())
-                    .then((buffer) => {
-                        const gltfLoader = new GLTFLoader();
-                        gltfLoader.parse(buffer, '', (gltf) => {
-                            gltf.scene.traverse((child) => {
-                                if ((child as THREE.Mesh).isMesh) {
-                                    const mesh = child as THREE.Mesh;
-                                    mesh.scale.multiplyScalar(0.03);
-                                }
-                            });
-                            scene.add(gltf.scene);
-                        });
-                    })
-                    .catch((error) => console.error('Error loading GLTF:', error));
-            },
-        },
-    });
+        })
+            .then((response) => response.arrayBuffer())
+            .then((buffer) => {
+                const gltfLoader = new GLTFLoader();
+                gltfLoader.parse(buffer, '', (gltf) => {
+                    gltf.scene.traverse((child) => {
+                        if ((child as THREE.Mesh).isMesh) {
+                            const mesh = child as THREE.Mesh;
+                            mesh.scale.multiplyScalar(0.03);
+                        }
+                    });
+                    scene.add(gltf.scene);
+                });
+            })
+            .catch((error) => console.error('Error loading GLTF:', error));
+    }
 </script>
 
 <style>
