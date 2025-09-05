@@ -10,7 +10,12 @@
                 ">
                 <div class="d-flex align-center">
                     <v-tooltip
-                        v-if="selectedAAS && Object.keys(selectedAAS).length > 0"
+                        v-if="
+                            ['SMViewer', 'SMEditor'].includes(route.name as string) ||
+                            (!['SMViewer', 'SMEditor'].includes(route.name as string) &&
+                                selectedAAS &&
+                                Object.keys(selectedAAS).length > 0)
+                        "
                         open-delay="600"
                         location="bottom"
                         :disabled="isMobile">
@@ -28,16 +33,27 @@
                         </template>
                         <span>Reload Submodel tree</span>
                     </v-tooltip>
-                    <span v-if="!selectedAAS || Object.keys(selectedAAS).length === 0 || singleAas" class="pl-4">
+                    <span
+                        v-if="
+                            !['SMViewer', 'SMEditor'].includes(route.name as string) &&
+                            (!selectedAAS || Object.keys(selectedAAS).length === 0)
+                        "
+                        class="pl-4">
                         Submodel tree
                     </span>
-                    <template v-else-if="!singleAas">
+                    <template v-else-if="!['SMViewer', 'SMEditor'].includes(route.name as string) && !singleAas">
                         <v-icon icon="custom:aasIcon" color="primary" size="small" class="" />
                         <span class="text-truncate ml-2">
                             {{ nameToDisplay(selectedAAS) }}
                         </span>
                     </template>
-                    <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
+                    <template
+                        v-if="
+                            ['SMViewer', 'SMEditor'].includes(route.name as string) ||
+                            (!['SMViewer', 'SMEditor'].includes(route.name as string) &&
+                                selectedAAS &&
+                                Object.keys(selectedAAS).length > 0)
+                        ">
                         <v-col class="pl-2 pr-0 py-0">
                             <v-text-field
                                 variant="outlined"
