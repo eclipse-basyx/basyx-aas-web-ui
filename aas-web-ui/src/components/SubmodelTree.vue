@@ -374,7 +374,6 @@
     });
 
     async function initialize(): Promise<void> {
-        // console.log(selectedNode.value);
         if (
             !['SMEditor', 'SMViewer'].includes(route.name as string) &&
             (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0)
@@ -452,7 +451,7 @@
             ) {
                 newItem.statements = deepMap(newItem.statements, fn); // Recursively map entity statements
             }
-            return Array.isArray(newItem)
+            return newItem && Array.isArray(newItem)
                 ? deepMap(newItem, fn) // Recursively map nested arrays
                 : fn(newItem);
         });
@@ -469,17 +468,28 @@
             sme.path = computePath(sme, parent, index);
             const expand = shouldExpandNode(sme.path);
 
-            if (sme.modelType === 'Submodel' && Array.isArray(sme.submodelElements) && sme.submodelElements.length) {
+            if (
+                sme.modelType === 'Submodel' &&
+                sme.submodelElements &&
+                Array.isArray(sme.submodelElements) &&
+                sme.submodelElements.length > 0
+            ) {
                 sme.children = prepareForTree(sme.submodelElements, sme);
                 sme.showChildren = expand;
             } else if (
                 ['SubmodelElementCollection', 'SubmodelElementList'].includes(sme.modelType) &&
+                sme.value &&
                 Array.isArray(sme.value) &&
-                sme.value.length
+                sme.value.length > 0
             ) {
                 sme.children = prepareForTree(sme.value, sme);
                 sme.showChildren = expand;
-            } else if (sme.modelType === 'Entity' && Array.isArray(sme.statements) && sme.statements.length) {
+            } else if (
+                sme.modelType === 'Entity' &&
+                sme.statements &&
+                Array.isArray(sme.statements) &&
+                sme.statements.length > 0
+            ) {
                 sme.children = prepareForTree(sme.statements, sme);
                 sme.showChildren = expand;
             }
@@ -492,15 +502,26 @@
         submodelElements.forEach((sme: any) => {
             sme.showChildren = false;
 
-            if (sme.modelType === 'Submodel' && Array.isArray(sme.submodelElements) && sme.submodelElements.length) {
+            if (
+                sme.modelType === 'Submodel' &&
+                sme.submodelElements &&
+                Array.isArray(sme.submodelElements) &&
+                sme.submodelElements.length > 0
+            ) {
                 collapseTree(sme.submodelElements);
             } else if (
                 ['SubmodelElementCollection', 'SubmodelElementList'].includes(sme.modelType) &&
+                sme.value &&
                 Array.isArray(sme.value) &&
-                sme.value.length
+                sme.value.length > 0
             ) {
                 collapseTree(sme.value);
-            } else if (sme.modelType === 'Entity' && Array.isArray(sme.statements) && sme.statements.length) {
+            } else if (
+                sme.modelType === 'Entity' &&
+                sme.statements &&
+                Array.isArray(sme.statements) &&
+                sme.statements.length > 0
+            ) {
                 collapseTree(sme.statements);
             }
         });
@@ -513,17 +534,24 @@
 
             if (
                 sme.modelType === 'Submodel' &&
+                sme.submodelElements &&
                 Array.isArray(sme.submodelElements) &&
                 sme.submodelElements.length > 0
             ) {
                 expandTree(sme.submodelElements);
             } else if (
                 ['SubmodelElementCollection', 'SubmodelElementList'].includes(sme.modelType) &&
+                sme.value &&
                 Array.isArray(sme.value) &&
                 sme.value.length > 0
             ) {
                 expandTree(sme.value);
-            } else if (sme.modelType === 'Entity' && Array.isArray(sme.statements) && sme.statements.length > 0) {
+            } else if (
+                sme.modelType === 'Entity' &&
+                sme.statements &&
+                Array.isArray(sme.statements) &&
+                sme.statements.length > 0
+            ) {
                 expandTree(sme.statements);
             }
         });
