@@ -34,6 +34,32 @@ function copyWebIfcWasmPlugin() {
     };
 }
 
+function copyOcctImportJsWasmFilesPlugin() {
+    return {
+        name: 'copy-occt-import-js-wasm',
+        buildStart() {
+            // Copy WASM files from occt-import-js to public/wasm directory
+            const sourceDir = 'node_modules/occt-import-js/dist';
+            const targetDir = 'public/wasm';
+
+            if (!existsSync(targetDir)) {
+                mkdirSync(targetDir, { recursive: true });
+            }
+
+            const wasmFiles = ['occt-import-js.wasm'];
+
+            wasmFiles.forEach((file) => {
+                const sourcePath = join(sourceDir, file);
+                const targetPath = join(targetDir, file);
+
+                if (existsSync(sourcePath)) {
+                    copyFileSync(sourcePath, targetPath);
+                }
+            });
+        },
+    };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
     process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
@@ -42,6 +68,7 @@ export default defineConfig(({ mode }) => {
     return {
         plugins: [
             copyWebIfcWasmPlugin(),
+            copyOcctImportJsWasmFilesPlugin(),
             AutoImport({
                 imports: ['vue'],
                 dts: 'src/auto-imports.d.ts',
@@ -74,11 +101,21 @@ export default defineConfig(({ mode }) => {
         server: {
             port: 3000,
             hmr: true, // enable hot module replacement
+            fs: {
+                allow: ['..'],
+            },
         },
         css: {
             preprocessorOptions: {
                 sass: {},
             },
+        },
+        assetsInclude: ['**/*.wasm'],
+        optimizeDeps: {
+            exclude: ['occt-import-js'],
+        },
+        define: {
+            global: 'globalThis',
         },
     };
 });

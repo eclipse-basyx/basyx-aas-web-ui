@@ -3828,6 +3828,11 @@ object.assign@^4.1.4:
     has-symbols "^1.1.0"
     object-keys "^1.1.1"
 
+occt-import-js@^0.0.23:
+  version "0.0.23"
+  resolved "https://registry.yarnpkg.com/occt-import-js/-/occt-import-js-0.0.23.tgz#1916aacd5b228e92da5de631ae048ca152281778"
+  integrity sha512-RFfYQXYFX5C1mB1Aywm0ShcUKzXOr/VzTnlzhBSDJOR6YCAPt1HYCzeXWg1vwwjn/cUxwqRNhhtf1dlewoZYCQ==
+
 optionator@^0.9.3:
   version "0.9.4"
   resolved "https://registry.yarnpkg.com/optionator/-/optionator-0.9.4.tgz#7ea1c1a5d91d764fb282139c88fe11e182a3a734"
