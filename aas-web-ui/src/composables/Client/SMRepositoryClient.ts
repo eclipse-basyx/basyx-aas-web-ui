@@ -100,10 +100,15 @@ export function useSMRepositoryClient() {
         const disableMessage = true;
         try {
             const smRepoResponse = await getRequest(smRepoPath, smRepoContext, disableMessage);
-            const smRepoMessages = smRepoResponse.data?.messages || [];
-            const smRepoAuthorizationError = smRepoMessages.some(
-                (message: any) => message.code === '403' || message.code === '401'
-            );
+            const smRepoBadRequestError = Array.isArray(smRepoResponse.data)
+                ? smRepoResponse.data.some((message: any) => Number(message.code) === 400)
+                : false;
+            const smRepoAuthorizationError = Array.isArray(smRepoResponse.data)
+                ? smRepoResponse.data.some((message: any) => [401, 403].includes(Number(message.code)))
+                : false;
+            const smRepoNotFoundError = Array.isArray(smRepoResponse.data)
+                ? smRepoResponse.data.some((message: any) => Number(message.code) === 404)
+                : false;
 
             if (smRepoAuthorizationError) {
                 return {
@@ -117,6 +122,10 @@ export function useSMRepositoryClient() {
                     path: smEndpoint,
                     endpoints: [{ protocolInformation: { href: smEndpoint }, interface: 'SUBMODEL-3.0' }],
                 };
+            }
+
+            if (smRepoBadRequestError || smRepoNotFoundError) {
+                return {};
             }
 
             if (smRepoResponse?.success && smRepoResponse?.data && Object.keys(smRepoResponse?.data).length > 0) {
@@ -171,9 +180,47 @@ export function useSMRepositoryClient() {
         const disableMessage = true;
         try {
             const smRepoResponse = await getRequest(smRepoPath, smRepoContext, disableMessage);
+            const smRepoBadRequestError = Array.isArray(smRepoResponse.data)
+                ? smRepoResponse.data.some((message: any) => Number(message.code) === 400)
+                : false;
+            const smRepoAuthorizationError = Array.isArray(smRepoResponse.data)
+                ? smRepoResponse.data.some((message: any) => [401, 403].includes(Number(message.code)))
+                : false;
+            const smRepoNotFoundError = Array.isArray(smRepoResponse.data)
+                ? smRepoResponse.data.some((message: any) => Number(message.code) === 404)
+                : false;
+
+            if (smRepoAuthorizationError) {
+                return {
+                    id: generateUUIDFromString(smePath),
+                    idShort: 'Submodel Not Authorized!',
+                    modelType: 'Submodel',
+                    semanticId: null,
+                    description: [],
+                    displayName: [],
+                    submodelElements: [],
+                    path: smePath,
+                };
+            }
+
+            if (smRepoBadRequestError || smRepoNotFoundError) {
+                return {};
+            }
+
             if (smRepoResponse?.success && smRepoResponse?.data && Object.keys(smRepoResponse?.data).length > 0) {
                 const sme = smRepoResponse.data;
                 return sme;
+            } else {
+                return {
+                    id: generateUUIDFromString(smePath),
+                    idShort: 'Submodel not found',
+                    modelType: 'Submodel',
+                    semanticId: null,
+                    description: [],
+                    displayName: [],
+                    submodelElements: [],
+                    path: smePath,
+                };
             }
         } catch (e) {
             console.warn(e);
