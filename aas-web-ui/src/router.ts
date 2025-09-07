@@ -364,7 +364,8 @@ export async function createAppRouter(): Promise<Router> {
         // Check if single AAS mode is on and no aas query is set to either redirect or show 404
         if (
             envStore.getSingleAas &&
-            routesUsingAasUrlQuery.includes(to.name) &&
+            (routesUsingAasUrlQuery.includes(to.name) ||
+                (to.path.includes('/modules/') && to.meta.isOnlyVisibleWithSelectedAas)) &&
             (!Object.hasOwn(to.query, 'aas') || (to.query.aas as string).trim() === '')
         ) {
             if (envStore.getSingleAasRedirect) {
