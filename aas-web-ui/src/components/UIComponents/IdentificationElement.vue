@@ -5,7 +5,14 @@
             <div>
                 <div class="d-flex justify-space-between align-center">
                     <v-tooltip activator="parent" open-delay="600" transition="slide-x-transition">
-                        <div v-if="identificationObject?.id" class="text-caption">
+                        <div
+                            v-if="
+                                identificationObject?.id &&
+                                !['SubmodelElementCollection', 'SubmodelElementList', 'Entity'].includes(
+                                    identificationObject.modelType
+                                )
+                            "
+                            class="text-caption">
                             <span class="font-weight-bold">{{ identificationTitle + ': ' }}</span
                             >{{ identificationObject['id'] }}
                         </div>
@@ -38,7 +45,12 @@
                 <!-- ID -->
                 <v-hover v-slot="{ isHovering, props }">
                     <v-list-item
-                        v-if="identificationObject?.id"
+                        v-if="
+                            identificationObject?.id &&
+                            !['SubmodelElementCollection', 'SubmodelElementList', 'Entity'].includes(
+                                identificationObject.modelType
+                            )
+                        "
                         class="pa-0 mt-n2"
                         :class="
                             identificationObject?.idShort &&
