@@ -8,6 +8,8 @@
 </template>
 
 <script setup lang="ts">
+    // ts-expect-error Could not find a declaration file for module 'occt-import-js'.
+    import occtimportjs from 'occt-import-js';
     import * as THREE from 'three';
     import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
     import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
@@ -55,7 +57,7 @@
     });
 
     // Methods
-    function initThree(): void {
+    async function initThree(): Promise<void> {
         // create a new Three.js scene
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x343434);
@@ -108,6 +110,8 @@
             contentType == 'text/x-sla'
         ) {
             importSTL(scene);
+        } else if (contentType.endsWith('step') || contentType.endsWith('stp')) {
+            await importSTEP(scene);
             // check if the file is an obj file
         } else if (contentType == 'application/obj') {
             importOBJ(scene);
@@ -258,6 +262,66 @@
                 });
             })
             .catch((error) => console.error('Error loading GLTF:', error));
+    }
+
+    // Function to import a STEP file
+    async function importSTEP(scene: THREE.Scene): Promise<void> {
+        try {
+            const response = await fetch(localPathValue.value, {
+                headers: {
+                    Authorization: `Bearer ${authToken.value}`,
+                },
+            });
+            const buffer = await response.arrayBuffer();
+            const stepFile = new Uint8Array(buffer);
+
+            const occt = await occtimportjs();
+            const result = occt.ReadStepFile(stepFile, null);
+            console.log('STEP parse result:', result);
+
+            // Prüfen ob mehrere Meshes zurückkamen
+            if (result.meshes && Array.isArray(result.meshes)) {
+                result.meshes.forEach((m) => {
+                    const geometry = new THREE.BufferGeometry();
+                    geometry.setAttribute('position', new THREE.Float32BufferAttribute(m.positions, 3));
+                    if (m.normals && m.normals.length > 0) {
+                        geometry.setAttribute('normal', new THREE.Float32BufferAttribute(m.normals, 3));
+                    } else {
+                        geometry.computeVertexNormals();
+                    }
+
+                    const material = new THREE.MeshStandardMaterial({
+                        color: m.color ? new THREE.Color(m.color.r, m.color.g, m.color.b) : 0xcccccc,
+                        metalness: 0.1,
+                        roughness: 0.8,
+                    });
+
+                    const mesh = new THREE.Mesh(geometry, material);
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+                    mesh.scale.multiplyScalar(0.03);
+                    scene.add(mesh);
+                });
+                // } else if (result.mesh) {
+                //     // Fallback falls nur ein Mesh-Objekt vorliegt
+                //     const geometry = new THREE.BufferGeometry();
+                //     geometry.setAttribute('position', new THREE.Float32BufferAttribute(result.mesh.positions, 3));
+                //     if (result.mesh.normals && result.mesh.normals.length > 0) {
+                //         geometry.setAttribute('normal', new THREE.Float32BufferAttribute(result.mesh.normals, 3));
+                //     } else {
+                //         geometry.computeVertexNormals();
+                //     }
+
+                //     const material = new THREE.MeshStandardMaterial({ color: 0xcccccc });
+                //     const mesh = new THREE.Mesh(geometry, material);
+                //     mesh.scale.multiplyScalar(0.03);
+                //     scene.add(mesh);
+            } else {
+                console.warn('Keine Meshdaten in STEP-Datei gefunden.');
+            }
+        } catch (error) {
+            console.error('Error loading STEP:', error);
+        }
     }
 </script>
 
