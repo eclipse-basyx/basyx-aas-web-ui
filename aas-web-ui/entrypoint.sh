@@ -26,6 +26,7 @@
 : "${ENDPOINT_CONFIG_AVAILABLE:=true}"
 : "${SINGLE_AAS:=false}"
 : "${SINGLE_AAS_REDIRECT:=}"
+: "${SM_VIEWER_EDITOR:=}"
 : "${ALLOW_EDITING:=true}"
 : "${ALLOW_UPLOADING:=true}"
 : "${BASIC_AUTH_USERNAME:=}"
@@ -108,6 +109,7 @@ printf "%-38s %s\n" "InfluxDB token:" "$INFLUXDB_TOKEN"
 printf "%-38s %s\n" "Endpoint config available:" "$ENDPOINT_CONFIG_AVAILABLE"
 printf "%-38s %s\n" "Single AAS:" "$SINGLE_AAS"
 printf "%-38s %s\n" "Single AAS redirect:" "$SINGLE_AAS_REDIRECT"
+printf "%-38s %s\n" "SM Viewer/Editor:" "$SM_VIEWER_EDITOR"
 printf "%-38s %s\n" "Allow editing:" "$ALLOW_EDITING"
 printf "%-38s %s\n" "Allow uploading:" "$ALLOW_UPLOADING"
 printf "%-38s %s\n" "Basic Auth active:" "$BASIC_AUTH_ACTIVE"
@@ -141,6 +143,7 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__ENDPOINT_CONFIG_AVAILABLE_PLACEHOLDER__/|$ENDPOINT_CONFIG_AVAILABLE|g" \
     -e "s|/__SINGLE_AAS_PLACEHOLDER__/|$SINGLE_AAS|g" \
     -e "s|/__SINGLE_AAS_REDIRECT_PLACEHOLDER__/|$SINGLE_AAS_REDIRECT|g" \
+    -e "s|/__SM_VIEWER_EDITOR_PLACEHOLDER__/|$SM_VIEWER_EDITOR|g" \
     -e "s|/__ALLOW_EDITING_PLACEHOLDER__/|$ALLOW_EDITING|g" \
     -e "s|/__ALLOW_UPLOADING_PLACEHOLDER__/|$ALLOW_UPLOADING|g" \
     -e "s|/__BASIC_AUTH_ACTIVE_PLACEHOLDER__/|$BASIC_AUTH_ACTIVE|g" \

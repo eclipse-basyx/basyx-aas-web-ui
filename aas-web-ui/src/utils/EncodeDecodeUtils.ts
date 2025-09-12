@@ -11,23 +11,29 @@
  * @returns {string} The Base64 encoded string. If `urlSafe` is true, the encoded string will be modified to be URL safe.
  */
 export function base64Encode(string: string, urlSafe: boolean = true): string {
+    const failResponse = '';
+
     string = string.trim();
 
-    if (string === '') return '';
+    if (string === '') return failResponse;
 
     const encodedUriComponent = encodeURIComponent(string);
     const unescapedEncodedUriComponent = unescape(encodedUriComponent); // reverse the percent-encoded characters back to their original
 
-    const base64String = btoa(unescapedEncodedUriComponent);
+    try {
+        const base64String = btoa(unescapedEncodedUriComponent);
 
-    if (!urlSafe) return base64String;
+        if (!urlSafe) return base64String;
 
-    const urlSafeBase64String = base64String
-        .replace(/\+/g, '-') // Replace + with -
-        .replace(/\//g, '_') // Replace / with _
-        .replace(/=+$/, ''); // Replace = padding
+        const urlSafeBase64String = base64String
+            .replace(/\+/g, '-') // Replace + with -
+            .replace(/\//g, '_') // Replace / with _
+            .replace(/=+$/, ''); // Replace = padding
 
-    return urlSafeBase64String;
+        return urlSafeBase64String;
+    } catch {
+        return failResponse;
+    }
 }
 
 /**
@@ -37,9 +43,11 @@ export function base64Encode(string: string, urlSafe: boolean = true): string {
  * @returns {string} The decoded string.
  */
 export function base64Decode(urlSafeBase64String: string): string {
+    const failResponse = '';
+
     urlSafeBase64String = urlSafeBase64String.trim();
 
-    if (urlSafeBase64String === '') return '';
+    if (urlSafeBase64String === '') return failResponse;
 
     let base64String = urlSafeBase64String
         .replace(/-/g, '+') // Replace - with +
@@ -50,9 +58,13 @@ export function base64Decode(urlSafeBase64String: string): string {
     const incompleteFourChars = base64String.length % 4;
     if (incompleteFourChars > 0) base64String += '=='.substring(0, 4 - incompleteFourChars);
 
-    const encodedUriComponent = atob(base64String);
-    const escapedEncodedUriComponent = escape(encodedUriComponent);
-    const decodedString = decodeURIComponent(escapedEncodedUriComponent);
+    try {
+        const encodedUriComponent = atob(base64String);
+        const escapedEncodedUriComponent = escape(encodedUriComponent);
+        const decodedString = decodeURIComponent(escapedEncodedUriComponent);
 
-    return decodedString;
+        return decodedString;
+    } catch {
+        return failResponse;
+    }
 }

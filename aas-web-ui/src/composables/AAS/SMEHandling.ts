@@ -2,6 +2,7 @@ import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescript
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
 import { useAASStore } from '@/store/AASDataStore';
 import { formatDate } from '@/utils/DateUtils';
+import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
 export function useSMEHandling() {
     // Composables
@@ -83,5 +84,29 @@ export function useSMEHandling() {
         return smOrSme;
     }
 
-    return { fetchSme, fetchAndDispatchSme };
+    /**
+     * Extracts the Submodel (SM) ID from a Submodel Element (SME) path
+     *
+     * @param {string} smePath - The SME path containing the encoded SM ID
+     * @returns {string} The decoded SM ID, or empty string if extraction fails
+     */
+    function getSmIdOfSmePath(smePath: string): string {
+        const failResponse = '';
+
+        if (!smePath) return failResponse;
+
+        smePath = smePath.trim();
+
+        if (smePath === '') return failResponse;
+
+        const index = smePath.indexOf('/submodel-elements/');
+
+        const smPath = index !== -1 ? smePath.substring(0, index) : smePath;
+
+        const smId = smPath.slice(smPath.lastIndexOf('/') + 1);
+
+        return base64Decode(smId);
+    }
+
+    return { fetchSme, fetchAndDispatchSme, getSmIdOfSmePath };
 }
