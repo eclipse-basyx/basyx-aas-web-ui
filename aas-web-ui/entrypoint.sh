@@ -26,7 +26,7 @@
 : "${ENDPOINT_CONFIG_AVAILABLE:=true}"
 : "${SINGLE_AAS:=false}"
 : "${SINGLE_AAS_REDIRECT:=}"
-: "${SM_VIEWER_EDITOR:=}"
+: "${SM_VIEWER_EDITOR:=true}"
 : "${ALLOW_EDITING:=true}"
 : "${ALLOW_UPLOADING:=true}"
 : "${BASIC_AUTH_USERNAME:=}"
