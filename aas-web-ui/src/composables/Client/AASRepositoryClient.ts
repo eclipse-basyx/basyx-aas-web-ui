@@ -105,10 +105,15 @@ export function useAASRepositoryClient() {
         const disableMessage = true;
         try {
             const aasRepoResponse = await getRequest(aasRepoPath, aasRepoContext, disableMessage);
-            const aasRepoMessages = aasRepoResponse.data?.messages || [];
-            const aasRepoAuthorizationError = aasRepoMessages.some(
-                (message: any) => message.code === '403' || message.code === '401'
-            );
+            const aasRepoBadRequestError = Array.isArray(aasRepoResponse.data)
+                ? aasRepoResponse.data.some((message: any) => Number(message.code) === 400)
+                : false;
+            const aasRepoAuthorizationError = Array.isArray(aasRepoResponse.data)
+                ? aasRepoResponse.data.some((message: any) => [401, 403].includes(Number(message.code)))
+                : false;
+            const aasRepoNotFoundError = Array.isArray(aasRepoResponse.data)
+                ? aasRepoResponse.data.some((message: any) => Number(message.code) === 404)
+                : false;
 
             if (aasRepoAuthorizationError) {
                 return {
@@ -121,6 +126,10 @@ export function useAASRepositoryClient() {
                     path: aasEndpoint,
                     endpoints: [{ protocolInformation: { href: aasEndpoint }, interface: 'AAS-3.0' }],
                 };
+            }
+
+            if (aasRepoBadRequestError || aasRepoNotFoundError) {
+                return {};
             }
 
             if (aasRepoResponse?.success && aasRepoResponse?.data && Object.keys(aasRepoResponse?.data).length > 0) {

@@ -1,4 +1,5 @@
 import type { Router, RouteRecordNameGeneric, RouteRecordRaw } from 'vue-router';
+import _ from 'lodash';
 import { createRouter, createWebHistory } from 'vue-router';
 import AASList from '@/components/AppNavigation/AASList.vue';
 import ComponentVisualization from '@/components/ComponentVisualization.vue';
@@ -135,36 +136,67 @@ export async function createAppRouter(): Promise<Router> {
     navigationStore.connectComponents();
 
     // Composables
-    const { fetchAndDispatchAas } = useAASHandling();
+    const { fetchAndDispatchAas, aasByEndpointHasSmeByPath } = useAASHandling();
     const { fetchAndDispatchSme } = useSMEHandling();
     const { idRedirectHandled } = useRouteHandling();
 
     // Data
-    const routesForMobile: Array<RouteRecordNameGeneric> = ['AASList', 'SMList', 'SubmodelList', 'Visualization'];
-    const routesForDesktop: Array<RouteRecordNameGeneric> = [
-        'AASViewer',
-        'AASEditor',
-        'AASSubmodelViewer',
-        'SMViewer',
-        'SMEditor',
-        'Visualization',
-    ];
-    const routesToSaveAndLoadUrlQuery: Array<RouteRecordNameGeneric> = [
-        'AASViewer',
-        'AASEditor',
-        'AASList',
-        'AASSubmodelViewer',
-        'SMViewer',
-        'SMEditor',
-        'SMList',
-        'Visualization',
-    ];
-    const routesSMViewerEditor: Array<RouteRecordNameGeneric> = ['SMViewer', 'SMEditor', 'SMList'];
     const routesStayOnPages: Array<RouteRecordNameGeneric> = ['About', 'NotFound404'];
-    const routesDesktopToAASViewer: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList'];
-    const routesDesktopToSMViewer: Array<RouteRecordNameGeneric> = ['SMList'];
-    const routesMobileToAASList: Array<RouteRecordNameGeneric> = ['AASViewer', 'AASEditor', 'AASSubmodelViewer'];
-    const routesMobileToSMList: Array<RouteRecordNameGeneric> = ['SMViewer', 'SMEditor'];
+    const routesForMobile: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList', 'Visualization'];
+    const routesForDesktop: Array<RouteRecordNameGeneric> = [
+        'AASEditor',
+        'AASViewer',
+        'AASSubmodelViewer',
+        'SMEditor',
+        'SMViewer',
+        'Visualization',
+    ];
+    const routesOnlyMobile: Array<RouteRecordNameGeneric> = routesForMobile.filter(
+        (x) => !routesForDesktop.includes(x)
+    );
+    const routesOnlyDesktop: Array<RouteRecordNameGeneric> = routesForDesktop.filter(
+        (x) => !routesForMobile.includes(x)
+    );
+
+    // const routesToSaveUrlQuery: Array<RouteRecordNameGeneric> = [...new Set([...routesForDesktop, ...routesForMobile])];
+    // console.log('routesToSaveUrlQuery', routesToSaveUrlQuery);
+
+    // const routesToLoadUrlQuery: Array<RouteRecordNameGeneric> = [...new Set([...routesForDesktop, ...routesForMobile])];
+    // console.log('routesToLoadUrlQuery', routesToLoadUrlQuery);
+
+    const routesUsingAasUrlQuery: Array<RouteRecordNameGeneric> = [
+        'AASEditor', // just desktop
+        'AASViewer', // just desktop
+        'AASSubmodelViewer', // just desktop
+
+        'AASList', // just mobile
+        'SubmodelList', // just mobile
+
+        'Visualization', // desktop and mobile
+    ];
+    const routesUsingPathUrlQuery: Array<RouteRecordNameGeneric> = [
+        'AASEditor', // just desktop
+        'AASViewer', // just desktop
+        'AASSubmodelViewer', // just desktop
+        'SMEditor', // just desktop
+        'SMViewer', // just desktop
+
+        'AASList', // just mobile
+        'SubmodelList', // just mobile
+
+        'Visualization', // desktop and mobile
+    ];
+    const routesUsingUrlQuery: Array<RouteRecordNameGeneric> = [
+        ...new Set([...routesUsingAasUrlQuery, ...routesUsingPathUrlQuery]),
+    ];
+
+    const routesUsingOnlyPathUrlQuery: Array<RouteRecordNameGeneric> = routesUsingPathUrlQuery.filter(
+        (x) => !routesUsingAasUrlQuery.includes(x)
+    );
+    const routesUsingOnlyAasUrlQuery: Array<RouteRecordNameGeneric> = routesUsingAasUrlQuery.filter(
+        (x) => !routesUsingPathUrlQuery.includes(x)
+    );
+
     const routesToVisualization: Array<RouteRecordNameGeneric> = ['ComponentVisualization'];
 
     const possibleGloBalAssetIdQueryParameter = ['globalAssetId', 'globalassetid'];
@@ -177,8 +209,9 @@ export async function createAppRouter(): Promise<Router> {
     ];
 
     // Computed Properties
-    const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
-    const allowEditing = computed(() => envStore.getAllowEditing); // Check if the current environment allows showing the AAS Editor
+    const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current device is a mobile device
+    const allowEditing = computed(() => envStore.getAllowEditing); // Check if the current environment allows showing the AAS resp. SM Editor
+    const smViewerEditor = computed(() => envStore.getSmViewerEditor); // Check the current environment allows showing the SM Viewer/Editor
 
     // Save the generated routes in the navigation store
     navigationStore.dispatchModuleRoutes(moduleRoutes);
@@ -203,44 +236,96 @@ export async function createAppRouter(): Promise<Router> {
             return;
 
         // Same route
-        if (from.name && from.name === to.name) {
-            // But changed URL query parameter
-            if (from.query !== to.query) {
-                // Just for routes to save/load Query parameter
-                if (routesToSaveAndLoadUrlQuery.includes(from.name))
-                    // Save URL query parameter
-                    navigationStore.dispatchUrlQuery(to.query);
+        if (Object.hasOwn(from, 'name') && Object.hasOwn(to, 'name') && from.name === to.name) {
+            // Just for routes using url query parameter and changed url query parameter
+            if (routesUsingUrlQuery.includes(to.name) && from.query !== to.query) {
+                // --> Save url query parameter
+                if (Object.keys(to.query).length > 0) {
+                    const queryToDispatch = _.cloneDeep(to.query);
+
+                    // Take into account also possible previous saved url query parameter
+                    const queryLoaded = navigationStore.getUrlQuery;
+                    if (!Object.hasOwn(queryToDispatch, 'aas') && Object.hasOwn(queryLoaded, 'aas')) {
+                        queryToDispatch.aas = queryLoaded.aas;
+                    }
+                    if (!Object.hasOwn(queryToDispatch, 'path') && Object.hasOwn(queryLoaded, 'path')) {
+                        queryToDispatch.path = queryLoaded.path;
+                    }
+
+                    // Save url query parameter
+                    navigationStore.dispatchUrlQuery(queryToDispatch);
+                }
             }
         }
 
         // Switch from one route to another one
-        if (from.name && from.name !== to.name) {
-            // Just for switching from a route to save/load URL query parameter
-            if (routesToSaveAndLoadUrlQuery.includes(from.name) || from.path.startsWith('/modules/')) {
-                // Save URL query parameter
+        if (Object.hasOwn(from, 'name') && Object.hasOwn(to, 'name') && from.name !== to.name) {
+            // Just for switching FROM a route using url query parameter
+            if (routesUsingUrlQuery.includes(from.name) || from.path.startsWith('/modules/')) {
+                // --> Save url query parameter
                 if (Object.keys(from.query).length > 0) {
-                    const queryToDispatch = from.query;
+                    const queryToDispatch = _.cloneDeep(from.query);
 
-                    // Strip idShortPath in case of switching to AAS Submodel Viewer
-                    const queryPathToDispatch = queryToDispatch?.path as string;
-                    if (to.name === 'AASSubmodelViewer' && queryPathToDispatch && queryPathToDispatch.trim() !== '') {
-                        queryToDispatch.path = queryPathToDispatch.trim().split('/submodel-elements/')[0];
+                    // Take into account also possible previous saved url query parameter
+                    const queryLoaded = navigationStore.getUrlQuery;
+                    if (!Object.hasOwn(queryToDispatch, 'aas') && Object.hasOwn(queryLoaded, 'aas')) {
+                        queryToDispatch.aas = queryLoaded.aas;
+                    }
+                    if (!Object.hasOwn(queryToDispatch, 'path') && Object.hasOwn(queryLoaded, 'path')) {
+                        queryToDispatch.path = queryLoaded.path;
                     }
 
+                    // Save url query parameter
                     navigationStore.dispatchUrlQuery(queryToDispatch);
                 }
             }
-
-            // Just for switching to a route to save/load URL query parameter
-            if (routesToSaveAndLoadUrlQuery.includes(to.name)) {
-                // Load URL query parameter
-                if (!to.query || Object.keys(to.query).length === 0) {
+            // Just for switching TO a route using url query parameter
+            if (routesUsingUrlQuery.includes(to.name) || to.path.startsWith('/modules/')) {
+                // --> Load url query parameter
+                if (!Object.hasOwn(to, 'query') || Object.keys(to.query).length === 0) {
                     const queryLoaded = navigationStore.getUrlQuery;
-                    const updatedRoute = Object.assign({}, to, {
-                        query: queryLoaded,
-                    });
 
-                    if (queryLoaded && Object.keys(queryLoaded).length > 0 && updatedRoute !== to) {
+                    const updatedRoute = _.cloneDeep(to);
+                    updatedRoute.query = {};
+
+                    if (
+                        routesUsingAasUrlQuery.includes(to.name) &&
+                        Object.hasOwn(queryLoaded, 'aas') &&
+                        (queryLoaded.aas as string).trim() !== ''
+                    ) {
+                        updatedRoute.query.aas = queryLoaded.aas;
+                    }
+                    if (
+                        routesUsingPathUrlQuery.includes(to.name) &&
+                        Object.hasOwn(queryLoaded, 'path') &&
+                        (queryLoaded.path as string).trim() !== ''
+                    ) {
+                        updatedRoute.query.path = queryLoaded.path;
+                    }
+
+                    if (
+                        routesUsingAasUrlQuery.includes(updatedRoute.name) &&
+                        !Object.hasOwn(updatedRoute.query, 'aas') &&
+                        Object.hasOwn(updatedRoute.query, 'path')
+                    ) {
+                        delete updatedRoute.query.path;
+                    }
+
+                    if (
+                        routesUsingOnlyAasUrlQuery.includes(updatedRoute.name) &&
+                        Object.hasOwn(updatedRoute.query, 'path')
+                    ) {
+                        delete updatedRoute.query.path;
+                    }
+
+                    if (
+                        routesUsingOnlyPathUrlQuery.includes(updatedRoute.name) &&
+                        Object.hasOwn(updatedRoute.query, 'aas')
+                    ) {
+                        delete updatedRoute.query.aas;
+                    }
+
+                    if (Object.keys(updatedRoute.query).length > 0) {
                         next(updatedRoute);
                         return;
                     }
@@ -248,22 +333,60 @@ export async function createAppRouter(): Promise<Router> {
             }
         }
 
+        // Delete not needed url query parameter
+        if (
+            routesUsingAasUrlQuery.includes(to.name) &&
+            !Object.hasOwn(to.query, 'aas') &&
+            Object.hasOwn(to.query, 'path')
+        ) {
+            // --> Delete path url query parameter
+            const updatedRoute = _.cloneDeep(to);
+            delete updatedRoute.query.path;
+            next(updatedRoute);
+            return;
+        }
+
+        if (routesUsingOnlyAasUrlQuery.includes(to.name) && Object.hasOwn(to.query, 'path')) {
+            // --> Delete path url query parameter
+            const updatedRoute = _.cloneDeep(to);
+            delete updatedRoute.query.path;
+            next(updatedRoute);
+            return;
+        }
+        if (routesUsingOnlyPathUrlQuery.includes(to.name) && Object.hasOwn(to.query, 'aas')) {
+            // --> Delete aas url query parameter
+            const updatedRoute = _.cloneDeep(to);
+            delete updatedRoute.query.aas;
+            next(updatedRoute);
+            return;
+        }
+
         // Check if single AAS mode is on and no aas query is set to either redirect or show 404
-        if (envStore.getSingleAas && (!to.query.aas || (to.query.aas as string).trim() === '')) {
-            if (!routesStayOnPages.includes(to.name) && !to.path.startsWith('/modules/')) {
-                if (envStore.getSingleAasRedirect) {
-                    window.location.replace(envStore.getSingleAasRedirect);
-                    return;
-                } else if (to.name !== 'NotFound404') {
-                    next({ name: 'NotFound404' });
-                    return;
-                }
+        if (
+            envStore.getSingleAas &&
+            (routesUsingAasUrlQuery.includes(to.name) ||
+                (to.path.includes('/modules/') && to.meta.isOnlyVisibleWithSelectedAas)) &&
+            (!Object.hasOwn(to.query, 'aas') || (to.query.aas as string).trim() === '')
+        ) {
+            if (envStore.getSingleAasRedirect) {
+                window.location.replace(envStore.getSingleAasRedirect);
+                return;
+            } else if (to.name !== 'NotFound404') {
+                const updatedRoute = { name: 'NotFound404' };
+                next(updatedRoute);
+                return;
             }
         }
 
-        // Handle mobile/desktop view
-        if (isMobile.value) {
-            // Handle mobile view
+        if (routesToVisualization.includes(to.name)) {
+            // General redirect to 'Visualization' with query
+            const updatedRoute = { name: 'Visualization', query: to.query };
+            next(updatedRoute);
+            return;
+        }
+        // Handle mobile/desktop views
+        else if (isMobile.value) {
+            // Handle mobile views
             if (
                 routesForMobile.includes(to.name) ||
                 routesStayOnPages.includes(to.name) ||
@@ -271,75 +394,88 @@ export async function createAppRouter(): Promise<Router> {
             ) {
                 // Do nothing
             } else if (
-                routesMobileToAASList.includes(to.name) ||
+                routesOnlyDesktop.includes(to.name) ||
                 (to.path.includes('/modules/') && !to.meta.isMobileModule)
             ) {
                 // Redirect to 'AASList' with query
-                next({ name: 'AASList', query: to.query });
-                return;
-            } else if (
-                routesMobileToSMList.includes(to.name) ||
-                (to.path.includes('/modules/') && !to.meta.isMobileModule)
-            ) {
-                // Redirect to 'SMList' with query
-                if (to.query.aas) delete to.query.ass;
-                next({ name: 'SMList', query: to.query });
-                return;
-            } else if (routesToVisualization.includes(to.name)) {
-                // Redirect to 'Visualization' with query
-                next({ name: 'Visualization', query: to.query });
+                const updatedRoute = { name: 'AASList', query: to.query };
+                next(updatedRoute);
                 return;
             }
         } else {
-            // Handle desktop view
+            // Handle desktop views
             if (
                 routesForDesktop.includes(to.name) ||
                 routesStayOnPages.includes(to.name) ||
                 (to.path.includes('/modules/') && to.meta.isDesktopModule)
             ) {
+                if (['SMViewer', 'SMEditor'].includes(to.name as string)) {
+                    if (smViewerEditor.value && to.name === 'SMEditor' && !allowEditing.value) {
+                        // Redirect to 'SMViewer' with query
+                        const updatedRoute = { name: 'SMViewer', query: to.query };
+                        next(updatedRoute);
+                        return;
+                    }
+                    if (!smViewerEditor.value) {
+                        // Redirect to 'AASViewer' resp. 'AASEditor' with query
+                        const updatedRoute = { name: (to.name as string).replace('SM', 'AAS'), query: to.query };
+                        next(updatedRoute);
+                        return;
+                    }
+                }
+                if (to.name === 'AASEditor' && !allowEditing.value) {
+                    // Redirect to 'AASViewer' with query
+                    const updatedRoute = { name: 'AASViewer', query: to.query };
+                    next(updatedRoute);
+                    return;
+                }
                 // Do nothing
             } else if (
-                routesDesktopToAASViewer.includes(to.name) ||
-                (to.name === 'AASEditor' && !allowEditing.value) ||
+                routesOnlyMobile.includes(to.name) ||
                 (to.path.includes('/modules/') && !to.meta.isDesktopModule)
             ) {
                 // Redirect to 'AASViewer' with query
-                next({ name: 'AASViewer', query: to.query });
-                return;
-            } else if (
-                routesDesktopToSMViewer.includes(to.name) ||
-                (to.name === 'SMEditor' && !allowEditing.value) ||
-                (to.path.includes('/modules/') && !to.meta.isDesktopModule)
-            ) {
-                // Redirect to 'SMViewer' with query
-                if (to.query.aas) delete to.query.ass;
-                next({ name: 'SMViewer', query: to.query });
-                return;
-            } else if (routesToVisualization.includes(to.name)) {
-                // Redirect to 'Visualization' with query
-                next({ name: 'Visualization', query: to.query });
+                const updatedRoute = { name: 'AASViewer', query: to.query };
+                next(updatedRoute);
                 return;
             }
         }
 
-        if (to.query.aas && routesSMViewerEditor.includes(to.name)) {
-            delete to.query.aas;
-            const updatedRoute = Object.assign({}, to, {
-                query: to.query,
-            });
-            next(updatedRoute);
-            return;
+        // Validate combination of specified aas and path url query parameter
+        if (
+            Object.hasOwn(to.query, 'aas') &&
+            (to.query.aas as string).trim() !== '' &&
+            Object.hasOwn(to.query, 'path') &&
+            (to.query.path as string).trim() !== ''
+        ) {
+            const combinationAasPathIsOk = await aasByEndpointHasSmeByPath(
+                (to.query.aas as string).trim(),
+                (to.query.path as string).trim()
+            );
+            if (!combinationAasPathIsOk) {
+                // Remove path query for not available SME path in AAS
+                const updatedRoute = _.cloneDeep(to);
+                delete updatedRoute.query.path;
+                next(updatedRoute);
+                return;
+            }
         }
 
         // Fetch and dispatch AAS
-        if (to.query.aas && to.query.aas !== '' && from.query.aas !== to.query.aas) {
+        if (
+            Object.hasOwn(to.query, 'aas') &&
+            (to.query.aas as string).trim() !== '' &&
+            (!aasStore.getSelectedAAS ||
+                Object.keys(aasStore.getSelectedAAS).length === 0 ||
+                !Object.hasOwn(from.query, 'aas') ||
+                (Object.hasOwn(to.query, 'aas') &&
+                    (from.query.aas as string).trim() !== (to.query.aas as string).trim()))
+        ) {
             const aas = await fetchAndDispatchAas(to.query.aas as string);
             if (!aas || Object.keys(aas).length === 0) {
                 // Remove aas query for not available AAS endpoint
-                if (to.query.ass) delete to.query.aas;
-                const updatedRoute = Object.assign({}, to, {
-                    query: to.query,
-                });
+                const updatedRoute = _.cloneDeep(to);
+                delete updatedRoute.query.aas;
                 next(updatedRoute);
                 return;
             }
@@ -349,17 +485,19 @@ export async function createAppRouter(): Promise<Router> {
 
         // Fetch and dispatch SM/SME
         if (
-            to.query.path &&
-            to.query.path !== '' &&
-            (from.query.path !== to.query.path || ['SMViewer', 'SMEditor'].includes(to.name as string))
+            Object.hasOwn(to.query, 'path') &&
+            (to.query.path as string).trim() !== '' &&
+            (!aasStore.getSelectedNode ||
+                Object.keys(aasStore.getSelectedNode).length === 0 ||
+                !Object.hasOwn(from.query, 'path') ||
+                (Object.hasOwn(from.query, 'path') &&
+                    (from.query.path as string).trim() !== (to.query.path as string).trim()))
         ) {
             const sme = await fetchAndDispatchSme(to.query.path as string, true);
             if (!sme || Object.keys(sme).length === 0) {
                 // Remove path query for not available SME path
-                if (to.query.path) delete to.query.path;
-                const updatedRoute = Object.assign({}, to, {
-                    query: to.query,
-                });
+                const updatedRoute = _.cloneDeep(to);
+                delete updatedRoute.query.path;
                 next(updatedRoute);
                 return;
             }

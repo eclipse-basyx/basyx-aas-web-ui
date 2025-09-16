@@ -1,3 +1,4 @@
+import { useSMEHandling } from '@/composables/AAS/SMEHandling';
 import { useSMHandling } from '@/composables/AAS/SMHandling';
 import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
@@ -21,6 +22,7 @@ export function useAASHandling() {
         getSubmodelRefs: getSubmodelRefsFromRepo,
     } = useAASRepositoryClient();
     const { fetchSmDescriptor, fetchSmById } = useSMHandling();
+    const { getSmIdOfSmePath } = useSMEHandling();
 
     // Stores
     const aasStore = useAASStore();
@@ -214,6 +216,7 @@ export function useAASHandling() {
      * the AAS registry, and if that fails, it tries to obtain it from the AAS repository. If the provided
      * AAS ID is invalid or empty, the function returns an empty string.
      *
+     * @async
      * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
      * @returns {Promise<string>} A promise that resolves to an AAS endpoint.
      */
@@ -239,6 +242,7 @@ export function useAASHandling() {
      * Fetches a list of all available Submodel (SM) Descriptors of a specified Asset Administration Shell (AAS).
      *
      * @async
+     * @param {string} aasId - The ID of the AAS
      * @returns {Promise<Array<any>>} A promise that resolves to an array of SM Descriptors.
      * An empty array is returned if the request fails or no SM Descriptors are found.
      */
@@ -268,6 +272,48 @@ export function useAASHandling() {
             });
 
             return await Promise.all(submodelPromises);
+        }
+
+        return failResponse;
+    }
+
+    /**
+     * Checks if an Asset Administration Shell (AAS) contains a specific Submodel (SM) by ID
+     * or a Submodel Element (SME) by path.
+     *
+     * @async
+     * @param {string} aasEndpoint - The endpoint URL of the AAS
+     * @param {string} smePath - smePath - The path URL of the SME
+     * @returns {Promise<boolean>} Promise that resolves to true if the AAS contains the specified SM OR SME, false otherwise
+     */
+    async function aasByEndpointHasSmeByPath(aasEndpoint: string, smePath: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!aasEndpoint || !smePath) return failResponse;
+
+        aasEndpoint = aasEndpoint.trim();
+        smePath = smePath.trim();
+
+        if (aasEndpoint === '' || smePath === '') return failResponse;
+
+        const aas = await fetchAas(aasEndpoint);
+        const smId = getSmIdOfSmePath(smePath);
+
+        if (
+            aas &&
+            Object.keys(aas).length > 0 &&
+            aas.submodels &&
+            Array.isArray(aas.submodels) &&
+            aas.submodels.length > 0
+        ) {
+            const submodelRefs = aas.submodels;
+
+            const submodelRef = submodelRefs.find((submodelRef: any) => {
+                const smRefSmId = extractIdFromReference(submodelRef, 'Submodel');
+                return smRefSmId === smId;
+            });
+
+            return (submodelRef && Object.keys(submodelRef).length > 0) || failResponse;
         }
 
         return failResponse;
@@ -348,6 +394,7 @@ export function useAASHandling() {
         getSubmodelRefsById,
         getSmIdOfAasIdBySemanticId,
         aasIsAvailableById,
+        aasByEndpointHasSmeByPath,
         fetchAndDispatchAas,
         fetchAndDispatchAasById,
         fetchAasDescriptorList,

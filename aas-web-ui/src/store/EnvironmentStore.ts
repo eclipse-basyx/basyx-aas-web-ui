@@ -73,6 +73,9 @@ export const useEnvStore = defineStore('envStore', () => {
     const singleAasRedirect = ref(
         import.meta.env.VITE_SINGLE_AAS_REDIRECT || (isProduction ? '/__SINGLE_AAS_REDIRECT_PLACEHOLDER__/' : '')
     );
+    const smViewerEditor = ref(
+        import.meta.env.VITE_SM_VIEWER_EDITOR || (isProduction ? '/__SM_VIEWER_EDITOR_PLACEHOLDER__/' : '')
+    );
     const allowEditing = ref(
         import.meta.env.VITE_ALLOW_EDITING || (isProduction ? '/__ALLOW_EDITING_PLACEHOLDER__/' : '')
     );
@@ -124,6 +127,7 @@ export const useEnvStore = defineStore('envStore', () => {
         }
         return undefined;
     });
+    const getSmViewerEditor = computed(() => smViewerEditor.value === 'true');
     const getAllowEditing = computed(() => allowEditing.value === 'true');
     const getAllowUploading = computed(() => allowUploading.value === 'true');
     const getBasicAuthActive = computed(() => basicAuthActive.value === 'true');
@@ -163,6 +167,7 @@ export const useEnvStore = defineStore('envStore', () => {
         getEndpointConfigAvailable,
         getSingleAas,
         getSingleAasRedirect,
+        getSmViewerEditor,
         getAllowEditing,
         getAllowUploading,
         getBasicAuthActive,

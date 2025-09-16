@@ -52,6 +52,7 @@
                             </template>
                         </v-list-item>
                         <v-list-item
+                            v-if="smViewerEditor"
                             class="mt-3 py-2"
                             nav
                             :active="false"
@@ -67,7 +68,7 @@
                             </template>
                         </v-list-item>
                         <v-list-item
-                            v-if="allowEditing"
+                            v-if="smViewerEditor && allowEditing"
                             class="mt-3 py-2"
                             :active="false"
                             nav
@@ -207,7 +208,8 @@
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
     const currentRoutePath = computed(() => route.path); // get the current route path
-    const allowEditing = computed(() => envStore.getAllowEditing); // Check if the current environment allows showing the AAS Editor
+    const allowEditing = computed(() => envStore.getAllowEditing); // Check if the current environment allows showing the AAS resp. SM Editor
+    const smViewerEditor = computed(() => envStore.getSmViewerEditor); // Check the current environment allows showing the SM Viewer/Editor
     const moduleRoutes = computed(() => navigationStore.getModuleRoutes); // get the module routes
     const selectedAas = computed(() => aasStore.getSelectedAAS); // get selected AAS from Store
     const selectedNode = computed(() => aasStore.getSelectedNode); // get selected AAS from Store

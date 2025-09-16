@@ -13,7 +13,10 @@
                         color="primary"
                         :active="isSelected(item)"
                         v-bind="props"
-                        @click="selectSmOrSme(item)">
+                        @click="
+                            selectSmOrSme(item);
+                            openTree(item);
+                        ">
                         <v-list-item-title>{{ nameToDisplay(item) }}</v-list-item-title>
                         <template #prepend>
                             <!-- Button to show/hide children -->
@@ -428,6 +431,26 @@
     const copyIconAsRef = computed(() => copyIcon);
     const copyJsonIconAsRef = computed(() => copyJsonIcon);
     const clipboardElementContentType = computed(() => clipboardStore.getClipboardElementModelType());
+
+    function openTree(smOrSme: any): void {
+        if (
+            (smOrSme.modelType === 'Submodel' &&
+                smOrSme.submodelElements &&
+                Array.isArray(smOrSme.submodelElements) &&
+                smOrSme.submodelElements.length > 0) ||
+            (['SubmodelElementCollection', 'SubmodelElementList'].includes(smOrSme.modelType) &&
+                smOrSme.value &&
+                Array.isArray(smOrSme.value) &&
+                smOrSme.value.length > 0) ||
+            (smOrSme.modelType === 'Entity' &&
+                smOrSme.statements &&
+                Array.isArray(smOrSme.statements) &&
+                smOrSme.statements.length > 0) ||
+            Object.hasOwn(smOrSme, 'showChildren')
+        ) {
+            smOrSme.showChildren = true;
+        }
+    }
 
     function toggleTree(smOrSme: any): void {
         smOrSme.showChildren = !smOrSme.showChildren;

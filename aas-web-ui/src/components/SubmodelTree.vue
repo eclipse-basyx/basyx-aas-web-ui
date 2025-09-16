@@ -4,13 +4,19 @@
             <!-- Title bar -->
             <v-card-title
                 :style="
-                    selectedAAS && Object.keys(selectedAAS).length > 0
+                    (selectedAAS && Object.keys(selectedAAS).length > 0) ||
+                    ['SMViewer', 'SMEditor'].includes(route.name as string)
                         ? 'padding: 7px 0px 8px'
                         : 'padding: 15px 0px 16px'
                 ">
                 <div class="d-flex align-center">
                     <v-tooltip
-                        v-if="selectedAAS && Object.keys(selectedAAS).length > 0"
+                        v-if="
+                            ['SMViewer', 'SMEditor'].includes(route.name as string) ||
+                            (!['SMViewer', 'SMEditor'].includes(route.name as string) &&
+                                selectedAAS &&
+                                Object.keys(selectedAAS).length > 0)
+                        "
                         open-delay="600"
                         location="bottom"
                         :disabled="isMobile">
@@ -28,16 +34,27 @@
                         </template>
                         <span>Reload Submodel tree</span>
                     </v-tooltip>
-                    <span v-if="!selectedAAS || Object.keys(selectedAAS).length === 0 || singleAas" class="pl-4">
+                    <span
+                        v-if="
+                            !['SMViewer', 'SMEditor'].includes(route.name as string) &&
+                            (!selectedAAS || Object.keys(selectedAAS).length === 0)
+                        "
+                        class="pl-4">
                         Submodel tree
                     </span>
-                    <template v-else-if="!singleAas">
+                    <template v-else-if="!['SMViewer', 'SMEditor'].includes(route.name as string) && !singleAas">
                         <v-icon icon="custom:aasIcon" color="primary" size="small" class="" />
                         <span class="text-truncate ml-2">
                             {{ nameToDisplay(selectedAAS) }}
                         </span>
                     </template>
-                    <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
+                    <template
+                        v-if="
+                            ['SMViewer', 'SMEditor'].includes(route.name as string) ||
+                            (!['SMViewer', 'SMEditor'].includes(route.name as string) &&
+                                selectedAAS &&
+                                Object.keys(selectedAAS).length > 0)
+                        ">
                         <v-col class="pl-2 pr-0 py-0">
                             <v-text-field
                                 variant="outlined"
@@ -374,7 +391,6 @@
     });
 
     async function initialize(): Promise<void> {
-        // console.log(selectedNode.value);
         if (
             !['SMEditor', 'SMViewer'].includes(route.name as string) &&
             (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0)
@@ -429,6 +445,11 @@
 
     function deepMap(array: Array<any>, fn: (arg0: any) => any): Array<any> {
         return array.map((item: any) => {
+            // Handle null/undefined items explicitly
+            if (item == null) {
+                return item;
+            }
+
             let newItem = { ...item }; // Create a copy of the item
             if (
                 newItem.modelType === 'Submodel' &&
@@ -452,9 +473,7 @@
             ) {
                 newItem.statements = deepMap(newItem.statements, fn); // Recursively map entity statements
             }
-            return Array.isArray(newItem)
-                ? deepMap(newItem, fn) // Recursively map nested arrays
-                : fn(newItem);
+            return fn(newItem);
         });
     }
 
@@ -469,17 +488,28 @@
             sme.path = computePath(sme, parent, index);
             const expand = shouldExpandNode(sme.path);
 
-            if (sme.modelType === 'Submodel' && Array.isArray(sme.submodelElements) && sme.submodelElements.length) {
+            if (
+                sme.modelType === 'Submodel' &&
+                sme.submodelElements &&
+                Array.isArray(sme.submodelElements) &&
+                sme.submodelElements.length > 0
+            ) {
                 sme.children = prepareForTree(sme.submodelElements, sme);
                 sme.showChildren = expand;
             } else if (
                 ['SubmodelElementCollection', 'SubmodelElementList'].includes(sme.modelType) &&
+                sme.value &&
                 Array.isArray(sme.value) &&
-                sme.value.length
+                sme.value.length > 0
             ) {
                 sme.children = prepareForTree(sme.value, sme);
                 sme.showChildren = expand;
-            } else if (sme.modelType === 'Entity' && Array.isArray(sme.statements) && sme.statements.length) {
+            } else if (
+                sme.modelType === 'Entity' &&
+                sme.statements &&
+                Array.isArray(sme.statements) &&
+                sme.statements.length > 0
+            ) {
                 sme.children = prepareForTree(sme.statements, sme);
                 sme.showChildren = expand;
             }
@@ -492,15 +522,26 @@
         submodelElements.forEach((sme: any) => {
             sme.showChildren = false;
 
-            if (sme.modelType === 'Submodel' && Array.isArray(sme.submodelElements) && sme.submodelElements.length) {
+            if (
+                sme.modelType === 'Submodel' &&
+                sme.submodelElements &&
+                Array.isArray(sme.submodelElements) &&
+                sme.submodelElements.length > 0
+            ) {
                 collapseTree(sme.submodelElements);
             } else if (
                 ['SubmodelElementCollection', 'SubmodelElementList'].includes(sme.modelType) &&
+                sme.value &&
                 Array.isArray(sme.value) &&
-                sme.value.length
+                sme.value.length > 0
             ) {
                 collapseTree(sme.value);
-            } else if (sme.modelType === 'Entity' && Array.isArray(sme.statements) && sme.statements.length) {
+            } else if (
+                sme.modelType === 'Entity' &&
+                sme.statements &&
+                Array.isArray(sme.statements) &&
+                sme.statements.length > 0
+            ) {
                 collapseTree(sme.statements);
             }
         });
@@ -513,17 +554,24 @@
 
             if (
                 sme.modelType === 'Submodel' &&
+                sme.submodelElements &&
                 Array.isArray(sme.submodelElements) &&
                 sme.submodelElements.length > 0
             ) {
                 expandTree(sme.submodelElements);
             } else if (
                 ['SubmodelElementCollection', 'SubmodelElementList'].includes(sme.modelType) &&
+                sme.value &&
                 Array.isArray(sme.value) &&
                 sme.value.length > 0
             ) {
                 expandTree(sme.value);
-            } else if (sme.modelType === 'Entity' && Array.isArray(sme.statements) && sme.statements.length > 0) {
+            } else if (
+                sme.modelType === 'Entity' &&
+                sme.statements &&
+                Array.isArray(sme.statements) &&
+                sme.statements.length > 0
+            ) {
                 expandTree(sme.statements);
             }
         });
