@@ -410,13 +410,13 @@ export async function createAppRouter(): Promise<Router> {
                 (to.path.includes('/modules/') && to.meta.isDesktopModule)
             ) {
                 if (['SMViewer', 'SMEditor'].includes(to.name as string)) {
-                    if (smViewerEditor && to.name === 'SMEditor' && !allowEditing.value) {
+                    if (smViewerEditor.value && to.name === 'SMEditor' && !allowEditing.value) {
                         // Redirect to 'SMViewer' with query
                         const updatedRoute = { name: 'SMViewer', query: to.query };
                         next(updatedRoute);
                         return;
                     }
-                    if (!smViewerEditor) {
+                    if (!smViewerEditor.value) {
                         // Redirect to 'AASViewer' resp. 'AASEditor' with query
                         const updatedRoute = { name: (to.name as string).replace('SM', 'AAS'), query: to.query };
                         next(updatedRoute);

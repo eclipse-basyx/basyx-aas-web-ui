@@ -4,7 +4,8 @@
             <!-- Title bar -->
             <v-card-title
                 :style="
-                    selectedAAS && Object.keys(selectedAAS).length > 0
+                    (selectedAAS && Object.keys(selectedAAS).length > 0) ||
+                    ['SMViewer', 'SMEditor'].includes(route.name as string)
                         ? 'padding: 7px 0px 8px'
                         : 'padding: 15px 0px 16px'
                 ">
@@ -444,6 +445,11 @@
 
     function deepMap(array: Array<any>, fn: (arg0: any) => any): Array<any> {
         return array.map((item: any) => {
+            // Handle null/undefined items explicitly
+            if (item == null) {
+                return item;
+            }
+
             let newItem = { ...item }; // Create a copy of the item
             if (
                 newItem.modelType === 'Submodel' &&
@@ -467,9 +473,7 @@
             ) {
                 newItem.statements = deepMap(newItem.statements, fn); // Recursively map entity statements
             }
-            return newItem && Array.isArray(newItem)
-                ? deepMap(newItem, fn) // Recursively map nested arrays
-                : fn(newItem);
+            return fn(newItem);
         });
     }
 

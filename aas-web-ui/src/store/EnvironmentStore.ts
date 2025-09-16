@@ -73,7 +73,9 @@ export const useEnvStore = defineStore('envStore', () => {
     const singleAasRedirect = ref(
         import.meta.env.VITE_SINGLE_AAS_REDIRECT || (isProduction ? '/__SINGLE_AAS_REDIRECT_PLACEHOLDER__/' : '')
     );
-    const smViewerEditor = ref(import.meta.env.VITE_SM_VIEWER_EDITOR || (isProduction ? '/__SM_VIEWER_EDITOR__/' : ''));
+    const smViewerEditor = ref(
+        import.meta.env.VITE_SM_VIEWER_EDITOR || (isProduction ? '/__SM_VIEWER_EDITOR_PLACEHOLDER__/' : '')
+    );
     const allowEditing = ref(
         import.meta.env.VITE_ALLOW_EDITING || (isProduction ? '/__ALLOW_EDITING_PLACEHOLDER__/' : '')
     );
