@@ -37,34 +37,29 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-
+<script lang="ts" setup>
     type Variant = 'elevated' | 'outlined' | 'flat' | 'text' | 'tonal' | 'plain' | undefined;
 
-    export default defineComponent({
-        name: 'SubmodelELementWrapper',
-        props: {
-            submodelElementObject: {
-                type: Object,
-                default: () => ({}),
-            },
-            cardStyle: {
-                type: String as () => Variant,
-                default: 'elevated',
-            },
-            isEditable: {
-                type: Boolean,
-                default: true,
-            },
+    defineProps({
+        submodelElementObject: {
+            type: Object as any,
+            default: {} as any,
         },
-
-        methods: {
-            // Function to update the value of a property
-            updatePropertyValue(submodelElement: any) {
-                this.$emit('updateValue', submodelElement);
-            },
+        cardStyle: {
+            type: String as () => Variant,
+            default: 'elevated',
+        },
+        isEditable: {
+            type: Boolean,
+            default: true,
         },
     });
+
+    const emit = defineEmits<{
+        (e: 'updateValue', submodelElement: any): void;
+    }>();
+
+    function updatePropertyValue(submodelElement: any): void {
+        emit('updateValue', submodelElement);
+    }
 </script>

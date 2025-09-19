@@ -56,113 +56,78 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-    import { useRouter } from 'vue-router';
+<script lang="ts" setup>
+    import { computed, onMounted, ref, watch } from 'vue';
     import { useReferenceComposable } from '@/composables/AAS/ReferenceComposable';
     import { useJumpHandling } from '@/composables/JumpHandling';
-    import { useAASStore } from '@/store/AASDataStore';
     import { capitalizeFirstLetter } from '@/utils/StringUtils';
 
-    export default defineComponent({
-        name: 'RelationshipElement',
-        props: {
-            relationshipElementObject: {
-                type: Object,
-                default: () => ({}),
-            },
-        },
-
-        setup() {
-            const aasStore = useAASStore();
-            const router = useRouter();
-            const { checkReference } = useReferenceComposable();
-            const { jumpToReference } = useJumpHandling();
-
-            return {
-                aasStore, // AASStore Object
-                router, // Router Object
-                capitalizeFirstLetter,
-                checkReference,
-                jumpToReference,
-            };
-        },
-
-        data() {
-            return {
-                referenceKeys: ['first', 'second'], // Keys of the References
-                firstReference: {} as any,
-                secondReference: {} as any,
-                firstLoading: false, // Loading State of the first Jump-Button (loading when checking if referenced element exists in one of the registered AAS)
-                secondLoading: false, // Loading State of the second Jump-Button (loading when checking if referenced element exists in one of the registered AAS)
-                firstDisabled: true, // Disabled State of the first Jump-Button (disabled when referenced element does not exist in one of the registered AAS)
-                secondDisabled: true, // Disabled State of the second Jump-Button (disabled when referenced element does not exist in one of the registered AAS)
-            };
-        },
-
-        computed: {
-            // Get the referenceObject based on the referenceKey
-            getReferences() {
-                return {
-                    first: this.firstReference,
-                    second: this.secondReference,
-                };
-            },
-
-            // Get the loadingState based on the referenceKey
-            getLoadingState() {
-                return {
-                    first: this.firstLoading,
-                    second: this.secondLoading,
-                };
-            },
-
-            // Get the disabledState based on the referenceKey
-            getDisabledState() {
-                return {
-                    first: this.firstDisabled,
-                    second: this.secondDisabled,
-                };
-            },
-        },
-
-        watch: {
-            // Watch for changes in the relationshipElementObject
-            relationshipElementObject: {
-                deep: true,
-                handler() {
-                    this.firstReference = this.relationshipElementObject.first;
-                    this.secondReference = this.relationshipElementObject.second;
-                    this.validateReference('first');
-                    this.validateReference('second');
-                },
-            },
-        },
-
-        mounted() {
-            this.firstReference = this.relationshipElementObject.first;
-            this.secondReference = this.relationshipElementObject.second;
-            this.validateReference('first');
-            this.validateReference('second');
-        },
-
-        methods: {
-            // Function to check if the referenced Element exists
-            validateReference(referenceKey: string) {
-                (this as any)[referenceKey + 'Loading'] = true;
-
-                this.checkReference((this as any)[referenceKey + 'Reference'])
-                    .then((success) => {
-                        (this as any)[referenceKey + 'Disabled'] = !success;
-                        (this as any)[referenceKey + 'Loading'] = false;
-                    })
-                    .catch((error) => {
-                        // Handle any errors
-                        console.error('Error:', error);
-                        (this as any)[referenceKey + 'Loading'] = false;
-                    });
-            },
+    const props = defineProps({
+        relationshipElementObject: {
+            type: Object as any,
+            default: {} as any,
         },
     });
+
+    const { checkReference } = useReferenceComposable();
+    const { jumpToReference } = useJumpHandling();
+
+    const referenceKeys = ref<Array<string>>(['first', 'second']); // Keys of the References
+    const firstReference = ref<any>({});
+    const secondReference = ref<any>({});
+    const firstLoading = ref<boolean>(false); // Loading State of the first Jump-Button
+    const secondLoading = ref<boolean>(false); // Loading State of the second Jump-Button
+    const firstDisabled = ref<boolean>(true); // Disabled State of the first Jump-Button
+    const secondDisabled = ref<boolean>(true); // Disabled State of the second Jump-Button
+
+    const getReferences = computed(() => {
+        return {
+            first: firstReference.value,
+            second: secondReference.value,
+        };
+    });
+
+    const getDisabledState = computed(() => {
+        return {
+            first: firstDisabled.value,
+            second: secondDisabled.value,
+        };
+    });
+
+    watch(
+        () => props.relationshipElementObject,
+        () => {
+            if (props.relationshipElementObject) {
+                firstReference.value = props.relationshipElementObject.first;
+                secondReference.value = props.relationshipElementObject.second;
+                validateReference('first');
+                validateReference('second');
+            }
+        },
+        { deep: true, immediate: true }
+    );
+
+    onMounted(() => {
+        if (props.relationshipElementObject) {
+            firstReference.value = props.relationshipElementObject.first;
+            secondReference.value = props.relationshipElementObject.second;
+            validateReference('first');
+            validateReference('second');
+        }
+    });
+
+    function validateReference(referenceKey: string): void {
+        (referenceKey === 'first' ? firstLoading : secondLoading).value = true;
+
+        checkReference((referenceKey === 'first' ? firstReference : secondReference).value)
+            .then((success) => {
+                (referenceKey === 'first' ? firstDisabled : secondDisabled).value = !success;
+                (referenceKey === 'first' ? firstLoading : secondLoading).value = false;
+            })
+            .catch((error) => {
+                // Handle any errors
+                console.error('Error:', error);
+                (referenceKey === 'first' ? firstLoading : secondLoading).value = false;
+            });
+    }
 </script>
