@@ -52,6 +52,7 @@ export default [
             'vue/no-unused-vars': ['error', { ignorePattern: '^_' }],
             'vue/max-attributes-per-line': ['error', { singleline: 5 }],
             'vue/no-console': [process.env.NODE_ENV === 'production' ? 'error' : 'warn', { allow: ['warn', 'error'] }],
+            'vue/component-api-style': ['error', ['script-setup', 'composition']],
         },
     },
 

@@ -66,67 +66,43 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
-    import { useTheme } from 'vuetify';
+<script lang="ts" setup>
+    import { onMounted, ref, watch } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
-    import { useRequestHandling } from '@/composables/RequestHandling';
-    import { useAASStore } from '@/store/AASDataStore';
 
-    export default defineComponent({
-        name: 'GenericDataVisu',
-        props: ['submodelElementData'],
-
-        setup() {
-            const theme = useTheme();
-            const aasStore = useAASStore();
-
-            const { nameToDisplay } = useReferableUtils();
-            const { putRequest } = useRequestHandling();
-
-            return {
-                theme, // Theme Object
-                aasStore, // AASStore Object
-                nameToDisplay,
-                putRequest,
-            };
-        },
-
-        data() {
-            return {
-                localSubmodelElementData: [] as Array<any>, // SubmodelElement Data
-                // conceptDescriptions: {}, // Data of Concept Descriptions
-            };
-        },
-
-        watch: {
-            submodelElementData: {
-                handler() {
-                    this.initializeSubmodelElementData();
-                },
-                deep: true,
-            },
-        },
-
-        mounted() {
-            this.initializeSubmodelElementData();
-        },
-
-        methods: {
-            // Initialize the SubmodelElement Data
-            initializeSubmodelElementData() {
-                if (!this.submodelElementData) return;
-
-                // console.log('SubmodelElementData: ', this.submodelElementData)
-                if (Object.keys(this.submodelElementData).length === 0) {
-                    this.localSubmodelElementData = []; // Reset the SubmodelElement Data when no Node is selected
-                    return;
-                }
-                let submodelElementData = [...this.submodelElementData];
-                // console.log('SubmodelElementData: ', submodelElementData);
-                this.localSubmodelElementData = submodelElementData;
-            },
+    const props = defineProps({
+        submodelElementData: {
+            type: Object as any,
+            default: {} as any,
         },
     });
+
+    const { nameToDisplay } = useReferableUtils();
+
+    const localSubmodelElementData = ref<Array<any>>([]);
+
+    watch(
+        () => props.submodelElementData,
+        () => {
+            initializeSubmodelElementData();
+        },
+        { deep: true }
+    );
+
+    onMounted(() => {
+        initializeSubmodelElementData();
+    });
+
+    function initializeSubmodelElementData(): void {
+        if (!props.submodelElementData) return;
+
+        // console.log('SubmodelElementData: ', this.submodelElementData)
+        if (Object.keys(props.submodelElementData).length === 0) {
+            localSubmodelElementData.value = []; // Reset the SubmodelElement Data when no Node is selected
+            return;
+        }
+        let submodelElementData = [...props.submodelElementData];
+        // console.log('SubmodelElementData: ', submodelElementData);
+        localSubmodelElementData.value = submodelElementData;
+    }
 </script>
