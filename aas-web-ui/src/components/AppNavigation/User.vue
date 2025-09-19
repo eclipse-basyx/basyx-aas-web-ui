@@ -75,8 +75,36 @@
 
         // Trigger Keycloak logout
         if (authStore.getKeycloak) {
+            let redirectUri = '';
+
+            if (envStore.getSingleAas) {
+                if (envStore.getSingleAasRedirect) {
+                    redirectUri = envStore.getSingleAasRedirect;
+                } else {
+                    const params = new URLSearchParams(window.location.search);
+                    if (
+                        envStore.getPreconfiguredAuth ||
+                        new URLSearchParams(window.location.search).has('ignorePreConfAuth')
+                    ) {
+                        // Set ignore query parameter
+                        params.set('ignorePreConfAuth', '');
+                    }
+                    redirectUri = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+                }
+            } else {
+                const params = new URLSearchParams();
+                if (
+                    envStore.getPreconfiguredAuth ||
+                    new URLSearchParams(window.location.search).has('ignorePreConfAuth')
+                ) {
+                    // Set ignore query parameter
+                    params.set('ignorePreConfAuth', '');
+                }
+                redirectUri = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+            }
+
             authStore.getKeycloak.logout({
-                redirectUri: window.location.origin + window.location.pathname,
+                redirectUri: redirectUri,
             });
         }
     }

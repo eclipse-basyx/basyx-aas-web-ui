@@ -113,7 +113,10 @@ export const useEnvStore = defineStore('envStore', () => {
     const getKeycloakUrl = computed(() => keycloakUrl.value);
     const getKeycloakRealm = computed(() => keycloakRealm.value);
     const getKeycloakClientId = computed(() => keycloakClientId.value);
-    const getPreconfiguredAuth = computed(() => preconfiguredAuth.value === 'true');
+    const getPreconfiguredAuth = computed(
+        () =>
+            !new URLSearchParams(window.location.search).has('ignorePreConfAuth') && preconfiguredAuth.value === 'true'
+    );
     const getPreconfiguredAuthUsername = computed(() => preconfiguredAuthUsername.value);
     const getPreconfiguredAuthPassword = computed(() => preconfiguredAuthPassword.value);
     const getEndpointConfigAvailable = computed(() => endpointConfigAvailable.value === 'true');

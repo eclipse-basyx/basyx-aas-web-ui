@@ -33,11 +33,24 @@ export async function loginWithDirectGrant(
     });
 
     try {
+        let keycloak: Keycloak | null = null;
+
+        const initOptions = {
+            url: keycloakUrl,
+            realm: keycloakRealm,
+            clientId: keycloakClientId,
+            onLoad: 'check-sso' as KeycloakOnLoad,
+        };
+
+        keycloak = new Keycloak(initOptions);
+        keycloak?.init({ onLoad: initOptions.onLoad });
+
         const response = await fetch(tokenEndpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: params.toString(),
         });
+
         const data = await response.json();
 
         if (!response.ok) {
@@ -46,10 +59,12 @@ export async function loginWithDirectGrant(
 
         // Store tokens in the auth store
         const authStore = useAuthStore();
+        authStore.setKeycloak(keycloak);
         authStore.setToken(data.access_token);
         authStore.setRefreshToken(data.refresh_token);
         authStore.setAuthStatus(true);
         authStore.setAuthEnabled(true);
+        authStore.setUsername(username);
 
         // Setup token refresh interval (adjust timing as needed)
         const refreshIntervalId = window.setInterval(async () => {
@@ -80,6 +95,7 @@ export async function loginWithDirectGrant(
                 console.error('Token refresh error:', error);
                 authStore.setAuthStatus(false);
                 authStore.setAuthEnabled(false);
+                authStore.setUsername('');
             }
         }, 60000); // refresh every minute
 
@@ -87,6 +103,9 @@ export async function loginWithDirectGrant(
         authStore.setRefreshIntervalId(refreshIntervalId);
     } catch (error) {
         console.error('Auto login failed:', error);
+        const authStore = useAuthStore();
+        authStore.setAuthStatus(false);
+        authStore.setUsername('');
         throw error;
     }
 }
