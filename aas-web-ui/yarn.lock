@@ -936,10 +936,10 @@
     "@thatopen/ui" "~3.1.0"
     lit "3.1.2"
 
-"@thatopen/ui@^3.1.3", "@thatopen/ui@~3.1.0":
-  version "3.1.3"
-  resolved "https://registry.yarnpkg.com/@thatopen/ui/-/ui-3.1.3.tgz#42553d92ac819ce3f275040455a5d843936b0817"
-  integrity sha512-AXev4quN5kaTs2IPWcaOwMlijw0A1JfaZaR35moYH7xf3OlDPKVu68eMlYcNelahk5Qq5dG/9+PgWqxPn9rSRg==
+"@thatopen/ui@^3.1.4", "@thatopen/ui@~3.1.0":
+  version "3.1.4"
+  resolved "https://registry.yarnpkg.com/@thatopen/ui/-/ui-3.1.4.tgz#0df74e77e4218f77a4c867bdaf9f35c8e580140c"
+  integrity sha512-pZXgT0a/LW5qC03VvxK2H4J/GDOWhwDNGumv6/KbHNVLnOwU/UVxEjHOifkQUH552bkJG29tWJaunBQnu9lYVw==
   dependencies:
     "@floating-ui/dom" "1.6.3"
     iconify-icon "2.0.0"
