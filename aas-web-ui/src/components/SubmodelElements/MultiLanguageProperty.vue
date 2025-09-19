@@ -149,7 +149,7 @@
                 mlpValue.value = [];
             }
         },
-        { deep: true } // Removed immediate: true to prevent setup errors
+        { deep: true }
     );
 
     onMounted(() => {
