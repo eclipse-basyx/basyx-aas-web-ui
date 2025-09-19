@@ -90,157 +90,148 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
+<script lang="ts" setup>
+    import { computed, onMounted, ref, watch } from 'vue';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
-    export default defineComponent({
-        name: 'MultiLanguageProperty',
-        props: {
-            multiLanguagePropertyObject: {
-                type: Object,
-                default: () => ({}),
-            },
-            isEditable: {
-                type: Boolean,
-                default: true,
-            },
+    const props = defineProps({
+        multiLanguagePropertyObject: {
+            type: Object as any,
+            default: {} as any,
         },
-
-        setup() {
-            const aasStore = useAASStore();
-
-            const { fetchAndDispatchSme } = useSMEHandling();
-            const { patchRequest } = useRequestHandling();
-
-            return {
-                aasStore, // AASStore Object
-                fetchAndDispatchSme,
-                patchRequest,
-            };
-        },
-
-        data() {
-            return {
-                localMultiLanguagePropertyObject: {} as any,
-                mlpValue: {} as any,
-                languages: [
-                    { id: 1, text: 'Deutsch', short: 'de' },
-                    { id: 2, text: 'English', short: 'en' },
-                    { id: 3, text: 'Français', short: 'fr' },
-                    { id: 4, text: 'Español', short: 'es' },
-                    { id: 5, text: 'Italiano', short: 'it' },
-                    { id: 6, text: 'Kanton Zürich', short: 'zh' },
-                    { id: 7, text: '한국인', short: 'kr' },
-                ] as any,
-            };
-        },
-
-        computed: {
-            // get selected AAS from Store
-            SelectedAAS() {
-                return this.aasStore.getSelectedAAS;
-            },
-
-            // Get the selected Treeview Node (SubmodelElement) from the store
-            SelectedNode() {
-                return this.aasStore.getSelectedNode;
-            },
-        },
-
-        watch: {
-            // Watch for changes in the selected Node and reset input
-            SelectedNode: {
-                deep: true,
-                handler() {
-                    this.mlpValue = {};
-                },
-            },
-
-            // Watch for changes in the propertyObject and update the newPropertyValue if the input field is not focused
-            multiLanguagePropertyObject: {
-                deep: true,
-                handler() {
-                    this.mlpValue = this.multiLanguagePropertyObject.value;
-                },
-            },
-        },
-
-        mounted() {
-            this.localMultiLanguagePropertyObject = this.multiLanguagePropertyObject;
-            this.mlpValue = this.multiLanguagePropertyObject.value;
-        },
-
-        methods: {
-            // Function to remove an Entry from the MultiLanguageProperty
-            removeEntry(position: number) {
-                // console.log('removeEntry: ', value);
-                this.mlpValue.splice(position, 1);
-                this.localMultiLanguagePropertyObject.value = this.mlpValue;
-                this.updateMLP();
-            },
-
-            // Function to add an Entry to the MultiLanguageProperty
-            addEntry() {
-                this.mlpValue.push({
-                    language: '',
-                    text: '',
-                });
-                this.localMultiLanguagePropertyObject.value = this.mlpValue;
-                // console.log('addEntry: ', this.multiLanguagePropertyObject)
-                this.updateMLP();
-            },
-
-            // Function to select the Language of the Entry
-            selectLanguage(language: any, value: any) {
-                // console.log('selectLanguage: ', language);
-                value.language = language.short;
-                this.updateMLP();
-            },
-
-            // Function to update the Value of the MultiLanguageProperty
-            updateValue() {
-                // console.log('updateValue: ', this.mlpValue);
-                if (document.activeElement) (document.activeElement as HTMLElement).blur(); // remove focus from input field
-                this.localMultiLanguagePropertyObject.value = this.mlpValue;
-                this.updateMLP();
-            },
-
-            // Function to update the value of the property
-            updateMLP() {
-                // console.log("Update Value: ", this.multiLanguagePropertyObject);
-                let path = this.localMultiLanguagePropertyObject.path + '/$value';
-                let content = JSON.stringify(
-                    this.localMultiLanguagePropertyObject.value.map((item: any) => ({ [item.language]: item.text }))
-                );
-                let headers = new Headers();
-                headers.append('Content-Type', 'application/json');
-                let context =
-                    'updating ' +
-                    this.localMultiLanguagePropertyObject.modelType +
-                    ' "' +
-                    this.localMultiLanguagePropertyObject.idShort +
-                    '"';
-                let disableMessage = false;
-                // Send Request to update the value of the property
-                this.patchRequest(path, content, headers, context, disableMessage).then((response: any) => {
-                    if (response.success) {
-                        // After successful patch request fetch and dispatch updated SME
-                        this.fetchAndDispatchSme(this.SelectedNode.path, false);
-                        // // this.newPropertyValue = ''; // reset input
-                        // let updatedPropertyObject = { ...this.propertyObject }; // copy the propertyObject
-                        // updatedPropertyObject.value = content.toString().replace(/'/g, ''); // update the value of the propertyObject
-                    }
-                });
-            },
-
-            // Function to set the focus on the input field
-            setFocus(e: boolean, value: any) {
-                value.isFocused = e;
-            },
+        isEditable: {
+            type: Boolean,
+            default: true,
         },
     });
+
+    const aasStore = useAASStore();
+
+    const { fetchAndDispatchSme } = useSMEHandling();
+    const { patchRequest } = useRequestHandling();
+
+    const localMultiLanguagePropertyObject = ref<any>(undefined);
+    const mlpValue = ref<any>([]);
+    const languages = ref<any>([
+        { id: 1, text: 'Deutsch', short: 'de' },
+        { id: 2, text: 'English', short: 'en' },
+        { id: 3, text: 'Français', short: 'fr' },
+        { id: 4, text: 'Español', short: 'es' },
+        { id: 5, text: 'Italiano', short: 'it' },
+        { id: 6, text: 'Kanton Zürich', short: 'zh' },
+        { id: 7, text: '한국인', short: 'kr' },
+    ]);
+
+    const selectedNode = computed(() => {
+        try {
+            return aasStore.getSelectedNode();
+        } catch {
+            return null;
+        }
+    });
+
+    watch(
+        selectedNode,
+        () => {
+            mlpValue.value = [];
+        },
+        { deep: true }
+    );
+
+    watch(
+        () => props.multiLanguagePropertyObject,
+        (newVal: any) => {
+            if (newVal && newVal.value) {
+                mlpValue.value = JSON.parse(JSON.stringify(newVal.value));
+            } else {
+                mlpValue.value = [];
+            }
+        },
+        { deep: true } // Removed immediate: true to prevent setup errors
+    );
+
+    onMounted(() => {
+        localMultiLanguagePropertyObject.value = props.multiLanguagePropertyObject;
+        const propValue = props.multiLanguagePropertyObject as any;
+        mlpValue.value = propValue.value || [];
+    });
+
+    // Function to remove an Entry from the MultiLanguageProperty
+    function removeEntry(position: number): void {
+        // console.log('removeEntry: ', value);
+        mlpValue.value.splice(position, 1);
+        localMultiLanguagePropertyObject.value.value = mlpValue.value;
+        updateMLP();
+    }
+
+    // Function to add an Entry to the MultiLanguageProperty
+    function addEntry(): void {
+        mlpValue.value.push({
+            language: '',
+            text: '',
+        });
+        localMultiLanguagePropertyObject.value.value = mlpValue.value;
+        // console.log('addEntry: ', this.multiLanguagePropertyObject)
+        updateMLP();
+    }
+
+    // Function to select the Language of the Entry
+    function selectLanguage(language: { short: string }, value: { language: string }): void {
+        // console.log('selectLanguage: ', language);
+        value.language = language.short;
+        updateMLP();
+    }
+
+    // Function to update the Value of the MultiLanguageProperty
+    function updateValue(): void {
+        // console.log('updateValue: ', this.mlpValue);
+        if (document.activeElement) (document.activeElement as HTMLElement).blur(); // remove focus from input field
+        localMultiLanguagePropertyObject.value.value = mlpValue.value;
+        updateMLP();
+    }
+
+    // Function to update the value of the property
+    function updateMLP(): void {
+        try {
+            if (!localMultiLanguagePropertyObject.value || !localMultiLanguagePropertyObject.value.path) {
+                console.warn('Cannot update MLP: missing object or path');
+                return;
+            }
+
+            const path = localMultiLanguagePropertyObject.value.path + '/$value';
+            const content = JSON.stringify(
+                mlpValue.value.map((item: { language: string; text: string }) => ({ [item.language]: item.text }))
+            );
+            const headers = new Headers();
+            headers.append('Content-Type', 'application/json');
+            const context =
+                'updating ' +
+                localMultiLanguagePropertyObject.value.modelType +
+                ' "' +
+                localMultiLanguagePropertyObject.value.idShort +
+                '"';
+            const disableMessage = false;
+
+            // Send Request to update the value of the property
+            patchRequest(path, content, headers, context, disableMessage)
+                .then((response: { success: boolean }) => {
+                    if (response.success && selectedNode.value?.path) {
+                        // After successful patch request fetch and dispatch updated SME
+                        fetchAndDispatchSme(selectedNode.value.path, false);
+                    }
+                })
+                .catch((error: unknown) => {
+                    console.error('Error updating MLP:', error);
+                });
+        } catch (error) {
+            console.error('Error in updateMLP:', error);
+        }
+    }
+
+    // Function to set the focus on the input field
+    function setFocus(e: boolean, value: { isFocused?: boolean }): void {
+        value.isFocused = e;
+    }
 </script>
