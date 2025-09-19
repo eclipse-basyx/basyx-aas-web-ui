@@ -1109,299 +1109,259 @@
     </v-container>
 </template>
 
-// TODO Transfer to composition API
-<script lang="ts">
-    import { defineComponent } from 'vue';
+<script lang="ts" setup>
+    import { computed, onMounted, ref, watch } from 'vue';
     import { useTheme } from 'vuetify';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useIDUtils } from '@/composables/IDUtils';
     import { useRequestHandling } from '@/composables/RequestHandling';
+    import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
-    export default defineComponent({
+    // Options
+    defineOptions({
         name: 'HTWFuehrungskomponente',
         semanticId: 'http://htw-berlin.de/smc_statemachine',
-        props: ['submodelElementData', 'selectedNode'],
-
-        setup() {
-            const theme = useTheme();
-            const navigationStore = useNavigationStore();
-
-            const { generateUUIDFromString } = useIDUtils();
-            const { checkIdShort } = useReferableUtils();
-            const { putRequest } = useRequestHandling();
-
-            return {
-                theme, // Theme Object
-                navigationStore, // NavigationStore Object
-                checkIdShort,
-                generateUUIDFromString,
-                putRequest,
-            };
-        },
-
-        data() {
-            return {
-                resetStates: ['Complete', 'Stopped'], // List of states that can be reset
-                startStates: ['Idle'], // List of states that can be started
-                stopStates: ['Idle', 'Held', 'Execute', 'Suspended', 'Complete'], // List of states that can be stopped
-                holdStates: ['Execute'], // List of states that can be held
-                unholdStates: ['Held'], // List of states that can be unheld
-                suspendStates: ['Execute'], // List of states that can be suspended
-                unsuspendStates: ['Suspended'], // List of states that can be unsuspended
-                abortStates: ['Idle', 'Held', 'Execute', 'Suspended', 'Complete'], // List of states that can be aborted
-                clearStates: ['Aborted'], // List of states that can be cleared
-            };
-        },
-
-        computed: {
-            // Check if the current Theme is dark
-            isDark() {
-                return this.theme.global.current.value.dark;
-            },
-
-            // Returns a hash created from the selectedNode.pathFull
-            uniqueId() {
-                return this.generateUUIDFromString(this.selectedNode.pathFull);
-            },
-
-            // returns the primary color of the current theme
-            primaryColor() {
-                if (this.isDark) {
-                    return this.$vuetify.theme.themes.dark.colors.primary;
-                } else {
-                    return this.$vuetify.theme.themes.light.colors.primary;
-                }
-            },
-
-            // returns the primary lighten 2 color of the current theme
-            primaryColorLighten2() {
-                let primary = this.$vuetify.theme.themes.light.colors.primary;
-                return this.lightenDarkenColor(primary, 20);
-            },
-
-            // returns the state transition color
-            stateTransitionColor() {
-                return '#999999';
-            },
-
-            // returns the primary darken 2 color of the current theme
-            executeColor() {
-                return '#565656';
-            },
-
-            // States of the Statemachine
-            states() {
-                return [
-                    {
-                        value: 0,
-                        text: 'Undefined',
-                        path: undefined,
-                    },
-                    {
-                        value: 1,
-                        text: 'Clearing',
-                        path: document.getElementById('Clearing_Border' + this.uniqueId),
-                    },
-                    {
-                        value: 2,
-                        text: 'Stopped',
-                        path: document.getElementById('Stopped_Border' + this.uniqueId),
-                    },
-                    {
-                        value: 3,
-                        text: 'Starting',
-                        path: document.getElementById('Starting_Border' + this.uniqueId),
-                    },
-                    {
-                        value: 4,
-                        text: 'Idle',
-                        path: document.getElementById('Idle_Border' + this.uniqueId),
-                    },
-                    {
-                        value: 5,
-                        text: 'Suspended',
-                        path: document.getElementById('Suspended_Border' + this.uniqueId),
-                    },
-                    {
-                        value: 6,
-                        text: 'Execute',
-                        path: document.getElementById('Execute_Border' + this.uniqueId),
-                    },
-                    {
-                        value: 7,
-                        text: 'Stopping',
-                        path: document.getElementById('Stopping_Border' + this.uniqueId),
-                    },
-                    {
-                        value: 8,
-                        text: 'Aborting',
-                        path: document.getElementById('Aborting_Border' + this.uniqueId),
-                    },
-                    {
-                        value: 9,
-                        text: 'Aborted',
-                        path: document.getElementById('Aborted_Border' + this.uniqueId),
-                    },
-                    {
-                        value: 10,
-                        text: 'Holding',
-                        path: document.getElementById('Holding_Border' + this.uniqueId),
-                    },
-                    {
-                        value: 11,
-                        text: 'Held',
-                        path: document.getElementById('Held_Border' + this.uniqueId),
-                    },
-                    {
-                        value: 12,
-                        text: 'Unholding',
-                        path: document.getElementById('Unholding_Border' + this.uniqueId),
-                    },
-                    {
-                        value: 13,
-                        text: 'Suspending',
-                        path: document.getElementById('Suspending_Border' + this.uniqueId),
-                    },
-                    {
-                        value: 14,
-                        text: 'Unsuspending',
-                        path: document.getElementById('Unsuspending_Border' + this.uniqueId),
-                    },
-                    {
-                        value: 15,
-                        text: 'Resetting',
-                        path: document.getElementById('Resetting_Border' + this.uniqueId),
-                    },
-                    {
-                        value: 16,
-                        text: 'Completing',
-                        path: document.getElementById('Completing_Border' + this.uniqueId),
-                    },
-                    {
-                        value: 17,
-                        text: 'Complete',
-                        path: document.getElementById('Complete_Border' + this.uniqueId),
-                    },
-                ];
-            },
-        },
-
-        watch: {
-            // Watch for changes in the submodelElementData and update the SVG
-            submodelElementData: {
-                handler() {
-                    this.updateSVG();
-                },
-                deep: true,
-            },
-        },
-
-        mounted() {
-            this.updateSVG(); // set the visual state of the PackML SVG
-        },
-
-        methods: {
-            // Function to update the visual state of the PackML SVG
-            updateSVG() {
-                // console.log('updateSVG');
-                let states = [] as any;
-                states = this.states;
-                states.forEach((state: any) => {
-                    if (
-                        this.submodelElementData.value[0].value &&
-                        state.text === this.makeUniform(this.submodelElementData.value[0].value)
-                    ) {
-                        state.path.style.strokeWidth = '4';
-                        state.path.style.stroke = this.isDark ? '#ff0000' : '#ff0000';
-                        state.path.style.fill = 'rgb(0,0,0);';
-                    } else {
-                        if (state.path != undefined) {
-                            state.path.style.strokeWidth = '';
-                            state.path.style.stroke = '';
-                            state.path.style.fill = '';
-                        }
-                    }
-                });
-            },
-
-            // Function to make the state prop uniform
-            makeUniform(state: string) {
-                if (typeof state != 'string') return state;
-                let originalString = state.toLowerCase();
-                return originalString.charAt(0).toUpperCase() + originalString.slice(1);
-            },
-
-            // Function to set the Mode of the PackML Statemachine
-            setMode(mode: number) {
-                // console.log("Set Mode: ", mode, this.selectedNode.pathFull + '/Prop_UnitMode/value');
-                let propName = 'Prop_Mode';
-                // console.log('setState: ', state, this.selectedNode)
-                this.submodelElementData.value.forEach((element: any) => {
-                    if (this.checkIdShort(element, 'Prop_UnitMode')) propName = 'Prop_UnitMode';
-                });
-                let path = this.selectedNode.pathFull + '/' + propName + '/value';
-                let content = "'" + mode + "'";
-                let headers = new Headers();
-                headers.append('Content-Type', 'application/json');
-                let context = 'updating Property "Prop_UnitMode"';
-                let disableMessage = false;
-                // Send Request to update the value of the property
-                this.putRequest(path, content, headers, context, disableMessage).then((response: any) => {
-                    if (response.success) {
-                        this.navigationStore.dispatchSnackbar({
-                            status: true,
-                            timeout: 4000,
-                            color: 'success',
-                            btnColor: 'buttonText',
-                            text: 'PackML Mode updated successfully.',
-                        }); // Show Success Snackbar
-                    }
-                });
-            },
-
-            // Function to set the State of the PackML Statemachine
-            setState(state: number) {
-                // check which property-name is used for the state
-                let propName = 'Prop_ControlCommand';
-                // console.log('setState: ', state, this.selectedNode)
-                this.submodelElementData.value.forEach((element: any) => {
-                    if (this.checkIdShort(element, 'Prop_eCommand')) propName = 'Prop_eCommand';
-                });
-                let path = this.selectedNode.pathFull + '/' + propName + '/value';
-                let content = "'" + state + "'";
-                let headers = new Headers();
-                headers.append('Content-Type', 'application/json');
-                let context = 'updating Property "' + propName + '"';
-                let disableMessage = false;
-                // Send Request to update the value of the property
-                this.putRequest(path, content, headers, context, disableMessage).then(() => {
-                    this.navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 4000,
-                        color: 'success',
-                        btnColor: 'buttonText',
-                        text: 'PackML State updated successfully.',
-                    }); // Show Success Snackbar
-                });
-            },
-
-            lightenDarkenColor(hex: string, percent: number) {
-                // Parse the hex color string to RGB values
-                const hexColor = hex.replace('#', '');
-                const r = parseInt(hexColor.substring(0, 2), 16);
-                const g = parseInt(hexColor.substring(2, 4), 16);
-                const b = parseInt(hexColor.substring(4, 6), 16);
-
-                // Calculate the new RGB values based on the percent
-                const newR = Math.round(Math.min(255, r + (percent / 100) * r));
-                const newG = Math.round(Math.min(255, g + (percent / 100) * g));
-                const newB = Math.round(Math.min(255, b + (percent / 100) * b));
-
-                // Convert the RGB values back to a hex color string
-                const newHexColor = ((newR << 16) | (newG << 8) | newB).toString(16).padStart(6, '0');
-                return '#' + newHexColor;
-            },
-        },
     });
+
+    const props = defineProps<{
+        submodelElementData: any;
+    }>();
+
+    const theme = useTheme();
+    const navigationStore = useNavigationStore();
+    const aasStore = useAASStore();
+
+    const { generateUUIDFromString } = useIDUtils();
+    const { checkIdShort } = useReferableUtils();
+    const { putRequest } = useRequestHandling();
+
+    const stateTransitionColor = ref('#999999'); // Color for state transition boxes
+    const executeColor = ref('#565656'); // Color for execute state box
+
+    const selectedNode = computed(() => aasStore.getSelectedNode);
+    const uniqueId = computed(() => generateUUIDFromString(selectedNode.value.path));
+
+    const states = ref([
+        {
+            value: 0,
+            text: 'Undefined',
+            path: undefined,
+        },
+        {
+            value: 1,
+            text: 'Clearing',
+            path: document.getElementById('Clearing_Border' + uniqueId.value),
+        },
+        {
+            value: 2,
+            text: 'Stopped',
+            path: document.getElementById('Stopped_Border' + uniqueId.value),
+        },
+        {
+            value: 3,
+            text: 'Starting',
+            path: document.getElementById('Starting_Border' + uniqueId.value),
+        },
+        {
+            value: 4,
+            text: 'Idle',
+            path: document.getElementById('Idle_Border' + uniqueId.value),
+        },
+        {
+            value: 5,
+            text: 'Suspended',
+            path: document.getElementById('Suspended_Border' + uniqueId.value),
+        },
+        {
+            value: 6,
+            text: 'Execute',
+            path: document.getElementById('Execute_Border' + uniqueId.value),
+        },
+        {
+            value: 7,
+            text: 'Stopping',
+            path: document.getElementById('Stopping_Border' + uniqueId.value),
+        },
+        {
+            value: 8,
+            text: 'Aborting',
+            path: document.getElementById('Aborting_Border' + uniqueId.value),
+        },
+        {
+            value: 9,
+            text: 'Aborted',
+            path: document.getElementById('Aborted_Border' + uniqueId.value),
+        },
+        {
+            value: 10,
+            text: 'Holding',
+            path: document.getElementById('Holding_Border' + uniqueId.value),
+        },
+        {
+            value: 11,
+            text: 'Held',
+            path: document.getElementById('Held_Border' + uniqueId.value),
+        },
+        {
+            value: 12,
+            text: 'Unholding',
+            path: document.getElementById('Unholding_Border' + uniqueId.value),
+        },
+        {
+            value: 13,
+            text: 'Suspending',
+            path: document.getElementById('Suspending_Border' + uniqueId.value),
+        },
+        {
+            value: 14,
+            text: 'Unsuspending',
+            path: document.getElementById('Unsuspending_Border' + uniqueId.value),
+        },
+        {
+            value: 15,
+            text: 'Resetting',
+            path: document.getElementById('Resetting_Border' + uniqueId.value),
+        },
+        {
+            value: 16,
+            text: 'Completing',
+            path: document.getElementById('Completing_Border' + uniqueId.value),
+        },
+        {
+            value: 17,
+            text: 'Complete',
+            path: document.getElementById('Complete_Border' + uniqueId.value),
+        },
+    ]);
+
+    const resetStates = ref(['Complete', 'Stopped']); // List of states that can be reset
+    const startStates = ref(['Idle']); // List of states that can be started
+    const stopStates = ref(['Idle', 'Held', 'Execute', 'Suspended', 'Complete']); // List of states that can be stopped
+    const holdStates = ref(['Execute']); // List of states that can be held
+    const unholdStates = ref(['Held']); // List of states that can be unheld
+    const suspendStates = ref(['Execute']); // List of states that can be suspended
+    const unsuspendStates = ref(['Suspended']); // List of states that can be unsuspended
+    const abortStates = ref(['Idle', 'Held', 'Execute', 'Suspended', 'Complete']); // List of states that can be aborted
+    const clearStates = ref(['Aborted']); // List of states that can be cleared
+
+    const isDark = computed(() => theme.global.current.value.dark);
+    const primaryColor = computed(() => theme.current.value.colors.primary || '#1976d2');
+    const primaryColorLighten2 = computed(() => lightenDarkenColor(primaryColor.value, 20));
+
+    watch(
+        () => props.submodelElementData,
+        () => {
+            updateSVG();
+        },
+        { deep: true }
+    );
+
+    onMounted(() => {
+        updateSVG(); // set the visual state of the PackML SVG
+    });
+
+    function updateSVG(): void {
+        // console.log('updateSVG');
+        states.value.forEach((state: any) => {
+            if (
+                props.submodelElementData.value[0].value &&
+                state.text === makeUniform(props.submodelElementData.value[0].value)
+            ) {
+                state.path.style.strokeWidth = '4';
+                state.path.style.stroke = isDark.value ? '#ff0000' : '#ff0000';
+                state.path.style.fill = 'rgb(0,0,0);';
+            } else {
+                if (state.path != undefined) {
+                    state.path.style.strokeWidth = '';
+                    state.path.style.stroke = '';
+                    state.path.style.fill = '';
+                }
+            }
+        });
+    }
+
+    function makeUniform(state: string): string {
+        if (typeof state != 'string') return state;
+        let originalString = state.toLowerCase();
+        return originalString.charAt(0).toUpperCase() + originalString.slice(1);
+    }
+
+    function setMode(mode: number): void {
+        // console.log("Set Mode: ", mode, this.selectedNode.pathFull + '/Prop_UnitMode/value');
+        let propName = 'Prop_Mode';
+        // console.log('setState: ', state, this.selectedNode)
+        props.submodelElementData.value.forEach((element: any) => {
+            if (checkIdShort(element, 'Prop_UnitMode')) propName = 'Prop_UnitMode';
+        });
+
+        const path = selectedNode.value.pathFull + '/' + propName + '/value';
+        const content = "'" + mode + "'";
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const context = 'updating Property "Prop_UnitMode"';
+        const disableMessage = false;
+
+        // Send Request to update the value of the property
+        putRequest(path, content, headers, context, disableMessage).then((response: any) => {
+            if (response.success) {
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 4000,
+                    color: 'success',
+                    btnColor: 'buttonText',
+                    text: 'PackML Mode updated successfully.',
+                }); // Show Success Snackbar
+            }
+        });
+    }
+
+    function setState(state: number): void {
+        // check which property-name is used for the state
+        let propName = 'Prop_ControlCommand';
+        // console.log('setState: ', state, this.selectedNode)
+        props.submodelElementData.value.forEach((element: any) => {
+            if (checkIdShort(element, 'Prop_eCommand')) propName = 'Prop_eCommand';
+        });
+
+        const path = selectedNode.value.pathFull + '/' + propName + '/value';
+        const content = "'" + state + "'";
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const context = 'updating Property "' + propName + '"';
+        const disableMessage = false;
+
+        // Send Request to update the value of the property
+        putRequest(path, content, headers, context, disableMessage).then(() => {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'success',
+                btnColor: 'buttonText',
+                text: 'PackML State updated successfully.',
+            }); // Show Success Snackbar
+        });
+    }
+
+    function lightenDarkenColor(hex: string, percent: number): string {
+        // Return a default color if hex is undefined or invalid
+        if (!hex || typeof hex !== 'string') {
+            return '#1976d2';
+        }
+
+        // Parse the hex color string to RGB values
+        const hexColor = hex.replace('#', '');
+        const r = parseInt(hexColor.substring(0, 2), 16);
+        const g = parseInt(hexColor.substring(2, 4), 16);
+        const b = parseInt(hexColor.substring(4, 6), 16);
+
+        // Calculate the new RGB values based on the percent
+        const newR = Math.round(Math.min(255, r + (percent / 100) * r));
+        const newG = Math.round(Math.min(255, g + (percent / 100) * g));
+        const newB = Math.round(Math.min(255, b + (percent / 100) * b));
+
+        // Convert the RGB values back to a hex color string
+        const newHexColor = ((newR << 16) | (newG << 8) | newB).toString(16).padStart(6, '0');
+        return '#' + newHexColor;
+    }
 </script>
