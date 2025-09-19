@@ -96,13 +96,11 @@
     function initializeSubmodelElementData(): void {
         if (!props.submodelElementData) return;
 
-        // console.log('SubmodelElementData: ', this.submodelElementData)
         if (Object.keys(props.submodelElementData).length === 0) {
-            localSubmodelElementData.value = []; // Reset the SubmodelElement Data when no Node is selected
+            localSubmodelElementData.value = [];
             return;
         }
         let submodelElementData = [...props.submodelElementData];
-        // console.log('SubmodelElementData: ', submodelElementData);
         localSubmodelElementData.value = submodelElementData;
     }
 </script>
