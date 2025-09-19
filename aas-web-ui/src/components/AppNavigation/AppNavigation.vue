@@ -314,10 +314,18 @@
     const showAASList = computed(() => ['AASViewer', 'AASEditor', 'AASSubmodelViewer'].includes(route.name as string));
     const drawerState = computed(() => navigationStore.getDrawerState);
     const LogoPath = computed(() => {
+        const basePath = import.meta.env.MODE === 'production' ? envStore.getEnvBasePath : import.meta.env.BASE_URL;
+
+        let logoFolder = '/Logo/';
+        if (basePath && basePath.trim() !== '' && !basePath.includes('PLACEHOLDER')) {
+            const normalizedBasePath = basePath.endsWith('/') ? basePath : basePath + '/';
+            logoFolder = `${normalizedBasePath}Logo/`;
+        }
+
         if (isDark.value && envStore.getEnvLogoDarkPath.trim().length > 0) {
-            return 'Logo/' + envStore.getEnvLogoDarkPath;
+            return logoFolder + envStore.getEnvLogoDarkPath;
         } else {
-            return 'Logo/' + envStore.getEnvLogoLightPath;
+            return logoFolder + envStore.getEnvLogoLightPath;
         }
     });
     const showMobileMenu = computed(() => isMobile.value && !mainMenu.value);
