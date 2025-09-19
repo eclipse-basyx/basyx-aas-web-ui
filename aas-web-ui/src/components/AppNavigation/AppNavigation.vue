@@ -315,9 +315,9 @@
     const drawerState = computed(() => navigationStore.getDrawerState);
     const LogoPath = computed(() => {
         if (isDark.value && envStore.getEnvLogoDarkPath.trim().length > 0) {
-            return 'Logo/' + envStore.getEnvLogoDarkPath;
+            return '/Logo/' + envStore.getEnvLogoDarkPath;
         } else {
-            return 'Logo/' + envStore.getEnvLogoLightPath;
+            return '/Logo/' + envStore.getEnvLogoLightPath;
         }
     });
     const showMobileMenu = computed(() => isMobile.value && !mainMenu.value);
