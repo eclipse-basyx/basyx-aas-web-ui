@@ -39,6 +39,20 @@
                 class="text-buttonText"
                 @click="executeQuery"></v-btn>
         </v-card-actions>
+
+        <!-- Query Response Display -->
+        <v-textarea
+            v-if="queryResponse"
+            v-model="queryResponse"
+            variant="outlined"
+            bg-color="surface"
+            density="compact"
+            flat
+            label="Query Response"
+            readonly
+            rows="15"
+            class="mt-4">
+        </v-textarea>
     </v-container>
 </template>
 
@@ -58,6 +72,9 @@
     const queryText = ref('');
     const isValidJson = ref(true);
     const jsonError = ref('');
+
+    // Query response
+    const queryResponse = ref('');
 
     // Watch for changes in queryText to validate JSON
     watch(queryText, (newValue) => {
@@ -182,22 +199,24 @@
 
     async function executeQuery(): Promise<void> {
         if (!selectedEndpoint.value) {
-            alert('Please select an API component.');
+            queryResponse.value = 'Error: Please select an API component.';
             return;
         }
 
         if (!isValidJson.value || queryText.value.trim() === '') {
-            alert('Please enter a valid JSON query.');
+            queryResponse.value = 'Error: Please enter a valid JSON query.';
             return;
         }
 
         const endpoint = availableEndpoints.value.find((ep) => ep.value === selectedEndpoint.value);
         if (!endpoint) {
-            alert('Selected endpoint is not valid.');
+            queryResponse.value = 'Error: Selected endpoint is not valid.';
             return;
         }
 
         try {
+            queryResponse.value = 'Executing query...';
+
             const requestHeaders = new Headers();
             requestHeaders.append('Content-Type', 'application/json');
 
@@ -207,17 +226,16 @@
             const context = 'executing query';
             const disableMessage = false;
             // send the request
-            await postRequest(path, content, headers, context, disableMessage, true).then((response: any) => {
-                if (response.success) {
-                    alert('Query executed successfully. Check console for results.');
-                    console.log('Query Response:', response.data);
+            await postRequest(path, content, headers, context, disableMessage, true).then((response: unknown) => {
+                const res = response as { success: boolean; data?: unknown; message?: string };
+                if (res.success) {
+                    queryResponse.value = JSON.stringify(res.data, null, 2);
                 } else {
-                    alert(`Query failed: ${response.message}`);
+                    queryResponse.value = `Query failed: ${res.message || 'Unknown error'}`;
                 }
             });
         } catch (error) {
-            console.error('Error executing query:', error);
-            alert(`Error executing query: ${(error as Error).message}`);
+            queryResponse.value = `Error executing query: ${(error as Error).message}`;
         }
     }
 </script>
