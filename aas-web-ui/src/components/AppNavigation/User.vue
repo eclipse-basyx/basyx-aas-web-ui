@@ -58,7 +58,7 @@
     const authUsername = computed(
         () => authStore.getUsername || (envStore.getBasicAuthActive ? envStore.getBasicAuthUsername : '')
     );
-    const allowLogout = computed(() => envStore.getAllowLogout); // Check if the current environment allows showing the AAS resp. SM Editor
+    const allowLogout = computed(() => envStore.getAllowLogout);
 
     function logout(): void {
         // Store the clean path to redirect to after logout
