@@ -23,7 +23,7 @@ export async function createAAS(baseUrl: string, aasId: string) {
 
     const body = JSON.stringify(aas.jsonization.toJsonable(shell), null, 2);
 
-    const res = await fetch(`${baseUrl}/shells`, {
+    const res = await fetch(`${baseUrl.endsWith('/shells') ? baseUrl : `${baseUrl}/shells`}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body,
@@ -40,7 +40,7 @@ export async function upsertSubmodel(baseUrl: string, smIdPrefix: string) {
     submodel.id = smIdPrefix + submodel.id; // allow custom prefix for submodel ID
     const smBody = JSON.stringify(aas.jsonization.toJsonable(submodel), null, 2);
 
-    let res = await fetch(`${baseUrl}/submodels`, {
+    let res = await fetch(`${baseUrl.endsWith('/shells') ? baseUrl.split('/shells')[0] : baseUrl}/submodels`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: smBody,
