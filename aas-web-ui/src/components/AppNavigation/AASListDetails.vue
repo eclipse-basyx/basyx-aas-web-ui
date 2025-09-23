@@ -131,6 +131,7 @@
 </template>
 
 <script lang="ts" setup>
+    import _ from 'lodash';
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
@@ -335,9 +336,12 @@
     }
 
     function gotoSubmodelList(): void {
+        const query = _.cloneDeep(route.query);
+        if (Object.hasOwn(query, 'path')) delete query.path;
+
         router.push({
             name: 'SubmodelList',
-            query: { aas: route.query.aas },
+            query: query,
         });
     }
 </script>
