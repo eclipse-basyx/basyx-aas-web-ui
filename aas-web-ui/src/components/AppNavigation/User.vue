@@ -26,7 +26,7 @@
                     </template>
                 </v-list-item>
             </v-list>
-            <template v-if="authStore.getAuthStatus" #actions>
+            <template v-if="authStore.getAuthStatus && allowLogout" #actions>
                 <v-spacer></v-spacer>
                 <v-btn append-icon="mdi-logout" class="text-none" color="primary" text="Logout" @click="logout" />
             </template>
@@ -58,6 +58,7 @@
     const authUsername = computed(
         () => authStore.getUsername || (envStore.getBasicAuthActive ? envStore.getBasicAuthUsername : '')
     );
+    const allowLogout = computed(() => envStore.getAllowLogout); // Check if the current environment allows showing the AAS resp. SM Editor
 
     function logout(): void {
         // Store the clean path to redirect to after logout
