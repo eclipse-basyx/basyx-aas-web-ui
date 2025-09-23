@@ -2,7 +2,6 @@ import * as aas from '@aas-core-works/aas-core3.0-typescript';
 
 export function createBankAccountsSMC(forms: any): aas.types.SubmodelElementCollection {
     const elements: aas.types.ISubmodelElement[] = [];
-
     forms.forEach((account: any, index: number) => {
         const bankAccountSMC = new aas.types.SubmodelElementCollection();
         bankAccountSMC.idShort = account.idShort ? account.idShort : `BankAccount__${String(index).padStart(2, '0')}__`;

@@ -9,6 +9,7 @@ export const useFormStore = defineStore('form', {
         imageFile: null,
         pdfFile: [] as Array<File | null>,
         companyIDFormData: {} as Record<string, any>,
+        mainAccountIdShort: 'BankAccount__00__',
     }),
 
     actions: {
@@ -43,9 +44,17 @@ export const useFormStore = defineStore('form', {
         saveCompanyFormData(data: any) {
             this.companyIDFormData = data;
         },
+        saveMainAccountIdShort(idShort: string) {
+            if (idShort && idShort.trim().length > 0) {
+                this.mainAccountIdShort = idShort;
+            } else {
+                this.mainAccountIdShort = 'BankAccount__00__';
+            }
+        },
     },
     getters: {
         getCompanyFormData: (state) => state.companyIDFormData,
+        getMainAccountIdShort: (state) => state.mainAccountIdShort,
     },
 });
 

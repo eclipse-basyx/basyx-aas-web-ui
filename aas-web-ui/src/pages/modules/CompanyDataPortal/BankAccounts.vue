@@ -131,6 +131,7 @@
         if (filteredForm.length > 0) {
             const smc = createBankAccountsSMC(filteredForm);
             store.saveBankAccountSMC(smc);
+            store.saveMainAccountIdShort(filteredForm[0].idShort || 'BankAccount__00__');
         }
         props.next();
     }

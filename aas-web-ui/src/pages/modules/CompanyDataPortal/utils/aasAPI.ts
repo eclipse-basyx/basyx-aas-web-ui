@@ -1,5 +1,6 @@
 import * as aas from '@aas-core-works/aas-core3.0-typescript';
 import { getSubmodel } from './mainSubmodel';
+import { useFormStore } from '../stores/formData';
 
 function base64UrlEncode(input: string): string {
     if (typeof Buffer !== 'undefined' && typeof Buffer.from === 'function') {
@@ -49,7 +50,19 @@ export async function createAAS(
 }
 export async function upsertSubmodel(baseUrl: string, smIdPrefix: string) {
     const submodel = getSubmodel();
+    const store = useFormStore();
     submodel.id = smIdPrefix + submodel.id; // allow custom prefix for submodel ID
+    const bankAccounts = submodel.submodelElements?.find((el) => el.idShort === 'BankAccounts');
+    if (bankAccounts && 'value' in bankAccounts && Array.isArray((bankAccounts as any).value)) {
+        const mainAccount = (bankAccounts as any).value.find((el: { idShort: string }) => el.idShort === 'MainAccount');
+        if (mainAccount && 'value' in mainAccount) {
+            mainAccount.value = new aas.types.Reference(aas.types.ReferenceTypes.ModelReference, [
+                new aas.types.Key(aas.types.KeyTypes.Submodel, submodel.id),
+                new aas.types.Key(aas.types.KeyTypes.SubmodelElementCollection, 'BankAccounts'),
+                new aas.types.Key(aas.types.KeyTypes.Property, store.getMainAccountIdShort),
+            ]);
+        }
+    }
     const smBody = JSON.stringify(aas.jsonization.toJsonable(submodel), null, 2);
 
     let res = await fetch(`${baseUrl.endsWith('/shells') ? baseUrl.split('/shells')[0] : baseUrl}/submodels`, {

@@ -88,7 +88,7 @@
     const smId = ref('');
     const serverUrl = ref('');
     const serverOptions = ref<string[]>([]);
-    const aasDisplayName = ref([]);
+    const aasDisplayName = ref<any[]>([]);
 
     const navStore = useNavigationStore();
 
