@@ -11,8 +11,6 @@ import AASEditor from '@/pages/AASEditor.vue';
 import AASSubmodelViewer from '@/pages/AASSubmodelViewer.vue';
 import AASViewer from '@/pages/AASViewer.vue';
 import About from '@/pages/About.vue';
-import Dashboard from '@/pages/Dashboard.vue';
-import DashboardGroup from '@/pages/DashboardGroup.vue';
 import Page404 from '@/pages/Page404.vue';
 import SMEditor from '@/pages/SMEditor.vue';
 import SMViewer from '@/pages/SMViewer.vue';
@@ -63,8 +61,6 @@ const staticRoutes: Array<RouteRecordRaw> = [
         meta: { name: 'About' },
     },
     { path: '/404', name: 'NotFound404', component: Page404, meta: { name: 'Page not found | 404' } },
-    { path: '/dashboard', name: 'Dashboard', component: Dashboard },
-    { path: '/dashboard-group', name: 'DashboardGroup', component: DashboardGroup },
     { path: '/:pathMatch(.*)*', name: 'NotFound', component: Page404 },
 ];
 
