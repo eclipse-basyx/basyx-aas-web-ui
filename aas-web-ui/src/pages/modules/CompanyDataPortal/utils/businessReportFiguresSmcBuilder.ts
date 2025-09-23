@@ -45,7 +45,7 @@ export function createBusinessReportFiguresSMC(forms: any): aas.types.SubmodelEl
             p.description = [
                 new aas.types.LangStringTextType(
                     'en',
-                    'The 12-month period used for accounting and financial reporting of the business repor'
+                    'The 12-month period used for accounting and financial reporting of the business report'
                 ),
             ];
             p.semanticId = new aas.types.Reference(aas.types.ReferenceTypes.ExternalReference, [

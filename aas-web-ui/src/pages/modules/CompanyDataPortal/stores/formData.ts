@@ -58,5 +58,3 @@ export const useFormStore = defineStore('form', {
     },
 });
 
-//TODO: smc can be stored. make json forms also can be stored here
-// so that we can retrieve them in the last übersicht
