@@ -611,7 +611,12 @@
         });
     }
 
-    async function save(aasId: string, smId: string, serverUrl: string): Promise<void> {
+    async function save(
+        aasId: string,
+        smId: string,
+        serverUrl: string,
+        aasDisplayName: Array<{ language: string; text: string }>
+    ): Promise<void> {
         const smc = createCompanyGovernanceSMC(form as any);
         if (smc !== null) {
             store.saveGovernmentSMC(smc);
@@ -619,7 +624,7 @@
         try {
             const baseUrl = serverUrl;
             const image = store.imageFile ?? undefined;
-            await createAll(baseUrl, aasId, smId, image);
+            await createAll(baseUrl, aasId, smId, image, aasDisplayName);
             console.warn('AAS + Submodel created and linked successfully');
             const files = store.getPdfFile?.() ?? store.pdfFile ?? [];
             for (let i = 0; i < files.length; i++) {
@@ -640,11 +645,16 @@
         showDialog.value = true;
     }
 
-    function execSave(aasId: string, smId: string, serverUrl: string): void {
+    function execSave(
+        aasId: string,
+        smId: string,
+        serverUrl: string,
+        aasDisplayName: Array<{ language: string; text: string }>
+    ): void {
         if (!props.isActiveComponent) {
             return;
         }
-        save(aasId, smId, serverUrl);
+        save(aasId, smId, serverUrl, aasDisplayName);
         console.warn('Saving with AAS ID:', aasId, 'Submodel ID Prefix:', smId, 'to server:', serverUrl);
     }
 </script>

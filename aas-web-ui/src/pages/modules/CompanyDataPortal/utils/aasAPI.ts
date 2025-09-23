@@ -16,10 +16,22 @@ function base64UrlEncode(input: string): string {
     return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-export async function createAAS(baseUrl: string, aasId: string) {
+export async function createAAS(
+    baseUrl: string,
+    aasId: string,
+    aasDisplayName?: Array<{ language: string; text: string }>
+) {
     const assetInfo = new aas.types.AssetInformation(aas.types.AssetKind.Instance, 'urn:example:assets:company:1234');
     const shell = new aas.types.AssetAdministrationShell(aasId, assetInfo);
     shell.idShort = 'CompanyDataAAS';
+
+    if (aasDisplayName && Array.isArray(aasDisplayName) && aasDisplayName.length > 0) {
+        shell.displayName = aasDisplayName.map(
+            (dn) => new aas.types.LangStringNameType(dn.language ?? 'en', dn.text ?? 'Company Data AAS')
+        );
+    } else {
+        shell.displayName = [new aas.types.LangStringNameType('en', 'Company Data AAS')];
+    }
 
     const body = JSON.stringify(aas.jsonization.toJsonable(shell), null, 2);
 
@@ -53,11 +65,14 @@ export async function upsertSubmodel(baseUrl: string, smIdPrefix: string) {
 
     if (res.status === 409) {
         const submodelIdB64 = base64UrlEncode(submodel.id);
-        res = await fetch(`${baseUrl}/submodels/${submodelIdB64}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: smBody,
-        });
+        res = await fetch(
+            `${baseUrl.endsWith('/shells') ? baseUrl.split('/shells')[0] : baseUrl}/submodels/${submodelIdB64}`,
+            {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: smBody,
+            }
+        );
 
         if (!res.ok) {
             throw new Error(`Failed to update Submodel: ${res.status} ${res.statusText}`);
@@ -170,8 +185,14 @@ export async function uploadConsolidatedDataFileByIndex({
     });
 }
 
-export async function createAll(baseUrl: string, aasId: string, smIdPrefix: string, companyLogoFile?: File) {
-    const shell = await createAAS(baseUrl, aasId);
+export async function createAll(
+    baseUrl: string,
+    aasId: string,
+    smIdPrefix: string,
+    companyLogoFile?: File,
+    aasDisplayName?: Array<{ language: string; text: string }>
+) {
+    const shell = await createAAS(baseUrl, aasId, aasDisplayName);
     const submodel = await upsertSubmodel(baseUrl, smIdPrefix);
     await linkSubmodelToAAS(baseUrl, shell.id, submodel);
     if (companyLogoFile) {

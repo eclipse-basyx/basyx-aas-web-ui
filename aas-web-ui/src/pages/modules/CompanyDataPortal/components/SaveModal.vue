@@ -25,6 +25,50 @@
                     density="compact"
                     variant="outlined"
                     :rules="[(v) => !!v || 'Submodel ID Prefix is required']"></v-text-field>
+                <FormField
+                    label="Homepage URL"
+                    tip="Web address of the company's official website, for customers and interested parties">
+                    <v-slide-y-transition group>
+                        <div v-for="(entry, index) in aasDisplayName" :key="`url-${index}`" class="mb-3">
+                            <v-row align="center" no-gutters>
+                                <v-col cols="12" md="3" class="pr-md-2">
+                                    <v-text-field
+                                        v-model="entry.language"
+                                        placeholder="e.g., en"
+                                        variant="outlined"
+                                        density="comfortable"
+                                        hide-details />
+                                </v-col>
+                                <v-col cols="12" md="9">
+                                    <v-text-field
+                                        v-model="entry.text"
+                                        type="url"
+                                        placeholder="https://example.com"
+                                        variant="outlined"
+                                        density="comfortable"
+                                        hide-details />
+                                </v-col>
+                                <v-col cols="12" class="mt-1">
+                                    <v-btn
+                                        variant="tonal"
+                                        color="error"
+                                        size="small"
+                                        @click="aasDisplayName.splice(index, 1)">
+                                        Remove
+                                    </v-btn>
+                                </v-col>
+                            </v-row>
+                        </div>
+                    </v-slide-y-transition>
+
+                    <v-btn
+                        variant="tonal"
+                        color="primary"
+                        size="small"
+                        @click="aasDisplayName.push({ language: '', text: '' })">
+                        + Add AAS Display Name
+                    </v-btn>
+                </FormField>
             </v-card-text>
             <v-card-actions>
                 <v-btn color="error" variant="tonal" @click="close">Cancel</v-btn>
@@ -44,6 +88,7 @@
     const smId = ref('');
     const serverUrl = ref('');
     const serverOptions = ref<string[]>([]);
+    const aasDisplayName = ref([]);
 
     const navStore = useNavigationStore();
 
@@ -58,7 +103,12 @@
     );
 
     const props = defineProps<{
-        save: (aasId: string, smId: string, serverUrl: string) => void;
+        save: (
+            aasId: string,
+            smId: string,
+            serverUrl: string,
+            aasDisplayName: Array<{ language: string; text: string }>
+        ) => void;
         closeDialog: () => void;
         showDialog: boolean;
     }>();
@@ -84,7 +134,7 @@
 
     function execSave(): void {
         if (aasId.value && serverUrl.value) {
-            props.save(aasId.value, smId.value, serverUrl.value);
+            props.save(aasId.value, smId.value, serverUrl.value, aasDisplayName.value);
             close();
         } else {
             alert('Please fill in all required fields.');
