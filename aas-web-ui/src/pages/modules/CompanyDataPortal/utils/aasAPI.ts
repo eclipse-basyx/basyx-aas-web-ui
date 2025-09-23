@@ -1,6 +1,6 @@
 import * as aas from '@aas-core-works/aas-core3.0-typescript';
-import { getSubmodel } from './mainSubmodel';
 import { useFormStore } from '../stores/formData';
+import { getSubmodel } from './mainSubmodel';
 
 function base64UrlEncode(input: string): string {
     if (typeof Buffer !== 'undefined' && typeof Buffer.from === 'function') {
