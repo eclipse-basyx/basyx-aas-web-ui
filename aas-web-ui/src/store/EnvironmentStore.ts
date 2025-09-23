@@ -83,7 +83,7 @@ export const useEnvStore = defineStore('envStore', () => {
         import.meta.env.VITE_ALLOW_UPLOADING || (isProduction ? '/__ALLOW_UPLOADING_PLACEHOLDER__/' : '')
     );
     const allowLogout = ref(
-        import.meta.env.VITE_ALLOW_LOGOUT || (isProduction ? '/__ALLOW_UPLOADING_PLACEHOLDER__/' : '')
+        import.meta.env.VITE_ALLOW_LOGOUT || (isProduction ? '/__ALLOW_LOGOUT_PLACEHOLDER__/' : '')
     );
     const basicAuthActive = ref(
         import.meta.env.VITE_BASIC_AUTH_ACTIVE || (isProduction ? '/__BASIC_AUTH_ACTIVE_PLACEHOLDER__/' : '')
