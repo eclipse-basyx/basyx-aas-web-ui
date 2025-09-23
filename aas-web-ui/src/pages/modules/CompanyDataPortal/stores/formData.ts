@@ -57,4 +57,3 @@ export const useFormStore = defineStore('form', {
         getMainAccountIdShort: (state) => state.mainAccountIdShort,
     },
 });
-
