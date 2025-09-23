@@ -140,7 +140,7 @@
                             </v-expansion-panel>
                         </v-expansion-panels>
 
-                        <v-btn class="mt-2" variant="elevated" color="primary" @click="addCertification">
+                        <v-btn class="mt-2" variant="tonal" color="primary" @click="addCertification">
                             <v-icon start>mdi-plus</v-icon>
                             Add Certification
                         </v-btn>
@@ -365,7 +365,7 @@
                     </v-slide-y-transition>
                     <v-btn
                         class="mt-1"
-                        variant="elevated"
+                        variant="tonal"
                         color="primary"
                         @click="form.insurances.push({ insuranceCompany: '', insuranceType: '', insuranceSum: '' })">
                         <v-icon start>mdi-plus</v-icon> Add Insurance
@@ -499,17 +499,19 @@
                             </v-expansion-panel-text>
                         </v-expansion-panel>
                     </v-expansion-panels>
-                    <v-btn class="mt-2" variant="elevated" color="primary" @click="addRegulation">
+                    <v-btn class="mt-2" variant="tonal" color="primary" @click="addRegulation">
                         <v-icon start>mdi-plus</v-icon> Add Regulation
                     </v-btn>
 
                     <!-- Footer actions -->
                     <v-row class="pt-6" align="center" justify="space-between">
                         <v-col cols="auto">
-                            <v-btn variant="elevated" color="grey" @click="props.prev">Previous</v-btn>
+                            <v-btn variant="elevated" color="grey" class="text-buttonText" @click="props.prev"
+                                >Previous</v-btn
+                            >
                         </v-col>
                         <v-col cols="auto">
-                            <v-btn type="submit" color="green">Save</v-btn>
+                            <v-btn type="submit" color="green" class="text-buttonText">Save</v-btn>
                         </v-col>
                     </v-row>
                 </v-form>

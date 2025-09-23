@@ -38,7 +38,7 @@
                                 <v-col cols="4" class="d-flex align-center">
                                     <v-btn
                                         v-if="model > 0"
-                                        class="text-none"
+                                        class="text-buttonText"
                                         color="white"
                                         icon="mdi-arrow-left"
                                         text
@@ -57,7 +57,7 @@
                                 <v-col cols="4" class="d-flex justify-end align-center">
                                     <v-btn
                                         v-if="settings[model].addBtn"
-                                        class="text-none"
+                                        class="text-buttonText"
                                         color="primary"
                                         prepend-icon="mdi-plus"
                                         text="Add New"

@@ -338,7 +338,7 @@
                 <v-row class="pt-4" align="center" justify="space-between">
                     <v-spacer></v-spacer>
                     <v-col cols="auto">
-                        <v-btn type="submit" color="green"> Next </v-btn>
+                        <v-btn type="submit" color="green" class="text-buttonText"> Next </v-btn>
                     </v-col>
                 </v-row>
             </v-form>

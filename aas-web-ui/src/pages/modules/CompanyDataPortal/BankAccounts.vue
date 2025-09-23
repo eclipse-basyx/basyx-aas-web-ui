@@ -9,7 +9,7 @@
                 </div>
                 <v-row :class="forms.length > 0 ? 'pt-6' : ''" align="center" justify="space-between">
                     <v-col cols="auto">
-                        <v-btn color="grey" variant="elevated" @click="props.prev"> Previous </v-btn>
+                        <v-btn color="grey" variant="elevated" @click="props.prev" class="text-buttonText"> Previous </v-btn>
                     </v-col>
                     <v-col cols="auto">
                         <div v-if="forms.length == 0">Add a bank account (optional) to proceed.</div>
@@ -18,7 +18,7 @@
                         </div>
                     </v-col>
                     <v-col cols="auto">
-                        <v-btn type="submit" color="green">Next</v-btn>
+                        <v-btn type="submit" color="green" class="text-buttonText">Next</v-btn>
                     </v-col>
                 </v-row>
             </v-form>
