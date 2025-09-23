@@ -150,7 +150,9 @@
                 <!-- Navigation Buttons -->
                 <v-row align="center" justify="space-between">
                     <v-col cols="auto">
-                        <v-btn color="grey" variant="elevated" @click="props.prev" class="text-buttonText">Previous</v-btn>
+                        <v-btn color="grey" variant="elevated" class="text-buttonText" @click="props.prev"
+                            >Previous</v-btn
+                        >
                     </v-col>
                     <v-col cols="auto">
                         <v-btn type="submit" color="green" class="text-buttonText">Next</v-btn>
