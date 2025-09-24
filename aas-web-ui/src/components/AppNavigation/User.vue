@@ -77,23 +77,19 @@
         // Trigger Keycloak logout
         if (authStore.getKeycloak) {
             let redirectUri = '';
-            let params = new URLSearchParams();
-            if (envStore.getSingleAas) {
-                if (envStore.getSingleAasRedirect) {
-                    redirectUri = envStore.getSingleAasRedirect;
-                } else {
-                    params = new URLSearchParams(window.location.search);
-                    if (envStore.getPreconfiguredAuth) {
-                        // Set ignore query parameter
-                        params.set('ignorePreConfAuth', '');
-                    }
-                    redirectUri = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
-                }
+
+            if (envStore.getSingleAas && envStore.getSingleAasRedirect) {
+                redirectUri = envStore.getSingleAasRedirect;
             } else {
+                const params = envStore.getSingleAas
+                    ? new URLSearchParams(window.location.search)
+                    : new URLSearchParams();
+
                 if (envStore.getPreconfiguredAuth) {
                     // Set ignore query parameter
                     params.set('ignorePreConfAuth', '');
                 }
+
                 redirectUri = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
             }
 
