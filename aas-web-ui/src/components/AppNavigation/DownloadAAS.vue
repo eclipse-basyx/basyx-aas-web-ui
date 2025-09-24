@@ -119,6 +119,7 @@
 
             downloadFile(filename, aasSerialization);
             downloadLoading.value = false;
+            downloadDialog.value = false;
         }
     }
 </script>

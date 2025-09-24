@@ -61,7 +61,7 @@
                                 append-icon="mdi-download"
                                 class="text-none"
                                 text="Download"
-                                @click="downloadAasx(assetAdministrationShellData)" />
+                                @click="openDownloadDialog(assetAdministrationShellData)" />
                         </template>
                         <span>Download Asset Administration Shell as .aasx file</span>
                     </v-tooltip>
@@ -128,6 +128,8 @@
             </v-card-text>
         </v-sheet>
     </v-container>
+    <!-- Dialog for downloading AAS -->
+    <DownloadAAS v-model="downloadAASDialog" :aas="aasToDownload"></DownloadAAS>
 </template>
 
 <script lang="ts" setup>
@@ -146,7 +148,7 @@
     const router = useRouter();
 
     // Composables
-    const { downloadAasx, fetchAssetInformation } = useAASRepositoryClient();
+    const { fetchAssetInformation } = useAASRepositoryClient();
     const { aasIsAvailableById, fetchAas } = useAASHandling();
 
     // Stores
@@ -159,6 +161,8 @@
     const assetInformation = ref({} as any | null);
     const autoSyncInterval = ref<number | undefined>(undefined);
     const statusCheckInterval = ref<number | undefined>(undefined);
+    const downloadAASDialog = ref(false); // Variable to store if the DownloadAAS Dialog should be shown
+    const aasToDownload = ref({}); // Variable to store the AAS to be downloaded
 
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile);
@@ -339,5 +343,10 @@
             name: 'SubmodelList',
             query: { aas: route.query.aas },
         });
+    }
+
+    function openDownloadDialog(aasDescriptor: any): void {
+        downloadAASDialog.value = true;
+        aasToDownload.value = aasDescriptor;
     }
 </script>
