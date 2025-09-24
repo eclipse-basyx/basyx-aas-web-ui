@@ -3,7 +3,15 @@ import { urlRegex } from '@/composables/UrlUtils';
 
 const isProduction = import.meta.env.MODE === 'production';
 
+// Helper function for extracting initial URL query parameter
+function extractInitialUrlQueryParameter(): any {
+    const params = new URLSearchParams(window.location.search);
+    return Object.fromEntries(params.entries());
+}
+
 export const useEnvStore = defineStore('envStore', () => {
+    const initialUrlQueryParameter = ref(extractInitialUrlQueryParameter());
+
     // States
     const basePath = ref(import.meta.env.VITE_BASE_PATH || (isProduction ? '/__BASE_PATH_PLACEHOLDER__/' : ''));
     const logoLightPath = ref(
@@ -117,8 +125,7 @@ export const useEnvStore = defineStore('envStore', () => {
     const getKeycloakRealm = computed(() => keycloakRealm.value);
     const getKeycloakClientId = computed(() => keycloakClientId.value);
     const getPreconfiguredAuth = computed(
-        () =>
-            !new URLSearchParams(window.location.search).has('ignorePreConfAuth') && preconfiguredAuth.value === 'true'
+        () => !Object.hasOwn(initialUrlQueryParameter.value, 'ignorePreConfAuth') && preconfiguredAuth.value === 'true'
     );
     const getPreconfiguredAuthUsername = computed(() => preconfiguredAuthUsername.value);
     const getPreconfiguredAuthPassword = computed(() => preconfiguredAuthPassword.value);
