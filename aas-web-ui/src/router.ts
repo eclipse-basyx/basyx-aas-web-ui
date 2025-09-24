@@ -247,7 +247,7 @@ export async function createAppRouter(): Promise<Router> {
                         !Object.hasOwn(queryToDispatch, 'ignorePreConfAuth') &&
                         Object.hasOwn(queryLoaded, 'ignorePreConfAuth')
                     ) {
-                        queryToDispatch.aas = queryLoaded.ignorePreConfAuth;
+                        queryToDispatch.ignorePreConfAuth = queryLoaded.ignorePreConfAuth;
                     }
 
                     // Save url query parameter
@@ -259,7 +259,7 @@ export async function createAppRouter(): Promise<Router> {
                     // For all other routes
 
                     // Take into account also possible previous saved url query parameter
-                    queryToDispatch.aas = queryLoaded.ignorePreConfAuth;
+                    queryToDispatch.ignorePreConfAuth = queryLoaded.ignorePreConfAuth;
 
                     // Save url query parameter
                     navigationStore.dispatchUrlQuery(queryToDispatch);
@@ -301,7 +301,7 @@ export async function createAppRouter(): Promise<Router> {
                     // For all other routes
 
                     // Take into account also possible previous saved url query parameter
-                    queryToDispatch.aas = queryLoaded.ignorePreConfAuth;
+                    queryToDispatch.ignorePreConfAuth = queryLoaded.ignorePreConfAuth;
 
                     // Save url query parameter
                     navigationStore.dispatchUrlQuery(queryToDispatch);
@@ -331,7 +331,7 @@ export async function createAppRouter(): Promise<Router> {
                     ) {
                         updatedRoute.query.path = queryLoaded.path;
                     }
-                    if (routesUsingPathUrlQuery.includes(to.name) && Object.hasOwn(queryLoaded, 'ignorePreConfAuth')) {
+                    if (Object.hasOwn(queryLoaded, 'ignorePreConfAuth')) {
                         updatedRoute.query.ignorePreConfAuth = queryLoaded.ignorePreConfAuth;
                     }
 
