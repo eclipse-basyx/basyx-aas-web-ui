@@ -3,7 +3,15 @@ import { urlRegex } from '@/composables/UrlUtils';
 
 const isProduction = import.meta.env.MODE === 'production';
 
+// Helper function for extracting initial URL query parameter
+function extractInitialUrlQueryParameter(): any {
+    const params = new URLSearchParams(window.location.search);
+    return Object.fromEntries(params.entries());
+}
+
 export const useEnvStore = defineStore('envStore', () => {
+    const initialUrlQueryParameter = ref(extractInitialUrlQueryParameter());
+
     // States
     const basePath = ref(import.meta.env.VITE_BASE_PATH || (isProduction ? '/__BASE_PATH_PLACEHOLDER__/' : ''));
     const logoLightPath = ref(
@@ -82,6 +90,9 @@ export const useEnvStore = defineStore('envStore', () => {
     const allowUploading = ref(
         import.meta.env.VITE_ALLOW_UPLOADING || (isProduction ? '/__ALLOW_UPLOADING_PLACEHOLDER__/' : '')
     );
+    const allowLogout = ref(
+        import.meta.env.VITE_ALLOW_LOGOUT || (isProduction ? '/__ALLOW_LOGOUT_PLACEHOLDER__/' : '')
+    );
     const basicAuthActive = ref(
         import.meta.env.VITE_BASIC_AUTH_ACTIVE || (isProduction ? '/__BASIC_AUTH_ACTIVE_PLACEHOLDER__/' : '')
     );
@@ -113,7 +124,9 @@ export const useEnvStore = defineStore('envStore', () => {
     const getKeycloakUrl = computed(() => keycloakUrl.value);
     const getKeycloakRealm = computed(() => keycloakRealm.value);
     const getKeycloakClientId = computed(() => keycloakClientId.value);
-    const getPreconfiguredAuth = computed(() => preconfiguredAuth.value === 'true');
+    const getPreconfiguredAuth = computed(
+        () => !Object.hasOwn(initialUrlQueryParameter.value, 'ignorePreConfAuth') && preconfiguredAuth.value === 'true'
+    );
     const getPreconfiguredAuthUsername = computed(() => preconfiguredAuthUsername.value);
     const getPreconfiguredAuthPassword = computed(() => preconfiguredAuthPassword.value);
     const getEndpointConfigAvailable = computed(() => endpointConfigAvailable.value === 'true');
@@ -130,6 +143,7 @@ export const useEnvStore = defineStore('envStore', () => {
     const getSmViewerEditor = computed(() => smViewerEditor.value === 'true');
     const getAllowEditing = computed(() => allowEditing.value === 'true');
     const getAllowUploading = computed(() => allowUploading.value === 'true');
+    const getAllowLogout = computed(() => allowLogout.value === 'true');
     const getBasicAuthActive = computed(() => basicAuthActive.value === 'true');
     const getBasicAuthUsername = computed(() => basicAuthUsername.value);
     const getBasicAuthPassword = computed(() => basicAuthPassword.value);
@@ -170,6 +184,7 @@ export const useEnvStore = defineStore('envStore', () => {
         getSmViewerEditor,
         getAllowEditing,
         getAllowUploading,
+        getAllowLogout,
         getBasicAuthActive,
         getBasicAuthUsername,
         getBasicAuthPassword,

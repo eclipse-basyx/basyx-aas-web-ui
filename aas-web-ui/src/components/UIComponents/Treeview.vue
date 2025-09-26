@@ -375,6 +375,7 @@
 </template>
 
 <script lang="ts" setup>
+    import _ from 'lodash';
     import { computed, Ref, ref } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
@@ -459,7 +460,7 @@
     function selectSmOrSme(smOrSme: any): void {
         if (isSelected(smOrSme)) {
             // Deselect submodel: remove the path query
-            let query = { ...route.query };
+            const query = _.cloneDeep(route.query);
             delete query.path;
             router.push({ query: query });
         } else {

@@ -288,6 +288,7 @@
 
 <script lang="ts" setup>
     import type { ComponentPublicInstance } from 'vue';
+    import _ from 'lodash';
     import debounce from 'lodash/debounce';
     import { computed, onActivated, onBeforeUnmount, onMounted, Ref, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
@@ -528,16 +529,24 @@
             return;
         }
         if (isSelected(aas)) {
-            // Deselect AAS: remove entire query
-            router.push({ query: {} });
+            // Deselect AAS: remove aas and path url query parameter
+            const query = _.cloneDeep(route.query);
+            if (Object.hasOwn(query, 'aas')) delete query.aas;
+            if (Object.hasOwn(query, 'path')) delete query.path;
+
+            router.push({ query: query });
         } else {
-            // // Select AAS: Add aasEndpoint to aas query
+            // // Select AAS: Set AAS path as aas url query parameter
             // let scrollToAas = false;
             // if (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0) {
             //     scrollToAas = true;
             // }
 
-            router.push({ query: { aas: aas.path } });
+            const query = _.cloneDeep(route.query);
+            query.aas = aas.path;
+            if (Object.hasOwn(query, 'path')) delete query.path;
+
+            router.push({ query: query });
 
             // if (scrollToAas) scrollToSelectedAAS();
         }

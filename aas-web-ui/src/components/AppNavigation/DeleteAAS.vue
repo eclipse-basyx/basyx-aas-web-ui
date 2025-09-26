@@ -27,8 +27,9 @@
 </template>
 
 <script lang="ts" setup>
+    import _ from 'lodash';
     import { computed, ref, watch } from 'vue';
-    import { useRouter } from 'vue-router';
+    import { useRoute, useRouter } from 'vue-router';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
@@ -37,11 +38,15 @@
     import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
     import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
+    // Vue Router
+    const route = useRoute();
     const router = useRouter();
 
+    // Stores
     const aasStore = useAASStore();
     const navigationStore = useNavigationStore();
 
+    // Composables
     const { getRequest, deleteRequest } = useRequestHandling();
     const { getSubmodelRefsById } = useAASRepositoryClient();
     const { fetchSmById } = useSMRepositoryClient();
@@ -124,7 +129,11 @@
             if (!error) {
                 // Check if the selected AAS is the one being deleted
                 if (aasStore.getSelectedAAS.id === props.aas.id) {
-                    router.push({ query: {} });
+                    const query = _.cloneDeep(route.query);
+                    if (Object.hasOwn(query, 'aas')) delete query.aas;
+                    if (Object.hasOwn(query, 'path')) delete query.path;
+
+                    router.push({ query: query });
                     aasStore.dispatchSelectedAAS({});
                 }
                 navigationStore.dispatchTriggerAASListReload(); // Reload AAS List

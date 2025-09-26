@@ -1,17 +1,18 @@
 import type { JsonValue } from '@aas-core-works/aas-core3.0-typescript/jsonization';
 import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
-import { useRouter } from 'vue-router';
+import _ from 'lodash';
+import { useRoute, useRouter } from 'vue-router';
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
 import { useIDUtils } from '@/composables/IDUtils';
 import { useAASStore } from '@/store/AASDataStore';
 import { useClipboardStore } from '@/store/ClipboardStore';
 import { useNavigationStore } from '@/store/NavigationStore';
-import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 import { base64Decode, base64Encode } from '@/utils/EncodeDecodeUtils';
 
 export function useClipboardUtil() {
     // Vue Router
+    const route = useRoute();
     const router = useRouter();
 
     // Store
@@ -137,9 +138,9 @@ export function useClipboardUtil() {
         // Add Submodel Reference to AAS
         await addSubmodelReferenceToAas(submodel);
         // Fetch and dispatch Submodel
-        const path = submodelRepoUrl.value + '/' + base64Encode(submodel.id);
-        const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
-        router.push({ query: { aas: aasEndpoint, path: path } });
+        const query = _.cloneDeep(route.query);
+        query.path = submodelRepoUrl.value + '/' + base64Encode(submodel.id);
+        router.push({ query: query });
 
         navigationStore.dispatchTriggerTreeviewReload();
     }
@@ -169,14 +170,11 @@ export function useClipboardUtil() {
             // Create the property on the parent Submodel
             await postSubmodelElement(submodelElement, parentElement.id);
 
-            const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
-
             // Navigate to the new property
+            const query = _.cloneDeep(route.query);
+            query.path = parentElement.path + '/submodel-elements/' + submodelElement.idShort;
             router.push({
-                query: {
-                    aas: aasEndpoint,
-                    path: parentElement.path + '/submodel-elements/' + submodelElement.idShort,
-                },
+                query: query,
             });
         } else {
             // Extract the submodel ID and the idShortPath from the parentElement path
@@ -187,15 +185,12 @@ export function useClipboardUtil() {
             // Create the property on the parent element
             await postSubmodelElement(submodelElement, submodelId, idShortPath);
 
-            const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
-
             // Navigate to the new property
             if (parentElement.modelType === 'SubmodelElementCollection') {
+                const query = _.cloneDeep(route.query);
+                query.path = parentElement.path + '.' + submodelElement.idShort;
                 router.push({
-                    query: {
-                        aas: aasEndpoint,
-                        path: parentElement.path + '.' + submodelElement.idShort,
-                    },
+                    query: query,
                 });
             }
         }

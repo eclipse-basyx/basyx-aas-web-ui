@@ -30,9 +30,9 @@
 </template>
 
 <script lang="ts" setup>
+    import _ from 'lodash';
     import { computed, ref, watch } from 'vue';
-    import { useRouter } from 'vue-router';
-    import { useRoute } from 'vue-router';
+    import { useRoute, useRouter } from 'vue-router';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
@@ -110,7 +110,10 @@
 
                 // Check if the selected Submodel is the deleted one
                 if (props.element.path === route.query.path) {
-                    router.push({ query: { aas: route.query.aas } });
+                    const query = _.cloneDeep(route.query);
+                    if (Object.hasOwn(query, 'path')) delete query.path;
+
+                    router.push({ query: query });
                     aasStore.dispatchSelectedNode({});
                 }
                 navigationStore.dispatchTriggerTreeviewReload();
@@ -125,7 +128,10 @@
 
                 // Check if the selected Submodel Element is the deleted one
                 if (props.element.path === route.query.path) {
-                    router.push({ query: { aas: route.query.aas, path: props.element.parent.path } });
+                    const query = _.cloneDeep(route.query);
+                    query.path = props.element.parent.path;
+
+                    router.push({ query: query });
                     aasStore.dispatchSelectedNode(props.element.parent);
                 }
                 navigationStore.dispatchTriggerTreeviewReload();

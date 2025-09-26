@@ -29,6 +29,7 @@
 : "${SM_VIEWER_EDITOR:=true}"
 : "${ALLOW_EDITING:=true}"
 : "${ALLOW_UPLOADING:=true}"
+: "${ALLOW_LOGOUT:=true}"
 : "${BASIC_AUTH_USERNAME:=}"
 : "${BASIC_AUTH_PASSWORD:=}"
 : "${EDITOR_ID_PREFIX:=https://example.com/}"
@@ -112,6 +113,7 @@ printf "%-38s %s\n" "Single AAS redirect:" "$SINGLE_AAS_REDIRECT"
 printf "%-38s %s\n" "SM Viewer/Editor:" "$SM_VIEWER_EDITOR"
 printf "%-38s %s\n" "Allow editing:" "$ALLOW_EDITING"
 printf "%-38s %s\n" "Allow uploading:" "$ALLOW_UPLOADING"
+printf "%-38s %s\n" "Allow logout:" "$ALLOW_LOGOUT"
 printf "%-38s %s\n" "Basic Auth active:" "$BASIC_AUTH_ACTIVE"
 printf "%-38s %s\n" "Basic Auth username:" "$BASIC_AUTH_USERNAME"
 printf "%-38s %s\n" "Basic Auth password:" "$BASIC_AUTH_PASSWORD"
@@ -146,6 +148,7 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__SM_VIEWER_EDITOR_PLACEHOLDER__/|$SM_VIEWER_EDITOR|g" \
     -e "s|/__ALLOW_EDITING_PLACEHOLDER__/|$ALLOW_EDITING|g" \
     -e "s|/__ALLOW_UPLOADING_PLACEHOLDER__/|$ALLOW_UPLOADING|g" \
+    -e "s|/__ALLOW_LOGOUT_PLACEHOLDER__/|$ALLOW_LOGOUT|g" \
     -e "s|/__BASIC_AUTH_ACTIVE_PLACEHOLDER__/|$BASIC_AUTH_ACTIVE|g" \
     -e "s|/__BASIC_AUTH_USERNAME_PLACEHOLDER__/|$BASIC_AUTH_USERNAME|g" \
     -e "s|/__BASIC_AUTH_PASSWORD_PLACEHOLDER__/|$BASIC_AUTH_PASSWORD|g" \

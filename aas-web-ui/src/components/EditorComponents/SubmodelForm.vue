@@ -152,8 +152,9 @@
 <script lang="ts" setup>
     import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
+    import _ from 'lodash';
     import { computed, ref, watch } from 'vue';
-    import { useRouter } from 'vue-router';
+    import { useRoute, useRouter } from 'vue-router';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
@@ -161,7 +162,6 @@
     import { useIDUtils } from '@/composables/IDUtils';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
     import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
     const props = defineProps<{
@@ -171,6 +171,7 @@
     }>();
 
     // Vue Router
+    const route = useRoute();
     const router = useRouter();
 
     // Composables
@@ -370,9 +371,9 @@
             // Add Submodel Reference to AAS
             await addSubmodelReferenceToAas(submodelObject.value);
             // Fetch and dispatch Submodel
-            const path = submodelRepoUrl.value + '/' + base64Encode(submodelObject.value.id);
-            const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
-            router.push({ query: { aas: aasEndpoint, path: path } });
+            const query = _.cloneDeep(route.query);
+            query.path = submodelRepoUrl.value + '/' + base64Encode(submodelObject.value.id);
+            router.push({ query: query });
             navigationStore.dispatchTriggerTreeviewReload();
         } else {
             // Update existing Submodel
