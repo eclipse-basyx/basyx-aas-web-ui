@@ -74,8 +74,34 @@
             window.clearInterval(refreshIntervalId);
         }
 
-        // Trigger Keycloak logout
-        if (authStore.getKeycloak) {
+        // Check if we're using preconfigured auth (direct grant)
+        if (envStore.getPreconfiguredAuth) {
+            // For preconfigured auth, clear local auth state and redirect manually
+            authStore.setAuthStatus(false);
+            authStore.setAuthEnabled(false);
+            authStore.setToken(undefined);
+            authStore.setRefreshToken(undefined);
+            authStore.setUsername(undefined);
+            authStore.setKeycloak(null);
+            authStore.setRefreshIntervalId(undefined); // Clear refresh interval
+
+            // Redirect with ignorePreConfAuth parameter
+            const params = new URLSearchParams(window.location.search);
+            params.set('ignorePreConfAuth', '');
+
+            let redirectUri = '';
+            if (envStore.getSingleAas && envStore.getSingleAasRedirect) {
+                redirectUri = envStore.getSingleAasRedirect;
+            } else {
+                redirectUri = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+            }
+
+            window.location.href = redirectUri;
+            return;
+        }
+
+        // For standard Keycloak auth, use Keycloak logout
+        if (authStore.getKeycloak && typeof authStore.getKeycloak.logout === 'function') {
             let redirectUri = '';
 
             if (envStore.getSingleAas && envStore.getSingleAasRedirect) {
@@ -85,17 +111,21 @@
                     ? new URLSearchParams(window.location.search)
                     : new URLSearchParams();
 
-                if (envStore.getPreconfiguredAuth) {
-                    // Set ignore query parameter
-                    params.set('ignorePreConfAuth', '');
-                }
-
                 redirectUri = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
             }
 
             authStore.getKeycloak.logout({
                 redirectUri: redirectUri,
             });
+        } else {
+            // Fallback: clear auth state and reload page
+            authStore.setAuthStatus(false);
+            authStore.setAuthEnabled(false);
+            authStore.setToken(undefined);
+            authStore.setRefreshToken(undefined);
+            authStore.setUsername(undefined);
+            authStore.setKeycloak(null);
+            window.location.reload();
         }
     }
 </script>
