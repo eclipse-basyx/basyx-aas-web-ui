@@ -75,8 +75,13 @@ export const useAuthStore = defineStore('authStore', () => {
     }
 
     function setRefreshIntervalId(refreshIntervalIdValue: number | undefined): void {
-        // Clear existing interval if one exists
-        if (refreshIntervalId.value) {
+        // Clear existing interval only when:
+        // 1. Setting to undefined (clearing the interval)
+        // 2. Replacing with a different interval ID
+        if (
+            refreshIntervalId.value &&
+            (refreshIntervalIdValue === undefined || refreshIntervalId.value !== refreshIntervalIdValue)
+        ) {
             window.clearInterval(refreshIntervalId.value);
         }
         refreshIntervalId.value = refreshIntervalIdValue;
