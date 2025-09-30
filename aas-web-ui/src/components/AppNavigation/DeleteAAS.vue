@@ -63,6 +63,7 @@
     const selected = ref<string[]>([]); // Variable to store the selected Submodel Ids
 
     const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL); // Get Submodel Registry URL from Store
+    const submodelRepositoryURL = computed(() => navigationStore.getSubmodelRepoURL); // Get Submodel Repository URL from Store
 
     watch(
         () => props.modelValue,
@@ -101,15 +102,23 @@
                 await removeAAS(props.aas);
                 // Remove each submodel
                 for (const submodelId of submodelIds) {
-                    const submodelRegistryPath = `${submodelRegistryURL.value}/${base64Encode(submodelId)}`;
-                    const submodelRegistryResponse = await getRequest(
-                        submodelRegistryPath,
-                        'Removing Submodels',
-                        disableMessage
-                    );
-                    if (submodelRegistryResponse.success) {
-                        const submodelHref = extractEndpointHref(submodelRegistryResponse.data, 'SUBMODEL-3.0');
-                        const deletePath = submodelHref;
+                    if (submodelRegistryURL.value) {
+                        const submodelRegistryPath = `${submodelRegistryURL.value}/${base64Encode(submodelId)}`;
+                        const submodelRegistryResponse = await getRequest(
+                            submodelRegistryPath,
+                            'Removing Submodels',
+                            disableMessage
+                        );
+                        if (submodelRegistryResponse.success) {
+                            const submodelHref = extractEndpointHref(submodelRegistryResponse.data, 'SUBMODEL-3.0');
+                            const deletePath = submodelHref;
+                            await deleteRequest(deletePath, 'removing Submodel', disableMessage);
+                        } else {
+                            error = true;
+                        }
+                    } else if (submodelRepositoryURL.value) {
+                        const submodelFromRepo = await fetchSmById(submodelId);
+                        const deletePath = extractEndpointHref(submodelFromRepo, 'SUBMODEL-3.0');
                         await deleteRequest(deletePath, 'removing Submodel', disableMessage);
                     } else {
                         error = true;
@@ -146,8 +155,8 @@
             return;
         }
         // console.log('Remove AAS: ', AAS);
-        const aasEndpopint = extractEndpointHref(AAS, 'AAS-3.0');
-        let path = aasEndpopint;
+        const aasEndpoint = extractEndpointHref(AAS, 'AAS-3.0');
+        let path = aasEndpoint;
         let context = 'removing AAS';
         let disableMessage = false;
         await deleteRequest(path, context, disableMessage);
