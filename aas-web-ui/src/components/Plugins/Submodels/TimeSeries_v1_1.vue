@@ -620,35 +620,30 @@
     }
 
     function finalizeDataset(headerLine: string, datasetLines: string[]): { key: string | null; series: Array<{ time: string; value: number }> } {
-        // Parse header indices - trim headers to handle \r\n line endings
-        const headers = headerLine.split(',').map(h => h.trim());
-        const idxTime = headers.indexOf('_time');
-        const idxValue = headers.indexOf('_value');
-        const idxField = headers.indexOf('_field');
-        const idxTopic = headers.indexOf('topic');
-        const idxHost  = headers.indexOf('host');
+    // Parse header indices - trim headers to handle \r\n line endings
+    const headers = headerLine.split(',').map((h) => h.trim());
+    const idxTime = headers.indexOf('_time');
+    const idxValue = headers.indexOf('_value');
+    const idxField = headers.indexOf('_field');
+    const idxTopic = headers.indexOf('topic');
+    // const idxHost  = headers.indexOf('host'); // removed unused variable
 
         if (idxTime === -1 || idxValue === -1) {
             return { key: null, series: [] };
         }
 
-        // First data row to discover labels for this table
-        const first = datasetLines[0]?.split(',').map(col => col.trim()) ?? [];
-        const rawField = idxField !== -1 ? (first[idxField] ?? '').trim() : '';
-        const topic = idxTopic !== -1 ? (first[idxTopic] ?? '').trim() : '';
-
-        // Strip leading underscore from field if present (e.g., "_velocity_0" -> "velocity_0")
-        const field = rawField.startsWith('_') ? rawField.substring(1) : rawField;
-
-        // Determine key based on field type:
+    // First data row to discover labels for this table
+    const first = datasetLines[0]?.split(',').map((col) => col.trim()) ?? [];
+    const rawField = idxField !== -1 ? (first[idxField] ?? '').trim() : '';
+    const topic = idxTopic !== -1 ? (first[idxTopic] ?? '').trim() : '';
         // - If _field = "value": use topic (extract last part after '/')
         // - Otherwise: use _field name directly
         let key: string | null = null;
-        if (field === 'value' && topic && topic.trim() !== '') {
+        if (rawField === 'value' && topic && topic.trim() !== '') {
             const topicParts = topic.split('/');
             key = topicParts[topicParts.length - 1]; // Get last part (e.g., "AirQuality", "Temperature")
-        } else if (field && field.trim() !== '') {
-            key = field;
+        } else if (rawField && rawField.trim() !== '') {
+            key = rawField;
         } else {
             key = rawField || null;
         }
