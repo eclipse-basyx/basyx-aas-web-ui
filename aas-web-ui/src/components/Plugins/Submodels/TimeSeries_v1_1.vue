@@ -616,7 +616,6 @@
         const idxValue = headers.indexOf('_value');
         const idxField = headers.indexOf('_field');
         const idxTopic = headers.indexOf('topic');
-        // const idxHost  = headers.indexOf('host'); // removed unused variable
 
         if (idxTime === -1 || idxValue === -1) {
             return { key: null, series: [] };
