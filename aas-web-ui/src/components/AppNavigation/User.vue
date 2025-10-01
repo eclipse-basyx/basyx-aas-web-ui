@@ -26,7 +26,7 @@
                     </template>
                 </v-list-item>
             </v-list>
-            <template v-if="authStore.getAuthStatus" #actions>
+            <template v-if="authStore.getAuthStatus && allowLogout" #actions>
                 <v-spacer></v-spacer>
                 <v-btn append-icon="mdi-logout" class="text-none" color="primary" text="Logout" @click="logout" />
             </template>
@@ -58,6 +58,7 @@
     const authUsername = computed(
         () => authStore.getUsername || (envStore.getBasicAuthActive ? envStore.getBasicAuthUsername : '')
     );
+    const allowLogout = computed(() => envStore.getAllowLogout);
 
     function logout(): void {
         // Store the clean path to redirect to after logout
@@ -73,11 +74,58 @@
             window.clearInterval(refreshIntervalId);
         }
 
-        // Trigger Keycloak logout
-        if (authStore.getKeycloak) {
+        // Check if we're using preconfigured auth (direct grant)
+        if (envStore.getPreconfiguredAuth) {
+            // For preconfigured auth, clear local auth state and redirect manually
+            authStore.setAuthStatus(false);
+            authStore.setAuthEnabled(false);
+            authStore.setToken(undefined);
+            authStore.setRefreshToken(undefined);
+            authStore.setUsername(undefined);
+            authStore.setKeycloak(null);
+            authStore.setRefreshIntervalId(undefined); // Clear refresh interval
+
+            // Redirect with ignorePreConfAuth parameter
+            const params = new URLSearchParams(window.location.search);
+            params.set('ignorePreConfAuth', '');
+
+            let redirectUri = '';
+            if (envStore.getSingleAas && envStore.getSingleAasRedirect) {
+                redirectUri = envStore.getSingleAasRedirect;
+            } else {
+                redirectUri = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+            }
+
+            window.location.href = redirectUri;
+            return;
+        }
+
+        // For standard Keycloak auth, use Keycloak logout
+        if (authStore.getKeycloak && typeof authStore.getKeycloak.logout === 'function') {
+            let redirectUri = '';
+
+            if (envStore.getSingleAas && envStore.getSingleAasRedirect) {
+                redirectUri = envStore.getSingleAasRedirect;
+            } else {
+                const params = envStore.getSingleAas
+                    ? new URLSearchParams(window.location.search)
+                    : new URLSearchParams();
+
+                redirectUri = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+            }
+
             authStore.getKeycloak.logout({
-                redirectUri: window.location.origin + window.location.pathname,
+                redirectUri: redirectUri,
             });
+        } else {
+            // Fallback: clear auth state and reload page
+            authStore.setAuthStatus(false);
+            authStore.setAuthEnabled(false);
+            authStore.setToken(undefined);
+            authStore.setRefreshToken(undefined);
+            authStore.setUsername(undefined);
+            authStore.setKeycloak(null);
+            window.location.reload();
         }
     }
 </script>

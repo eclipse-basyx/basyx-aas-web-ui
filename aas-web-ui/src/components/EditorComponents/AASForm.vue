@@ -177,8 +177,9 @@
 <script lang="ts" setup>
     import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
+    import _ from 'lodash';
     import { computed, ref, watch } from 'vue';
-    import { useRouter } from 'vue-router';
+    import { useRoute, useRouter } from 'vue-router';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
@@ -193,6 +194,7 @@
     }>();
 
     // Vue Router
+    const route = useRoute();
     const router = useRouter();
 
     // Composables
@@ -416,7 +418,12 @@
             if (fileThumbnail.value !== undefined) {
                 await putThumbnail(fileThumbnail.value, AASObject.value.id);
             }
-            router.push({ query: { aas: await getAasEndpointById(AASObject.value.id) } });
+
+            const query = _.cloneDeep(route.query);
+            query.aas = await getAasEndpointById(AASObject.value.id);
+            if (Object.hasOwn(query, 'path')) delete query.path;
+
+            router.push({ query: query });
             navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
         } else {
             // Update existing AAS

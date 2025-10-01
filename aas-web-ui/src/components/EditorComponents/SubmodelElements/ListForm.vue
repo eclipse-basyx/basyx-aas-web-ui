@@ -137,13 +137,12 @@
 
 <script setup lang="ts">
     import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+    import _ from 'lodash';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
-    import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
@@ -157,7 +156,6 @@
 
     // Stores
     const navigationStore = useNavigationStore();
-    const aasStore = useAASStore();
 
     // Composables
     const { fetchSme, putSubmodelElement, postSubmodelElement } = useSMRepositoryClient();
@@ -209,8 +207,6 @@
             emit('update:modelValue', value);
         }
     );
-
-    const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
 
     const bordersToShow = computed(() => (panel: number) => {
         let border = '';
@@ -355,14 +351,12 @@
                 // Create the SML on the parent Submodel
                 await postSubmodelElement(smlObject.value, props.parentElement.id);
 
-                const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
-
                 // Navigate to the new SML
+                const query = _.cloneDeep(route.query);
+                query.path = props.parentElement.path + '/submodel-elements/' + smlObject.value.idShort;
+
                 router.push({
-                    query: {
-                        aas: aasEndpoint,
-                        path: props.parentElement.path + '/submodel-elements/' + smlObject.value.idShort,
-                    },
+                    query: query,
                 });
             } else {
                 // Extract the submodel ID and the idShortPath from the parentElement path
@@ -373,12 +367,13 @@
                 // Create the SML on the parent element
                 await postSubmodelElement(smlObject.value, submodelId, idShortPath);
 
-                const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
-
                 // Navigate to the new SML
                 if (props.parentElement.modelType === 'SubmodelElementCollection') {
+                    const query = _.cloneDeep(route.query);
+                    query.path = props.parentElement.path + '.' + smlObject.value.idShort;
+
                     router.push({
-                        query: { aas: aasEndpoint, path: props.parentElement.path + '.' + smlObject.value.idShort },
+                        query: query,
                     });
                 }
             }

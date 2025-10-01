@@ -154,12 +154,6 @@ export async function createAppRouter(): Promise<Router> {
         (x) => !routesForMobile.includes(x)
     );
 
-    // const routesToSaveUrlQuery: Array<RouteRecordNameGeneric> = [...new Set([...routesForDesktop, ...routesForMobile])];
-    // console.log('routesToSaveUrlQuery', routesToSaveUrlQuery);
-
-    // const routesToLoadUrlQuery: Array<RouteRecordNameGeneric> = [...new Set([...routesForDesktop, ...routesForMobile])];
-    // console.log('routesToLoadUrlQuery', routesToLoadUrlQuery);
-
     const routesUsingAasUrlQuery: Array<RouteRecordNameGeneric> = [
         'AASEditor', // just desktop
         'AASViewer', // just desktop
@@ -182,7 +176,7 @@ export async function createAppRouter(): Promise<Router> {
 
         'Visualization', // desktop and mobile
     ];
-    const routesUsingUrlQuery: Array<RouteRecordNameGeneric> = [
+    const routesUsingAasOrPathUrlQuery: Array<RouteRecordNameGeneric> = [
         ...new Set([...routesUsingAasUrlQuery, ...routesUsingPathUrlQuery]),
     ];
 
@@ -233,20 +227,39 @@ export async function createAppRouter(): Promise<Router> {
 
         // Same route
         if (Object.hasOwn(from, 'name') && Object.hasOwn(to, 'name') && from.name === to.name) {
-            // Just for routes using url query parameter and changed url query parameter
-            if (routesUsingUrlQuery.includes(to.name) && from.query !== to.query) {
+            if (from.query !== to.query && Object.keys(to.query).length > 0) {
                 // --> Save url query parameter
-                if (Object.keys(to.query).length > 0) {
-                    const queryToDispatch = _.cloneDeep(to.query);
+
+                const queryToDispatch = _.cloneDeep(to.query);
+                const queryLoaded = navigationStore.getUrlQuery;
+
+                if (routesUsingAasOrPathUrlQuery.includes(to.name)) {
+                    // Just for routes using url query parameter and changed url query parameter
 
                     // Take into account also possible previous saved url query parameter
-                    const queryLoaded = navigationStore.getUrlQuery;
                     if (!Object.hasOwn(queryToDispatch, 'aas') && Object.hasOwn(queryLoaded, 'aas')) {
                         queryToDispatch.aas = queryLoaded.aas;
                     }
                     if (!Object.hasOwn(queryToDispatch, 'path') && Object.hasOwn(queryLoaded, 'path')) {
                         queryToDispatch.path = queryLoaded.path;
                     }
+                    if (
+                        !Object.hasOwn(queryToDispatch, 'ignorePreConfAuth') &&
+                        Object.hasOwn(queryLoaded, 'ignorePreConfAuth')
+                    ) {
+                        queryToDispatch.ignorePreConfAuth = queryLoaded.ignorePreConfAuth;
+                    }
+
+                    // Save url query parameter
+                    navigationStore.dispatchUrlQuery(queryToDispatch);
+                } else if (
+                    !Object.hasOwn(queryToDispatch, 'ignorePreConfAuth') &&
+                    Object.hasOwn(queryLoaded, 'ignorePreConfAuth')
+                ) {
+                    // For all other routes
+
+                    // Take into account also possible previous saved url query parameter
+                    queryToDispatch.ignorePreConfAuth = queryLoaded.ignorePreConfAuth;
 
                     // Save url query parameter
                     navigationStore.dispatchUrlQuery(queryToDispatch);
@@ -256,33 +269,53 @@ export async function createAppRouter(): Promise<Router> {
 
         // Switch from one route to another one
         if (Object.hasOwn(from, 'name') && Object.hasOwn(to, 'name') && from.name !== to.name) {
-            // Just for switching FROM a route using url query parameter
-            if (routesUsingUrlQuery.includes(from.name) || from.path.startsWith('/modules/')) {
+            if (Object.keys(from.query).length > 0) {
                 // --> Save url query parameter
-                if (Object.keys(from.query).length > 0) {
-                    const queryToDispatch = _.cloneDeep(from.query);
+
+                const queryToDispatch = _.cloneDeep(from.query);
+                const queryLoaded = navigationStore.getUrlQuery;
+
+                if (routesUsingAasOrPathUrlQuery.includes(from.name) || from.path.startsWith('/modules/')) {
+                    // Just for switching FROM a route using url query parameter
 
                     // Take into account also possible previous saved url query parameter
-                    const queryLoaded = navigationStore.getUrlQuery;
                     if (!Object.hasOwn(queryToDispatch, 'aas') && Object.hasOwn(queryLoaded, 'aas')) {
                         queryToDispatch.aas = queryLoaded.aas;
                     }
                     if (!Object.hasOwn(queryToDispatch, 'path') && Object.hasOwn(queryLoaded, 'path')) {
                         queryToDispatch.path = queryLoaded.path;
                     }
+                    if (
+                        !Object.hasOwn(queryToDispatch, 'ignorePreConfAuth') &&
+                        Object.hasOwn(queryLoaded, 'ignorePreConfAuth')
+                    ) {
+                        queryToDispatch.ignorePreConfAuth = queryLoaded.ignorePreConfAuth;
+                    }
+
+                    // Save url query parameter
+                    navigationStore.dispatchUrlQuery(queryToDispatch);
+                } else if (
+                    !Object.hasOwn(queryToDispatch, 'ignorePreConfAuth') &&
+                    Object.hasOwn(queryLoaded, 'ignorePreConfAuth')
+                ) {
+                    // For all other routes
+
+                    // Take into account also possible previous saved url query parameter
+                    queryToDispatch.ignorePreConfAuth = queryLoaded.ignorePreConfAuth;
 
                     // Save url query parameter
                     navigationStore.dispatchUrlQuery(queryToDispatch);
                 }
             }
-            // Just for switching TO a route using url query parameter
-            if (routesUsingUrlQuery.includes(to.name) || to.path.startsWith('/modules/')) {
+            if (!Object.hasOwn(to, 'query') || Object.keys(to.query).length === 0) {
                 // --> Load url query parameter
-                if (!Object.hasOwn(to, 'query') || Object.keys(to.query).length === 0) {
-                    const queryLoaded = navigationStore.getUrlQuery;
 
-                    const updatedRoute = _.cloneDeep(to);
-                    updatedRoute.query = {};
+                const queryLoaded = navigationStore.getUrlQuery;
+                const updatedRoute = _.cloneDeep(to);
+                updatedRoute.query = {};
+
+                if (routesUsingAasOrPathUrlQuery.includes(to.name) || to.path.startsWith('/modules/')) {
+                    // Just for switching TO a route using url query parameter
 
                     if (
                         routesUsingAasUrlQuery.includes(to.name) &&
@@ -297,6 +330,9 @@ export async function createAppRouter(): Promise<Router> {
                         (queryLoaded.path as string).trim() !== ''
                     ) {
                         updatedRoute.query.path = queryLoaded.path;
+                    }
+                    if (Object.hasOwn(queryLoaded, 'ignorePreConfAuth')) {
+                        updatedRoute.query.ignorePreConfAuth = queryLoaded.ignorePreConfAuth;
                     }
 
                     if (
@@ -320,6 +356,15 @@ export async function createAppRouter(): Promise<Router> {
                     ) {
                         delete updatedRoute.query.aas;
                     }
+
+                    if (Object.keys(updatedRoute.query).length > 0) {
+                        next(updatedRoute);
+                        return;
+                    }
+                } else if (Object.hasOwn(queryLoaded, 'ignorePreConfAuth')) {
+                    // For all other routes
+
+                    updatedRoute.query.ignorePreConfAuth = queryLoaded.ignorePreConfAuth;
 
                     if (Object.keys(updatedRoute.query).length > 0) {
                         next(updatedRoute);
@@ -380,6 +425,7 @@ export async function createAppRouter(): Promise<Router> {
             next(updatedRoute);
             return;
         }
+
         // Handle mobile/desktop views
         else if (isMobile.value) {
             // Handle mobile views
