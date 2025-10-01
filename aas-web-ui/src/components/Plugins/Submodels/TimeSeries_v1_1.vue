@@ -115,19 +115,6 @@
                     <template #title>
                         <div class="text-subtitle-2">{{ 'Preview Chart: ' }}</div>
                     </template>
-                    <!-- TODO: Decide if we want to keep the dashboard integration -->
-                    <!-- <template #append>
-                        <v-btn
-                            v-if="selectedChartType && !hideSettings"
-                            color="primary"
-                            class="text-buttonText"
-                            size="small"
-                            variant="elevated"
-                            append-icon="mdi-plus"
-                            @click="createObject()"
-                            >Dashboard</v-btn
-                        >
-                    </template> -->
                 </v-list-item>
             </v-list>
             <v-card-text class="pt-1">
@@ -619,23 +606,26 @@
         timeSeriesValues.value = newDatasets;
     }
 
-    function finalizeDataset(headerLine: string, datasetLines: string[]): { key: string | null; series: Array<{ time: string; value: number }> } {
-    // Parse header indices - trim headers to handle \r\n line endings
-    const headers = headerLine.split(',').map((h) => h.trim());
-    const idxTime = headers.indexOf('_time');
-    const idxValue = headers.indexOf('_value');
-    const idxField = headers.indexOf('_field');
-    const idxTopic = headers.indexOf('topic');
-    // const idxHost  = headers.indexOf('host'); // removed unused variable
+    function finalizeDataset(
+        headerLine: string,
+        datasetLines: string[]
+    ): { key: string | null; series: Array<{ time: string; value: number }> } {
+        // Parse header indices - trim headers to handle \r\n line endings
+        const headers = headerLine.split(',').map((h) => h.trim());
+        const idxTime = headers.indexOf('_time');
+        const idxValue = headers.indexOf('_value');
+        const idxField = headers.indexOf('_field');
+        const idxTopic = headers.indexOf('topic');
+        // const idxHost  = headers.indexOf('host'); // removed unused variable
 
         if (idxTime === -1 || idxValue === -1) {
             return { key: null, series: [] };
         }
 
-    // First data row to discover labels for this table
-    const first = datasetLines[0]?.split(',').map((col) => col.trim()) ?? [];
-    const rawField = idxField !== -1 ? (first[idxField] ?? '').trim() : '';
-    const topic = idxTopic !== -1 ? (first[idxTopic] ?? '').trim() : '';
+        // First data row to discover labels for this table
+        const first = datasetLines[0]?.split(',').map((col) => col.trim()) ?? [];
+        const rawField = idxField !== -1 ? (first[idxField] ?? '').trim() : '';
+        const topic = idxTopic !== -1 ? (first[idxTopic] ?? '').trim() : '';
         // - If _field = "value": use topic (extract last part after '/')
         // - Otherwise: use _field name directly
         let key: string | null = null;
@@ -645,7 +635,7 @@
         } else if (rawField && rawField.trim() !== '') {
             key = rawField;
         } else {
-            key = rawField || null;
+            key = null;
         }
 
         // Build series
@@ -656,18 +646,6 @@
 
         return { key, series };
     }
-
-    // function createObject(): void {
-    //     let dashboardElement = {} as any;
-    //     dashboardElement.title = props.submodelElementData.idShort;
-    //     dashboardElement.segment = selectedSegment.value;
-    //     dashboardElement.timeValue = timeVariable.value;
-    //     dashboardElement.yValues = yVariables.value;
-    //     if (apiToken.value && apiToken.value !== '') dashboardElement.apiToken = apiToken.value;
-    //     dashboardElement.chartType = selectedChartType.value;
-    //     dashboardElement.chartOptions = chartOptions.value;
-    //     dashboardAdd(dashboardElement);
-    // }
 
     function getChartOptions(options: any): void {
         // console.log('Chart Options: ', options);
