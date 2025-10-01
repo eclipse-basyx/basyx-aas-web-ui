@@ -621,6 +621,10 @@
             return { key: null, series: [] };
         }
 
+        // Explicitly check for empty datasetLines
+        if (!datasetLines || datasetLines.length === 0) {
+            return { key: null, series: [] };
+        }
         // First data row to discover labels for this table
         const first = datasetLines[0]?.split(',').map((col) => col.trim()) ?? [];
         const rawField = idxField !== -1 ? (first[idxField] ?? '').trim() : '';
