@@ -1,11 +1,11 @@
 /**
  * Extracts the endpoint from a descriptor based on the given interface short name.
  *
- * @param {Object} descriptor - The descriptor containing endpoint information.
+ * @param {Object} descriptor_or_model - The descriptor or model (AAS / Submodel) containing endpoint information.
  * @param {string} interfaceShortName - The short name of the interface to match against endpoint interfaces.
  * @returns {string} The href of the matching endpoint's protocol information if found, otherwise an empty string.
  */
-export function extractEndpointHref(descriptor: any, interfaceShortName: string): string {
+export function extractEndpointHref(descriptor_or_model: any, interfaceShortName: string): string {
     const failResponse = '';
 
     const interfaceShortNames = [
@@ -22,6 +22,14 @@ export function extractEndpointHref(descriptor: any, interfaceShortName: string)
         'AAS-DISCOVERY',
     ];
 
+    if (
+        (descriptor_or_model?.modelType == 'AssetAdministrationShell' ||
+            descriptor_or_model?.modelType == 'Submodel') &&
+        descriptor_or_model?.path
+    ) {
+        return descriptor_or_model.path;
+    }
+
     if (!interfaceShortName || interfaceShortName.trim() === '') return failResponse;
 
     interfaceShortName = interfaceShortName.trim();
@@ -31,11 +39,11 @@ export function extractEndpointHref(descriptor: any, interfaceShortName: string)
         return failResponse;
     }
 
-    if (!Array.isArray(descriptor?.endpoints) || descriptor?.endpoints.length === 0) {
+    if (!Array.isArray(descriptor_or_model?.endpoints) || descriptor_or_model?.endpoints.length === 0) {
         return failResponse;
     }
 
-    const endpoints = descriptor.endpoints;
+    const endpoints = descriptor_or_model.endpoints;
 
     // find the right endpoint based on the interfaceShortName (has to match endpoint.interface)
     const endpoint = endpoints.find((endpoint: any) => {
