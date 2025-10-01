@@ -175,7 +175,6 @@
     import type { RouteRecordRaw } from 'vue-router';
     import { computed, onMounted, Ref, ref } from 'vue';
     import { useRoute } from 'vue-router';
-    import { useDashboardHandling } from '@/composables/DashboardHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -187,9 +186,6 @@
 
     // Vue Router
     const route = useRoute();
-
-    // Composables
-    const { checkDashboardAvailability } = useDashboardHandling();
 
     // Stores
     const aasStore = useAASStore();
@@ -203,7 +199,6 @@
 
     // Data
     const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null); // Reference to the Virtual Scroll Component
-    const dashboardAvailable = ref(false);
 
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
@@ -242,7 +237,6 @@
     });
 
     onMounted(async () => {
-        dashboardAvailable.value = await checkDashboardAvailability();
         scrollToSelectedModule();
     });
 

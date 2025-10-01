@@ -1,7 +1,7 @@
 <template>
     <v-container fluid class="pa-0">
         <!-- Header -->
-        <v-card v-if="!hideSettings" class="mb-4">
+        <v-card class="mb-4">
             <v-card-title>
                 <div class="text-subtitle-1">
                     {{ nameToDisplay(submodelElementData, 'en', 'Time Series Data') }}
@@ -12,9 +12,9 @@
             </v-card-text>
         </v-card>
         <!-- Data Preview Config -->
-        <v-card v-if="!hideSettings || editDialog" class="mb-4">
+        <v-card class="mb-4">
             <!-- Title -->
-            <v-list v-if="!hideSettings || editDialog" nav class="py-0">
+            <v-list nav class="py-0">
                 <v-list-item class="pb-0">
                     <template #title>
                         <div class="text-subtitle-2">{{ 'Preview Configuration: ' }}</div>
@@ -108,9 +108,9 @@
             </v-list>
         </v-card>
         <!-- Data Preview Chart -->
-        <v-card :flat="hideSettings">
+        <v-card>
             <!-- Title -->
-            <v-list v-if="!hideSettings || editDialog" nav class="py-0">
+            <v-list nav class="py-0">
                 <v-list-item>
                     <template #title>
                         <div class="text-subtitle-2">{{ 'Preview Chart: ' }}</div>
@@ -120,7 +120,6 @@
             <v-card-text class="pt-1">
                 <!-- Chart Type Selection -->
                 <v-select
-                    v-if="!hideSettings || editDialog"
                     v-model="selectedChartType"
                     variant="outlined"
                     density="compact"
@@ -138,7 +137,6 @@
                     :time-variable="timeVariable"
                     :y-variables="yVariables"
                     :chart-options-external="chartOptions"
-                    :edit-dialog="editDialog"
                     @chart-options="getChartOptions"></LineChart>
                 <AreaChart
                     v-if="selectedChartType && selectedChartType.id == 2"
@@ -146,7 +144,6 @@
                     :time-variable="timeVariable"
                     :y-variables="yVariables"
                     :chart-options-external="chartOptions"
-                    :edit-dialog="editDialog"
                     @chart-options="getChartOptions"></AreaChart>
                 <ScatterChart
                     v-if="selectedChartType && selectedChartType.id == 3"
@@ -154,7 +151,6 @@
                     :time-variable="timeVariable"
                     :y-variables="yVariables"
                     :chart-options-external="chartOptions"
-                    :edit-dialog="editDialog"
                     @chart-options="getChartOptions"></ScatterChart>
                 <Histogram
                     v-if="selectedChartType && selectedChartType.id == 4"
@@ -162,7 +158,6 @@
                     :time-variable="timeVariable"
                     :y-variables="yVariables"
                     :chart-options-external="chartOptions"
-                    :edit-dialog="editDialog"
                     @chart-options="getChartOptions"></Histogram>
                 <Gauge
                     v-if="selectedChartType && selectedChartType.id == 5"
@@ -170,7 +165,6 @@
                     :time-variable="timeVariable"
                     :y-variables="yVariables"
                     :chart-options-external="chartOptions"
-                    :edit-dialog="editDialog"
                     @chart-options="getChartOptions"></Gauge>
                 <DisplayField
                     v-if="selectedChartType && selectedChartType.id == 6"
@@ -183,10 +177,8 @@
 
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
-    import { useRoute } from 'vue-router';
     import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
-    // import { useDashboardHandling } from '@/composables/DashboardHandling';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -200,12 +192,10 @@
         defineProps<{
             submodelElementData: any; // TODO: Convert SubmodelElementData to SubmodelElement Type of AAS Core Works
             configData?: any;
-            editDialog?: boolean;
             loadTrigger?: any;
         }>(),
         {
             configData: null,
-            editDialog: false,
             loadTrigger: null,
         }
     );
@@ -226,10 +216,6 @@
     const { fetchCds } = useConceptDescriptionHandling();
     const { checkIdShort, descriptionToDisplay, nameToDisplay } = useReferableUtils();
     const { getRequest, postRequest } = useRequestHandling();
-    // const { dashboardAdd } = useDashboardHandling();
-
-    // vue-router
-    const route = useRoute();
 
     const timeSeriesData = ref({} as any); // Object to store the data of the time series smt
     const segments = ref([] as Array<any>); // Array to store the segments of the time series smt
@@ -280,10 +266,6 @@
         return null;
     });
 
-    const hideSettings = computed(() => {
-        return route.name === 'DashboardGroup';
-    });
-
     watch(
         () => props.loadTrigger,
         () => {
@@ -298,7 +280,6 @@
 
     function initComponent(): void {
         initializeTimeSeriesData();
-        initDashboardTSD();
         const influxDBToken = envStore.getEnvInfluxdbToken;
         if (influxDBToken && influxDBToken !== '') {
             apiToken.value = influxDBToken;
@@ -341,25 +322,6 @@
             // console.log('Updated Records: ', updatedRecords);
             records.value = updatedRecords;
         });
-    }
-
-    function initDashboardTSD(): void {
-        if (!hideSettings.value) return;
-        selectedChartType.value = props.configData.configObject.chartType;
-        selectedSegment.value = props.configData.configObject.segment;
-        timeVariable.value = props.configData.configObject.timeVal;
-        // console.log(timeVariable.value);
-        yVariables.value = props.configData.configObject.yvals;
-        // add the chart type specific options to the chartOptions
-        chartOptions.value = props.configData.configObject.chartOptions;
-        // add the API Token to the API Token field if it is available
-        if (props.configData.configObject.apiToken && props.configData.configObject.apiToken !== '') {
-            apiToken.value = props.configData.configObject.apiToken;
-            showTokenInput.value = false;
-        }
-        if (checkIdShort(selectedSegment.value, 'InternalSegment')) fetchInternalData();
-        if (checkIdShort(selectedSegment.value, 'ExternalSegment')) fetchExternalData();
-        if (checkIdShort(selectedSegment.value, 'LinkedSegment')) fetchLinkedData();
     }
 
     function fetchInternalData(): void {

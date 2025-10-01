@@ -38,9 +38,6 @@ export const useEnvStore = defineStore('envStore', () => {
     const conceptDescriptionRepoPath = ref(
         import.meta.env.VITE_CD_REPO_PATH || (isProduction ? '/__CD_REPO_PATH_PLACEHOLDER__/' : '')
     );
-    const dashboardServicePath = ref(
-        import.meta.env.VITE_DASHBOARD_SERVICE_PATH || (isProduction ? '/__DASHBOARD_SERVICE_PATH_PLACEHOLDER__/' : '')
-    );
     const primaryLightColor = ref(
         import.meta.env.VITE_PRIMARY_LIGHT_COLOR || (isProduction ? '/__PRIMARY_LIGHT_COLOR_PLACEHOLDER__/' : '')
     );
@@ -116,7 +113,6 @@ export const useEnvStore = defineStore('envStore', () => {
     const getEnvAASRepoPath = computed(() => aasRepoPath.value);
     const getEnvSubmodelRepoPath = computed(() => submodelRepoPath.value);
     const getEnvConceptDescriptionRepoPath = computed(() => conceptDescriptionRepoPath.value);
-    const getEnvDashboardServicePath = computed(() => dashboardServicePath.value);
     const getEnvPrimaryLightColor = computed(() => primaryLightColor.value);
     const getEnvPrimaryDarkColor = computed(() => primaryDarkColor.value);
     const getEnvInfluxdbToken = computed(() => influxdbToken.value);
@@ -167,7 +163,6 @@ export const useEnvStore = defineStore('envStore', () => {
         getEnvAASRepoPath,
         getEnvSubmodelRepoPath,
         getEnvConceptDescriptionRepoPath,
-        getEnvDashboardServicePath,
         getEnvPrimaryLightColor,
         getEnvPrimaryDarkColor,
         getEnvInfluxdbToken,

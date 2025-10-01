@@ -1,14 +1,14 @@
 <template>
     <v-container fluid class="pa-0">
         <!-- Options -->
-        <v-list v-if="!hideSettings || editDialog" nav class="pa-0" style="margin-left: -8px; margin-top: -14px">
+        <v-list nav class="pa-0" style="margin-left: -8px; margin-top: -14px">
             <v-list-item class="pb-0">
                 <template #title>
                     <div class="text-subtitle-2">{{ 'Options: ' }}</div>
                 </template>
             </v-list-item>
         </v-list>
-        <v-row v-if="!hideSettings || editDialog" align="center">
+        <v-row align="center">
             <v-col cols="auto">
                 <v-text-field
                     v-model="range"
@@ -41,7 +41,6 @@
 <script lang="ts" setup>
     import ApexCharts from 'apexcharts';
     import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-    import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
     import { useChartHandling } from '@/composables/ChartHandling';
 
@@ -50,7 +49,6 @@
         timeVariable: any;
         yVariables: any;
         chartOptionsExternal: any;
-        editDialog: boolean;
     }>();
 
     const emit = defineEmits<{
@@ -58,7 +56,6 @@
     }>();
 
     const theme = useTheme();
-    const route = useRoute();
 
     const { prepareSeriesValues, prepareYValueTooltip, prepareLegend } = useChartHandling();
 
@@ -73,9 +70,6 @@
     // Computed properties
     const currentTheme = computed(() => {
         return theme.global.current.value.dark;
-    });
-    const hideSettings = computed(() => {
-        return route.name === 'DashboardGroup';
     });
 
     onMounted(async () => {
