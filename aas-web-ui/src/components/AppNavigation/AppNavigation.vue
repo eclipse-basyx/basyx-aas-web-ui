@@ -195,29 +195,6 @@
                             class="text-buttonText"></v-btn>
                     </v-col>
                 </v-row>
-                <!-- Dashboard -->
-                <v-row v-if="dashboardAvailable" justify="end" align="center">
-                    <v-col cols="auto" class="pr-1">
-                        <v-card
-                            class="py-1 px-2 text-buttonText"
-                            :color="route.path === '/dashboard' ? 'primarySurface' : 'primary'"
-                            to="/dashboard"
-                            :disabled="route.path === '/dashboard'"
-                            >Dashboard</v-card
-                        >
-                    </v-col>
-                    <v-col cols="auto" class="py-1">
-                        <v-btn
-                            icon="mdi-chart-timeline-variant-shimmer"
-                            to="/dashboard"
-                            :disabled="route.path === '/dashboard'"
-                            :active="route.path === '/dashboard'"
-                            style="z-index: 9990"
-                            size="small"
-                            color="primary"
-                            class="text-buttonText"></v-btn>
-                    </v-col>
-                </v-row>
                 <!-- About -->
                 <v-row justify="end" align="center">
                     <v-col cols="auto" class="pr-1">
@@ -251,7 +228,6 @@
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
-    import { useDashboardHandling } from '@/composables/DashboardHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -259,9 +235,6 @@
 
     // Vue Router
     const route = useRoute();
-
-    // Composables
-    const { checkDashboardAvailability } = useDashboardHandling();
 
     // Stores
     const navigationStore = useNavigationStore();
@@ -274,7 +247,6 @@
     // Data
     const mainMenu = ref(false); // Variable to show the Main Menu
     const mobileMenu = ref(false); // Variable to show the Mobile Menu
-    const dashboardAvailable = ref(false); // Dashboard Availability
     const endpointConfigAvailable = ref(envStore.getEndpointConfigAvailable);
     const drawerVisibility = ref(true); // Variable to show the AAS List Drawer
 
@@ -359,7 +331,6 @@
     );
 
     onMounted(async () => {
-        dashboardAvailable.value = await checkDashboardAvailability();
         applyTheme();
 
         // Get auto-sync object from the lcoal storage
