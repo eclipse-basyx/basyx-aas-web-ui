@@ -66,7 +66,7 @@
                         </v-list-item>
                         <v-list-item
                             v-if="smViewerEditor && currentTab === 1"
-                            class="mt-3 py-2"
+                            class="py-2"
                             nav
                             :active="false"
                             :border="isActiveRoutePath('/smviewer')"
