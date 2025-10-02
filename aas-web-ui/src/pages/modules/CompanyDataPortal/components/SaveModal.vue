@@ -82,13 +82,14 @@
 <script lang="ts" setup>
     import { computed, ref, watch } from 'vue';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import FormField from './FormField.vue';
 
     const dialog = ref(false);
     const aasId = ref('');
     const smId = ref('');
     const serverUrl = ref('');
     const serverOptions = ref<string[]>([]);
-    const aasDisplayName = ref<any[]>([]);
+    const aasDisplayName = ref<{ language: string; text: string }[]>([]);
 
     const navStore = useNavigationStore();
 
@@ -97,7 +98,11 @@
     watch(
         aasRepoURL,
         (newVal) => {
-            serverOptions.value.push(newVal);
+            // Remove everything after the port number
+            let baseUrl = newVal.replace(/\/shells\/?$/, '');
+            // Remove trailing slash if present
+            baseUrl = baseUrl.replace(/\/$/, '');
+            serverOptions.value.push(baseUrl);
         },
         { immediate: true }
     );
