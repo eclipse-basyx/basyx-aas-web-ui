@@ -2,10 +2,22 @@
     <v-container fluid class="pa-0">
         <v-card class="pa-2" border color="navigationMenu" :min-width="620">
             <v-container>
-                <v-row>
-                    <!-- Main Menu Items -->
-                    <v-col cols="12" sm="7">
+                <v-sheet class="overflow-hidden mx-auto mb-4" elevation="2" rounded="lg" min-width="450">
+                    <v-tabs color="primary" grow v-model="currentTab">
+                        <v-tab class="text-none" text="AAS" />
+
+                        <v-divider vertical />
+
+                        <v-tab class="text-none" text="Submodel" />
+
+                        <v-divider vertical />
+
+                        <v-tab class="text-none" text="Modules" />
+                    </v-tabs>
+                    <v-divider></v-divider>
+                    <div class="pa-2">
                         <v-list-item
+                            v-if="currentTab === 0"
                             class="py-2"
                             :active="false"
                             nav
@@ -21,7 +33,7 @@
                             </template>
                         </v-list-item>
                         <v-list-item
-                            v-if="allowEditing"
+                            v-if="allowEditing && currentTab === 0"
                             class="mt-3 py-2"
                             :active="false"
                             nav
@@ -37,6 +49,7 @@
                             </template>
                         </v-list-item>
                         <v-list-item
+                            v-if="currentTab === 0"
                             class="mt-3 py-2"
                             nav
                             :active="false"
@@ -52,8 +65,8 @@
                             </template>
                         </v-list-item>
                         <v-list-item
-                            v-if="smViewerEditor"
-                            class="mt-3 py-2"
+                            v-if="smViewerEditor && currentTab === 1"
+                            class="py-2"
                             nav
                             :active="false"
                             :border="isActiveRoutePath('/smviewer')"
@@ -68,7 +81,7 @@
                             </template>
                         </v-list-item>
                         <v-list-item
-                            v-if="smViewerEditor && allowEditing"
+                            v-if="smViewerEditor && allowEditing && currentTab === 1"
                             class="mt-3 py-2"
                             :active="false"
                             nav
@@ -84,7 +97,7 @@
                             </template>
                         </v-list-item>
                         <v-list-item
-                            v-if="selectedNode && Object.keys(selectedNode).length > 0"
+                            v-if="selectedNode && Object.keys(selectedNode).length > 0 && currentTab === 1"
                             class="mt-3 py-2"
                             nav
                             :active="false"
@@ -99,50 +112,39 @@
                                 </v-avatar>
                             </template>
                         </v-list-item>
-                    </v-col>
-                    <!-- Custom Modules -->
-                    <v-col v-if="filteredAndOrderedModuleRoutes.length > 0" cols="12" sm="5" class="pl-3">
-                        <v-sheet border rounded color="rgba(0, 0, 0, 0)" class="py-2 px-3">
-                            <div class="d-flex align-center text-subtitle-1">
-                                <v-icon icon="mdi-view-module" size="x-small" color="primary" start />
-                                <strong>Modules</strong>
-                            </div>
-                            <v-divider class="mt-2 mb-2"></v-divider>
-                            <v-list
-                                nav
-                                class="pa-0 overflow-y-auto"
-                                :max-height="52 * 5 + 'px'"
-                                style="display: flex; flex-direction: column">
-                                <v-virtual-scroll
-                                    ref="virtualScrollRef"
-                                    :items="filteredAndOrderedModuleRoutes"
-                                    :item-height="52"
-                                    class="bg-navigationMenu">
-                                    <template #default="{ item }">
-                                        <v-list-item
-                                            class="my-1 mx-1"
-                                            :active="false"
-                                            :border="isActiveRoutePath(item.path)"
-                                            slim
-                                            nav
-                                            :subtitle="item.path"
-                                            :title="
-                                                item.meta?.title
-                                                    ? item.meta.title.toString()
-                                                    : item.meta?.name?.toString()
-                                            "
-                                            :to="
-                                                item?.meta?.preserveRouteQuery === true
-                                                    ? { path: item.path, query: route.query }
-                                                    : { path: item.path }
-                                            "
-                                            @click="closeMenu" />
-                                    </template>
-                                </v-virtual-scroll>
-                            </v-list>
-                        </v-sheet>
-                    </v-col>
-                </v-row>
+                        <v-list
+                            v-if="currentTab === 2"
+                            nav
+                            class="pa-0 overflow-y-auto"
+                            :max-height="52 * 5 + 'px'"
+                            style="display: flex; flex-direction: column">
+                            <v-virtual-scroll
+                                ref="virtualScrollRef"
+                                :items="filteredAndOrderedModuleRoutes"
+                                :item-height="52"
+                                class="bg-navigationMenu">
+                                <template #default="{ item }">
+                                    <v-list-item
+                                        class="my-1 mx-1"
+                                        :active="false"
+                                        :border="isActiveRoutePath(item.path)"
+                                        slim
+                                        nav
+                                        :subtitle="item.path"
+                                        :title="
+                                            item.meta?.title ? item.meta.title.toString() : item.meta?.name?.toString()
+                                        "
+                                        :to="
+                                            item?.meta?.preserveRouteQuery === true
+                                                ? { path: item.path, query: route.query }
+                                                : { path: item.path }
+                                        "
+                                        @click="closeMenu" />
+                                </template>
+                            </v-virtual-scroll>
+                        </v-list>
+                    </div>
+                </v-sheet>
             </v-container>
             <template #actions>
                 <v-btn
@@ -199,6 +201,7 @@
 
     // Data
     const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null); // Reference to the Virtual Scroll Component
+    const currentTab: Ref<number> = ref(0); // Current Tab Index
 
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
@@ -238,6 +241,7 @@
 
     onMounted(async () => {
         scrollToSelectedModule();
+        setTabByRoutePath();
     });
 
     function closeMenu(): void {
@@ -266,6 +270,16 @@
                     clearInterval(intervalId);
                 }
             }, 50);
+        }
+    }
+
+    function setTabByRoutePath(): void {
+        if (isActiveRoutePath('/') || isActiveRoutePath('/aaseditor') || isActiveRoutePath('/aassmviewer')) {
+            currentTab.value = 0;
+        } else if (isActiveRoutePath('/smviewer') || isActiveRoutePath('/smeditor') || isActiveRoutePath('/visu')) {
+            currentTab.value = 1;
+        } else {
+            currentTab.value = 2;
         }
     }
 </script>
