@@ -63,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-    import { defineEmits, defineProps, ref, watch } from 'vue';
+    import { computed, defineEmits, defineProps } from 'vue';
     import FormField from './FormField.vue';
 
     const props = defineProps<{
@@ -86,21 +86,10 @@
         'update:modelValue': [value: typeof props.modelValue];
     }>();
 
-    const formData = ref({ ...props.modelValue });
-
-    watch(
-        () => props.modelValue,
-        (newValue) => {
-            formData.value = { ...newValue };
+    const formData = computed({
+        get: () => props.modelValue,
+        set: (value) => {
+            emit('update:modelValue', { ...value });
         },
-        { deep: true }
-    );
-
-    watch(
-        formData,
-        (newValue) => {
-            emit('update:modelValue', { ...newValue });
-        },
-        { deep: true }
-    );
+    });
 </script>
