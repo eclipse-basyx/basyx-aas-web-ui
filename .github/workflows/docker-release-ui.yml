@@ -41,7 +41,26 @@ jobs:
           TAG_NAME=${GITHUB_REF#refs/tags/}
           echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
 
-      # Step 5: Build and Push Docker Images
+      # Step 5: Replace version in Vue settings component
+      - name: Replace version in Vue settings component
+        run: |
+          find src -type f -name "Settings.vue" -exec sed -i -E 's|<v-chip id="version" color="primary".*>v2-[0-9]{6}</v-chip>|<v-chip id="version" color="primary">${{ env.TAG_NAME }}</v-chip>|g' {} +
+
+      # Step 6
+      - name: Hide snapshot chip
+        run: |
+          find src -type f -name "Settings.vue" -exec sed -i -E 's|<v-chip id="snapshot".*>([a-z0-9]{7})</v-chip>|<v-chip id="snapshot">\1</v-chip>|g' {} +
+
+      # Step 7 Commit replaced version
+      - name: Commit updated files
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "Updates version ${{ env.TAG_NAME }} from release tag"
+          git push
+
+      # Step 8: Build and Push Docker Images
       - name: Build and Push Docker Images
         uses: docker/build-push-action@v6
         with:
@@ -53,7 +72,7 @@ jobs:
             ${{ env.IMAGE_NAME }}:${{ env.TAG_NAME }}
             ${{ env.IMAGE_NAME }}:latest
       
-      # Step 6: Generate SBOM with Syft
+      # Step 9: Generate SBOM with Syft
       - name: Install Syft
         run: |
           curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
@@ -62,14 +81,14 @@ jobs:
         run: |
           syft ${{ env.IMAGE_NAME }}:${{ env.TAG_NAME }} -o json > ${{ env.SBOM_FILE }}
 
-      # Step 7: Upload SBOM as an Artifact
+      # Step 10: Upload SBOM as an Artifact
       - name: Upload SBOM
         uses: actions/upload-artifact@v4
         with:
           name: sbom
           path: ${{ env.SBOM_FILE }}
 
-      # Step 8: Verify the Push
+      # Step 11: Verify the Push
       - name: Verify Docker Images
         run: |
           docker pull ${{ env.IMAGE_NAME }}:${{ env.TAG_NAME }}

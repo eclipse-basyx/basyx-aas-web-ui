@@ -37,6 +37,22 @@ jobs:
       - name: Set short SHA
         run: echo "SHORT_SHA=${GITHUB_SHA:0:7}" >> $GITHUB_ENV
 
+      - name: Replace snapshot in Vue settings component
+        run: |
+          find src -type f -name "Settings.vue" -exec sed -i -E 's|<v-chip id="snapshot".*>[a-z0-9]{7}</v-chip>|<v-chip id="snapshot">${{ env.TAG_NAME }}</v-chip>|g' {} +
+
+      - name: Hide version chip
+        run: |
+          find src -type f -name "Settings.vue" -exec sed -i -E 's|<v-chip id="version" color="primary".*>(v2-[0-9]{6})</v-chip>|<v-chip id="version" color="primary" class="d-none">\1</v-chip>|g' {} +
+
+      - name: Commit updated files
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "Updates snapshot ${{ env.SHORT_SHA }}"
+          git push
+
       - name: Build and Push Docker Image (Pre-release)
         uses: docker/build-push-action@v6
         with:
