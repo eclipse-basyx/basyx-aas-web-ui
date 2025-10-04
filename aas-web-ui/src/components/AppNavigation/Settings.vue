@@ -13,6 +13,12 @@
                 <v-divider v-if="endpointConfigAvailable" class="mt-3"></v-divider>
                 <!-- Backend Configuration -->
                 <BackendConfig v-if="endpointConfigAvailable"></BackendConfig>
+                <v-divider class="mt-3"></v-divider>
+                <v-list-subheader>BaSyx AAS Web UI Version</v-list-subheader>
+                <v-list-item class="py-0">
+                    <v-chip id="version" color="primary">v2-251001</v-chip>
+                    <v-chip id="snapshot">ba56ca7</v-chip>
+                </v-list-item>
             </v-list>
         </v-card>
     </v-menu>
