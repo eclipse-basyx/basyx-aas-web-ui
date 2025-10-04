@@ -2,22 +2,32 @@
     <v-container fluid class="pa-0">
         <v-card class="pa-2" border color="navigationMenu" :min-width="620">
             <v-container>
-                <v-sheet class="overflow-hidden mx-auto mb-4" elevation="2" rounded="lg" min-width="450">
-                    <v-tabs color="primary" grow v-model="currentTab">
-                        <v-tab class="text-none" text="AAS" />
+                <v-sheet
+                    class="overflow-hidden mx-auto mb-4"
+                    :elevation="smViewerEditor || filteredAndOrderedModuleRoutes.length > 0 ? 2 : 0"
+                    rounded="lg"
+                    min-width="450">
+                    <template v-if="smViewerEditor || filteredAndOrderedModuleRoutes.length > 0">
+                        <v-tabs v-model="currentTab" color="primary" grow>
+                            <v-tab value="aas" class="text-none" text="AAS" />
 
-                        <v-divider vertical />
+                            <v-divider vertical />
 
-                        <v-tab class="text-none" text="Submodel" />
+                            <v-tab v-if="smViewerEditor" value="submodel" class="text-none" text="Submodel" />
 
-                        <v-divider vertical />
+                            <v-divider vertical />
 
-                        <v-tab class="text-none" text="Modules" />
-                    </v-tabs>
-                    <v-divider></v-divider>
+                            <v-tab
+                                v-if="filteredAndOrderedModuleRoutes.length > 0"
+                                value="modules"
+                                class="text-none"
+                                text="Modules" />
+                        </v-tabs>
+                        <v-divider></v-divider>
+                    </template>
                     <div class="pa-2">
                         <v-list-item
-                            v-if="currentTab === 0"
+                            v-if="currentTab === 'aas'"
                             class="py-2"
                             :active="false"
                             nav
@@ -33,7 +43,7 @@
                             </template>
                         </v-list-item>
                         <v-list-item
-                            v-if="allowEditing && currentTab === 0"
+                            v-if="allowEditing && currentTab === 'aas'"
                             class="mt-3 py-2"
                             :active="false"
                             nav
@@ -49,7 +59,7 @@
                             </template>
                         </v-list-item>
                         <v-list-item
-                            v-if="currentTab === 0"
+                            v-if="currentTab === 'aas'"
                             class="mt-3 py-2"
                             nav
                             :active="false"
@@ -65,7 +75,7 @@
                             </template>
                         </v-list-item>
                         <v-list-item
-                            v-if="smViewerEditor && currentTab === 1"
+                            v-if="smViewerEditor && currentTab === 'submodel'"
                             class="py-2"
                             nav
                             :active="false"
@@ -81,7 +91,7 @@
                             </template>
                         </v-list-item>
                         <v-list-item
-                            v-if="smViewerEditor && allowEditing && currentTab === 1"
+                            v-if="smViewerEditor && allowEditing && currentTab === 'submodel'"
                             class="mt-3 py-2"
                             :active="false"
                             nav
@@ -97,7 +107,7 @@
                             </template>
                         </v-list-item>
                         <v-list-item
-                            v-if="selectedNode && Object.keys(selectedNode).length > 0 && currentTab === 1"
+                            v-if="selectedNode && Object.keys(selectedNode).length > 0 && currentTab === 'submodel'"
                             class="mt-3 py-2"
                             nav
                             :active="false"
@@ -113,7 +123,7 @@
                             </template>
                         </v-list-item>
                         <v-list
-                            v-if="currentTab === 2"
+                            v-if="currentTab === 'modules'"
                             nav
                             class="pa-0 overflow-y-auto"
                             :max-height="52 * 5 + 'px'"
@@ -201,7 +211,7 @@
 
     // Data
     const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null); // Reference to the Virtual Scroll Component
-    const currentTab: Ref<number> = ref(0); // Current Tab Index
+    const currentTab: Ref<string> = ref('aas'); // Current Tab Index
 
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
@@ -275,11 +285,11 @@
 
     function setTabByRoutePath(): void {
         if (isActiveRoutePath('/') || isActiveRoutePath('/aaseditor') || isActiveRoutePath('/aassmviewer')) {
-            currentTab.value = 0;
+            currentTab.value = 'aas';
         } else if (isActiveRoutePath('/smviewer') || isActiveRoutePath('/smeditor') || isActiveRoutePath('/visu')) {
-            currentTab.value = 1;
+            currentTab.value = 'submodel';
         } else {
-            currentTab.value = 2;
+            currentTab.value = 'modules';
         }
     }
 </script>
