@@ -49,7 +49,7 @@ jobs:
       # Step 6
       - name: Hide snapshot chip
         run: |
-          find src -type f -name "Settings.vue" -exec sed -i -E 's|<v-chip id="snapshot".*>([a-z0-9]{7})</v-chip>|<v-chip id="snapshot">\1</v-chip>|g' {} +
+          find src -type f -name "Settings.vue" -exec sed -i -E 's|<v-chip id="snapshot".*>([a-z0-9]{7})</v-chip>|<v-chip id="snapshot" class="d-none">\1</v-chip>|g' {} +
 
       # Step 7 Commit replaced version
       - name: Commit updated files
