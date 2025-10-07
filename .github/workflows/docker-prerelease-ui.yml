@@ -39,7 +39,7 @@ jobs:
 
       - name: Replace snapshot in Vue settings component
         run: |
-          find src -type f -name "Settings.vue" -exec sed -i -E 's|<v-chip id="snapshot".*>[a-z0-9]{7}</v-chip>|<v-chip id="snapshot">${{ env.TAG_NAME }}</v-chip>|g' {} +
+          find src -type f -name "Settings.vue" -exec sed -i -E "s|<v-chip id=\"snapshot\".*>[a-z0-9]{7}</v-chip>|<v-chip id=\"snapshot\">${{ env.SHORT_SHA }}</v-chip>|g" {} +
 
       - name: Hide version chip
         run: |
