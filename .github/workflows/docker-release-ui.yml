@@ -44,7 +44,7 @@ jobs:
       # Step 5: Replace version in Vue settings component
       - name: Replace version in Vue settings component
         run: |
-          find src -type f -name "Settings.vue" -exec sed -i -E 's|<v-chip id="version" color="primary".*>v2-[0-9]{6}</v-chip>|<v-chip id="version" color="primary">${{ env.TAG_NAME }}</v-chip>|g' {} +
+          find src -type f -name "Settings.vue" -exec sed -i -E "s|<v-chip id=\"version\" color=\"primary\".*>v2-[0-9]{6}</v-chip>|<v-chip id=\"version\" color=\"primary\">${{ env.TAG_NAME }}</v-chip>|g" {} +
 
       # Step 6
       - name: Hide snapshot chip
