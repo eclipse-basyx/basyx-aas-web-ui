@@ -1,0 +1,9 @@
+services:
+  swagger:
+    image: swaggerapi/swagger-ui
+    ports:
+      - "8080:8080"
+    environment:
+      SWAGGER_JSON: /swagger/din18222.yaml
+    volumes:
+      - ./swagger/din18222.yaml:/swagger/din18222.yaml
