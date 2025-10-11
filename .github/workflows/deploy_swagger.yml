@@ -22,7 +22,7 @@ jobs:
           username: deploy
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "/EXECUTABLE/swagger/din18222.yaml"
+          source: "EXECUTABLE/swagger/din18222.yaml"
           target: "/srv/swe-basyx/swagger-spec/"
 
       - name: Deploy to Server via SSH
