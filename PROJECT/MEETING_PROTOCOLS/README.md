@@ -1,12 +1,12 @@
 # Meeting Protocol - Team 6 BaSyx DPP API
 
 ## Table of Contents
-- [Meeting 09.10.2025 - Next Steps](#meeting-09102025--next-steps)
-- [Meeting 30.09.2025 - Research](#meeting-30092025--research)
-- [Meeting 29.09.2025 - Foundations](#meeting-29092025--foundations)
+- [Meeting 09.10.2025 - Next Steps](#next-steps)
+- [Meeting 30.09.2025 - Research](#research)
+- [Meeting 29.09.2025 - Foundations](#foundations)
 
 ---
-
+<a id="next-steps"></a>
 ## Meeting 09.10.2025 - Next Steps
 
 <table style="width:100%;border-collapse:collapse;">
@@ -89,7 +89,7 @@ The next meeting is planned for 14.10.2025.
 
 ---
 
-
+<a id="research"></a>
 ## Meeting 30.09.2025 - Research
 
 <table style="width:100%;border-collapse:collapse;">
@@ -155,7 +155,7 @@ The next meeting is planned for Thursday, 09.10.2025.
 - This session focused mainly on **research and understanding BaSyx**.
 
 ---
-
+<a id="foundations"></a>
 ## Meeting 29.09.2025 - Foundations
 
 <table style="width:100%;border-collapse:collapse;">
