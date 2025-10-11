@@ -1,0 +1,11 @@
+name: Deploy Web UI (WIP)
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-webui:
+    runs-on: ubuntu-latest
+    steps:
+      - name: test
+        run: echo "test"
+    

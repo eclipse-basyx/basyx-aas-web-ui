@@ -1,4 +1,5 @@
 name: Deploy Swagger UI
+
 on:
   workflow_dispatch:
   pull_request:
