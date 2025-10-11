@@ -9,7 +9,7 @@ on:
 
 jobs:
   deploy-swagger:
-    if: contains(github.event.pull_request.body, '+swagger')
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request_review' && contains(github.event.pull_request.body, '+swagger'))
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
