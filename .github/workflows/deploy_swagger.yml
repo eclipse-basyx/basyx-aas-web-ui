@@ -1,4 +1,4 @@
-name: Deploy Swagger UI
+name: Deploy Swagger Specification
 
 on:
   workflow_dispatch:
@@ -15,14 +15,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Log in to GHCR
-        run: echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} --password-stdin
-
-      - name: Build Swagger Docker image
-        run: docker build -t ghcr.io/${{ secrets.GHCR_USERNAME }}/dhbw-inf24f-team6-basyx-webui-swagger:latest .
-      
-      - name: Push Swagger Docker image to GHCR
-        run: docker push ghcr.io/${{ secrets.GHCR_USERNAME }}/dhbw-inf24f-team6-basyx-webui-swagger:latest
+      - name: Copy OpenAPI file via scp
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: deploy
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "/EXECUTABLE/swagger/din18222.yaml"
+          target: "/srv/swe-basyx/swagger-spec/"
 
       - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -36,4 +37,4 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           envs: GHCR_USERNAME,GHCR_TOKEN
           script: |
-            /srv/swe-basyx/build_swagger.sh
+            /srv/swe-basyx/load_swagger.sh
