@@ -1,0 +1,456 @@
+openapi: 3.0.3
+info:
+  title: "Digitaler Produktpass (DPP) API"
+  description: |
+    OpenAPI-Spezifikation basierend auf dem Entwurf der Norm DIN EN 18222:2025.
+    Diese API standardisiert die Schnittstellen für das Lebenszyklusmanagement und die Durchsuchbarkeit von Digitalen Produktpässen (DPP) im Einklang mit der European Sustainability Product Regulation (ESPR).
+    Sie umfasst drei Hauptbereiche:
+    1.  **Life Cycle API**: Hauptmethoden zum Erstellen, Lesen, Aktualisieren und Löschen von DPPs.
+    2.  **Registry API**: Eine Methode zur Registrierung eines neuen DPP im zentralen Register der EU-Kommission.
+    3.  **Fine-Granular API**: Optionale Methoden für den detaillierten Lese- und Schreibzugriff auf einzelne Datenelemente innerhalb eines DPP.
+  version: "1.0.0"
+  contact:
+    name: "DIN/DKE Gemeinschaftsgremium Digitaler Produktpass"
+    email: "samarkhel-khan.yahya@din.de"
+
+servers:
+  - url: http://srv01.noah-becker.de/api
+    description: "Produktiv-Server"
+  - url: http://localhost:3000/api
+    description: "Lokale Entwicklungsumgebung"
+
+tags:
+  - name: "DPP Life Cycle API"
+    description: "Hauptmethoden zur Verwaltung des DPP-Lebenszyklus."
+  - name: "DPP Registry API"
+    description: "Schnittstelle zur Registrierung von DPPs im zentralen Register."
+  - name: "DPP Fine-Granular Life Cycle API"
+    description: "Optionale Operationen für den feingranularen Zugriff auf DPP-Daten."
+
+paths:
+  /dpps:
+    post:
+      tags:
+        - "DPP Life Cycle API"
+      summary: "Neuen DPP erstellen (CreateDPP)"
+      description: "Erstellt einen neuen Digitalen Produktpass. Zugriffsregeln steuern, ob die Erstellung erlaubt ist."
+      operationId: "createDPP"
+      requestBody:
+        required: true
+        description: "Das vollständige DPP-Objekt, das erstellt werden soll."
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DPP"
+      responses:
+        "201":
+          description: "DPP erfolgreich erstellt. Gibt die ID des neuen DPP zurück."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dppId:
+                    $ref: "#/components/schemas/Identifier"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /dpps/{dppId}:
+    get:
+      tags:
+        - "DPP Life Cycle API"
+      summary: "DPP anhand seiner ID abrufen (ReadDPPById)"
+      description: "Gibt den Digitalen Produktpass für eine bekannte DPP-Kennung zurück."
+      operationId: "readDPPById"
+      parameters:
+        - $ref: "#/components/parameters/dppId"
+      responses:
+        "200":
+          description: "Erfolgreiche Antwort mit dem angeforderten DPP."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DPP"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags:
+        - "DPP Life Cycle API"
+      summary: "DPP teilweise aktualisieren (UpdateDPPById)"
+      description: "Aktualisiert den Inhalt eines DPPs partiell (Patch). Der eingereichte DPP enthält nur die Daten, die aktualisiert oder hinzugefügt werden sollen. Die Aktualisierung ist atomar: Wenn ein Teil fehlschlägt, wird die gesamte Operation zurückgerollt."
+      operationId: "updateDPPById"
+      parameters:
+        - $ref: "#/components/parameters/dppId"
+      requestBody:
+        required: true
+        description: "Ein partielles DPP-Objekt, das die zu aktualisierenden Felder enthält. Implementierungen können RFC 7396 (JSON Merge Patch) berücksichtigen."
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PartialDPP"
+      responses:
+        "200":
+          description: "DPP erfolgreich aktualisiert. Gibt den vollständigen, aktualisierten DPP zurück."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DPP"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags:
+        - "DPP Life Cycle API"
+      summary: "DPP löschen (DeleteDPPById)"
+      description: "Entfernt einen DPP anhand seiner ID, z.B. am Ende seines Lebenszyklus. Zugriffsregeln steuern, ob die Löschung erlaubt ist."
+      operationId: "deleteDPPById"
+      parameters:
+        - $ref: "#/components/parameters/dppId"
+      responses:
+        "204":
+          description: "DPP erfolgreich gelöscht."
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /dppsByProductId/{productId}:
+    get:
+      tags:
+        - "DPP Life Cycle API"
+      summary: "Aktuellen DPP anhand der Produkt-ID abrufen (ReadDPPByProductId)"
+      description: "Gibt den aktuell aktiven (letzte Version) DPP für eine bekannte Produkt-Kennung zurück."
+      operationId: "readDPPByProductId"
+      parameters:
+        - $ref: "#/components/parameters/productId"
+      responses:
+        "200":
+          description: "Erfolgreiche Antwort mit dem angeforderten DPP."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DPP"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /dppsByProductIdAndDate/{productId}:
+    get:
+      tags:
+        - "DPP Life Cycle API"
+      summary: "DPP-Version nach Produkt-ID und Datum abrufen (ReadDPPVersionByProductIdAndDate)"
+      description: "Gibt eine spezifische Version eines DPP zurück, basierend auf seiner Produkt-ID und einem angegebenen Datum."
+      operationId: "readDPPVersionByProductIdAndDate"
+      parameters:
+        - $ref: "#/components/parameters/productId"
+        - name: date
+          in: query
+          required: true
+          description: "Der Zeitstempel (UTC-basiert), für den die DPP-Version angefordert wird."
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: "Erfolgreiche Antwort mit der angeforderten DPP-Version."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DPP"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /dppsByProductIds:
+    post:
+      tags:
+        - "DPP Life Cycle API"
+      summary: "DPP-IDs für eine Liste von Produkt-IDs abrufen (ReadDPPIdsByProductIds)"
+      description: "Gibt eine Liste von DPP-Kennungen zurück, die zu einer Menge von Produkt-Kennungen passen. Paginierung wird über 'limit' und 'cursor' unterstützt."
+      operationId: "readDPPIdsByProductIds"
+      parameters:
+        - name: limit
+          in: query
+          description: "Maximale Anzahl der zurückgegebenen Ergebnisse."
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - name: cursor
+          in: query
+          description: "Position, von der aus die Ergebnisliste fortgesetzt werden soll (für Paginierung)."
+          schema:
+            type: string
+      requestBody:
+        required: true
+        description: "Eine Liste von Produkt-IDs, für die die entsprechenden DPP-IDs gefunden werden sollen."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productIds:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/Identifier"
+      responses:
+        "200":
+          description: "Eine Liste der passenden DPP-Kennungen."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dppIds:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Identifier"
+
+  /registerDPP:
+    post:
+      tags:
+        - "DPP Registry API"
+      summary: "Neuen DPP im zentralen Register registrieren (PostNewDPPToRegistry)"
+      description: "Registriert einen neuen DPP im zentralen Register der EU-Kommission. Gibt eine eindeutige Registrierungs-ID zurück."
+      operationId: "postNewDPPToRegistry"
+      requestBody:
+        required: true
+        description: "Ein Objekt, das die Kennungen für Produkt, Betreiber und Sicherungsbetreiber enthält (Teilmenge des DPP-Headers)."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productId:
+                  $ref: "#/components/schemas/Identifier"
+                operatorId:
+                  $ref: "#/components/schemas/Identifier"
+                backupOperatorId:
+                  $ref: "#/components/schemas/Identifier"
+      responses:
+        "201":
+          description: "DPP erfolgreich registriert. Gibt die neue Registrierungs-ID zurück."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  registryIdentifier:
+                    $ref: "#/components/schemas/Identifier"
+
+  /dpps/{dppId}/collections/{elementId}:
+    get:
+      tags:
+        - "DPP Fine-Granular Life Cycle API"
+      summary: "Eine Daten-Sammlung aus einem DPP lesen (ReadDataElementCollection)"
+      description: "Gibt eine spezifische 'DataElementCollection' anhand ihrer ID aus einem bestimmten DPP zurück."
+      operationId: "readDataElementCollection"
+      parameters:
+        - $ref: "#/components/parameters/dppId"
+        - $ref: "#/components/parameters/elementId"
+      responses:
+        "200":
+          description: "Die angeforderte DataElementCollection."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataElementCollection"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags:
+        - "DPP Fine-Granular Life Cycle API"
+      summary: "Eine Daten-Sammlung in einem DPP aktualisieren (UpdateDataElementCollection)"
+      description: "Aktualisiert den Inhalt einer 'DataElementCollection' in einem bestimmten DPP."
+      operationId: "updateDataElementCollection"
+      parameters:
+        - $ref: "#/components/parameters/dppId"
+        - $ref: "#/components/parameters/elementId"
+      requestBody:
+        description: "Partielle DataElementCollection, die nur die zu aktualisierenden Teile enthält."
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PartialDataElementCollection"
+      responses:
+        "200":
+          description: "Erfolgreich aktualisiert. Gibt optional die aktualisierte Collection zurück."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataElementCollection"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /dpps/{dppId}/elements/{elementPath}:
+    get:
+      tags:
+        - "DPP Fine-Granular Life Cycle API"
+      summary: "Ein einzelnes Datenelement aus einem DPP lesen (ReadDataElement)"
+      description: "Ermöglicht das Lesen eines spezifischen Datenelements mittels seines eindeutigen Pfades innerhalb eines DPPs."
+      operationId: "readDataElement"
+      parameters:
+        - $ref: "#/components/parameters/dppId"
+        - $ref: "#/components/parameters/elementPath"
+      responses:
+        "200":
+          description: "Das angeforderte Datenelement."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataElement"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags:
+        - "DPP Fine-Granular Life Cycle API"
+      summary: "Ein einzelnes Datenelement in einem DPP aktualisieren (UpdateDataElement)"
+      description: "Aktualisiert ein spezifisches Datenelement innerhalb eines DPPs. Ermöglicht auch das Hinzufügen oder Entfernen von Informationen."
+      operationId: "updateDataElement"
+      parameters:
+        - $ref: "#/components/parameters/dppId"
+        - $ref: "#/components/parameters/elementPath"
+      requestBody:
+        description: "Der neue Inhalt des Datenelements."
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DataElement"
+      responses:
+        "200":
+          description: "Erfolgreich aktualisiert. Gibt das geänderte Datenelement zurück."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataElement"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  schemas:
+    DPP:
+      type: object
+      description: "Repräsentiert den Digitalen Produktpass. Die genaue logische Struktur ist in 'Modul 4: Systeminteroperabilität' der Normungsreihe definiert und wird hier als generisches Objekt dargestellt."
+      properties:
+        dppId:
+          $ref: "#/components/schemas/Identifier"
+        productId:
+          $ref: "#/components/schemas/Identifier"
+      additionalProperties: true
+    PartialDPP:
+      type: object
+      description: "Eine partielle Repräsentation des DPP für PATCH-Operationen."
+      additionalProperties: true
+    DataElement:
+      description: "Ein einzelnes Datenelement innerhalb eines DPP. Kann ein beliebiger Typ sein."
+    DataElementCollection:
+      type: object
+      description: "Eine Sammlung von Datenelementen innerhalb eines DPPs."
+      additionalProperties:
+        $ref: "#/components/schemas/DataElement"
+    PartialDataElementCollection:
+      type: object
+      description: "Eine partielle Sammlung von Datenelementen für PATCH-Operationen."
+      additionalProperties:
+        $ref: "#/components/schemas/DataElement"
+    Identifier:
+      type: string
+      description: "Eine eindeutige Kennung."
+      example: "urn:uuid:6c84fb90-12c4-11e1-840d-7b25c5ee775a"
+    ErrorResult:
+      type: object
+      description: "Das Standard-Antwortobjekt im Fehlerfall."
+      properties:
+        message:
+          type: array
+          items:
+            $ref: "#/components/schemas/Message"
+    Message:
+      type: object
+      properties:
+        messageType:
+          $ref: "#/components/schemas/MessageTypeEnum"
+        text:
+          type: string
+          description: "Nachrichtentext, der den Fehler beschreibt."
+        code:
+          type: string
+          description: "Ein technologieabhängiger Status- oder Fehlercode."
+        correlationId:
+          type: string
+          description: "ID zur Verbindung von Nachrichten über mehrere Systeme hinweg."
+        timestamp:
+          type: string
+          format: date-time
+          description: "Zeitstempel der Nachricht."
+    MessageTypeEnum:
+      type: string
+      enum:
+        - Info
+        - Warning
+        - Error
+        - Exception
+
+  parameters:
+    dppId:
+      name: dppId
+      in: path
+      required: true
+      description: "Eindeutige Kennung des DPP."
+      schema:
+        $ref: "#/components/schemas/Identifier"
+    productId:
+      name: productId
+      in: path
+      required: true
+      description: "Eindeutige Kennung des Produkts."
+      schema:
+        $ref: "#/components/schemas/Identifier"
+    elementId:
+      name: elementId
+      in: path
+      required: true
+      description: "Kennung der DataElementCollection innerhalb des DPP."
+      schema:
+        $ref: "#/components/schemas/Identifier"
+    elementPath:
+      name: elementPath
+      in: path
+      required: true
+      description: "Der absolute Pfad zum spezifischen Datenelement innerhalb des DPP."
+      schema:
+        type: string
+        example: "sustainability.recyclability.recycledContent"
+
+  responses:
+    BadRequest:
+      description: "Fehlerhafte Anfrage (z.B. falsche Syntax oder ungültige Parameter)."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResult"
+    Forbidden:
+      description: "Zugriff verweigert. Der Client hat nicht die erforderlichen Berechtigungen für die Ressource."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResult"
+    NotFound:
+      description: "Die angeforderte Ressource wurde nicht gefunden."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResult"

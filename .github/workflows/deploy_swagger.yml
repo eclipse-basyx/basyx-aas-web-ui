@@ -1,0 +1,39 @@
+name: Deploy Swagger UI
+
+on:
+  workflow_dispatch:
+  pull_request_review:
+    types: [submitted]
+    branches:
+      - main
+
+jobs:
+  deploy-swagger:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request_review' && contains(github.event.pull_request.body, '+swagger'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} --password-stdin
+
+      - name: Build Swagger Docker image
+        run: docker build -t ghcr.io/${{ secrets.GHCR_USERNAME }}/dhbw-inf24f-team6-basyx-webui-swagger:latest .
+      
+      - name: Push Swagger Docker image to GHCR
+        run: docker push ghcr.io/${{ secrets.GHCR_USERNAME }}/dhbw-inf24f-team6-basyx-webui-swagger:latest
+
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: deploy
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: GHCR_USERNAME,GHCR_TOKEN
+          script: |
+            /srv/swe-basyx/build_swagger.sh
