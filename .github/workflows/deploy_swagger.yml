@@ -25,7 +25,7 @@ jobs:
         run: docker push ghcr.io/${{ secrets.GHCR_USERNAME }}/dhbw-inf24f-team6-basyx-webui-swagger:latest
 
       - name: Deploy to Server via SSH
-        uses: appleboy/ssh-action@1.0.3
+        uses: appleboy/ssh-action@v1.0.3
         env:
           GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
