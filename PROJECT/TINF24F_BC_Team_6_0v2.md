@@ -1,4 +1,4 @@
-# BUSINESS CASE: BaSyx DPP API Implementation
+# BUSINESS CASE: BaSyx DPP API 
 
 **TIN24F, SWL Practice project 2025/2026**
 
@@ -96,7 +96,16 @@ The project milestones are:
 
 ## Cost Calculation
 
-The total development cost estimate includes base salary and other investor expenses.
+Calculation of the development cost estimate. The cost estimate is a comprehensive 
+plan of all the company´s expenses for the planned period of production and financial 
+activity. 
+
+An investor´s cost estimate includes the following main expenses: 
+• *Base salary*; 
+• *Rent*; 
+• *Components*; 
+• *Electricity*; 
+• *Risk*. 
 
 ### Salary Costs
 
@@ -140,21 +149,26 @@ $$\text{Total Costs} = €38,700 + €20,485 = \mathbf{€59,185}$$
 
 The team identified the following key risks:
 
-* **Operational Capacity Risk:** Sudden decline in the project's operating capacity.
-* **Communication Risks:** Insufficient communication between team members.
-    * *Mitigation:* Regular meetings and use of GitHub.
-* **Technical Risks:** Sudden failure of Internet connection or power supply; unplanned unavailability of equipment.
-* **Risk of Ignoring Risks:** Insufficiently realistic assessment of scenarios.
-    * *Mitigation:* Detailed list of possible risks and solutions created.
-* **Schedule Risk:** Delays in the project work plan.
-    * *Mitigation:* Detailed work plan and systematic progress monitoring.
-* **Budget Risks:** Exceeding the planned budget due to additional costs.
+* *Risks associated with a sudden decline* in the project's operating capacity.  
+* **Communication risks* (insufficient communication between team members). To 
+solve this problem, it was decided to hold regular meetings, use the GitHub and Jira services.
+* **Technical risks** (sudden failure of the Internet connection or power supply for an 
+extended period of time, unplanned unavailability of equipment).   
+* *Risk of ignoring risks* (insufficiently realistic assessment of scenarios by each 
+member of the test team). To solve this problem, a list of possible risks and possible 
+solutions was created.  
+* *Schedule risk*. To address this issue, a detailed project work plan was created and 
+progress was systematically monitored. 
+* *Budget risks*. Exceeding the planned budget due to additional costs. 
 
 ---
 
 ## Offer
 
-This commercial offer details the sum for implementing the DIN EN 18222 standard (DPP) in the Eclipse BaSyx framework, including a **profit margin of ~30%**.
+This is a commercial offer for the implementation of the DIN EN 18222 standard 
+(Digital Product Passport, DPP) in the Eclipse BaSyx framework. The details and the 
+offer sum of 59 185 € are illustrated in following table. It shows the total costs of the 
+project along with the profit **margin of ~ 30 %** and the offer. 
 
 | **Type of Costs** | **Costs, €** |
 | :--- | :---: |
