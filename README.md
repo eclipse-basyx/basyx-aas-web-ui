@@ -3,7 +3,7 @@
 #   TINF24F_Team6_BaSyx_DPP_API
 
 
-This project implements a **REST API for the Digital Product Passport (DPP)** according to the **DIN EN 18222** standard, integrated into the **Eclipse BaSyx framework**.  
+This project implements a **REST API for the Digital Product Passport (DPP)** according to the [**DIN EN 18222**](PROJECT/DIN_EN_18222_Draft.pdf) standard, integrated into the **Eclipse BaSyx framework**.  
 It provides a complete end-to-end solution for lifecycle management, interoperability, and usability of digital product data across the entire product lifecycle.
 
 ---
@@ -27,7 +27,7 @@ Based on **DIN EN 18222**, this project defines and implements a standardized RE
 ## Main Tasks
 
 1. **OpenAPI Specification**  
-   - Derive a complete OpenAPI (Swagger) specification from DIN EN 18222  
+   - Derive a complete OpenAPI (Swagger) specification from [DIN EN 18222](PROJECT/DIN_EN_18222_Draft.pdf)  
    - Ensure compliance and interoperability with BaSyx REST standards  
 
 2. **BaSyx Environment Setup**  
@@ -63,10 +63,11 @@ Based on **DIN EN 18222**, this project defines and implements a standardized RE
 | **Frontend** | React / TypeScript (BaSyx UI) |
 | **Data Model** | Asset Administration Shell (AAS) |
 | **Infrastructure** | Eclipse BaSyx Framework |
-| **Hosting** | Docker / Kubernetes (Demo Server) |
+| **Hosting** | Docker / Kubernetes [Demo Server](https://srv01.noah-becker.de/uni/swe/swagger/) |
 | **Documentation** | Markdown, GitHub Pages, Swagger UI |
 
 ## Useful Links
 -   [BaSyx Hack - Useful API information](https://basyxhack.iese.de/docs.html#gettingstarted)
 -   [AAS Web UI overview](https://wiki.basyx.org/en/latest/content/user_documentation/basyx_components/web_ui/index.html)
+-   [DIN EN 1822](PROJECT/DIN_EN_18222_Draft.pdf)
 -   [Tutorials & Resources](https://github.com/DHBW-TINF24F/.github/blob/main/Tutorials.md)
