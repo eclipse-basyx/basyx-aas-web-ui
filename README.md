@@ -1,4 +1,4 @@
-![GitHub](https://img.shields.io/github/license/eclipse-basyx/basyx-aas-web-ui)
+![GitHub](https://img.shields.io/github/license/eclipse-basyx/basyx-aas-web-ui) [![Deploy Web UI (WIP)](https://github.com/DHBW-TINF24F/Team6-BaSyx-DPP-API/actions/workflows/deploy_webui.yml/badge.svg?branch=main)](https://github.com/DHBW-TINF24F/Team6-BaSyx-DPP-API/actions/workflows/deploy_webui.yml) [![Deploy Swagger Specification](https://github.com/DHBW-TINF24F/Team6-BaSyx-DPP-API/actions/workflows/deploy_swagger.yml/badge.svg)](https://github.com/DHBW-TINF24F/Team6-BaSyx-DPP-API/actions/workflows/deploy_swagger.yml)
 
 #   TINF24F_Team6_BaSyx_DPP_API
 
@@ -63,11 +63,11 @@ Based on **DIN EN 18222**, this project defines and implements a standardized RE
 | **Frontend** | React / TypeScript (BaSyx UI) |
 | **Data Model** | Asset Administration Shell (AAS) |
 | **Infrastructure** | Eclipse BaSyx Framework |
-| **Hosting** | Docker / Kubernetes [Demo Server](https://srv01.noah-becker.de/uni/swe/swagger/) |
+| **Hosting** | <div>Traefik (Reverse Proxy) & Docker<br><li> [Swagger](https://srv01.noah-becker.de/uni/swe/swagger/) OpenAPI Spezifikation<br><li> [BaSyx WebUI](https://srv01.noah-becker.de/uni/swe/app/) Applikation</div> |
 | **Documentation** | Markdown, GitHub Pages, Swagger UI |
 
 ## Useful Links
 -   [BaSyx Hack - Useful API information](https://basyxhack.iese.de/docs.html#gettingstarted)
 -   [AAS Web UI overview](https://wiki.basyx.org/en/latest/content/user_documentation/basyx_components/web_ui/index.html)
--   [DIN EN 1822](PROJECT/DIN_EN_18222_Draft.pdf)
+-   [DIN EN 18222](PROJECT/DIN_EN_18222_Draft.pdf)
 -   [Tutorials & Resources](https://github.com/DHBW-TINF24F/.github/blob/main/Tutorials.md)
