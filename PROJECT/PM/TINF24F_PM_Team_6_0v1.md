@@ -96,12 +96,15 @@
 | | - Technical Writer | Fabian Steiß |
 | | - UI-Design | Felix Schulz |
 
-*[Insert Diagram of Roles/Project Organization here]*
+![Project organisation](Roles.png)
+
+*Figur.1* Project organisation
 
 ### Work breakdown structure (PSP)
 
-*[To be filled in]*
+![WSB](WBS.png)
 
+*Figur.2* Work breakdown structure (PSP)
 ---
 
 ## Milestones
@@ -171,7 +174,7 @@
 
 ## Gantt chart 3rd Semester
 
-*[Insert Gantt chart here]*
+![Gantt chart](Gantt_chart.png)
 
 ---
 
@@ -207,7 +210,7 @@ At each meeting, every team member receives a task. In addition, every week, eve
 The Jira platform is also used for more detailed control over the progress of tasks, which is also convenient for the team.
 
 
-* **With the customer:** *[To be filled in]*
+* **With the customer:**
 
 All documents are visible in the GitHub repository. The documents PM, BC, CRS, SAS, SRS and MeetingMinutes are in the PROJECT folder.
 
