@@ -30,6 +30,7 @@
 | **Version** | **Date** | **Author** | **Comment** |
 | :--- | :--- | :--- | :--- |
 | 1.0 | 12.10.2025 | Nataliia Chubak | Created and added structure |
+| 2.0 | 14.10.2025 | Nataliia Chubak | Added Milestones, Project Organisation and Gantt chart |
 | | | | |
 
 ---
@@ -66,18 +67,18 @@
 
 | **Topic** | **Details** |
 | :--- | :--- |
-| **Initial Situation** | *[To be filled in]* |
-| **Temporal context** | Pre-project phase: No previous project. Getting to know BaSyx during lectures. |
-| | Project phase: *[To be filled in]* |
-| | Post-project phase: *[To be filled in]* |
+| **Initial Situation** | During the project, we need to create and implement a REST API for a digital product passport (DPP). The project development involves the use of Eclipse BaSyx Framework, which includes frontend and backend. In addition, the project is also characterised by existing standard requirements and the lack of implementation of this standard in the Eclipse BaSyx platform. |
+| **Temporal context** | An open-source platform BaSyx  developed in 2023 for the development and use of digital twins in the context of Industry 4.0.  |
+| | Project phase: Full implementation of the API, hosting on a demo server, and acceptance in the open source project. |
+| | Post-project phase: The BaSyx framework is enhanced with the standards-compliant DPP API, which increases interoperability.|
 
 ### Stakeholder Analysis
 
 | **Stakeholder** | **Potential / Chance** | **Conflict / Risk** | **Actions** |
 | :--- | :--- | :--- | :--- |
-| Customer | *[To be filled in]* | *[To be filled in]* | *[To be filled in]* |
-| Supplier | *[To be filled in]* | *[To be filled in]* | *[To be filled in]* |
-| User | *[To be filled in]* | *[To be filled in]* | *[To be filled in]* |
+| Customer | Satisfied with the project | Changing the requirements during the project | Regular communication between supplier and customer|
+| Supplier | Development of the solutions that meets the requirements | Miscommunication, Time pressure | Regular meetings, Structured project leading|
+| User | Uses the system  | Needs more information or does not understand the provided documentation, Incorrect operation | Make documentation clear and easy to get. Create the usability concept and testing of catching errors |
 
 ---
 
@@ -105,13 +106,14 @@
 
 ## Milestones
 
-| **WP-Code** | **Milestone name** | **Plan date** | **Responsible Person** |
-| :--- | :--- | :--- | :--- |
-| *[TBD]* | *[TBD]* | *[TBD]* | *[TBD]* |
-| *[TBD]* | *[TBD]* | *[TBD]* | *[TBD]* |
-| *[TBD]* | *[TBD]* | *[TBD]* | *[TBD]* |
-| *[TBD]* | *[TBD]* | *[TBD]* | *[TBD]* |
-| *[TBD]* | *[TBD]* | *[TBD]* | *[TBD]* |
+| **WP-Code** | **Milenstone name** | **Responsible Person** |
+| :--- | :--- | :--- | 
+| W1 | *Analysis*: <ul><li>Official project start</li><li>First meeting, task distribution</li></ul> | Whole Team |
+| W2 | *Analysis*: <ul><li>Create project structure, time scope (first version)</li><li>Create BC</li><li>Start analysing the requirements</li></ul>  |  <ul><li>Nataliia Chubak</li><li>Nataliia Chubak</li><li>Nataliia Chubak, Magnus Lörcher, Luca Schmoll</li></ul> |
+| W3 | *Analysis*: <ul><li>Set up GitHub repository</li></ul>  | Noah Becker |
+| W4 | *Analysis/Design*: <ul><li>Create CRS (first version)</li><li>Create usability concept</li></ul>  | <ul><li>Nataliia Chubak, Magnus Lörcher, Luca Schmoll</li><li>Nataliia Chubak, Magnus Lörcher, Luca Schmoll, Fabian Steiß, Felix Schulz, Noah Becker</li</ul> |
+| W5 | *Design*: <ul><li>Create mockups</li><li>Create SRS</li><li>Create SAS</li></ul>  |  <ul><li>Felix Schulz</li><li>Fabian Steiß</li><li>Noah Becker</li></ul> |
+| W6 | *Presentation*: <ul><li>Create powerPoint file</li><li>Prepare for presentation</li><li>Push PM, BC, CRS, SRS, SAS, Meetings protocols in final version in the GitHub repository</li></ul> *Development*: <ul><li>Start with development</li></ul>  |  <ul><li>Manuel Lutz</li><li>Whole team</li><li>Whole team</li></ul><ul><li>Whole team</li></ul> |
 
 ### List of tasks and responsible person
 
@@ -181,14 +183,33 @@
 
 ## Soft- and Hardware requirements
 
-*[To be filled in]*
+*Software requirements:* OS: MS Windows, Linux, macOS.
+
+*Hardware requirements:*
+   
+   • 32-bit (x86) or 64-bit (x64) processor with a clock speed of 1 GHz or faster;
+   
+   • 512 megabytes (MB) of RAM.
+
+*Communication:* Teams, WhatsApp.
+
+*Tools:* GitHub, Jira.
+
 
 ---
 
 ## Communication and reporting
 
-* **Within the team:** *[To be filled in]*
+* **Within the team:** 
+
+Meetings are every week. Meetings are held on the university premises. They are protocolled. Fabian Steiß is responsible for the protocols. 
+At each meeting, every team member receives a task. In addition, every week, everyone reports on the progress of the task and any problems that may have arisen. The Teams platform is also used for communication, if clarification of a specific task is needed.
+The Jira platform is also used for more detailed control over the progress of tasks, which is also convenient for the team.
+
+
 * **With the customer:** *[To be filled in]*
+
+All documents are visible in the GitHub repository. The documents PM, BC, CRS, SAS, SRS and MeetingMinutes are in the PROJECT folder.
 
 ---
 
