@@ -49,11 +49,15 @@ services:
     ports:
       - "8103:8080"
     environment:
+      - SPRING_PROFILES_ACTIVE=v3
       - SPRING_DATA_MONGODB_URI=mongodb://admin:admin@basyx-mongodb:27017
       - BASYX_CORS_ALLOWED-ORIGINS=http://localhost:3000
+      - BASYX_CORS_ALLOWED-METHODS=GET,POST,PATCH,DELETE,PUT,OPTIONS,HEAD
       - SPRING_PROFILES_ACTIVE=default
       - SERVER_ADDRESS=0.0.0.0
       - SERVER_PORT=8080
+      - SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE=50MB
+      - SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE=50MB
     restart: unless-stopped
     networks:
       - basyx-ui-dev
@@ -98,11 +102,11 @@ services:
       - ./SOURCE/aas-web-ui:/app/src
     command: npm run dev
     environment:
-      - AAS_REGISTRY_PATH=http://localhost:8101/shell-descriptors
-      - SUBMODEL_REGISTRY_PATH=http://localhost:8102/submodel-descriptors
-      - AAS_REPO_PATH=http://localhost:8103/shells
-      - SUBMODEL_REPO_PATH=http://localhost:8104/submodels
-      - CD_REPO_PATH=http://localhost:8105/concept-descriptions
+      - AAS_REGISTRY_PATH=http://localhost:8101
+      - SUBMODEL_REGISTRY_PATH=http://localhost:8102
+      - AAS_REPO_PATH=http://localhost:8103
+      - SUBMODEL_REPO_PATH=http://localhost:8104
+      - CD_REPO_PATH=http://localhost:8105
     depends_on:
       - basyx-aas-registry
       - basyx-submodel-registry
