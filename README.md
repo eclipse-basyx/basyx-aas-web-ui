@@ -69,28 +69,30 @@ Based on **DIN EN 18222**, this project defines and implements a standardized RE
 ---
 
 ## How to: Local development
-> [!TIP]
+> [!NOTE]
 > PowerShell scripts should be running on your device, if not please follow [this](#running-without-powershell-scripts) workflow.
 
 > [!WARNING]
-> The PowerShell scripts are running/downloading Docker Containers. Please ensure, that you have Docker installed on your device and have the Docker Daemon running. Also, make sure that you have enough space.<br>The BaSyx WebUI needs several services as dependencies, which will also be installed during the process. - The whole installing will take around **5GB of space**.
+> The PowerShell scripts are running/downloading Docker Containers. Please ensure, that you have Docker installed on your device and have the Docker Daemon running. Also, make sure that you have enough space.
 
-#### BaSyx WebUI
+### BaSyx WebUI
 To start the local BaSyx development environment, run the following command (assuming that you are in the main repo folder):
 ```
 ./run_basyx-webui.ps1
 ```
+> [!CAUTION]
+> The BaSyx WebUI needs several services as dependencies, which will also be installed during the process. - The whole installing will take around **5GB of space**.
 
-**The BaSyx WebUI is now available on `http://localhost:3000`**
+**The BaSyx WebUI is now available on `http://localhost:3000`**<br>
 *The initialization of all background BaSyx services can take up to 1 minute. Even tho the UI is available, you can still get errors till all services are available to the UI.*
 
-#### Swagger Editor
+### Swagger Editor
 To start the Swagger Editor, run the following command (assuming that you are in the main repo folder):
 ```
 ./run_swagger-editor.ps1
 ```
-
-#### Running without PowerShell scripts
+---
+### Running without PowerShell scripts
 **BaSyx WebUI**
 ```
 docker compose -f ./docker-compose.yml up -d
