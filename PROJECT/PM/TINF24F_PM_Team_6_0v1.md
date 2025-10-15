@@ -31,6 +31,7 @@
 | :--- | :--- | :--- | :--- |
 | 1.0 | 12.10.2025 | Nataliia Chubak | Created and added structure |
 | 2.0 | 14.10.2025 | Nataliia Chubak | Added Milestones, Project Organisation and Gantt chart |
+| 3.0 | 15.10.2025 | Nataliia Chubak | Risks analysis with suggestions from Luca Schmoll |
 | | | | |
 
 ---
@@ -176,12 +177,28 @@
 
 ![Gantt chart](Gantt_chart.png)
 
+*Figur.3* Gantt chart 3rd Semester
+
 ---
 
 ## Risks
 
-*[To be filled in]*
+| **Nr** | **Risk** | **Probability** | **Amount of damage** | **Effects** | **Measure** |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 1 | Planning risk| 20 % | Very low | The project might take longer than planned. | Creating a detailed project work plan and systematically monitoring of the progress.  |
+| 2 | Communication risk | 40 % | Low| Insufficient communication between team members. | Holding regular meetings and use the GitHub and Jira services. |
+| 3 | Miscommunication with client | 40 % | Medium | Final product might not satisfy customer. | Presenting parts of the project during developing. |
+| 4 |Technical risk| 60 % | High | Technical complexity of BaSyx. |  Evaluation and expansion of BaSyx teaching aids. |
+| 5 |Risk of ignoring risks | 20 % |Medium| Insufficiently realistic assessment of scenarios by each member of the test team. | Creating a list of possible risks and possible solutions. | 
+| 6 | Budget risk | 80 % | Medium | The budget for the project is being significantly exceeded. | Good planning and concentrating on main task. | 
+| 7 | Cyber attack| 20 % | Very high | The servers are hacked; data is lost. | Encryption of the server. | 
+| 8 | Illness | 40 % | Medium | Depending on the duration of the illness, several days/weeks.| In the event of long-term illness, the tasks assigned to the team member may be transferred to other team members. | 
 
+
+
+![Risk matrix](matrix.JPG)
+
+*Figur.4* Risk matrix
 ---
 
 ## Soft- and Hardware requirements
