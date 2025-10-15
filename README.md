@@ -66,6 +66,41 @@ Based on **DIN EN 18222**, this project defines and implements a standardized RE
 | **Hosting** | <div>Traefik (Reverse Proxy) & Docker<br><li> [Swagger](https://srv01.noah-becker.de/uni/swe/swagger/) OpenAPI Spezifikation<br><li> [BaSyx WebUI](https://srv01.noah-becker.de/uni/swe/app/) Applikation</div> |
 | **Documentation** | Markdown, GitHub Pages, Swagger UI |
 
+---
+
+## How to: Local development
+> [!TIP]
+> PowerShell scripts should be running on your device, if not please follow [this](#running-without-powershell-scripts) workflow.
+
+> [!WARNING]
+> The PowerShell scripts are running/downloading Docker Containers. Please ensure, that you have Docker installed on your device and have the Docker Daemon running. Also, make sure that you have enough space.<br>The BaSyx WebUI needs several services as dependencies, which will also be installed during the process. - The whole installing will take around **5GB of space**.
+
+#### BaSyx WebUI
+To start the local BaSyx development environment, run the following command (assuming that you are in the main repo folder):
+```
+./run_basyx-webui.ps1
+```
+
+**The BaSyx WebUI is now available on `http://localhost:3000`**
+*The initialization of all background BaSyx services can take up to 1 minute. Even tho the UI is available, you can still get errors till all services are available to the UI.*
+
+#### Swagger Editor
+To start the Swagger Editor, run the following command (assuming that you are in the main repo folder):
+```
+./run_swagger-editor.ps1
+```
+
+#### Running without PowerShell scripts
+**BaSyx WebUI**
+```
+docker compose -f ./docker-compose.yml up -d
+```
+
+**Swagger Editor**
+```
+docker compose -f ./docker-compose.swagger.yml up -d
+```
+
 ## Useful Links
 -   [BaSyx Hack - Useful API information](https://basyxhack.iese.de/docs.html#gettingstarted)
 -   [AAS Web UI overview](https://wiki.basyx.org/en/latest/content/user_documentation/basyx_components/web_ui/index.html)
