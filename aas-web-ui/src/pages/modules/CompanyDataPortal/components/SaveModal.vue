@@ -4,6 +4,7 @@
             <v-card-title>Save AAS</v-card-title>
             <v-card-text>
                 <v-combobox
+                    v-if="endpointConfigAvailable"
                     v-model="serverUrl"
                     :items="serverOptions"
                     label="AAS Environment URL"
@@ -80,7 +81,8 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, ref, watch } from 'vue';
+    import { computed, onMounted, ref, watch } from 'vue';
+    import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import FormField from './FormField.vue';
 
@@ -92,7 +94,9 @@
     const aasDisplayName = ref<{ language: string; text: string }[]>([]);
 
     const navStore = useNavigationStore();
+    const envStore = useEnvStore();
 
+    const endpointConfigAvailable = computed(() => envStore.getEndpointConfigAvailable);
     const aasRepoURL = computed(() => navStore.getAASRepoURL);
 
     watch(
@@ -106,6 +110,12 @@
         },
         { immediate: true }
     );
+
+    onMounted(() => {
+        if (!endpointConfigAvailable.value) {
+            serverUrl.value = aasRepoURL.value.replace(/\/shells\/?$/, '').replace(/\/$/, '');
+        }
+    });
 
     const props = defineProps<{
         save: (
