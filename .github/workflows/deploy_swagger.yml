@@ -2,14 +2,16 @@ name: Deploy Swagger Specification
 
 on:
   workflow_dispatch:
-  pull_request_review:
-    types: [submitted]
+  pull_request_target:
+    types: [closed]
     branches:
       - main
+    tags:
+      - swagger
 
 jobs:
   deploy-swagger:
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request_review' && contains(github.event.pull_request.body, '+swagger'))
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
