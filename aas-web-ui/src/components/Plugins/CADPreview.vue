@@ -4,6 +4,13 @@
             <!-- CAD File Preview -->
             <div ref="viewerContainer" class="viewer"></div>
         </v-card>
+        <v-container
+            id="emptyContainer"
+            fluid
+            class="pa-0 ma-0 d-flex justify-center align-center d-none"
+            style="height: calc(100svh - 202px)">
+            <v-empty-state title="No available CAD visualization" class="text-divider"></v-empty-state>
+        </v-container>
     </v-container>
 </template>
 
@@ -41,8 +48,12 @@
     watch(
         () => props.submodelElementData,
         () => {
+            // Reset viewer container
+            if (viewerContainer.value) viewerContainer.value.replaceChildren();
+
             if (props.submodelElementData.modelType == 'File') {
                 localPathValue.value = valueUrl(props.submodelElementData).url;
+                initThree();
             }
         }
     );
@@ -56,6 +67,9 @@
 
     // Methods
     function initThree(): void {
+        const viewerCard = document.getElementById('viewerCard');
+        const emptyContainer = document.getElementById('emptyContainer');
+
         // create a new Three.js scene
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x343434);
@@ -75,7 +89,7 @@
         container.appendChild(renderer.domElement);
 
         // Get the v-card element
-        const vCard = document.getElementById('viewerCard') as HTMLElement;
+        const vCard = viewerCard as HTMLElement;
 
         // Add a resize observer to the v-card
         new ResizeObserver(() => {
@@ -108,7 +122,6 @@
             contentType == 'text/x-sla'
         ) {
             importSTL(scene);
-            // check if the file is an obj file
         } else if (contentType == 'application/obj') {
             importOBJ(scene);
             // check if the file is a gltf file
@@ -116,7 +129,18 @@
             importGLTF(scene);
         } else {
             // console.log('Unsupported File Type');
+            if (viewerCard) viewerCard.classList.add('d-none');
+            if (emptyContainer) {
+                emptyContainer.classList.remove('d-none');
+                emptyContainer.classList.add('d-flex');
+            }
             return;
+        }
+
+        if (viewerCard) viewerCard.classList.remove('d-none');
+        if (emptyContainer) {
+            emptyContainer.classList.add('d-none');
+            emptyContainer.classList.remove('d-flex');
         }
 
         // add a view cube with three.js view helper
