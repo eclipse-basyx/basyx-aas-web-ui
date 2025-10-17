@@ -1,13 +1,13 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-card id="viewerCard">
+        <v-card v-show="showViewer">
             <!-- CAD File Preview -->
-            <div ref="viewerContainer" class="viewer"></div>
+            <div ref="viewerContainer" style="width: 100%; height: 600px"></div>
         </v-card>
         <v-container
-            id="emptyContainer"
+            v-show="!showViewer"
             fluid
-            class="pa-0 ma-0 d-flex justify-center align-center d-none"
+            class="pa-0 ma-0 d-flex justify-center align-center"
             style="height: calc(100svh - 202px)">
             <v-empty-state title="No available CAD visualization" class="text-divider"></v-empty-state>
         </v-container>
@@ -40,6 +40,7 @@
 
     // Reactive data
     const localPathValue = ref('');
+    const showViewer = ref(true);
 
     // Computed properties
     const authToken = computed(() => authStore.getToken);
@@ -70,9 +71,6 @@
 
     // Methods
     function initThree(): void {
-        const viewerCard = document.getElementById('viewerCard');
-        const emptyContainer = document.getElementById('emptyContainer');
-
         // create a new Three.js scene
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x343434);
@@ -91,18 +89,15 @@
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         container.appendChild(renderer.domElement);
 
-        // Get the v-card element
-        const vCard = viewerCard as HTMLElement;
-
-        // Add a resize observer to the v-card
+        // Add a resize observer to the container
         new ResizeObserver(() => {
             // Update the size of the renderer
-            renderer.setSize(vCard.clientWidth, vCard.clientHeight);
+            renderer.setSize(container.clientWidth, container.clientHeight);
 
             // Update the aspect ratio of the camera
-            camera.aspect = vCard.clientWidth / vCard.clientHeight;
+            camera.aspect = container.clientWidth / container.clientHeight;
             camera.updateProjectionMatrix();
-        }).observe(vCard);
+        }).observe(container);
 
         // create a new Three.js OrbitControls
         const controls = new OrbitControls(camera, renderer.domElement);
@@ -132,19 +127,11 @@
             importGLTF(scene);
         } else {
             // console.log('Unsupported File Type');
-            if (viewerCard) viewerCard.classList.add('d-none');
-            if (emptyContainer) {
-                emptyContainer.classList.remove('d-none');
-                emptyContainer.classList.add('d-flex');
-            }
+            showViewer.value = false;
             return;
         }
 
-        if (viewerCard) viewerCard.classList.remove('d-none');
-        if (emptyContainer) {
-            emptyContainer.classList.add('d-none');
-            emptyContainer.classList.remove('d-flex');
-        }
+        showViewer.value = true;
 
         // add a view cube with three.js view helper
         const viewHelper = new ViewHelper(camera, renderer.domElement);
@@ -184,7 +171,7 @@
         });
 
         // render the scene
-        const animate = () => {
+        const animate = (): void => {
             // render main scene
             requestAnimationFrame(animate);
 
@@ -287,10 +274,3 @@
             .catch((error) => console.error('Error loading GLTF:', error));
     }
 </script>
-
-<style>
-    .viewer {
-        width: 100%;
-        height: 600px;
-    }
-</style>
