@@ -7,6 +7,50 @@
 - [Meeting 29.09.2025 - Foundations](#foundations)
 
 ---
+
+## Meeting 17.10.2025 – Discussion of Task Description
+<table style="width:100%;border-collapse:collapse;">
+  <tr>
+    <td style="width:60%; vertical-align:top;">
+
+| No. | Topic              | Responsibility | Time (min) |
+|-----|--------------------|----------------|-------------|
+| 1   | Explaination / discussion of project goal| All       | 10          |
+</td>
+<td style="width:40%; vertical-align:bottom; text-align:center;">
+
+**Location:** DHBW Stuttgart  
+**Date:** 17.10.2025  
+**Time:** 10:30 – 10:40  
+**Moderator:** Nataliia Chubak  
+**Minutes:** Fabian Steiß  
+**Type:** Briefing  
+</td>
+</tr>
+</table>
+
+---
+
+**Attendees:**  
+Noah Becker, Nataliia Chubak, Magnus Lörcher, Luca Schmoll, Fabian Steiß  
+
+---
+
+### I. Goal  
+The goal is to understand what we need to do with the API.
+
+### II. Status  
+
+### III. Risks / Issues  
+
+### IV. Discussion Points  
+- Noah Becker spoke with Herr. Rentschler. We need to extend the existing REST API’s OpenAPI specifications, both in the backend and the frontend.
+
+---
+
+
+
+
 <a id="TaskDistribution"></a>
 
 ## Meeting 15.10.2025 - Task Distribution
@@ -28,7 +72,8 @@
 **Date:** 15.10.2025  
 **Time:** 12:40 – 13:05  
 **Moderator:** Nataliia Chubak  
-**Minutes:** Fabian Steiß
+**Minutes:** Fabian Steiß  
+**Type** Weekly
 
 </td>
 </tr>
@@ -104,7 +149,8 @@ The next meeting is planned for xx.10.2025.
 **Date:** 09.10.2025  
 **Time:** 13:00 – 13:22  
 **Moderator:** Nataliia Chubak  
-**Minutes:** Fabian Steiß
+**Minutes:** Fabian Steiß  
+**Type** Weekly
 
 </td>
   </tr>
@@ -188,7 +234,8 @@ The next meeting is planned for 14.10.2025.
 **Date:** 30.09.2025  
 **Time:** 10:00 – 11:00  
 **Moderator:** Nataliia Chubak  
-**Minutes:** Fabian Steiß
+**Minutes:** Fabian Steiß  
+**Type** Weekly
 
 </td>
   </tr>
@@ -254,7 +301,8 @@ The next meeting is planned for Thursday, 09.10.2025.
 **Date:** 26.09.2025  
 **Time:** 10:00 – 11:00  
 **Moderator:** Nataliia Chubak  
-**Minutes:** Fabian Steiß
+**Minutes:** Fabian Steiß  
+**Type** Weekly
 
 </td>
   </tr>
