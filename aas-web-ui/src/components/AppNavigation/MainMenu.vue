@@ -3,7 +3,7 @@
         <v-card class="pa-2" border color="navigationMenu" :min-width="620">
             <v-container>
                 <v-sheet class="overflow-hidden mx-auto mb-4" elevation="2" rounded="lg" min-width="450">
-                    <v-tabs color="primary" grow v-model="currentTab">
+                    <v-tabs v-model="currentTab" color="primary" grow>
                         <v-tab class="text-none" text="AAS" />
 
                         <v-divider vertical />

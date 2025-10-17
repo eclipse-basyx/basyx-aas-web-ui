@@ -41,26 +41,7 @@ jobs:
           TAG_NAME=${GITHUB_REF#refs/tags/}
           echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
 
-      # Step 5: Replace version in Vue settings component
-      - name: Replace version in Vue settings component
-        run: |
-          find src -type f -name "Settings.vue" -exec sed -i -E "s|<v-chip id=\"version\" color=\"primary\".*>v2-[0-9]{6}</v-chip>|<v-chip id=\"version\" color=\"primary\">${{ env.TAG_NAME }}</v-chip>|g" {} +
-
-      # Step 6
-      - name: Hide snapshot chip
-        run: |
-          find src -type f -name "Settings.vue" -exec sed -i -E 's|<v-chip id="snapshot".*>([a-z0-9]{7})</v-chip>|<v-chip id="snapshot" class="d-none">\1</v-chip>|g' {} +
-
-      # Step 7 Commit replaced version
-      - name: Commit updated files
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add .
-          git commit -m "Updates version ${{ env.TAG_NAME }} from release tag"
-          git push
-
-      # Step 8: Build and Push Docker Images
+      # Step 5: Build and Push Docker Images
       - name: Build and Push Docker Images
         uses: docker/build-push-action@v6
         with:
@@ -68,6 +49,8 @@ jobs:
           file: ./aas-web-ui/Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64,linux/arm/v7
+          build-args: |
+            VITE_APP_VERSION=${{ env.TAG_NAME }}
           tags: |
             ${{ env.IMAGE_NAME }}:${{ env.TAG_NAME }}
             ${{ env.IMAGE_NAME }}:latest

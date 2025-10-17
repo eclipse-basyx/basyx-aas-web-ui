@@ -3,7 +3,9 @@ FROM --platform=$BUILDPLATFORM node:lts-slim AS build-stage
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
 ARG NODE_OPTIONS=--max-old-space-size=8192
+ARG VITE_APP_VERSION
 ENV NODE_OPTIONS=$NODE_OPTIONS
+ENV VITE_APP_VERSION=$VITE_APP_VERSION
 # Set working directory
 WORKDIR /app
 # Copy the package.json and yarn.lock files
