@@ -39,7 +39,8 @@ function copyWebIfcWasmPlugin() {
 function getCommitSha(): string {
     try {
         return execSync('git rev-parse HEAD').toString().trim();
-    } catch {
+    } catch (error) {
+        console.error('Failed to get git commit SHA:', error);
         return 'unknown';
     }
 }
