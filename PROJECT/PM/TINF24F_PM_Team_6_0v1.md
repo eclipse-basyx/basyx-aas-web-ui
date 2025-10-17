@@ -30,6 +30,8 @@
 | **Version** | **Date** | **Author** | **Comment** |
 | :--- | :--- | :--- | :--- |
 | 1.0 | 12.10.2025 | Nataliia Chubak | Created and added structure |
+| 2.0 | 14.10.2025 | Nataliia Chubak | Added Milestones, Project Organisation and Gantt chart |
+| 3.0 | 15.10.2025 | Nataliia Chubak | Risks analysis with suggestions from Luca Schmoll |
 | | | | |
 
 ---
@@ -66,18 +68,18 @@
 
 | **Topic** | **Details** |
 | :--- | :--- |
-| **Initial Situation** | *[To be filled in]* |
-| **Temporal context** | Pre-project phase: No previous project. Getting to know BaSyx during lectures. |
-| | Project phase: *[To be filled in]* |
-| | Post-project phase: *[To be filled in]* |
+| **Initial Situation** | During the project, we need to create and implement a REST API for a digital product passport (DPP). The project development involves the use of Eclipse BaSyx Framework, which includes frontend and backend. In addition, the project is also characterised by existing standard requirements and the lack of implementation of this standard in the Eclipse BaSyx platform. |
+| **Temporal context** | An open-source platform BaSyx  developed in 2023 for the development and use of digital twins in the context of Industry 4.0.  |
+| | Project phase: Full implementation of the API, hosting on a demo server, and acceptance in the open source project. |
+| | Post-project phase: The BaSyx framework is enhanced with the standards-compliant DPP API, which increases interoperability.|
 
 ### Stakeholder Analysis
 
 | **Stakeholder** | **Potential / Chance** | **Conflict / Risk** | **Actions** |
 | :--- | :--- | :--- | :--- |
-| Customer | *[To be filled in]* | *[To be filled in]* | *[To be filled in]* |
-| Supplier | *[To be filled in]* | *[To be filled in]* | *[To be filled in]* |
-| User | *[To be filled in]* | *[To be filled in]* | *[To be filled in]* |
+| Customer | Satisfied with the project | Changing the requirements during the project | Regular communication between supplier and customer|
+| Supplier | Development of the solutions that meets the requirements | Miscommunication, Time pressure | Regular meetings, Structured project leading|
+| User | Uses the system  | Needs more information or does not understand the provided documentation, Incorrect operation | Make documentation clear and easy to get. Create the usability concept and testing of catching errors |
 
 ---
 
@@ -95,23 +97,27 @@
 | | - Technical Writer | Fabian Steiß |
 | | - UI-Design | Felix Schulz |
 
-*[Insert Diagram of Roles/Project Organization here]*
+![Project organisation](Roles.png)
+
+*Figur.1* Project organisation
 
 ### Work breakdown structure (PSP)
 
-*[To be filled in]*
+![WSB](WBS.png)
 
+*Figur.2* Work breakdown structure (PSP)
 ---
 
 ## Milestones
 
-| **WP-Code** | **Milestone name** | **Plan date** | **Responsible Person** |
-| :--- | :--- | :--- | :--- |
-| *[TBD]* | *[TBD]* | *[TBD]* | *[TBD]* |
-| *[TBD]* | *[TBD]* | *[TBD]* | *[TBD]* |
-| *[TBD]* | *[TBD]* | *[TBD]* | *[TBD]* |
-| *[TBD]* | *[TBD]* | *[TBD]* | *[TBD]* |
-| *[TBD]* | *[TBD]* | *[TBD]* | *[TBD]* |
+| **WP-Code** | **Milenstone name** | **Responsible Person** |
+| :--- | :--- | :--- | 
+| W1 | *Analysis*: <ul><li>Official project start</li><li>First meeting, task distribution</li></ul> | Whole Team |
+| W2 | *Analysis*: <ul><li>Create project structure, time scope (first version)</li><li>Create BC</li><li>Start analysing the requirements</li></ul>  |  <ul><li>Nataliia Chubak</li><li>Nataliia Chubak</li><li>Nataliia Chubak, Magnus Lörcher, Luca Schmoll</li></ul> |
+| W3 | *Analysis*: <ul><li>Set up GitHub repository</li></ul>  | Noah Becker |
+| W4 | *Analysis/Design*: <ul><li>Create CRS (first version)</li><li>Create usability concept</li></ul>  | <ul><li>Nataliia Chubak, Magnus Lörcher, Luca Schmoll</li><li>Nataliia Chubak, Magnus Lörcher, Luca Schmoll, Fabian Steiß, Felix Schulz, Noah Becker</li</ul> |
+| W5 | *Design*: <ul><li>Create mockups</li><li>Create SRS</li><li>Create SAS</li></ul>  |  <ul><li>Felix Schulz</li><li>Fabian Steiß</li><li>Noah Becker</li></ul> |
+| W6 | *Presentation*: <ul><li>Create powerPoint file</li><li>Prepare for presentation</li><li>Push PM, BC, CRS, SRS, SAS, Meetings protocols in final version in the GitHub repository</li></ul> *Development*: <ul><li>Start with development</li></ul>  |  <ul><li>Manuel Lutz</li><li>Whole team</li><li>Whole team</li></ul><ul><li>Whole team</li></ul> |
 
 ### List of tasks and responsible person
 
@@ -169,26 +175,61 @@
 
 ## Gantt chart 3rd Semester
 
-*[Insert Gantt chart here]*
+![Gantt chart](Gantt_chart.png)
+
+*Figur.3* Gantt chart 3rd Semester
 
 ---
 
 ## Risks
 
-*[To be filled in]*
+| **Nr** | **Risk** | **Probability** | **Amount of damage** | **Effects** | **Measure** |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 1 | Planning risk| 20 % | Very low | The project might take longer than planned. | Creating a detailed project work plan and systematically monitoring of the progress.  |
+| 2 | Communication risk | 40 % | Low| Insufficient communication between team members. | Holding regular meetings and use the GitHub and Jira services. |
+| 3 | Miscommunication with client | 40 % | Medium | Final product might not satisfy customer. | Presenting parts of the project during developing. |
+| 4 |Technical risk| 60 % | High | Technical complexity of BaSyx. |  Evaluation and expansion of BaSyx teaching aids. |
+| 5 |Risk of ignoring risks | 20 % |Medium| Insufficiently realistic assessment of scenarios by each member of the test team. | Creating a list of possible risks and possible solutions. | 
+| 6 | Budget risk | 80 % | Medium | The budget for the project is being significantly exceeded. | Good planning and concentrating on main task. | 
+| 7 | Cyber attack| 20 % | Very high | The servers are hacked; data is lost. | Encryption of the server. | 
+| 8 | Illness | 40 % | Medium | Depending on the duration of the illness, several days/weeks.| In the event of long-term illness, the tasks assigned to the team member may be transferred to other team members. | 
 
+
+
+![Risk matrix](matrix.JPG)
+
+*Figur.4* Risk matrix
 ---
 
 ## Soft- and Hardware requirements
 
-*[To be filled in]*
+*Software requirements:* OS: MS Windows, Linux, macOS.
+
+*Hardware requirements:*
+   
+   • 32-bit (x86) or 64-bit (x64) processor with a clock speed of 1 GHz or faster;
+   
+   • 512 megabytes (MB) of RAM.
+
+*Communication:* Teams, WhatsApp.
+
+*Tools:* GitHub, Jira.
+
 
 ---
 
 ## Communication and reporting
 
-* **Within the team:** *[To be filled in]*
-* **With the customer:** *[To be filled in]*
+* **Within the team:** 
+
+Meetings are every week. Meetings are held on the university premises. They are protocolled. Fabian Steiß is responsible for the protocols. 
+At each meeting, every team member receives a task. In addition, every week, everyone reports on the progress of the task and any problems that may have arisen. The Teams platform is also used for communication, if clarification of a specific task is needed.
+The Jira platform is also used for more detailed control over the progress of tasks, which is also convenient for the team.
+
+
+* **With the customer:**
+
+All documents are visible in the GitHub repository. The documents PM, BC, CRS, SAS, SRS and MeetingMinutes are in the PROJECT folder.
 
 ---
 

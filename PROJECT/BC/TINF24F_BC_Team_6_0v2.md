@@ -87,7 +87,7 @@ The project milestones are:
 
 
 
-[Image of Project timeline]
+![Timeline](Timeline.png)
 
 
 *Figure 1. Project timeline.*

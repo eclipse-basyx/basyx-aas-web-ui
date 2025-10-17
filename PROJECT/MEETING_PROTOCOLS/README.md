@@ -1,11 +1,87 @@
 # Meeting Protocol - Team 6 BaSyx DPP API
 
 ## Table of Contents
+- [Meeting 15.10.2025 - Task Distribution](#TaskDistribution)
 - [Meeting 09.10.2025 - Next Steps](#next-steps)
 - [Meeting 30.09.2025 - Research](#research)
 - [Meeting 29.09.2025 - Foundations](#foundations)
 
 ---
+<a id="TaskDistribution"></a>
+
+## Meeting 15.10.2025 - Task Distribution
+
+<table style="width:100%;border-collapse:collapse;">
+  <tr>
+    <td style="width:60%; vertical-align:top;">
+
+| No. | Topic                | Responsibility   | Time (min) |
+|-----|----------------------|------------------|-------------|
+| 1   | Task Distribution    | Nataliia Chubak  | 10          |
+| 2   | Task unclear         |All                  |             15|
+
+
+</td>
+<td style="width:40%; vertical-align:bottom; text-align:center;">
+
+**Location:** DHBW Stuttgart  
+**Date:** 15.10.2025  
+**Time:** 12:40 – 13:05  
+**Moderator:** Nataliia Chubak  
+**Minutes:** Fabian Steiß
+
+</td>
+</tr>
+</table>
+
+**Attendees:**  
+Noah Becker, Nataliia Chubak, Magnus Lörcher,  
+Manuel Lutz, Luca Schmoll, Felix Schulz, Fabian Steiß  
+
+---
+
+### I. Goal  
+
+### II. Status  
+✔️ Business Case completed  
+✔️ BaSyx environment is active  
+✔️ Links to server and API / Swagger are set up  
+
+### III. Risks / Issues  
+- **File uploading not working**  
+- **Basic functionality unclear — what exactly needs to be done**  
+
+### IV. Discussion Points  
+- **Task Distribution**  
+  - Manuel Lutz: Presentation and testing  
+  - Magnus Lörcher, Fabian Steiß, Luca Schmoll: Backend  
+  - Felix Schulz: Frontend, UI Design   and presentation
+  - Noah Becker: Fullstack  
+
+
+  **Documents:**  
+  - **Setup of BaSyx environment**  
+  - File upload in BaSyx AASX Web UI not working, but Swagger works  
+  → Therefore, email to Herr. Rentschler asking for clarification of the project goal  
+
+### V. Future Meeting  
+The next meeting is planned for xx.10.2025.  
+
+---
+
+### To-Do’s
+
+| **To-Do**                                          | **Responsible Person(s)** | **Due Date** |
+|----------------------------------------------------|----------------------------|---------------|
+| Email Herr Rentschler about clarification of project goal | Nataliia Chubak            | 15.10.2025    |
+
+
+
+**Notes:**  
+  - [**Swagger UI**](https://srv01.noah-becker.de/uni/swe/swagger/)
+  - [**BaSyx WEB UI**](https://srv01.noah-becker.de/uni/swe/app/)
+---
+
 <a id="next-steps"></a>
 ## Meeting 09.10.2025 - Next Steps
 
@@ -39,6 +115,7 @@ Noah Becker, Nataliia Chubak, Magnus Lörcher,
 Manuel Lutz, Luca Schmoll, Felix Schulz, Fabian Steiß
 
 ---
+
 
 ### I. Goal
 Overview of the next steps and documents to be submitted.
