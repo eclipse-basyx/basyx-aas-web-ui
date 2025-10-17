@@ -49,7 +49,10 @@
         () => props.submodelElementData,
         () => {
             // Reset viewer container
-            if (viewerContainer.value) viewerContainer.value.replaceChildren();
+            if (viewerContainer.value) {
+                const hasRenderer = viewerContainer.value.querySelector('canvas');
+                if (hasRenderer) viewerContainer.value.replaceChildren();
+            }
 
             if (props.submodelElementData.modelType == 'File') {
                 localPathValue.value = valueUrl(props.submodelElementData).url;
