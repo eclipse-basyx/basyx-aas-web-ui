@@ -1,5 +1,6 @@
 // Plugins
 import Vue from '@vitejs/plugin-vue';
+import { execSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
@@ -34,11 +35,27 @@ function copyWebIfcWasmPlugin() {
     };
 }
 
+// Get commit SHA from git
+function getCommitSha(): string {
+    try {
+        return execSync('git rev-parse HEAD').toString().trim();
+    } catch (error) {
+        console.error('Failed to get git commit SHA:', error);
+        return 'unknown';
+    }
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
     process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
     const isProduction = mode === 'production';
     const base = isProduction ? process.env.BASE || '/__BASE_PATH_PLACEHOLDER__/' : '/';
+
+    // Get version information
+    const commitSha = getCommitSha();
+    const version = process.env.VITE_APP_VERSION || 'dev';
+    const buildDate = new Date().toISOString();
+
     return {
         plugins: [
             copyWebIfcWasmPlugin(),
@@ -65,6 +82,11 @@ export default defineConfig(({ mode }) => {
             }),
         ],
         base: base,
+        define: {
+            'import.meta.env.VITE_APP_VERSION': JSON.stringify(version),
+            'import.meta.env.VITE_APP_COMMIT_SHA': JSON.stringify(commitSha),
+            'import.meta.env.VITE_APP_BUILD_DATE': JSON.stringify(buildDate),
+        },
         resolve: {
             alias: {
                 '@': fileURLToPath(new URL('./src', import.meta.url)),
