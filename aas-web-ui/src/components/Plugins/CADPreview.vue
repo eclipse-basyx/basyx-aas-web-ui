@@ -70,6 +70,17 @@
     });
 
     // Methods
+    function createStandardMaterial(): THREE.MeshStandardMaterial {
+        return new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            metalness: 0.2,
+            roughness: 0.5,
+            envMapIntensity: 1.0,
+            transparent: true,
+            opacity: 0.5,
+        });
+    }
+
     function initThree(): void {
         // create a new Three.js scene
         const scene = new THREE.Scene();
@@ -209,14 +220,7 @@
             .then((buffer) => {
                 const stlLoader = new STLLoader();
                 const geometry = stlLoader.parse(buffer);
-                const material = new THREE.MeshStandardMaterial({
-                    color: 0xffffff,
-                    metalness: 0.2,
-                    roughness: 0.5,
-                    envMapIntensity: 1.0,
-                    transparent: true,
-                    opacity: 0.5,
-                });
+                const material = createStandardMaterial();
                 const mesh = new THREE.Mesh(geometry, material);
                 mesh.scale.multiplyScalar(0.03);
                 scene.add(mesh);
@@ -238,11 +242,7 @@
                 object.traverse((child) => {
                     if ((child as THREE.Mesh).isMesh) {
                         const mesh = child as THREE.Mesh;
-                        mesh.material = new THREE.MeshStandardMaterial({
-                            color: 0xffffff,
-                            metalness: 0.2,
-                            roughness: 0.5,
-                        });
+                        mesh.material = createStandardMaterial();
                         mesh.scale.multiplyScalar(0.03);
                     }
                 });
@@ -265,6 +265,7 @@
                     gltf.scene.traverse((child) => {
                         if ((child as THREE.Mesh).isMesh) {
                             const mesh = child as THREE.Mesh;
+                            mesh.material = createStandardMaterial();
                             mesh.scale.multiplyScalar(0.03);
                         }
                     });
