@@ -1,0 +1,89 @@
+services:
+  # BaSyx Dependencies
+  basyx-aas-env:
+    image: eclipsebasyx/aas-environment:2.0.0-SNAPSHOT
+    container_name: basyx-aas-env
+    environment:
+      - SERVER_PORT=8081
+    volumes:
+      - ./EXECUTABLE/basyx_webui/aas:/application/aas
+      - ./EXECUTABLE/basyx_webui/basyx/aas-env.properties:/application/application.properties
+    ports:
+      - '8081:8081'
+    restart: always
+    depends_on:
+      basyx-aas-registry:
+        condition: service_healthy
+      basyx-sm-registry:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+  basyx-aas-registry:
+    image: eclipsebasyx/aas-registry-log-mongodb:2.0.0-SNAPSHOT
+    container_name: basyx-aas-registry
+    ports:
+      - '8082:8080'
+    environment:
+      - SERVER_PORT=8080
+    volumes:
+      - ./EXECUTABLE/basyx_webui/basyx/aas-registry.yml:/workspace/config/application.yml
+    restart: always
+    depends_on:
+      mongo:
+        condition: service_healthy
+  basyx-sm-registry:
+    image: eclipsebasyx/submodel-registry-log-mongodb:2.0.0-SNAPSHOT
+    container_name: basyx-sm-registry
+    ports:
+      - '8083:8080'
+    environment:
+      - SERVER_PORT=8080
+    volumes:
+      - ./EXECUTABLE/basyx_webui/basyx/sm-registry.yml:/workspace/config/application.yml
+    restart: always
+    depends_on:
+      mongo:
+        condition: service_healthy
+  basyx-aas-discovery:
+    image: eclipsebasyx/aas-discovery:2.0.0-SNAPSHOT
+    container_name: basyx-aas-discovery
+    environment:
+      - SERVER_PORT=8081
+    volumes:
+      - ./EXECUTABLE/basyx_webui/basyx/aas-discovery.properties:/application/application.properties
+    ports:
+      - '8084:8081'
+    restart: always
+    depends_on:
+      mongo:
+        condition: service_healthy
+  mongo:
+    image: mongo:5.0.10
+    container_name: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongoAdmin
+      MONGO_INITDB_ROOT_PASSWORD: mongoPassword
+    restart: always
+    healthcheck:
+      test: mongo
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  
+  # BaSyx WebUI
+  basyx-aas-web-ui:
+    image: eclipsebasyx/aas-gui:SNAPSHOT
+    container_name: basyx-aas-web-ui
+    ports:
+      - '3000:3000'
+    environment:
+      AAS_REGISTRY_PATH: http://localhost:8082/shell-descriptors
+      SUBMODEL_REGISTRY_PATH: http://localhost:8083/submodel-descriptors
+      AAS_REPO_PATH: http://localhost:8081/shells
+      SUBMODEL_REPO_PATH: http://localhost:8081/submodels
+      CD_REPO_PATH: http://localhost:8081/concept-descriptions
+      AAS_DISCOVERY_PATH: http://localhost:8084/lookup/shells
+    restart: always
+    depends_on:
+      basyx-aas-env:
+        condition: service_healthy
