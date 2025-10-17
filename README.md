@@ -82,7 +82,7 @@ To start the local BaSyx development environment, run the following command (ass
 ```
 
 **The BaSyx WebUI is now available on `http://localhost:3000`**
-*The initialization of all background BaSyx services can take up to 1 minute. Even tho the UI is available, you can still get errors till all services are available to the UI.*
+*The initialization of all background BaSyx services can take up to 1-2 minutes. Till the services aren't running, the WebUI won't be available.*
 
 #### Swagger Editor
 To start the Swagger Editor, run the following command (assuming that you are in the main repo folder):
@@ -90,10 +90,13 @@ To start the Swagger Editor, run the following command (assuming that you are in
 ./run_swagger-editor.ps1
 ```
 
+> [!TIP]
+> If you are getting an "Permission denied"-error, please run **`chmod +x ./run_basyx-webui.ps1`** or **`chmod +x ./run_swagger-editor.ps1`** and then try running the start scripts again.
+
 #### Running without PowerShell scripts
 **BaSyx WebUI**
 ```
-docker compose -f ./docker-compose.yml up -d
+docker compose -f ./docker-compose.webui.yml up -d
 ```
 
 **Swagger Editor**
