@@ -81,7 +81,7 @@ To start the local BaSyx development environment, run the following command (ass
 ./run_basyx-webui.ps1
 ```
 
-**The BaSyx WebUI is now available on `http://localhost:3000`**
+**The BaSyx WebUI is now available on `http://localhost:3000`**<br>
 *The initialization of all background BaSyx services can take up to 1-2 minutes. Till the services aren't running, the WebUI won't be available.*
 
 #### Swagger Editor
