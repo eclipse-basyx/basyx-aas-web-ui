@@ -35,12 +35,11 @@ function copyWebIfcWasmPlugin() {
     };
 }
 
-// Get commit SHA from git
+// Get commit SHA from git (only for local dev)
 function getCommitSha(): string {
     try {
         return execSync('git rev-parse HEAD').toString().trim();
-    } catch (error) {
-        console.error('Failed to get git commit SHA:', error);
+    } catch {
         return 'unknown';
     }
 }
@@ -52,9 +51,11 @@ export default defineConfig(({ mode }) => {
     const base = isProduction ? process.env.BASE || '/__BASE_PATH_PLACEHOLDER__/' : '/';
 
     // Get version information
-    const commitSha = getCommitSha();
+    // In Docker/CI: use environment variables passed as build args
+    // In local dev: detect from git
     const version = process.env.VITE_APP_VERSION || 'dev';
-    const buildDate = new Date().toISOString();
+    const commitSha = process.env.VITE_APP_COMMIT_SHA || getCommitSha();
+    const buildDate = process.env.VITE_APP_BUILD_DATE || new Date().toISOString();
 
     return {
         plugins: [
