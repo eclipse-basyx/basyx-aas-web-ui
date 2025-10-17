@@ -17,7 +17,7 @@ export function getVersionDisplay(): VersionDisplay {
     const { version, commitSha } = VERSION_INFO;
 
     // For releases: show version like "v2-251001"
-    if (version.startsWith('v2-') || version.startsWith('v3-')) {
+    if (/^v\d+-/.test(version)) {
         return {
             showVersion: true,
             versionText: version,
