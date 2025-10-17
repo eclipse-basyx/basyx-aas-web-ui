@@ -46,6 +46,8 @@ jobs:
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           build-args: |
             VITE_APP_VERSION=snapshot
+            VITE_APP_COMMIT_SHA=${{ github.sha }}
+            VITE_APP_BUILD_DATE=${{ github.run_started_at }}
           tags: |
             ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
             ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}-${{ env.SHORT_SHA }}
