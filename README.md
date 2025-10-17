@@ -69,7 +69,7 @@ Based on **DIN EN 18222**, this project defines and implements a standardized RE
 ---
 
 ## How to: Local development
-> [!TIP]
+> [!NOTE]
 > PowerShell scripts should be running on your device, if not please follow [this](#running-without-powershell-scripts) workflow.
 
 > [!WARNING]
