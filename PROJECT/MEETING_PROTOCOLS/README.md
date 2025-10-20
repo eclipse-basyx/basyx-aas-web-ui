@@ -110,7 +110,7 @@ Manuel Lutz, Luca Schmoll, Felix Schulz, Fabian Steiß
   → Therefore, email to Herr. Rentschler asking for clarification of the project goal  
 
 ### V. Future Meeting  
-The next meeting is planned for xx.10.2025.  
+The next meeting is planned for 22.10.2025.  
 
 ---
 
