@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@aas-core-works/aas-core3.0-typescript@^1.0.3":
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/@aas-core-works/aas-core3.0-typescript/-/aas-core3.0-typescript-1.0.3.tgz#abc18f59c1eca5d87226a190aa7d16c771d600b2"
-  integrity sha512-ZS2Fijmy3SzVYngA/p5Uiv2hBPZRxm89G1Y3TPzs7uRi/cyf+A0LZppsNvcybL87EdjZscFoZLsCyGrg1uiDVA==
+"@aas-core-works/aas-core3.0-typescript@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@aas-core-works/aas-core3.0-typescript/-/aas-core3.0-typescript-1.0.4.tgz#56972e92530944d7c4db4936b3fcd960e8a33c8a"
+  integrity sha512-tHCCi5HMDw1UBmYmgd7kRMLFPjUNsULsoex3Gg0bikC0CxJnT5X2N6z1j81sJOVmsTbdwCmlfMZXF2b+PCfdYA==
 
 "@ampproject/remapping@^2.2.0":
   version "2.3.0"
