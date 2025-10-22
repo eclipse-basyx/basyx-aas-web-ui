@@ -1,7 +1,9 @@
 # Meeting Protocol - Team 6 BaSyx DPP API
 
+
+
 ## Table of Contents
-- [Meeting 22.10.2025 - XXX](#XXX)
+- [Meeting 22.10.2025 - Document Distribution and Jira/GitHub Tasks](#documentDistribution)
 - [Meeting 17.10.2025 - Discussion of Task Distribution](#discussionBriefing)
 - [Meeting 15.10.2025 - Task Distribution](#TaskDistribution)
 - [Meeting 09.10.2025 - Next Steps](#next-steps)
@@ -9,21 +11,23 @@
 - [Meeting 29.09.2025 - Foundations](#foundations)
 
 ---
-<a id="test">
-## Meeting 22.10.2025 – XXX
+<a id="documentDistribution">
+
+## Meeting 22.10.2025 – Document Distribution and Jira/GitHub Tasks
 <table style="width:100%;border-collapse:collapse;">
   <tr>
     <td style="width:60%; vertical-align:top;">
 
-| No. | Topic              | Responsibility | Time (min) |
-|-----|--------------------|----------------|-------------|
-|||||
+| No. | Topic | Responsibility | Time (min) |
+|-----|--------|----------------|-------------|
+| 1 | Who writes which documents | All | 10 min |
+| 2 | GitHub Issues and Jira | All | 10 min |
 </td>
 <td style="width:40%; vertical-align:bottom; text-align:center;">
 
 **Location:** DHBW Stuttgart  
 **Date:** 22.10.2025  
-**Time:** 10:30 – 10:40  
+**Time:** 12:40 – 13:05  
 **Moderator:** Nataliia Chubak  
 **Minutes:** Fabian Steiß  
 **Type:** Weekly  
@@ -40,28 +44,48 @@ Manuel Lutz, Luca Schmoll, Felix Schulz, Fabian Steiß
 ---
 
 ### I. Goal  
+- To get an overview of who writes which documents
 
 ### II. Status  
+✔️ BaSyx Environment is now [reachable](https://srv01.noah-becker.de/uni/swe/basyx/) and fully functional
 
 ### III. Risks / Issues  
 
 ### IV. Discussion Points  
 
+- **Document Distribution:**
+  - SRS – Luca Schmoll  
+  - CRS – Magnus Lörcher  
+  - BC – Nataliia Chubak  
+  - PM – Nataliia Chubak  
+  - SAS – Noah Becker  
+  - STR – Felix Schulz  
+  - STP – Manuel Lutz  
+  - Presentation – Manuel Lutz, Felix Schulz  
+  - Meeting Minutes – Fabian Steiß  
+
+- **More Git Issues**
+  - Discussion on whether Jira tasks should be created as GitHub Issues.  
+    **Result:** Ask Rentschler what is preferred  
+
+- **Upstream Changes**
+  - Do not make upstream changes from the original repository. If at all, only at the end when necessary  
+
 ### V. Future Meeting  
-The next meeting is planned for 22.10.2025.  
+The next meeting is planned for **29.10.2025**.  
 
 ---
 
 ### To-Do’s
 
-| **To-Do**                                          | **Responsible Person(s)** | **Due Date** |
+| **To-Do** | **Responsible Person(s)** | **Due Date** |
 |----------------------------------------------------|----------------------------|---------------|
-||||
+| Ask Herr Rentschler whether Jira tasks should be created as GitHub Issues | Luca Schmoll | 24.10.2025 |
+| Fix file upload in BaSyx Environment | Noah Becker | 24.10.2025 |
 
-
+---
 
 **Notes:**  
-
 ---
 
 <a id="discussionBriefing">
@@ -148,7 +172,7 @@ Manuel Lutz, Luca Schmoll, Felix Schulz, Fabian Steiß
 ### II. Status  
 ✔️ Business Case completed  
 ✔️ BaSyx environment is active  
-✔️ Links to server and API / Swagger are set up  
+✔️ Link to Swagger is up  
 
 ### III. Risks / Issues  
 - **File uploading not working**  
@@ -182,7 +206,6 @@ The next meeting is planned for 22.10.2025.
 
 **Notes:**  
   - [**Swagger UI**](https://srv01.noah-becker.de/uni/swe/swagger/)
-  - [**BaSyx WEB UI**](https://srv01.noah-becker.de/uni/swe/app/)
 ---
 
 <a id="next-steps"></a>
