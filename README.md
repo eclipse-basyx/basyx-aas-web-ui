@@ -1,9 +1,13 @@
 ![GitHub](https://img.shields.io/github/license/eclipse-basyx/basyx-aas-web-ui) [![Deploy Web UI (WIP)](https://github.com/DHBW-TINF24F/Team6-BaSyx-DPP-API/actions/workflows/deploy_webui.yml/badge.svg?branch=main)](https://github.com/DHBW-TINF24F/Team6-BaSyx-DPP-API/actions/workflows/deploy_webui.yml) [![Deploy Swagger Specification](https://github.com/DHBW-TINF24F/Team6-BaSyx-DPP-API/actions/workflows/deploy_swagger.yml/badge.svg)](https://github.com/DHBW-TINF24F/Team6-BaSyx-DPP-API/actions/workflows/deploy_swagger.yml)
 
+[![Jira Link](https://camo.githubusercontent.com/ad9e6a6136a57e1da04e20cfb5bff82fd2a4a824a92fbaf8318bc060bebb2a78/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f4a6972612d3030353243433f7374796c653d666f722d7468652d6261646765266c6f676f3d4a697261266c6f676f436f6c6f723d7768697465)](https://zerodayz.atlassian.net/jira/software/projects/BDA/boards/67)
+
+
+
 #   TINF24F_Team6_BaSyx_DPP_API
 
 
-This project implements a **REST API for the Digital Product Passport (DPP)** according to the [**DIN EN 18222**](PROJECT/DIN_EN_18222_Draft.pdf) standard, integrated into the **Eclipse BaSyx framework**.  
+This project implements a **REST API for the Digital Product Passport (DPP)** according to the [**DIN EN 18222**](https://www.dinmedia.de/en/draft-standard/din-en-18222/393321021) standard, integrated into the **Eclipse BaSyx framework**.  
 It provides a complete end-to-end solution for lifecycle management, interoperability, and usability of digital product data across the entire product lifecycle.
 
 ---
@@ -112,3 +116,24 @@ docker compose -f ./docker-compose.swagger.yml up -d
 -   [DIN EN 18222](PROJECT/DIN_EN_18222_Draft.pdf)
 -   [Tutorials & Resources](https://github.com/DHBW-TINF24F/.github/blob/main/Tutorials.md)
 -   [PowerPoint](https://1drv.ms/p/c/94b53bce14d0456b/EVwut7JiukRCs4097VqIiFMBA16DA1QQZXdYSsWuQjsq4Q?e=AmxA4S)
+
+
+
+
+## Roadmap
+
+- [x] Open API specification
+- [x] Development environment
+- [ ] Issue tracker
+- [ ] GitHub Wiki
+- [ ] Project planning with projects feature
+- [ ] Documents
+    - [x] Business sase
+    - [ ] Customer request specifications
+    - [ ] Software requirements specifications
+    - [ ] Software requirements specifications
+    - [ ] Project management
+    - [ ] Meeting minutes
+    - [ ] Presentation
+
+See the [open issues](https://github.com/DHBW-TINF24F/Team6-BaSyx-DPP-API/issues) for a full list of proposed features (and known issues).

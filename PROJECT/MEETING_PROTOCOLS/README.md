@@ -1,12 +1,70 @@
 # Meeting Protocol - Team 6 BaSyx DPP API
 
 ## Table of Contents
+- [Meeting 22.10.2025 - XXX](#XXX)
+- [Meeting 17.10.2025 - Discussion of Task Distribution](#discussionBriefing)
 - [Meeting 15.10.2025 - Task Distribution](#TaskDistribution)
 - [Meeting 09.10.2025 - Next Steps](#next-steps)
 - [Meeting 30.09.2025 - Research](#research)
 - [Meeting 29.09.2025 - Foundations](#foundations)
 
 ---
+<a id="test">
+## Meeting 22.10.2025 – XXX
+<table style="width:100%;border-collapse:collapse;">
+  <tr>
+    <td style="width:60%; vertical-align:top;">
+
+| No. | Topic              | Responsibility | Time (min) |
+|-----|--------------------|----------------|-------------|
+|||||
+</td>
+<td style="width:40%; vertical-align:bottom; text-align:center;">
+
+**Location:** DHBW Stuttgart  
+**Date:** 22.10.2025  
+**Time:** 10:30 – 10:40  
+**Moderator:** Nataliia Chubak  
+**Minutes:** Fabian Steiß  
+**Type:** Weekly  
+</td>
+</tr>
+</table>
+
+---
+
+**Attendees:**  
+Noah Becker, Nataliia Chubak, Magnus Lörcher,  
+Manuel Lutz, Luca Schmoll, Felix Schulz, Fabian Steiß  
+
+---
+
+### I. Goal  
+
+### II. Status  
+
+### III. Risks / Issues  
+
+### IV. Discussion Points  
+
+### V. Future Meeting  
+The next meeting is planned for 22.10.2025.  
+
+---
+
+### To-Do’s
+
+| **To-Do**                                          | **Responsible Person(s)** | **Due Date** |
+|----------------------------------------------------|----------------------------|---------------|
+||||
+
+
+
+**Notes:**  
+
+---
+
+<a id="discussionBriefing">
 
 ## Meeting 17.10.2025 – Discussion of Task Description
 <table style="width:100%;border-collapse:collapse;">
