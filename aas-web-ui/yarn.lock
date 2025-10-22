@@ -4884,10 +4884,10 @@ vue-tsc@^3.1.1:
     "@volar/typescript" "2.4.23"
     "@vue/language-core" "3.1.1"
 
-vue3-apexcharts@^1.9.0:
-  version "1.9.0"
-  resolved "https://registry.yarnpkg.com/vue3-apexcharts/-/vue3-apexcharts-1.9.0.tgz#a32830e019dab3efc0ca12890f1d03cc2b8c3246"
-  integrity sha512-oGbo4kUlV9QRbsvS/zz7s251+yTI9O82d61rSMKWHS5OFo05kO2j5DdTrZW4HcLNXm6iNBsq/s81iylTxWfl5g==
+vue3-apexcharts@^1.10.0:
+  version "1.10.0"
+  resolved "https://registry.yarnpkg.com/vue3-apexcharts/-/vue3-apexcharts-1.10.0.tgz#3142e79c8fcac9896501562ee186ffa1fb47da59"
+  integrity sha512-sBma2In4rU5n/JBrv8KVb8if+IoY019Dse2yRDD/eRU1WGZHK07zuy9erefKzbJ7T3wP9+Jsy9bH6Vdjy85HZg==
 
 vue@^3.2.25, vue@^3.5.22:
   version "3.5.22"
