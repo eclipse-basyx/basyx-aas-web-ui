@@ -5,7 +5,6 @@
 
 
 #   TINF24F_Team6_BaSyx_DPP_API
-# Test
 
 
 This project implements a **REST API for the Digital Product Passport (DPP)** according to the [**DIN EN 18222**](https://www.dinmedia.de/en/draft-standard/din-en-18222/393321021) standard, integrated into the **Eclipse BaSyx framework**.  
@@ -32,7 +31,7 @@ Based on **DIN EN 18222**, this project defines and implements a standardized RE
 ## Main Tasks
 
 1. **OpenAPI Specification**  
-   - Derive a complete OpenAPI (Swagger) specification from [DIN EN 18222](PROJECT/DIN_EN_18222_Draft.pdf)  
+   - Derive a complete OpenAPI (Swagger) specification from [DIN EN 18222](https://www.dinmedia.de/en/draft-standard/din-en-18222/393321021)  
    - Ensure compliance and interoperability with BaSyx REST standards  
 
 2. **BaSyx Environment Setup**  
@@ -68,8 +67,8 @@ Based on **DIN EN 18222**, this project defines and implements a standardized RE
 | **Frontend** | React / TypeScript (BaSyx UI) |
 | **Data Model** | Asset Administration Shell (AAS) |
 | **Infrastructure** | Eclipse BaSyx Framework |
-| **Hosting** | <div>Traefik (Reverse Proxy) & Docker<br><li> [Swagger](https://srv01.noah-becker.de/uni/swe/swagger/) OpenAPI Spezifikation<br><li> [BaSyx WebUI](https://srv01.noah-becker.de/uni/swe/app/) Applikation</div> |
-| **Documentation** | Markdown, GitHub Pages, Swagger UI |
+| **Hosting** | <div>Traefik (Reverse Proxy) & Docker<br><li> [Swagger](https://srv01.noah-becker.de/uni/swe/swagger/) OpenAPI Spezifikation<br><li> [BaSyx WebUI](https://srv01.noah-becker.de/uni/swe/basyx/) Applikation</div> |
+| **Documentation** | Markdown, GitHub Wiki, Swagger UI |
 
 ---
 
@@ -114,7 +113,7 @@ docker compose -f ./docker-compose.swagger.yml up -d
 ## Useful Links
 -   [BaSyx Hack - Useful API information](https://basyxhack.iese.de/docs.html#gettingstarted)
 -   [AAS Web UI overview](https://wiki.basyx.org/en/latest/content/user_documentation/basyx_components/web_ui/index.html)
--   [DIN EN 18222](PROJECT/DIN_EN_18222_Draft.pdf)
+-   [DIN EN 18222](https://www.dinmedia.de/en/draft-standard/din-en-18222/393321021)
 -   [Tutorials & Resources](https://github.com/DHBW-TINF24F/.github/blob/main/Tutorials.md)
 -   [PowerPoint](https://1drv.ms/p/c/94b53bce14d0456b/EVwut7JiukRCs4097VqIiFMBA16DA1QQZXdYSsWuQjsq4Q?e=AmxA4S)
 
