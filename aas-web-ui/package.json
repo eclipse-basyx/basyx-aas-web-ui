@@ -40,7 +40,7 @@
     "uuid": "^13.0.0",
     "vue": "^3.5.22",
     "vue-router": "^4.6.3",
-    "vue3-apexcharts": "^1.9.0",
+    "vue3-apexcharts": "^1.10.0",
     "vuetify": "^3.10.6",
     "web-ifc": "^0.0.70",
     "webfontloader": "^1.0.0"
