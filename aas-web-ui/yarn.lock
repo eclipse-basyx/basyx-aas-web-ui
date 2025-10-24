@@ -959,7 +959,16 @@
     "@thatopen/ui" "~3.1.0"
     lit "3.1.2"
 
-"@thatopen/ui@^3.1.4", "@thatopen/ui@~3.1.0":
+"@thatopen/ui@^3.2.0":
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/@thatopen/ui/-/ui-3.2.0.tgz#bc0b28cacf03a5a30d18f2d3fb4b6cc2abc580fa"
+  integrity sha512-2LTh8tVf2DwteA9RSWNH4FSJyAc5OslADIEDyPre96RpVP3z2/J+5svX00RdrbVVJONh2ASUtexWykY7XR8xCg==
+  dependencies:
+    "@floating-ui/dom" "1.6.3"
+    iconify-icon "2.0.0"
+    lit "3.1.2"
+
+"@thatopen/ui@~3.1.0":
   version "3.1.4"
   resolved "https://registry.yarnpkg.com/@thatopen/ui/-/ui-3.1.4.tgz#0df74e77e4218f77a4c867bdaf9f35c8e580140c"
   integrity sha512-pZXgT0a/LW5qC03VvxK2H4J/GDOWhwDNGumv6/KbHNVLnOwU/UVxEjHOifkQUH552bkJG29tWJaunBQnu9lYVw==
