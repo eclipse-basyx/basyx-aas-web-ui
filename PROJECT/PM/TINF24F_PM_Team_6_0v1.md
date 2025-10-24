@@ -42,7 +42,7 @@
 1.  [Project Assignment](#project-assignment)
 2.  [Project Context](#project-context)
 3.  [Project Organisation](#project-organisation)
-4.  [Milestonesand delivarebles](#milestones)
+4.  [Milestones and delivarebles](#milestones-and-delivarebles)
 5.  [Gantt chart 3rd Semester](#gantt-chart-3rd-semester)
 6.  [Risks](#risks)
 7.  [Soft- and Hardware requirements](#soft--and-hardware-requirements)
@@ -98,20 +98,20 @@
 | | - Technical Writer | Fabian Steiß |
 | | - UI-Design | Felix Schulz |
 
-![Project organisation](Roles.png)
+![Project organisation](images/Roles.png)
 
 *Figur.1* Project organisation
 
 ### Work breakdown structure (PSP)
 
-![WSB](WBS.png)
+![WSB](images/WBS.png)
 
 *Figur.2* Work breakdown structure (PSP)
 ---
 
-## Milestones and Deliverables
 
-## Milestones and Deliverables
+## Milestones and deliverables
+
 ### Phase I: Analysis
 
 | Nr  | Milestone name             | Week   | Responsible person                  | Deliverable |
@@ -129,8 +129,6 @@
 | M6  | White-Box-Design (HOW)                 | 9–10     | Whole team                                     | 1. Definition of modules and assignment as work packages |
 | M7  | Final preparation                      | 11       | Whole team, Manuel Lutz                        | 1. Final project plan update (parallelised tasks, dependencies)<br>2. PowerPoint presentation (first version) |
 | M8  | Semester-Review                        | 21.11.25 | Whole team                                     | 1. Presentation – results of analysis & design phase, final repository |
-
-### List of tasks and responsible person
 
 ### List of tasks and responsible person
 
@@ -199,7 +197,7 @@
 
 ## Gantt chart 3rd Semester
 
-![Gantt chart](Gantt_chart.png)
+![Gantt chart](images/Gantt_chart.png)
 
 *Figur.3* Gantt chart 3rd Semester
 
@@ -219,7 +217,7 @@
 | 8 | Illness | 40 % | Medium | Depending on the duration of the illness, several days/weeks.| In the event of long-term illness, the tasks assigned to the team member may be transferred to other team members. | 
 
 
-![Risk matrix](matrix.JPG)
+![Risk matrix](images/matrix.JPG)
 
 *Figur.4* Risk matrix
 ---
