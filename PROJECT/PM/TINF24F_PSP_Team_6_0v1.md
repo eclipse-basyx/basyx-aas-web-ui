@@ -224,17 +224,16 @@
 
 ## Soft- and Hardware requirements
 
-| Components       | Technology                  |
-|------------------|----------------------------|
-| Backend          | Java / Spring Boot (BaSyx SDK) |
-| API-Definition   | OpenAPI 3.0 / Swagger |
-| Frontend         | React / TypeScript (BaSyx UI) |
-| Data model       | Asset Administration Shell (AAS) |
-| Infrastructur    | Eclipse BaSyx Framework |
-| Hosting          | Traefik & Docker |
-| Hosting-Links    | [Swagger]https://srv01.noah-becker.de/uni/swe/swagger Wiki| 
-| | [WebUI (Applikation)] [https://srv01.noah-becker.de/uni/swe/basyx/] |
-| Documentation | Markdown, GitHub Wiki, Swagger UI |
+
+| Component | Technology |
+|------------|-------------|
+| **Backend** | Java / Spring Boot (BaSyx SDK) |
+| **API Definition** | OpenAPI 3.0 / Swagger |
+| **Frontend** | React / TypeScript (BaSyx UI) |
+| **Data Model** | Asset Administration Shell (AAS) |
+| **Infrastructure** | Eclipse BaSyx Framework |
+| **Hosting** | <div>Traefik (Reverse Proxy) & Docker<br><li> [Swagger](https://srv01.noah-becker.de/uni/swe/swagger/) OpenAPI Spezifikation<br><li> [BaSyx WebUI](https://srv01.noah-becker.de/uni/swe/basyx/) Applikation</div> |
+| **Documentation** | Markdown, GitHub Wiki, Swagger UI |
 
 
 ---
