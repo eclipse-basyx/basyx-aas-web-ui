@@ -32,6 +32,7 @@
 | 1.0 | 12.10.2025 | Nataliia Chubak | Created and added structure |
 | 2.0 | 14.10.2025 | Nataliia Chubak | Added Milestones, Project Organisation and Gantt chart |
 | 3.0 | 15.10.2025 | Nataliia Chubak | Risks analysis with suggestions from Luca Schmoll |
+| 4.0 | 21.10.2025 | Nataliia Chubak | Deliverables |
 | | | | |
 
 ---
@@ -41,7 +42,7 @@
 1.  [Project Assignment](#project-assignment)
 2.  [Project Context](#project-context)
 3.  [Project Organisation](#project-organisation)
-4.  [Milestones](#milestones)
+4.  [Milestonesand delivarebles](#milestones)
 5.  [Gantt chart 3rd Semester](#gantt-chart-3rd-semester)
 6.  [Risks](#risks)
 7.  [Soft- and Hardware requirements](#soft--and-hardware-requirements)
@@ -108,68 +109,91 @@
 *Figur.2* Work breakdown structure (PSP)
 ---
 
-## Milestones
+## Milestones and Deliverables
 
-| **WP-Code** | **Milenstone name** | **Responsible Person** |
-| :--- | :--- | :--- | 
-| W1 | *Analysis*: <ul><li>Official project start</li><li>First meeting, task distribution</li></ul> | Whole Team |
-| W2 | *Analysis*: <ul><li>Create project structure, time scope (first version)</li><li>Create BC</li><li>Start analysing the requirements</li></ul>  |  <ul><li>Nataliia Chubak</li><li>Nataliia Chubak</li><li>Nataliia Chubak, Magnus Lörcher, Luca Schmoll</li></ul> |
-| W3 | *Analysis*: <ul><li>Set up GitHub repository</li></ul>  | Noah Becker |
-| W4 | *Analysis/Design*: <ul><li>Create CRS (first version)</li><li>Create usability concept</li></ul>  | <ul><li>Nataliia Chubak, Magnus Lörcher, Luca Schmoll</li><li>Nataliia Chubak, Magnus Lörcher, Luca Schmoll, Fabian Steiß, Felix Schulz, Noah Becker</li</ul> |
-| W5 | *Design*: <ul><li>Create mockups</li><li>Create SRS</li><li>Create SAS</li></ul>  |  <ul><li>Felix Schulz</li><li>Fabian Steiß</li><li>Noah Becker</li></ul> |
-| W6 | *Presentation*: <ul><li>Create powerPoint file</li><li>Prepare for presentation</li><li>Push PM, BC, CRS, SRS, SAS, Meetings protocols in final version in the GitHub repository</li></ul> *Development*: <ul><li>Start with development</li></ul>  |  <ul><li>Manuel Lutz</li><li>Whole team</li><li>Whole team</li></ul><ul><li>Whole team</li></ul> |
+## Milestones and Deliverables
+### Phase I: Analysis
+
+| Nr  | Milestone name             | Week   | Responsible person                  | Deliverable |
+|-----|----------------------------|--------|-------------------------------------|-------------|
+| M1  | Project-Kickoff            | 1      | Whole team                          | 1. Project kick-off protocol (protocol of the first meeting)<br>2. Task distribution matrix (roles and initial responsibilities) |
+| M2  | Analysing the requirements | 2–4    | Nataliia Chubak, Magnus Lörcher     | 1. Detailed stakeholder analysis<br>2. Business case (BC)<br>3. Customer Requirements Specification (CRS) |
+| M3  | Project plan               | 5–6    | Nataliia Chubak                     | 1. Project structure plan (initial rough schedule and scoping)<br>2. Initial product backlog (prioritised CRS requirements) |
+
+### Phase II: Design
+
+| Nr  | Milestone name                        | Week     | Responsible person                             | Deliverable |
+|-----|----------------------------------------|----------|------------------------------------------------|-------------|
+| M4  | Repository-Setup & Issue-Management    | 7        | Fabian Steiß, Noah Becker                      | 1. GitHub repository (basic structure)<br>2. Standard templates (README.md, PR templates)<br>3. Issue tracker setup (CRS, BC, SRS, SAS, STP, protocols) |
+| M5  | Black-Box-Design (WHAT)                | 8–9      | Noah Becker, Luca Schmoll, Felix Schulz, Manuel Lutz | 1. Software Requirements Specification (SRS)<br>2. Software Architecture Specification (SAS)<br>3. Mockups/API design sketches, Usability/DX concept |
+| M6  | White-Box-Design (HOW)                 | 9–10     | Whole team                                     | 1. Definition of modules and assignment as work packages |
+| M7  | Final preparation                      | 11       | Whole team, Manuel Lutz                        | 1. Final project plan update (parallelised tasks, dependencies)<br>2. PowerPoint presentation (first version) |
+| M8  | Semester-Review                        | 21.11.25 | Whole team                                     | 1. Presentation – results of analysis & design phase, final repository |
 
 ### List of tasks and responsible person
 
-| **Person** | **Work package** | **Task** |
-| :--- | :--- | :--- |
-| **Nataliia Chubak** | Role: Project manager | - Planning & control |
-| *E-mail: inf24271@lehre.dhbw-stuttgart.de* | - Analysis | - Usability concept |
-| *MatrikelNr: 6401719* | - Design | - BC (Business Case) |
-| | - Development | - PM (Project Manual) |
-| | | - CRS (Customer Requirement Specification) |
-| | | - Coding |
-| | | - Presentation |
-| | | - PowerPoint |
-| **Magnus Lörcher** | Role: Product manager | - Market and demand analysis |
-| *E-mail: Inf24155@lehre.dhbw-stuttgart.de* | - Analysis | - Usability concept |
-| *MatrikelNr: 6699202* | - Design | - CRS |
-| | - Development | - SRS (Software Requirement Specification) |
-| | | - Coding |
-| | | - Presentation |
-| **Luca Schmoll** | Role: Product manager | - Market and demand analysis |
-| *E-mail: Inf24137@lehre.dhbw-stuttgart.de* | - Analysis | - Usability concept |
-| *MatrikelNr: 5919706* | - Design | - CRS |
-| | - Development | - SRS |
-| | | - Coding |
-| | | - Presentation |
-| **Fabian Steiß** | Role: Technical writer | - STR (Software Test Report) |
-| *E-mail: Inf24138@lehre.dhbw-stuttgart.de* | - Documentation | - Usability concept |
-| *MatrikelNr: 5934347* | - Design | - Meetings Minutes |
-| | - Development | - User Manual |
-| | | - Readme |
-| | | - Coding |
-| | | - Presentation |
-| **Manuel Lutz** | Role: Test manager | - STP (Software Test Plan) |
-| *E-mail: Inf24224@lehre.dhbw-stuttgart.de* | - Design | - Test planning |
-| *MatrikelNr: 9414567* | - Development | - Test execution |
-| | - Testing | - Coding |
-| | | - Testing |
-| | | - Presentation |
-| **Noah Becker** | Role: System Architect | - SAS (Software Architecture Specification) |
-| *E-mail: inf24038@lehre.dhbw-stuttgart.de* | - Analysis | - Backend implementation |
-| *MatrikelNr: 1871817* | - Design | - Infrastructure setup |
-| | - Development | - GitHub Repository |
-| | | - Usability concept |
-| | | - Coding |
-| | | - Presentation |
-| **Felix Schulz** | Role: UI-Designer | - UI-implementation |
-| *E-mail: inf24075@lehre.dhbw-stuttgart.de* | - Design | - Prototyping |
-| *MatrikelNr: 3954527* | - Development | - BaSyx analysis |
-| | - Testing | - Coding |
-| | | - Testing |
-| | | - Presentation |
-| | | - PowerPoint |
+### List of tasks and responsible person
+
+| **Person** | **Task** |
+| :--- | :--- |
+| **Nataliia Chubak**   | 
+| Rolle: Project manager|  - Planning & control |
+| *E-mail: inf24271@lehre.dhbw-stuttgart.de* |  - PSP (Project structure plan) |
+| *MatrikelNr: 6401719* |  - BC (Business Case) |
+| |  - CRS (Customer Requirement Specification) |
+| |  - Coding (Frontend)|
+| |  - Presentation |
+| |  - PowerPoint |
+| | - Usability concept |
+| | - Meetings Minutes (X-X Weeks)
+| **Magnus Lörcher** |
+| Role: Product manager |  - CRS (Customer Requirements Specification) |
+| *E-mail: inf24155@lehre.dhbw-stuttgart.de* | - Market and demand analysis|
+| *MatrikelNr: 6699202* | - Coding (Backend) |
+| |- Usability concept |
+| | - Presentation |
+| **Luca Schmoll** | |
+| Role: Product manager |- SRS (System Requirements Specification) |
+| *E-mail: inf24137@lehre.dhbw-stuttgart.de* | -  Usability concept |
+| *MatrikelNr: 5919706* | - Coding (Backend) |
+| | - Market and demand analysis|
+| | - Presentation |
+| **Fabian Steiß** | |
+| Role: Technical writer | - Meetings Minutes (1-11 Weeks)|
+| *E-mail: inf24138@lehre.dhbw-stuttgart.de* |  - Usability concept |
+| *MatrikelNr: 5934347* |  - User Manual |
+| | - MOD    |
+| | - Readme |
+| | - Wiki   |
+| | - Coding (Backend)|
+| | - Presentation |
+| **Manuel Lutz** | | 
+| Role: Test manager | - STP (Software Test Plan) |
+| *E-mail: inf24224@lehre.dhbw-stuttgart.de* | - STR (System Test Report)|
+| *MatrikelNr: 9414567* | - Test execution |
+| | - Test planning |
+| | - Coding (full stack) |
+| | - Testing |
+| | - Presentation |
+| | - PowerPoint I |
+| **Noah Becker** | |
+| Role: System Architect | - SAS (Software Architecture Specification) |
+| *E-mail: inf24038@lehre.dhbw-stuttgart.de* | - Backend implementation |
+| *MatrikelNr: 1871817* | - Infrastructure setup |
+| | - GitHub Repository |
+| | - Usability concept |
+| | - Coding (Frontend) |
+| | - Presentation |
+| **Felix Schulz** | |
+| Role: UI-Designer | - UI-implementation |
+| *E-mail: inf24075@lehre.dhbw-stuttgart.de* | - Prototyping |
+| *MatrikelNr: 3954527* |  - BaSyx analysis |
+| | - Executable|
+| | - MOD (Web-Interface) |
+| | - Coding (Frontend) |
+| | - Testing |
+| | - Presentation |
+| | - PowerPoint I |
 
 ---
 
@@ -195,7 +219,6 @@
 | 8 | Illness | 40 % | Medium | Depending on the duration of the illness, several days/weeks.| In the event of long-term illness, the tasks assigned to the team member may be transferred to other team members. | 
 
 
-
 ![Risk matrix](matrix.JPG)
 
 *Figur.4* Risk matrix
@@ -203,17 +226,17 @@
 
 ## Soft- and Hardware requirements
 
-*Software requirements:* OS: MS Windows, Linux, macOS.
-
-*Hardware requirements:*
-   
-   • 32-bit (x86) or 64-bit (x64) processor with a clock speed of 1 GHz or faster;
-   
-   • 512 megabytes (MB) of RAM.
-
-*Communication:* Teams, WhatsApp.
-
-*Tools:* GitHub, Jira.
+| Components       | Technology                  |
+|------------------|----------------------------|
+| Backend          | Java / Spring Boot (BaSyx SDK) |
+| API-Definition   | OpenAPI 3.0 / Swagger |
+| Frontend         | React / TypeScript (BaSyx UI) |
+| Data model       | Asset Administration Shell (AAS) |
+| Infrastructur    | Eclipse BaSyx Framework |
+| Hosting          | Traefik & Docker |
+| Hosting-Links    | [Swagger]https://srv01.noah-becker.de/uni/swe/swagger Wiki| 
+| | [WebUI (Applikation)] [https://srv01.noah-becker.de/uni/swe/basyx/] |
+| Documentation | Markdown, GitHub Wiki, Swagger UI |
 
 
 ---
@@ -234,24 +257,15 @@ All documents are visible in the GitHub repository. The documents PM, BC, CRS, S
 ---
 
 ## End of project
+The project´s deadline (first part) is officially set on 21.11.2025.
 
-The project's deadline is officially set on **X.X.2026**.
-
-The following tasks must be completed in the finished project:
-
-* **Code:** The source code and an executable version have to be published on our **GitHub repository**.
+Officially, the following tasks must be completed in the project (first part):
 * **GitHub:** The GitHub repository needs to be cleaned up, and its wiki has to be updated.
 * **Documentation:** The complete set of documents must be delivered:
     * CRS (Customer Requirement Specification)
     * BC (Business Case)
     * SRS (Software Requirement Specification)
     * SAS (Software Architecture Specification)
-    * Projektplan (Project Plan - PM)
-    * MODs (Minutes of Decision - *likely included in Protocolls*)
-    * STP (Software Test Plan)
-    * STR (Software Test Report)
-    * Benutzer Manual (User Manual)
+    * PSP (Project structure plan - PM)
     * Protokolle (Protocols/Meeting Minutes)
-    * Sourcen (Source Code)
-    * Executable
-* **Product presentation**
+* **Product presentation I**
