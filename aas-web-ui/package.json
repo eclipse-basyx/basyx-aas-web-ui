@@ -21,7 +21,7 @@
     "@thatopen/components": "^3.1.2",
     "@thatopen/components-front": "^3.1.6",
     "@thatopen/fragments": "^3.1.6",
-    "@thatopen/ui": "^3.1.4",
+    "@thatopen/ui": "^3.2.0",
     "@thatopen/ui-obc": "^3.1.2",
     "@vue-leaflet/vue-leaflet": "^0.10.1",
     "apexcharts": "^5.3.5",
