@@ -59,10 +59,10 @@ Manuel Lutz, Luca Schmoll, Felix Schulz, Fabian Steiß
   - BC – Nataliia Chubak  
   - PM – Nataliia Chubak  
   - SAS – Noah Becker  
-  - STR – Felix Schulz  
-  - STP – Manuel Lutz  
+  - MOD (Web-Interface) - Felix Schulz   
+  - STR, STP – Manuel Lutz  
   - Presentation – Manuel Lutz, Felix Schulz  
-  - Meeting Minutes – Fabian Steiß  
+  - Meeting Minutes, User Manual – Fabian Steiß  
 
 - **More Git Issues**
   - Discussion on whether Jira tasks should be created as GitHub Issues.  
