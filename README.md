@@ -1,10 +1,16 @@
 ![GitHub](https://img.shields.io/github/license/eclipse-basyx/basyx-aas-web-ui) [![Deploy Web UI (WIP)](https://github.com/DHBW-TINF24F/Team6-BaSyx-DPP-API/actions/workflows/deploy_webui.yml/badge.svg?branch=main)](https://github.com/DHBW-TINF24F/Team6-BaSyx-DPP-API/actions/workflows/deploy_webui.yml) [![Deploy Swagger Specification](https://github.com/DHBW-TINF24F/Team6-BaSyx-DPP-API/actions/workflows/deploy_swagger.yml/badge.svg)](https://github.com/DHBW-TINF24F/Team6-BaSyx-DPP-API/actions/workflows/deploy_swagger.yml)
 
-[![Jira Link](https://camo.githubusercontent.com/ad9e6a6136a57e1da04e20cfb5bff82fd2a4a824a92fbaf8318bc060bebb2a78/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f4a6972612d3030353243433f7374796c653d666f722d7468652d6261646765266c6f676f3d4a697261266c6f676f436f6c6f723d7768697465)](https://zerodayz.atlassian.net/jira/software/projects/BDA/boards/67)
-
 
 
 #   TINF24F_Team6_BaSyx_DPP_API
+
+<hr>
+<p align="center"><a href="#swagger">Swagger</a> &bull; <a href="https://srv01.noah-becker.de/uni/swe/swagger/"></a>
+<a href="#webUI">BaSyx Web UI</a> &bull; <a href="https://srv01.noah-becker.de/uni/swe/basyx/"></a>
+<a href="#minutes">Meeting Minutes</a> <a href="https://github.com/DHBW-TINF24F/Team6-BaSyx-DPP-API/tree/main/PROJECT/MEETING_PROTOCOLS"></a> &bull;
+<a href="#presentation">Presentation</a> <a href="https://1drv.ms/p/c/94b53bce14d0456b/EVwut7JiukRCs4097VqIiFMBA16DA1QQZXdYSsWuQjsq4Q?e=AmxA4S
+"></a>
+<hr>
 
 
 This project implements a **REST API for the Digital Product Passport (DPP)** according to the [**DIN EN 18222**](https://www.dinmedia.de/en/draft-standard/din-en-18222/393321021) standard, integrated into the **Eclipse BaSyx framework**.  
@@ -124,7 +130,7 @@ docker compose -f ./docker-compose.swagger.yml up -d
 
 - [x] Open API specification
 - [x] Development environment
-- [ ] Issue tracker
+- [x] Issue tracker
 - [ ] GitHub Wiki
 - [ ] Project planning with projects feature
 - [ ] Documents
@@ -132,7 +138,7 @@ docker compose -f ./docker-compose.swagger.yml up -d
     - [ ] Customer request specifications
     - [ ] Software requirements specifications
     - [ ] Software requirements specifications
-    - [ ] Project management
+    - [x] Project management
     - [ ] Meeting minutes
     - [ ] Presentation
 
