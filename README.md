@@ -5,11 +5,10 @@
 #   TINF24F_Team6_BaSyx_DPP_API
 
 <hr>
-<p align="center"><a href="#swagger">Swagger</a> &bull; <a href="https://srv01.noah-becker.de/uni/swe/swagger/"></a>
-<a href="#webUI">BaSyx Web UI</a> &bull; <a href="https://srv01.noah-becker.de/uni/swe/basyx/"></a>
-<a href="#minutes">Meeting Minutes</a> <a href="https://github.com/DHBW-TINF24F/Team6-BaSyx-DPP-API/tree/main/PROJECT/MEETING_PROTOCOLS"></a> &bull;
-<a href="#presentation">Presentation</a> <a href="https://1drv.ms/p/c/94b53bce14d0456b/EVwut7JiukRCs4097VqIiFMBA16DA1QQZXdYSsWuQjsq4Q?e=AmxA4S
-"></a>
+<p align="center"><a href="https://srv01.noah-becker.de/uni/swe/swagger/">Swagger</a> &bull;
+<a href="https://srv01.noah-becker.de/uni/swe/basyx/">BaSyx Web UI</a> &bull;
+<a href="https://github.com/DHBW-TINF24F/Team6-BaSyx-DPP-API/tree/main/PROJECT/MEETING_PROTOCOLS">Meeting Minutes</a> &bull;
+<a href="https://1drv.ms/p/c/94b53bce14d0456b/EVwut7JiukRCs4097VqIiFMBA16DA1QQZXdYSsWuQjsq4Q?e=AmxA4S">Presentation</a>
 <hr>
 
 

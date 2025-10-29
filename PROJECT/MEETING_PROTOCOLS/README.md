@@ -3,12 +3,107 @@
 
 
 ## Table of Contents
+- [Meeting 28.10.2025 - Status team members](#status)
 - [Meeting 22.10.2025 - Document Distribution and Jira/GitHub Tasks](#documentDistribution)
 - [Meeting 17.10.2025 - Discussion of Task Distribution](#discussionBriefing)
 - [Meeting 15.10.2025 - Task Distribution](#TaskDistribution)
 - [Meeting 09.10.2025 - Next Steps](#next-steps)
 - [Meeting 30.09.2025 - Research](#research)
 - [Meeting 29.09.2025 - Foundations](#foundations)
+
+<a id="status">
+
+## Meeting 28.10.2025 – Status team members
+<table style="width:100%;border-collapse:collapse;">
+  <tr>
+    <td style="width:60%; vertical-align:top;">
+
+| No. | Topic | Responsibility | Time (min) |
+|-----|--------|----------------|-------------|
+| 1 |Mockup presentation|Felix Schulz|5 min|
+| 2 |Presentation task distribution|all|10 min|
+| 3 |Pull request rule question|Fabian|2 min|
+| 4 |Security concept|all|5 min|
+</td>
+<td style="width:40%; vertical-align:bottom; text-align:center;">
+
+**Location:** DHBW Stuttgart  
+**Date:** 28.10.2025  
+**Time:** 11:30 – 12:04  
+**Moderator:** Nataliia Chubak  
+**Minutes:** Fabian Steiß  
+**Type:** Weekly  
+</td>
+</tr>
+</table>
+
+---
+
+**Attendees:**  
+Noah Becker, Nataliia Chubak, Magnus Lörcher, Luca Schmoll, Felix Schulz, Fabian Steiß  
+
+---
+
+### I. Goal  
+To check the status of the team members
+
+### II. Status  
+- SRS will be finalized this week
+- 2 mockups have been created
+- SAS deadline in 2 days, still some work to do
+- Transfer of tasks from Jira to GitHub Project successful
+
+### III. Risks / Issues
+
+### IV. Discussion Points
+
+- Presentation of mockups
+  - Team appreciated designidea
+  - Recognized the problem of dynamic value integration, for example: an object has 4 values, another object has 1000 values
+
+- Presentation
+  - Discussion who will do what in the presentation
+  - Will be specified in the next meeting
+
+- UML diagrams in SRS
+  - Magnus and Luca are going to do it
+
+- Pull requests must be consistently followed through
+
+- Languages and Tools
+  - Backend: Django
+  - Frontend: React with Typescript and Tailwind for design
+
+- No test driven development
+
+- Security concept
+  - Authentication in the web app with a login page
+
+
+
+### V. Future meeting
+The next meeting is planned for 04.11.2025.
+
+
+---
+
+### To-dos
+
+| **To-Do** | **Responsible Person(s)** | **Due Date** |
+|----------------------------------------------------|----------------------------|---------------|
+|Create presentation|Manuel Lutz|20.11.2025|
+|Finish writing SAS|Noah Becker|14.11.2025|
+|Finish writing SRS|Luca Schmoll|14.11.2025|
+|Mockup of the login page|Felix Schulz|15.11.2025|
+|Email for trial presentation to Herr Rentschler|Nataliia Chubak|28.10.2025|
+
+---
+
+**Notes:**  
+- Manuel Lutz not present
+---
+
+
 
 ---
 <a id="documentDistribution">
