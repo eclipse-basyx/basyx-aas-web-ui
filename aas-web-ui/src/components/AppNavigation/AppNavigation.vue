@@ -35,12 +35,7 @@
                 <!-- Settings-Menu for Auto-Sync and Sync-Interval -->
                 <AutoSync v-if="showAutoSync"></AutoSync>
                 <!-- Platform I 4.0 Logo -->
-                <v-img
-                    v-if="!isMobile"
-                    src="@/assets/I40.png"
-                    max-width="260px"
-                    :style="{ filter: isDark ? 'invert(1)' : 'invert(0)' }">
-                </v-img>
+                <v-img v-if="!isMobile" src="@/assets/IDTA_Logo_Blue_Web_S.svg" max-width="120px" />
                 <!-- Menu Toggle (Mobile) -->
                 <v-dialog v-if="isMobile" v-model="mainMenu" fullscreen :z-index="9993" :transition="false">
                     <template #activator="{ props }">
@@ -64,11 +59,7 @@
                             </v-col>
                             <v-col cols="12" class="text-center">
                                 <!-- Platform I 4.0 Logo -->
-                                <v-img
-                                    src="@/assets/I40.png"
-                                    max-width="260px"
-                                    class="mx-auto"
-                                    :style="{ filter: isDark ? 'invert(1)' : 'invert(0)' }" />
+                                <v-img src="@/assets/IDTA_Logo_Blue_Web_S.svg" max-width="120px" class="mx-auto" />
                             </v-col>
                         </v-row>
                     </v-card>
