@@ -63,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-    import { computed, defineEmits, defineProps } from 'vue';
+    import { computed } from 'vue';
     import FormField from './FormField.vue';
 
     const props = defineProps<{
