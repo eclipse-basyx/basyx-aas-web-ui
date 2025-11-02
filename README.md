@@ -13,27 +13,60 @@
 
 
 This project implements a REST API for the Digital Product Passport (DPP) according to the [**DIN EN 18222**](https://www.dinmedia.de/en/draft-standard/din-en-18222/393321021) standard, integrated into the Eclipse BaSyx framework.  
-It provides a complete end-to-end solution for lifecycle management, interoperability, and usability of digital product data across the entire product lifecycle.
 
 
+Our main task is to define an API according to the DIN standard and provide it through a backend service. As a potential release, we plan to offer a new DPP “BaSyx” Docker container. The core idea is to call existing BaSyx APIs-particularly the “Asset Administration Shell Repository API” and map their responses to the required DIN compliant output format.
 
-## Objectives
+In addition, we need to develop a completely independent frontend that is not directly connected to BaSyx. This frontend should display the DPPs of uploaded shells (AASX, JSON, etc.) in a well structured and user friendly way. Possible frontend frameworks include Angular (as suggested by Herr Rentschler) or React. Currently, this visualization is handled rather poorly through the “AAS SM Visualizations” tab in the BaSyx Web UI.
 
-- Implement the **DIN EN 18222 REST API** specification for digital product passports  
-- Integrate the API with **BaSyx AAS (Asset Administration Shell)** infrastructure  
-- Develop **example DPPs** and **frontend viewer functionality**  
-- Improve tutorials and documentation within the **BaSyx open-source community**
+Ideally, we would also add a new entry in the BaSyx UI under the “AAS SM Visualizations” section, potentially called “AAS DPP Viewer”, which would redirect users to our new frontend.
 
+
+## Main Tasks
+
+1. **OpenAPI Specification**  
+   - Derive a complete OpenAPI (Swagger) specification from [DIN EN 18222](https://www.dinmedia.de/en/draft-standard/din-en-18222/393321021)  
+   - Ensure compliance and interoperability with BaSyx REST standards  
+
+2. **BaSyx Environment Setup**
+   - Install and configure a local BaSyx environment   
+
+3. **UI Analysis & Design**
+   - Analyze existing BaSyx and DPP UI solutions  
+   - Define designs for the API frontend
+
+4. **Development & Integration**
+   - Fork and modify required BaSyx repositories  
+   - Implement and test DPP API and UI components  
+
+5. **Deployment & Documentation**
+   - Host the DPP API and frontend on a public demo server  
+   - Provide structured online documentation via GitHub Pages or BaSyx Wiki  
+   - Present the implementation for community acceptance in the BaSyx open-source project
+
+---
+
+## Team Members
+
+| Role              | Responsible Person            |
+  |-------------------|-----------------------------------|
+  | Project Manager   | Nataliia Chubak                   |
+  | Product Manager   | Luca Schmoll, Magnus Lörcher      |
+  | Test Manager      | Manuel Lutz                       |
+  | System Architect  | Noah Becker                       |
+  | Documentation     | Fabian Steiß                      |
+  | UI Designer       | Felix Schulz                      |
+  | Developer         | All                               |
 
 ## Technologies & Tools
 
 | Component | Technology |
 |------------|-------------|
 | **Backend** | Java / Spring Boot (BaSyx SDK) |
-| **API Definition** | OpenAPI 3.0 / Swagger |
 | **Frontend** | React / TypeScript (BaSyx UI) |
-| **Data Model** | Asset Administration Shell (AAS) |
 | **Infrastructure** | Eclipse BaSyx Framework |
+| **API Definition** | OpenAPI 3.0 / Swagger |
+| **Data Model** | Asset Administration Shell (AAS) |
 | **Hosting** | <div>Traefik (Reverse Proxy) & Docker<br><li> [Swagger](https://srv01.noah-becker.de/uni/swe/swagger/) OpenAPI Spezifikation<br><li> [BaSyx WebUI](https://srv01.noah-becker.de/uni/swe/basyx/) Applikation</div> |
 | **Documentation** | Markdown, GitHub Wiki, Swagger UI |
 
@@ -44,9 +77,12 @@ It provides a complete end-to-end solution for lifecycle management, interoperab
 -   [AAS Web UI overview](https://wiki.basyx.org/en/latest/content/user_documentation/basyx_components/web_ui/index.html)
 -   [DIN EN 18222](https://www.dinmedia.de/en/draft-standard/din-en-18222/393321021)
 -   [Tutorials & Resources](https://github.com/DHBW-TINF24F/.github/blob/main/Tutorials.md)
+-   [PowerPoint](https://1drv.ms/p/c/94b53bce14d0456b/EVwut7JiukRCs4097VqIiFMBA16DA1QQZXdYSsWuQjsq4Q?e=AmxA4S)
 
 
-## Quick Roadmap
+
+
+## Roadmap
 
 - [x] Open API specification
 - [x] Development environment
