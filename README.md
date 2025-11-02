@@ -12,26 +12,15 @@
 <hr>
 
 
-This project implements a **REST API for the Digital Product Passport (DPP)** according to the [**DIN EN 18222**](https://www.dinmedia.de/en/draft-standard/din-en-18222/393321021) standard, integrated into the **Eclipse BaSyx framework**.  
-It provides a complete end-to-end solution for lifecycle management, interoperability, and usability of digital product data across the entire product lifecycle.
+This project implements a REST API for the Digital Product Passport (DPP) according to the [**DIN EN 18222**](https://www.dinmedia.de/en/draft-standard/din-en-18222/393321021) standard, integrated into the Eclipse BaSyx framework.  
 
----
 
-## Project Overview
+Our main task is to define an API according to the DIN standard and provide it through a backend service. As a potential release, we plan to offer a new DPP “BaSyx” Docker container. The core idea is to call existing BaSyx APIs-particularly the “Asset Administration Shell Repository API” and map their responses to the required DIN compliant output format.
 
-The **Digital Product Passport (DPP)** enables transparency and sustainability in Industry 4.0 product lifecycle management.  
-Based on **DIN EN 18222**, this project defines and implements a standardized REST API, frontend interface, and demo environment using the BaSyx ecosystem.
+In addition, we need to develop a completely independent frontend that is not directly connected to BaSyx. This frontend should display the DPPs of uploaded shells (AASX, JSON, etc.) in a well structured and user friendly way. Possible frontend frameworks include Angular (as suggested by Herr Rentschler) or React. Currently, this visualization is handled rather poorly through the “AAS SM Visualizations” tab in the BaSyx Web UI.
 
----
+Ideally, we would also add a new entry in the BaSyx UI under the “AAS SM Visualizations” section, potentially called “AAS DPP Viewer”, which would redirect users to our new frontend.
 
-## Objectives
-
-- Implement the **DIN EN 18222 REST API** specification for digital product passports  
-- Integrate the API with **BaSyx AAS (Asset Administration Shell)** infrastructure  
-- Develop **example DPPs** and **frontend viewer functionality**  
-- Improve tutorials and documentation within the **BaSyx open-source community**
-
----
 
 ## Main Tasks
 
@@ -39,81 +28,49 @@ Based on **DIN EN 18222**, this project defines and implements a standardized RE
    - Derive a complete OpenAPI (Swagger) specification from [DIN EN 18222](https://www.dinmedia.de/en/draft-standard/din-en-18222/393321021)  
    - Ensure compliance and interoperability with BaSyx REST standards  
 
-2. **BaSyx Environment Setup**  
-   - Install and configure a local BaSyx environment  
-   - Review and improve existing BaSyx tutorials  
+2. **BaSyx Environment Setup**
+   - Install and configure a local BaSyx environment   
 
-3. **DPP Example Models**  
-   - Create example product passports using BaSyx Asset Administration Shells  
-   - Demonstrate lifecycle management and traceability  
+3. **UI Analysis & Design**
+   - Analyze existing BaSyx and DPP UI solutions  
+   - Define designs for the API frontend
 
-4. **UI Analysis & Design**  
-   - Analyze existing BaSyx and HARTING DPP UI solutions  
-   - Define a usability concept and workflow for DPP viewer use cases  
-
-5. **Development & Integration**  
+4. **Development & Integration**
    - Fork and modify required BaSyx repositories  
-   - Set up a local build chain (build, deploy, verify changes)  
    - Implement and test DPP API and UI components  
 
-6. **Deployment & Documentation**  
+5. **Deployment & Documentation**
    - Host the DPP API and frontend on a public demo server  
    - Provide structured online documentation via GitHub Pages or BaSyx Wiki  
    - Present the implementation for community acceptance in the BaSyx open-source project
 
 ---
 
+## Team Members
+
+| Role              | Responsible Person            |
+  |-------------------|-----------------------------------|
+  | Project Manager   | Nataliia Chubak                   |
+  | Product Manager   | Luca Schmoll, Magnus Lörcher      |
+  | Test Manager      | Manuel Lutz                       |
+  | System Architect  | Noah Becker                       |
+  | Documentation     | Fabian Steiß                      |
+  | UI Designer       | Felix Schulz                      |
+  | Developer         | All                               |
+
 ## Technologies & Tools
 
 | Component | Technology |
 |------------|-------------|
 | **Backend** | Java / Spring Boot (BaSyx SDK) |
-| **API Definition** | OpenAPI 3.0 / Swagger |
 | **Frontend** | React / TypeScript (BaSyx UI) |
-| **Data Model** | Asset Administration Shell (AAS) |
 | **Infrastructure** | Eclipse BaSyx Framework |
+| **API Definition** | OpenAPI 3.0 / Swagger |
+| **Data Model** | Asset Administration Shell (AAS) |
 | **Hosting** | <div>Traefik (Reverse Proxy) & Docker<br><li> [Swagger](https://srv01.noah-becker.de/uni/swe/swagger/) OpenAPI Spezifikation<br><li> [BaSyx WebUI](https://srv01.noah-becker.de/uni/swe/basyx/) Applikation</div> |
 | **Documentation** | Markdown, GitHub Wiki, Swagger UI |
 
 ---
-
-## How to: Local development
-> [!NOTE]
-> PowerShell scripts should be running on your device, if not please follow [this](#running-without-powershell-scripts) workflow.
-
-> [!WARNING]
-> The PowerShell scripts are running/downloading Docker Containers. Please ensure, that you have Docker installed on your device and have the Docker Daemon running. Also, make sure that you have enough space.
-
-### BaSyx WebUI
-To start the local BaSyx development environment, run the following command (assuming that you are in the main repo folder):
-```
-./run_basyx-webui.ps1
-```
-> [!CAUTION]
-> The BaSyx WebUI needs several services as dependencies, which will also be installed during the process. - The whole installing will take around **5GB of space**.
-
-**The BaSyx WebUI is now available on `http://localhost:3000`**<br>
-*The initialization of all background BaSyx services can take up to 1-2 minutes. Till the services aren't running, the WebUI won't be available.*
-
-### Swagger Editor
-To start the Swagger Editor, run the following command (assuming that you are in the main repo folder):
-```
-./run_swagger-editor.ps1
-```
-
-> [!TIP]
-> If you are getting an "Permission denied"-error, please run **`chmod +x ./run_basyx-webui.ps1`** or **`chmod +x ./run_swagger-editor.ps1`** and then try running the start scripts again.
-
-#### Running without PowerShell scripts
-**BaSyx WebUI**
-```
-docker compose -f ./docker-compose.webui.yml up -d
-```
-
-**Swagger Editor**
-```
-docker compose -f ./docker-compose.swagger.yml up -d
-```
 
 ## Useful Links
 -   [BaSyx Hack - Useful API information](https://basyxhack.iese.de/docs.html#gettingstarted)
@@ -130,7 +87,7 @@ docker compose -f ./docker-compose.swagger.yml up -d
 - [x] Open API specification
 - [x] Development environment
 - [x] Issue tracker
-- [ ] GitHub Wiki
+- [x] GitHub Wiki
 - [ ] Project planning with projects feature
 - [ ] Documents
     - [x] Business sase
@@ -141,4 +98,4 @@ docker compose -f ./docker-compose.swagger.yml up -d
     - [ ] Meeting minutes
     - [ ] Presentation
 
-See the [open issues](https://github.com/DHBW-TINF24F/Team6-BaSyx-DPP-API/issues) for a full list of proposed features (and known issues).
+Go to [open issues](https://github.com/DHBW-TINF24F/Team6-BaSyx-DPP-API/issues) or [roadmap](https://github.com/orgs/DHBW-TINF24F/projects/9) for a full list of proposed features (and known issues).
