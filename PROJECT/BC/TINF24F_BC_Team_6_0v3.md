@@ -146,7 +146,7 @@ The estimated total cost of developing the software product is:
 $$\text{Total Costs} = \text{Salary Costs} + \text{Other Costs}$$
 $$\text{Total Costs} = €38,700 + €20,485 = \mathbf{€59,185}$$
 
-![Gantt chart](images/Gantt_analyse.png)
+![Gantt chart](images/Costs.png)
 
 *Figur.3* Project cost distribution 
 
