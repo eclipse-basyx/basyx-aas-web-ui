@@ -42,7 +42,7 @@
 1.  [Project Assignment](#project-assignment)
 2.  [Project Context](#project-context)
 3.  [Project Organisation](#project-organisation)
-4.  [Milestones and delivarebles](#milestones-and-delivarebles)
+4.  [Milestones and delivarebles](#milestones-and-deliverables)
 5.  [Gantt chart 3rd Semester](#gantt-chart-3rd-semester)
 6.  [Risks](#risks)
 7.  [Soft- and Hardware requirements](#soft--and-hardware-requirements)
@@ -130,6 +130,20 @@
 | M7  | Final preparation                      | 11       | Whole team, Manuel Lutz                        | 1. Final project plan update (parallelised tasks, dependencies)<br>2. PowerPoint presentation (first version) |
 | M8  | Semester-Review                        | 21.11.25 | Whole team                                     | 1. Presentation – results of analysis & design phase, final repository |
 
+---
+
+## Gantt chart 3rd Semester
+
+![Gantt chart](images/Gantt_analyse.png)
+
+*Figur.3* Gantt chart 3rd Semester (Phase I)
+
+![Gantt chart](images/Gantt_design.png)
+
+*Figur.4* Gantt chart 3rd Semester (Phase II)
+
+---
+
 ### List of tasks and responsible person
 
 | **Person** | **Task** |
@@ -195,14 +209,6 @@
 
 ---
 
-## Gantt chart 3rd Semester
-
-![Gantt chart](images/Gantt_chart.png)
-
-*Figur.3* Gantt chart 3rd Semester
-
----
-
 ## Risks
 
 | **Nr** | **Risk** | **Probability** | **Amount of damage** | **Effects** | **Measure** |
@@ -219,7 +225,7 @@
 
 ![Risk matrix](images/matrix.JPG)
 
-*Figur.4* Risk matrix
+*Figur.5* Risk matrix
 ---
 
 ## Soft- and Hardware requirements
