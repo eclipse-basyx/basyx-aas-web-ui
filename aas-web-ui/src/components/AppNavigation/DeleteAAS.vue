@@ -91,6 +91,36 @@
         selected.value = value;
     }
 
+    async function deleteSMFromSMRegistry(submodelId: string) {
+        let error = false;
+        try {
+            const submodelRegistryPath = `${submodelRegistryURL.value}/${base64Encode(submodelId)}`;
+            const submodelRegistryResponse = await getRequest(submodelRegistryPath, 'Removing Submodels', false);
+            if (submodelRegistryResponse.success && submodelRegistryResponse.status < 400) {
+                const submodelHref = extractEndpointHref(submodelRegistryResponse.data, 'SUBMODEL-3.0');
+                const deletePath = submodelHref;
+                await deleteRequest(deletePath, 'removing Submodel', false);
+            } else {
+                error = true;
+            }
+        } catch {
+            error = true;
+        }
+        return error;
+    }
+
+    async function deleteSMFromSMRepository(submodelId: string) {
+        let error = false;
+        try {
+            const submodelFromRepo = await fetchSmById(submodelId);
+            const deletePath = extractEndpointHref(submodelFromRepo, 'SUBMODEL-3.0');
+            await deleteRequest(deletePath, 'removing Submodel', false);
+        } catch {
+            error = true;
+        }
+        return error;
+    }
+
     async function confirmDelete() {
         deleteLoading.value = true;
         let error = false;
@@ -98,28 +128,14 @@
             if (deleteSubmodels.value) {
                 // Extract all references in an array called submodelIds from each keys[0].value
                 const submodelIds = selected.value;
-                const disableMessage = false;
                 await removeAAS(props.aas);
                 // Remove each submodel
                 for (const submodelId of submodelIds) {
                     if (submodelRegistryURL.value) {
-                        const submodelRegistryPath = `${submodelRegistryURL.value}/${base64Encode(submodelId)}`;
-                        const submodelRegistryResponse = await getRequest(
-                            submodelRegistryPath,
-                            'Removing Submodels',
-                            disableMessage
-                        );
-                        if (submodelRegistryResponse.success) {
-                            const submodelHref = extractEndpointHref(submodelRegistryResponse.data, 'SUBMODEL-3.0');
-                            const deletePath = submodelHref;
-                            await deleteRequest(deletePath, 'removing Submodel', disableMessage);
-                        } else {
-                            error = true;
-                        }
-                    } else if (submodelRepositoryURL.value) {
-                        const submodelFromRepo = await fetchSmById(submodelId);
-                        const deletePath = extractEndpointHref(submodelFromRepo, 'SUBMODEL-3.0');
-                        await deleteRequest(deletePath, 'removing Submodel', disableMessage);
+                        error = await deleteSMFromSMRegistry(submodelId);
+                    }
+                    if (submodelRepositoryURL.value) {
+                        error = await deleteSMFromSMRepository(submodelId);
                     } else {
                         error = true;
                     }
