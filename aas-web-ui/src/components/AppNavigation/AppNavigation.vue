@@ -35,12 +35,7 @@
                 <!-- Settings-Menu for Auto-Sync and Sync-Interval -->
                 <AutoSync v-if="showAutoSync"></AutoSync>
                 <!-- Platform I 4.0 Logo -->
-                <v-img
-                    v-if="!isMobile"
-                    src="@/assets/I40.png"
-                    max-width="260px"
-                    :style="{ filter: isDark ? 'invert(1)' : 'invert(0)' }">
-                </v-img>
+                <v-img v-if="!isMobile" src="@/assets/IDTA_Logo_Blue_Web_S.svg" max-width="120px" />
                 <!-- Menu Toggle (Mobile) -->
                 <v-dialog v-if="isMobile" v-model="mainMenu" fullscreen :z-index="9993" :transition="false">
                     <template #activator="{ props }">
@@ -64,11 +59,7 @@
                             </v-col>
                             <v-col cols="12" class="text-center">
                                 <!-- Platform I 4.0 Logo -->
-                                <v-img
-                                    src="@/assets/I40.png"
-                                    max-width="260px"
-                                    class="mx-auto"
-                                    :style="{ filter: isDark ? 'invert(1)' : 'invert(0)' }" />
+                                <v-img src="@/assets/IDTA_Logo_Blue_Web_S.svg" max-width="120px" class="mx-auto" />
                             </v-col>
                         </v-row>
                     </v-card>
@@ -195,29 +186,6 @@
                             class="text-buttonText"></v-btn>
                     </v-col>
                 </v-row>
-                <!-- Dashboard -->
-                <v-row v-if="dashboardAvailable" justify="end" align="center">
-                    <v-col cols="auto" class="pr-1">
-                        <v-card
-                            class="py-1 px-2 text-buttonText"
-                            :color="route.path === '/dashboard' ? 'primarySurface' : 'primary'"
-                            to="/dashboard"
-                            :disabled="route.path === '/dashboard'"
-                            >Dashboard</v-card
-                        >
-                    </v-col>
-                    <v-col cols="auto" class="py-1">
-                        <v-btn
-                            icon="mdi-chart-timeline-variant-shimmer"
-                            to="/dashboard"
-                            :disabled="route.path === '/dashboard'"
-                            :active="route.path === '/dashboard'"
-                            style="z-index: 9990"
-                            size="small"
-                            color="primary"
-                            class="text-buttonText"></v-btn>
-                    </v-col>
-                </v-row>
                 <!-- About -->
                 <v-row justify="end" align="center">
                     <v-col cols="auto" class="pr-1">
@@ -251,7 +219,6 @@
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
-    import { useDashboardHandling } from '@/composables/DashboardHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -259,9 +226,6 @@
 
     // Vue Router
     const route = useRoute();
-
-    // Composables
-    const { checkDashboardAvailability } = useDashboardHandling();
 
     // Stores
     const navigationStore = useNavigationStore();
@@ -274,7 +238,6 @@
     // Data
     const mainMenu = ref(false); // Variable to show the Main Menu
     const mobileMenu = ref(false); // Variable to show the Mobile Menu
-    const dashboardAvailable = ref(false); // Dashboard Availability
     const endpointConfigAvailable = ref(envStore.getEndpointConfigAvailable);
     const drawerVisibility = ref(true); // Variable to show the AAS List Drawer
 
@@ -359,7 +322,6 @@
     );
 
     onMounted(async () => {
-        dashboardAvailable.value = await checkDashboardAvailability();
         applyTheme();
 
         // Get auto-sync object from the lcoal storage

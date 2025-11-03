@@ -18,7 +18,6 @@
         timeVariable: any;
         yVariables: any;
         chartOptionsExternal: any;
-        editDialog: boolean;
     }>();
 
     const emit = defineEmits<{

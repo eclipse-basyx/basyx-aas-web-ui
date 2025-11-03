@@ -39,7 +39,7 @@
                                     <v-btn
                                         v-if="model > 0"
                                         class="text-buttonText"
-                                        color="white"
+                                        color="primary"
                                         icon="mdi-arrow-left"
                                         text
                                         @click="model--">

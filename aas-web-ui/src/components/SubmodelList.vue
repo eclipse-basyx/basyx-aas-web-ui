@@ -192,6 +192,7 @@
 
 <script lang="ts" setup>
     import type { ComponentPublicInstance } from 'vue';
+    import _ from 'lodash';
     import { computed, onActivated, onMounted, Ref, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
@@ -324,7 +325,7 @@
         // On mobile every click on a submodel routes to visualization ()
         if (isSelected(submodel) && !isMobile.value) {
             // Deselect submodel: remove the path query
-            let query = { ...route.query };
+            const query = _.cloneDeep(route.query);
             delete query.path;
             router.push({ query: query });
         } else {

@@ -26,7 +26,7 @@
                     </template>
                 </v-list-item>
             </v-list>
-            <template v-if="authStore.getAuthStatus" #actions>
+            <template v-if="authStore.getAuthStatus && allowLogout" #actions>
                 <v-spacer></v-spacer>
                 <v-btn append-icon="mdi-logout" class="text-none" color="primary" text="Logout" @click="logout" />
             </template>
@@ -58,8 +58,9 @@
     const authUsername = computed(
         () => authStore.getUsername || (envStore.getBasicAuthActive ? envStore.getBasicAuthUsername : '')
     );
+    const allowLogout = computed(() => envStore.getAllowLogout);
 
-    function logout(): void {
+    async function logout(): Promise<void> {
         // Store the clean path to redirect to after logout
         const cleanPath = {
             path: route.path,
@@ -73,11 +74,88 @@
             window.clearInterval(refreshIntervalId);
         }
 
-        // Trigger Keycloak logout
-        if (authStore.getKeycloak) {
-            authStore.getKeycloak.logout({
-                redirectUri: window.location.origin + window.location.pathname,
-            });
+        // Check if we're using preconfigured auth (direct grant)
+        if (envStore.getPreconfiguredAuth) {
+            // For preconfigured auth, revoke tokens via Keycloak API before clearing state
+            const refreshToken = authStore.getRefreshToken;
+            if (refreshToken && envStore.getKeycloakUrl && envStore.getKeycloakRealm && envStore.getKeycloakClientId) {
+                try {
+                    const logoutEndpoint = `${envStore.getKeycloakUrl}/realms/${envStore.getKeycloakRealm}/protocol/openid-connect/logout`;
+                    const logoutParams = new URLSearchParams({
+                        client_id: envStore.getKeycloakClientId,
+                        refresh_token: refreshToken,
+                    });
+
+                    await fetch(logoutEndpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: logoutParams.toString(),
+                    });
+                } catch (error) {
+                    console.error('Failed to revoke tokens:', error);
+                }
+            }
+
+            // Clear local auth state
+            authStore.setAuthStatus(false);
+            authStore.setAuthEnabled(false);
+            authStore.setToken(undefined);
+            authStore.setRefreshToken(undefined);
+            authStore.setUsername(undefined);
+            authStore.setKeycloak(null);
+            authStore.setRefreshIntervalId(undefined);
+
+            // Redirect with ignorePreConfAuth parameter
+            const params = new URLSearchParams(window.location.search);
+            params.set('ignorePreConfAuth', '');
+
+            let redirectUri = '';
+            if (envStore.getSingleAas && envStore.getSingleAasRedirect) {
+                redirectUri = envStore.getSingleAasRedirect;
+            } else {
+                redirectUri = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+            }
+
+            window.location.href = redirectUri;
+            return;
         }
+
+        // For all logout scenarios, manually revoke tokens via Keycloak API and clear state
+        // This works for both standard Keycloak auth and direct grant auth
+        const refreshToken = authStore.getRefreshToken;
+        if (refreshToken && envStore.getKeycloakUrl && envStore.getKeycloakRealm && envStore.getKeycloakClientId) {
+            try {
+                const logoutEndpoint = `${envStore.getKeycloakUrl}/realms/${envStore.getKeycloakRealm}/protocol/openid-connect/logout`;
+                const logoutParams = new URLSearchParams({
+                    client_id: envStore.getKeycloakClientId,
+                    refresh_token: refreshToken,
+                });
+
+                await fetch(logoutEndpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: logoutParams.toString(),
+                });
+            } catch (revokeError) {
+                console.error('Failed to revoke tokens:', revokeError);
+            }
+        } // Clear auth state
+        authStore.setAuthStatus(false);
+        authStore.setAuthEnabled(false);
+        authStore.setToken(undefined);
+        authStore.setRefreshToken(undefined);
+        authStore.setUsername(undefined);
+        authStore.setKeycloak(null);
+        authStore.setRefreshIntervalId(undefined);
+
+        // Determine redirect URI
+        let redirectUri = '';
+        if (envStore.getSingleAas && envStore.getSingleAasRedirect) {
+            redirectUri = envStore.getSingleAasRedirect;
+        } else {
+            redirectUri = `${window.location.origin}${window.location.pathname}${window.location.search}`;
+        }
+
+        window.location.href = redirectUri;
     }
 </script>

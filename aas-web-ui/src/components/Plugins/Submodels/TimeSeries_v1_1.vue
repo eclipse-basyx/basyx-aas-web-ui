@@ -1,7 +1,7 @@
 <template>
     <v-container fluid class="pa-0">
         <!-- Header -->
-        <v-card v-if="!hideSettings" class="mb-4">
+        <v-card class="mb-4">
             <v-card-title>
                 <div class="text-subtitle-1">
                     {{ nameToDisplay(submodelElementData, 'en', 'Time Series Data') }}
@@ -12,9 +12,9 @@
             </v-card-text>
         </v-card>
         <!-- Data Preview Config -->
-        <v-card v-if="!hideSettings || editDialog" class="mb-4">
+        <v-card class="mb-4">
             <!-- Title -->
-            <v-list v-if="!hideSettings || editDialog" nav class="py-0">
+            <v-list nav class="py-0">
                 <v-list-item class="pb-0">
                     <template #title>
                         <div class="text-subtitle-2">{{ 'Preview Configuration: ' }}</div>
@@ -108,32 +108,18 @@
             </v-list>
         </v-card>
         <!-- Data Preview Chart -->
-        <v-card :flat="hideSettings">
+        <v-card>
             <!-- Title -->
-            <v-list v-if="!hideSettings || editDialog" nav class="py-0">
+            <v-list nav class="py-0">
                 <v-list-item>
                     <template #title>
                         <div class="text-subtitle-2">{{ 'Preview Chart: ' }}</div>
                     </template>
-                    <!-- TODO: Decide if we want to keep the dashboard integration -->
-                    <!-- <template #append>
-                        <v-btn
-                            v-if="selectedChartType && !hideSettings"
-                            color="primary"
-                            class="text-buttonText"
-                            size="small"
-                            variant="elevated"
-                            append-icon="mdi-plus"
-                            @click="createObject()"
-                            >Dashboard</v-btn
-                        >
-                    </template> -->
                 </v-list-item>
             </v-list>
             <v-card-text class="pt-1">
                 <!-- Chart Type Selection -->
                 <v-select
-                    v-if="!hideSettings || editDialog"
                     v-model="selectedChartType"
                     variant="outlined"
                     density="compact"
@@ -151,7 +137,6 @@
                     :time-variable="timeVariable"
                     :y-variables="yVariables"
                     :chart-options-external="chartOptions"
-                    :edit-dialog="editDialog"
                     @chart-options="getChartOptions"></LineChart>
                 <AreaChart
                     v-if="selectedChartType && selectedChartType.id == 2"
@@ -159,7 +144,6 @@
                     :time-variable="timeVariable"
                     :y-variables="yVariables"
                     :chart-options-external="chartOptions"
-                    :edit-dialog="editDialog"
                     @chart-options="getChartOptions"></AreaChart>
                 <ScatterChart
                     v-if="selectedChartType && selectedChartType.id == 3"
@@ -167,7 +151,6 @@
                     :time-variable="timeVariable"
                     :y-variables="yVariables"
                     :chart-options-external="chartOptions"
-                    :edit-dialog="editDialog"
                     @chart-options="getChartOptions"></ScatterChart>
                 <Histogram
                     v-if="selectedChartType && selectedChartType.id == 4"
@@ -175,7 +158,6 @@
                     :time-variable="timeVariable"
                     :y-variables="yVariables"
                     :chart-options-external="chartOptions"
-                    :edit-dialog="editDialog"
                     @chart-options="getChartOptions"></Histogram>
                 <Gauge
                     v-if="selectedChartType && selectedChartType.id == 5"
@@ -183,7 +165,6 @@
                     :time-variable="timeVariable"
                     :y-variables="yVariables"
                     :chart-options-external="chartOptions"
-                    :edit-dialog="editDialog"
                     @chart-options="getChartOptions"></Gauge>
                 <DisplayField
                     v-if="selectedChartType && selectedChartType.id == 6"
@@ -196,10 +177,8 @@
 
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
-    import { useRoute } from 'vue-router';
     import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
-    // import { useDashboardHandling } from '@/composables/DashboardHandling';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -213,12 +192,10 @@
         defineProps<{
             submodelElementData: any; // TODO: Convert SubmodelElementData to SubmodelElement Type of AAS Core Works
             configData?: any;
-            editDialog?: boolean;
             loadTrigger?: any;
         }>(),
         {
             configData: null,
-            editDialog: false,
             loadTrigger: null,
         }
     );
@@ -239,10 +216,6 @@
     const { fetchCds } = useConceptDescriptionHandling();
     const { checkIdShort, descriptionToDisplay, nameToDisplay } = useReferableUtils();
     const { getRequest, postRequest } = useRequestHandling();
-    // const { dashboardAdd } = useDashboardHandling();
-
-    // vue-router
-    const route = useRoute();
 
     const timeSeriesData = ref({} as any); // Object to store the data of the time series smt
     const segments = ref([] as Array<any>); // Array to store the segments of the time series smt
@@ -293,10 +266,6 @@
         return null;
     });
 
-    const hideSettings = computed(() => {
-        return route.name === 'DashboardGroup';
-    });
-
     watch(
         () => props.loadTrigger,
         () => {
@@ -311,7 +280,6 @@
 
     function initComponent(): void {
         initializeTimeSeriesData();
-        initDashboardTSD();
         const influxDBToken = envStore.getEnvInfluxdbToken;
         if (influxDBToken && influxDBToken !== '') {
             apiToken.value = influxDBToken;
@@ -354,25 +322,6 @@
             // console.log('Updated Records: ', updatedRecords);
             records.value = updatedRecords;
         });
-    }
-
-    function initDashboardTSD(): void {
-        if (!hideSettings.value) return;
-        selectedChartType.value = props.configData.configObject.chartType;
-        selectedSegment.value = props.configData.configObject.segment;
-        timeVariable.value = props.configData.configObject.timeVal;
-        // console.log(timeVariable.value);
-        yVariables.value = props.configData.configObject.yvals;
-        // add the chart type specific options to the chartOptions
-        chartOptions.value = props.configData.configObject.chartOptions;
-        // add the API Token to the API Token field if it is available
-        if (props.configData.configObject.apiToken && props.configData.configObject.apiToken !== '') {
-            apiToken.value = props.configData.configObject.apiToken;
-            showTokenInput.value = false;
-        }
-        if (checkIdShort(selectedSegment.value, 'InternalSegment')) fetchInternalData();
-        if (checkIdShort(selectedSegment.value, 'ExternalSegment')) fetchExternalData();
-        if (checkIdShort(selectedSegment.value, 'LinkedSegment')) fetchLinkedData();
     }
 
     function fetchInternalData(): void {
@@ -554,16 +503,16 @@
     }
 
     function convertInfluxCSVtoArray(csvData: any): void {
-        const lines = csvData.trim().split('\n');
-        const datasets = {} as any;
-        let currentDataset = [] as Array<any>;
-        let currentTable = null as any;
+        const csvString = typeof csvData === 'string' ? csvData : String(csvData);
+        const lines = csvString.trim().split('\n');
+        const datasets: Record<string, Array<{ time: string; value: number }>> = {};
+        let currentDataset: string[] = [];
+        let currentTable: string | null = null;
         let headerLine = '';
 
-        lines.forEach((line: any) => {
+        lines.forEach((line: string) => {
             const columns = line.split(',');
 
-            // Skip the header line (because it's not including data)
             if (columns[1] === 'result') {
                 headerLine = line;
                 return;
@@ -571,95 +520,97 @@
 
             const table = columns[2];
             if (currentTable === null) {
-                // this handles the first line after the header
                 currentTable = table;
                 currentDataset.push(line);
             } else if (table !== currentTable) {
-                // this handles the first line of a new table
-                const topic = extractTopic(currentDataset[0]);
-                datasets[topic] = processDataset(headerLine, currentDataset);
+                // finalize previous table
+                const { key, series } = finalizeDataset(headerLine, currentDataset);
+                if (key) {
+                    // merge if multiple series share the same key (e.g., same _field across tags)
+                    datasets[key] = (datasets[key] || []).concat(series);
+                }
+                // start next
                 currentDataset = [line];
                 currentTable = table;
             } else {
-                // this handles all other lines
                 currentDataset.push(line);
             }
         });
 
         if (currentDataset.length > 0) {
-            // this handles the last dataset
-            const topic = extractTopic(currentDataset[0]);
-            datasets[topic] = processDataset(headerLine, currentDataset);
+            const { key, series } = finalizeDataset(headerLine, currentDataset);
+            if (key) datasets[key] = (datasets[key] || []).concat(series);
         }
 
-        // console.log('Datasets: ', datasets);
+        // Build the array of datasets in the order of selected yVariables
+        const allKeys = Object.keys(datasets);
 
-        // remove the keys from the datasets based on the yVariables
-        const datasetsKeys = Object.keys(datasets);
-        const datasetsFiltered = datasetsKeys.filter((key) =>
-            yVariables.value.some((yVar) => key.includes(yVar.idShort))
-        );
+        // Find missing y-vars by exact match
+        const missingYVars = yVariables.value
+            .filter((yVar: any) => !allKeys.includes(yVar.idShort))
+            .map((yVar: any) => yVar.idShort);
 
-        // Find yVariables that are not in the datasets
-        const missingYVars = yVariables.value.filter(
-            (yVar) => !datasetsFiltered.some((key) => key.includes(yVar.idShort))
-        );
-
-        // If there are any missing yVariables, display a warning snackbar
-        if (missingYVars.length > 0) {
-            const missingYVarNames = missingYVars.map((yVar) => yVar.idShort).join(', ');
+        if (missingYVars.length) {
             navigationStore.dispatchSnackbar({
                 status: true,
                 timeout: 4000,
                 color: 'warning',
                 btnColor: 'buttonText',
-                text: 'y-values "' + missingYVarNames + '" not available in LinkedSegment Data!',
+                text: `y-values "${missingYVars.join(', ')}" not available in LinkedSegment Data! Available keys: ${allKeys.join(', ')}`,
             });
         }
 
-        // Order the datasets based on the yVariables
+        // Order datasets by yVariables and drop the missing ones
         const newDatasets = yVariables.value
-            .map((yVar) => datasetsFiltered.find((key) => key.includes(yVar.idShort)))
-            .filter((key) => key !== undefined)
-            .map((key: any) => datasets[key]);
+            .map((yVar: any) => datasets[yVar.idShort])
+            .filter((ds: any) => Array.isArray(ds));
 
-        // console.log('Filtered and Ordered Datasets: ', newDatasets);
         timeSeriesValues.value = newDatasets;
     }
 
-    function extractTopic(headerLine: string): string {
-        // Implement this method to extract the topic from the header line
-        // This is a placeholder implementation
-        const columns = headerLine.split(',');
-        return columns[columns.length - 1];
-    }
+    function finalizeDataset(
+        headerLine: string,
+        datasetLines: string[]
+    ): { key: string | null; series: Array<{ time: string; value: number }> } {
+        // Parse header indices - trim headers to handle \r\n line endings
+        const headers = headerLine.split(',').map((h) => h.trim());
+        const idxTime = headers.indexOf('_time');
+        const idxValue = headers.indexOf('_value');
+        const idxField = headers.indexOf('_field');
+        const idxTopic = headers.indexOf('topic');
 
-    function processDataset(headerLine: string, datasetLines: any): Array<{ time: string; value: number }> {
-        // console.log('Dataset Lines: ', datasetLines, ' Header Line: ', headerLine)
-        const headers = headerLine.split(',');
-        const valueIndex = headers.indexOf('_value');
-        const timeIndex = headers.indexOf('_time');
+        if (idxTime === -1 || idxValue === -1) {
+            return { key: null, series: [] };
+        }
 
-        return datasetLines.slice(1).map((line: any) => {
-            const columns = line.split(',');
-            return {
-                time: columns[timeIndex],
-                value: parseFloat(columns[valueIndex]),
-            };
+        // Explicitly check for empty datasetLines
+        if (!datasetLines || datasetLines.length === 0) {
+            return { key: null, series: [] };
+        }
+        // First data row to discover labels for this table
+        const first = datasetLines[0]?.split(',').map((col) => col.trim()) ?? [];
+        const rawField = idxField !== -1 ? (first[idxField] ?? '').trim() : '';
+        const topic = idxTopic !== -1 ? (first[idxTopic] ?? '').trim() : '';
+        // - If _field = "value": use topic (extract last part after '/')
+        // - Otherwise: use _field name directly
+        let key: string | null = null;
+        if (rawField === 'value' && topic && topic.trim() !== '') {
+            const topicParts = topic.split('/');
+            key = topicParts[topicParts.length - 1]; // Get last part (e.g., "AirQuality", "Temperature")
+        } else if (rawField && rawField.trim() !== '') {
+            key = rawField;
+        } else {
+            key = null;
+        }
+
+        // Build series
+        const series = datasetLines.slice(1).map((line: string) => {
+            const cols = line.split(',');
+            return { time: cols[idxTime], value: parseFloat(cols[idxValue]) };
         });
-    }
 
-    // function createObject(): void {
-    //     let dashboardElement = {} as any;
-    //     dashboardElement.title = props.submodelElementData.idShort;
-    //     dashboardElement.segment = selectedSegment.value;
-    //     dashboardElement.timeValue = timeVariable.value;
-    //     dashboardElement.yValues = yVariables.value;
-    //     if (apiToken.value && apiToken.value !== '') dashboardElement.apiToken = apiToken.value;
-    //     dashboardElement.chartType = selectedChartType.value;
-    //     dashboardElement.chartOptions = chartOptions.value;
-    //     dashboardAdd(dashboardElement);
-    // }
+        return { key, series };
+    }
 
     function getChartOptions(options: any): void {
         // console.log('Chart Options: ', options);
