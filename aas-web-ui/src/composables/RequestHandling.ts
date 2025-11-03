@@ -16,44 +16,44 @@ export function useRequestHandling() {
                     response.headers.get('Content-Type')?.split(';')[0] === 'application/json' &&
                     response.headers.get('Content-Length') !== '0'
                 ) {
-                    return {response: response, data: await response.json()}; // Return the response as JSON
+                    return { response: response, data: await response.json() }; // Return the response as JSON
                 } else if (
                     response.headers.get('Content-Type')?.split(';')[0] ===
                         'application/asset-administration-shell-package+xml' &&
                     response.headers.get('Content-Length') !== '0'
                 ) {
-                    return {response: response, data: await response.blob()}; // Return the response as Blob}
+                    return { response: response, data: await response.blob() }; // Return the response as Blob}
                 } else if (
                     response.headers.get('Content-Type')?.split(';')[0].includes('image') &&
                     response.headers.get('Content-Length') !== '0'
                 ) {
-                    return {response: response, data: await response.blob()}; // Return the response as Blob
+                    return { response: response, data: await response.blob() }; // Return the response as Blob
                 } else if (
                     response.headers.get('Content-Type')?.split(';')[0] === 'text/csv' &&
                     response.headers.get('Content-Length') !== '0'
                 ) {
-                    return {response: response, data: await response.text()}; // Return the response as text
+                    return { response: response, data: await response.text() }; // Return the response as text
                 } else if (
                     response.headers.get('Content-Type')?.split(';')[0] === 'text/plain' &&
                     response.headers.get('Content-Length') !== '0'
                 ) {
-                    return {response: response, data: await response.text()}; // Return the response as text
+                    return { response: response, data: await response.text() }; // Return the response as text
                 } else if (
                     response.headers.get('Content-Type')?.split(';')[0] === 'application/pdf' &&
                     response.headers.get('Content-Length') !== '0'
                 ) {
-                    return {response: response, data: await response.blob()}; // Return the response as Blob
+                    return { response: response, data: await response.blob() }; // Return the response as Blob
                 } else if (!response.ok) {
                     // No content but received an HTTP error status
                     throw new Error('Error status: ' + response.status);
                 } else if (response.ok && response.status >= 200 && response.status < 300) {
-                    return {response: response, data: await response.blob()}; // Return the response as Blob
+                    return { response: response, data: await response.blob() }; // Return the response as Blob
                 } else {
                     // Unexpected HTTP status
                     throw new Error('Unexpected HTTP status: ' + response.status);
                 }
             })
-            .then(({response, data}) => {
+            .then(({ response, data }) => {
                 console.log(response);
                 console.log(data);
                 // Check if the Server responded with an error
@@ -71,7 +71,7 @@ export function useRequestHandling() {
             })
             .catch((error) => {
                 // Catch any errors
-                console.error('Error: ', error);  // Log the error
+                console.error('Error: ', error); // Log the error
                 if (!disableMessage)
                     navigationStore.dispatchSnackbar({
                         status: true,
