@@ -54,8 +54,6 @@ export function useRequestHandling() {
                 }
             })
             .then(({ response, data }) => {
-                console.log(response);
-                console.log(data);
                 // Check if the Server responded with an error
                 if (data && Object.prototype.hasOwnProperty.call(data, 'status') && data.status >= 400) {
                     // Error response from the server
@@ -71,7 +69,7 @@ export function useRequestHandling() {
             })
             .catch((error) => {
                 // Catch any errors
-                console.error('Error: ', error); // Log the error
+                // console.error('Error: ', error); // Log the error
                 if (!disableMessage)
                     navigationStore.dispatchSnackbar({
                         status: true,
