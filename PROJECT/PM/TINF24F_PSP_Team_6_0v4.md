@@ -184,6 +184,7 @@
 | *E-mail: inf24224@lehre.dhbw-stuttgart.de* | - STR (System Test Report)|
 | *MatrikelNr: 9414567* | - Test execution |
 | | - Test planning |
+| | - GitHub Repository |
 | | - Coding (full stack) |
 | | - Testing |
 | | - Presentation |
@@ -192,7 +193,6 @@
 | Role: System Architect | - SAS (Software Architecture Specification) |
 | *E-mail: inf24038@lehre.dhbw-stuttgart.de* | - Backend implementation |
 | *MatrikelNr: 1871817* | - Infrastructure setup |
-| | - GitHub Repository |
 | | - Usability concept |
 | | - Coding (Frontend) |
 | | - Presentation |
