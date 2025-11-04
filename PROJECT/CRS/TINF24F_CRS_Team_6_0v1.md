@@ -32,7 +32,7 @@ Address: Lerchenstraße 1
     1. [BP02 Usability concept and DPP viewer](#bp02-usability-concept-and-dpp-viewer)
     1. [BP03 Hosting and documentation](#bp03-hosting-and-dokumentation)
 1. [Use cases](#use-cases)
-    1. [UCxx create / register DPP](#ucxx-createregister-dpp)
+    1. [UC01 create / register DPP](#ucxx-createregister-dpp)
     1. [UCxx read / search for DPP](#ucxx-readsearch)
     1. [UCxx update DPP](#ucxx-update-dpps)
     1. [UCxx DPP viewer](#ucxx-dpp-viewer)
