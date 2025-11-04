@@ -63,7 +63,7 @@
     "@vitest/ui": "^4.0.6",
     "@vue/test-utils": "^2.4.6",
     "cross-env": "^10.1.0",
-    "eslint": "^9.38.0",
+    "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-promise": "^7.2.1",
