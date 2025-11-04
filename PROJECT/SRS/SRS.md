@@ -2,7 +2,7 @@
 ## Projekt 6: API für den Digitalen Produktpass (DPP) im BaSyx Framework
 |Version|Autor|Datum|Kommentar|
 |---|---|---|---|
-|1.0|Luca Schmoll|17.10.2025|Ersterstellung der Grundstruktur|
+|1.0|Luca Schmoll|04.11.2025|Ersterstellung der Grundstruktur|
 
 ---
 
