@@ -1,4 +1,4 @@
-# BUSINESS CASE: BaSyx DPP API 
+<h1 align="center">BUSINESS CASE: BaSyx DPP API </h1> 
 
 **TIN24F, SWL Practice project 2025/2026**
 
@@ -32,7 +32,7 @@
 | 1.0 | 26.09.2025 | Nataliia Chubak | Initial Business Case (BC) |
 | 1.1 | 27.09.2025 | Nataliia Chubak | Update BC and financial calculation |
 | 1.2 | 10.10.2025 | Luca Schmoll | Convert to Markdown |
-
+| 1.3 | 02.11.2025 | Nataliia Chubak | Add Gantt diagram |
 ---
 
 ## Table of Contents
@@ -64,12 +64,12 @@ Each member of the project has **180 hours** available. The distribution of thes
 | **Customer Dialogue** | 10 | 5 | 5 | 0 | 0 | 0 | 0 | 20 |
 | **Leading Project** | 40 | 10 | 10 | 0 | 0 | 0 | 0 | 60 |
 | **Research** | 15 | 15 | 15 | 15 | 15 | 15 | 15 | 105 |
-| **Documentation** | 15 | 0 | 0 | 30 | 0 | 15 | 0 | 60 |
-| **Coding** | 45 | 90 | 90 | 95 | 115 | 75 | 115 | 625 |
+| **Documentation** | 25 | 15 | 15 | 30 | 20 | 25 | 25 | 155 |
+| **Coding** | 45 | 85 | 85 | 95 | 105 | 75 | 100 | 590 |
 | **Testing** | 0 | 0 | 0 | 0 | 0 | 30 | 5 | 35 |
 | **Meetings** | 15 | 15 | 15 | 15 | 15 | 15 | 15 | 105 |
-| **GitHub Management** | 5 | 10 | 10 | 10 | 20 | 15 | 15 | 85 |
-| **Presentation** | 15 | 15 | 15 | 15 | 15 | 15 | 15 | 105 |
+| **GitHub Management** | 5 | 10 | 10 | 20 | 20 | 15 | 15 | 95 |
+| **Presentation** | 5 | 5 | 5 | 5 | 5 | 5 | 5 | 35 |
 | **Total** | **180** | **180** | **180** | **180** | **180** | **180** | **180** | **1260** |
 
 *Table 1. Expected working hours.*
@@ -85,12 +85,15 @@ The project milestones are:
 * **Planning and Requirements Analysis:** Weeks 1-6
 * **Design and Architecture:** Weeks 7-11
 
+## Gantt chart 3rd Semester
 
+![Gantt chart](images/Gantt_analyse.png)
 
-![Timeline](Timeline.png)
+*Figur.1* Gantt chart 3rd Semester (Phase I)
 
+![Gantt chart](images/Gantt_design.png)
 
-*Figure 1. Project timeline.*
+*Figur.2* Gantt chart 3rd Semester (Phase II)
 
 ---
 
@@ -142,6 +145,10 @@ Expenses estimated for the 11-week project duration (Table 3).
 The estimated total cost of developing the software product is:
 $$\text{Total Costs} = \text{Salary Costs} + \text{Other Costs}$$
 $$\text{Total Costs} = €38,700 + €20,485 = \mathbf{€59,185}$$
+
+![Gantt chart](images/Costs.png)
+
+*Figur.3* Project cost distribution 
 
 ---
 
