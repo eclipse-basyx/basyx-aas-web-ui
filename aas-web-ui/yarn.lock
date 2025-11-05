@@ -1736,10 +1736,10 @@ ansi-styles@^6.1.0:
   resolved "https://registry.yarnpkg.com/ansi-styles/-/ansi-styles-6.2.1.tgz#0e62320cf99c21afff3b3012192546aacbfb05c5"
   integrity sha512-bN798gFfQX+viw3R7yrGWRqnrN2oRkEkUjjl4JNn4E8GxxbjtG3FbrEIIY3l8/hrwUwIeCZvi4QuOTP4MErVug==
 
-apexcharts@^5.3.5:
-  version "5.3.5"
-  resolved "https://registry.yarnpkg.com/apexcharts/-/apexcharts-5.3.5.tgz#5297861fdc8585c26bec3605b2d62638cc226b8d"
-  integrity sha512-I04DY/WBZbJgJD2uixeV5EzyiL+J5LgKQXEu8rctqAwyRmKv44aDVeofJoLdTJe3ao4r2KEQfCgtVzXn6pqirg==
+apexcharts@^5.3.6:
+  version "5.3.6"
+  resolved "https://registry.yarnpkg.com/apexcharts/-/apexcharts-5.3.6.tgz#15742b69fc3357494ab751aa9bbf760a4e2f13f7"
+  integrity sha512-sVEPw+J0Gp0IHQabKu8cfdsxlfME0e36Wid7RIaPclGM2OUt+O7O4+6mfAmTUYhy5bDk8cNHzEhPfVtLCIXEJA==
   dependencies:
     "@svgdotjs/svg.draggable.js" "^3.0.4"
     "@svgdotjs/svg.filter.js" "^3.0.8"
