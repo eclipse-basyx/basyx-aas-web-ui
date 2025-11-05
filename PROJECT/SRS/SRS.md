@@ -4,24 +4,23 @@
 |---|---|---|---|
 |1.0|Luca Schmoll|04.11.2025|Ersterstellung der Grundstruktur|
 
----
 
-1. Zweck, Geltungsbereich und Referenzen
-    1. Zweck
-    2. Anwendungsbereich
-    3. Begrifflichkeiten und Abkürzungen
-2. Systemarchitektur
-3. Anwendungsfälle
-4. Funktionale Anforderungen
-    1. Daten und API Anforderungen
-    2. Frontend-Anforderungen
-5. Nicht-funktionale Anforderungen
-6. Externe Schnittstellen
-7. Datenmodell und Semantik
-8. Usability Konzept & Workflows
-9. Qualitätssicherung & Tests
-10. Build & Deployment-Vorgaben
-11. Dokumentation
+1. [Zweck, Geltungsbereich und Referenzen](#1-zweck-geltungsbereich-und-referenzen)
+    1. [Zweck](#11-zweck)
+    2. [Anwendungsbereich](#12-geltungsbereich)
+    3. [Begrifflichkeiten und Abkürzungen](#13-begrifflichkeiten-und-abkürzungen)
+2. [Systemarchitektur](#2-systemarchitektur)
+3. [Anwendungsfälle](#3-anwendungsfälle)
+4. [Funktionale Anforderungen](#4-funktionale-anforderungen-fr)
+    1. [Daten und API Anforderungen](#41-daten-und-api-anforderungen)
+    2. [Frontend-Anforderungen](#42-frontend-anforderungen)
+5. [Nicht-funktionale Anforderungen](#5-nicht-funktionale-anforderungen-nfr)
+6. [Externe Schnittstellen](#6-externe-schnittstellen)
+7. [Datenmodell und Semantik](#7-datenmodell-und-semantik)
+8. [Usability Konzept & Workflows](#8-usability-konzept--workflows)
+9. [Qualitätssicherung & Tests](#9-qualitätssicherung--tests)
+10. [Build & Deployment-Vorgaben](#10-build--deployment-vorgaben)
+11. [Dokumentation](#11-dokumentation)
 
 ---
 
