@@ -8,6 +8,8 @@ TIN24F, SWL Practice project 2025/2026
 
 *Supplier*: Team 6
 
+*Author*: Magnus Lörcher
+
 | **Position**     | **Name**        | **e-Mail**                         |
 |------------------|-----------------|------------------------------------|
 | Project Manager  | Nataliia Chubak | <inf24271@lehre.dhbw-stuttgart.de> |
