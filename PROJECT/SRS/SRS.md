@@ -70,6 +70,8 @@ graph LR
   Spec --> |spezifiziert|API
   API --- Templates
 ```
+<p align="center"> <i>Abbildung 1: Visuelle Übersicht des Projekts</i> </p>
+
 
 ### 1.3 Begrifflichkeiten und Abkürzungen
 |Abkürzung|Bedeutung|
@@ -109,6 +111,7 @@ Mapping --> SMRepo
 Mapping --> Registry
 Search --> Discovery
 ```
+<p align="center"> <i>Abbildung 2: Flow der API</i> </p>
 
 ## 3. Anwendungsfälle
 
@@ -181,7 +184,7 @@ sequenceDiagram
   API-->>Web: 200 OK (DPP-Daten)
   Web-->>User: Tabs rendern und Downloads
 ```
-
+<p align="center"> <i>Abbildung 3: Beispielhafter Durchlauf eines API-Calls</i> </p>
 
 ### UC05 Usability Konzept und Workflows definieren.
 |||
@@ -271,7 +274,7 @@ flowchart LR
   Tabs --> Preview[Preview/Download eingebetteter Dateien]
   Detail --> Share[Teilen/Deep‑Link]
 ```
-
+<p align="center"> <i>Abbildung 4: Kernworkflow des Projekts</i> </p>
 
 ## 9. Qualitätssicherung & Tests
 Die Qualitätssicherung für dieses Produkt muss mindestens folgendes umfassen:
@@ -293,7 +296,7 @@ Contract[Contract‑Tests DIN EN 18222]
   Performance[Leistungstests] --> Integration
   Unit[Unit‑Tests Mapping/Validation] --> |kontinuierlich|Unit[Unit‑Tests Mapping/Validation]
 ```
-
+<p align="center"> <i>Abbildung 5: Übersicht der Tests</i> </p>
 
 ## 10. Build & Deployment-Vorgaben
 |Umgebung|Vorgabe|Tooling|
