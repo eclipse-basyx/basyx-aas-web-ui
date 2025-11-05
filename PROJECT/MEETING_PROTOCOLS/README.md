@@ -1,9 +1,9 @@
 # Meeting Protocol - Team 6 BaSyx DPP API
 
 
-
 ## Table of Contents
-- [Meeting 28.10.2025 - Status team members](#status)
+- [Meeting 28.10.2025 - Status team members II](#status2)
+- [Meeting 28.10.2025 - Status team members I](#status)
 - [Meeting 22.10.2025 - Document Distribution and Jira/GitHub Tasks](#documentDistribution)
 - [Meeting 17.10.2025 - Discussion of Task Distribution](#discussionBriefing)
 - [Meeting 15.10.2025 - Task Distribution](#TaskDistribution)
@@ -11,7 +11,84 @@
 - [Meeting 30.09.2025 - Research](#research)
 - [Meeting 29.09.2025 - Foundations](#foundations)
 
-<a id="status">
+<a id="status2">
+
+## Meeting 04.11.2025 – Status team members II
+<table style="width:100%;border-collapse:collapse;">
+  <tr>
+    <td style="width:60%; vertical-align:top;">
+
+| No. | Topic | Responsibility | Time (min) |
+|-----|--------|----------------|-------------|
+| 1 |Documentation status|All|20 min|
+||||
+
+</td>
+<td style="width:40%; vertical-align:bottom; text-align:center;">
+
+**Location:** DHBW Stuttgart  
+**Date:** 04.11.2025  
+**Time:** 11:30 – 12:00 
+**Moderator:** Nataliia Chubak  
+**Minutes:** Fabian Steiß  
+**Type:** Weekly  
+</td>
+</tr>
+</table>
+
+---
+
+**Attendees:**  
+Noah Becker, Nataliia Chubak, Manuel Lutz, Magnus Lörcher, Luca Schmoll, Felix Schulz, Fabian Steiß  
+
+---
+
+### I. Goal  
+Team members share there documentation status and other discussions
+
+### II. Status  
+- CRS finished
+- SRS and SAS will be soon finished
+- Presentation in progress but needs more information from team members
+
+### III. Risks / Issues
+
+### IV. Discussion Points
+
+- Document status query
+  CRS from Magnus complete, feedback from Rentschler via Nataliia
+
+  SRS complete, wireframes have to be added
+
+  SAS will be finished soon
+
+
+- Presentation
+  Manuel waits for infos from team members
+
+
+
+
+### V. Future meeting
+The next meeting is planned for 04.11.2025.
+
+
+---
+
+### To-dos
+
+| **To-Do** | **Responsible Person(s)** | **Due Date** |
+|----------------------------------------------------|----------------------------|---------------|
+|Pushing needed Infos for presentation|all|10.11.2025|
+|CRS Feedback from Herr Rentschler |Nataliia Chubak|10.11.2025|
+|Questions regarding frontend to Herr Rentschler |Noah Becker|10.11.2025|
+---
+
+**Notes:**  
+
+---
+
+
 
 ## Meeting 28.10.2025 – Status team members
 <table style="width:100%;border-collapse:collapse;">
