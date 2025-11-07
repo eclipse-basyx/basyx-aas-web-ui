@@ -274,7 +274,7 @@ flowchart LR
   Tabs --> Preview[Preview/Download eingebetteter Dateien]
   Detail --> Share[Teilen/Deep‑Link]
 ```
-<p align="center"> <i>Abbildung 4: Kernworkflow des Projekts</i> </p>
+<p align="center"> <i>Abbildung 4: Workflow für das Suchen eines DPP</i> </p>
 
 ## 9. Qualitätssicherung & Tests
 Die Qualitätssicherung für dieses Produkt muss mindestens folgendes umfassen:
@@ -296,7 +296,7 @@ Contract[Contract‑Tests DIN EN 18222]
   Performance[Leistungstests] --> Integration
   Unit[Unit‑Tests Mapping/Validation] --> |kontinuierlich|Unit[Unit‑Tests Mapping/Validation]
 ```
-<p align="center"> <i>Abbildung 5: Übersicht der Tests</i> </p>
+<p align="center"> <i>Abbildung 5: Teststrategie</i> </p>
 
 ## 10. Build & Deployment-Vorgaben
 |Umgebung|Vorgabe|Tooling|
