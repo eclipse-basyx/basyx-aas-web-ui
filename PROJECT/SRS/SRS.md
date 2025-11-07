@@ -94,11 +94,11 @@ graph TB
 subgraph DPP_API_Service
 Router[HTTP Router /dpp/*]
 Mapping[Mapping Layer AAS Adapter]
-Search[Discovery Client + Filter]
+Search[AAS Environment API]
 Serializer[Serializer und JSON Schemas]
 end
 
-Router  --> Mapping --> Serializer
+Mapping --> Serializer
 Router --> Search
 
 AASRepo[(AAS Repository)]
@@ -106,9 +106,11 @@ SMRepo[(Submodel Repository)]
 Registry[(AAS Registry)]
 Discovery[(Discovery Service)]
 
-Mapping --> AASRepo
-Mapping --> SMRepo
-Mapping --> Registry
+Search --> Mapping
+
+Search --> AASRepo
+Search --> SMRepo
+Search --> Registry
 Search --> Discovery
 ```
 <p align="center"> <i>Abbildung 2: Flow der API</i> </p>
