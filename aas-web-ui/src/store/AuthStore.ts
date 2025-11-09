@@ -1,5 +1,16 @@
 import Keycloak from 'keycloak-js';
 import { defineStore } from 'pinia';
+import { useEnvStore } from '@/store/EnvironmentStore';
+import { base64Decode } from '@/utils/EncodeDecodeUtils';
+
+type UserData = {
+    username: string;
+    name?: string;
+    given_name?: string;
+    family_name?: string;
+    email?: string;
+    roles?: string[];
+};
 
 export const useAuthStore = defineStore('authStore', () => {
     // States
@@ -9,7 +20,8 @@ export const useAuthStore = defineStore('authStore', () => {
     const authEnabled = ref(false);
     const keycloak = ref(null as Keycloak | null);
     const refreshIntervalId = ref(undefined as number | undefined);
-    const username = ref('' as string | undefined);
+
+    const user = ref(null as UserData | null);
 
     // Getters
     const getToken = computed(() => token.value);
@@ -18,21 +30,30 @@ export const useAuthStore = defineStore('authStore', () => {
     const getAuthEnabled = computed(() => authEnabled.value);
     const getKeycloak = computed(() => keycloak.value);
     const getRefreshIntervalId = computed(() => refreshIntervalId.value);
-    const getUsername = computed(() => username.value);
+    const getUser = computed(() => user.value);
 
     // Initialize from localStorage on store creation
     function initializeFromStorage(): void {
         const storedToken = localStorage.getItem('auth_token');
         const storedRefreshToken = localStorage.getItem('auth_refresh_token');
         const storedAuthStatus = localStorage.getItem('auth_status');
-        const storedUsername = localStorage.getItem('auth_username');
 
         if (storedToken && storedAuthStatus === 'true') {
             token.value = storedToken;
             refreshToken.value = storedRefreshToken || undefined;
             authStatus.value = true;
             authEnabled.value = true;
-            username.value = storedUsername || undefined;
+
+            const accessTokenPayload = JSON.parse(base64Decode(storedToken.split('.')[1]));
+            const user = {
+                username: accessTokenPayload?.preferred_username,
+                name: accessTokenPayload?.name,
+                given_name: accessTokenPayload?.given_name,
+                family_name: accessTokenPayload?.family_name,
+                email: accessTokenPayload?.email,
+                roles: accessTokenPayload?.realm_access?.roles,
+            };
+            setUser(user);
         }
     }
 
@@ -41,8 +62,19 @@ export const useAuthStore = defineStore('authStore', () => {
         token.value = tokenValue;
         if (tokenValue) {
             localStorage.setItem('auth_token', tokenValue);
+            const accessTokenPayload = JSON.parse(base64Decode(tokenValue.split('.')[1]));
+            const user = {
+                username: accessTokenPayload?.preferred_username,
+                name: accessTokenPayload?.name,
+                given_name: accessTokenPayload?.given_name,
+                family_name: accessTokenPayload?.family_name,
+                email: accessTokenPayload?.email,
+                roles: accessTokenPayload?.realm_access?.roles,
+            };
+            setUser(user);
         } else {
             localStorage.removeItem('auth_token');
+            setUser(null);
         }
     }
 
@@ -87,13 +119,47 @@ export const useAuthStore = defineStore('authStore', () => {
         refreshIntervalId.value = refreshIntervalIdValue;
     }
 
-    function setUsername(usernameValue: string | undefined): void {
-        username.value = usernameValue;
-        if (usernameValue) {
-            localStorage.setItem('auth_username', usernameValue);
-        } else {
-            localStorage.removeItem('auth_username');
-        }
+    function setUser(userValue: UserData | null): void {
+        user.value = userValue || null;
+
+        const keycloak_roles_features = [
+            {
+                keycloakRole: 'basyx-aas-web-ui-feature-multiple-aas',
+                feature: 'SINGLE_AAS',
+                setFunction: 'setSingleAas',
+                setValue: 'false',
+            },
+            {
+                keycloakRole: 'basyx-aas-web-ui-feature-sm-viewer-editor',
+                feature: 'SM_VIEWER_EDITOR',
+                setFunction: 'setSmViewerEditor',
+                setValue: 'true',
+            },
+            {
+                keycloakRole: 'basyx-aas-web-ui-feature-allow-editing',
+                feature: 'ALLOW_EDITING',
+                setFunction: 'setAllowEditing',
+                setValue: 'true',
+            },
+            {
+                keycloakRole: 'basyx-aas-web-ui-feature-allow-uploading',
+                feature: 'ALLOW_UPLOADING',
+                setFunction: 'setAllowUploading',
+                setValue: 'true',
+            },
+        ];
+        const envStore = useEnvStore();
+
+        keycloak_roles_features.forEach((keycloak_roles_feature: any) => {
+            const key = keycloak_roles_feature.setFunction as keyof typeof envStore;
+            if (
+                userValue?.roles?.includes(keycloak_roles_feature.keycloakRole) &&
+                envStore &&
+                typeof envStore[key] === 'function'
+            ) {
+                envStore[key]('true');
+            }
+        });
     }
 
     // Initialize from localStorage when store is created
@@ -107,7 +173,7 @@ export const useAuthStore = defineStore('authStore', () => {
         getAuthEnabled,
         getKeycloak,
         getRefreshIntervalId,
-        getUsername,
+        getUser,
 
         // Actions
         setToken,
@@ -116,6 +182,6 @@ export const useAuthStore = defineStore('authStore', () => {
         setAuthEnabled,
         setKeycloak,
         setRefreshIntervalId,
-        setUsername,
+        setUser,
     };
 });

@@ -153,7 +153,25 @@ export const useEnvStore = defineStore('envStore', () => {
         return editorIdPrefix.value;
     });
 
+    // Actions
+    function setSingleAas(singleAasValue: string): void {
+        singleAas.value = singleAasValue;
+    }
+
+    function setSmViewerEditor(smViewerEditorValue: string): void {
+        smViewerEditor.value = smViewerEditorValue;
+    }
+
+    function setAllowEditing(allowEditingValue: string): void {
+        allowEditing.value = allowEditingValue.toString();
+    }
+
+    function setAllowUploading(allowUploadingValue: string): void {
+        allowUploading.value = allowUploadingValue.toString();
+    }
+
     return {
+        // Getters
         getEnvBasePath,
         getEnvLogoLightPath,
         getEnvLogoDarkPath,
@@ -184,5 +202,11 @@ export const useEnvStore = defineStore('envStore', () => {
         getBasicAuthUsername,
         getBasicAuthPassword,
         getEditorIdPrefix,
+
+        // Actions
+        setSingleAas,
+        setSmViewerEditor,
+        setAllowEditing,
+        setAllowUploading,
     };
 });
