@@ -122,44 +122,48 @@ export const useAuthStore = defineStore('authStore', () => {
     function setUser(userValue: UserData | null): void {
         user.value = userValue || null;
 
-        const keycloak_roles_features = [
-            {
-                keycloakRole: 'basyx-aas-web-ui-feature-multiple-aas',
-                feature: 'SINGLE_AAS',
-                setFunction: 'setSingleAas',
-                setValue: 'false',
-            },
-            {
-                keycloakRole: 'basyx-aas-web-ui-feature-sm-viewer-editor',
-                feature: 'SM_VIEWER_EDITOR',
-                setFunction: 'setSmViewerEditor',
-                setValue: 'true',
-            },
-            {
-                keycloakRole: 'basyx-aas-web-ui-feature-allow-editing',
-                feature: 'ALLOW_EDITING',
-                setFunction: 'setAllowEditing',
-                setValue: 'true',
-            },
-            {
-                keycloakRole: 'basyx-aas-web-ui-feature-allow-uploading',
-                feature: 'ALLOW_UPLOADING',
-                setFunction: 'setAllowUploading',
-                setValue: 'true',
-            },
-        ];
         const envStore = useEnvStore();
 
-        keycloak_roles_features.forEach((keycloak_roles_feature: any) => {
-            const key = keycloak_roles_feature.setFunction as keyof typeof envStore;
-            if (
-                userValue?.roles?.includes(keycloak_roles_feature.keycloakRole) &&
-                envStore &&
-                typeof envStore[key] === 'function'
-            ) {
-                envStore[key]('true');
-            }
-        });
+        if (envStore.getKeycloakFeatureControl) {
+            const keycloakFeatureControlRolePrefix = envStore.getKeycloakFeatureControlRolePrefix;
+            const keycloak_roles_features = [
+                {
+                    keycloakRole: keycloakFeatureControlRolePrefix + 'multiple-aas',
+                    feature: 'SINGLE_AAS',
+                    setFunction: 'setSingleAas',
+                    setValue: 'false',
+                },
+                {
+                    keycloakRole: keycloakFeatureControlRolePrefix + 'sm-viewer-editor',
+                    feature: 'SM_VIEWER_EDITOR',
+                    setFunction: 'setSmViewerEditor',
+                    setValue: 'true',
+                },
+                {
+                    keycloakRole: keycloakFeatureControlRolePrefix + 'allow-editing',
+                    feature: 'ALLOW_EDITING',
+                    setFunction: 'setAllowEditing',
+                    setValue: 'true',
+                },
+                {
+                    keycloakRole: keycloakFeatureControlRolePrefix + 'allow-uploading',
+                    feature: 'ALLOW_UPLOADING',
+                    setFunction: 'setAllowUploading',
+                    setValue: 'true',
+                },
+            ];
+
+            keycloak_roles_features.forEach((keycloak_roles_feature: any) => {
+                const key = keycloak_roles_feature.setFunction as keyof typeof envStore;
+                if (
+                    userValue?.roles?.includes(keycloak_roles_feature.keycloakRole) &&
+                    envStore &&
+                    typeof envStore[key] === 'function'
+                ) {
+                    envStore[key]('true');
+                }
+            });
+        }
     }
 
     // Initialize from localStorage when store is created

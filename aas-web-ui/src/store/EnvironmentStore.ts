@@ -59,6 +59,14 @@ export const useEnvStore = defineStore('envStore', () => {
     const keycloakClientId = ref(
         import.meta.env.VITE_KEYCLOAK_CLIENT_ID || (isProduction ? '/__KEYCLOAK_CLIENT_ID_PLACEHOLDER__/' : '')
     );
+    const keycloakFeatureControl = ref(
+        import.meta.env.VITE_KEYCLOAK_FEATURE_CONTROL ||
+            (isProduction ? '/__KEYCLOAK_FEATURE_CONTROL_PLACEHOLDER__/' : '')
+    );
+    const keycloakFeatureControlRolePrefix = ref(
+        import.meta.env.VITE_KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX ||
+            (isProduction ? '/__KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX_PLACEHOLDER__/' : '')
+    );
     const preconfiguredAuth = ref(
         import.meta.env.VITE_PRECONFIGURED_AUTH || (isProduction ? '/__PRECONFIGURED_AUTH_PLACEHOLDER__/' : '')
     );
@@ -120,6 +128,8 @@ export const useEnvStore = defineStore('envStore', () => {
     const getKeycloakUrl = computed(() => keycloakUrl.value);
     const getKeycloakRealm = computed(() => keycloakRealm.value);
     const getKeycloakClientId = computed(() => keycloakClientId.value);
+    const getKeycloakFeatureControl = computed(() => keycloakFeatureControl.value);
+    const getKeycloakFeatureControlRolePrefix = computed(() => keycloakFeatureControlRolePrefix.value);
     const getPreconfiguredAuth = computed(
         () => !Object.hasOwn(initialUrlQueryParameter.value, 'ignorePreConfAuth') && preconfiguredAuth.value === 'true'
     );
@@ -188,6 +198,8 @@ export const useEnvStore = defineStore('envStore', () => {
         getKeycloakUrl,
         getKeycloakRealm,
         getKeycloakClientId,
+        getKeycloakFeatureControl,
+        getKeycloakFeatureControlRolePrefix,
         getPreconfiguredAuth,
         getPreconfiguredAuthUsername,
         getPreconfiguredAuthPassword,
