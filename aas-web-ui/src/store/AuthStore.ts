@@ -3,7 +3,7 @@ import { defineStore } from 'pinia';
 import { useEnvStore } from '@/store/EnvironmentStore';
 import { getUserFromToken } from '@/utils/TokenUtil';
 
-type UserData = {
+export type UserData = {
     username: string;
     name?: string;
     given_name?: string;
@@ -119,7 +119,7 @@ export const useAuthStore = defineStore('authStore', () => {
         const envStore = useEnvStore();
 
         if (
-            envStore?.getKeycloakFeatureControl === true &&
+            envStore.getKeycloakFeatureControl === true &&
             userValue?.roles &&
             Array.isArray(userValue.roles) &&
             userValue.roles.length > 0

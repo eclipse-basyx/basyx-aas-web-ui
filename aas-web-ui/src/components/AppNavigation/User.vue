@@ -26,7 +26,7 @@
                     </template>
                 </v-list-item>
             </v-list>
-            <template v-if="isAuthEnabled" #actions>
+            <template #actions>
                 <v-icon size="small" class="ml-2"> mdi-lock-check </v-icon>
                 <span class="text-subtitleText text-subtitle-2">{{ authStatus }}</span>
                 <template v-if="allowLogout">
