@@ -1,7 +1,7 @@
 import Keycloak from 'keycloak-js';
 import { defineStore } from 'pinia';
 import { useEnvStore } from '@/store/EnvironmentStore';
-import { base64Decode } from '@/utils/EncodeDecodeUtils';
+import { getUserFromToken } from '@/utils/TokenUtil';
 
 type UserData = {
     username: string;
@@ -44,16 +44,15 @@ export const useAuthStore = defineStore('authStore', () => {
             authStatus.value = true;
             authEnabled.value = true;
 
-            const accessTokenPayload = JSON.parse(base64Decode(storedToken.split('.')[1]));
-            const user = {
-                username: accessTokenPayload?.preferred_username,
-                name: accessTokenPayload?.name,
-                given_name: accessTokenPayload?.given_name,
-                family_name: accessTokenPayload?.family_name,
-                email: accessTokenPayload?.email,
-                roles: accessTokenPayload?.realm_access?.roles,
-            };
-            setUser(user);
+            try {
+                setUser(getUserFromToken(storedToken));
+            } catch {
+                token.value = undefined;
+                refreshToken.value = undefined;
+                authStatus.value = false;
+                authEnabled.value = false;
+                setUser(null);
+            }
         }
     }
 
@@ -62,16 +61,11 @@ export const useAuthStore = defineStore('authStore', () => {
         token.value = tokenValue;
         if (tokenValue) {
             localStorage.setItem('auth_token', tokenValue);
-            const accessTokenPayload = JSON.parse(base64Decode(tokenValue.split('.')[1]));
-            const user = {
-                username: accessTokenPayload?.preferred_username,
-                name: accessTokenPayload?.name,
-                given_name: accessTokenPayload?.given_name,
-                family_name: accessTokenPayload?.family_name,
-                email: accessTokenPayload?.email,
-                roles: accessTokenPayload?.realm_access?.roles,
-            };
-            setUser(user);
+            try {
+                setUser(getUserFromToken(tokenValue));
+            } catch {
+                setUser(null);
+            }
         } else {
             localStorage.removeItem('auth_token');
             setUser(null);
@@ -124,7 +118,12 @@ export const useAuthStore = defineStore('authStore', () => {
 
         const envStore = useEnvStore();
 
-        if (envStore.getKeycloakFeatureControl) {
+        if (
+            envStore?.getKeycloakFeatureControl === true &&
+            userValue?.roles &&
+            Array.isArray(userValue.roles) &&
+            userValue.roles.length > 0
+        ) {
             const keycloakFeatureControlRolePrefix = envStore.getKeycloakFeatureControlRolePrefix;
             const keycloak_roles_features = [
                 {
@@ -169,10 +168,9 @@ export const useAuthStore = defineStore('authStore', () => {
                 const key = keycloak_roles_feature.setFunction as keyof typeof envStore;
                 if (
                     userValue?.roles?.includes(keycloak_roles_feature.keycloakRole) &&
-                    envStore &&
                     typeof envStore[key] === 'function'
                 ) {
-                    envStore[key]('true');
+                    envStore[key](keycloak_roles_feature.setValue);
                 }
             });
         }
