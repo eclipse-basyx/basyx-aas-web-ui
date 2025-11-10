@@ -184,6 +184,10 @@ export const useEnvStore = defineStore('envStore', () => {
         allowLogout.value = allowLogoutValue;
     }
 
+    function setEndpointConfigAvailable(endpointConfigAvailableValue: string): void {
+        endpointConfigAvailable.value = endpointConfigAvailableValue;
+    }
+
     return {
         // Getters
         getEnvBasePath,
@@ -225,5 +229,6 @@ export const useEnvStore = defineStore('envStore', () => {
         setAllowEditing,
         setAllowUploading,
         setAllowLogout,
+        setEndpointConfigAvailable,
     };
 });

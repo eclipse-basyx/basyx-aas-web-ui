@@ -157,6 +157,12 @@ export const useAuthStore = defineStore('authStore', () => {
                     setFunction: 'setAllowLogout',
                     setValue: 'true',
                 },
+                {
+                    keycloakRole: keycloakFeatureControlRolePrefix + 'endpoint-config-available',
+                    feature: 'ENDPOINT_CONFIG_AVAILABLE',
+                    setFunction: 'setEndpointConfigAvailable',
+                    setValue: 'true',
+                },
             ];
 
             keycloak_roles_features.forEach((keycloak_roles_feature: any) => {
