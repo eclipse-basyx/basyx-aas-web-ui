@@ -151,6 +151,12 @@ export const useAuthStore = defineStore('authStore', () => {
                     setFunction: 'setAllowUploading',
                     setValue: 'true',
                 },
+                {
+                    keycloakRole: keycloakFeatureControlRolePrefix + 'allow-logout',
+                    feature: 'ALLOW_LOGOUT',
+                    setFunction: 'setAllowLogout',
+                    setValue: 'true',
+                },
             ];
 
             keycloak_roles_features.forEach((keycloak_roles_feature: any) => {

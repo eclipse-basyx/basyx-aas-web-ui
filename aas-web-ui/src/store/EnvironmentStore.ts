@@ -173,11 +173,15 @@ export const useEnvStore = defineStore('envStore', () => {
     }
 
     function setAllowEditing(allowEditingValue: string): void {
-        allowEditing.value = allowEditingValue.toString();
+        allowEditing.value = allowEditingValue;
     }
 
     function setAllowUploading(allowUploadingValue: string): void {
-        allowUploading.value = allowUploadingValue.toString();
+        allowUploading.value = allowUploadingValue;
+    }
+
+    function setAllowLogout(allowLogoutValue: string): void {
+        allowLogout.value = allowLogoutValue;
     }
 
     return {
@@ -220,5 +224,6 @@ export const useEnvStore = defineStore('envStore', () => {
         setSmViewerEditor,
         setAllowEditing,
         setAllowUploading,
+        setAllowLogout,
     };
 });
