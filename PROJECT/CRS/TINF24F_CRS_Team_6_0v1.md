@@ -1,62 +1,32 @@
 # **CUSTOMER REQUIREMENTS SPECIFICATION**
 
-TIN24F, SWL Practice project 2025/2026
+## Projekt 6: API für den Digitalen Produktpass (DPP) im BaSyx Framework
 
-## ***BaSyx DPP API***
+### Customer
+|Name|Mail|
+|---|---|
+|Markus Rentschler|rentschler@lehre.dhbw-stuttgart.de|
+|Pawel Wojcik|pawel.wojcik@lehre.dhbw-stuttgart.de|
 
-*Customers*: Rentschler Markus, Pawel Wojcik
 
-*Supplier*: Team 6
+### Aufgabenstellung
+ > Die **DIN EN 18222** "Digitaler Produktpass -        Programmierschnittstellen (APIs) für das Lebenszyklusmanagement und die Durchsuchbarkeit vom Produktpass" beschreibt eine REST-API, welche im Rahmen dieser Aufgabe im BaSyx-Framework implementiert werden soll, sowohl Backend- als auch Frontendseitig. Die genaue Aufgabenstellung kann <a href="https://github.com/DHBW-TINF24F/.github/blob/main/project6_basyx_dpp_api.md">hier</a> gefunden werden.
 
-| **Position**     | **Name**        | **e-Mail**                         |
-|------------------|-----------------|------------------------------------|
-| Project Manager  | Nataliia Chubak | <inf24271@lehre.dhbw-stuttgart.de> |
-| Productmanager   | Luca Schmoll    | <inf24137@lehre.dhbw-stuttgart.de> |
-| Produktmanager   | Magnus Lörcher  | <inf24155@lehre.dhbw-stuttgart.de> |
-| Testmanager      | Manuel Lutz     | <inf24224@lehre.dhbw-stuttgart.de> |
-| Systemarchitekt  | Noah Becker     | <inf24038@lehre.dhbw-stuttgart.de> |
-| Technical writer | Fabian Steiß    | <inf24138@lehre.dhbw-stuttgart.de> |
-| UI-Designer      | Felix Schulz    | <inf24075@lehre.dhbw-stuttgart.de> |
+### Dokumenthistorie
 
-Address: Lerchenstraße 1
-
-70178 Stuttgart
+|Version|Autor|Datum|Kommentar|
+|---|---|---|---|
+|1.0| Magnus Lörcher |11.11.2025| Abgabe Semester 3|
 
 
 ## Table of contents
-
-1. [Introduction](#introduction)
-1. [Scope](#scope)
-1. [Business Processes](#business-processes---bp)
-    1. [BP01 API implementation and infrastructure setup](#bp01-api-implementation-and-infrastructure-setup)
-    1. [BP02 Usability concept and DPP viewer](#bp02-usability-concept-and-dpp-viewer)
-    1. [BP03 Hosting and documentation](#bp03-hosting-and-dokumentation)
-1. [Use cases](#use-cases)
-    1. [UC01 create / register DPP](#ucxx-createregister-dpp)
-    1. [UCxx read / search for DPP](#ucxx-readsearch)
-    1. [UCxx update DPP](#ucxx-update-dpps)
-    1. [UCxx DPP viewer](#ucxx-dpp-viewer)
-    1. [UCxx export DPPs](#ucxx-exporting-dpps)
-1. Functional Requirements
-    1. [FR OpenAPI-Specification](#fr-openapi-specification)
-    1. [FR Backend implementation](#fr-backend-implementation)
-    1. [FR DPP-viwer/frontend](#fr-dpp-viewerfrontend)
-    1. [FR Usability concept and workflow definition](#fr-usability-concept-and-workflow-definition)
-    1. [FR Creation of DPP examples](#fr-creation-of-dpp-examples)
-    1. [FR Documentation](#fr-documentation-creation)
-    1. [FR DPP search](#fr-dpp-search)
-1. None Functional Requirements
-    1. [NFR Performance](#nfr-performance)
-    1. [NFR Deployability](#nfr-deployability)
-    1. [NFR Hosting on demo server](#nfr-hosting-on-demoserver)
-    1. [NFR Code quality](#nfr-code-quality)
 
 ## Introduction
 This document defines and specifies the requirements for the implementation of a *REST-API* for the management of Digital Product Pass (DPP) acording to **DIN-EN 18222**. The implementation includes both a backend for the **REST-API** as well as a frontend for users to interact/manage DPP's with. The implementation will be built upon the BaSyx framework.\
 **DIN-EN 18222** describes an API for life cycle management as well as searching within the "Product Pass" which will be the foundation of the developed solution.\
 The project will be developed as an open source repo on GitHub and after the conclusion of the project merged in to the BaSyx repository.
 
-This CRS will be foundation for the folowing documents:\
+This CRS will be the foundation for the folowing documents:\
 Software Requirements Specification (SRS), every other design, test and implementation document.
 
 ## Scope
@@ -74,14 +44,6 @@ The main goal of this project is the implementation of a **REST-API** for the ma
 <br>
 
 ## Business Processes - BP
-### BP01: API implementation and infrastructure setup
-|||
-| --- | ---|
-| ID | BP01 |
-| Roles involved | System architect, Developer |
-| Result | Local development platform of the DPP REST-API backend|
-| Procedure | <ol> <li>Forking the BaSyx development repository.</li> <li>Understanding the BaSyx infrastructure.</li> <li>Creating the OpenAPI-specification.</li> <li>Implementing the backend API for the DPP </li></ol>|
-| Checkpoints | <ul><li>Creation of the OpenAPI-specification.</li><li>Successfull local deployment.</li><li>Finish the REST-API.</li></ul>|
 
 ### BP02: Usability concept and DPP-viewer
 
@@ -137,11 +99,11 @@ The main goal of this project is the implementation of a **REST-API** for the ma
 | Result| The user can manage the lifecycle of an existing DPP|
 
 
-### UC04 DPP viewer
+### UC04 display DPP information
 |||
 |---|---|
 | ID | UC04|
-| Description| Graphical user interface for the user to interact with to manage their DPPs. Abstraction layer of the backend API|
+| Description| The graphical user interface allows the user to interact with and manage their DPPs. Abstraction layer of the backend API|
 | Roles involved||
 | Prerequisit| DPP backend API is implemented (at least partialy)|
 | Procedure| Implement a coherent and intuitive UI to provide an abstraction layer for the DPP backend. All functionality of the backend is covered in the frontend.|
@@ -167,17 +129,12 @@ The main goal of this project is the implementation of a **REST-API** for the ma
 | ID | FR01|
 | Description| The REST-API for the Dpp is described in an OPEN-API-Specification based on the **DIN-EN 18222** |
 
-### FR02 Norm conformaty
+### FR02 Norm conformity
 |||
 |---|---|
 | ID | FR02 |
 | Description| The REST-API has to implement all endpoints and operations described in **DIN-EN 18222**|
 
-### FR03 Backend implementation
-|||
-|---|---|
-| ID | FR02|
-| Description| Every DPP action described by **DIN-en 18222** is implemented in the DPP backend. This can either be a mapping to an existing AAS API call or an implementation of new functionality.|
 
 ### FR04 DPP search
 |||
@@ -204,28 +161,20 @@ The main goal of this project is the implementation of a **REST-API** for the ma
 | ID | FR03|
 | Description| A web based frontend where users can use the REST-API backend for their Dpp lifecycle management|
 
-### FR07 Usability concept and workflow definition
+## Nonfunctional Requirements
+
+### NFR07 Usability concept and workflow definition
 |||
 |---|---|
 | ID | FR04|
 | Description| A usability concept and workflows for all possible user interactions in the Dpp-viewer are defined to enshure optimal user guidance|
 
 
-### FR08 Documentation creation
+### NFR08 Documentation creation
 |||
 |---|---|
 | ID | FR06|
 | Description| The project documentation allows future users or developers to continue the project. Every importand development step is documented. A user documentation is created to allow users to setup the DPP lifecycle management|
-
-### FR09 Locale build chain
-|||
-|---|---|
-| ID | FR09|
-| Description| The development build chain for BaSyx is setup and can be used to develop, test and deplay changes.|
-
-
-## Nonfunctional Requirements
-
 
 ### NFR Performance
 |||
@@ -250,3 +199,10 @@ The main goal of this project is the implementation of a **REST-API** for the ma
 |---|---|
 | ID | NFR04|
 | Description| The development process is documented and reviewd regularly to enshure adherence to best practices|
+
+
+## 10. Quellen & Referenzen
+|NR.|Referenz|Titel|Version|Beschreibung|
+|---|---|---|---|---|
+|1|DIN EN 18222|Digital Product Passport - Application Programming Interfaces (APIs) for the product passport lifecycle management and searchability|2025|Dokument, dass die Anforderungen an eine API für den Digitalen Produktpass enthält.|
+|2|Aufgabenstellung| Aufgabenstellung Team 6|2025||
