@@ -19,13 +19,13 @@
 ### Team 6
 | **Name** | **e-Mail** | **Position** |
 | :--- | :--- | :--- |
-|  Nataliia Chubak | `<inf24271@lehre.dhbw-stuttgart.de>` |Project Manager |
-|  Luca Schmoll | `<inf24137@lehre.dhbw-stuttgart.de>` |Product Manager |
-|  Magnus Lörcher | `<inf24155@lehre.dhbw-stuttgart.de>` |Product Manager |
-| Manuel Lutz | `<inf24224@lehre.dhbw-stuttgart.de>` |Test Manager | 
-|  Noah Becker | `<inf24038@lehre.dhbw-stuttgart.de>` |System Architect |
-|  Fabian Steiß | `<inf24138@lehre.dhbw-stuttgart.de>` |Technical Writer |
-|  Felix Schulz | `<inf24075@lehre.dhbw-stuttgart.de>` |UI-Designer |
+|  Nataliia Chubak | <inf24271@lehre.dhbw-stuttgart.de>|Project Manager |
+|  Luca Schmoll | <inf24137@lehre.dhbw-stuttgart.de> |Product Manager |
+|  Magnus Lörcher | <inf24155@lehre.dhbw-stuttgart.de>|Product Manager |
+| Manuel Lutz |<inf24224@lehre.dhbw-stuttgart.de> |Test Manager | 
+|  Noah Becker | <inf24038@lehre.dhbw-stuttgart.de> |System Architect |
+|  Fabian Steiß | <inf24138@lehre.dhbw-stuttgart.de> |Technical Writer |
+|  Felix Schulz |<inf24075@lehre.dhbw-stuttgart.de> |UI-Designer |
 
 ---
 
