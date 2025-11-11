@@ -8,7 +8,7 @@ import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { downloadFile } from '@/utils/generalUtils';
 import { stripLastCharacter } from '@/utils/StringUtils';
 
-export function useAASRepositoryClient() {
+export function useAASRepositoryClient(useSecondaryRepo?: boolean) {
     // Stores
     const navigationStore = useNavigationStore();
 
@@ -19,9 +19,25 @@ export function useAASRepositoryClient() {
     const endpointPath = '/shells';
 
     // Computed Properties
-    const aasRepositoryUrl = computed(() => navigationStore.getAASRepoURL);
+    let aasRepositoryUrl = computed(() => navigationStore.getAASRepoURL);
+    let otherAasRepositoryUrl = computed(() => navigationStore.getSecondaryAASRepoURL);
+    if (useSecondaryRepo) {
+        aasRepositoryUrl = computed(() => navigationStore.getSecondaryAASRepoURL);
+        otherAasRepositoryUrl = computed(() => navigationStore.getAASRepoURL);
+    }
+
     const uploadURL = computed(() => {
         let aasRepoUrl = aasRepositoryUrl.value.trim();
+        if (aasRepoUrl === '') return '';
+        if (aasRepoUrl.endsWith('/')) aasRepoUrl = stripLastCharacter(aasRepoUrl);
+
+        // remove '/shells' AAS Repository URL and add '/upload' to construct the upload URL
+        // TODO: This is a workaround, as the AAS Repository does not provide an upload endpoint but rather the AAS Environment. This should be changed in the future.
+        return aasRepoUrl.replace(endpointPath, '') + '/upload';
+    });
+
+    const otherUploadURL = computed(() => {
+        let aasRepoUrl = otherAasRepositoryUrl.value.trim();
         if (aasRepoUrl === '') return '';
         if (aasRepoUrl.endsWith('/')) aasRepoUrl = stripLastCharacter(aasRepoUrl);
 
@@ -565,5 +581,6 @@ export function useAASRepositoryClient() {
         getSubmodelRefs,
         getSubmodelRefsById,
         deleteSubmodelRef,
+        otherUploadURL,
     };
 }

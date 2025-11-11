@@ -10,6 +10,7 @@ import { useRouteHandling } from '@/composables/routeHandling';
 import AASEditor from '@/pages/AASEditor.vue';
 import AASSubmodelViewer from '@/pages/AASSubmodelViewer.vue';
 import AASViewer from '@/pages/AASViewer.vue';
+import AASCommander from '@/pages/AASCommander.vue';
 import About from '@/pages/About.vue';
 import Page404 from '@/pages/Page404.vue';
 import SMEditor from '@/pages/SMEditor.vue';
@@ -41,6 +42,12 @@ const staticRoutes: Array<RouteRecordRaw> = [
         name: 'AASSubmodelViewer',
         component: AASSubmodelViewer,
         meta: { name: 'AAS Submodel Viewer', subtitle: 'Visualize Submodels of AAS' },
+    },
+    {
+        path: '/aascommander',
+        name: 'AASCommander',
+        component: AASCommander,
+        meta: { name: 'AAS Commander', subtitle: 'Norton\'s Way of Managing AAS' },
     },
     {
         path: '/smviewer',
@@ -143,6 +150,7 @@ export async function createAppRouter(): Promise<Router> {
         'AASEditor',
         'AASViewer',
         'AASSubmodelViewer',
+        'AASCommander',
         'SMEditor',
         'SMViewer',
         'Visualization',
@@ -158,6 +166,7 @@ export async function createAppRouter(): Promise<Router> {
         'AASEditor', // just desktop
         'AASViewer', // just desktop
         'AASSubmodelViewer', // just desktop
+        'AASCommander',
 
         'AASList', // just mobile
         'SubmodelList', // just mobile
@@ -168,6 +177,7 @@ export async function createAppRouter(): Promise<Router> {
         'AASEditor', // just desktop
         'AASViewer', // just desktop
         'AASSubmodelViewer', // just desktop
+        'AASCommander',
         'SMEditor', // just desktop
         'SMViewer', // just desktop
 

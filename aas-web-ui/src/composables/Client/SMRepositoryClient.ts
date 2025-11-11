@@ -7,7 +7,7 @@ import { useNavigationStore } from '@/store/NavigationStore';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { stripLastCharacter } from '@/utils/StringUtils';
 
-export function useSMRepositoryClient() {
+export function useSMRepositoryClient(useSecondaryRepo?: boolean) {
     // Stores
     const navigationStore = useNavigationStore();
 
@@ -18,7 +18,10 @@ export function useSMRepositoryClient() {
     const endpointPath = '/submodels';
 
     // Computed Properties
-    const submodelRepoUrl = computed(() => navigationStore.getSubmodelRepoURL);
+    let submodelRepoUrl = computed(() => navigationStore.getSubmodelRepoURL);
+    if (useSecondaryRepo) {
+        submodelRepoUrl = computed(() => navigationStore.getSecondarySubmodelRepoURL);
+    }
 
     /**
      * Fetches a list of all available Submodels (SMs).

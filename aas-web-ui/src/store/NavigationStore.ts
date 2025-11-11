@@ -117,8 +117,18 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const getAASDiscoveryURL = computed(() => AASDiscoveryURL.value);
     const getAASRegistryURL = computed(() => AASRegistryURL.value);
     const getSubmodelRegistryURL = computed(() => SubmodelRegistryURL.value);
-    const getAASRepoURL = computed(() => AASRepoURL.value);
-    const getSubmodelRepoURL = computed(() => SubmodelRepoURL.value);
+    const getAASRepoURL = computed(() => {
+        return getUrlByIndex(AASRepoURL.value, 0);
+    });
+    const getSecondaryAASRepoURL = computed(() => {
+        return getUrlByIndex(AASRepoURL.value, 1);
+    });
+    const getSubmodelRepoURL = computed(() => {
+        return getUrlByIndex(SubmodelRepoURL.value, 0);
+    });
+    const getSecondarySubmodelRepoURL = computed(() => {
+        return getUrlByIndex(SubmodelRepoURL.value, 1);
+    });
     const getConceptDescriptionRepoURL = computed(() => ConceptDescriptionRepoURL.value);
     const getSnackbar = computed(() => Snackbar.value);
     const getAutoSync = computed(() => autoSync.value);
@@ -132,6 +142,14 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const getUrlQuery = computed(() => urlQuery.value);
     const getModuleRoutes = computed(() => moduleRoutes.value);
     const getBasyxComponents = computed(() => basyxComponents);
+
+    function getUrlByIndex(urls: string, index: number): string {
+        const urlsArray = urls.toString().split(',');
+        if (urlsArray.length > index) {
+            return urlsArray[index];
+        }
+        return '';
+    }
 
     // Actions
     function dispatchDrawerState(dispatchedDrawerState: boolean): void {
@@ -268,25 +286,71 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         const basyxComponent = basyxComponents[componentKey];
         if (basyxComponent.url && basyxComponent.url.trim() !== '') {
             basyxComponent.loading = true;
-            let basyxComponentURL = basyxComponent.url;
-            if (basyxComponentURL.endsWith('/')) basyxComponentURL = stripLastCharacter(basyxComponentURL);
+            const basyxComponentURLs = basyxComponent.url.split(',');
+            for (let i = 0; i < basyxComponentURLs.length; i++) {
+                let basyxComponentURL = getUrlByIndex(basyxComponent.url, i);
+                if (basyxComponentURL.endsWith('/')) basyxComponentURL = stripLastCharacter(basyxComponentURL);
+                await connectThisComponent(componentKey, basyxComponentURL);
+            }
+        } else {
+            basyxComponent.connected = false;
+            console.warn(`Repository URL for ${componentKey} is not defined or empty.`);
+        }
+    }
 
-            const context = `Connecting to ${basyxComponent.label}`;
-            let disableMessage = false;
+    async function connectThisComponent(
+        componentKey: keyof typeof basyxComponents,
+        basyxComponentURL: string
+    ): Promise<void> {
+        const basyxComponent = basyxComponents[componentKey];
+        const context = `Connecting to ${basyxComponent.label}`;
+        let disableMessage = false;
 
-            try {
-                // First attemp to connect to components via `/description` endpoint
-                let path = basyxComponentURL;
+        try {
+            // First attemp to connect to components via `/description` endpoint
+            let path = basyxComponentURL;
+            if (path.endsWith('/')) path = stripLastCharacter(path); // Strip ending slash
+
+            if (basyxComponent.pathCheck) path = path.replace(basyxComponent.pathCheck, ''); // Remove path check term if it exists in the URL
+
+            if (path.endsWith('/')) path = stripLastCharacter(path); // Strip ending slash
+
+            path += '/description';
+
+            disableMessage = true;
+
+            const response = await getRequest(path, context, disableMessage);
+            basyxComponent.loading = false;
+
+            if (response.success) {
+                // Dispatch to the navigation store
+                dispatchComponentURL(componentKey, basyxComponent.url);
+
+                // Save to localStorage if endpoint config is available
+                if (endpointConfigAvailable.value) {
+                    // console.log(`Saving ${repoKey} URL to localStorage:`, repo.url);
+                    window.localStorage.setItem(componentKey + 'URL', basyxComponent.url);
+                }
+
+                // Update the connected status
+                basyxComponent.connected = true;
+            } else {
+                // If connect to components via `/description`fails, second attempt to connect via main endpoints
+                const lastPath = path;
+                path = basyxComponentURL;
+                console.warn(context + ' (' + lastPath + ') failed!', 'Try to connect to main endpoint (' + path + ')');
                 if (path.endsWith('/')) path = stripLastCharacter(path); // Strip ending slash
 
-                if (basyxComponent.pathCheck) path = path.replace(basyxComponent.pathCheck, ''); // Remove path check term if it exists in the URL
+                // Append path check term if it exists and not already appended
+                if (basyxComponent.pathCheck && !path.endsWith(basyxComponent.pathCheck))
+                    path += basyxComponent.pathCheck;
 
-                if (path.endsWith('/')) path = stripLastCharacter(path); // Strip ending slash
+                // Append additional parameters if any
+                if (basyxComponent.additionalParams) {
+                    path += basyxComponent.additionalParams;
+                }
 
-                path += '/description';
-
-                disableMessage = true;
-
+                disableMessage = false;
                 const response = await getRequest(path, context, disableMessage);
                 basyxComponent.loading = false;
 
@@ -303,75 +367,36 @@ export const useNavigationStore = defineStore('navigationStore', () => {
                     // Update the connected status
                     basyxComponent.connected = true;
                 } else {
-                    // If connect to components via `/description`fails, second attempt to connect via main endpoints
-                    const lastPath = path;
-                    path = basyxComponentURL;
-                    console.warn(
-                        context + ' (' + lastPath + ') failed!',
-                        'Try to connect to main endpoint (' + path + ')'
-                    );
-                    if (path.endsWith('/')) path = stripLastCharacter(path); // Strip ending slash
+                    console.warn(context + ' (' + path + ') failed!');
 
-                    // Append path check term if it exists and not already appended
-                    if (basyxComponent.pathCheck && !path.endsWith(basyxComponent.pathCheck))
-                        path += basyxComponent.pathCheck;
+                    // Clear the URL in the navigation store
+                    dispatchComponentURL(componentKey, '');
 
-                    // Append additional parameters if any
-                    if (basyxComponent.additionalParams) {
-                        path += basyxComponent.additionalParams;
+                    // Remove from localStorage if endpoint config is available
+                    if (endpointConfigAvailable.value) {
+                        // console.log(`Removing ${repoKey} URL from localStorage:`, repo.url);
+                        window.localStorage.removeItem(componentKey + 'URL');
                     }
 
-                    disableMessage = false;
-                    const response = await getRequest(path, context, disableMessage);
-                    basyxComponent.loading = false;
-
-                    if (response.success) {
-                        // Dispatch to the navigation store
-                        dispatchComponentURL(componentKey, basyxComponent.url);
-
-                        // Save to localStorage if endpoint config is available
-                        if (endpointConfigAvailable.value) {
-                            // console.log(`Saving ${repoKey} URL to localStorage:`, repo.url);
-                            window.localStorage.setItem(componentKey + 'URL', basyxComponent.url);
-                        }
-
-                        // Update the connected status
-                        basyxComponent.connected = true;
-                    } else {
-                        console.warn(context + ' (' + path + ') failed!');
-
-                        // Clear the URL in the navigation store
-                        dispatchComponentURL(componentKey, '');
-
-                        // Remove from localStorage if endpoint config is available
-                        if (endpointConfigAvailable.value) {
-                            // console.log(`Removing ${repoKey} URL from localStorage:`, repo.url);
-                            window.localStorage.removeItem(componentKey + 'URL');
-                        }
-
-                        // Update the connected status
-                        basyxComponent.connected = false;
-                    }
+                    // Update the connected status
+                    basyxComponent.connected = false;
                 }
-            } catch (error) {
-                basyxComponent.loading = false;
-                console.error(`Error connecting to ${basyxComponent.label}:`, error);
-
-                // Clear the URL in the navigation store
-                dispatchComponentURL(componentKey, '');
-
-                // Remove from localStorage if endpoint config is available
-                if (endpointConfigAvailable.value) {
-                    // console.log(`Removing ${repoKey} URL from localStorage:`, repo.url);
-                    window.localStorage.removeItem(componentKey + 'URL');
-                }
-
-                // Update the connected status
-                basyxComponent.connected = false;
             }
-        } else {
+        } catch (error) {
+            basyxComponent.loading = false;
+            console.error(`Error connecting to ${basyxComponent.label}:`, error);
+
+            // Clear the URL in the navigation store
+            dispatchComponentURL(componentKey, '');
+
+            // Remove from localStorage if endpoint config is available
+            if (endpointConfigAvailable.value) {
+                // console.log(`Removing ${repoKey} URL from localStorage:`, repo.url);
+                window.localStorage.removeItem(componentKey + 'URL');
+            }
+
+            // Update the connected status
             basyxComponent.connected = false;
-            console.warn(`Repository URL for ${componentKey} is not defined or empty.`);
         }
     }
 
@@ -382,7 +407,9 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         getAASRegistryURL,
         getSubmodelRegistryURL,
         getAASRepoURL,
+        getSecondaryAASRepoURL,
         getSubmodelRepoURL,
+        getSecondarySubmodelRepoURL,
         getConceptDescriptionRepoURL,
         getSnackbar,
         getAutoSync,

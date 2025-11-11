@@ -2,12 +2,12 @@ import { useSMEHandling } from '@/composables/AAS/SMEHandling';
 import { useSMHandling } from '@/composables/AAS/SMHandling';
 import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
-import { useAASStore } from '@/store/AASDataStore';
+import { useAASStore, useAASStoreCmd } from '@/store/AASDataStore';
 import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 import { extractId as extractIdFromReference } from '@/utils/AAS/ReferenceUtil';
 import { formatDate } from '@/utils/DateUtils';
 
-export function useAASHandling() {
+export function useAASHandling(forCommander?: boolean, useSecondaryRepo?: boolean) {
     // Composables
     const {
         fetchAasDescriptorById: fetchAasDescriptorByIdFromRegistry,
@@ -20,12 +20,17 @@ export function useAASHandling() {
         getAasEndpointById: getAasEndpointByIdFromRepo,
         aasIsAvailable: aasIsAvailableInRepo,
         getSubmodelRefs: getSubmodelRefsFromRepo,
-    } = useAASRepositoryClient();
+    } = useAASRepositoryClient(useSecondaryRepo);
     const { fetchSmDescriptor, fetchSmById } = useSMHandling();
     const { getSmIdOfSmePath } = useSMEHandling();
 
     // Stores
-    const aasStore = useAASStore();
+    let aasStore = undefined;
+    if (forCommander) {
+        aasStore = useAASStoreCmd();
+    } else {
+        aasStore = useAASStore();
+    }
 
     /**
      * Fetches an Asset Administration Shell (AAS) by the provided AAS endpoint
