@@ -9,8 +9,10 @@
 |Pawel Wojcik|pawel.wojcik@lehre.dhbw-stuttgart.de|
 
 
-### Aufgabenstellung
- > Die **DIN EN 18222** "Digitaler Produktpass -        Programmierschnittstellen (APIs) für das Lebenszyklusmanagement und die Durchsuchbarkeit vom Produktpass" beschreibt eine REST-API, welche im Rahmen dieser Aufgabe im BaSyx-Framework implementiert werden soll, sowohl Backend- als auch Frontendseitig. Die genaue Aufgabenstellung kann <a href="https://github.com/DHBW-TINF24F/.github/blob/main/project6_basyx_dpp_api.md">hier</a> gefunden werden.
+### Task specification
+ > The **DIN-EN 18222** "Digital Product Passport - Application Programming
+Interfaces (APIs) for the product passport lifecycle
+management and searchability" describes a REST-API which will be implemented in the BaSyx-Framework back- and frontend. The task specification is available <a href="https://github.com/DHBW-TINF24F/.github/blob/main/project6_basyx_dpp_api.md">here</a>.
 
 ### Dokumenthistorie
 
@@ -192,7 +194,7 @@ The main goal of this project is the implementation of a **REST-API** for the ma
 |||
 |---|---|
 | ID | NFR03|
-| Description| The project is hosted on a publically accessible demo server for presentation, testing and development|
+| Description| The project is hosted on a publically accessible demo server for presentation, testing and development. Expanded in [xx]|
 
 ### NFR Code quality
 |||
@@ -200,9 +202,15 @@ The main goal of this project is the implementation of a **REST-API** for the ma
 | ID | NFR04|
 | Description| The development process is documented and reviewd regularly to enshure adherence to best practices|
 
+## 10. Build & Deployment-Vorgaben
+|Environment|Requirement|Tooling|
+|---|---|---|
+|Lokal (Dev)|Isolated development environment for the BaSyx-Stack.|Docker-Compose File|
+|Demo‑Server|Publically hosted instance of the project|Docker-Compose File|
+|Konfiguration|Easily changable configuration parameters (Database link, Password, etc.)|.env File|
 
 ## 10. Quellen & Referenzen
-|NR.|Referenz|Titel|Version|Beschreibung|
-|---|---|---|---|---|
+|NR.|Referenz|Titel|Version|
+|---|---|---|---|
 |1|DIN EN 18222|Digital Product Passport - Application Programming Interfaces (APIs) for the product passport lifecycle management and searchability|2025|Dokument, dass die Anforderungen an eine API für den Digitalen Produktpass enthält.|
 |2|Aufgabenstellung| Aufgabenstellung Team 6|2025||
