@@ -14,21 +14,7 @@
 Interfaces (APIs) for the product passport lifecycle
 management and searchability" describes a REST-API which will be implemented in the BaSyx-Framework back- and frontend. The task specification is available <a href="https://github.com/DHBW-TINF24F/.github/blob/main/project6_basyx_dpp_api.md">here</a>.
 
-<<<<<<< HEAD:PROJECT/CRS/crs.md
 ### Dokumenthistorie
-=======
-*Author*: Magnus Lörcher
-
-| **Position**     | **Name**        | **e-Mail**                         |
-|------------------|-----------------|------------------------------------|
-| Project Manager  | Nataliia Chubak | <inf24271@lehre.dhbw-stuttgart.de> |
-| Productmanager   | Luca Schmoll    | <inf24137@lehre.dhbw-stuttgart.de> |
-| Produktmanager   | Magnus Lörcher  | <inf24155@lehre.dhbw-stuttgart.de> |
-| Testmanager      | Manuel Lutz     | <inf24224@lehre.dhbw-stuttgart.de> |
-| Systemarchitekt  | Noah Becker     | <inf24038@lehre.dhbw-stuttgart.de> |
-| Technical writer | Fabian Steiß    | <inf24138@lehre.dhbw-stuttgart.de> |
-| UI-Designer      | Felix Schulz    | <inf24075@lehre.dhbw-stuttgart.de> |
->>>>>>> 264862e6ac2ef3c97458dae2cfb2f182e6b43a28:PROJECT/CRS/TINF24F_CRS_Team_6_0v1.md
 
 |Version|Autor|Datum|Kommentar|
 |---|---|---|---|
@@ -215,7 +201,6 @@ The main goal of this project is the implementation of a **REST-API** for the ma
 |---|---|
 | ID | NFR04|
 | Description| The development process is documented and reviewd regularly to enshure adherence to best practices|
-<<<<<<< HEAD:PROJECT/CRS/crs.md
 
 ## 10. Build & Deployment-Vorgaben
 |Environment|Requirement|Tooling|
@@ -229,5 +214,3 @@ The main goal of this project is the implementation of a **REST-API** for the ma
 |---|---|---|---|
 |1|DIN EN 18222|Digital Product Passport - Application Programming Interfaces (APIs) for the product passport lifecycle management and searchability|2025|Dokument, dass die Anforderungen an eine API für den Digitalen Produktpass enthält.|
 |2|Aufgabenstellung| Aufgabenstellung Team 6|2025||
-=======
->>>>>>> 264862e6ac2ef3c97458dae2cfb2f182e6b43a28:PROJECT/CRS/TINF24F_CRS_Team_6_0v1.md
