@@ -88,12 +88,10 @@ Ideally, we would also add a new entry in the BaSyx UI under the “AAS SM Visua
 - [x] Development environment
 - [x] Issue tracker
 - [x] GitHub Wiki
-- [ ] Project planning with projects feature
 - [ ] Documents
     - [x] Business sase
-    - [ ] Customer request specifications
-    - [ ] Software requirements specifications
-    - [ ] Software requirements specifications
+    - [x] Customer request specifications
+    - [x] Software requirements specifications
     - [x] Project management
     - [ ] Meeting minutes
     - [ ] Presentation

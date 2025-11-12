@@ -1,31 +1,35 @@
-# PROJECT STRUCTURE PLAN: BaSyx DPP API
+# Project structure plan: BaSyx DPP API
 
-**TIN24F, SWL Practice project 2025/2026**
+## Project 6: API for the Digital Product Passport (DPP) in the BaSyx Framework
 
-| | |
-| :--- | :--- |
-| **Author:** | Nataliia Chubak |
-| **Project:** | BaSyx DPP API |
-| **Clients:** | Rentschler Markus, Pawel Wojcik |
-| **Address:** | Lerchenstraße 1, 70178 Stuttgart |
+### Customer
+|Name|Mail|
+|---|---|
+|Markus Rentschler|rentschler@lehre.dhbw-stuttgart.de|
+|Pawel Wojcik|pawel.wojcik@lehre.dhbw-stuttgart.de|
 
 ---
 
-## Team 6: 
+### Definition of tasks
+ > **DIN EN 18222** “Digital product passport – Application programming interfaces (APIs) for product passport lifecycle management and searchability” describes a REST API that is to be implemented in the BaSyx framework as part of this task, both on the backend and frontend sides. The exact task can be found <a href="https://github.com/DHBW-TINF24F/.github/blob/main/project6_basyx_dpp_api.md">here</a>.
 
-| **Position** | **Name** | **e-Mail** |
+
+---
+
+### Team 6
+| **Name** | **e-Mail** | **Position** |
 | :--- | :--- | :--- |
-| Project Manager | Nataliia Chubak | `<inf24271@lehre.dhbw-stuttgart.de>` |
-| Product Manager | Luca Schmoll | `<inf24137@lehre.dhbw-stuttgart.de>` |
-| Product Manager | Magnus Lörcher | `<inf24155@lehre.dhbw-stuttgart.de>` |
-| Test Manager | Manuel Lutz | `<inf24224@lehre.dhbw-stuttgart.de>` |
-| System Architect | Noah Becker | `<inf24038@lehre.dhbw-stuttgart.de>` |
-| Technical Writer | Fabian Steiß | `<inf24138@lehre.dhbw-stuttgart.de>` |
-| UI-Designer | Felix Schulz | `<inf24075@lehre.dhbw-stuttgart.de>` |
+|  Nataliia Chubak | <inf24271@lehre.dhbw-stuttgart.de>|Project Manager |
+|  Luca Schmoll | <inf24137@lehre.dhbw-stuttgart.de> |Product Manager |
+|  Magnus Lörcher | <inf24155@lehre.dhbw-stuttgart.de>|Product Manager |
+| Manuel Lutz |<inf24224@lehre.dhbw-stuttgart.de> |Test Manager | 
+|  Noah Becker | <inf24038@lehre.dhbw-stuttgart.de> |System Architect |
+|  Fabian Steiß | <inf24138@lehre.dhbw-stuttgart.de> |Technical Writer |
+|  Felix Schulz |<inf24075@lehre.dhbw-stuttgart.de> |UI-Designer |
 
 ---
 
-## Version Control
+### Version Control
 
 | **Version** | **Date** | **Author** | **Comment** |
 | :--- | :--- | :--- | :--- |
@@ -39,42 +43,39 @@
 
 ## Table of Contents
 
-1.  [Project Assignment](#project-assignment)
-2.  [Project Context](#project-context)
-3.  [Project Organisation](#project-organisation)
-4.  [Milestones and delivarebles](#milestones-and-deliverables)
-5.  [Gantt chart 3rd Semester](#gantt-chart-3rd-semester)
-6.  [Risks](#risks)
-7.  [Soft- and Hardware requirements](#soft--and-hardware-requirements)
-8.  [Communication and reporting](#communication-and-reporting)
-9.  [End of project](#end-of-project)
+1.  [Project Assignment](#1-project-assignment)
+2.  [Project Context](#2-project-context)
+3.  [Stakeholder Analysis](#3-stakeholder-analysis)
+4.  [Work breakdown structure](#4-work-breakdown-structure-psp)
+5.  [Milestones and delivarebles](#5-milestones-and-deliverables)
+6.  [Gantt chart 3rd Semester](#6-gantt-chart-3rd-semester)
+7.  [Risks](#7-risks)
+8.  [Soft- and Hardware requirements](#8-soft--and-hardware-requirements)
+9.  [Communication and reporting](#9-communication-and-reporting)
+10. [Project deliveries](#10-project-deliveries)
 
 ---
 
-## Project Assignment
+## 1. Project Assignment
 
-| **Field** | **Details** |
-| :--- | :--- |
-| **Project Goal (Output)** | Development of a two-sided (Backend-Frontend) REST-API Digital Product Passport (DPP) solution in the BaSyx framework according to DIN standards. |
-| **Project Use (Outcome)** | Standardized lifecycle management, improved DPP search capability, and increased service efficiency. |
-| **Project Clients** | Rentschler Markus, Pawel Wojcik |
-| **Team members** | Nataliia Chubak, Luca Schmoll, Magnus Lörcher, Manuel Lutz, Fabian Steiß, Noah Becker, Felix Schulz |
-| **Main tasks** | Analysis, Design, Coding, Documentation, Testing |
-| **Budget** | Can be found in the Business Case (BC) |
-| **Timeline of the project** | Start: Introductory lecture, 19.09.2025; End: Final presentation and project delivery, #.#.2026 |
+The goal of the project is to develop a complete, two-sided REST API solution for the Digital Product Passport (DPP). This solution is to be implemented in the BaSyx framework and must comply with the relevant DIN standards.
+
+The outcome of this project lies in the establishment of standardized lifecycle management. The implementation of the solution is intended to improve the searchability of the DPP and increase overall service efficiency.
+
+The main tasks include the phases of analysis, design, coding, documentation, and testing. The budget for this project is specified in detail in the business case (<a href="https://github.com/DHBW-TINF24F/Team6-BaSyx-DPP-API/blob/main/PROJECT/BC/TINF24F_BC_Team_6_0v3.md">BC</a>). The project will officially begin with the introductory lecture on September 19, 2025, and end with the final presentation and project submission in 2026 (exact end date to be determined).
 
 ---
 
-## Project Context
+## 2. Project Context
 
-| **Topic** | **Details** |
-| :--- | :--- |
-| **Initial Situation** | During the project, we need to create and implement a REST API for a digital product passport (DPP). The project development involves the use of Eclipse BaSyx Framework, which includes frontend and backend. In addition, the project is also characterised by existing standard requirements and the lack of implementation of this standard in the Eclipse BaSyx platform. |
-| **Temporal context** | An open-source platform BaSyx  developed in 2023 for the development and use of digital twins in the context of Industry 4.0.  |
-| | Project phase: Full implementation of the API, hosting on a demo server, and acceptance in the open source project. |
-| | Post-project phase: The BaSyx framework is enhanced with the standards-compliant DPP API, which increases interoperability.|
+During the project, we need to create and implement a REST API for a digital product passport (DPP). The project development involves the use of Eclipse BaSyx Framework, which includes frontend and backend. In addition, the project is also characterised by existing standard requirements and the lack of implementation of this standard in the Eclipse BaSyx platform. 
 
-### Stakeholder Analysis
+Time frame and phases:
+- Platform basis: The BaSyx Framework is an open-source platform developed in 2023 for the development and use of digital twins in the context of Industry 4.0.
+- Project phase: The current phase includes the complete implementation of the API, hosting on a demo server, and subsequent acceptance and integration into the open-source project.
+- Post-project phase: After successful project completion, the BaSyx Framework will be expanded by the standards-compliant DPP API, which will significantly increase the interoperability of the platform.
+
+## 3. Stakeholder Analysis
 
 | **Stakeholder** | **Potential / Chance** | **Conflict / Risk** | **Actions** |
 | :--- | :--- | :--- | :--- |
@@ -84,33 +85,17 @@
 
 ---
 
-## Project Organisation
 
-| **Position** | **Description** | **Name** |
-| :--- | :--- | :--- |
-| Customer | Provides project | Rentschler Markus / Pawel Wojcik |
-| Project Leader | Manages the project, monitors the progress of tasks | Nataliia Chubak |
-| Project Team | Specialized on different tasks | |
-| | - Product Manager | Luca Schmoll |
-| | - Product Manager | Magnus Lörcher |
-| | - System Architect | Noah Becker |
-| | - Test Manager | Manuel Lutz |
-| | - Technical Writer | Fabian Steiß |
-| | - UI-Design | Felix Schulz |
+## 4. Work breakdown structure (PSP)
 
-![Project organisation](images/Roles.png)
+![WBS](images/WBS.png)
 
-*Figur.1* Project organisation
+<p align="center"> <i>Figur.1 Work breakdown structure (PSP)</i> </p> 
 
-### Work breakdown structure (PSP)
-
-![WSB](images/WBS.png)
-
-*Figur.2* Work breakdown structure (PSP)
 ---
 
 
-## Milestones and deliverables
+## 5. Milestones and deliverables
 
 ### Phase I: Analysis
 
@@ -132,15 +117,16 @@
 
 ---
 
-## Gantt chart 3rd Semester
+## 6. Gantt chart 3rd Semester
 
 ![Gantt chart](images/Gantt_analyse.png)
 
-*Figur.3* Gantt chart 3rd Semester (Phase I)
+<p align="center"> <i>Figur.2 Gantt chart 3rd Semester (Phase I)</i> </p>  
+
 
 ![Gantt chart](images/Gantt_design.png)
 
-*Figur.4* Gantt chart 3rd Semester (Phase II)
+<p align="center"> <i>Figur.3 Gantt chart 3rd Semester (Phase II)</i> </p> 
 
 ---
 
@@ -152,11 +138,9 @@
 | Rolle: Project manager|  - Planning & control |
 | *E-mail: inf24271@lehre.dhbw-stuttgart.de* |  - PSP (Project structure plan) |
 | *MatrikelNr: 6401719* |  - BC (Business Case) |
-| |  - CRS (Customer Requirement Specification) |
 | |  - Coding (Frontend)|
 | |  - Presentation |
 | |  - PowerPoint |
-| | - Usability concept |
 | | - Meetings Minutes (X-X Weeks)
 | **Magnus Lörcher** |
 | Role: Product manager |  - CRS (Customer Requirements Specification) |
@@ -209,7 +193,7 @@
 
 ---
 
-## Risks
+## 7. Risks
 
 | **Nr** | **Risk** | **Probability** | **Amount of damage** | **Effects** | **Measure** |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -225,10 +209,11 @@
 
 ![Risk matrix](images/matrix.JPG)
 
-*Figur.5* Risk matrix
+<p align="center"> <i>Figur.4 Risk matrix</i> </p> 
+
 ---
 
-## Soft- and Hardware requirements
+## 8. Soft- and Hardware requirements
 
 
 | Component | Technology |
@@ -244,7 +229,7 @@
 
 ---
 
-## Communication and reporting
+## 9. Communication and reporting
 
 * **Within the team:** 
 
@@ -259,7 +244,7 @@ All documents are visible in the GitHub repository. The documents PM, BC, CRS, S
 
 ---
 
-## End of project
+## 10. Project deliveries
 The project´s deadline (first part) is officially set on 21.11.2025.
 
 Officially, the following tasks must be completed in the project (first part):
@@ -271,4 +256,5 @@ Officially, the following tasks must be completed in the project (first part):
     * SAS (Software Architecture Specification)
     * PSP (Project structure plan - PM)
     * Protokolle (Protocols/Meeting Minutes)
+    * Mockups
 * **Product presentation I**

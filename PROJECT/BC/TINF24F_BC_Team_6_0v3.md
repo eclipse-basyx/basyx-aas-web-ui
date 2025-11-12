@@ -1,31 +1,35 @@
-<h1 align="center">BUSINESS CASE: BaSyx DPP API </h1> 
+# Business case: BaSyx DPP API
 
-**TIN24F, SWL Practice project 2025/2026**
+## Project 6: API for the Digital Product Passport (DPP) in the BaSyx Framework
 
-| | |
-| :--- | :--- |
-| **Author:** | Nataliia Chubak |
-| **Project:** | BaSyx DPP API |
-| **Clients:** | Rentschler Markus, Pawel Wojcik |
-| **Address:** | Lerchenstraße 1, 70178 Stuttgart |
+## Customer
+|Name|Mail|
+|---|---|
+|Markus Rentschler|rentschler@lehre.dhbw-stuttgart.de|
+|Pawel Wojcik|pawel.wojcik@lehre.dhbw-stuttgart.de|
 
 ---
 
-## Project Team (Team 6)
+## Definition of tasks
+ > **DIN EN 18222** “Digital product passport – Application programming interfaces (APIs) for product passport lifecycle management and searchability” describes a REST API that is to be implemented in the BaSyx framework as part of this task, both on the backend and frontend sides. The exact task can be found <a href="https://github.com/DHBW-TINF24F/.github/blob/main/project6_basyx_dpp_api.md">here</a>.
 
-| **Position** | **Name** | **e-Mail** |
+
+---
+
+## Team 6
+| **Name** | **e-Mail** | **Position** |
 | :--- | :--- | :--- |
-| Project Manager | Nataliia Chubak | `<inf24271@lehre.dhbw-stuttgart.de>` |
-| Product Manager | Luca Schmoll | `<inf24137@lehre.dhbw-stuttgart.de>` |
-| Product Manager | Magnus Lörcher | `<inf24155@lehre.dhbw-stuttgart.de>` |
-| Test Manager | Manuel Lutz | `<inf24224@lehre.dhbw-stuttgart.de>` |
-| System Architect | Noah Becker | `<inf24038@lehre.dhbw-stuttgart.de>` |
-| Technical Writer | Fabian Steiß | `<inf24138@lehre.dhbw-stuttgart.de>` |
-| UI-Designer | Felix Schulz | `<inf24075@lehre.dhbw-stuttgart.de>` |
+|  Nataliia Chubak | <inf24271@lehre.dhbw-stuttgart.de>|Project Manager |
+|  Luca Schmoll | <inf24137@lehre.dhbw-stuttgart.de> |Product Manager |
+|  Magnus Lörcher | <inf24155@lehre.dhbw-stuttgart.de>|Product Manager |
+| Manuel Lutz |<inf24224@lehre.dhbw-stuttgart.de> |Test Manager | 
+|  Noah Becker | <inf24038@lehre.dhbw-stuttgart.de> |System Architect |
+|  Fabian Steiß | <inf24138@lehre.dhbw-stuttgart.de> |Technical Writer |
+|  Felix Schulz |<inf24075@lehre.dhbw-stuttgart.de> |UI-Designer |
 
 ---
 
-## Change History
+## Version Control
 
 | **Version** | **Date** | **Author** | **Comment** |
 | :--- | :--- | :--- | :--- |
@@ -72,7 +76,7 @@ Each member of the project has **180 hours** available. The distribution of thes
 | **Presentation** | 5 | 5 | 5 | 5 | 5 | 5 | 5 | 35 |
 | **Total** | **180** | **180** | **180** | **180** | **180** | **180** | **180** | **1260** |
 
-*Table 1. Expected working hours.*
+<p align="center"> <i>Table 1. Expected working hours</i> </p>  
 
 ---
 
@@ -89,11 +93,11 @@ The project milestones are:
 
 ![Gantt chart](images/Gantt_analyse.png)
 
-*Figur.1* Gantt chart 3rd Semester (Phase I)
+<p align="center"> <i>Figur.1 Gantt chart 3rd Semester (Phase I)</i> </p>  
 
 ![Gantt chart](images/Gantt_design.png)
 
-*Figur.2* Gantt chart 3rd Semester (Phase II)
+<p align="center"> <i>Figur.2 Gantt chart 3rd Semester (Phase II)</i> </p>  
 
 ---
 
@@ -124,7 +128,7 @@ Based on 180 hours per team member (Table 2).
 | UI-Designer | 28 | 5,040 |
 | **Total Salary Costs** | **215** | **38,700** |
 
-*Table 2. Salary calculation based on hourly wages.*
+<p align="center"> <i>Table 2. Salary calculation based on hourly wages</i> </p>  
 
 ### Other Costs
 
@@ -140,7 +144,7 @@ Expenses estimated for the 11-week project duration (Table 3).
 | Training | 1,000 |
 | **Total Other Costs** | **20,485** |
 
-*Table 3. Other costs calculation.*
+<p align="center"> <i>Table 3. Other costs calculation</i> </p> 
 
 The estimated total cost of developing the software product is:
 $$\text{Total Costs} = \text{Salary Costs} + \text{Other Costs}$$
@@ -148,7 +152,8 @@ $$\text{Total Costs} = €38,700 + €20,485 = \mathbf{€59,185}$$
 
 ![Gantt chart](images/Costs.png)
 
-*Figur.3* Project cost distribution 
+<p align="center"> <i>Figur.3 Project cost distribution</i> </p>  
+
 
 ---
 
@@ -157,7 +162,7 @@ $$\text{Total Costs} = €38,700 + €20,485 = \mathbf{€59,185}$$
 The team identified the following key risks:
 
 * *Risks associated with a sudden decline* in the project's operating capacity.  
-* **Communication risks* (insufficient communication between team members). To 
+* *Communication risks* (insufficient communication between team members). To 
 solve this problem, it was decided to hold regular meetings, use the GitHub and Jira services.
 * **Technical risks** (sudden failure of the Internet connection or power supply for an 
 extended period of time, unplanned unavailability of equipment).   
