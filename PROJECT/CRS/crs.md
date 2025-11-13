@@ -36,7 +36,7 @@ The main goal of this project is the implementation of a **REST-API** for the ma
 | **Scope** | **Aim**|
 | --- | --- |
 | API specification (**DIN-EN 18222**) | Create an OpenAPI-Specification for the **REST-API** described by **DIN-EN 18222** |
-| Backend implementation | Implementation of the DPP **REST-API** backend using the **DJANGO** framework. The backend will expose API endpoints for the frontend to provide the described DPP functionality. This includes merging existing API's of the BaSyx backend. |
+| Backend implementation | Implementation of the DPP **REST-API** backend using the **JAVA-Spring boot** framework. The backend will expose API endpoints for the frontend to provide the described DPP functionality. This includes merging existing API's of the BaSyx backend. |
 | Frontend implementation | The frontend (DPP viewer) will provide a UI to the end users to interact with and manage the DPP using the DPP backend. The DPP viewer will be integrated in to the existing BaSyx frontend module. |
 | Usability and workflow | Definition of a clear usability concept as well as a workflow for the DPP viewer based on existing solutions. |
 | Infrastructure and Deployment | The project will be hosted on a publically available server for demonstration purposes.|
