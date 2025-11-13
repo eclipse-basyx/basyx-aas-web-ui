@@ -8,17 +8,12 @@
 |Markus Rentschler|rentschler@lehre.dhbw-stuttgart.de|
 |Pawel Wojcik|pawel.wojcik@lehre.dhbw-stuttgart.de|
 
-
-### Task specification
- > The **DIN-EN 18222** "Digital Product Passport - Application Programming
-Interfaces (APIs) for the product passport lifecycle
-management and searchability" describes a REST-API which will be implemented in the BaSyx-Framework back- and frontend. The task specification is available <a href="https://github.com/DHBW-TINF24F/.github/blob/main/project6_basyx_dpp_api.md">here</a>.
-
-### Dokumenthistorie
+### History
 
 |Version|Autor|Datum|Kommentar|
 |---|---|---|---|
 |1.0| Magnus Lörcher |11.11.2025| Abgabe Semester 3|
+
 
 
 ## Table of contents
@@ -55,6 +50,12 @@ The project will be developed as an open source repo on GitHub and after the con
 
 This CRS will be the foundation for the folowing documents:\
 Software Requirements Specification (SRS), every other design, test and implementation document.
+
+### Task specification
+ > The **DIN-EN 18222** "Digital Product Passport - Application Programming
+Interfaces (APIs) for the product passport lifecycle
+management and searchability" describes a REST-API which will be implemented in the BaSyx-Framework back- and frontend. The task specification is available <a href="https://github.com/DHBW-TINF24F/.github/blob/main/project6_basyx_dpp_api.md">here</a>.
+
 
 ## 2 Scope
 The main goal of this project is the implementation of a **REST-API** for the management of DPP's with in the BaSyx framework.
