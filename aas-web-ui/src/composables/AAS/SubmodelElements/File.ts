@@ -64,10 +64,21 @@ export function useSMEFile() {
     function valueUrl(file: any): { url: string; isExternal: boolean } {
         if (isFile(file) && hasValue(file)) {
             try {
-                new URL(file.value);
-                // If no error is thrown, value is a valid URL
-                return { url: file.value, isExternal: true };
+                const parsedUrl = new URL(file.value);
+                // Only treat http:// and https:// as external URLs
+                // file://, data://, blob://, and other schemes are considered internal
+                const isExternalUrl = parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+
+                if (isExternalUrl) {
+                    return { url: file.value, isExternal: true };
+                } else {
+                    // For file:// and other non-http(s) schemes, treat as internal
+                    if (file.path && file.path.trim() !== '') {
+                        return { url: `${file.path}/attachment`, isExternal: false };
+                    }
+                }
             } catch {
+                // Not a valid URL, check if we have an internal path
                 if (file.path && file.path.trim() !== '') return { url: `${file.path}/attachment`, isExternal: false };
             }
         }
