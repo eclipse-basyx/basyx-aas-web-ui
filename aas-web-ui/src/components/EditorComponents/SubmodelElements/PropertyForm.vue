@@ -22,7 +22,7 @@
                                         v-model="propertyIdShort"
                                         label="IdShort"
                                         :error="hasError('idShort')"
-                                        :rules="[rules.required]"
+                                        :rules="isParentSubmodelElementList ? [] : [rules.required]"
                                         :error-messages="getError('idShort')" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
@@ -191,6 +191,8 @@
 
     const errors = ref<Map<string, string>>(new Map());
 
+    const isParentSubmodelElementList = computed(() => props.parentElement?.modelType === 'SubmodelElementList');
+
     const rules = {
         required: (value: any) => !!value || 'Required.',
     };
@@ -311,7 +313,7 @@
 
         if (propertyIdShort.value !== null) {
             propertyObject.value.idShort = propertyIdShort.value;
-        } else {
+        } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'Property IdShort is required');
             return;
         }
