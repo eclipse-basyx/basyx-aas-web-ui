@@ -94,6 +94,10 @@
                                 <span>Upload AAS File to Environment</span>
                             </v-tooltip>
                         </v-col>
+                        <!-- AAS Filter -->
+                        <v-col cols="auto" class="px-0">
+                            <FilterAAS />
+                        </v-col>
                     </v-row>
                 </v-card-title>
                 <v-divider></v-divider>

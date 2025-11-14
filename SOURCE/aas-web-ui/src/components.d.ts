@@ -43,6 +43,7 @@ declare module 'vue' {
     File: typeof import('./components/SubmodelElements/File.vue')['default']
     FileForm: typeof import('./components/EditorComponents/SubmodelElements/FileForm.vue')['default']
     FileInput: typeof import('./components/EditorComponents/InputTypes/FileInput.vue')['default']
+    FilterAAS: typeof import('./components/AppNavigation/FilterAAS.vue')['default']
     Gauge: typeof import('./components/Widgets/Gauge.vue')['default']
     GenericDataTableView: typeof import('./components/UIComponents/GenericDataTableView.vue')['default']
     GenericDataVisu: typeof import('./components/UIComponents/GenericDataVisu.vue')['default']
