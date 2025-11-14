@@ -8,7 +8,24 @@ on:
       - 'aas-web-ui/**'
 
 jobs:
+  guard:
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.check.outputs.should-run }}
+    steps:
+      - id: check
+        run: |
+          if [[ "${GITHUB_REPOSITORY}" == "eclipse-basyx/basyx-aas-web-ui" && "${GITHUB_EVENT_REPOSITORY_FORK}" != "true" ]]; then
+            echo "✅ Running in upstream repository"
+            echo "should-run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "⏭️ Skipping build — fork detected (${GITHUB_REPOSITORY})"
+            echo "should-run=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build-and-push-prerelease:
+    needs: guard
+    if: ${{ needs.guard.outputs.should-run == 'true' }}
     runs-on: ubuntu-latest
 
     env:
