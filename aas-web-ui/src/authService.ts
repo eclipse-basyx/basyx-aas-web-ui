@@ -47,7 +47,7 @@ function setupTokenRefresh(
             console.error('Token refresh error:', error);
             authStore.setAuthStatus(false);
             authStore.setAuthEnabled(false);
-            authStore.setUsername('');
+            authStore.setUser(null);
         }
     }, 60000); // refresh every minute
 
@@ -137,7 +137,6 @@ export async function loginWithDirectGrant(
         authStore.setRefreshToken(data.refresh_token);
         authStore.setAuthStatus(true);
         authStore.setAuthEnabled(true);
-        authStore.setUsername(username);
 
         // Setup token refresh interval
         setupTokenRefresh(keycloakUrl, keycloakRealm, keycloakClientId, authStore);
@@ -145,7 +144,7 @@ export async function loginWithDirectGrant(
         console.error('Auto login failed:', error);
         const authStore = useAuthStore();
         authStore.setAuthStatus(false);
-        authStore.setUsername('');
+        authStore.setUser(null);
         throw error;
     }
 }
@@ -197,7 +196,6 @@ export async function initKeycloak(
                     authStore.setToken(keycloak.token);
                     authStore.setRefreshToken(keycloak.refreshToken);
                     authStore.setAuthStatus(true);
-                    authStore.setUsername(keycloak?.tokenParsed?.preferred_username);
                     const refreshIntervalId = window.setInterval(() => {
                         keycloak
                             .updateToken(70)
@@ -206,14 +204,13 @@ export async function initKeycloak(
                                     // console.log('Token refreshed');
                                     authStore.setToken(keycloak.token);
                                     authStore.setRefreshToken(keycloak.refreshToken);
-                                    authStore.setUsername(keycloak?.tokenParsed?.preferred_username);
                                 }
                                 authStore.setAuthStatus(true);
                             })
                             .catch(() => {
                                 console.error('Failed to refresh token');
                                 authStore.setAuthStatus(false);
-                                authStore.setUsername('');
+                                authStore.setUser(null);
                             });
                     }, 60000);
 
@@ -225,7 +222,7 @@ export async function initKeycloak(
                 console.error('Failed to authenticate with Keycloak', error);
                 const authStore = useAuthStore();
                 authStore.setAuthStatus(false);
-                authStore.setUsername('');
+                authStore.setUser(null);
                 reject();
             });
     });

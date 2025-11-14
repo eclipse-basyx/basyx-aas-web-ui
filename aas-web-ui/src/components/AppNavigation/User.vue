@@ -18,7 +18,7 @@
             color="navigationMenu"
             style="border-style: solid; border-width: 1px">
             <v-list nav class="bg-navigationMenu">
-                <v-list-item class="py-2" :active="false" nav :subtitle="authStatus" :title="authUsername">
+                <v-list-item class="py-2" :active="false" nav :subtitle="authUserEmail" :title="authUsername">
                     <template #prepend>
                         <v-avatar color="surface-light" icon="mdi-account" rounded>
                             <v-icon color="medium-emphasis" />
@@ -26,9 +26,13 @@
                     </template>
                 </v-list-item>
             </v-list>
-            <template v-if="authStore.getAuthStatus && allowLogout" #actions>
-                <v-spacer></v-spacer>
-                <v-btn append-icon="mdi-logout" class="text-none" color="primary" text="Logout" @click="logout" />
+            <template #actions>
+                <v-icon size="small" class="ml-2"> mdi-lock-check </v-icon>
+                <span class="text-subtitleText text-subtitle-2">{{ authStatus }}</span>
+                <template v-if="allowLogout">
+                    <v-spacer></v-spacer>
+                    <v-btn append-icon="mdi-logout" class="text-none" color="primary" text="Logout" @click="logout" />
+                </template>
             </template>
         </v-card>
     </v-menu>
@@ -56,8 +60,9 @@
     );
     const isAuthEnabled = computed(() => authStore.getAuthEnabled || envStore.getBasicAuthActive);
     const authUsername = computed(
-        () => authStore.getUsername || (envStore.getBasicAuthActive ? envStore.getBasicAuthUsername : '')
+        () => authStore.getUser?.username || (envStore.getBasicAuthActive ? envStore.getBasicAuthUsername : '')
     );
+    const authUserEmail = computed(() => authStore.getUser?.email || '');
     const allowLogout = computed(() => envStore.getAllowLogout);
 
     async function logout(): Promise<void> {
@@ -101,7 +106,6 @@
             authStore.setAuthEnabled(false);
             authStore.setToken(undefined);
             authStore.setRefreshToken(undefined);
-            authStore.setUsername(undefined);
             authStore.setKeycloak(null);
             authStore.setRefreshIntervalId(undefined);
 
@@ -144,7 +148,6 @@
         authStore.setAuthEnabled(false);
         authStore.setToken(undefined);
         authStore.setRefreshToken(undefined);
-        authStore.setUsername(undefined);
         authStore.setKeycloak(null);
         authStore.setRefreshIntervalId(undefined);
 
