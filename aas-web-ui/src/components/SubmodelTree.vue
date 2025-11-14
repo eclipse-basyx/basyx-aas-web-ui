@@ -409,7 +409,33 @@
             } else {
                 submodels = await fetchAasSmListById(selectedAAS.value.id);
             }
-            const sortedSubmodels = submodels.sort((a, b) => a.id.localeCompare(b.id));
+
+            // Handle empty objects and sort
+            const validSubmodels: Array<any> = [];
+            const emptySubmodels: Array<any> = [];
+
+            submodels.forEach((submodel: any) => {
+                const isEmpty = !submodel || Object.keys(submodel).length === 0 || (!submodel.id && !submodel.idShort);
+                if (isEmpty) {
+                    emptySubmodels.push({
+                        ...submodel,
+                        idShort: 'Submodel not available!',
+                        id: 'sm-not-available-' + Math.random().toString(36).substring(2, 15),
+                    });
+                } else {
+                    validSubmodels.push(submodel);
+                }
+            });
+
+            // Sort valid submodels
+            validSubmodels.sort((a, b) => {
+                const aId = a?.id || a?.idShort || '';
+                const bId = b?.id || b?.idShort || '';
+                return aId.localeCompare(bId);
+            });
+
+            // Combine: valid first, empty at the bottom
+            const sortedSubmodels = [...validSubmodels, ...emptySubmodels];
 
             let processedList = [] as Array<any>;
 
@@ -486,6 +512,10 @@
         return submodelElements.map((sme: any, index: number) => {
             sme.parent = parent;
             sme.path = computePath(sme, parent, index);
+            // Store index for children of SubmodelElementList
+            if (parent?.modelType === 'SubmodelElementList') {
+                sme.listIndex = index;
+            }
             const expand = shouldExpandNode(sme.path);
 
             if (

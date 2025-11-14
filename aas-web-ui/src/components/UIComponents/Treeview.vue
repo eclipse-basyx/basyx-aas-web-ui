@@ -17,7 +17,7 @@
                             selectSmOrSme(item);
                             openTree(item);
                         ">
-                        <v-list-item-title>{{ nameToDisplay(item) }}</v-list-item-title>
+                        <v-list-item-title>{{ displayNameWithIndex(item) }}</v-list-item-title>
                         <template #prepend>
                             <!-- Button to show/hide children -->
                             <v-btn
@@ -502,6 +502,15 @@
             item.modelType === 'SubmodelElementList' ||
             item.modelType === 'Entity'
         );
+    }
+
+    function displayNameWithIndex(item: any): string {
+        const baseName = nameToDisplay(item);
+        // Prepend index for direct children of SubmodelElementList
+        if (item?.parent?.modelType === 'SubmodelElementList' && item?.listIndex !== undefined) {
+            return `[${item.listIndex}] ${baseName}`;
+        }
+        return baseName;
     }
 
     function copyElement(item: any, valueName: string, iconRef: any): void {
