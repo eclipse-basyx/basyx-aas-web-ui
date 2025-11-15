@@ -163,6 +163,8 @@ The main goal of this project is the implementation of a **REST-API** for the ma
 | ID | FR02 |
 | Description| The REST-API has to implement all endpoints and operations described in **DIN-EN 18222**|
 
+>After the meeting with Herr Rentschler on (14.11.2025) this requirement is not needed anymore. For example the version management of the DPPs is not needed anymore.
+
 ### FR03 DPP search
 |||
 |---|---|
