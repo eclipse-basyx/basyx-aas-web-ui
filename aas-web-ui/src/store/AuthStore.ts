@@ -1,5 +1,16 @@
 import Keycloak from 'keycloak-js';
 import { defineStore } from 'pinia';
+import { useEnvStore } from '@/store/EnvironmentStore';
+import { getUserFromToken } from '@/utils/TokenUtil';
+
+export type UserData = {
+    username: string;
+    name?: string;
+    given_name?: string;
+    family_name?: string;
+    email?: string;
+    roles?: string[];
+};
 
 export const useAuthStore = defineStore('authStore', () => {
     // States
@@ -9,7 +20,8 @@ export const useAuthStore = defineStore('authStore', () => {
     const authEnabled = ref(false);
     const keycloak = ref(null as Keycloak | null);
     const refreshIntervalId = ref(undefined as number | undefined);
-    const username = ref('' as string | undefined);
+
+    const user = ref(null as UserData | null);
 
     // Getters
     const getToken = computed(() => token.value);
@@ -18,21 +30,29 @@ export const useAuthStore = defineStore('authStore', () => {
     const getAuthEnabled = computed(() => authEnabled.value);
     const getKeycloak = computed(() => keycloak.value);
     const getRefreshIntervalId = computed(() => refreshIntervalId.value);
-    const getUsername = computed(() => username.value);
+    const getUser = computed(() => user.value);
 
     // Initialize from localStorage on store creation
     function initializeFromStorage(): void {
         const storedToken = localStorage.getItem('auth_token');
         const storedRefreshToken = localStorage.getItem('auth_refresh_token');
         const storedAuthStatus = localStorage.getItem('auth_status');
-        const storedUsername = localStorage.getItem('auth_username');
 
         if (storedToken && storedAuthStatus === 'true') {
             token.value = storedToken;
             refreshToken.value = storedRefreshToken || undefined;
             authStatus.value = true;
             authEnabled.value = true;
-            username.value = storedUsername || undefined;
+
+            try {
+                setUser(getUserFromToken(storedToken));
+            } catch {
+                token.value = undefined;
+                refreshToken.value = undefined;
+                authStatus.value = false;
+                authEnabled.value = false;
+                setUser(null);
+            }
         }
     }
 
@@ -41,8 +61,14 @@ export const useAuthStore = defineStore('authStore', () => {
         token.value = tokenValue;
         if (tokenValue) {
             localStorage.setItem('auth_token', tokenValue);
+            try {
+                setUser(getUserFromToken(tokenValue));
+            } catch {
+                setUser(null);
+            }
         } else {
             localStorage.removeItem('auth_token');
+            setUser(null);
         }
     }
 
@@ -87,12 +113,66 @@ export const useAuthStore = defineStore('authStore', () => {
         refreshIntervalId.value = refreshIntervalIdValue;
     }
 
-    function setUsername(usernameValue: string | undefined): void {
-        username.value = usernameValue;
-        if (usernameValue) {
-            localStorage.setItem('auth_username', usernameValue);
-        } else {
-            localStorage.removeItem('auth_username');
+    function setUser(userValue: UserData | null): void {
+        user.value = userValue || null;
+
+        const envStore = useEnvStore();
+
+        if (
+            envStore.getKeycloakFeatureControl === true &&
+            userValue?.roles &&
+            Array.isArray(userValue.roles) &&
+            userValue.roles.length > 0
+        ) {
+            const keycloakFeatureControlRolePrefix = envStore.getKeycloakFeatureControlRolePrefix;
+            const keycloak_roles_features = [
+                {
+                    keycloakRole: keycloakFeatureControlRolePrefix + 'multiple-aas',
+                    feature: 'SINGLE_AAS',
+                    setFunction: 'setSingleAas',
+                    setValue: 'false',
+                },
+                {
+                    keycloakRole: keycloakFeatureControlRolePrefix + 'sm-viewer-editor',
+                    feature: 'SM_VIEWER_EDITOR',
+                    setFunction: 'setSmViewerEditor',
+                    setValue: 'true',
+                },
+                {
+                    keycloakRole: keycloakFeatureControlRolePrefix + 'allow-editing',
+                    feature: 'ALLOW_EDITING',
+                    setFunction: 'setAllowEditing',
+                    setValue: 'true',
+                },
+                {
+                    keycloakRole: keycloakFeatureControlRolePrefix + 'allow-uploading',
+                    feature: 'ALLOW_UPLOADING',
+                    setFunction: 'setAllowUploading',
+                    setValue: 'true',
+                },
+                {
+                    keycloakRole: keycloakFeatureControlRolePrefix + 'allow-logout',
+                    feature: 'ALLOW_LOGOUT',
+                    setFunction: 'setAllowLogout',
+                    setValue: 'true',
+                },
+                {
+                    keycloakRole: keycloakFeatureControlRolePrefix + 'endpoint-config-available',
+                    feature: 'ENDPOINT_CONFIG_AVAILABLE',
+                    setFunction: 'setEndpointConfigAvailable',
+                    setValue: 'true',
+                },
+            ];
+
+            keycloak_roles_features.forEach((keycloak_roles_feature: any) => {
+                const key = keycloak_roles_feature.setFunction as keyof typeof envStore;
+                if (
+                    userValue?.roles?.includes(keycloak_roles_feature.keycloakRole) &&
+                    typeof envStore[key] === 'function'
+                ) {
+                    envStore[key](keycloak_roles_feature.setValue);
+                }
+            });
         }
     }
 
@@ -107,7 +187,7 @@ export const useAuthStore = defineStore('authStore', () => {
         getAuthEnabled,
         getKeycloak,
         getRefreshIntervalId,
-        getUsername,
+        getUser,
 
         // Actions
         setToken,
@@ -116,6 +196,6 @@ export const useAuthStore = defineStore('authStore', () => {
         setAuthEnabled,
         setKeycloak,
         setRefreshIntervalId,
-        setUsername,
+        setUser,
     };
 });

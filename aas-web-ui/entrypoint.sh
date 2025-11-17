@@ -20,6 +20,8 @@
 : "${KEYCLOAK_URL:=}"
 : "${KEYCLOAK_REALM:=}"
 : "${KEYCLOAK_CLIENT_ID:=}"
+: "${KEYCLOAK_FEATURE_CONTROL:=false}"
+: "${KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX:=basyx-aas-web-ui-feature-}"
 : "${PRECONFIGURED_AUTH_USERNAME:=}"
 : "${PRECONFIGURED_AUTH_PASSWORD:=}"
 : "${ENDPOINT_CONFIG_AVAILABLE:=true}"
@@ -101,6 +103,8 @@ printf "%-38s %s\n" "Keycloak active:" "$KEYCLOAK_ACTIVE"
 printf "%-38s %s\n" "Keycloak URL:" "$KEYCLOAK_URL"
 printf "%-38s %s\n" "Keycloak realm:" "$KEYCLOAK_REALM"
 printf "%-38s %s\n" "Keycloak client ID:" "$KEYCLOAK_CLIENT_ID"
+printf "%-38s %s\n" "Keycloak feature control:" "$KEYCLOAK_FEATURE_CONTROL"
+printf "%-38s %s\n" "Keycloak feature control, role prefix:" "$KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX"
 printf "%-38s %s\n" "Preconfigured auth:" "$PRECONFIGURED_AUTH"
 printf "%-38s %s\n" "Preconfigured auth username:" "$PRECONFIGURED_AUTH_USERNAME"
 printf "%-38s %s\n" "Preconfigured auth password:" "$PRECONFIGURED_AUTH_PASSWORD"
@@ -136,6 +140,8 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__KEYCLOAK_URL_PLACEHOLDER__/|$KEYCLOAK_URL|g" \
     -e "s|/__KEYCLOAK_REALM_PLACEHOLDER__/|$KEYCLOAK_REALM|g" \
     -e "s|/__KEYCLOAK_CLIENT_ID_PLACEHOLDER__/|$KEYCLOAK_CLIENT_ID|g" \
+    -e "s|/__KEYCLOAK_FEATURE_CONTROL_PLACEHOLDER__/|$KEYCLOAK_FEATURE_CONTROL|g" \
+    -e "s|/__KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX_PLACEHOLDER__/|$KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX|g" \
     -e "s|/__PRECONFIGURED_AUTH_PLACEHOLDER__/|$PRECONFIGURED_AUTH|g" \
     -e "s|/__PRECONFIGURED_AUTH_USERNAME_PLACEHOLDER__/|$PRECONFIGURED_AUTH_USERNAME|g" \
     -e "s|/__PRECONFIGURED_AUTH_PASSWORD_PLACEHOLDER__/|$PRECONFIGURED_AUTH_PASSWORD|g" \
