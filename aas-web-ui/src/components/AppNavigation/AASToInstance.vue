@@ -17,7 +17,7 @@
                     variant="outlined"
                     label="ID Suffix"
                     class="mt-6"
-                    hide-details
+                    :rules="[rules.required]"
                     density="compact"></v-text-field>
             </v-card-text>
             <v-divider></v-divider>
@@ -65,9 +65,12 @@
 
     const selected = ref<string[]>([]);
     const submodelIds = ref<any[]>([]);
-    const downloadEndpoint = ref<string>('');
 
     const idSuffix = ref<string>('');
+
+    const rules = {
+        required: (value: string) => !!value?.trim() || 'ID Suffix is required',
+    };
 
     onMounted(() => {
         idSuffix.value = '_instance_' + generateUUID();
@@ -79,11 +82,9 @@
             instanceDialog.value = value;
             selected.value = [];
             submodelIds.value = [];
-            downloadEndpoint.value = '';
             instantiationLoading.value = false;
             if (!props.aas) return;
             const submodelRefs = await getSubmodelRefsById(props.aas.id);
-            downloadEndpoint.value = props.aas.endpoints[0].protocolInformation.href.split('/shells')[0];
             for (const submodelRef of submodelRefs) {
                 const submodel = await fetchSmById(submodelRef.keys[0].value);
                 submodelIds.value.push({ smId: submodelRef.keys[0].value, smIdShort: submodel.idShort, submodel });
@@ -104,86 +105,168 @@
     }
 
     async function instantiate(): Promise<void> {
-        const fetchedAAS = await fetchAasById(props.aas.id);
-        // Check if AAS with new ID already exists
-        const newAASId = props.aas.id + idSuffix.value;
-        const existingAAS = await fetchAASByIdFromRepo(newAASId);
+        instantiationLoading.value = true;
+        try {
+            // Validate ID Suffix
+            if (!idSuffix.value?.trim()) {
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 4000,
+                    color: 'error',
+                    btnColor: 'buttonText',
+                    text: 'ID Suffix cannot be empty.',
+                });
+                return;
+            }
 
-        if (existingAAS?.id) {
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 4000,
-                color: 'error',
-                btnColor: 'buttonText',
-                text: 'Instantiation Failed: An AAS with the ID "' + newAASId + '" already exists.',
+            // Fetch the AAS
+            const fetchedAAS = await fetchAasById(props.aas.id);
+            if (!fetchedAAS) {
+                throw new Error('Failed to fetch AAS.');
+            }
+
+            // Check if AAS with new ID already exists
+            const newAASId = props.aas.id + idSuffix.value.trim();
+            const existingAAS = await fetchAASByIdFromRepo(newAASId);
+
+            if (existingAAS?.id) {
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 4000,
+                    color: 'error',
+                    btnColor: 'buttonText',
+                    text: 'Instantiation Failed: An AAS with the ID "' + newAASId + '" already exists.',
+                });
+                return;
+            }
+
+            fetchedAAS.id = newAASId;
+
+            // create AAS Core Works AAS
+            const instanceOrError = jsonization.assetAdministrationShellFromJsonable(fetchedAAS);
+            if (instanceOrError.error !== null) {
+                throw new Error('Converting AAS Failed during Instantiation: ' + instanceOrError.error);
+            }
+            const coreworksAAS = instanceOrError.mustValue();
+
+            // Change the asset kind of the AAS to "Instance"
+            if (!coreworksAAS.assetInformation) {
+                throw new Error('AAS assetInformation is missing.');
+            }
+            coreworksAAS.assetInformation.assetKind = aasTypes.AssetKind.Instance;
+            // Delete existing submodel references
+            coreworksAAS.submodels = [];
+
+            if (!fetchedAAS.submodels || fetchedAAS.submodels.length === 0) {
+                // No submodels to process, just post the AAS
+                await postAas(coreworksAAS);
+                instanceDialog.value = false;
+                navigationStore.dispatchTriggerAASListReload();
+                return;
+            }
+
+            // Filter submodels that are selected
+            interface SubmodelRef {
+                keys: Array<{ value: string }>;
+            }
+            const selectedSubmodelRefs = fetchedAAS.submodels.filter((submodelRef: SubmodelRef) => {
+                if (!submodelRef.keys?.[0]?.value) return false;
+                return selected.value.includes(submodelRef.keys[0].value);
             });
-            return;
-        }
 
-        fetchedAAS.id = fetchedAAS.id + idSuffix.value;
-        // create AAS Core Works AAS
-        const instanceOrError = jsonization.assetAdministrationShellFromJsonable(fetchedAAS);
-        if (instanceOrError.error !== null) {
-            console.error('Error parsing AAS: ', instanceOrError.error);
-            return;
-        }
-        const coreworksAAS = instanceOrError.mustValue();
-        // Change the asset kind of the AAS to "Instance"
-        coreworksAAS.assetInformation.assetKind = aasTypes.AssetKind.Instance;
-        // Delete existing submodel references
-        coreworksAAS.submodels = [];
+            // Fetch all selected submodels in parallel
+            const fetchedSubmodels = await Promise.all(
+                selectedSubmodelRefs.map(async (submodelRef: SubmodelRef) => {
+                    const submodelId = submodelRef.keys[0].value;
+                    const fetchedSubmodel = await fetchSubmodelById(submodelId);
+                    if (!fetchedSubmodel) {
+                        throw new Error(`Failed to fetch Submodel with ID "${submodelId}".`);
+                    }
+                    return { originalId: submodelId, submodel: fetchedSubmodel };
+                })
+            );
 
-        const submodelsToAttach: any[] = [];
+            // Check if any submodels with new IDs already exist (in parallel)
+            const existingSubmodelChecks = await Promise.all(
+                fetchedSubmodels.map(async ({ originalId }) => {
+                    const newSubmodelId = originalId + idSuffix.value.trim();
+                    const existingSubmodel = await fetchSmById(newSubmodelId);
+                    return { newSubmodelId, exists: !!existingSubmodel?.id };
+                })
+            );
 
-        for (const submodelRef of fetchedAAS.submodels) {
-            if (selected.value.includes(submodelRef.keys[0].value)) {
-                const fetchedSubmodel = await fetchSubmodelById(submodelRef.keys[0].value);
-                // Check if Submodel with new ID already exists
-                const newSubmodelId = submodelRef.keys[0].value + idSuffix.value;
-                const existingSubmodel = await fetchSmById(newSubmodelId);
-                if (existingSubmodel?.id) {
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 4000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'Instantiation Failed: A Submodel with the ID "' + newSubmodelId + '" already exists.',
-                    });
-                    return;
-                }
+            const existingSubmodel = existingSubmodelChecks.find((check) => check.exists);
+            if (existingSubmodel) {
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 4000,
+                    color: 'error',
+                    btnColor: 'buttonText',
+                    text:
+                        'Instantiation Failed: A Submodel with the ID "' +
+                        existingSubmodel.newSubmodelId +
+                        '" already exists.',
+                });
+                return;
+            }
+
+            // Process submodels
+            const submodelsToAttach: aasTypes.Submodel[] = [];
+            for (const { originalId, submodel } of fetchedSubmodels) {
+                const newSubmodelId = originalId + idSuffix.value.trim();
+
                 // Change the submodel kind of the Submodel to "Instance"
-                fetchedSubmodel.kind = 'Instance';
-                fetchedSubmodel.id = newSubmodelId;
+                submodel.kind = 'Instance';
+                submodel.id = newSubmodelId;
 
                 // Create Core Works Submodel
-                const submodelOrError = jsonization.submodelFromJsonable(fetchedSubmodel);
+                const submodelOrError = jsonization.submodelFromJsonable(submodel);
                 if (submodelOrError.error !== null) {
-                    console.error('Error parsing Submodel: ', submodelOrError.error);
-                    return;
+                    throw new Error('Converting Submodel Failed during Instantiation: ' + submodelOrError.error);
                 }
                 const coreworksSubmodel = submodelOrError.mustValue();
                 submodelsToAttach.push(coreworksSubmodel);
+
                 // Add submodel reference to AAS
-                coreworksAAS.submodels?.push(
+                if (!coreworksAAS.submodels) {
+                    coreworksAAS.submodels = [];
+                }
+                coreworksAAS.submodels.push(
                     new aasTypes.Reference(aasTypes.ReferenceTypes.ModelReference, [
                         new aasTypes.Key(aasTypes.KeyTypes.Submodel, coreworksSubmodel.id),
                     ])
                 );
             }
+
+            // Post all Submodels in parallel
+            await Promise.all(submodelsToAttach.map((submodel) => postSubmodel(submodel)));
+
+            // Post AAS after Submodels
+            await postAas(coreworksAAS);
+
+            // Close Dialog
+            instanceDialog.value = false;
+
+            // Reload AAS List
+            navigationStore.dispatchTriggerAASListReload();
+
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 3000,
+                color: 'success',
+                btnColor: 'buttonText',
+                text: 'AAS instantiated successfully.',
+            });
+        } catch (error) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Instantiation Failed: ' + (error instanceof Error ? error.message : String(error)),
+            });
+        } finally {
+            instantiationLoading.value = false;
         }
-
-        // Post Submodels first
-        for (const submodel of submodelsToAttach) {
-            await postSubmodel(submodel);
-        }
-        // Post AAS after Submodels
-        await postAas(coreworksAAS);
-
-        // Close Dialog
-        instanceDialog.value = false;
-        instantiationLoading.value = false;
-
-        // Reload AAS List
-        navigationStore.dispatchTriggerAASListReload();
     }
 </script>
