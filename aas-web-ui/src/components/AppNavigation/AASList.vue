@@ -220,10 +220,17 @@
                                                     </template>
                                                     <v-list-item-subtitle>Delete AAS</v-list-item-subtitle>
                                                 </v-list-item>
-                                                <v-divider v-if="item.assetKind === 'Type'"></v-divider>
+                                                <v-divider
+                                                    v-if="
+                                                        item.assetKind === 'Type' ||
+                                                        item.assetInformation?.assetKind === 'Type'
+                                                    "></v-divider>
                                                 <!-- Create Instance from Type -->
                                                 <v-list-item
-                                                    v-if="item.assetKind === 'Type'"
+                                                    v-if="
+                                                        item.assetKind === 'Type' ||
+                                                        item.assetInformation?.assetKind === 'Type'
+                                                    "
                                                     @click="createInstanceFromType(item)">
                                                     <template #prepend>
                                                         <v-icon size="x-small">mdi-file-plus</v-icon>
