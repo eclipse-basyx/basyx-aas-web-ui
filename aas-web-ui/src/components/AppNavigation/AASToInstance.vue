@@ -136,7 +136,6 @@
             // Check if AAS with new ID already exists
             const newAASId = props.aas.id + idSuffix.value.trim();
             const aasExists = await aasIsAvailableById(newAASId);
-            console.log('AAS Exists:', aasExists);
 
             if (aasExists) {
                 navigationStore.dispatchSnackbar({
