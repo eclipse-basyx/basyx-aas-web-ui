@@ -275,7 +275,12 @@ export function useSMRepositoryClient() {
 
         try {
             const smRepoResponse = await getRequest(smRepoPath, smRepoContext, disableMessage);
-            if (smRepoResponse?.success && smRepoResponse?.data && Object.keys(smRepoResponse?.data).length > 0) {
+            if (
+                smRepoResponse?.success &&
+                smRepoResponse?.data &&
+                Object.keys(smRepoResponse?.data).length > 0 &&
+                smRepoResponse.status < 400
+            ) {
                 return true;
             }
         } catch (e) {

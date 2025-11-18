@@ -220,6 +220,18 @@
                                                     </template>
                                                     <v-list-item-subtitle>Delete AAS</v-list-item-subtitle>
                                                 </v-list-item>
+                                                <v-divider v-if="item.assetKind === 'Type'"></v-divider>
+                                                <!-- Create Instance from Type -->
+                                                <v-list-item
+                                                    v-if="item.assetKind === 'Type'"
+                                                    @click="createInstanceFromType(item)">
+                                                    <template #prepend>
+                                                        <v-icon size="x-small">mdi-file-plus</v-icon>
+                                                    </template>
+                                                    <v-list-item-subtitle
+                                                        >Create Instance from Type</v-list-item-subtitle
+                                                    >
+                                                </v-list-item>
                                                 <v-divider></v-divider>
                                                 <!-- Copy AAS Endpoint to clipboard -->
                                                 <v-list-item
@@ -284,6 +296,8 @@
     <DeleteAAS v-model="deleteDialog" :aas="aasToDelete" :list-loading-state="listLoading"></DeleteAAS>
     <!-- Dialog for downloading AAS -->
     <DownloadAAS v-model="downloadAASDialog" :aas="aasToDownload"></DownloadAAS>
+    <!-- Dialog for Instance Creation from Type -->
+    <AASToInstance v-model="instanceDialog" :aas="aasToInstantiate"></AASToInstance>
 </template>
 
 <script lang="ts" setup>
@@ -338,6 +352,8 @@
     const aasToEdit = ref<any | undefined>(undefined); // Variable to store the AAS to be edited
     const statusCheckInterval = ref<number | undefined>(undefined);
     const copyIcon = ref<string>('mdi-clipboard-file-outline');
+    const instanceDialog = ref(false); // Variable to store if the Instance Creation Dialog should be shown
+    const aasToInstantiate = ref({}); // Variable to store the AAS to be instantiated
 
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
@@ -601,6 +617,11 @@
         if (createNew === false && aasOrAasDescriptor) {
             aasToEdit.value = aasOrAasDescriptor;
         }
+    }
+
+    function createInstanceFromType(aasDescriptor: any): void {
+        instanceDialog.value = true;
+        aasToInstantiate.value = aasDescriptor;
     }
 </script>
 
