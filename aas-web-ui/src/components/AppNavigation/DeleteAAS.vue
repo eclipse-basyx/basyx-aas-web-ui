@@ -107,11 +107,11 @@
                 const submodelIds = selected.value;
                 // Remove each submodel
                 for (const submodelId of submodelIds) {
-                    error = !(await deleteSmById(submodelId));
+                    error = error || !(await deleteSmById(submodelId));
                 }
             }
 
-            error = !(await removeAAS(props.aas));
+            error = error || !(await removeAAS(props.aas));
         } finally {
             deleteDialog.value = false;
             deleteSubmodels.value = false;

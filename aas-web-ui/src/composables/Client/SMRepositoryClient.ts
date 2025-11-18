@@ -391,10 +391,10 @@ export function useSMRepositoryClient() {
 
         if (submodelId === '') return failResponse;
 
-        const smEndoint = getSmEndpointById(submodelId);
+        const smEndpoint = getSmEndpointById(submodelId);
 
-        if (smEndoint && smEndoint.trim() !== '') {
-            const path = smEndoint;
+        if (smEndpoint && smEndpoint.trim() !== '') {
+            const path = smEndpoint;
             const context = 'deleting Submodel';
             const disableMessage = false;
             const response = await deleteRequest(path, context, disableMessage);

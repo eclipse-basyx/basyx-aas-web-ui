@@ -448,5 +448,6 @@ export function useAASHandling() {
         fetchAasById,
         fetchAasSmListById,
         deleteAasById,
+        deleteAas,
     };
 }
