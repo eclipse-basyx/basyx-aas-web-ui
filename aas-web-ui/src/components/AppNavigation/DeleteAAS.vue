@@ -32,8 +32,6 @@
     import { useRoute, useRouter } from 'vue-router';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
-    import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
-    import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
@@ -46,10 +44,8 @@
     const navigationStore = useNavigationStore();
 
     // Composables
-    const { getSubmodelRefsById } = useAASRepositoryClient();
-    const { fetchSmById } = useSMRepositoryClient();
-    const { deleteAasById } = useAASHandling();
-    const { deleteSmById } = useSMHandling();
+    const { deleteAasById, getSubmodelRefsById } = useAASHandling();
+    const { deleteSmById, fetchSmById } = useSMHandling();
 
     const props = defineProps<{
         modelValue: boolean;
@@ -79,6 +75,7 @@
                 const submodelRefs = await getSubmodelRefsById(props.aas.id);
 
                 for (const submodelRef of submodelRefs) {
+                    // TODO: Optimize by only using the metadata endpoint once it is implemented in BaSyx Go
                     const submodel = await fetchSmById(submodelRef.keys[0].value);
                     submodelIds.value.push({ smId: submodelRef.keys[0].value, smIdShort: submodel.idShort, submodel });
                     selected.value.push(submodelRef.keys[0].value);
