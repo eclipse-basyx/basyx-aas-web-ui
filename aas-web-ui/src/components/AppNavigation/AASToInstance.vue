@@ -43,10 +43,10 @@
     import { useIDUtils } from '@/composables/IDUtils';
     import { useNavigationStore } from '@/store/NavigationStore';
 
-    const { getSubmodelRefsById, aasIsAvailableById, postAas } = useAASRepositoryClient();
-    const { fetchAasById } = useAASHandling();
-    const { fetchSmById, smIsAvailableById, postSubmodel } = useSMRepositoryClient();
-    const { fetchSmById: fetchSubmodelById } = useSMHandling();
+    const { postAas } = useAASRepositoryClient();
+    const { fetchAasById, getSubmodelRefsById, aasIsAvailableById } = useAASHandling();
+    const { postSubmodel } = useSMRepositoryClient();
+    const { fetchSmById, smIsAvailableById } = useSMHandling();
     const { generateUUID } = useIDUtils();
 
     const navigationStore = useNavigationStore();
@@ -94,6 +94,7 @@
             const submodelRefs = await getSubmodelRefsById(props.aas.id);
 
             for (const submodelRef of submodelRefs) {
+                // TODO: Optimize by only using the metadata endpoint once it is implemented in BaSyx Go
                 const submodel = await fetchSmById(submodelRef.keys[0].value);
                 submodelIds.value.push({ smId: submodelRef.keys[0].value, smIdShort: submodel.idShort, submodel });
                 selected.value.push(submodelRef.keys[0].value);
@@ -186,7 +187,7 @@
             const fetchedSubmodels = await Promise.all(
                 selectedSubmodelRefs.map(async (submodelRef: SubmodelRef) => {
                     const submodelId = submodelRef.keys[0].value;
-                    const fetchedSubmodel = await fetchSubmodelById(submodelId);
+                    const fetchedSubmodel = await fetchSmById(submodelId);
                     if (!fetchedSubmodel) {
                         throw new Error(`Failed to fetch Submodel with ID "${submodelId}".`);
                     }
