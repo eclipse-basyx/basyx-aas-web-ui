@@ -202,7 +202,6 @@ export function useAASRepositoryClient() {
         const disableMessage = true;
         try {
             const aasRepoResponse = await getRequest(aasRepoPath, aasRepoContext, disableMessage);
-            console.log('AAS Availability Response:', aasRepoResponse);
             if (
                 aasRepoResponse?.success &&
                 aasRepoResponse?.data &&
