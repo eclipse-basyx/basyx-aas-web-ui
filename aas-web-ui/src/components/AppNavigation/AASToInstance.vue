@@ -43,9 +43,9 @@
     import { useIDUtils } from '@/composables/IDUtils';
     import { useNavigationStore } from '@/store/NavigationStore';
 
-    const { getSubmodelRefsById, fetchAasById: fetchAASByIdFromRepo, postAas } = useAASRepositoryClient();
+    const { getSubmodelRefsById, aasIsAvailableById, postAas } = useAASRepositoryClient();
     const { fetchAasById } = useAASHandling();
-    const { fetchSmById, postSubmodel } = useSMRepositoryClient();
+    const { fetchSmById, smIsAvailableById, postSubmodel } = useSMRepositoryClient();
     const { fetchSmById: fetchSubmodelById } = useSMHandling();
     const { generateUUID } = useIDUtils();
 
@@ -83,8 +83,16 @@
             selected.value = [];
             submodelIds.value = [];
             instantiationLoading.value = false;
+
+            // Generate new ID Suffix on dialog open
+            if (value) {
+                idSuffix.value = '_instance_' + generateUUID();
+            }
+
             if (!props.aas) return;
+
             const submodelRefs = await getSubmodelRefsById(props.aas.id);
+
             for (const submodelRef of submodelRefs) {
                 const submodel = await fetchSmById(submodelRef.keys[0].value);
                 submodelIds.value.push({ smId: submodelRef.keys[0].value, smIdShort: submodel.idShort, submodel });
@@ -127,9 +135,10 @@
 
             // Check if AAS with new ID already exists
             const newAASId = props.aas.id + idSuffix.value.trim();
-            const existingAAS = await fetchAASByIdFromRepo(newAASId);
+            const aasExists = await aasIsAvailableById(newAASId);
+            console.log('AAS Exists:', aasExists);
 
-            if (existingAAS?.id) {
+            if (aasExists) {
                 navigationStore.dispatchSnackbar({
                     status: true,
                     timeout: 4000,
@@ -154,7 +163,7 @@
                 throw new Error('AAS assetInformation is missing.');
             }
             coreworksAAS.assetInformation.assetKind = aasTypes.AssetKind.Instance;
-            // Delete existing submodel references
+            // Clear existing submodel references for rebuilding
             coreworksAAS.submodels = [];
 
             if (!fetchedAAS.submodels || fetchedAAS.submodels.length === 0) {
@@ -186,12 +195,12 @@
                 })
             );
 
-            // Check if any submodels with new IDs already exist (in parallel)
+            // Check if any submodels with new IDs already exist
             const existingSubmodelChecks = await Promise.all(
                 fetchedSubmodels.map(async ({ originalId }) => {
                     const newSubmodelId = originalId + idSuffix.value.trim();
-                    const existingSubmodel = await fetchSmById(newSubmodelId);
-                    return { newSubmodelId, exists: !!existingSubmodel?.id };
+                    const smExists = await smIsAvailableById(newSubmodelId);
+                    return { newSubmodelId, exists: smExists };
                 })
             );
 
@@ -215,8 +224,6 @@
             for (const { originalId, submodel } of fetchedSubmodels) {
                 const newSubmodelId = originalId + idSuffix.value.trim();
 
-                // Change the submodel kind of the Submodel to "Instance"
-                submodel.kind = 'Instance';
                 submodel.id = newSubmodelId;
 
                 // Create Core Works Submodel
@@ -225,12 +232,13 @@
                     throw new Error('Converting Submodel Failed during Instantiation: ' + submodelOrError.error);
                 }
                 const coreworksSubmodel = submodelOrError.mustValue();
+
+                // Change the submodel kind of the Submodel to "Instance"
+                submodel.kind = aasTypes.ModellingKind.Instance;
+
                 submodelsToAttach.push(coreworksSubmodel);
 
                 // Add submodel reference to AAS
-                if (!coreworksAAS.submodels) {
-                    coreworksAAS.submodels = [];
-                }
                 coreworksAAS.submodels.push(
                     new aasTypes.Reference(aasTypes.ReferenceTypes.ModelReference, [
                         new aasTypes.Key(aasTypes.KeyTypes.Submodel, coreworksSubmodel.id),
