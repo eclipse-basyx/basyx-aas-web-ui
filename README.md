@@ -1,38 +1,37 @@
 # Team 2 SWE
 ![alt text](https://github.com/user-attachments/assets/5401a4c2-23e4-4d54-8362-cf95a31ca3f6 "Banner")
 
-Dieses Projekt zielt darauf ab, die Web-UI des BaSyx-Tools
-zu verbessern. Dabei wird hauptsächlich Wert auf Usability bei der Suchfunktion gesetzt.
+This project aims to improve the web UI of the BaSyx tool, with a primary focus on enhancing the usability of the search function.
 
 
-# Das Team
+# The Team
 
-| Name | Rolle | Github |
+| Name | Role | Github |
 | ---- | ---- | ---- |
-| Manuel Sposato​ | Projektleiter​ | [Manujpg](https://github.com/Manujpg) |
-| Amon Rizzo​ | Produktmanager | [amon1220](https://github.com/amon1220)​ |
-| Jakob Pauls​ | Systemarchitekt | [DJSkyRoad](https://github.com/DJSkyRoad) |
-| David Ehrhardt​ | Systemarchitekt | [xyzyx4546](https://github.com/xyzyx4546)​ |
+| Manuel Sposato​ | Project Leader​ | [Manujpg](https://github.com/Manujpg) |
+| Amon Rizzo​ | Product Manager | [amon1220](https://github.com/amon1220)​ |
+| Jakob Pauls​ | System Developer | [DJSkyRoad](https://github.com/DJSkyRoad) |
+| David Ehrhardt​ | System Developer | [xyzyx4546](https://github.com/xyzyx4546)​ |
 | Mattis Weigold​ | Testmanager | [Skullman-G](https://github.com/Skullman-G) |
-| Laszlo Engemann​ | Technische Dokumentation​ | [Laszlo2025](https://github.com/Laszlo2025)​ |
-| Matti Frey​ | Technische Dokumentation | [Matti2603](https://github.com/Matti2603) |
+| Laszlo Engemann​ | Technical Documentation | [Laszlo2025](https://github.com/Laszlo2025)​ |
+| Matti Frey​ | Technical Documentation | [Matti2603](https://github.com/Matti2603) |
 
-# Das Basisprojekt
+# The Root Project
 
-Unser Projekt ist eine Weiterentwicklung und Fork der [basyx-aas-web-ui](https://github.com/eclipse-basyx/basyx-aas-web-ui), einer Web-Application mit Vue.js. Diese ermöglicht es sogenannte
-Asset Administration Shells zu verwalten.
-Mehr über AAS Dateien und weitere Informationen zu BaSyx können in der offiziellen [BaSyx-Dokumentation](https://wiki.basyx.org/en/latest/index.html) nachgelesen werden.
+Our project is an extension and fork of the [basyx-aas-web-ui](https://github.com/eclipse-basyx/basyx-aas-web-ui), a web application built with Vue.js. It enables the management of so-called Asset Administration Shells.
+
+More information about AAS files and additional details about BaSyx can be found in the official [BaSyx documentation](https://wiki.basyx.org/en/latest/index.html).
 
 ![alt text](ORIGINAL_DOCS/Figs/AAS_Web_UI.png "AAS GUI")
 
-# Unser Projekt
+# Our Project
 
-[Unsere Projektanweisung](https://github.com/DHBW-TINF24F/.github/blob/main/project2_basyx_viewer_extension.md) besteht aus dem Erhalt und Aufbau der bereits bestehenden Funktionen im Frontend und der API.
-Folgende neue Funktionen sind bereits geplant:
-- Eine rekursive Suchfunktion
-- Sortieren nach Schlüsselattributen in der Suche
-- Nameplate Integration im Plugin: "Digital Nameplate"
-- UI-Verbesserung durch Boolean Labeling
+Our [project specification](https://github.com/DHBW-TINF24F/.github/blob/main/project2_basyx_viewer_extension.md) consists of maintaining and further developing the existing frontend and API functionalities.
 
-Weitere Details zur Planung und Verständigung sind auf unserer [Notion](https://shore-ambert-85d.notion.site/SWE-Hub-2e4958e5f3554007b4deb97139e785b3?pvs=74) Seite vorhanden.
+The following new features are already planned:
+- A recursive search function
+- Sorting by key attributes in the search
+- Nameplate integration in the "Digital Nameplate" plugin
+- UI improvements through boolean labeling
 
+Further details on planning and coordination can be found on our [Notion](https://shore-ambert-85d.notion.site/SWE-Hub-2e4958e5f3554007b4deb97139e785b3?pvs=74) page.
