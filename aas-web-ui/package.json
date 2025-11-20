@@ -58,7 +58,7 @@
     "@types/three": "^0.181.0",
     "@types/uuid": "^11.0.0",
     "@types/webfontloader": "^1.6.38",
-    "@vitejs/plugin-vue": "^6.0.1",
+    "@vitejs/plugin-vue": "^6.0.2",
     "@vitest/coverage-istanbul": "4.0.10",
     "@vitest/ui": "^4.0.10",
     "@vue/test-utils": "^2.4.6",
