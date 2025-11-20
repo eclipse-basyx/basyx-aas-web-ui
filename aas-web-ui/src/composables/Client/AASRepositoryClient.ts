@@ -202,7 +202,12 @@ export function useAASRepositoryClient() {
         const disableMessage = true;
         try {
             const aasRepoResponse = await getRequest(aasRepoPath, aasRepoContext, disableMessage);
-            if (aasRepoResponse?.success && aasRepoResponse?.data && Object.keys(aasRepoResponse?.data).length > 0) {
+            if (
+                aasRepoResponse?.success &&
+                aasRepoResponse?.data &&
+                Object.keys(aasRepoResponse?.data).length > 0 &&
+                aasRepoResponse?.status < 400
+            ) {
                 return true;
             }
         } catch (e) {
@@ -545,6 +550,58 @@ export function useAASRepositoryClient() {
         downloadAasx(aas);
     }
 
+    /**
+     * Deletes an Asset Administration Shell (AAS) by the provided AAS ID.
+     *
+     * @async
+     * @param {string} aasId - The ID of the AAS to delete.
+     * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
+     */
+    async function deleteAasById(aasId: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!aasId) return failResponse;
+
+        aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
+
+        const aasEndpoint = getAasEndpointById(aasId);
+
+        if (aasEndpoint && aasEndpoint.trim() !== '') {
+            const path = aasEndpoint;
+            const context = 'deleting AAS';
+            const disableMessage = false;
+            const response = await deleteRequest(path, context, disableMessage);
+            return response.success;
+        }
+
+        return failResponse;
+    }
+
+    /**
+     * Deletes an Asset Administration Shell (AAS) by the provided AAS endpoint.
+     *
+     * @async
+     * @param {string} aasEndpoint - The endpoint URL of the AAS to delete.
+     * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
+     */
+    async function deleteAas(aasEndpoint: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!aasEndpoint) return failResponse;
+
+        aasEndpoint = aasEndpoint.trim();
+
+        if (aasEndpoint === '') return failResponse;
+
+        const path = aasEndpoint;
+        const context = 'deleting AAS';
+        const disableMessage = false;
+        const response = await deleteRequest(path, context, disableMessage);
+        return response.success;
+    }
+
     return {
         endpointPath,
         fetchAasList,
@@ -565,5 +622,7 @@ export function useAASRepositoryClient() {
         getSubmodelRefs,
         getSubmodelRefsById,
         deleteSubmodelRef,
+        deleteAasById,
+        deleteAas,
     };
 }

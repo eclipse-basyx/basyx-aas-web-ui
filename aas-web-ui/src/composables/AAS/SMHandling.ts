@@ -18,6 +18,7 @@ export function useSMHandling() {
         getSmEndpointById: getSmEndpointByIdFromRepo,
         fetchSme: fetchSmeFromRepo,
         smIsAvailable: smIsAvailableInRepo,
+        deleteSubmodel: deleteSubmodelFromRepo,
     } = useSMRepositoryClient();
     const { fetchCds } = useConceptDescriptionHandling();
     const { generateUUID } = useIDUtils();
@@ -182,6 +183,49 @@ export function useSMHandling() {
         }
 
         return failResponse;
+    }
+
+    /**
+     * Deletes a Submodel by the provided Submodel ID.
+     *
+     * @async
+     * @param {string} smId - The ID of the Submodel to delete.
+     * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
+     */
+    async function deleteSmById(smId: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!smId) return failResponse;
+
+        smId = smId.trim();
+
+        if (smId === '') return failResponse;
+
+        const smEndpoint = await getSmEndpointById(smId);
+        if (smEndpoint && smEndpoint.trim() !== '') {
+            return await deleteSm(smEndpoint.trim());
+        }
+
+        return failResponse;
+    }
+
+    /**
+     * Deletes a Submodel by the provided Submodel endpoint.
+     *
+     * @async
+     * @param {string} smEndpoint - The endpoint URL of the Submodel to delete.
+     * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
+     */
+    async function deleteSm(smEndpoint: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!smEndpoint) return failResponse;
+
+        smEndpoint = smEndpoint.trim();
+
+        if (smEndpoint === '') return failResponse;
+
+        return await deleteSubmodelFromRepo(smEndpoint);
     }
 
     /**
@@ -427,5 +471,7 @@ export function useSMHandling() {
         fetchSmList,
         setData,
         fetchAllConceptDescriptions,
+        deleteSm,
+        deleteSmById,
     };
 }

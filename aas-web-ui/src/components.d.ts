@@ -14,6 +14,7 @@ declare module 'vue' {
     AASForm: typeof import('./components/EditorComponents/AASForm.vue')['default']
     AASList: typeof import('./components/AppNavigation/AASList.vue')['default']
     AASListDetails: typeof import('./components/AppNavigation/AASListDetails.vue')['default']
+    AASToInstance: typeof import('./components/AppNavigation/AASToInstance.vue')['default']
     AdministrativeInformationElement: typeof import('./components/UIComponents/AdministrativeInformationElement.vue')['default']
     AnnotatedRelationshipElement: typeof import('./components/SubmodelElements/AnnotatedRelationshipElement.vue')['default']
     AppNavigation: typeof import('./components/AppNavigation/AppNavigation.vue')['default']

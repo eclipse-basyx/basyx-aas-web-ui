@@ -20,6 +20,7 @@ export function useAASHandling() {
         getAasEndpointById: getAasEndpointByIdFromRepo,
         aasIsAvailable: aasIsAvailableInRepo,
         getSubmodelRefs: getSubmodelRefsFromRepo,
+        deleteAas: deleteAasFromRepo,
     } = useAASRepositoryClient();
     const { fetchSmDescriptor, fetchSmById } = useSMHandling();
     const { getSmIdOfSmePath } = useSMEHandling();
@@ -239,6 +240,49 @@ export function useAASHandling() {
     }
 
     /**
+     * Deletes an Asset Administration Shell (AAS) by the provided AAS ID.
+     *
+     * @async
+     * @param {string} aasId - The ID of the AAS to delete.
+     * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
+     */
+    async function deleteAasById(aasId: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!aasId) return failResponse;
+
+        aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
+
+        const aasEndpoint = await getAasEndpointById(aasId);
+        if (aasEndpoint && aasEndpoint.trim() !== '') {
+            return await deleteAas(aasEndpoint.trim());
+        }
+
+        return failResponse;
+    }
+
+    /**
+     * Deletes an Asset Administration Shell (AAS) by the provided AAS endpoint.
+     *
+     * @async
+     * @param {string} aasEndpoint - The endpoint URL of the AAS to delete.
+     * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
+     */
+    async function deleteAas(aasEndpoint: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!aasEndpoint) return failResponse;
+
+        aasEndpoint = aasEndpoint.trim();
+
+        if (aasEndpoint === '') return failResponse;
+
+        return await deleteAasFromRepo(aasEndpoint);
+    }
+
+    /**
      * Fetches a list of all available Submodel (SM) Descriptors of a specified Asset Administration Shell (AAS).
      *
      * @async
@@ -403,5 +447,7 @@ export function useAASHandling() {
         fetchAas,
         fetchAasById,
         fetchAasSmListById,
+        deleteAasById,
+        deleteAas,
     };
 }

@@ -275,7 +275,12 @@ export function useSMRepositoryClient() {
 
         try {
             const smRepoResponse = await getRequest(smRepoPath, smRepoContext, disableMessage);
-            if (smRepoResponse?.success && smRepoResponse?.data && Object.keys(smRepoResponse?.data).length > 0) {
+            if (
+                smRepoResponse?.success &&
+                smRepoResponse?.data &&
+                Object.keys(smRepoResponse?.data).length > 0 &&
+                smRepoResponse.status < 400
+            ) {
                 return true;
             }
         } catch (e) {
@@ -370,18 +375,54 @@ export function useSMRepositoryClient() {
         return response.success;
     }
 
-    async function deleteSubmodel(submodelId: string): Promise<boolean> {
+    /**
+     * Deletes a Submodel by the provided Submodel ID.
+     *
+     * @async
+     * @param {string} submodelId - The ID of the Submodel to delete.
+     * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
+     */
+    async function deleteSubmodelById(submodelId: string): Promise<boolean> {
         const failResponse = false;
 
-        let smRepoUrl = submodelRepoUrl.value;
-        if (smRepoUrl === '') return failResponse;
-        if (smRepoUrl.endsWith('/')) smRepoUrl = stripLastCharacter(smRepoUrl);
-        if (!smRepoUrl.endsWith(endpointPath)) smRepoUrl += endpointPath;
+        if (!submodelId) return failResponse;
 
+        submodelId = submodelId.trim();
+
+        if (submodelId === '') return failResponse;
+
+        const smEndpoint = getSmEndpointById(submodelId);
+
+        if (smEndpoint && smEndpoint.trim() !== '') {
+            const path = smEndpoint;
+            const context = 'deleting Submodel';
+            const disableMessage = false;
+            const response = await deleteRequest(path, context, disableMessage);
+            return response.success;
+        }
+
+        return failResponse;
+    }
+
+    /**
+     * Deletes a Submodel by the provided Submodel endpoint.
+     *
+     * @async
+     * @param {string} submodelEndpoint - The endpoint URL of the Submodel to delete.
+     * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
+     */
+    async function deleteSubmodel(submodelEndpoint: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!submodelEndpoint) return failResponse;
+
+        submodelEndpoint = submodelEndpoint.trim();
+
+        if (submodelEndpoint === '') return failResponse;
+
+        const path = submodelEndpoint;
         const context = 'deleting Submodel';
         const disableMessage = false;
-        const path = smRepoUrl + '/' + base64Encode(submodelId);
-
         const response = await deleteRequest(path, context, disableMessage);
         return response.success;
     }
@@ -477,6 +518,7 @@ export function useSMRepositoryClient() {
         getSmEndpointById,
         postSubmodel,
         putSubmodel,
+        deleteSubmodelById,
         deleteSubmodel,
         postSubmodelElement,
         putSubmodelElement,
