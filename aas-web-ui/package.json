@@ -71,7 +71,7 @@
     "eslint-plugin-vue": "^10.5.1",
     "jsdom": "^27.2.0",
     "prettier": "^3.6.2",
-    "sass": "^1.94.0",
+    "sass": "^1.94.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.47.0",
     "unplugin-auto-import": "^20.2.0",
