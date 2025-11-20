@@ -1,6 +1,11 @@
 <template>
     <v-container class="px-2 pt-2 pb-0">
-        <v-list-subheader>Backend Configuration</v-list-subheader>
+        <v-list-subheader>
+            Backend Configuration
+            <v-chip v-if="selectedInfrastructure" size="x-small" color="primary" class="ml-2">
+                {{ selectedInfrastructure.name }}
+            </v-chip>
+        </v-list-subheader>
         <v-list-item v-for="(repo, key) in basyxComponents" :key="key" class="px-0 py-0">
             <v-text-field
                 v-model="repo.url"
@@ -35,4 +40,5 @@
 
     // Computed Properties
     const basyxComponents = computed(() => navigationStore.getBasyxComponents);
+    const selectedInfrastructure = computed(() => navigationStore.getSelectedInfrastructure);
 </script>

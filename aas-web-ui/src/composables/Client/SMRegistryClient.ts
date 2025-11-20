@@ -61,7 +61,7 @@ export function useSMRegistryClient() {
      * @param {string} smId - The ID of the SM Descriptor to fetch.
      * @returns {Promise<any>} A promise that resolves to a SM Descriptor.
      */
-    async function fetchSmDescriptorById(smId: string): Promise<any> {
+    async function fetchSmDescriptorById(smId: string, endpoint?: string): Promise<any> {
         const failResponse = {} as any;
 
         if (!smId) return failResponse;
@@ -70,7 +70,7 @@ export function useSMRegistryClient() {
 
         if (smId === '') return failResponse;
 
-        let smRegistryUrl = submodelRegistryUrl.value.trim();
+        let smRegistryUrl = endpoint ? endpoint : submodelRegistryUrl.value.trim();
         if (smRegistryUrl === '') return failResponse;
         if (smRegistryUrl.endsWith('/')) smRegistryUrl = stripLastCharacter(smRegistryUrl);
         if (!smRegistryUrl.endsWith(endpointPath)) smRegistryUrl += endpointPath;
@@ -101,7 +101,7 @@ export function useSMRegistryClient() {
      * @param {string} smId - The ID of the SM to retrieve the endpoint for.
      * @returns {Promise<string>} A promise that resolves to an SM endpoint.
      */
-    async function getSmEndpointById(smId: string): Promise<string> {
+    async function getSmEndpointById(smId: string, endpoint?: string): Promise<string> {
         const failResponse = '';
 
         if (!smId) return failResponse;
@@ -110,7 +110,7 @@ export function useSMRegistryClient() {
 
         if (smId === '') return failResponse;
 
-        const smDescriptor = await fetchSmDescriptorById(smId);
+        const smDescriptor = await fetchSmDescriptorById(smId, endpoint);
         const smEndpoint = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0');
 
         return smEndpoint || failResponse;

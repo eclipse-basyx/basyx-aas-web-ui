@@ -32,7 +32,15 @@
                     <MainMenu @close-menu="mainMenu = false"></MainMenu>
                 </v-menu>
                 <v-spacer></v-spacer>
-                <!-- Settings-Menu for Auto-Sync and Sync-Interval -->
+                <!-- Infrastructure Selector -->
+                <v-menu v-if="!isMobile" v-model="infrastructureMenu" :close-on-content-click="false" :offset="8">
+                    <template #activator="{ props }">
+                        <v-btn class="text-none" v-bind="props" append-icon="mdi-chevron-down" variant="text">
+                            {{ selectedInfrastructureName }}
+                        </v-btn>
+                    </template>
+                    <InfrastructureSelector @open-manage="openInfrastructureManagement"></InfrastructureSelector>
+                </v-menu>
                 <AutoSync v-if="showAutoSync"></AutoSync>
                 <!-- Platform I 4.0 Logo -->
                 <v-img v-if="!isMobile" src="@/assets/IDTA_Logo_Blue_Web_S.svg" max-width="120px" />
@@ -52,6 +60,9 @@
                         <!-- Settings in Mobile View -->
                         <v-row justify="center" align="start" style="max-height: calc(100vh - 64px); overflow-y: auto">
                             <v-col cols="12" class="text-center px-5">
+                                <InfrastructureSelector
+                                    @open-manage="openInfrastructureManagement"></InfrastructureSelector>
+                                <v-divider class="mt-2"></v-divider>
                                 <ThemeSwitch></ThemeSwitch>
                                 <v-divider v-if="endpointConfigAvailable" class="mt-2"></v-divider>
                                 <!-- Backend Configuration -->
@@ -211,6 +222,9 @@
                 </v-row>
             </div>
         </v-menu>
+
+        <!-- Infrastructure Management Dialog -->
+        <InfrastructureManagement v-model:open="infrastructureManagementDialog"></InfrastructureManagement>
     </v-container>
 </template>
 
@@ -237,6 +251,8 @@
 
     // Data
     const mainMenu = ref(false); // Variable to show the Main Menu
+    const infrastructureMenu = ref(false); // Variable to show the Infrastructure Menu
+    const infrastructureManagementDialog = ref(false); // Variable to show the Infrastructure Management Dialog
     const mobileMenu = ref(false); // Variable to show the Mobile Menu
     const endpointConfigAvailable = ref(envStore.getEndpointConfigAvailable);
     const drawerVisibility = ref(true); // Variable to show the AAS List Drawer
@@ -249,6 +265,10 @@
     const selectedAas = computed(() => aasStore.getSelectedAAS); // get selected AAS from Store
     const selectedNode = computed(() => aasStore.getSelectedNode); // get selected AAS from Store
     const moduleRoutes = computed(() => navigationStore.getModuleRoutes); // get the module routes
+    const selectedInfrastructureName = computed(() => {
+        const infra = navigationStore.getSelectedInfrastructure;
+        return infra ? infra.name : 'No Infrastructure';
+    });
     const filteredAndOrderedModuleRoutes = computed(() => {
         const filteredModuleRoutes = moduleRoutes.value.filter((moduleRoute: RouteRecordRaw) => {
             if (isMobile.value && !moduleRoute?.meta?.isMobileModule) return false;
@@ -321,6 +341,14 @@
         }
     );
 
+    // Watch for trigger to open infrastructure management dialog (e.g., from token refresh failure)
+    watch(
+        () => navigationStore.getTriggerInfrastructureDialog,
+        () => {
+            infrastructureManagementDialog.value = true;
+        }
+    );
+
     onMounted(async () => {
         applyTheme();
 
@@ -337,11 +365,11 @@
         }
     });
 
-    function closeSnackbar() {
+    function closeSnackbar(): void {
         navigationStore.dispatchSnackbar({ status: false });
     }
 
-    function applyTheme() {
+    function applyTheme(): void {
         // check the local storage for a saved theme preference
         const storedTheme = localStorage.getItem('theme');
         if (storedTheme) {
@@ -365,13 +393,18 @@
         }
     }
 
-    function extendSidebar() {
+    function extendSidebar(): void {
         drawerVisibility.value = true;
         navigationStore.dispatchDrawerState(true);
     }
 
-    function updateDrawerState(value: boolean) {
+    function updateDrawerState(value: boolean): void {
         // console.log('updateDrawerState: ', value);
         navigationStore.dispatchDrawerState(value);
+    }
+
+    function openInfrastructureManagement(): void {
+        infrastructureMenu.value = false;
+        infrastructureManagementDialog.value = true;
     }
 </script>

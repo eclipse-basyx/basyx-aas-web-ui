@@ -26,14 +26,14 @@ export function useAASDiscoveryClient() {
      * @param {string} globalAssetId - The global asset ID for which to retrieve the AAS ID.
      * @returns {Promise<string>} A promise that resolves to the AAS ID as a string if found; otherwise, an empty string.
      */
-    async function getAasId(globalAssetId: string): Promise<string> {
+    async function getAasId(globalAssetId: string, endpoint?: string): Promise<string> {
         const failResponse = '';
 
         globalAssetId = globalAssetId.trim();
 
         if (globalAssetId === '') return failResponse;
 
-        let aasDiscUrl = aasDiscoveryUrl.value.trim();
+        let aasDiscUrl = endpoint ? endpoint : aasDiscoveryUrl.value.trim();
         if (aasDiscUrl === '') return failResponse;
         if (aasDiscUrl.endsWith('/')) aasDiscUrl = stripLastCharacter(aasDiscUrl);
         if (!aasDiscUrl.endsWith(endpointPath)) aasDiscUrl += endpointPath;

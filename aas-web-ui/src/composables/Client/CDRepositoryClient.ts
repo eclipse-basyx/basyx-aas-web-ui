@@ -56,7 +56,7 @@ export function useCDRepositoryClient() {
      * @param {string} cdId - The ID of the CD to fetch.
      * @returns {Promise<any>} A promise that resolves to a CD.
      */
-    async function fetchCdById(cdId: string): Promise<any> {
+    async function fetchCdById(cdId: string, endpoint?: string): Promise<any> {
         const failResponse = {} as any;
 
         if (!cdId) return failResponse;
@@ -65,9 +65,9 @@ export function useCDRepositoryClient() {
 
         if (cdId === '') return failResponse;
 
-        if (conceptDescriptionRepoUrl.value.trim() === '') return failResponse;
+        if (conceptDescriptionRepoUrl.value.trim() === '' && !endpoint) return failResponse;
 
-        let cdRepoUrl = conceptDescriptionRepoUrl.value;
+        let cdRepoUrl = endpoint ? endpoint : conceptDescriptionRepoUrl.value;
         if (cdRepoUrl.trim() === '') return failResponse;
         if (cdRepoUrl.endsWith('/')) cdRepoUrl = stripLastCharacter(cdRepoUrl);
         if (!cdRepoUrl.endsWith(endpointPath)) cdRepoUrl += endpointPath;

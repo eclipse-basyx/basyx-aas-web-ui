@@ -62,7 +62,7 @@ export function useAASRegistryClient() {
      * @param {string} aasId - The ID of the AAS Descriptor to fetch.
      * @returns {Promise<any>} A promise that resolves to an AAS Descriptor.
      */
-    async function fetchAasDescriptorById(aasId: string): Promise<any> {
+    async function fetchAasDescriptorById(aasId: string, registryUrl?: string): Promise<any> {
         const failResponse = {} as any;
 
         if (!aasId) return failResponse;
@@ -71,7 +71,7 @@ export function useAASRegistryClient() {
 
         if (aasId === '') return failResponse;
 
-        let aasRegUrl = aasRegistryUrl.value.trim();
+        let aasRegUrl = registryUrl ? registryUrl : aasRegistryUrl.value.trim();
         if (aasRegUrl === '') return failResponse;
         if (aasRegUrl.endsWith('/')) aasRegUrl = stripLastCharacter(aasRegUrl);
         if (!aasRegUrl.endsWith(endpointPath)) aasRegUrl += endpointPath;
@@ -102,7 +102,7 @@ export function useAASRegistryClient() {
      * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
      * @returns {Promise<string>} A promise that resolves to an AAS endpoint.
      */
-    async function getAasEndpointById(aasId: string): Promise<string> {
+    async function getAasEndpointById(aasId: string, registryUrl?: string): Promise<string> {
         const failResponse = '';
 
         if (!aasId) return failResponse;
@@ -111,7 +111,7 @@ export function useAASRegistryClient() {
 
         if (aasId === '') return failResponse;
 
-        const aasDescriptor = await fetchAasDescriptorById(aasId);
+        const aasDescriptor = await fetchAasDescriptorById(aasId, registryUrl);
         const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0');
 
         return aasEndpoint || failResponse;

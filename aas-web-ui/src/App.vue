@@ -13,20 +13,53 @@
 <script lang="ts" setup>
     import { onBeforeUnmount, onMounted, ref } from 'vue';
     import { useRouter } from 'vue-router';
+    import { useNavigationStore } from '@/store/NavigationStore';
 
     // Vue Router
     const router = useRouter();
 
+    // Stores
+    const navigationStore = useNavigationStore();
+
     // Data
     const mediaQueryList = window.matchMedia('(max-width: 600px)');
     const matchesMobile = ref(mediaQueryList.matches);
+    let tokenRefreshInterval: ReturnType<typeof setInterval> | null = null;
 
     onMounted(() => {
         mediaQueryList.addEventListener('change', handleMediaChange);
+        
+        // Start token refresh background timer (every 60 seconds)
+        tokenRefreshInterval = setInterval(async () => {
+            const failures = await navigationStore.refreshInfrastructureTokens();
+            
+            // Handle refresh failures
+            if (failures.length > 0) {
+                const failureMessages = failures.map((f) => `${f.infraName} (${f.component}): ${f.error}`).join('\n');
+                
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 10000,
+                    color: 'warning',
+                    btnColor: 'buttonText',
+                    text: `Token refresh failed for ${failures.length} component(s). Please re-authenticate.`,
+                    extendedError: failureMessages,
+                });
+
+                // Trigger opening the infrastructure management dialog
+                navigationStore.dispatchTriggerInfrastructureDialog();
+            }
+        }, 60000); // 60 seconds
     });
 
     onBeforeUnmount(() => {
         mediaQueryList.removeEventListener('change', handleMediaChange);
+        
+        // Clear token refresh interval
+        if (tokenRefreshInterval) {
+            clearInterval(tokenRefreshInterval);
+            tokenRefreshInterval = null;
+        }
     });
 
     function handleMediaChange(event: MediaQueryListEvent): void {

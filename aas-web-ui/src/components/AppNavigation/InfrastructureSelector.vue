@@ -1,0 +1,95 @@
+<template>
+    <v-container fluid class="pa-0">
+        <v-card class="pa-2" border color="navigationMenu" :min-width="620">
+            <v-list-subheader>Infrastructure</v-list-subheader>
+            <v-row class="px-2 align-center" dense>
+                <v-col>
+                    <v-select
+                        v-model="selectedInfraId"
+                        :items="infrastructureItems"
+                        item-title="name"
+                        item-value="id"
+                        label="Select Infrastructure"
+                        variant="outlined"
+                        density="compact"
+                        hide-details
+                        @update:model-value="onInfrastructureChange">
+                        <template #prepend-inner>
+                            <v-icon :icon="connectionStatus.icon" :color="connectionStatus.color" size="x-small"></v-icon>
+                        </template>
+                    </v-select>
+                </v-col>
+                <v-col cols="auto" class="pl-0">
+                    <v-btn icon="mdi-cog" size="small" variant="text" @click="openManageDialog">
+                        <v-icon>mdi-cog</v-icon>
+                        <v-tooltip activator="parent" location="bottom">Manage Infrastructures</v-tooltip>
+                    </v-btn>
+                </v-col>
+            </v-row>
+        </v-card>
+    </v-container>
+</template>
+
+<script lang="ts" setup>
+    import { computed, ref, watch } from 'vue';
+    import { useNavigationStore } from '@/store/NavigationStore';
+
+    // Stores
+    const navigationStore = useNavigationStore();
+
+    // Emit
+    const emit = defineEmits<{
+        openManage: [];
+    }>();
+
+    // Computed Properties
+    const infrastructures = computed(() => navigationStore.getInfrastructures);
+    const basyxComponents = computed(() => navigationStore.getBasyxComponents);
+
+    // Local State
+    const selectedInfraId = ref<string | null>(navigationStore.getSelectedInfrastructureId);
+
+    // Computed infrastructure items for dropdown
+    const infrastructureItems = computed(() =>
+        infrastructures.value.map((infra) => ({
+            id: infra.id,
+            name: infra.name + (infra.isDefault ? ' (Default)' : ''),
+        }))
+    );
+
+    // Compute connection status based on connected components
+    const connectionStatus = computed(() => {
+        const components = Object.values(basyxComponents.value);
+        const connectedCount = components.filter((comp) => comp.connected === true).length;
+        const hasFailures = components.some((comp) => comp.connected === false);
+        const hasUnknown = components.some((comp) => comp.connected === null);
+
+        if (connectedCount === components.length) {
+            return { icon: 'mdi-check-circle', color: 'success' };
+        } else if (hasFailures) {
+            return { icon: 'mdi-alert-circle', color: 'error' };
+        } else if (hasUnknown) {
+            return { icon: 'mdi-help-circle', color: 'grey' };
+        } else if (connectedCount > 0) {
+            return { icon: 'mdi-alert-circle', color: 'warning' };
+        }
+        return { icon: 'mdi-help-circle', color: 'grey' };
+    });
+
+    // Watch for external changes to selected infrastructure
+    watch(
+        () => navigationStore.getSelectedInfrastructureId,
+        (newId) => {
+            selectedInfraId.value = newId;
+        }
+    );
+
+    // Methods
+    async function onInfrastructureChange(infrastructureId: string): Promise<void> {
+        await navigationStore.dispatchSelectInfrastructure(infrastructureId);
+    }
+
+    function openManageDialog(): void {
+        emit('openManage');
+    }
+</script>
