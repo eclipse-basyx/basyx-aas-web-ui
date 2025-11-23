@@ -264,6 +264,14 @@
                 <v-divider></v-divider>
 
                 <v-card-actions>
+                    <v-btn
+                        color="info"
+                        :loading="reauthenticating"
+                        :disabled="!hasAuthenticatedComponents"
+                        @click="reauthenticateAll">
+                        <v-icon left>mdi-refresh</v-icon>
+                        Re-authenticate All
+                    </v-btn>
                     <v-spacer></v-spacer>
                     <v-btn @click="cancelEdit">Cancel</v-btn>
                     <v-btn color="primary" @click="saveInfrastructure">Save</v-btn>
@@ -310,6 +318,12 @@
     // Computed Properties
     const infrastructures = computed(() => navigationStore.getInfrastructures);
     const selectedInfrastructureId = computed(() => navigationStore.getSelectedInfrastructureId);
+    const hasAuthenticatedComponents = computed(() => {
+        return componentKeys.some((key) => {
+            const auth = editingInfrastructure.value.components[key].auth;
+            return auth && auth.securityType !== 'No Authentication';
+        });
+    });
 
     // Local State
     const dialogOpen = ref(false);
@@ -352,6 +366,7 @@
     const keycloakTokens = ref<Record<string, { accessToken: string; refreshToken?: string; expiresAt?: number }>>({});
     const keycloakLoading = ref<Record<string, boolean>>({});
     const keycloakErrors = ref<Record<string, string>>({});
+    const reauthenticating = ref(false);
     let keycloakPopup: Window | null = null;
 
     // Watch props
@@ -515,6 +530,86 @@
             infrastructureToDelete.value = null;
         }
         deleteDialogOpen.value = false;
+    }
+
+    // Re-authenticate all components
+    async function reauthenticateAll(): Promise<void> {
+        reauthenticating.value = true;
+        const errors: string[] = [];
+        let successCount = 0;
+
+        for (const componentKey of componentKeys) {
+            const component = editingInfrastructure.value.components[componentKey];
+            const auth = component.auth;
+
+            if (!auth || auth.securityType === 'No Authentication') {
+                continue;
+            }
+
+            try {
+                if (auth.securityType === 'Keycloak') {
+                    // Clear previous error for this component
+                    keycloakErrors.value[componentKey] = '';
+                    
+                    await authenticateKeycloak(componentKey);
+                    
+                    // Check if authentication was successful by verifying token exists
+                    if (keycloakTokens.value[componentKey]?.accessToken && !keycloakErrors.value[componentKey]) {
+                        successCount++;
+                    } else {
+                        errors.push(
+                            `${componentKey}: ${keycloakErrors.value[componentKey] || 'Authentication failed - no token received'}`
+                        );
+                    }
+                } else {
+                    // For Basic Auth and Bearer Token, the credentials are already in the form
+                    // Just validate they exist
+                    if (auth.securityType === 'Basic Authentication') {
+                        if (basicAuthUsername.value[componentKey] && basicAuthPassword.value[componentKey]) {
+                            successCount++;
+                        } else {
+                            errors.push(`${componentKey}: Basic Auth credentials missing`);
+                        }
+                    } else if (auth.securityType === 'Bearer Token') {
+                        if (bearerToken.value[componentKey]) {
+                            successCount++;
+                        } else {
+                            errors.push(`${componentKey}: Bearer Token missing`);
+                        }
+                    }
+                }
+            } catch (error) {
+                errors.push(`${componentKey}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            }
+        }
+
+        // Save the updated tokens to the infrastructure and persist to localStorage
+        if (successCount > 0) {
+            saveAuthDataToInfrastructure(editingInfrastructure.value);
+            navigationStore.dispatchUpdateInfrastructure(editingInfrastructure.value);
+        }
+
+        reauthenticating.value = false;
+
+        // Show feedback
+        if (errors.length === 0) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'success',
+                btnColor: 'buttonText',
+                text: `Successfully re-authenticated ${successCount} component(s) and saved to storage`,
+            });
+        } else {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 8000,
+                color: 'warning',
+                btnColor: 'buttonText',
+                text: `Re-authenticated ${successCount} component(s), ${errors.length} failed`,
+                extendedError: errors.join('\n'),
+            });
+        }
     }
 
     // Keycloak Authentication Methods
