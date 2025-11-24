@@ -11,7 +11,7 @@
                     item-value="id"
                     density="compact"
                     variant="outlined"
-                    label="Infrastructure with AAS Discovery"
+                    label="Source Infrastructure with AAS Discovery"
                     no-data-text="No Infrastructure with an AAS Discovery configured"
                     placeholder="Please select..."
                     prepend-inner-icon="mdi-server-network"
@@ -30,7 +30,7 @@
                     v-model="assetId"
                     density="compact"
                     variant="outlined"
-                    label="Global Asset ID"
+                    label="Global Asset ID of the AAS to Import"
                     class="mt-n5"
                     prepend-inner-icon="mdi-qrcode">
                 </v-text-field>
@@ -42,10 +42,10 @@
                     item-value="id"
                     density="compact"
                     variant="outlined"
-                    label="Upload Destination Infrastructure"
+                    label="Import Destination Infrastructure"
                     no-data-text="No Infrastructure with an AAS Repository configured"
                     placeholder="Please select..."
-                    prepend-inner-icon="mdi-upload"
+                    prepend-inner-icon="mdi-download"
                     clearable
                     class="mb-4">
                     <template #item="{ props, item }">
@@ -62,15 +62,8 @@
                         <v-icon color="info" size="x-small">mdi-information</v-icon>
                     </template>
                     When clicking 'Import', the AAS along with its Submodels and Concept Descriptions (if configured)
-                    will be fetched from the selected infrastructure and uploaded to your configured Default
-                    Infrastructure.
+                    will be fetched from the selected infrastructure and uploaded to your configured Infrastructure.
                 </v-alert>
-                <!-- <v-btn class="mb-4" color="lightButton">
-                    <template #prepend>
-                        <v-icon size="x-small">mdi-chevron-down</v-icon>
-                    </template>
-                    Advanced Options
-                </v-btn> -->
                 <v-btn color="primary" block class="text-buttonText" :loading="loading" @click="startImport"
                     >Import</v-btn
                 >
@@ -95,7 +88,7 @@
     const navigationStore = useNavigationStore();
     const infrastructureStore = useInfrastructureStore();
 
-    const assetId = ref<string>('https://acplt.org/Test_Asset');
+    const assetId = ref<string>('');
     const selectedInfrastructureId = ref<string | null>(null);
     const selectedDestinationInfrastructureId = ref<string | null>(null);
     const loading = ref<boolean>(false);
