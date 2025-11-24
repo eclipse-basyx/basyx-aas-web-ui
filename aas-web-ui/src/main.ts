@@ -14,11 +14,9 @@ import { createApp } from 'vue';
 import { defineComponent } from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
 import App from '@/App.vue';
-// import { initKeycloak, loginWithDirectGrant } from '@/authService';
 // Plugins
 import { registerVuetify } from '@/plugins';
 import { createAppRouter } from '@/router';
-// import { useEnvStore } from '@/store/EnvironmentStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 
 initialize();
@@ -34,7 +32,6 @@ async function initialize(): Promise<void> {
     app.component('ApexChart', VueApexCharts);
 
     // Stores
-    // const envStore = useEnvStore();
     const navigationStore = useNavigationStore();
 
     // Vuetify
