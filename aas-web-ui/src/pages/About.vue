@@ -168,6 +168,7 @@
     import Buettner from '@/assets/Contributors/Buettner.jpg';
     import Eicke from '@/assets/Contributors/Eicke.jpg';
     import Fischer from '@/assets/Contributors/Fischer.jpg';
+    import Fried from '@/assets/Contributors/Fried.jpg';
     import Schnicke from '@/assets/Contributors/Schnicke.jpg';
     import Zielstorff from '@/assets/Contributors/Zielstorff.jpg';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -278,6 +279,14 @@
             image: Eicke,
             github_link: 'https://github.com/seicke',
             linkedin_link: 'https://www.linkedin.com/in/seicke',
+        },
+        {
+            name: 'Jannik Oliver Fried',
+            company: 'Fraunhofer IESE',
+            email: 'Jannik.Fried@iese.fraunhofer.de',
+            image: Fried,
+            github_link: 'https://github.com/FriedJannik',
+            linkedin_link: 'https://www.linkedin.com/in/friedjannik/',
         },
     ]);
 </script>
