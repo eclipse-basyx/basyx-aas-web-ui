@@ -1,11 +1,8 @@
 <template>
     <v-dialog v-model="dialogOpen" max-width="900px" persistent scrollable>
         <v-card>
-            <v-card-title>
-                <span class="text-h5">Manage Infrastructures</span>
-            </v-card-title>
+            <v-card-title>Manage Infrastructures</v-card-title>
             <v-divider></v-divider>
-
             <v-card-text style="max-height: 600px">
                 <!-- Infrastructure List -->
                 <v-radio-group v-model="defaultInfrastructure" @update:model-value="changeDefault">
@@ -62,10 +59,13 @@
                     </v-table>
                 </v-radio-group>
                 <!-- Add Infrastructure Button -->
-                <v-btn color="primary" block class="mt-4" @click="addNewInfrastructure">
-                    <v-icon left>mdi-plus</v-icon>
-                    Add Infrastructure
-                </v-btn>
+                <v-btn
+                    color="primary"
+                    block
+                    class="mt-4 text-buttonText"
+                    text="Add Infrastructure"
+                    prepend-icon="mdi-plus"
+                    @click="addNewInfrastructure" />
             </v-card-text>
 
             <v-divider></v-divider>

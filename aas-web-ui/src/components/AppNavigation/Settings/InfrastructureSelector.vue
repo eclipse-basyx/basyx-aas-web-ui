@@ -74,6 +74,7 @@
         } else if (hasFailures) {
             return { icon: 'mdi-alert-circle', color: 'error' };
         } else if (hasUnknown) {
+            console.log('Some components have unknown connection status');
             return { icon: 'mdi-help-circle', color: 'grey' };
         } else if (connectedCount > 0) {
             return { icon: 'mdi-alert-circle', color: 'warning' };
