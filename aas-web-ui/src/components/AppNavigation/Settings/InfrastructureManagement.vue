@@ -49,7 +49,7 @@
                                             size="x-small"
                                             variant="plain"
                                             class="ml-n2 mr-n2"
-                                            :disabled="infrastructures.length === 1"
+                                            :disabled="infrastructures.length === 1 || infra.isDefault"
                                             @click.stop="deleteInfrastructure(infra)">
                                         </v-btn>
                                     </div>
@@ -105,14 +105,24 @@
                                     <div class="d-flex align-center">
                                         <v-icon
                                             :color="
-                                                editingInfrastructure.components[componentKey].url ? 'success' : 'grey'
+                                                componentConnectionStatus[componentKey] === true
+                                                    ? 'success'
+                                                    : componentConnectionStatus[componentKey] === false
+                                                      ? 'error'
+                                                      : editingInfrastructure.components[componentKey].url
+                                                        ? 'grey'
+                                                        : 'grey'
                                             "
                                             size="small"
                                             class="mr-2">
                                             {{
-                                                editingInfrastructure.components[componentKey].url
+                                                componentConnectionStatus[componentKey] === true
                                                     ? 'mdi-check-circle'
-                                                    : 'mdi-circle-outline'
+                                                    : componentConnectionStatus[componentKey] === false
+                                                      ? 'mdi-alert-circle'
+                                                      : editingInfrastructure.components[componentKey].url
+                                                        ? 'mdi-help-circle'
+                                                        : 'mdi-circle-outline'
                                             }}
                                         </v-icon>
                                         <span>{{ getComponentLabel(componentKey) }}</span>
@@ -126,14 +136,31 @@
                                         variant="outlined"
                                         density="compact"
                                         placeholder="https://example.com/api"
-                                        class="mb-2"></v-text-field>
+                                        class="mb-2"
+                                        @keyup.enter="testComponentConnection(componentKey)"
+                                        @update:model-value="componentConnectionStatus[componentKey] = null">
+                                        <template #append-inner>
+                                            <v-btn
+                                                icon
+                                                size="x-small"
+                                                variant="text"
+                                                :loading="componentTestingLoading[componentKey]"
+                                                :disabled="!editingInfrastructure.components[componentKey].url"
+                                                @click.stop="testComponentConnection(componentKey)">
+                                                <v-icon>mdi-connection</v-icon>
+                                                <v-tooltip activator="parent" location="bottom">
+                                                    Test Connection
+                                                </v-tooltip>
+                                            </v-btn>
+                                        </template>
+                                    </v-text-field>
                                 </v-expansion-panel-text>
                             </v-expansion-panel>
                         </v-expansion-panels>
                         <v-expansion-panels class="mt-4">
                             <v-expansion-panel>
                                 <v-expansion-panel-title>
-                                    <v-icon left size="small">mdi-lock</v-icon>
+                                    <v-icon left size="small" class="mr-2">mdi-lock</v-icon>
                                     Security Configuration (applies to all components)
                                 </v-expansion-panel-title>
                                 <v-expansion-panel-text>
@@ -274,12 +301,19 @@
                 <v-card-actions>
                     <v-btn
                         color="info"
+                        class="mr-2"
+                        prepend-icon="mdi-refresh"
+                        text="Re-authenticate"
                         :loading="reauthenticating"
                         :disabled="!hasAuthenticatedComponents"
-                        @click="reauthenticateAll">
-                        <v-icon left>mdi-refresh</v-icon>
-                        Re-authenticate All
-                    </v-btn>
+                        @click="reauthenticateAll" />
+                    <v-btn
+                        color="primary"
+                        variant="tonal"
+                        prepend-icon="mdi-connection"
+                        text="Test all connections"
+                        :loading="testingAllConnections"
+                        @click="testAllConnections" />
                     <v-spacer></v-spacer>
                     <v-btn @click="cancelEdit">Cancel</v-btn>
                     <v-btn color="primary" @click="saveInfrastructure">Save</v-btn>
@@ -383,6 +417,13 @@
     const keycloakError = ref<string>('');
     const reauthenticating = ref(false);
 
+    // Component connection testing states
+    const componentConnectionStatus = ref<Record<BaSyxComponentKey, boolean | null>>(
+        {} as Record<BaSyxComponentKey, boolean | null>
+    );
+    const componentTestingLoading = ref<Record<BaSyxComponentKey, boolean>>({} as Record<BaSyxComponentKey, boolean>);
+    const testingAllConnections = ref(false);
+
     // Watch props
     watch(
         () => props.open,
@@ -405,7 +446,7 @@
     });
 
     // Lifecycle
-    onMounted(() => {
+    onMounted(async () => {
         const defaultInfra = infrastructures.value.find((infra) => infra.isDefault);
         if (defaultInfra) {
             defaultInfrastructure.value = defaultInfra.id;
@@ -415,6 +456,9 @@
             defaultInfrastructure.value = firstInfra.id;
             infrastructureStore.dispatchSetDefaultInfrastructure(firstInfra.id);
         }
+
+        // Test connections for all infrastructures on mount
+        await testAllInfrastructures();
     });
 
     function changeDefault(newDefaultId: string | null): void {
@@ -479,6 +523,12 @@
         keycloakUsername.value = '';
         keycloakPassword.value = '';
         keycloakToken.value = null;
+
+        // Reset component connection status
+        componentKeys.forEach((key) => {
+            componentConnectionStatus.value[key] = null;
+            componentTestingLoading.value[key] = false;
+        });
 
         // Load based on security type
         if (auth.basicAuth) {
@@ -715,5 +765,59 @@
 
     function requiredRule(value: string): string | boolean {
         return !!value || 'This field is required';
+    }
+
+    // Test individual component connection
+    async function testComponentConnection(componentKey: BaSyxComponentKey): Promise<void> {
+        const url = editingInfrastructure.value.components[componentKey].url;
+        if (!url || url.trim() === '') {
+            componentConnectionStatus.value[componentKey] = false;
+            return;
+        }
+
+        componentTestingLoading.value[componentKey] = true;
+        componentConnectionStatus.value[componentKey] = null;
+
+        try {
+            // Temporarily set the component URL in the store to test it
+            const originalUrl = infrastructureStore.getBasyxComponents[componentKey].url;
+            infrastructureStore.getBasyxComponents[componentKey].url = url;
+
+            // Test the connection
+            await infrastructureStore.connectComponent(componentKey);
+
+            // Get the connection result
+            const connected = infrastructureStore.getBasyxComponents[componentKey].connected;
+            componentConnectionStatus.value[componentKey] = connected;
+
+            // Restore original URL
+            infrastructureStore.getBasyxComponents[componentKey].url = originalUrl;
+        } catch {
+            componentConnectionStatus.value[componentKey] = false;
+        } finally {
+            componentTestingLoading.value[componentKey] = false;
+        }
+    }
+
+    // Test all component connections for the currently edited infrastructure
+    async function testAllConnections(): Promise<void> {
+        testingAllConnections.value = true;
+        const testPromises = componentKeys.map((key) => testComponentConnection(key));
+        await Promise.all(testPromises);
+        testingAllConnections.value = false;
+    }
+
+    // Test connections for all infrastructures
+    async function testAllInfrastructures(): Promise<void> {
+        for (const infra of infrastructures.value) {
+            // Temporarily switch to this infrastructure to test its connections
+            await infrastructureStore.dispatchSelectInfrastructure(infra.id);
+            // Test connections for this infrastructure
+            await infrastructureStore.connectComponents();
+        }
+        // Switch back to the originally selected infrastructure
+        if (selectedInfrastructureId.value) {
+            await infrastructureStore.dispatchSelectInfrastructure(selectedInfrastructureId.value);
+        }
     }
 </script>
