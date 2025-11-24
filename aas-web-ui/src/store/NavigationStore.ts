@@ -227,7 +227,6 @@ export const useNavigationStore = defineStore('navigationStore', () => {
             };
             if (EnvPreconfiguredAuth.value) {
                 // Trigger client-credentials flow
-                console.log('Refreshing tokens for infrastructure created from env');
                 await refreshInfrastructureTokens(infrastructure.id);
                 const result = await authenticateWithClientCredentials(infrastructure.auth.keycloakConfig!);
                 infrastructure.token = {
