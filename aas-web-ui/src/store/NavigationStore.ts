@@ -10,10 +10,10 @@ import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient
 import { useCDRepositoryClient } from '@/composables/Client/CDRepositoryClient';
 import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+import { authenticateWithClientCredentials } from '@/composables/KeycloakAuth';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useEnvStore } from '@/store/EnvironmentStore';
 import { stripLastCharacter } from '@/utils/StringUtils';
-import { authenticateWithClientCredentials } from '@/composables/KeycloakAuth';
 
 export const useNavigationStore = defineStore('navigationStore', () => {
     // Stores

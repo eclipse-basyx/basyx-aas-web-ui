@@ -4,19 +4,15 @@
             <v-btn v-bind="props" icon="mdi-cog" class="ml-3"></v-btn>
         </template>
         <v-card
-            min-width="300px"
+            :width="364"
             :color="isMobile ? 'card' : 'navigationMenu'"
             :style="{ 'border-style': isMobile ? '' : 'solid', 'border-width': isMobile ? '' : '1px' }">
             <v-list nav class="py-0" :class="isMobile ? 'bg-card' : 'bg-navigationMenu'">
                 <!-- Switch to change the app theme -->
                 <ThemeSwitch></ThemeSwitch>
                 <v-divider class="mt-3"></v-divider>
-                <!-- Backend Configuration -->
-                <!-- Infrastructure Selector -->
-                <v-list-item align="center">
-                    <InfrastructureSelector @open-manage="openInfrastructureManagement"></InfrastructureSelector>
-                </v-list-item>
-                <!-- <BackendConfig v-if="endpointConfigAvailable"></BackendConfig> -->
+                <!-- Backend Configuration (infrastructure selection) -->
+                <InfrastructureSelector @open-manage="openInfrastructureManagement"></InfrastructureSelector>
                 <v-divider class="mt-3"></v-divider>
                 <v-list-item class="py-0" density="compact" nav>
                     <v-list-item-title class="text-caption text-medium-emphasis pb-0">

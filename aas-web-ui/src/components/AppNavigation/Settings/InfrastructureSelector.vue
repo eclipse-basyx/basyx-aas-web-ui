@@ -1,40 +1,31 @@
 <template>
-    <v-container fluid class="pa-0">
-        <v-card class="pa-2 mt-n4" color="navigationMenu">
-            <v-list-subheader>Infrastructures</v-list-subheader>
-            <v-row class="px-2 align-center" dense>
-                <v-col>
-                    <v-select
-                        v-model="selectedInfraId"
-                        :items="infrastructureItems"
-                        item-title="name"
-                        item-value="id"
-                        label="Select Infrastructure"
-                        variant="outlined"
-                        density="compact"
-                        hide-details
-                        @update:model-value="onInfrastructureChange">
-                        <template #prepend-inner>
-                            <v-icon
-                                :icon="connectionStatus.icon"
-                                :color="connectionStatus.color"
-                                size="x-small"></v-icon>
-                        </template>
-                    </v-select>
-                </v-col>
-                <v-col cols="auto">
-                    <v-btn
-                        :disabled="!endpointConfigAvailable"
-                        icon="mdi-cog"
-                        size="small"
-                        variant="text"
-                        @click="openManageDialog">
-                        <v-icon>mdi-cog</v-icon>
-                        <v-tooltip activator="parent" location="bottom">Manage Infrastructures</v-tooltip>
-                    </v-btn>
-                </v-col>
-            </v-row>
-        </v-card>
+    <v-container fluid class="px-2 pt-2 pb-0">
+        <v-list-subheader class="mb-3">Infrastructures</v-list-subheader>
+        <v-select
+            v-model="selectedInfraId"
+            :items="infrastructureItems"
+            item-title="name"
+            item-value="id"
+            label="Select Infrastructure"
+            variant="outlined"
+            density="compact"
+            hide-details
+            @update:model-value="onInfrastructureChange">
+            <template #prepend-inner>
+                <v-icon :icon="connectionStatus.icon" :color="connectionStatus.color" size="x-small"></v-icon>
+            </template>
+            <template #append>
+                <v-btn
+                    :disabled="!endpointConfigAvailable"
+                    icon="mdi-cog"
+                    size="small"
+                    variant="text"
+                    @click="openManageDialog">
+                    <v-icon>mdi-cog</v-icon>
+                    <v-tooltip activator="parent" location="bottom" :open-delay="600">Manage Infrastructures</v-tooltip>
+                </v-btn>
+            </template>
+        </v-select>
     </v-container>
 </template>
 

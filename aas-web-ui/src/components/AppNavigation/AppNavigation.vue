@@ -51,11 +51,11 @@
                         <!-- Settings in Mobile View -->
                         <v-row justify="center" align="start" style="max-height: calc(100vh - 64px); overflow-y: auto">
                             <v-col cols="12" class="text-center px-5">
-                                <v-divider class="mt-2"></v-divider>
                                 <ThemeSwitch></ThemeSwitch>
-                                <v-divider class="mt-2 mb-8"></v-divider>
+                                <v-divider class="mt-2"></v-divider>
                                 <InfrastructureSelector
                                     @open-manage="openInfrastructureManagement"></InfrastructureSelector>
+                                <v-divider class="mt-2"></v-divider>
                             </v-col>
                             <v-col cols="12" class="text-center">
                                 <!-- Platform I 4.0 Logo -->
