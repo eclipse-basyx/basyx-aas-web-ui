@@ -95,15 +95,6 @@
                             :rules="[requiredRule]"
                             class="mb-2"></v-text-field>
 
-                        <!-- Set as Default -->
-                        <v-switch
-                            v-model="editingInfrastructure.isDefault"
-                            label="Set as Default Infrastructure"
-                            color="primary"
-                            density="compact"
-                            hide-details
-                            class="mb-4"></v-switch>
-
                         <!-- Component Configurations -->
                         <v-expansion-panels v-model="expandedPanels" multiple>
                             <v-expansion-panel
@@ -413,7 +404,15 @@
 
     // Lifecycle
     onMounted(() => {
-        defaultInfrastructure.value = infrastructures.value.find((infra) => infra.isDefault)?.id || '';
+        const defaultInfra = infrastructures.value.find((infra) => infra.isDefault);
+        if (defaultInfra) {
+            defaultInfrastructure.value = defaultInfra.id;
+        } else if (infrastructures.value.length > 0) {
+            // If no default exists, set the first one as default
+            const firstInfra = infrastructures.value[0];
+            defaultInfrastructure.value = firstInfra.id;
+            navigationStore.dispatchSetDefaultInfrastructure(firstInfra.id);
+        }
     });
 
     function changeDefault(newDefaultId: string | null): void {

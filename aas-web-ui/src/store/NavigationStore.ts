@@ -270,6 +270,19 @@ export const useNavigationStore = defineStore('navigationStore', () => {
                 const storage: InfrastructureStorage = JSON.parse(stored);
                 infrastructures.value = storage.infrastructures;
                 selectedInfrastructureId.value = storage.selectedInfrastructureId;
+
+                // Ensure at least one infrastructure is marked as default
+                const hasDefault = infrastructures.value.some((infra) => infra.isDefault);
+                if (!hasDefault && infrastructures.value.length > 0) {
+                    // If no default exists, mark the selected one (or first one) as default
+                    const defaultId = selectedInfrastructureId.value || infrastructures.value[0].id;
+                    const defaultInfra = infrastructures.value.find((infra) => infra.id === defaultId);
+                    if (defaultInfra) {
+                        defaultInfra.isDefault = true;
+                        saveInfrastructuresToStorage();
+                    }
+                }
+
                 console.warn('[NavigationStore] Loaded infrastructures from localStorage:', {
                     count: infrastructures.value.length,
                     selected: selectedInfrastructureId.value,
