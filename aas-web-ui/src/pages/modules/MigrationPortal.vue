@@ -156,8 +156,8 @@
 
 <script lang="ts" setup>
     import { onBeforeUnmount, onMounted, ref } from 'vue';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useMigrationStore } from '@/store/MigrationStore';
-    import { useNavigationStore } from '@/store/NavigationStore';
     import Error from './MigrationPortal/Error.vue';
     import RemoteSource from './MigrationPortal/RemoteSource.vue';
     import Success from './MigrationPortal/Success.vue';
@@ -178,7 +178,7 @@
     };
 
     const migrationStore = useMigrationStore();
-    const navStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
 
     const currentStep = ref(0);
     const dataSource = ref<DataSource | null>(null);
@@ -263,7 +263,7 @@
 
         // Setup source endpoint and headers
         if (isLocalSource()) {
-            sourceEndpoint = navStore.getAASRepoURL;
+            sourceEndpoint = infrastructureStore.getAASRepoURL;
         } else {
             const sourceConn = migrationStore.getSourceConnection('aas');
             if (!sourceConn?.endpoint.endsWith('/shells')) {
@@ -292,7 +292,7 @@
 
         // Setup destination endpoint and headers
         if (isLocalDestination()) {
-            destinationEndpoint = navStore.getAASRepoURL;
+            destinationEndpoint = infrastructureStore.getAASRepoURL;
         } else {
             const destConn = migrationStore.getDestinationConnection('aas');
             if (!destConn?.endpoint.endsWith('/shells')) {

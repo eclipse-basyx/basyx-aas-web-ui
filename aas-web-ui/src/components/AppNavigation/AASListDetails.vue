@@ -140,6 +140,7 @@
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
     import { getKeyTypeAbbreviation } from '@/utils/AAS/KeyTypesUtil';
@@ -156,6 +157,7 @@
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
     const envStore = useEnvStore();
+    const infrastructureStore = useInfrastructureStore();
 
     // Data
     const assetAdministrationShellData = ref({} as any | null);
@@ -169,8 +171,8 @@
     const isMobile = computed(() => navigationStore.getIsMobile);
     const singleAas = computed(() => envStore.getSingleAas);
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
-    const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL); // Get AAS Registry URL from Store
-    const aasRepoURL = computed(() => navigationStore.getAASRepoURL); // Get the AAS Repository URL from the Store
+    const aasRegistryURL = computed(() => infrastructureStore.getAASRegistryURL); // Get AAS Registry URL from Store
+    const aasRepoURL = computed(() => infrastructureStore.getAASRepoURL); // Get the AAS Repository URL from the Store
     const detailsListHeight = computed(() => {
         if (isMobile.value) {
             if (singleAas.value) {

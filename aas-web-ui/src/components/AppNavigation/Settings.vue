@@ -34,14 +34,14 @@
 
 <script lang="ts" setup>
     import { computed, ref, watch } from 'vue';
-    // import { useEnvStore } from '@/store/EnvironmentStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { getVersionDisplay } from '@/version';
 
     // const envStore = useEnvStore();
     const navigationStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
 
-    // const endpointConfigAvailable = ref(envStore.getEndpointConfigAvailable);
     const infrastructureMenu = ref(false); // Variable to show the Infrastructure Menu
     const infrastructureManagementDialog = ref(false); // Variable to show the Infrastructure Management Dialog
 
@@ -50,7 +50,7 @@
 
     // Watch for trigger to open infrastructure management dialog (e.g., from token refresh failure)
     watch(
-        () => navigationStore.getTriggerInfrastructureDialog,
+        () => infrastructureStore.getTriggerInfrastructureDialog,
         () => {
             infrastructureManagementDialog.value = true;
         }

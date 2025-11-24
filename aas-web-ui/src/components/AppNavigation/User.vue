@@ -57,12 +57,14 @@
     import { authenticateKeycloak } from '@/composables/KeycloakAuth';
     import { usePopupOverlay } from '@/composables/PopupOverlay';
     import { useEnvStore } from '@/store/EnvironmentStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { getUserFromToken } from '@/utils/TokenUtil';
 
     // Stores
     const envStore = useEnvStore();
     const navStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
 
     const router = useRouter();
 
@@ -77,7 +79,7 @@
               : 'Not Authenticated'
     );
     const currentInfrastructure = computed(() => {
-        return navStore.getSelectedInfrastructure;
+        return infrastructureStore.getSelectedInfrastructure;
     });
     const isAuthEnabled = computed(
         () =>
@@ -154,8 +156,8 @@
                         expiresAt: result.expiresAt,
                     },
                 };
-                navStore.dispatchUpdateInfrastructure(updatedInfra);
-                navStore.setAuthenticationStatusForInfrastructure(infra.id, true);
+                infrastructureStore.dispatchUpdateInfrastructure(updatedInfra);
+                infrastructureStore.setAuthenticationStatusForInfrastructure(infra.id, true);
                 navStore.dispatchTriggerAASListReload();
                 navStore.dispatchTriggerTreeviewReload();
 
@@ -168,7 +170,7 @@
                 });
             } else {
                 // For client-credentials and password flows, need to open the dialog
-                navStore.dispatchTriggerInfrastructureDialog(true);
+                infrastructureStore.dispatchTriggerInfrastructureDialog(true);
             }
         } catch (error: unknown) {
             navStore.dispatchSnackbar({
@@ -223,10 +225,10 @@
             if (event.origin !== window.location.origin) return;
             if (event.data && event.data.type === 'keycloak-logout-complete') {
                 if (currentInfrastructure.value) {
-                    navStore.setAuthenticationStatusForInfrastructure(currentInfrastructure.value.id, false);
+                    infrastructureStore.setAuthenticationStatusForInfrastructure(currentInfrastructure.value.id, false);
                     // Remove token from infrastructure
                     const updatedInfra = { ...currentInfrastructure.value, token: undefined };
-                    navStore.dispatchUpdateInfrastructure(updatedInfra);
+                    infrastructureStore.dispatchUpdateInfrastructure(updatedInfra);
                     navStore.dispatchClearAASList();
                     navStore.dispatchClearTreeview();
                     router.push({

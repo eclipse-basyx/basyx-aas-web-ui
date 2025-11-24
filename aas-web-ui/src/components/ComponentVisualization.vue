@@ -50,6 +50,7 @@
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     // Vue Router
@@ -60,6 +61,7 @@
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
     const envStore = useEnvStore();
+    const infrastructureStore = useInfrastructureStore();
 
     // Composables
     const { nameToDisplay } = useReferableUtils();
@@ -69,8 +71,8 @@
     const routesToVisualization: Array<RouteRecordNameGeneric> = ['ComponentVisualization', 'Visualization'];
 
     // Computed Properties
-    const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL);
-    const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL);
+    const aasRegistryURL = computed(() => infrastructureStore.getAASRegistryURL);
+    const submodelRegistryURL = computed(() => infrastructureStore.getSubmodelRegistryURL);
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
     const selectedNode = computed(() => aasStore.getSelectedNode);
     const isMobile = computed(() => navigationStore.getIsMobile);

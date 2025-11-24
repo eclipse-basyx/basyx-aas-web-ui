@@ -16,6 +16,7 @@ import SMEditor from '@/pages/SMEditor.vue';
 import SMViewer from '@/pages/SMViewer.vue';
 import { useAASStore } from '@/store/AASDataStore';
 import { useEnvStore } from '@/store/EnvironmentStore';
+import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 
 // Static routes
@@ -124,12 +125,13 @@ export async function createAppRouter(): Promise<Router> {
     const routes: Array<RouteRecordRaw> = [...staticRoutes, ...moduleRoutes];
 
     // Stores
+    const infrastructureStore = useInfrastructureStore();
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
     const envStore = useEnvStore();
 
     // Connect to (BaSyx) components, otherwise IDs redirecting not possible
-    navigationStore.connectComponents();
+    infrastructureStore.connectComponents();
 
     // Composables
     const { fetchAndDispatchAas, aasByEndpointHasSmeByPath } = useAASHandling();

@@ -309,6 +309,7 @@
     import type { InfrastructureConfig, KeycloakConnectionData, SecurityType } from '@/types/Infrastructure';
     import { computed, onMounted, ref, watch } from 'vue';
     import { authenticateKeycloak } from '@/composables/KeycloakAuth';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     // Props
@@ -322,11 +323,12 @@
     }>();
 
     // Stores
+    const infrastructureStore = useInfrastructureStore();
     const navigationStore = useNavigationStore();
 
     // Computed Properties
-    const infrastructures = computed(() => navigationStore.getInfrastructures);
-    const selectedInfrastructureId = computed(() => navigationStore.getSelectedInfrastructureId);
+    const infrastructures = computed(() => infrastructureStore.getInfrastructures);
+    const selectedInfrastructureId = computed(() => infrastructureStore.getSelectedInfrastructureId);
     const hasAuthenticatedComponents = computed(() => {
         const auth = editingInfrastructure.value.auth;
         return auth && auth.securityType !== 'No Authentication';
@@ -337,7 +339,7 @@
     const editDialogOpen = ref(false);
     const deleteDialogOpen = ref(false);
     const editMode = ref<'add' | 'edit'>('edit');
-    const editingInfrastructure = ref<InfrastructureConfig>(navigationStore.createEmptyInfrastructure());
+    const editingInfrastructure = ref<InfrastructureConfig>(infrastructureStore.createEmptyInfrastructure());
     const infrastructureToDelete = ref<InfrastructureConfig | null>(null);
     const expandedPanels = ref<number[]>([]);
     const formRef = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null);
@@ -387,8 +389,8 @@
         (val) => {
             dialogOpen.value = val;
             // If opening and edit mode is requested, automatically open edit for current infrastructure
-            if (val && navigationStore.getOpenInfrastructureEditMode) {
-                const currentInfra = navigationStore.getSelectedInfrastructure;
+            if (val && infrastructureStore.getOpenInfrastructureEditMode) {
+                const currentInfra = infrastructureStore.getSelectedInfrastructure;
                 if (currentInfra) {
                     editInfrastructure(currentInfra);
                 }
@@ -411,13 +413,13 @@
             // If no default exists, set the first one as default
             const firstInfra = infrastructures.value[0];
             defaultInfrastructure.value = firstInfra.id;
-            navigationStore.dispatchSetDefaultInfrastructure(firstInfra.id);
+            infrastructureStore.dispatchSetDefaultInfrastructure(firstInfra.id);
         }
     });
 
     function changeDefault(newDefaultId: string | null): void {
         if (newDefaultId === null) return;
-        navigationStore.dispatchSetDefaultInfrastructure(newDefaultId);
+        infrastructureStore.dispatchSetDefaultInfrastructure(newDefaultId);
     }
 
     // Methods
@@ -444,7 +446,7 @@
 
     function addNewInfrastructure(): void {
         editMode.value = 'add';
-        editingInfrastructure.value = navigationStore.createEmptyInfrastructure();
+        editingInfrastructure.value = infrastructureStore.createEmptyInfrastructure();
         loadAuthDataFromInfrastructure(editingInfrastructure.value);
         expandedPanels.value = [];
         editDialogOpen.value = true;
@@ -552,9 +554,9 @@
         await saveAuthDataToInfrastructure(editingInfrastructure.value);
 
         if (editMode.value === 'add') {
-            navigationStore.dispatchAddInfrastructure(editingInfrastructure.value);
+            infrastructureStore.dispatchAddInfrastructure(editingInfrastructure.value);
         } else {
-            navigationStore.dispatchUpdateInfrastructure(editingInfrastructure.value);
+            infrastructureStore.dispatchUpdateInfrastructure(editingInfrastructure.value);
         }
 
         editDialogOpen.value = false;
@@ -571,7 +573,7 @@
 
     function confirmDelete(): void {
         if (infrastructureToDelete.value) {
-            navigationStore.dispatchDeleteInfrastructure(infrastructureToDelete.value.id);
+            infrastructureStore.dispatchDeleteInfrastructure(infrastructureToDelete.value.id);
             infrastructureToDelete.value = null;
         }
         deleteDialogOpen.value = false;
@@ -598,7 +600,7 @@
                 if (keycloakToken.value?.accessToken && !keycloakError.value) {
                     // Save the updated token to the infrastructure and persist to localStorage
                     await saveAuthDataToInfrastructure(editingInfrastructure.value);
-                    navigationStore.dispatchUpdateInfrastructure(editingInfrastructure.value);
+                    infrastructureStore.dispatchUpdateInfrastructure(editingInfrastructure.value);
                     saveInfrastructure();
 
                     navigationStore.dispatchSnackbar({

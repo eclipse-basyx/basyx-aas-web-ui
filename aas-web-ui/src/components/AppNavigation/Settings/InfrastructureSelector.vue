@@ -33,10 +33,10 @@
     import { computed, ref, watch } from 'vue';
     import { useRouter } from 'vue-router';
     import { useEnvStore } from '@/store/EnvironmentStore';
-    import { useNavigationStore } from '@/store/NavigationStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
 
     // Stores
-    const navigationStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
 
     const envStore = useEnvStore();
     const endpointConfigAvailable = ref(envStore.getEndpointConfigAvailable);
@@ -48,11 +48,11 @@
     }>();
 
     // Computed Properties
-    const infrastructures = computed(() => navigationStore.getInfrastructures);
-    const basyxComponents = computed(() => navigationStore.getBasyxComponents);
+    const infrastructures = computed(() => infrastructureStore.getInfrastructures);
+    const basyxComponents = computed(() => infrastructureStore.getBasyxComponents);
 
     // Local State
-    const selectedInfraId = ref<string | null>(navigationStore.getSelectedInfrastructureId);
+    const selectedInfraId = ref<string | null>(infrastructureStore.getSelectedInfrastructureId);
 
     // Computed infrastructure items for dropdown
     const infrastructureItems = computed(() =>
@@ -83,7 +83,7 @@
 
     // Watch for external changes to selected infrastructure
     watch(
-        () => navigationStore.getSelectedInfrastructureId,
+        () => infrastructureStore.getSelectedInfrastructureId,
         (newId) => {
             selectedInfraId.value = newId;
         }
@@ -91,7 +91,7 @@
 
     // Methods
     async function onInfrastructureChange(infrastructureId: string): Promise<void> {
-        await navigationStore.dispatchSelectInfrastructure(infrastructureId);
+        await infrastructureStore.dispatchSelectInfrastructure(infrastructureId);
         router.push({
             query: {},
         });

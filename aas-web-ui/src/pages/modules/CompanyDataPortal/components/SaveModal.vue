@@ -11,21 +11,21 @@
                     required
                     density="compact"
                     variant="outlined"
-                    :rules="[(v) => !!v || 'Server URL is required']"></v-combobox>
+                    :rules="[(v: any) => !!v || 'Server URL is required']"></v-combobox>
                 <v-text-field
                     v-model="aasId"
                     label="AAS ID"
                     required
                     density="compact"
                     variant="outlined"
-                    :rules="[(v) => !!v || 'AAS ID is required']"></v-text-field>
+                    :rules="[(v: any) => !!v || 'AAS ID is required']"></v-text-field>
                 <v-text-field
                     v-model="smId"
                     label="Submodel ID Prefix"
                     required
                     density="compact"
                     variant="outlined"
-                    :rules="[(v) => !!v || 'Submodel ID Prefix is required']"></v-text-field>
+                    :rules="[(v: any) => !!v || 'Submodel ID Prefix is required']"></v-text-field>
                 <FormField
                     label="Homepage URL"
                     tip="Web address of the company's official website, for customers and interested parties">
@@ -83,7 +83,7 @@
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
     import { useEnvStore } from '@/store/EnvironmentStore';
-    import { useNavigationStore } from '@/store/NavigationStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import FormField from './FormField.vue';
 
     const dialog = ref(false);
@@ -93,11 +93,11 @@
     const serverOptions = ref<string[]>([]);
     const aasDisplayName = ref<{ language: string; text: string }[]>([]);
 
-    const navStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
     const envStore = useEnvStore();
 
     const endpointConfigAvailable = computed(() => envStore.getEndpointConfigAvailable);
-    const aasRepoURL = computed(() => navStore.getAASRepoURL);
+    const aasRepoURL = computed(() => infrastructureStore.getAASRepoURL);
 
     watch(
         aasRepoURL,

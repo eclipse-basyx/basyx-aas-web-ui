@@ -24,7 +24,7 @@
     import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
     import { computed, onMounted, ref, watch } from 'vue';
     import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
-    import { useNavigationStore } from '@/store/NavigationStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
 
     // Props
     const props = defineProps<{
@@ -35,7 +35,7 @@
     const viewerContainer = ref<HTMLElement>();
 
     // Composables and stores
-    const navigationStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
     const { valueUrl } = useSMEFile();
 
     // Reactive data
@@ -43,7 +43,7 @@
     const showViewer = ref(true);
 
     // Computed properties
-    const selectedInfra = computed(() => navigationStore.getSelectedInfrastructure);
+    const selectedInfra = computed(() => infrastructureStore.getSelectedInfrastructure);
 
     // Helper function to create authenticated headers
     function getAuthHeaders(): Headers {

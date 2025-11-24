@@ -88,10 +88,12 @@
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
     const navigationStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
 
     const assetId = ref<string>('https://acplt.org/Test_Asset');
     const selectedInfrastructureId = ref<string | null>(null);
@@ -108,19 +110,21 @@
     // Computed property to get the selected infrastructure object (for future use in import operations)
     const selectedInfrastructure = computed(() => {
         if (!selectedInfrastructureId.value) return null;
-        return navigationStore.getInfrastructures.find((infra) => infra.id === selectedInfrastructureId.value) || null;
+        return (
+            infrastructureStore.getInfrastructures.find((infra) => infra.id === selectedInfrastructureId.value) || null
+        );
     });
 
     // Get default infrastructure for upload
     const defaultInfrastructure = computed(() => {
-        return navigationStore.getInfrastructures.find((infra) => infra.isDefault) || null;
+        return infrastructureStore.getInfrastructures.find((infra) => infra.isDefault) || null;
     });
 
     // Get selected destination infrastructure
     const destinationInfrastructure = computed(() => {
         if (!selectedDestinationInfrastructureId.value) return null;
         return (
-            navigationStore.getInfrastructures.find(
+            infrastructureStore.getInfrastructures.find(
                 (infra) => infra.id === selectedDestinationInfrastructureId.value
             ) || null
         );
@@ -135,7 +139,7 @@
 
     // Filter infrastructures that have AASDiscovery configured
     const infrastructureItems = computed(() => {
-        return navigationStore.getInfrastructures
+        return infrastructureStore.getInfrastructures
             .filter((infra) => {
                 const discoveryUrl = infra.components.AASDiscovery.url;
                 return discoveryUrl && discoveryUrl.trim() !== '';
@@ -149,7 +153,7 @@
 
     // Filter infrastructures that have AAS Repository configured
     const destinationInfrastructureItems = computed(() => {
-        return navigationStore.getInfrastructures
+        return infrastructureStore.getInfrastructures
             .filter((infra) => {
                 const aasRepoUrl = infra.components.AASRepo.url;
                 return aasRepoUrl && aasRepoUrl.trim() !== '';
@@ -162,7 +166,7 @@
     });
 
     async function startImport(): Promise<void> {
-        const originalInfraId = navigationStore.getSelectedInfrastructureId;
+        const originalInfraId = infrastructureStore.getSelectedInfrastructureId;
 
         loading.value = true;
         try {
@@ -191,7 +195,7 @@
                 return;
             }
 
-            await navigationStore.dispatchSelectInfrastructure(selectedInfrastructure.value.id);
+            await infrastructureStore.dispatchSelectInfrastructure(selectedInfrastructure.value.id);
 
             // Step 1: Fetch AAS ID from Discovery
             const aasId = await getAasId(assetId.value, selectedInfrastructure?.value?.components.AASDiscovery.url);
@@ -256,7 +260,7 @@
                 }
             }
             // console.log('Switching Infrastructure to Destination for Upload:', destinationInfrastructure.value.name);
-            await navigationStore.dispatchSelectInfrastructure(destinationInfrastructure.value.id);
+            await infrastructureStore.dispatchSelectInfrastructure(destinationInfrastructure.value.id);
             delete aas.endpoints;
 
             // Step 6: Upload AAS to default infrastructure
@@ -286,7 +290,7 @@
 
             // Step 8: Restore original infrastructure selection
             if (originalInfraId && destinationInfrastructure.value.id !== originalInfraId) {
-                await navigationStore.dispatchSelectInfrastructure(originalInfraId);
+                await infrastructureStore.dispatchSelectInfrastructure(originalInfraId);
             }
 
             // Step 9: Show success message

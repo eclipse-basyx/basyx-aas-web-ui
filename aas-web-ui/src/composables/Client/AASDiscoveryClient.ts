@@ -1,12 +1,12 @@
 import { computed } from 'vue';
 import { useRequestHandling } from '@/composables/RequestHandling';
-import { useNavigationStore } from '@/store/NavigationStore';
+import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { stripLastCharacter } from '@/utils/StringUtils';
 
 export function useAASDiscoveryClient() {
     // Stores
-    const navigationStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
 
     // Composables
     const { getRequest } = useRequestHandling();
@@ -14,7 +14,7 @@ export function useAASDiscoveryClient() {
     const endpointPath = '/lookup/shells';
 
     // Computed Properties
-    const aasDiscoveryUrl = computed(() => navigationStore.getAASDiscoveryURL);
+    const aasDiscoveryUrl = computed(() => infrastructureStore.getAASDiscoveryURL);
 
     /**
      * Retrieves the Asset Administration Shell (AAS) ID corresponding to a given global asset ID.

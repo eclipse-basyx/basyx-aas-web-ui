@@ -1,12 +1,12 @@
 import { computed } from 'vue';
 import { useRequestHandling } from '@/composables/RequestHandling';
-import { useNavigationStore } from '@/store/NavigationStore';
+import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { stripLastCharacter } from '@/utils/StringUtils';
 
 export function useCDRepositoryClient() {
     // Stores
-    const navigationStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
 
     // Composables
     const { getRequest } = useRequestHandling();
@@ -14,7 +14,7 @@ export function useCDRepositoryClient() {
     const endpointPath = '/concept-descriptions';
 
     // Computed Properties
-    const conceptDescriptionRepoUrl = computed(() => navigationStore.getConceptDescriptionRepoURL);
+    const conceptDescriptionRepoUrl = computed(() => infrastructureStore.getConceptDescriptionRepoURL);
 
     /**
      * Fetches a list of all available Concept Descriptions (CDs).

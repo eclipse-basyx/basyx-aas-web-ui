@@ -1,7 +1,7 @@
 import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
 import { computed } from 'vue';
 import { useRequestHandling } from '@/composables/RequestHandling';
-import { useNavigationStore } from '@/store/NavigationStore';
+import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import * as descriptorTypes from '@/types/Descriptors';
 import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
@@ -10,7 +10,7 @@ import { stripLastCharacter } from '@/utils/StringUtils';
 
 export function useSMRegistryClient() {
     // Stores
-    const navigationStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
 
     // Composables
     const { getRequest, postRequest, putRequest } = useRequestHandling();
@@ -18,7 +18,7 @@ export function useSMRegistryClient() {
     const endpointPath = '/submodel-descriptors';
 
     // Computed Properties
-    const submodelRegistryUrl = computed(() => navigationStore.getSubmodelRegistryURL);
+    const submodelRegistryUrl = computed(() => infrastructureStore.getSubmodelRegistryURL);
 
     /**
      * Fetches a list of all available Submodel (SM) Descriptors.

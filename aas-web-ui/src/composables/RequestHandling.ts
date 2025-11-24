@@ -1,8 +1,10 @@
 import type { BaSyxComponentKey } from '@/types/BaSyx';
+import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 
 export function useRequestHandling() {
     const navigationStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
 
     function getRequest(path: string, context: string, disableMessage: boolean, headers: Headers = new Headers()): any {
         headers = addAuthorizationHeader(headers, path); // Add the Authorization header
@@ -293,7 +295,7 @@ export function useRequestHandling() {
 
     function addAuthorizationHeader(headers: Headers, path: string): Headers {
         // Try to find which infrastructure component this request is for
-        const selectedInfra = navigationStore.getSelectedInfrastructure;
+        const selectedInfra = infrastructureStore.getSelectedInfrastructure;
 
         // Debug logging (using warn to avoid lint errors)
         if (process.env.NODE_ENV === 'development') {

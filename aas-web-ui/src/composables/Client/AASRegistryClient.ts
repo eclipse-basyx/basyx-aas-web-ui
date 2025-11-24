@@ -1,7 +1,7 @@
 import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
 import { computed } from 'vue';
 import { useRequestHandling } from '@/composables/RequestHandling';
-import { useNavigationStore } from '@/store/NavigationStore';
+import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import * as descriptorTypes from '@/types/Descriptors';
 import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
@@ -10,7 +10,7 @@ import { stripLastCharacter } from '@/utils/StringUtils';
 
 export function useAASRegistryClient() {
     // Stores
-    const navigationStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
 
     //Composables
     const { getRequest, postRequest, putRequest } = useRequestHandling();
@@ -18,7 +18,7 @@ export function useAASRegistryClient() {
     const endpointPath = '/shell-descriptors';
 
     // Computed Properties
-    const aasRegistryUrl = computed(() => navigationStore.getAASRegistryURL);
+    const aasRegistryUrl = computed(() => infrastructureStore.getAASRegistryURL);
 
     /**
      * Fetches a list of all available Asset Administration Shell (AAS) Descriptors.

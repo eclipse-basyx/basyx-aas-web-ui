@@ -22,12 +22,14 @@
     import { onBeforeUnmount, onMounted, ref } from 'vue';
     import { useRouter } from 'vue-router';
     import { usePopupOverlay } from '@/composables/PopupOverlay';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     // Vue Router
     const router = useRouter();
 
     // Stores
+    const infrastructureStore = useInfrastructureStore();
     const navigationStore = useNavigationStore();
 
     // Popup Overlay
@@ -47,7 +49,7 @@
     });
 
     async function refreshTokens(): Promise<void> {
-        const failures = await navigationStore.refreshInfrastructureTokens();
+        const failures = await infrastructureStore.refreshInfrastructureTokens();
 
         // Handle refresh failures
         if (failures.length > 0) {
@@ -63,7 +65,7 @@
             });
 
             // Trigger opening the infrastructure management dialog
-            navigationStore.dispatchTriggerInfrastructureDialog();
+            infrastructureStore.dispatchTriggerInfrastructureDialog();
         }
     }
 
