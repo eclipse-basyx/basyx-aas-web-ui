@@ -1,13 +1,9 @@
 import type { AutoSyncType, PlatformType, PluginType, SnackbarType, StatusCheckType } from '@/types/Application';
 import type { BaSyxComponent, BaSyxComponentKey } from '@/types/BaSyx';
-import type {
-    ComponentConfig,
-    InfrastructureAuth,
-    InfrastructureConfig,
-    InfrastructureStorage,
-} from '@/types/Infrastructure';
+import type { InfrastructureConfig, InfrastructureStorage, KeycloakConnectionData } from '@/types/Infrastructure';
 import type { LocationQuery, RouteRecordRaw } from 'vue-router';
 import { defineStore } from 'pinia';
+import { nextTick } from 'vue';
 import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
 import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
@@ -17,6 +13,7 @@ import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useEnvStore } from '@/store/EnvironmentStore';
 import { stripLastCharacter } from '@/utils/StringUtils';
+import { authenticateWithClientCredentials } from '@/composables/KeycloakAuth';
 
 export const useNavigationStore = defineStore('navigationStore', () => {
     // Stores
@@ -43,6 +40,8 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const EnvKeycloakUrl = computed(() => envStore.getKeycloakUrl);
     const EnvKeycloakRealm = computed(() => envStore.getKeycloakRealm);
     const EnvKeycloakClientId = computed(() => envStore.getKeycloakClientId);
+    const EnvPreconfiguredAuth = computed(() => envStore.getPreconfiguredAuth);
+    const EnvPreconfiguredAuthClientSecret = computed(() => envStore.getPreconfiguredAuthClientSecret);
 
     // States
     const drawerState = ref(true);
@@ -59,6 +58,8 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const platform = ref<PlatformType>({} as PlatformType);
     const plugins = ref<PluginType[]>([]);
     const triggerAASListReload = ref(false);
+    const clearAASList = ref(false);
+    const clearTreeview = ref(false);
     const triggerAASListScroll = ref(false);
     const triggerTreeviewReload = ref(false);
     const urlQuery = ref<LocationQuery>({} as LocationQuery);
@@ -68,6 +69,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const infrastructures = ref<InfrastructureConfig[]>([]);
     const selectedInfrastructureId = ref<string | null>(null);
     const triggerInfrastructureDialog = ref(false);
+    const openInfrastructureEditMode = ref(false);
 
     // Reactive BaSyx Components Configurations
     const basyxComponents = reactive<Record<BaSyxComponentKey, BaSyxComponent>>({
@@ -142,6 +144,8 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const getPlatform = computed(() => platform.value);
     const getPlugins = computed(() => plugins.value);
     const getTriggerAASListReload = computed(() => triggerAASListReload.value);
+    const getClearAASList = computed(() => clearAASList.value);
+    const getClearTreeview = computed(() => clearTreeview.value);
     const getTriggerAASListScroll = computed(() => triggerAASListScroll.value);
     const getTriggerTreeviewReload = computed(() => triggerTreeviewReload.value);
     const getUrlQuery = computed(() => urlQuery.value);
@@ -156,6 +160,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         return infrastructures.value.find((infra) => infra.id === selectedInfrastructureId.value) || null;
     });
     const getTriggerInfrastructureDialog = computed(() => triggerInfrastructureDialog.value);
+    const getOpenInfrastructureEditMode = computed(() => openInfrastructureEditMode.value);
 
     // Helper Functions
     function generateInfrastructureId(): string {
@@ -166,36 +171,31 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         return {
             id: generateInfrastructureId(),
             name,
+            auth: { securityType: 'No Authentication' },
             components: {
                 AASDiscovery: {
                     url: '',
-                    auth: { securityType: 'No Authentication' },
                 },
                 AASRegistry: {
                     url: '',
-                    auth: { securityType: 'No Authentication' },
                 },
                 SubmodelRegistry: {
                     url: '',
-                    auth: { securityType: 'No Authentication' },
                 },
                 AASRepo: {
                     url: '',
-                    auth: { securityType: 'No Authentication' },
                 },
                 SubmodelRepo: {
                     url: '',
-                    auth: { securityType: 'No Authentication' },
                 },
                 ConceptDescriptionRepo: {
                     url: '',
-                    auth: { securityType: 'No Authentication' },
                 },
             },
         };
     }
 
-    function createDefaultInfrastructureFromEnv(): InfrastructureConfig {
+    async function createDefaultInfrastructureFromEnv(): Promise<InfrastructureConfig> {
         const infrastructure = createEmptyInfrastructure('Default Infrastructure');
         infrastructure.isDefault = true;
 
@@ -209,21 +209,34 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         if (EnvConceptDescriptionRepoPath.value)
             infrastructure.components.ConceptDescriptionRepo.url = EnvConceptDescriptionRepoPath.value;
         if (EnvKeycloakActive.value) {
-            const infrastructureAuth: InfrastructureAuth = {
-                securityType: 'Keycloak',
-                keycloakConfig: {
-                    serverUrl: EnvKeycloakUrl.value,
-                    realm: EnvKeycloakRealm.value,
-                    clientId: EnvKeycloakClientId.value,
-                    authFlow: 'auth-code',
-                },
+            const keycloakConfig: KeycloakConnectionData = {
+                serverUrl: EnvKeycloakUrl.value,
+                realm: EnvKeycloakRealm.value,
+                clientId: EnvKeycloakClientId.value,
+                authFlow: 'auth-code',
             };
-            infrastructure.components.AASDiscovery.auth = infrastructureAuth;
-            infrastructure.components.AASRegistry.auth = infrastructureAuth;
-            infrastructure.components.SubmodelRegistry.auth = infrastructureAuth;
-            infrastructure.components.AASRepo.auth = infrastructureAuth;
-            infrastructure.components.SubmodelRepo.auth = infrastructureAuth;
-            infrastructure.components.ConceptDescriptionRepo.auth = infrastructureAuth;
+
+            if (EnvPreconfiguredAuth.value) {
+                keycloakConfig.clientSecret = EnvPreconfiguredAuthClientSecret.value;
+                keycloakConfig.authFlow = 'client-credentials';
+            }
+
+            infrastructure.auth = {
+                securityType: 'Keycloak',
+                keycloakConfig,
+            };
+            if (EnvPreconfiguredAuth.value) {
+                // Trigger client-credentials flow
+                console.log('Refreshing tokens for infrastructure created from env');
+                await refreshInfrastructureTokens(infrastructure.id);
+                const result = await authenticateWithClientCredentials(infrastructure.auth.keycloakConfig!);
+                infrastructure.token = {
+                    accessToken: result.accessToken,
+                    refreshToken: result.refreshToken,
+                    expiresAt: result.expiresAt,
+                    idToken: result.idToken,
+                };
+            }
         }
 
         return infrastructure;
@@ -251,7 +264,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         return infrastructure;
     }
 
-    function loadInfrastructuresFromStorage(): void {
+    async function loadInfrastructuresFromStorage(): Promise<void> {
         try {
             const stored = window.localStorage.getItem('basyxInfrastructures');
             if (stored) {
@@ -264,9 +277,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
                     infrastructures: infrastructures.value.map((infra) => ({
                         id: infra.id,
                         name: infra.name,
-                        hasTokens: Object.entries(infra.components)
-                            .filter(([, comp]) => comp.token?.accessToken)
-                            .map(([key]) => key),
+                        hasToken: !!infra.token?.accessToken,
                     })),
                 });
             } else {
@@ -282,7 +293,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
                     selectedInfrastructureId.value = legacyInfra.id;
                 } else {
                     // Create default from environment
-                    const defaultInfra = createDefaultInfrastructureFromEnv();
+                    const defaultInfra = await createDefaultInfrastructureFromEnv();
                     infrastructures.value = [defaultInfra];
                     selectedInfrastructureId.value = defaultInfra.id;
                 }
@@ -292,7 +303,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         } catch (error) {
             console.error('Error loading infrastructures from storage:', error);
             // Fallback to default
-            const defaultInfra = createDefaultInfrastructureFromEnv();
+            const defaultInfra = await createDefaultInfrastructureFromEnv();
             infrastructures.value = [defaultInfra];
             selectedInfrastructureId.value = defaultInfra.id;
         }
@@ -312,9 +323,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
                     infrastructuresWithTokens: storage.infrastructures.map((infra) => ({
                         id: infra.id,
                         name: infra.name,
-                        tokensInComponents: Object.entries(infra.components)
-                            .filter(([, comp]) => comp.token?.accessToken)
-                            .map(([key]) => key),
+                        hasToken: !!infra.token?.accessToken,
                     })),
                 });
             }
@@ -325,8 +334,65 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         }
     }
 
+    function dispatchSetDefaultInfrastructure(infrastructureId: string): void {
+        infrastructures.value.forEach((infra) => {
+            if (infra.id === infrastructureId) {
+                infra.isDefault = true;
+            } else {
+                infra.isDefault = false;
+            }
+            saveInfrastructuresToStorage();
+        });
+    }
+
     // Initialize infrastructures on store creation
     loadInfrastructuresFromStorage();
+
+    // Check if selected infrastructure needs authentication on load
+    (async () => {
+        await nextTick(); // Wait for Vue reactivity
+        const selectedInfra = getSelectedInfrastructure.value;
+        if (selectedInfra) {
+            const requiresKeycloakAuth =
+                selectedInfra.auth?.securityType === 'Keycloak' &&
+                selectedInfra.auth.keycloakConfig &&
+                selectedInfra.auth.keycloakConfig.authFlow === 'auth-code';
+            const hasToken = selectedInfra.token?.accessToken;
+
+            if (requiresKeycloakAuth && !hasToken && selectedInfra.auth?.keycloakConfig) {
+                // Directly trigger authentication for auth-code flow
+                const { authenticateKeycloak } = await import('@/composables/KeycloakAuth');
+                try {
+                    const result = await authenticateKeycloak(selectedInfra.auth.keycloakConfig);
+
+                    // Update infrastructure with new token
+                    const updatedInfra = {
+                        ...selectedInfra,
+                        token: {
+                            accessToken: result.accessToken,
+                            refreshToken: result.refreshToken,
+                            idToken: result.idToken,
+                            expiresAt: result.expiresAt,
+                        },
+                    };
+                    dispatchUpdateInfrastructure(updatedInfra);
+                    setAuthenticationStatusForInfrastructure(selectedInfra.id, true);
+                    dispatchTriggerAASListReload();
+                    dispatchTriggerTreeviewReload();
+                    dispatchSnackbar({
+                        status: true,
+                        timeout: 4000,
+                        color: 'success',
+                        btnColor: 'buttonText',
+                        text: 'Successfully authenticated',
+                    });
+                } catch (error: unknown) {
+                    // Silently fail on page load - user can manually authenticate later
+                    console.warn('Authentication on load failed:', error);
+                }
+            }
+        }
+    })();
 
     // Watch for changes to sync URL refs with selected infrastructure
     watch(
@@ -381,6 +447,14 @@ export const useNavigationStore = defineStore('navigationStore', () => {
             // Reset dispatchTriggerAASListReload after 100 ms
             triggerAASListReload.value = false;
         }, 100);
+    }
+
+    function dispatchClearAASList(): void {
+        clearAASList.value = !clearAASList.value;
+    }
+
+    function dispatchClearTreeview(): void {
+        clearTreeview.value = !clearTreeview.value;
     }
 
     function dispatchTriggerAASListScroll(): void {
@@ -445,6 +519,52 @@ export const useNavigationStore = defineStore('navigationStore', () => {
             selectedInfrastructureId.value = infrastructureId;
             saveInfrastructuresToStorage();
 
+            // Check if infrastructure requires authentication and doesn't have a token
+            const requiresKeycloakAuth =
+                infra.auth?.securityType === 'Keycloak' &&
+                infra.auth.keycloakConfig &&
+                infra.auth.keycloakConfig.authFlow === 'auth-code';
+            const hasToken = infra.token?.accessToken;
+
+            if (requiresKeycloakAuth && !hasToken && infra.auth?.keycloakConfig) {
+                // Directly trigger authentication for auth-code flow
+                const { authenticateKeycloak } = await import('@/composables/KeycloakAuth');
+                try {
+                    const result = await authenticateKeycloak(infra.auth.keycloakConfig);
+
+                    // Update infrastructure with new token
+                    const updatedInfra = {
+                        ...infra,
+                        token: {
+                            accessToken: result.accessToken,
+                            refreshToken: result.refreshToken,
+                            idToken: result.idToken,
+                            expiresAt: result.expiresAt,
+                        },
+                    };
+                    dispatchUpdateInfrastructure(updatedInfra);
+                    setAuthenticationStatusForInfrastructure(infra.id, true);
+                    dispatchClearAASList();
+                    dispatchClearTreeview();
+                    dispatchSnackbar({
+                        status: true,
+                        timeout: 4000,
+                        color: 'success',
+                        btnColor: 'buttonText',
+                        text: 'Successfully authenticated',
+                    });
+                } catch (error: unknown) {
+                    dispatchSnackbar({
+                        status: true,
+                        timeout: 6000,
+                        color: 'warning',
+                        btnColor: 'buttonText',
+                        text: 'Authentication required for this infrastructure',
+                        extendedError: error instanceof Error ? error.message : 'Please authenticate to continue',
+                    });
+                }
+            }
+
             // Trigger connection check for all components
             await connectComponents();
         }
@@ -481,9 +601,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
                 console.warn('[NavigationStore] Updated infrastructure:', {
                     id: infrastructure.id,
                     name: infrastructure.name,
-                    hasTokens: Object.entries(infrastructure.components)
-                        .filter(([, comp]) => comp.token?.accessToken)
-                        .map(([key]) => key),
+                    hasToken: !!infrastructure.token?.accessToken,
                 });
             }
 
@@ -501,7 +619,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         }
     }
 
-    function dispatchDeleteInfrastructure(infrastructureId: string): void {
+    async function dispatchDeleteInfrastructure(infrastructureId: string): Promise<void> {
         const index = infrastructures.value.findIndex((i) => i.id === infrastructureId);
         if (index !== -1) {
             infrastructures.value.splice(index, 1);
@@ -512,7 +630,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
                     selectedInfrastructureId.value = infrastructures.value[0].id;
                 } else {
                     // Create a new default infrastructure if none exist
-                    const defaultInfra = createDefaultInfrastructureFromEnv();
+                    const defaultInfra = await createDefaultInfrastructureFromEnv();
                     infrastructures.value.push(defaultInfra);
                     selectedInfrastructureId.value = defaultInfra.id;
                 }
@@ -522,139 +640,153 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         }
     }
 
-    function dispatchUpdateComponentAuth(componentKey: BaSyxComponentKey, auth: ComponentConfig['auth']): void {
-        if (getSelectedInfrastructure.value && auth) {
-            getSelectedInfrastructure.value.components[componentKey].auth = auth;
+    function dispatchUpdateInfrastructureAuth(infrastructureId: string, auth: InfrastructureConfig['auth']): void {
+        const infrastructure = infrastructures.value.find((i) => i.id === infrastructureId);
+        if (infrastructure && auth) {
+            infrastructure.auth = auth;
             saveInfrastructuresToStorage();
         }
     }
 
-    function dispatchTriggerInfrastructureDialog(): void {
+    function dispatchTriggerInfrastructureDialog(editMode = false): void {
+        openInfrastructureEditMode.value = editMode;
         triggerInfrastructureDialog.value = !triggerInfrastructureDialog.value;
     }
 
     /**
      * Refreshes expired or expiring tokens for all infrastructures with Keycloak authentication.
      * Tokens are refreshed if they expire within 5 minutes (300 seconds).
-     * Returns array of failed refresh attempts with infrastructure and component info.
+     * Returns array of failed refresh attempts with infrastructure info.
      */
-    async function refreshInfrastructureTokens(): Promise<
-        Array<{ infraName: string; component: string; error: string }>
-    > {
-        const failures: Array<{ infraName: string; component: string; error: string }> = [];
+    async function refreshInfrastructureTokens(
+        infrastructureId?: string
+    ): Promise<Array<{ infraName: string; error: string }>> {
+        const failures: Array<{ infraName: string; error: string }> = [];
         const TOKEN_REFRESH_BUFFER = 5 * 60 * 1000; // 5 minutes in milliseconds
         const now = Date.now();
 
         for (const infrastructure of infrastructures.value) {
-            const componentKeys: BaSyxComponentKey[] = [
-                'AASDiscovery',
-                'AASRegistry',
-                'SubmodelRegistry',
-                'AASRepo',
-                'SubmodelRepo',
-                'ConceptDescriptionRepo',
-            ];
+            if (infrastructureId && infrastructure.id !== infrastructureId) {
+                continue; // Skip if a specific infrastructureId is provided and doesn't match
+            }
+            infrastructure.isAuthenticated = false;
+            const auth = infrastructure.auth;
+            const token = infrastructure.token;
 
-            for (const componentKey of componentKeys) {
-                const component = infrastructure.components[componentKey];
-                const auth = component.auth;
-                const token = component.token;
+            // Check if infrastructure uses Keycloak and has a token
+            if (auth?.securityType !== 'Keycloak' || !token?.accessToken) {
+                continue;
+            }
 
-                // Check if component uses Keycloak and has a token
-                if (auth?.securityType !== 'Keycloak' || !token?.accessToken) {
-                    continue;
-                }
+            // Check if token is expired or expiring soon
+            if (!token.expiresAt || token.expiresAt > now + TOKEN_REFRESH_BUFFER) {
+                continue;
+            }
 
-                // Check if token is expired or expiring soon
-                if (!token.expiresAt || token.expiresAt > now + TOKEN_REFRESH_BUFFER) {
-                    continue;
-                }
-
-                // Attempt token refresh
-                try {
-                    if (!token.refreshToken) {
-                        // No refresh token available (e.g., client credentials flow)
-                        failures.push({
-                            infraName: infrastructure.name,
-                            component: componentKey,
-                            error: 'No refresh token available - re-authentication required',
-                        });
+            // Attempt token refresh
+            try {
+                if (!token.refreshToken) {
+                    // No refresh token available (e.g., client credentials flow)
+                    // If is client-credentials, we can re-authenticate
+                    if (auth.keycloakConfig?.authFlow === 'client-credentials') {
+                        const result = await authenticateWithClientCredentials(auth.keycloakConfig);
+                        // Update token in infrastructure
+                        infrastructure.token = {
+                            accessToken: result.accessToken,
+                            refreshToken: result.refreshToken,
+                            idToken: result.idToken,
+                            expiresAt: result.expiresAt,
+                        };
+                        infrastructure.isAuthenticated = true;
+                        if (process.env.NODE_ENV === 'development') {
+                            console.warn(
+                                `[NavigationStore] Re-authenticated (client-credentials) for ${infrastructure.name}`
+                            );
+                        }
                         continue;
                     }
-
-                    if (!auth.keycloakConfig) {
-                        failures.push({
-                            infraName: infrastructure.name,
-                            component: componentKey,
-                            error: 'Missing Keycloak configuration',
-                        });
-                        continue;
-                    }
-
-                    const { serverUrl, realm, clientId, clientSecret } = auth.keycloakConfig;
-                    const tokenEndpoint = `${serverUrl.replace(/\/$/, '')}/realms/${realm}/protocol/openid-connect/token`;
-
-                    const params = new URLSearchParams({
-                        client_id: clientId,
-                        grant_type: 'refresh_token',
-                        refresh_token: token.refreshToken,
-                    });
-
-                    if (clientSecret) {
-                        params.set('client_secret', clientSecret);
-                    }
-
-                    const response = await fetch(tokenEndpoint, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: params.toString(),
-                    });
-
-                    const data = await response.json();
-
-                    if (!response.ok) {
-                        failures.push({
-                            infraName: infrastructure.name,
-                            component: componentKey,
-                            error: data.error_description || 'Token refresh failed',
-                        });
-                        continue;
-                    }
-
-                    // Update token in infrastructure
-                    const expiresAt = Date.now() + (data.expires_in || 300) * 1000;
-                    component.token = {
-                        accessToken: data.access_token,
-                        refreshToken: data.refresh_token || token.refreshToken,
-                        expiresAt,
-                    };
-
-                    if (process.env.NODE_ENV === 'development') {
-                        console.warn(`[NavigationStore] Refreshed token for ${infrastructure.name} - ${componentKey}`);
-                    }
-                } catch (error) {
                     failures.push({
                         infraName: infrastructure.name,
-                        component: componentKey,
-                        error: error instanceof Error ? error.message : 'Unknown error',
+                        error: 'No refresh token available - re-authentication required',
                     });
+                    continue;
                 }
+
+                if (!auth.keycloakConfig) {
+                    failures.push({
+                        infraName: infrastructure.name,
+                        error: 'Missing Keycloak configuration',
+                    });
+                    continue;
+                }
+
+                const { serverUrl, realm, clientId, clientSecret } = auth.keycloakConfig;
+                const tokenEndpoint = `${serverUrl.replace(/\/$/, '')}/realms/${realm}/protocol/openid-connect/token`;
+
+                const params = new URLSearchParams({
+                    client_id: clientId,
+                    grant_type: 'refresh_token',
+                    refresh_token: token.refreshToken,
+                });
+
+                if (clientSecret) {
+                    params.set('client_secret', clientSecret);
+                }
+
+                const response = await fetch(tokenEndpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params.toString(),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    failures.push({
+                        infraName: infrastructure.name,
+                        error: data.error_description || 'Token refresh failed',
+                    });
+                    continue;
+                }
+
+                // Update token in infrastructure
+                const expiresAt = Date.now() + (data.expires_in || 300) * 1000;
+                infrastructure.token = {
+                    accessToken: data.access_token,
+                    refreshToken: data.refresh_token || token.refreshToken,
+                    idToken: data.id_token || token.idToken, // Preserve or update idToken
+                    expiresAt,
+                };
+                infrastructure.isAuthenticated = true;
+                if (process.env.NODE_ENV === 'development') {
+                    console.warn(`[NavigationStore] Refreshed token for ${infrastructure.name}`);
+                }
+            } catch (error) {
+                failures.push({
+                    infraName: infrastructure.name,
+                    error: error instanceof Error ? error.message : 'Unknown error',
+                });
             }
         }
 
         // Save updated tokens to storage if any were refreshed
-        const totalKeycloakTokens = infrastructures.value.reduce(
-            (acc, infra) =>
-                acc +
-                Object.values(infra.components).filter((c) => c.auth?.securityType === 'Keycloak' && c.token).length,
-            0
-        );
+        const totalKeycloakInfrastructures = infrastructures.value.filter(
+            (infra) => infra.auth?.securityType === 'Keycloak' && infra.token
+        ).length;
 
-        if (failures.length < totalKeycloakTokens) {
+        if (failures.length < totalKeycloakInfrastructures) {
             saveInfrastructuresToStorage();
         }
 
         return failures;
+    }
+
+    function setAuthenticationStatusForInfrastructure(infrastructureId: string, state: boolean): void {
+        const infrastructure = infrastructures.value.find((i) => i.id === infrastructureId);
+        if (!infrastructure) {
+            return;
+        }
+        infrastructure.isAuthenticated = state;
     }
 
     async function connectComponents(): Promise<void> {
@@ -832,6 +964,8 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         getPlatform,
         getPlugins,
         getTriggerAASListReload,
+        getClearAASList,
+        getClearTreeview,
         getTriggerAASListScroll,
         getTriggerTreeviewReload,
         getUrlQuery,
@@ -841,6 +975,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         getSelectedInfrastructureId,
         getSelectedInfrastructure,
         getTriggerInfrastructureDialog,
+        getOpenInfrastructureEditMode,
 
         // Actions
         dispatchComponentURL,
@@ -852,6 +987,8 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         dispatchPlatform,
         dispatchPlugins,
         dispatchTriggerAASListReload,
+        dispatchClearAASList,
+        dispatchClearTreeview,
         dispatchTriggerAASListScroll,
         dispatchTriggerTreeviewReload,
         dispatchUrlQuery,
@@ -863,9 +1000,11 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         dispatchAddInfrastructure,
         dispatchUpdateInfrastructure,
         dispatchDeleteInfrastructure,
-        dispatchUpdateComponentAuth,
+        dispatchUpdateInfrastructureAuth,
         dispatchTriggerInfrastructureDialog,
         createEmptyInfrastructure,
         refreshInfrastructureTokens,
+        setAuthenticationStatusForInfrastructure,
+        dispatchSetDefaultInfrastructure,
     };
 });

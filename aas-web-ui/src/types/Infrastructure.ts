@@ -49,6 +49,7 @@ export interface InfrastructureAuth {
 export interface TokenData {
     accessToken: string;
     refreshToken?: string;
+    idToken?: string;
     expiresAt?: number;
 }
 
@@ -57,8 +58,6 @@ export interface TokenData {
  */
 export interface ComponentConfig {
     url: string;
-    auth?: InfrastructureAuth;
-    token?: TokenData;
 }
 
 /**
@@ -68,6 +67,9 @@ export interface InfrastructureConfig {
     id: string;
     name: string;
     isDefault?: boolean;
+    auth?: InfrastructureAuth;
+    token?: TokenData;
+    isAuthenticated?: boolean;
     components: {
         [key in BaSyxComponentKey]: ComponentConfig;
     };
@@ -80,3 +82,12 @@ export interface InfrastructureStorage {
     infrastructures: InfrastructureConfig[];
     selectedInfrastructureId: string | null;
 }
+
+export type UserData = {
+    username: string;
+    name?: string;
+    given_name?: string;
+    family_name?: string;
+    email?: string;
+    roles?: string[];
+};

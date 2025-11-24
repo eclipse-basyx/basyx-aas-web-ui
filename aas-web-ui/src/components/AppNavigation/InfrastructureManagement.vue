@@ -8,40 +8,59 @@
 
             <v-card-text style="max-height: 600px">
                 <!-- Infrastructure List -->
-                <v-list>
-                    <v-list-item
-                        v-for="infra in infrastructures"
-                        :key="infra.id"
-                        :class="{ 'bg-primary-lighten-5': infra.id === selectedInfrastructureId }"
-                        @click="selectForEditing()">
-                        <template #prepend>
-                            <v-icon icon="mdi-server-network"></v-icon>
-                        </template>
-                        <v-list-item-title>
-                            {{ infra.name }}
-                            <v-chip v-if="infra.isDefault" size="x-small" color="primary" class="ml-2">Default</v-chip>
-                        </v-list-item-title>
-                        <v-list-item-subtitle>{{ getInfrastructureSummary(infra) }}</v-list-item-subtitle>
-                        <template #append>
-                            <v-btn
-                                icon="mdi-pencil"
-                                size="small"
-                                variant="text"
-                                @click.stop="editInfrastructure(infra)">
-                                <v-icon>mdi-pencil</v-icon>
-                            </v-btn>
-                            <v-btn
-                                icon="mdi-delete"
-                                size="small"
-                                variant="text"
-                                :disabled="infrastructures.length === 1"
-                                @click.stop="deleteInfrastructure(infra)">
-                                <v-icon>mdi-delete</v-icon>
-                            </v-btn>
-                        </template>
-                    </v-list-item>
-                </v-list>
-
+                <v-radio-group v-model="defaultInfrastructure" @update:model-value="changeDefault">
+                    <v-table density="compact" class="border rounded">
+                        <thead>
+                            <tr>
+                                <th class="text-left">Default</th>
+                                <th class="text-left">Infrastructure Name</th>
+                                <th class="text-left">Configuration</th>
+                                <th class="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr
+                                v-for="infra in infrastructures"
+                                :key="infra.id"
+                                :class="{ 'bg-primary-lighten-5': infra.id === selectedInfrastructureId }">
+                                <td style="width: 80px">
+                                    <v-radio :value="infra.id"></v-radio>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-center">
+                                        {{ infra.name }}
+                                        <v-chip v-if="infra.isDefault" size="x-small" color="primary" class="ml-2"
+                                            >Default</v-chip
+                                        >
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="text-caption text-medium-emphasis">{{
+                                        getInfrastructureSummary(infra)
+                                    }}</span>
+                                </td>
+                                <td style="width: 120px">
+                                    <div class="d-flex justify-end">
+                                        <v-btn
+                                            icon="mdi-pencil"
+                                            size="x-small"
+                                            variant="plain"
+                                            @click.stop="editInfrastructure(infra)">
+                                        </v-btn>
+                                        <v-btn
+                                            icon="mdi-delete"
+                                            size="x-small"
+                                            variant="plain"
+                                            class="ml-n2 mr-n2"
+                                            :disabled="infrastructures.length === 1"
+                                            @click.stop="deleteInfrastructure(infra)">
+                                        </v-btn>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </v-table>
+                </v-radio-group>
                 <!-- Add Infrastructure Button -->
                 <v-btn color="primary" block class="mt-4" @click="addNewInfrastructure">
                     <v-icon left>mdi-plus</v-icon>
@@ -117,10 +136,19 @@
                                         density="compact"
                                         placeholder="https://example.com/api"
                                         class="mb-2"></v-text-field>
-
+                                </v-expansion-panel-text>
+                            </v-expansion-panel>
+                        </v-expansion-panels>
+                        <v-expansion-panels class="mt-4">
+                            <v-expansion-panel>
+                                <v-expansion-panel-title>
+                                    <v-icon left size="small">mdi-lock</v-icon>
+                                    Security Configuration (applies to all components)
+                                </v-expansion-panel-title>
+                                <v-expansion-panel-text>
                                     <!-- Authentication -->
                                     <v-select
-                                        v-model="editingInfrastructure.components[componentKey].auth!.securityType"
+                                        v-model="editingInfrastructure.auth!.securityType"
                                         :items="securityTypes"
                                         label="Authentication Type"
                                         variant="outlined"
@@ -129,18 +157,15 @@
 
                                     <!-- Basic Auth -->
                                     <template
-                                        v-if="
-                                            editingInfrastructure.components[componentKey].auth!.securityType ===
-                                            'Basic Authentication'
-                                        ">
+                                        v-if="editingInfrastructure.auth!.securityType === 'Basic Authentication'">
                                         <v-text-field
-                                            v-model="basicAuthUsername[componentKey]"
+                                            v-model="basicAuthUsername"
                                             label="Username"
                                             variant="outlined"
                                             density="compact"
                                             class="mb-2"></v-text-field>
                                         <v-text-field
-                                            v-model="basicAuthPassword[componentKey]"
+                                            v-model="basicAuthPassword"
                                             label="Password"
                                             type="password"
                                             variant="outlined"
@@ -149,13 +174,9 @@
                                     </template>
 
                                     <!-- Bearer Token -->
-                                    <template
-                                        v-if="
-                                            editingInfrastructure.components[componentKey].auth!.securityType ===
-                                            'Bearer Token'
-                                        ">
+                                    <template v-if="editingInfrastructure.auth!.securityType === 'Bearer Token'">
                                         <v-textarea
-                                            v-model="bearerToken[componentKey]"
+                                            v-model="bearerToken"
                                             label="Bearer Token"
                                             variant="outlined"
                                             density="compact"
@@ -164,32 +185,28 @@
                                     </template>
 
                                     <!-- Keycloak -->
-                                    <template
-                                        v-if="
-                                            editingInfrastructure.components[componentKey].auth!.securityType ===
-                                            'Keycloak'
-                                        ">
+                                    <template v-if="editingInfrastructure.auth!.securityType === 'Keycloak'">
                                         <v-text-field
-                                            v-model="keycloakServerUrl[componentKey]"
+                                            v-model="keycloakServerUrl"
                                             label="Keycloak Server URL"
                                             variant="outlined"
                                             density="compact"
                                             placeholder="https://keycloak.example.com"
                                             class="mb-2"></v-text-field>
                                         <v-text-field
-                                            v-model="keycloakRealm[componentKey]"
+                                            v-model="keycloakRealm"
                                             label="Realm"
                                             variant="outlined"
                                             density="compact"
                                             class="mb-2"></v-text-field>
                                         <v-text-field
-                                            v-model="keycloakClientId[componentKey]"
+                                            v-model="keycloakClientId"
                                             label="Client ID"
                                             variant="outlined"
                                             density="compact"
                                             class="mb-2"></v-text-field>
                                         <v-select
-                                            v-model="keycloakAuthFlow[componentKey]"
+                                            v-model="keycloakAuthFlow"
                                             :items="keycloakAuthFlowOptions"
                                             item-title="text"
                                             item-value="value"
@@ -199,39 +216,39 @@
                                             class="mb-2"></v-select>
                                         <v-text-field
                                             v-if="
-                                                keycloakAuthFlow[componentKey] === 'client-credentials' ||
-                                                keycloakAuthFlow[componentKey] === 'password'
+                                                keycloakAuthFlow === 'client-credentials' ||
+                                                keycloakAuthFlow === 'password'
                                             "
-                                            v-model="keycloakClientSecret[componentKey]"
+                                            v-model="keycloakClientSecret"
                                             label="Client Secret"
                                             type="password"
                                             variant="outlined"
                                             density="compact"
                                             class="mb-2"></v-text-field>
-                                        <template v-if="keycloakAuthFlow[componentKey] === 'password'">
+                                        <template v-if="keycloakAuthFlow === 'password'">
                                             <v-text-field
-                                                v-model="keycloakUsername[componentKey]"
+                                                v-model="keycloakUsername"
                                                 label="Username"
                                                 variant="outlined"
                                                 density="compact"
                                                 class="mb-2"></v-text-field>
                                             <v-text-field
-                                                v-model="keycloakPassword[componentKey]"
+                                                v-model="keycloakPassword"
                                                 label="Password"
                                                 type="password"
                                                 variant="outlined"
                                                 density="compact"
                                                 class="mb-2"></v-text-field>
                                         </template>
-                                        <v-row v-if="keycloakAuthFlow[componentKey]" class="mb-2">
+                                        <v-row v-if="keycloakAuthFlow" class="mb-2">
                                             <v-col>
                                                 <v-btn
-                                                    v-if="!keycloakTokens[componentKey]"
+                                                    v-if="!keycloakToken"
                                                     block
                                                     variant="tonal"
                                                     color="primary"
-                                                    :loading="keycloakLoading[componentKey]"
-                                                    @click="authenticateKeycloak(componentKey)">
+                                                    :loading="keycloakLoading"
+                                                    @click="authenticateKeycloakHandler()">
                                                     Authenticate
                                                 </v-btn>
                                                 <v-btn
@@ -240,19 +257,19 @@
                                                     variant="tonal"
                                                     color="success"
                                                     prepend-icon="mdi-check-circle"
-                                                    @click="authenticateKeycloak(componentKey)">
+                                                    @click="authenticateKeycloakHandler()">
                                                     Authenticated
                                                 </v-btn>
                                             </v-col>
                                         </v-row>
                                         <v-alert
-                                            v-if="keycloakErrors[componentKey]"
+                                            v-if="keycloakError"
                                             type="error"
                                             density="compact"
                                             closable
                                             class="mb-2"
-                                            @click:close="keycloakErrors[componentKey] = ''">
-                                            {{ keycloakErrors[componentKey] }}
+                                            @click:close="keycloakError = ''">
+                                            {{ keycloakError }}
                                         </v-alert>
                                     </template>
                                 </v-expansion-panel-text>
@@ -299,7 +316,8 @@
 <script lang="ts" setup>
     import type { BaSyxComponentKey } from '@/types/BaSyx';
     import type { InfrastructureConfig, KeycloakConnectionData, SecurityType } from '@/types/Infrastructure';
-    import { computed, ref, watch } from 'vue';
+    import { computed, onMounted, ref, watch } from 'vue';
+    import { authenticateKeycloak } from '@/composables/KeycloakAuth';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     // Props
@@ -319,10 +337,8 @@
     const infrastructures = computed(() => navigationStore.getInfrastructures);
     const selectedInfrastructureId = computed(() => navigationStore.getSelectedInfrastructureId);
     const hasAuthenticatedComponents = computed(() => {
-        return componentKeys.some((key) => {
-            const auth = editingInfrastructure.value.components[key].auth;
-            return auth && auth.securityType !== 'No Authentication';
-        });
+        const auth = editingInfrastructure.value.auth;
+        return auth && auth.securityType !== 'No Authentication';
     });
 
     // Local State
@@ -334,6 +350,7 @@
     const infrastructureToDelete = ref<InfrastructureConfig | null>(null);
     const expandedPanels = ref<number[]>([]);
     const formRef = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null);
+    const defaultInfrastructure = ref<string>('');
 
     // Component configuration
     const componentKeys: BaSyxComponentKey[] = [
@@ -353,27 +370,38 @@
     ];
 
     // Auth data helpers (to simplify form binding)
-    const basicAuthUsername = ref<Record<string, string>>({});
-    const basicAuthPassword = ref<Record<string, string>>({});
-    const bearerToken = ref<Record<string, string>>({});
-    const keycloakServerUrl = ref<Record<string, string>>({});
-    const keycloakRealm = ref<Record<string, string>>({});
-    const keycloakClientId = ref<Record<string, string>>({});
-    const keycloakAuthFlow = ref<Record<string, KeycloakConnectionData['authFlow']>>({});
-    const keycloakClientSecret = ref<Record<string, string>>({});
-    const keycloakUsername = ref<Record<string, string>>({});
-    const keycloakPassword = ref<Record<string, string>>({});
-    const keycloakTokens = ref<Record<string, { accessToken: string; refreshToken?: string; expiresAt?: number }>>({});
-    const keycloakLoading = ref<Record<string, boolean>>({});
-    const keycloakErrors = ref<Record<string, string>>({});
+    const basicAuthUsername = ref<string>('');
+    const basicAuthPassword = ref<string>('');
+    const bearerToken = ref<string>('');
+    const keycloakServerUrl = ref<string>('');
+    const keycloakRealm = ref<string>('');
+    const keycloakClientId = ref<string>('');
+    const keycloakAuthFlow = ref<KeycloakConnectionData['authFlow']>('auth-code');
+    const keycloakClientSecret = ref<string>('');
+    const keycloakUsername = ref<string>('');
+    const keycloakPassword = ref<string>('');
+    const keycloakToken = ref<{
+        accessToken: string;
+        refreshToken?: string;
+        expiresAt?: number;
+        idToken?: string;
+    } | null>(null);
+    const keycloakLoading = ref<boolean>(false);
+    const keycloakError = ref<string>('');
     const reauthenticating = ref(false);
-    let keycloakPopup: Window | null = null;
 
     // Watch props
     watch(
         () => props.open,
         (val) => {
             dialogOpen.value = val;
+            // If opening and edit mode is requested, automatically open edit for current infrastructure
+            if (val && navigationStore.getOpenInfrastructureEditMode) {
+                const currentInfra = navigationStore.getSelectedInfrastructure;
+                if (currentInfra) {
+                    editInfrastructure(currentInfra);
+                }
+            }
         }
     );
 
@@ -382,6 +410,16 @@
             emit('update:open', false);
         }
     });
+
+    // Lifecycle
+    onMounted(() => {
+        defaultInfrastructure.value = infrastructures.value.find((infra) => infra.isDefault)?.id || '';
+    });
+
+    function changeDefault(newDefaultId: string | null): void {
+        if (newDefaultId === null) return;
+        navigationStore.dispatchSetDefaultInfrastructure(newDefaultId);
+    }
 
     // Methods
     function close(): void {
@@ -405,10 +443,6 @@
         return `${configuredCount} of ${componentKeys.length} components configured`;
     }
 
-    function selectForEditing(): void {
-        // Optional: could auto-select in main list
-    }
-
     function addNewInfrastructure(): void {
         editMode.value = 'add';
         editingInfrastructure.value = navigationStore.createEmptyInfrastructure();
@@ -427,79 +461,87 @@
 
     function loadAuthDataFromInfrastructure(infra: InfrastructureConfig): void {
         // Load auth data into separate refs for easier form binding
-        componentKeys.forEach((key) => {
-            const auth = infra.components[key].auth;
-            const token = infra.components[key].token;
-            if (!auth) return;
+        const auth = infra.auth;
+        const token = infra.token;
 
-            if (auth.basicAuth) {
-                basicAuthUsername.value[key] = auth.basicAuth.username || '';
-                basicAuthPassword.value[key] = auth.basicAuth.password || '';
-            }
-            if (auth.bearerToken) {
-                bearerToken.value[key] = auth.bearerToken.token || '';
-            }
-            if (auth.keycloakConfig) {
-                keycloakServerUrl.value[key] = auth.keycloakConfig.serverUrl || '';
-                keycloakRealm.value[key] = auth.keycloakConfig.realm || '';
-                keycloakClientId.value[key] = auth.keycloakConfig.clientId || '';
-                keycloakAuthFlow.value[key] = auth.keycloakConfig.authFlow || 'auth-code';
-                keycloakClientSecret.value[key] = auth.keycloakConfig.clientSecret || '';
-                keycloakUsername.value[key] = auth.keycloakConfig.username || '';
-                keycloakPassword.value[key] = auth.keycloakConfig.password || '';
+        if (!auth) return;
 
-                // Load existing token if available
-                if (token) {
-                    keycloakTokens.value[key] = {
-                        accessToken: token.accessToken,
-                        refreshToken: token.refreshToken,
-                        expiresAt: token.expiresAt,
-                    };
-                }
+        // Reset all auth fields first
+        basicAuthUsername.value = '';
+        basicAuthPassword.value = '';
+        bearerToken.value = '';
+        keycloakServerUrl.value = '';
+        keycloakRealm.value = '';
+        keycloakClientId.value = '';
+        keycloakAuthFlow.value = 'auth-code';
+        keycloakClientSecret.value = '';
+        keycloakUsername.value = '';
+        keycloakPassword.value = '';
+        keycloakToken.value = null;
+
+        // Load based on security type
+        if (auth.basicAuth) {
+            basicAuthUsername.value = auth.basicAuth.username || '';
+            basicAuthPassword.value = auth.basicAuth.password || '';
+        }
+        if (auth.bearerToken) {
+            bearerToken.value = auth.bearerToken.token || '';
+        }
+        if (auth.keycloakConfig) {
+            keycloakServerUrl.value = auth.keycloakConfig.serverUrl || '';
+            keycloakRealm.value = auth.keycloakConfig.realm || '';
+            keycloakClientId.value = auth.keycloakConfig.clientId || '';
+            keycloakAuthFlow.value = auth.keycloakConfig.authFlow || 'auth-code';
+            keycloakClientSecret.value = auth.keycloakConfig.clientSecret || '';
+            keycloakUsername.value = auth.keycloakConfig.username || '';
+            keycloakPassword.value = auth.keycloakConfig.password || '';
+
+            // Load existing token if available
+            if (token) {
+                keycloakToken.value = {
+                    accessToken: token.accessToken,
+                    refreshToken: token.refreshToken,
+                    expiresAt: token.expiresAt,
+                    idToken: token.idToken,
+                };
             }
-        });
+        }
     }
 
     async function saveAuthDataToInfrastructure(infra: InfrastructureConfig): Promise<void> {
         // Save auth data from refs back to infrastructure object
-        componentKeys.forEach((key, index) => {
-            const auth = infra.components[key].auth;
-            if (!auth) return;
+        const auth = infra.auth;
+        if (!auth) return;
 
-            if (auth.securityType === 'Basic Authentication') {
-                auth.basicAuth = {
-                    username: basicAuthUsername.value[key] || '',
-                    password: basicAuthPassword.value[key] || '',
-                };
-            } else if (auth.securityType === 'Bearer Token') {
-                auth.bearerToken = {
-                    token: bearerToken.value[key] || '',
-                };
-            } else if (auth.securityType === 'Keycloak') {
-                auth.keycloakConfig = {
-                    serverUrl: keycloakServerUrl.value[key] || '',
-                    realm: keycloakRealm.value[key] || '',
-                    clientId: keycloakClientId.value[key] || '',
-                    authFlow: keycloakAuthFlow.value[key] || 'auth-code',
-                    clientSecret: keycloakClientSecret.value[key],
-                    username: keycloakUsername.value[key],
-                    password: keycloakPassword.value[key],
-                };
+        if (auth.securityType === 'Basic Authentication') {
+            auth.basicAuth = {
+                username: basicAuthUsername.value || '',
+                password: basicAuthPassword.value || '',
+            };
+        } else if (auth.securityType === 'Bearer Token') {
+            auth.bearerToken = {
+                token: bearerToken.value || '',
+            };
+        } else if (auth.securityType === 'Keycloak') {
+            auth.keycloakConfig = {
+                serverUrl: keycloakServerUrl.value || '',
+                realm: keycloakRealm.value || '',
+                clientId: keycloakClientId.value || '',
+                authFlow: keycloakAuthFlow.value || 'auth-code',
+                clientSecret: keycloakClientSecret.value,
+                username: keycloakUsername.value,
+                password: keycloakPassword.value,
+            };
 
-                // Save token data if authenticated
-                if (keycloakTokens.value[key]) {
-                    console.log('Saving token for', keycloakTokens.value[key].accessToken);
-                    infra.components[key].token = {
-                        accessToken: keycloakTokens.value[key].accessToken,
-                        refreshToken: keycloakTokens.value[key].refreshToken,
-                        expiresAt: keycloakTokens.value[key].expiresAt,
-                    };
-                }
+            // Save token data if authenticated
+            if (keycloakToken.value) {
+                infra.token = {
+                    accessToken: keycloakToken.value.accessToken,
+                    refreshToken: keycloakToken.value.refreshToken,
+                    expiresAt: keycloakToken.value.expiresAt,
+                };
             }
-            if (index === componentKeys.length - 1) {
-                return Promise.resolve();
-            }
-        });
+        }
     }
 
     async function saveInfrastructure(): Promise<void> {
@@ -539,376 +581,135 @@
     // Re-authenticate all components
     async function reauthenticateAll(): Promise<void> {
         reauthenticating.value = true;
-        const errors: string[] = [];
-        let successCount = 0;
+        const auth = editingInfrastructure.value.auth;
 
-        for (const componentKey of componentKeys) {
-            const component = editingInfrastructure.value.components[componentKey];
-            const auth = component.auth;
-
-            if (!auth || auth.securityType === 'No Authentication') {
-                continue;
-            }
-
-            try {
-                if (auth.securityType === 'Keycloak') {
-                    // Clear previous error for this component
-                    keycloakErrors.value[componentKey] = '';
-                    console.log('Token before Refresh', component.token?.accessToken);
-                    await authenticateKeycloak(componentKey);
-                    console.log(
-                        'Token after Refresh',
-                        editingInfrastructure.value.components[componentKey].token?.accessToken
-                    );
-
-                    // Check if authentication was successful by verifying token exists
-                    if (keycloakTokens.value[componentKey]?.accessToken && !keycloakErrors.value[componentKey]) {
-                        successCount++;
-                    } else {
-                        errors.push(
-                            `${componentKey}: ${keycloakErrors.value[componentKey] || 'Authentication failed - no token received'}`
-                        );
-                    }
-                } else {
-                    // For Basic Auth and Bearer Token, the credentials are already in the form
-                    // Just validate they exist
-                    if (auth.securityType === 'Basic Authentication') {
-                        if (basicAuthUsername.value[componentKey] && basicAuthPassword.value[componentKey]) {
-                            successCount++;
-                        } else {
-                            errors.push(`${componentKey}: Basic Auth credentials missing`);
-                        }
-                    } else if (auth.securityType === 'Bearer Token') {
-                        if (bearerToken.value[componentKey]) {
-                            successCount++;
-                        } else {
-                            errors.push(`${componentKey}: Bearer Token missing`);
-                        }
-                    }
-                }
-            } catch (error) {
-                errors.push(`${componentKey}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-            }
-        }
-
-        // Save the updated tokens to the infrastructure and persist to localStorage
-        if (successCount > 0) {
-            await saveAuthDataToInfrastructure(editingInfrastructure.value);
-            navigationStore.dispatchUpdateInfrastructure(editingInfrastructure.value);
-            saveInfrastructure();
-        }
-
-        reauthenticating.value = false;
-
-        // Show feedback
-        if (errors.length === 0) {
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 4000,
-                color: 'success',
-                btnColor: 'buttonText',
-                text: `Successfully re-authenticated ${successCount} component(s) and saved to storage`,
-            });
-        } else {
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 8000,
-                color: 'warning',
-                btnColor: 'buttonText',
-                text: `Re-authenticated ${successCount} component(s), ${errors.length} failed`,
-                extendedError: errors.join('\n'),
-            });
-        }
-    }
-
-    // Keycloak Authentication Methods
-    async function authenticateKeycloak(componentKey: BaSyxComponentKey): Promise<void> {
-        keycloakLoading.value[componentKey] = true;
-        keycloakErrors.value[componentKey] = '';
-
-        const serverUrl = keycloakServerUrl.value[componentKey];
-        const realm = keycloakRealm.value[componentKey];
-        const clientId = keycloakClientId.value[componentKey];
-        const authFlow = keycloakAuthFlow.value[componentKey];
-
-        if (!serverUrl || !realm || !clientId || !authFlow) {
-            keycloakErrors.value[componentKey] = 'Please fill in all required Keycloak fields';
-            keycloakLoading.value[componentKey] = false;
+        if (!auth || auth.securityType === 'No Authentication') {
+            reauthenticating.value = false;
             return;
         }
 
         try {
-            if (authFlow === 'client-credentials') {
-                await authenticateWithClientCredentials(componentKey);
-            } else if (authFlow === 'password') {
-                await authenticateWithPassword(componentKey);
-            } else {
-                await authenticateWithAuthCode(componentKey);
-            }
-        } catch (error: unknown) {
-            keycloakErrors.value[componentKey] = error instanceof Error ? error.message : 'Authentication failed';
-        } finally {
-            keycloakLoading.value[componentKey] = false;
-        }
-        console.log('Ended Keycloak authentication for', componentKey);
-    }
+            if (auth.securityType === 'Keycloak') {
+                // Clear previous error
+                keycloakError.value = '';
 
-    async function authenticateWithClientCredentials(componentKey: BaSyxComponentKey): Promise<void> {
-        const serverUrl = keycloakServerUrl.value[componentKey];
-        const realm = keycloakRealm.value[componentKey];
-        const clientId = keycloakClientId.value[componentKey];
-        const clientSecret = keycloakClientSecret.value[componentKey];
+                await authenticateKeycloakHandler();
 
-        if (!clientSecret) {
-            throw new Error('Client Secret is required for client credentials flow');
-        }
+                // Check if authentication was successful by verifying token exists
+                if (keycloakToken.value?.accessToken && !keycloakError.value) {
+                    // Save the updated token to the infrastructure and persist to localStorage
+                    await saveAuthDataToInfrastructure(editingInfrastructure.value);
+                    navigationStore.dispatchUpdateInfrastructure(editingInfrastructure.value);
+                    saveInfrastructure();
 
-        const tokenEndpoint = `${serverUrl.replace(/\/$/, '')}/realms/${realm}/protocol/openid-connect/token`;
-        const params = new URLSearchParams({
-            client_id: clientId,
-            client_secret: clientSecret,
-            grant_type: 'client_credentials',
-        });
-
-        const response = await fetch(tokenEndpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: params.toString(),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error_description || 'Authentication failed');
-        }
-
-        const expiresAt = Date.now() + (data.expires_in || 300) * 1000;
-        keycloakTokens.value[componentKey] = {
-            accessToken: data.access_token,
-            refreshToken: data.refresh_token,
-            expiresAt,
-        };
-    }
-
-    async function authenticateWithPassword(componentKey: BaSyxComponentKey): Promise<void> {
-        const serverUrl = keycloakServerUrl.value[componentKey];
-        const realm = keycloakRealm.value[componentKey];
-        const clientId = keycloakClientId.value[componentKey];
-        const clientSecret = keycloakClientSecret.value[componentKey];
-        const username = keycloakUsername.value[componentKey];
-        const password = keycloakPassword.value[componentKey];
-
-        if (!username || !password) {
-            throw new Error('Username and Password are required for password flow');
-        }
-
-        const tokenEndpoint = `${serverUrl.replace(/\/$/, '')}/realms/${realm}/protocol/openid-connect/token`;
-        const params = new URLSearchParams({
-            client_id: clientId,
-            username: username,
-            password: password,
-            grant_type: 'password',
-        });
-
-        if (clientSecret) {
-            params.set('client_secret', clientSecret);
-        }
-
-        const response = await fetch(tokenEndpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: params.toString(),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error_description || 'Authentication failed');
-        }
-
-        const expiresAt = Date.now() + (data.expires_in || 300) * 1000;
-        keycloakTokens.value[componentKey] = {
-            accessToken: data.access_token,
-            refreshToken: data.refresh_token,
-            expiresAt,
-        };
-    }
-
-    async function authenticateWithAuthCode(componentKey: BaSyxComponentKey): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            const run = async (): Promise<void> => {
-                const serverUrl = keycloakServerUrl.value[componentKey];
-                const realm = keycloakRealm.value[componentKey];
-                const clientId = keycloakClientId.value[componentKey];
-
-                // Generate PKCE code verifier and challenge
-                const codeVerifier = generateCodeVerifier();
-                const codeChallenge = await generateCodeChallenge(codeVerifier);
-
-                // Store code verifier for later exchange
-                sessionStorage.setItem(`pkce_code_verifier_${componentKey}`, codeVerifier);
-
-                // Build authorization URL
-                const redirectUri = `${window.location.origin}/keycloak-callback.html`;
-                const state = generateRandomString(32);
-                sessionStorage.setItem(`pkce_state_${componentKey}`, state);
-
-                const authUrl = new URL(`${serverUrl.replace(/\/$/, '')}/realms/${realm}/protocol/openid-connect/auth`);
-                authUrl.searchParams.set('client_id', clientId);
-                authUrl.searchParams.set('redirect_uri', redirectUri);
-                authUrl.searchParams.set('response_type', 'code');
-                authUrl.searchParams.set('scope', 'openid profile email');
-                authUrl.searchParams.set('code_challenge', codeChallenge);
-                authUrl.searchParams.set('code_challenge_method', 'S256');
-                authUrl.searchParams.set('state', state);
-
-                // Open popup window
-                const width = 500;
-                const height = 600;
-                const left = window.screenX + (window.outerWidth - width) / 2;
-                const top = window.screenY + (window.outerHeight - height) / 2;
-
-                keycloakPopup = window.open(
-                    authUrl.toString(),
-                    'keycloak-login',
-                    `width=${width},height=${height},left=${left},top=${top},popup=yes,resizable=yes,scrollbars=yes`
-                );
-
-                if (!keycloakPopup) {
-                    return reject(new Error('Failed to open login popup. Please allow popups for this site.'));
+                    navigationStore.dispatchSnackbar({
+                        status: true,
+                        timeout: 4000,
+                        color: 'success',
+                        btnColor: 'buttonText',
+                        text: 'Successfully re-authenticated and saved to storage',
+                    });
+                } else {
+                    navigationStore.dispatchSnackbar({
+                        status: true,
+                        timeout: 8000,
+                        color: 'error',
+                        btnColor: 'buttonText',
+                        text: 'Re-authentication failed',
+                        extendedError: keycloakError.value || 'Authentication failed - no token received',
+                    });
                 }
-
-                // Listen for messages from popup
-                const messageHandler = async (event: MessageEvent): Promise<void> => {
-                    if (event.origin !== window.location.origin) return;
-
-                    if (event.data && event.data.type === 'keycloak-auth-code') {
-                        const { code, state: returnedState } = event.data;
-                        const storedState = sessionStorage.getItem(`pkce_state_${componentKey}`);
-
-                        if (returnedState !== storedState) {
-                            keycloakErrors.value[componentKey] = 'Invalid state parameter';
-                            if (keycloakPopup && !keycloakPopup.closed) {
-                                keycloakPopup.close();
-                            }
-                            window.removeEventListener('message', messageHandler);
-                            keycloakLoading.value[componentKey] = false;
-                            return;
-                        }
-
-                        await exchangeCodeForToken(componentKey, code);
-                        if (keycloakPopup && !keycloakPopup.closed) {
-                            keycloakPopup.close();
-                        }
-                        window.removeEventListener('message', messageHandler);
-                    } else if (event.data && event.data.type === 'keycloak-auth-error') {
-                        keycloakErrors.value[componentKey] =
-                            event.data.errorDescription || event.data.error || 'Authentication failed';
-                        if (keycloakPopup && !keycloakPopup.closed) {
-                            keycloakPopup.close();
-                        }
-                        window.removeEventListener('message', messageHandler);
-                        keycloakLoading.value[componentKey] = false;
+            } else {
+                // For Basic Auth and Bearer Token, the credentials are already in the form
+                // Just validate they exist
+                if (auth.securityType === 'Basic Authentication') {
+                    if (basicAuthUsername.value && basicAuthPassword.value) {
+                        navigationStore.dispatchSnackbar({
+                            status: true,
+                            timeout: 4000,
+                            color: 'success',
+                            btnColor: 'buttonText',
+                            text: 'Basic Auth credentials are configured',
+                        });
+                    } else {
+                        navigationStore.dispatchSnackbar({
+                            status: true,
+                            timeout: 4000,
+                            color: 'error',
+                            btnColor: 'buttonText',
+                            text: 'Basic Auth credentials missing',
+                        });
                     }
-                };
-
-                window.addEventListener('message', messageHandler);
-
-                // Monitor if popup is closed manually
-                const popupCheckInterval = setInterval(() => {
-                    if (keycloakPopup && keycloakPopup.closed) {
-                        clearInterval(popupCheckInterval);
-                        window.removeEventListener('message', messageHandler);
-                        if (!keycloakTokens.value[componentKey] && !keycloakErrors.value[componentKey]) {
-                            keycloakErrors.value[componentKey] = 'Login popup was closed';
-                            keycloakLoading.value[componentKey] = false;
-                        }
-                        resolve();
+                } else if (auth.securityType === 'Bearer Token') {
+                    if (bearerToken.value) {
+                        navigationStore.dispatchSnackbar({
+                            status: true,
+                            timeout: 4000,
+                            color: 'success',
+                            btnColor: 'buttonText',
+                            text: 'Bearer Token is configured',
+                        });
+                    } else {
+                        navigationStore.dispatchSnackbar({
+                            status: true,
+                            timeout: 4000,
+                            color: 'error',
+                            btnColor: 'buttonText',
+                            text: 'Bearer Token missing',
+                        });
                     }
-                }, 500);
-            };
-            run();
-        });
+                }
+            }
+        } catch (error) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 8000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Re-authentication failed',
+                extendedError: error instanceof Error ? error.message : 'Unknown error occurred',
+            });
+        } finally {
+            reauthenticating.value = false;
+        }
     }
 
-    async function exchangeCodeForToken(componentKey: BaSyxComponentKey, code: string): Promise<void> {
-        const serverUrl = keycloakServerUrl.value[componentKey];
-        const realm = keycloakRealm.value[componentKey];
-        const clientId = keycloakClientId.value[componentKey];
-        const codeVerifier = sessionStorage.getItem(`pkce_code_verifier_${componentKey}`);
-        const redirectUri = `${window.location.origin}/keycloak-callback.html`;
+    // Keycloak Authentication Methods
+    async function authenticateKeycloakHandler(): Promise<void> {
+        keycloakLoading.value = true;
+        keycloakError.value = '';
 
-        if (!codeVerifier) {
-            throw new Error('Code verifier not found');
+        const config: KeycloakConnectionData = {
+            serverUrl: keycloakServerUrl.value,
+            realm: keycloakRealm.value,
+            clientId: keycloakClientId.value,
+            authFlow: keycloakAuthFlow.value,
+            clientSecret: keycloakClientSecret.value,
+            username: keycloakUsername.value,
+            password: keycloakPassword.value,
+        };
+
+        if (!config.serverUrl || !config.realm || !config.clientId || !config.authFlow) {
+            keycloakError.value = 'Please fill in all required Keycloak fields';
+            keycloakLoading.value = false;
+            return;
         }
-
-        const tokenEndpoint = `${serverUrl.replace(/\/$/, '')}/realms/${realm}/protocol/openid-connect/token`;
-        const params = new URLSearchParams({
-            client_id: clientId,
-            code: code,
-            redirect_uri: redirectUri,
-            grant_type: 'authorization_code',
-            code_verifier: codeVerifier,
-        });
 
         try {
-            const response = await fetch(tokenEndpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: params.toString(),
-            });
-
-            const data = await response.json();
-            console.log('New Token from KC:', data);
-            if (!response.ok) {
-                throw new Error(data.error_description || 'Token exchange failed');
-            }
-
-            const expiresAt = Date.now() + (data.expires_in || 300) * 1000;
-            keycloakTokens.value[componentKey] = {
-                accessToken: data.access_token,
-                refreshToken: data.refresh_token,
-                expiresAt,
+            const result = await authenticateKeycloak(config);
+            keycloakToken.value = {
+                accessToken: result.accessToken,
+                refreshToken: result.refreshToken,
+                expiresAt: result.expiresAt,
+                idToken: result.idToken,
             };
-
-            // Clean up session storage
-            sessionStorage.removeItem(`pkce_code_verifier_${componentKey}`);
-            sessionStorage.removeItem(`pkce_state_${componentKey}`);
+            navigationStore.dispatchTriggerAASListReload();
+            navigationStore.dispatchTriggerTreeviewReload();
         } catch (error: unknown) {
-            keycloakErrors.value[componentKey] = error instanceof Error ? error.message : 'Token exchange failed';
+            keycloakError.value = error instanceof Error ? error.message : 'Authentication failed';
+        } finally {
+            keycloakLoading.value = false;
         }
-    }
-
-    // PKCE helper functions
-    function generateRandomString(length: number): string {
-        const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
-        let result = '';
-        const randomValues = new Uint8Array(length);
-        crypto.getRandomValues(randomValues);
-        for (let i = 0; i < length; i++) {
-            result += charset[randomValues[i] % charset.length];
-        }
-        return result;
-    }
-
-    function generateCodeVerifier(): string {
-        return generateRandomString(128);
-    }
-
-    async function generateCodeChallenge(verifier: string): Promise<string> {
-        const encoder = new TextEncoder();
-        const data = encoder.encode(verifier);
-        const hash = await crypto.subtle.digest('SHA-256', data);
-        return base64UrlEncode(hash);
-    }
-
-    function base64UrlEncode(buffer: ArrayBuffer): string {
-        const bytes = new Uint8Array(buffer);
-        let binary = '';
-        for (let i = 0; i < bytes.length; i++) {
-            binary += String.fromCharCode(bytes[i]);
-        }
-        return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     }
 
     function requiredRule(value: string): string | boolean {

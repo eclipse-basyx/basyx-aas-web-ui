@@ -317,7 +317,7 @@
     const isAasEnvironment = ref<boolean>(false);
     const endpoint = ref<string>('');
     const connectionTestLoading = ref<boolean>(false);
-    const connectionTestStatus = ref<'success' | 'error' | null>(null);
+    const connectionTestStatus = ref<'success' | 'error'>('error');
     const connectionTestMessage = ref<string>('');
 
     // Keycloak authentication
@@ -909,7 +909,7 @@
         if (!endpoint.value) return;
 
         connectionTestLoading.value = true;
-        connectionTestStatus.value = null;
+        connectionTestStatus.value = 'error';
         connectionTestMessage.value = '';
 
         try {

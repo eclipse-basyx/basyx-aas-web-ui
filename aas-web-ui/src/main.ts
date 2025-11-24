@@ -37,36 +37,6 @@ async function initialize(): Promise<void> {
     // const envStore = useEnvStore();
     const navigationStore = useNavigationStore();
 
-    // Create keycloak instance - disabled for now
-    // if (envStore.getKeycloakActive) {
-    //     if (envStore.getPreconfiguredAuth) {
-    //         // Try to login with preconfigured credentials
-    //         const username = envStore.getPreconfiguredAuthUsername;
-    //         const password = envStore.getPreconfiguredAuthPassword;
-
-    //         try {
-    //             await loginWithDirectGrant(
-    //                 envStore.getKeycloakUrl,
-    //                 envStore.getKeycloakRealm,
-    //                 envStore.getKeycloakClientId,
-    //                 username,
-    //                 password
-    //             );
-    //         } catch {
-    //             alert('Could not login with preconfigured credentials.');
-    //             return;
-    //         }
-    //     } else {
-    //         // Use the normal Keycloak login flow with redirect to the Keycloak login page
-    //         try {
-    //             await initKeycloak(envStore.getKeycloakUrl, envStore.getKeycloakRealm, envStore.getKeycloakClientId);
-    //         } catch {
-    //             alert('Could not connect to Keycloak.');
-    //             return;
-    //         }
-    //     }
-    // }
-
     // Vuetify
     registerVuetify(app);
 

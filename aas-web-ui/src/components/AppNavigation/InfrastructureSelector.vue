@@ -1,7 +1,7 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-card class="pa-2" border color="navigationMenu" :min-width="620">
-            <v-list-subheader>Infrastructure</v-list-subheader>
+        <v-card class="pa-2 mt-n4" color="navigationMenu">
+            <v-list-subheader>Infrastructures</v-list-subheader>
             <v-row class="px-2 align-center" dense>
                 <v-col>
                     <v-select
@@ -22,8 +22,13 @@
                         </template>
                     </v-select>
                 </v-col>
-                <v-col cols="auto" class="pl-0">
-                    <v-btn icon="mdi-cog" size="small" variant="text" @click="openManageDialog">
+                <v-col cols="auto">
+                    <v-btn
+                        :disabled="!endpointConfigAvailable"
+                        icon="mdi-cog"
+                        size="small"
+                        variant="text"
+                        @click="openManageDialog">
                         <v-icon>mdi-cog</v-icon>
                         <v-tooltip activator="parent" location="bottom">Manage Infrastructures</v-tooltip>
                     </v-btn>
@@ -35,10 +40,16 @@
 
 <script lang="ts" setup>
     import { computed, ref, watch } from 'vue';
+    import { useRouter } from 'vue-router';
+    import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     // Stores
     const navigationStore = useNavigationStore();
+
+    const envStore = useEnvStore();
+    const endpointConfigAvailable = ref(envStore.getEndpointConfigAvailable);
+    const router = useRouter();
 
     // Emit
     const emit = defineEmits<{
@@ -90,6 +101,9 @@
     // Methods
     async function onInfrastructureChange(infrastructureId: string): Promise<void> {
         await navigationStore.dispatchSelectInfrastructure(infrastructureId);
+        router.push({
+            query: {},
+        });
     }
 
     function openManageDialog(): void {

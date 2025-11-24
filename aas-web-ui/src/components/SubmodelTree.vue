@@ -348,6 +348,7 @@
     const singleAas = computed(() => envStore.getSingleAas); // Get the single AAS state from the Store
     const editorMode = computed(() => ['AASEditor', 'SMEditor'].includes(route.name as string));
     const triggerTreeviewReload = computed(() => navigationStore.getTriggerTreeviewReload); // Reload the Treeview
+    const clearTreeview = computed(() => navigationStore.getClearTreeview); // Clear the Treeview
     const clipboardElementContentType = computed(() => clipboardStore.getClipboardElementModelType()); // Get the Clipboard Element Content Type
 
     // Watchers
@@ -383,6 +384,14 @@
             if (triggerVal === true) {
                 initialize();
             }
+        }
+    );
+
+    watch(
+        () => clearTreeview.value,
+        () => {
+            submodelTree.value = [];
+            submodelTreeUnfiltered.value = [];
         }
     );
 

@@ -370,6 +370,7 @@
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
     const primaryColor = computed(() => theme.current.value.colors.primary); // returns the primary color of the current theme
     const triggerAASListReload = computed(() => navigationStore.getTriggerAASListReload); // Get the trigger signal for AAS List reload from store
+    const clearAASList = computed(() => navigationStore.getClearAASList); // Get the clear AAS List signal from store
     const singleAas = computed(() => envStore.getSingleAas); // Get the single AAS state from the Store
     const listHeight = computed(() => {
         if (isMobile.value) {
@@ -440,6 +441,14 @@
             if (triggerVal === true) {
                 initialize();
             }
+        }
+    );
+
+    watch(
+        () => clearAASList.value,
+        () => {
+            aasList.value = [];
+            aasListUnfiltered.value = [];
         }
     );
 

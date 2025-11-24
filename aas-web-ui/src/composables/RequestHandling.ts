@@ -1,12 +1,8 @@
 import type { BaSyxComponentKey } from '@/types/BaSyx';
-import { useAuthStore } from '@/store/AuthStore';
-import { useEnvStore } from '@/store/EnvironmentStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 
 export function useRequestHandling() {
-    const authStore = useAuthStore();
     const navigationStore = useNavigationStore();
-    const envStore = useEnvStore();
 
     function getRequest(path: string, context: string, disableMessage: boolean, headers: Headers = new Headers()): any {
         headers = addAuthorizationHeader(headers, path); // Add the Authorization header
@@ -313,67 +309,52 @@ export function useRequestHandling() {
                 console.warn('[RequestHandling] Matched component:', componentKey);
             }
 
-            if (componentKey) {
-                const componentConfig = selectedInfra.components[componentKey];
-                const auth = componentConfig.auth;
+            // Use infrastructure-level authentication if configured
+            const auth = selectedInfra.auth;
 
-                if (process.env.NODE_ENV === 'development') {
-                    console.warn('[RequestHandling] Auth config:', {
-                        securityType: auth?.securityType,
-                        hasToken: !!componentConfig.token?.accessToken,
-                        token: componentConfig.token,
-                    });
-                }
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('[RequestHandling] Auth config:', {
+                    securityType: auth?.securityType,
+                    hasToken: !!selectedInfra.token?.accessToken,
+                    token: selectedInfra.token,
+                });
+            }
 
-                // Use infrastructure-specific authentication if configured
-                if (auth && auth.securityType !== 'No Authentication') {
-                    if (auth.securityType === 'Bearer Token' && auth.bearerToken?.token) {
-                        if (process.env.NODE_ENV === 'development') {
-                            console.warn('[RequestHandling] Using Bearer Token');
-                        }
-                        headers.set('Authorization', 'Bearer ' + auth.bearerToken.token);
-                        return headers;
-                    } else if (auth.securityType === 'Basic Authentication' && auth.basicAuth) {
-                        if (process.env.NODE_ENV === 'development') {
-                            console.warn('[RequestHandling] Using Basic Auth');
-                        }
-                        headers.set(
-                            'Authorization',
-                            'Basic ' + btoa(auth.basicAuth.username + ':' + auth.basicAuth.password)
+            if (auth && auth.securityType !== 'No Authentication') {
+                if (auth.securityType === 'Bearer Token' && auth.bearerToken?.token) {
+                    if (process.env.NODE_ENV === 'development') {
+                        console.warn('[RequestHandling] Using Bearer Token');
+                    }
+                    headers.set('Authorization', 'Bearer ' + auth.bearerToken.token);
+                    return headers;
+                } else if (auth.securityType === 'Basic Authentication' && auth.basicAuth) {
+                    if (process.env.NODE_ENV === 'development') {
+                        console.warn('[RequestHandling] Using Basic Auth');
+                    }
+                    headers.set(
+                        'Authorization',
+                        'Basic ' + btoa(auth.basicAuth.username + ':' + auth.basicAuth.password)
+                    );
+                    return headers;
+                } else if (auth.securityType === 'Keycloak' && selectedInfra.token?.accessToken) {
+                    // Use stored token from infrastructure
+                    if (process.env.NODE_ENV === 'development') {
+                        console.warn(
+                            '[RequestHandling] Using Keycloak token:',
+                            selectedInfra.token.accessToken.substring(0, 20) + '...'
                         );
-                        return headers;
-                    } else if (auth.securityType === 'Keycloak' && componentConfig.token?.accessToken) {
-                        // Use stored token from infrastructure component
-                        if (process.env.NODE_ENV === 'development') {
-                            console.warn(
-                                '[RequestHandling] Using Keycloak token:',
-                                componentConfig.token.accessToken.substring(0, 20) + '...'
-                            );
-                        }
-                        headers.set('Authorization', 'Bearer ' + componentConfig.token.accessToken);
-                        return headers;
-                    } else {
-                        if (process.env.NODE_ENV === 'development') {
-                            console.warn('[RequestHandling] Auth configured but no valid credentials/token found');
-                        }
+                    }
+                    headers.set('Authorization', 'Bearer ' + selectedInfra.token.accessToken);
+                    return headers;
+                } else {
+                    if (process.env.NODE_ENV === 'development') {
+                        console.warn('[RequestHandling] Auth configured but no valid credentials/token found');
                     }
                 }
             }
         }
 
-        // Fallback to global authentication
-        if (authStore.getAuthStatus) {
-            headers.set('Authorization', 'Bearer ' + authStore.getToken);
-            return headers;
-        } else if (envStore.getBasicAuthActive) {
-            headers.set(
-                'Authorization',
-                'Basic ' + btoa(envStore.getBasicAuthUsername + ':' + envStore.getBasicAuthPassword)
-            );
-            return headers;
-        } else {
-            return headers;
-        }
+        return headers;
     }
 
     function findMatchingComponent(path: string, infrastructure: any): BaSyxComponentKey | null {
