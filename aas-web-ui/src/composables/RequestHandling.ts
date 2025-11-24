@@ -308,7 +308,7 @@ export function useRequestHandling() {
         if (selectedInfra) {
             // Check which component URL matches this request path
             const componentKey = findMatchingComponent(path, selectedInfra);
-            
+
             if (process.env.NODE_ENV === 'development') {
                 console.warn('[RequestHandling] Matched component:', componentKey);
             }
@@ -316,7 +316,7 @@ export function useRequestHandling() {
             if (componentKey) {
                 const componentConfig = selectedInfra.components[componentKey];
                 const auth = componentConfig.auth;
-                
+
                 if (process.env.NODE_ENV === 'development') {
                     console.warn('[RequestHandling] Auth config:', {
                         securityType: auth?.securityType,
@@ -345,7 +345,10 @@ export function useRequestHandling() {
                     } else if (auth.securityType === 'Keycloak' && componentConfig.token?.accessToken) {
                         // Use stored token from infrastructure component
                         if (process.env.NODE_ENV === 'development') {
-                            console.warn('[RequestHandling] Using Keycloak token:', componentConfig.token.accessToken.substring(0, 20) + '...');
+                            console.warn(
+                                '[RequestHandling] Using Keycloak token:',
+                                componentConfig.token.accessToken.substring(0, 20) + '...'
+                            );
                         }
                         headers.set('Authorization', 'Bearer ' + componentConfig.token.accessToken);
                         return headers;

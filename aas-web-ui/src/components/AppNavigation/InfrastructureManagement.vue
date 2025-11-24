@@ -239,8 +239,8 @@
                                                     block
                                                     variant="tonal"
                                                     color="success"
-                                                    @click="authenticateKeycloak(componentKey)"
-                                                    prepend-icon="mdi-check-circle">
+                                                    prepend-icon="mdi-check-circle"
+                                                    @click="authenticateKeycloak(componentKey)">
                                                     Authenticated
                                                 </v-btn>
                                             </v-col>
@@ -460,9 +460,9 @@
         });
     }
 
-    function saveAuthDataToInfrastructure(infra: InfrastructureConfig): void {
+    async function saveAuthDataToInfrastructure(infra: InfrastructureConfig): Promise<void> {
         // Save auth data from refs back to infrastructure object
-        componentKeys.forEach((key) => {
+        componentKeys.forEach((key, index) => {
             const auth = infra.components[key].auth;
             if (!auth) return;
 
@@ -488,12 +488,16 @@
 
                 // Save token data if authenticated
                 if (keycloakTokens.value[key]) {
+                    console.log('Saving token for', keycloakTokens.value[key].accessToken);
                     infra.components[key].token = {
                         accessToken: keycloakTokens.value[key].accessToken,
                         refreshToken: keycloakTokens.value[key].refreshToken,
                         expiresAt: keycloakTokens.value[key].expiresAt,
                     };
                 }
+            }
+            if (index === componentKeys.length - 1) {
+                return Promise.resolve();
             }
         });
     }
@@ -504,7 +508,7 @@
         if (!valid) return;
 
         // Save auth data
-        saveAuthDataToInfrastructure(editingInfrastructure.value);
+        await saveAuthDataToInfrastructure(editingInfrastructure.value);
 
         if (editMode.value === 'add') {
             navigationStore.dispatchAddInfrastructure(editingInfrastructure.value);
@@ -550,9 +554,13 @@
                 if (auth.securityType === 'Keycloak') {
                     // Clear previous error for this component
                     keycloakErrors.value[componentKey] = '';
-                    
+                    console.log('Token before Refresh', component.token?.accessToken);
                     await authenticateKeycloak(componentKey);
-                    
+                    console.log(
+                        'Token after Refresh',
+                        editingInfrastructure.value.components[componentKey].token?.accessToken
+                    );
+
                     // Check if authentication was successful by verifying token exists
                     if (keycloakTokens.value[componentKey]?.accessToken && !keycloakErrors.value[componentKey]) {
                         successCount++;
@@ -585,8 +593,9 @@
 
         // Save the updated tokens to the infrastructure and persist to localStorage
         if (successCount > 0) {
-            saveAuthDataToInfrastructure(editingInfrastructure.value);
+            await saveAuthDataToInfrastructure(editingInfrastructure.value);
             navigationStore.dispatchUpdateInfrastructure(editingInfrastructure.value);
+            saveInfrastructure();
         }
 
         reauthenticating.value = false;
@@ -641,6 +650,7 @@
         } finally {
             keycloakLoading.value[componentKey] = false;
         }
+        console.log('Ended Keycloak authentication for', componentKey);
     }
 
     async function authenticateWithClientCredentials(componentKey: BaSyxComponentKey): Promise<void> {
@@ -725,94 +735,100 @@
     }
 
     async function authenticateWithAuthCode(componentKey: BaSyxComponentKey): Promise<void> {
-        const serverUrl = keycloakServerUrl.value[componentKey];
-        const realm = keycloakRealm.value[componentKey];
-        const clientId = keycloakClientId.value[componentKey];
+        return new Promise<void>((resolve, reject) => {
+            const run = async (): Promise<void> => {
+                const serverUrl = keycloakServerUrl.value[componentKey];
+                const realm = keycloakRealm.value[componentKey];
+                const clientId = keycloakClientId.value[componentKey];
 
-        // Generate PKCE code verifier and challenge
-        const codeVerifier = generateCodeVerifier();
-        const codeChallenge = await generateCodeChallenge(codeVerifier);
+                // Generate PKCE code verifier and challenge
+                const codeVerifier = generateCodeVerifier();
+                const codeChallenge = await generateCodeChallenge(codeVerifier);
 
-        // Store code verifier for later exchange
-        sessionStorage.setItem(`pkce_code_verifier_${componentKey}`, codeVerifier);
+                // Store code verifier for later exchange
+                sessionStorage.setItem(`pkce_code_verifier_${componentKey}`, codeVerifier);
 
-        // Build authorization URL
-        const redirectUri = `${window.location.origin}/keycloak-callback.html`;
-        const state = generateRandomString(32);
-        sessionStorage.setItem(`pkce_state_${componentKey}`, state);
+                // Build authorization URL
+                const redirectUri = `${window.location.origin}/keycloak-callback.html`;
+                const state = generateRandomString(32);
+                sessionStorage.setItem(`pkce_state_${componentKey}`, state);
 
-        const authUrl = new URL(`${serverUrl.replace(/\/$/, '')}/realms/${realm}/protocol/openid-connect/auth`);
-        authUrl.searchParams.set('client_id', clientId);
-        authUrl.searchParams.set('redirect_uri', redirectUri);
-        authUrl.searchParams.set('response_type', 'code');
-        authUrl.searchParams.set('scope', 'openid profile email');
-        authUrl.searchParams.set('code_challenge', codeChallenge);
-        authUrl.searchParams.set('code_challenge_method', 'S256');
-        authUrl.searchParams.set('state', state);
+                const authUrl = new URL(`${serverUrl.replace(/\/$/, '')}/realms/${realm}/protocol/openid-connect/auth`);
+                authUrl.searchParams.set('client_id', clientId);
+                authUrl.searchParams.set('redirect_uri', redirectUri);
+                authUrl.searchParams.set('response_type', 'code');
+                authUrl.searchParams.set('scope', 'openid profile email');
+                authUrl.searchParams.set('code_challenge', codeChallenge);
+                authUrl.searchParams.set('code_challenge_method', 'S256');
+                authUrl.searchParams.set('state', state);
 
-        // Open popup window
-        const width = 500;
-        const height = 600;
-        const left = window.screenX + (window.outerWidth - width) / 2;
-        const top = window.screenY + (window.outerHeight - height) / 2;
+                // Open popup window
+                const width = 500;
+                const height = 600;
+                const left = window.screenX + (window.outerWidth - width) / 2;
+                const top = window.screenY + (window.outerHeight - height) / 2;
 
-        keycloakPopup = window.open(
-            authUrl.toString(),
-            'keycloak-login',
-            `width=${width},height=${height},left=${left},top=${top},popup=yes,resizable=yes,scrollbars=yes`
-        );
+                keycloakPopup = window.open(
+                    authUrl.toString(),
+                    'keycloak-login',
+                    `width=${width},height=${height},left=${left},top=${top},popup=yes,resizable=yes,scrollbars=yes`
+                );
 
-        if (!keycloakPopup) {
-            throw new Error('Failed to open login popup. Please allow popups for this site.');
-        }
+                if (!keycloakPopup) {
+                    return reject(new Error('Failed to open login popup. Please allow popups for this site.'));
+                }
 
-        // Listen for messages from popup
-        const messageHandler = (event: MessageEvent): void => {
-            if (event.origin !== window.location.origin) return;
+                // Listen for messages from popup
+                const messageHandler = async (event: MessageEvent): Promise<void> => {
+                    if (event.origin !== window.location.origin) return;
 
-            if (event.data && event.data.type === 'keycloak-auth-code') {
-                const { code, state: returnedState } = event.data;
-                const storedState = sessionStorage.getItem(`pkce_state_${componentKey}`);
+                    if (event.data && event.data.type === 'keycloak-auth-code') {
+                        const { code, state: returnedState } = event.data;
+                        const storedState = sessionStorage.getItem(`pkce_state_${componentKey}`);
 
-                if (returnedState !== storedState) {
-                    keycloakErrors.value[componentKey] = 'Invalid state parameter';
-                    if (keycloakPopup && !keycloakPopup.closed) {
-                        keycloakPopup.close();
+                        if (returnedState !== storedState) {
+                            keycloakErrors.value[componentKey] = 'Invalid state parameter';
+                            if (keycloakPopup && !keycloakPopup.closed) {
+                                keycloakPopup.close();
+                            }
+                            window.removeEventListener('message', messageHandler);
+                            keycloakLoading.value[componentKey] = false;
+                            return;
+                        }
+
+                        await exchangeCodeForToken(componentKey, code);
+                        if (keycloakPopup && !keycloakPopup.closed) {
+                            keycloakPopup.close();
+                        }
+                        window.removeEventListener('message', messageHandler);
+                    } else if (event.data && event.data.type === 'keycloak-auth-error') {
+                        keycloakErrors.value[componentKey] =
+                            event.data.errorDescription || event.data.error || 'Authentication failed';
+                        if (keycloakPopup && !keycloakPopup.closed) {
+                            keycloakPopup.close();
+                        }
+                        window.removeEventListener('message', messageHandler);
+                        keycloakLoading.value[componentKey] = false;
                     }
-                    window.removeEventListener('message', messageHandler);
-                    keycloakLoading.value[componentKey] = false;
-                    return;
-                }
+                };
 
-                exchangeCodeForToken(componentKey, code);
-                if (keycloakPopup && !keycloakPopup.closed) {
-                    keycloakPopup.close();
-                }
-                window.removeEventListener('message', messageHandler);
-            } else if (event.data && event.data.type === 'keycloak-auth-error') {
-                keycloakErrors.value[componentKey] =
-                    event.data.errorDescription || event.data.error || 'Authentication failed';
-                if (keycloakPopup && !keycloakPopup.closed) {
-                    keycloakPopup.close();
-                }
-                window.removeEventListener('message', messageHandler);
-                keycloakLoading.value[componentKey] = false;
-            }
-        };
+                window.addEventListener('message', messageHandler);
 
-        window.addEventListener('message', messageHandler);
-
-        // Monitor if popup is closed manually
-        const popupCheckInterval = setInterval(() => {
-            if (keycloakPopup && keycloakPopup.closed) {
-                clearInterval(popupCheckInterval);
-                window.removeEventListener('message', messageHandler);
-                if (!keycloakTokens.value[componentKey] && !keycloakErrors.value[componentKey]) {
-                    keycloakErrors.value[componentKey] = 'Login popup was closed';
-                    keycloakLoading.value[componentKey] = false;
-                }
-            }
-        }, 500);
+                // Monitor if popup is closed manually
+                const popupCheckInterval = setInterval(() => {
+                    if (keycloakPopup && keycloakPopup.closed) {
+                        clearInterval(popupCheckInterval);
+                        window.removeEventListener('message', messageHandler);
+                        if (!keycloakTokens.value[componentKey] && !keycloakErrors.value[componentKey]) {
+                            keycloakErrors.value[componentKey] = 'Login popup was closed';
+                            keycloakLoading.value[componentKey] = false;
+                        }
+                        resolve();
+                    }
+                }, 500);
+            };
+            run();
+        });
     }
 
     async function exchangeCodeForToken(componentKey: BaSyxComponentKey, code: string): Promise<void> {
@@ -843,7 +859,7 @@
             });
 
             const data = await response.json();
-
+            console.log('New Token from KC:', data);
             if (!response.ok) {
                 throw new Error(data.error_description || 'Token exchange failed');
             }

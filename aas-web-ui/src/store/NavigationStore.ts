@@ -1,6 +1,11 @@
 import type { AutoSyncType, PlatformType, PluginType, SnackbarType, StatusCheckType } from '@/types/Application';
 import type { BaSyxComponent, BaSyxComponentKey } from '@/types/BaSyx';
-import type { ComponentConfig, InfrastructureConfig, InfrastructureStorage } from '@/types/Infrastructure';
+import type {
+    ComponentConfig,
+    InfrastructureAuth,
+    InfrastructureConfig,
+    InfrastructureStorage,
+} from '@/types/Infrastructure';
 import type { LocationQuery, RouteRecordRaw } from 'vue-router';
 import { defineStore } from 'pinia';
 import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
@@ -34,6 +39,10 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const EnvAASRepoPath = computed(() => envStore.getEnvAASRepoPath);
     const EnvSubmodelRepoPath = computed(() => envStore.getEnvSubmodelRepoPath);
     const EnvConceptDescriptionRepoPath = computed(() => envStore.getEnvConceptDescriptionRepoPath);
+    const EnvKeycloakActive = computed(() => envStore.getKeycloakActive);
+    const EnvKeycloakUrl = computed(() => envStore.getKeycloakUrl);
+    const EnvKeycloakRealm = computed(() => envStore.getKeycloakRealm);
+    const EnvKeycloakClientId = computed(() => envStore.getKeycloakClientId);
 
     // States
     const drawerState = ref(true);
@@ -187,7 +196,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     }
 
     function createDefaultInfrastructureFromEnv(): InfrastructureConfig {
-        const infrastructure = createEmptyInfrastructure('Environment Infrastructure');
+        const infrastructure = createEmptyInfrastructure('Default Infrastructure');
         infrastructure.isDefault = true;
 
         // Populate from environment variables
@@ -199,6 +208,23 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         if (EnvSubmodelRepoPath.value) infrastructure.components.SubmodelRepo.url = EnvSubmodelRepoPath.value;
         if (EnvConceptDescriptionRepoPath.value)
             infrastructure.components.ConceptDescriptionRepo.url = EnvConceptDescriptionRepoPath.value;
+        if (EnvKeycloakActive.value) {
+            const infrastructureAuth: InfrastructureAuth = {
+                securityType: 'Keycloak',
+                keycloakConfig: {
+                    serverUrl: EnvKeycloakUrl.value,
+                    realm: EnvKeycloakRealm.value,
+                    clientId: EnvKeycloakClientId.value,
+                    authFlow: 'auth-code',
+                },
+            };
+            infrastructure.components.AASDiscovery.auth = infrastructureAuth;
+            infrastructure.components.AASRegistry.auth = infrastructureAuth;
+            infrastructure.components.SubmodelRegistry.auth = infrastructureAuth;
+            infrastructure.components.AASRepo.auth = infrastructureAuth;
+            infrastructure.components.SubmodelRepo.auth = infrastructureAuth;
+            infrastructure.components.ConceptDescriptionRepo.auth = infrastructureAuth;
+        }
 
         return infrastructure;
     }
@@ -278,7 +304,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
                 infrastructures: infrastructures.value,
                 selectedInfrastructureId: selectedInfrastructureId.value,
             };
-            
+
             if (process.env.NODE_ENV === 'development') {
                 console.warn('[NavigationStore] Saving infrastructures to localStorage:', {
                     count: storage.infrastructures.length,
@@ -292,7 +318,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
                     })),
                 });
             }
-            
+
             localStorage.setItem('basyxInfrastructures', JSON.stringify(storage));
         } catch (error) {
             console.error('Error saving infrastructures to storage:', error);
@@ -431,7 +457,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
                 infra.isDefault = false;
             });
         }
-        
+
         infrastructures.value.push(infrastructure);
         saveInfrastructuresToStorage();
     }
@@ -447,10 +473,10 @@ export const useNavigationStore = defineStore('navigationStore', () => {
                     }
                 });
             }
-            
+
             // Use splice to ensure reactivity
             infrastructures.value.splice(index, 1, infrastructure);
-            
+
             if (process.env.NODE_ENV === 'development') {
                 console.warn('[NavigationStore] Updated infrastructure:', {
                     id: infrastructure.id,
@@ -460,7 +486,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
                         .map(([key]) => key),
                 });
             }
-            
+
             saveInfrastructuresToStorage();
 
             // If this is the selected infrastructure, update the URL refs
@@ -623,7 +649,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
                 Object.values(infra.components).filter((c) => c.auth?.securityType === 'Keycloak' && c.token).length,
             0
         );
-        
+
         if (failures.length < totalKeycloakTokens) {
             saveInfrastructuresToStorage();
         }

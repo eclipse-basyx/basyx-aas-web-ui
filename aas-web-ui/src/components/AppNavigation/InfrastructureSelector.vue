@@ -15,7 +15,10 @@
                         hide-details
                         @update:model-value="onInfrastructureChange">
                         <template #prepend-inner>
-                            <v-icon :icon="connectionStatus.icon" :color="connectionStatus.color" size="x-small"></v-icon>
+                            <v-icon
+                                :icon="connectionStatus.icon"
+                                :color="connectionStatus.color"
+                                size="x-small"></v-icon>
                         </template>
                     </v-select>
                 </v-col>

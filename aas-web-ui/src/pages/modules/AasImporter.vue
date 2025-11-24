@@ -34,6 +34,29 @@
                     class="mt-n5"
                     prepend-inner-icon="mdi-qrcode">
                 </v-text-field>
+
+                <v-alert v-if="defaultInfrastructure" type="info" variant="tonal" class="mb-4">
+                    <template #prepend>
+                        <v-icon size="small">mdi-upload</v-icon>
+                    </template>
+                    <div class="text-subtitle-2">Upload Destination</div>
+                    <div class="text-body-2">
+                        <strong>{{ defaultInfrastructure.name }}</strong>
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                        {{ defaultInfrastructure.components.AASRepo.url }}
+                    </div>
+                </v-alert>
+
+                <v-alert v-else type="warning" variant="tonal" class="mb-4">
+                    <template #prepend>
+                        <v-icon size="small">mdi-alert</v-icon>
+                    </template>
+                    <div class="text-body-2">
+                        No default infrastructure configured. Please mark an infrastructure as default in settings.
+                    </div>
+                </v-alert>
+
                 <v-alert class="mb-6">
                     <template #prepend>
                         <v-icon color="info" size="x-small">mdi-information</v-icon>
@@ -141,7 +164,7 @@
             // Step 1: Fetch AAS ID from Discovery
             const aasId = await getAasId(assetId.value, selectedInfrastructure?.value?.components.AASDiscovery.url);
             console.log('Discovered AAS ID:', aasId);
-            
+
             // Step 2: Get AAS Endpoint
             let url = selectedInfrastructure?.value?.components.AASRepo.url.endsWith('/shells')
                 ? selectedInfrastructure?.value?.components.AASRepo.url
@@ -181,7 +204,7 @@
                     }
 
                     const submodel = await fetchSm(smEndpoint);
-                    
+
                     // Fetch Concept Descriptions if configured
                     const cdRepoUrl = selectedInfrastructure?.value?.components.ConceptDescriptionRepo.url.trim();
                     if (cdRepoUrl !== '') {
@@ -190,7 +213,7 @@
                             conceptDescriptions.push(...cds);
                         }
                     }
-                    
+
                     submodels.push(submodel);
                 } catch (error) {
                     console.error('Error fetching Submodel:', error);
@@ -199,7 +222,7 @@
             console.log('Switching Infrastructure to Default for Upload:', defaultInfrastructure.value.name);
             await navigationStore.dispatchSelectInfrastructure(defaultInfrastructure.value.id);
             delete aas.endpoints;
-            
+
             // Step 6: Upload AAS to default infrastructure
             const instanceOrError = jsonization.assetAdministrationShellFromJsonable(aas);
             if (instanceOrError.error !== null) {
