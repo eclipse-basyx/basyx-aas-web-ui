@@ -290,23 +290,9 @@
 
 <script lang="ts" setup>
     import type { ComponentType, SecurityType } from '@/store/MigrationStore';
+    import type { BasicAuthData, KeycloakConnectionData } from '@/types/Infrastructure';
     import { computed, ref, watch } from 'vue';
     import { useMigrationStore } from '@/store/MigrationStore';
-
-    interface KeycloakConfig {
-        serverUrl: string;
-        realm: string;
-        clientId: string;
-        authFlow: 'auth-code' | 'client-credentials' | 'password';
-        clientSecret?: string;
-        username?: string;
-        password?: string;
-    }
-
-    interface BasicAuthConfig {
-        username: string;
-        password: string;
-    }
 
     const migrationStore = useMigrationStore();
     const dialog = ref<boolean>(true);
@@ -330,7 +316,7 @@
     const refreshToken = ref<string>('');
     let loginPopup: Window | null = null;
 
-    const keycloakConfig = ref<KeycloakConfig>({
+    const keycloakConfig = ref<KeycloakConnectionData>({
         serverUrl: '',
         realm: '',
         clientId: '',
@@ -342,7 +328,7 @@
 
     // Basic Authentication
     const basicAuthDialog = ref<boolean>(false);
-    const basicAuthConfig = ref<BasicAuthConfig>({
+    const basicAuthConfig = ref<BasicAuthData>({
         username: '',
         password: '',
     });

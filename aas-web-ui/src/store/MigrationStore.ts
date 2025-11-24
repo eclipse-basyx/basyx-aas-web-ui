@@ -4,29 +4,16 @@
  * Pinia store for managing migration authentication and tokens
  */
 
+import type {
+    BasicAuthData,
+    BearerTokenData,
+    KeycloakConnectionData,
+    SecurityType,
+    TokenData,
+} from '@/types/Infrastructure';
 import { defineStore } from 'pinia';
 
-export type SecurityType = 'Basic Authentication' | 'Keycloak' | 'Bearer Token';
 export type ComponentType = 'aas' | 'submodel' | 'conceptDescription';
-
-export interface KeycloakConnectionData {
-    serverUrl: string;
-    realm: string;
-    clientId: string;
-    authFlow: 'auth-code' | 'client-credentials' | 'password';
-    clientSecret?: string;
-    username?: string;
-    password?: string;
-}
-
-export interface BasicAuthData {
-    username: string;
-    password: string;
-}
-
-export interface BearerTokenData {
-    token: string;
-}
 
 export interface ComponentConnectionData {
     endpoint: string;
@@ -35,12 +22,6 @@ export interface ComponentConnectionData {
     keycloakConfig?: KeycloakConnectionData;
     basicAuth?: BasicAuthData;
     bearerToken?: BearerTokenData;
-}
-
-export interface TokenData {
-    accessToken: string;
-    refreshToken?: string;
-    expiresAt?: number;
 }
 
 interface MigrationState {

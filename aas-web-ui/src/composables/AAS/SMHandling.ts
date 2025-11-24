@@ -374,8 +374,7 @@ export function useSMHandling() {
      * @param {any} smOrSme - The Submodel or SubmodelElement object to process
      * @param {string} path - The base path string (used for tracking context during traversal)
      * @param {string} [cdEndpoint] - Optional Concept Description repository endpoint URL
-     * @returns {Promise<any>} A promise that resolves to the original SM/SME object (unmodified)
-     *                        or an empty object if input validation fails
+     * @returns {Promise<any>} A promise that resolves to the array of all fetched Concept Descriptions.
      */
     async function fetchAllConceptDescriptions(smOrSme: any, path: string, cdEndpoint?: string): Promise<any> {
         const failResponse = {};
@@ -444,7 +443,7 @@ export function useSMHandling() {
             }
         }
 
-        return smOrSme;
+        return conceptDescriptions;
     }
 
     async function smIsAvailableById(smId: string): Promise<boolean> {
