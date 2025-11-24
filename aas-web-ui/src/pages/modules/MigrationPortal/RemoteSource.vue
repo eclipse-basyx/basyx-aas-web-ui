@@ -289,8 +289,8 @@
 </template>
 
 <script lang="ts" setup>
-    import type { ComponentType, SecurityType } from '@/store/MigrationStore';
-    import type { BasicAuthData, KeycloakConnectionData } from '@/types/Infrastructure';
+    import type { ComponentType } from '@/store/MigrationStore';
+    import type { BasicAuthData, KeycloakConnectionData, SecurityType } from '@/types/Infrastructure';
     import { computed, ref, watch } from 'vue';
     import { useMigrationStore } from '@/store/MigrationStore';
 
