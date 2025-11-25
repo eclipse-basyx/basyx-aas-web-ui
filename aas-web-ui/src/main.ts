@@ -14,11 +14,9 @@ import { createApp } from 'vue';
 import { defineComponent } from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
 import App from '@/App.vue';
-import { initKeycloak, loginWithDirectGrant } from '@/authService';
 // Plugins
 import { registerVuetify } from '@/plugins';
 import { createAppRouter } from '@/router';
-import { useEnvStore } from '@/store/EnvironmentStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 
 initialize();
@@ -34,38 +32,7 @@ async function initialize(): Promise<void> {
     app.component('ApexChart', VueApexCharts);
 
     // Stores
-    const envStore = useEnvStore();
     const navigationStore = useNavigationStore();
-
-    // Create keycloak instance
-    if (envStore.getKeycloakActive) {
-        if (envStore.getPreconfiguredAuth) {
-            // Try to login with preconfigured credentials
-            const username = envStore.getPreconfiguredAuthUsername;
-            const password = envStore.getPreconfiguredAuthPassword;
-
-            try {
-                await loginWithDirectGrant(
-                    envStore.getKeycloakUrl,
-                    envStore.getKeycloakRealm,
-                    envStore.getKeycloakClientId,
-                    username,
-                    password
-                );
-            } catch {
-                alert('Could not login with preconfigured credentials.');
-                return;
-            }
-        } else {
-            // Use the normal Keycloak login flow with redirect to the Keycloak login page
-            try {
-                await initKeycloak(envStore.getKeycloakUrl, envStore.getKeycloakRealm, envStore.getKeycloakClientId);
-            } catch {
-                alert('Could not connect to Keycloak.');
-                return;
-            }
-        }
-    }
 
     // Vuetify
     registerVuetify(app);

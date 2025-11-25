@@ -199,6 +199,7 @@
     import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractVersionRevision } from '@/utils/AAS/SemanticIdUtils';
     import { smts } from '@/utils/AAS/SubmodelTemplateUtils';
@@ -219,6 +220,7 @@
     // Stores
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
+    const infrastructureStore = useInfrastructureStore();
 
     // Vuetify
     const theme = useTheme();
@@ -233,8 +235,8 @@
     const isDark = computed(() => theme.global.current.value.dark);
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
     const selectedNode = computed(() => aasStore.getSelectedNode);
-    const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL);
-    const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL);
+    const aasRegistryURL = computed(() => infrastructureStore.getAASRegistryURL);
+    const submodelRegistryURL = computed(() => infrastructureStore.getSubmodelRegistryURL);
     const isMobile = computed(() => navigationStore.getIsMobile);
     const primaryColor = computed(() => theme.current.value.colors.primary);
 

@@ -33,6 +33,7 @@
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { base64Decode, base64Encode } from '@/utils/EncodeDecodeUtils';
 
@@ -53,6 +54,7 @@
     // Stores
     const aasStore = useAASStore();
     const navigationStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
 
     // Composables
     const { postSubmodel, postSubmodelElement } = useSMRepositoryClient();
@@ -65,7 +67,7 @@
 
     // Computed Properties
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
-    const submodelRepoUrl = computed(() => navigationStore.getSubmodelRepoURL);
+    const submodelRepoUrl = computed(() => infrastructureStore.getSubmodelRepoURL);
 
     watch(
         () => props.modelValue,

@@ -3,14 +3,14 @@ import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
 import { computed } from 'vue';
 import { useIDUtils } from '@/composables/IDUtils';
 import { useRequestHandling } from '@/composables/RequestHandling';
-import { useNavigationStore } from '@/store/NavigationStore';
+import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { downloadFile } from '@/utils/generalUtils';
 import { stripLastCharacter } from '@/utils/StringUtils';
 
 export function useAASRepositoryClient() {
     // Stores
-    const navigationStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
 
     // Composables
     const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
@@ -19,7 +19,7 @@ export function useAASRepositoryClient() {
     const endpointPath = '/shells';
 
     // Computed Properties
-    const aasRepositoryUrl = computed(() => navigationStore.getAASRepoURL);
+    const aasRepositoryUrl = computed(() => infrastructureStore.getAASRepoURL);
     const uploadURL = computed(() => {
         let aasRepoUrl = aasRepositoryUrl.value.trim();
         if (aasRepoUrl === '') return '';

@@ -22,8 +22,7 @@
 : "${KEYCLOAK_CLIENT_ID:=}"
 : "${KEYCLOAK_FEATURE_CONTROL:=false}"
 : "${KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX:=basyx-aas-web-ui-feature-}"
-: "${PRECONFIGURED_AUTH_USERNAME:=}"
-: "${PRECONFIGURED_AUTH_PASSWORD:=}"
+: "${PRECONFIGURED_AUTH_CLIENT_SECRET:=}"
 : "${ENDPOINT_CONFIG_AVAILABLE:=true}"
 : "${SINGLE_AAS:=false}"
 : "${SINGLE_AAS_REDIRECT:=}"
@@ -106,8 +105,7 @@ printf "%-38s %s\n" "Keycloak client ID:" "$KEYCLOAK_CLIENT_ID"
 printf "%-38s %s\n" "Keycloak feature control:" "$KEYCLOAK_FEATURE_CONTROL"
 printf "%-38s %s\n" "Keycloak feature control, role prefix:" "$KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX"
 printf "%-38s %s\n" "Preconfigured auth:" "$PRECONFIGURED_AUTH"
-printf "%-38s %s\n" "Preconfigured auth username:" "$PRECONFIGURED_AUTH_USERNAME"
-printf "%-38s %s\n" "Preconfigured auth password:" "$PRECONFIGURED_AUTH_PASSWORD"
+printf "%-38s %s\n" "Preconfigured auth client secret:" "*********"
 printf "%-38s %s\n" "InfluxDB token:" "$INFLUXDB_TOKEN"
 printf "%-38s %s\n" "Endpoint config available:" "$ENDPOINT_CONFIG_AVAILABLE"
 printf "%-38s %s\n" "Single AAS:" "$SINGLE_AAS"
@@ -143,8 +141,7 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__KEYCLOAK_FEATURE_CONTROL_PLACEHOLDER__/|$KEYCLOAK_FEATURE_CONTROL|g" \
     -e "s|/__KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX_PLACEHOLDER__/|$KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX|g" \
     -e "s|/__PRECONFIGURED_AUTH_PLACEHOLDER__/|$PRECONFIGURED_AUTH|g" \
-    -e "s|/__PRECONFIGURED_AUTH_USERNAME_PLACEHOLDER__/|$PRECONFIGURED_AUTH_USERNAME|g" \
-    -e "s|/__PRECONFIGURED_AUTH_PASSWORD_PLACEHOLDER__/|$PRECONFIGURED_AUTH_PASSWORD|g" \
+    -e "s|/__PRECONFIGURED_AUTH_CLIENT_SECRET_PLACEHOLDER__/|$PRECONFIGURED_AUTH_CLIENT_SECRET|g" \
     -e "s|/__ENDPOINT_CONFIG_AVAILABLE_PLACEHOLDER__/|$ENDPOINT_CONFIG_AVAILABLE|g" \
     -e "s|/__SINGLE_AAS_PLACEHOLDER__/|$SINGLE_AAS|g" \
     -e "s|/__SINGLE_AAS_REDIRECT_PLACEHOLDER__/|$SINGLE_AAS_REDIRECT|g" \

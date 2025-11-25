@@ -78,6 +78,7 @@
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils';
 
@@ -87,14 +88,15 @@
     // Stores
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
+    const infrastructureStore = useInfrastructureStore();
 
     // Data
     const submodelElementData = ref({} as any);
     const routesToVisualization: Array<RouteRecordNameGeneric> = ['ComponentVisualization', 'Visualization'];
 
     // Computed Properties
-    const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL);
-    const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL);
+    const aasRegistryURL = computed(() => infrastructureStore.getAASRegistryURL);
+    const submodelRegistryURL = computed(() => infrastructureStore.getSubmodelRegistryURL);
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
     const selectedNode = computed(() => aasStore.getSelectedNode);
     const importedPlugins = computed(() => navigationStore.getPlugins);

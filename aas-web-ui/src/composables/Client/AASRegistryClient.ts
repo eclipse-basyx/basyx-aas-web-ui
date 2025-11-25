@@ -1,7 +1,7 @@
 import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
 import { computed } from 'vue';
 import { useRequestHandling } from '@/composables/RequestHandling';
-import { useNavigationStore } from '@/store/NavigationStore';
+import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import * as descriptorTypes from '@/types/Descriptors';
 import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
@@ -10,7 +10,7 @@ import { stripLastCharacter } from '@/utils/StringUtils';
 
 export function useAASRegistryClient() {
     // Stores
-    const navigationStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
 
     //Composables
     const { getRequest, postRequest, putRequest } = useRequestHandling();
@@ -18,7 +18,7 @@ export function useAASRegistryClient() {
     const endpointPath = '/shell-descriptors';
 
     // Computed Properties
-    const aasRegistryUrl = computed(() => navigationStore.getAASRegistryURL);
+    const aasRegistryUrl = computed(() => infrastructureStore.getAASRegistryURL);
 
     /**
      * Fetches a list of all available Asset Administration Shell (AAS) Descriptors.
@@ -62,7 +62,7 @@ export function useAASRegistryClient() {
      * @param {string} aasId - The ID of the AAS Descriptor to fetch.
      * @returns {Promise<any>} A promise that resolves to an AAS Descriptor.
      */
-    async function fetchAasDescriptorById(aasId: string): Promise<any> {
+    async function fetchAasDescriptorById(aasId: string, registryUrl?: string): Promise<any> {
         const failResponse = {} as any;
 
         if (!aasId) return failResponse;
@@ -71,7 +71,7 @@ export function useAASRegistryClient() {
 
         if (aasId === '') return failResponse;
 
-        let aasRegUrl = aasRegistryUrl.value.trim();
+        let aasRegUrl = registryUrl ? registryUrl : aasRegistryUrl.value.trim();
         if (aasRegUrl === '') return failResponse;
         if (aasRegUrl.endsWith('/')) aasRegUrl = stripLastCharacter(aasRegUrl);
         if (!aasRegUrl.endsWith(endpointPath)) aasRegUrl += endpointPath;
@@ -102,7 +102,7 @@ export function useAASRegistryClient() {
      * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
      * @returns {Promise<string>} A promise that resolves to an AAS endpoint.
      */
-    async function getAasEndpointById(aasId: string): Promise<string> {
+    async function getAasEndpointById(aasId: string, registryUrl?: string): Promise<string> {
         const failResponse = '';
 
         if (!aasId) return failResponse;
@@ -111,7 +111,7 @@ export function useAASRegistryClient() {
 
         if (aasId === '') return failResponse;
 
-        const aasDescriptor = await fetchAasDescriptorById(aasId);
+        const aasDescriptor = await fetchAasDescriptorById(aasId, registryUrl);
         const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0');
 
         return aasEndpoint || failResponse;

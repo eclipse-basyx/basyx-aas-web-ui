@@ -290,6 +290,7 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { useClipboardStore } from '@/store/ClipboardStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { isEmptyString } from '@/utils/StringUtils';
 
@@ -307,6 +308,7 @@
     const aasStore = useAASStore();
     const envStore = useEnvStore();
     const clipboardStore = useClipboardStore();
+    const infrastructureStore = useInfrastructureStore();
 
     // Data
     const submodelTree = ref([] as Array<any>) as Ref<Array<any>>; // Submodel Treeview Data
@@ -342,12 +344,13 @@
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // get selected AAS from Store
-    const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL); // get AAS Registry URL from Store
-    const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL); // get Submodel Registry URL from Store
+    const aasRegistryURL = computed(() => infrastructureStore.getAASRegistryURL); // get AAS Registry URL from Store
+    const submodelRegistryURL = computed(() => infrastructureStore.getSubmodelRegistryURL); // get Submodel Registry URL from Store
     const selectedNode = computed(() => aasStore.getSelectedNode); // get the updated Treeview Node from Store
     const singleAas = computed(() => envStore.getSingleAas); // Get the single AAS state from the Store
     const editorMode = computed(() => ['AASEditor', 'SMEditor'].includes(route.name as string));
     const triggerTreeviewReload = computed(() => navigationStore.getTriggerTreeviewReload); // Reload the Treeview
+    const clearTreeview = computed(() => navigationStore.getClearTreeview); // Clear the Treeview
     const clipboardElementContentType = computed(() => clipboardStore.getClipboardElementModelType()); // Get the Clipboard Element Content Type
 
     // Watchers
@@ -383,6 +386,14 @@
             if (triggerVal === true) {
                 initialize();
             }
+        }
+    );
+
+    watch(
+        () => clearTreeview.value,
+        () => {
+            submodelTree.value = [];
+            submodelTreeUnfiltered.value = [];
         }
     );
 

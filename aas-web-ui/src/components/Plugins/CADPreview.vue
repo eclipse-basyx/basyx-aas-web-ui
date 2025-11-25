@@ -24,7 +24,7 @@
     import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
     import { computed, onMounted, ref, watch } from 'vue';
     import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
-    import { useAuthStore } from '@/store/AuthStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
 
     // Props
     const props = defineProps<{
@@ -35,7 +35,7 @@
     const viewerContainer = ref<HTMLElement>();
 
     // Composables and stores
-    const authStore = useAuthStore();
+    const infrastructureStore = useInfrastructureStore();
     const { valueUrl } = useSMEFile();
 
     // Reactive data
@@ -43,7 +43,31 @@
     const showViewer = ref(true);
 
     // Computed properties
-    const authToken = computed(() => authStore.getToken);
+    const selectedInfra = computed(() => infrastructureStore.getSelectedInfrastructure);
+
+    // Helper function to create authenticated headers
+    function getAuthHeaders(): Headers {
+        const headers: Headers = new Headers();
+
+        if (selectedInfra.value) {
+            const auth = selectedInfra.value.auth;
+
+            if (auth && auth.securityType !== 'No Authentication') {
+                if (auth.securityType === 'Bearer Token' && auth.bearerToken?.token) {
+                    headers.set('Authorization', `Bearer ${auth.bearerToken.token}`);
+                } else if (auth.securityType === 'Basic Authentication' && auth.basicAuth) {
+                    headers.set(
+                        'Authorization',
+                        `Basic ${btoa(auth.basicAuth.username + ':' + auth.basicAuth.password)}`
+                    );
+                } else if (auth.securityType === 'Keycloak' && selectedInfra.value.token?.accessToken) {
+                    headers.set('Authorization', `Bearer ${selectedInfra.value.token.accessToken}`);
+                }
+            }
+        }
+
+        return headers;
+    }
 
     // Watchers
     watch(
@@ -212,9 +236,7 @@
     // Function to import a STL file
     function importSTL(scene: THREE.Scene): void {
         fetch(localPathValue.value, {
-            headers: {
-                Authorization: `Bearer ${authToken.value}`,
-            },
+            headers: getAuthHeaders(),
         })
             .then((response) => response.arrayBuffer())
             .then((buffer) => {
@@ -231,9 +253,7 @@
     // Function to import a OBJ file
     function importOBJ(scene: THREE.Scene): void {
         fetch(localPathValue.value, {
-            headers: {
-                Authorization: `Bearer ${authToken.value}`,
-            },
+            headers: getAuthHeaders(),
         })
             .then((response) => response.text())
             .then((text) => {
@@ -254,9 +274,7 @@
     // Function to import a GLTF file
     function importGLTF(scene: THREE.Scene): void {
         fetch(localPathValue.value, {
-            headers: {
-                Authorization: `Bearer ${authToken.value}`,
-            },
+            headers: getAuthHeaders(),
         })
             .then((response) => response.arrayBuffer())
             .then((buffer) => {

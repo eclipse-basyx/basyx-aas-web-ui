@@ -1,4 +1,4 @@
-import { UserData } from '@/store/AuthStore';
+import { UserData } from '@/types/Infrastructure';
 import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
 /**

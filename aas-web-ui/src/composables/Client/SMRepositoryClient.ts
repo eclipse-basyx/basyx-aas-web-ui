@@ -3,13 +3,13 @@ import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
 import { computed } from 'vue';
 import { useIDUtils } from '@/composables/IDUtils';
 import { useRequestHandling } from '@/composables/RequestHandling';
-import { useNavigationStore } from '@/store/NavigationStore';
+import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { stripLastCharacter } from '@/utils/StringUtils';
 
 export function useSMRepositoryClient() {
     // Stores
-    const navigationStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
 
     // Composables
     const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
@@ -18,7 +18,7 @@ export function useSMRepositoryClient() {
     const endpointPath = '/submodels';
 
     // Computed Properties
-    const submodelRepoUrl = computed(() => navigationStore.getSubmodelRepoURL);
+    const submodelRepoUrl = computed(() => infrastructureStore.getSubmodelRepoURL);
 
     /**
      * Fetches a list of all available Submodels (SMs).

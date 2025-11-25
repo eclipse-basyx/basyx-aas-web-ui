@@ -7,6 +7,7 @@ import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
 import { useIDUtils } from '@/composables/IDUtils';
 import { useAASStore } from '@/store/AASDataStore';
 import { useClipboardStore } from '@/store/ClipboardStore';
+import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { base64Decode, base64Encode } from '@/utils/EncodeDecodeUtils';
 
@@ -19,6 +20,7 @@ export function useClipboardUtil() {
     const aasStore = useAASStore();
     const clipboardStore = useClipboardStore();
     const navigationStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
 
     // composables
     const { postSubmodel, postSubmodelElement } = useSMRepositoryClient();
@@ -27,7 +29,7 @@ export function useClipboardUtil() {
 
     // Computed properties
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
-    const submodelRepoUrl = computed(() => navigationStore.getSubmodelRepoURL);
+    const submodelRepoUrl = computed(() => infrastructureStore.getSubmodelRepoURL);
 
     function copyToClipboard(value: string, valueName: string, iconReference: { value: string }): void {
         if (!value) return;

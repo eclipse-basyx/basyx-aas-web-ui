@@ -45,14 +45,18 @@
     import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { Endpoint, ProtocolInformation, SubmodelDescriptor } from '@/types/Descriptors';
     import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
     // Stores
     const navigationStore = useNavigationStore();
-    const aasRepositoryUrl = computed(() => navigationStore.getAASRepoURL);
-    const smRepositoryUrl = computed(() => navigationStore.getSubmodelRepoURL);
+    const infrastructureStore = useInfrastructureStore();
+
+    // Computed Properties
+    const aasRepositoryUrl = computed(() => infrastructureStore.getAASRepoURL);
+    const smRepositoryUrl = computed(() => infrastructureStore.getSubmodelRepoURL);
 
     // Composables
     const { fetchAas, uploadAas } = useAASRepositoryClient();

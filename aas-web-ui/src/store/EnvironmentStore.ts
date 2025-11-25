@@ -70,13 +70,9 @@ export const useEnvStore = defineStore('envStore', () => {
     const preconfiguredAuth = ref(
         import.meta.env.VITE_PRECONFIGURED_AUTH || (isProduction ? '/__PRECONFIGURED_AUTH_PLACEHOLDER__/' : '')
     );
-    const preconfiguredAuthUsername = ref(
-        import.meta.env.VITE_PRECONFIGURED_AUTH_USERNAME ||
-            (isProduction ? '/__PRECONFIGURED_AUTH_USERNAME_PLACEHOLDER__/' : '')
-    );
-    const preconfiguredAuthPassword = ref(
-        import.meta.env.VITE_PRECONFIGURED_AUTH_PASSWORD ||
-            (isProduction ? '/__PRECONFIGURED_AUTH_PASSWORD_PLACEHOLDER__/' : '')
+    const preconfiguredAuthClientSecret = ref(
+        import.meta.env.VITE_PRECONFIGURED_AUTH_CLIENT_SECRET ||
+            (isProduction ? '/__PRECONFIGURED_AUTH_CLIENT_SECRET_PLACEHOLDER__/' : '')
     );
     const endpointConfigAvailable = ref(
         import.meta.env.VITE_ENDPOINT_CONFIG_AVAILABLE ||
@@ -133,8 +129,7 @@ export const useEnvStore = defineStore('envStore', () => {
     const getPreconfiguredAuth = computed(
         () => !Object.hasOwn(initialUrlQueryParameter.value, 'ignorePreConfAuth') && preconfiguredAuth.value === 'true'
     );
-    const getPreconfiguredAuthUsername = computed(() => preconfiguredAuthUsername.value);
-    const getPreconfiguredAuthPassword = computed(() => preconfiguredAuthPassword.value);
+    const getPreconfiguredAuthClientSecret = computed(() => preconfiguredAuthClientSecret.value);
     const getEndpointConfigAvailable = computed(() => endpointConfigAvailable.value === 'true');
     const getSingleAas = computed(() => singleAas.value === 'true');
     const getSingleAasRedirect = computed(() => {
@@ -209,8 +204,7 @@ export const useEnvStore = defineStore('envStore', () => {
         getKeycloakFeatureControl,
         getKeycloakFeatureControlRolePrefix,
         getPreconfiguredAuth,
-        getPreconfiguredAuthUsername,
-        getPreconfiguredAuthPassword,
+        getPreconfiguredAuthClientSecret,
         getEndpointConfigAvailable,
         getSingleAas,
         getSingleAasRedirect,

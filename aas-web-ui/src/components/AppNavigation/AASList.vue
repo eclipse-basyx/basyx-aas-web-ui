@@ -319,6 +319,7 @@
     import { useClipboardUtil } from '@/composables/ClipboardUtil';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     // Extend the ComponentPublicInstance type to include scrollToIndex
@@ -339,6 +340,7 @@
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
     const envStore = useEnvStore();
+    const infrastructureStore = useInfrastructureStore();
 
     // Vuetify
     const theme = useTheme();
@@ -365,11 +367,12 @@
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
     const isDark = computed(() => theme.global.current.value.dark); // Check if the current Theme is dark
-    const aasRepoURL = computed(() => navigationStore.getAASRepoURL); // Get the AAS Repository URL from the Store
-    const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL); // Get AAS Registry URL from Store
+    const aasRepoURL = computed(() => infrastructureStore.getAASRepoURL); // Get the AAS Repository URL from the Store
+    const aasRegistryURL = computed(() => infrastructureStore.getAASRegistryURL); // Get AAS Registry URL from Store
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
     const primaryColor = computed(() => theme.current.value.colors.primary); // returns the primary color of the current theme
     const triggerAASListReload = computed(() => navigationStore.getTriggerAASListReload); // Get the trigger signal for AAS List reload from store
+    const clearAASList = computed(() => navigationStore.getClearAASList); // Get the clear AAS List signal from store
     const singleAas = computed(() => envStore.getSingleAas); // Get the single AAS state from the Store
     const listHeight = computed(() => {
         if (isMobile.value) {
@@ -440,6 +443,14 @@
             if (triggerVal === true) {
                 initialize();
             }
+        }
+    );
+
+    watch(
+        () => clearAASList.value,
+        () => {
+            aasList.value = [];
+            aasListUnfiltered.value = [];
         }
     );
 
