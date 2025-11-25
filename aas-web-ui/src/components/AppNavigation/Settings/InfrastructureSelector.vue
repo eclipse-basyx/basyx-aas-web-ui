@@ -15,12 +15,7 @@
                 <v-icon :icon="connectionStatus.icon" :color="connectionStatus.color" size="x-small"></v-icon>
             </template>
             <template #append>
-                <v-btn
-                    :disabled="!endpointConfigAvailable"
-                    icon="mdi-cog"
-                    size="small"
-                    variant="text"
-                    @click="openManageDialog">
+                <v-btn icon="mdi-cog" size="small" variant="text" @click="openManageDialog">
                     <v-icon>mdi-cog</v-icon>
                     <v-tooltip activator="parent" location="bottom" :open-delay="600">Manage Infrastructures</v-tooltip>
                 </v-btn>
@@ -32,14 +27,11 @@
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRouter } from 'vue-router';
-    import { useEnvStore } from '@/store/EnvironmentStore';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
 
     // Stores
     const infrastructureStore = useInfrastructureStore();
 
-    const envStore = useEnvStore();
-    const endpointConfigAvailable = ref(envStore.getEndpointConfigAvailable);
     const router = useRouter();
 
     // Emit

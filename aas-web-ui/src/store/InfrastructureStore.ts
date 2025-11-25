@@ -1,5 +1,10 @@
 import type { BaSyxComponent, BaSyxComponentKey } from '@/types/BaSyx';
-import type { InfrastructureConfig, InfrastructureStorage, KeycloakConnectionData } from '@/types/Infrastructure';
+import type {
+    InfrastructureConfig,
+    InfrastructureStorage,
+    KeycloakConnectionData,
+    UserData,
+} from '@/types/Infrastructure';
 import { defineStore } from 'pinia';
 import { computed, nextTick, reactive, ref, watch } from 'vue';
 import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
@@ -8,14 +13,16 @@ import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient
 import { useCDRepositoryClient } from '@/composables/Client/CDRepositoryClient';
 import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
-import { authenticateWithClientCredentials } from '@/composables/KeycloakAuth';
+import { authenticateKeycloak, authenticateWithClientCredentials } from '@/composables/KeycloakAuth';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useEnvStore } from '@/store/EnvironmentStore';
+import { useNavigationStore } from '@/store/NavigationStore';
 import { stripLastCharacter } from '@/utils/StringUtils';
 
 export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     // Stores
     const envStore = useEnvStore();
+    const navigationStore = useNavigationStore();
 
     // Composables
     const { getRequest } = useRequestHandling();
@@ -46,6 +53,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     const selectedInfrastructureId = ref<string | null>(null);
     const triggerInfrastructureDialog = ref(false);
     const openInfrastructureEditMode = ref(false);
+    const user = ref<UserData | null>(null);
 
     // Component URL States
     const AASDiscoveryURL = ref('');
@@ -370,8 +378,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
 
                     // Notify other parts of the app about successful authentication
                     // We'll need to import navigationStore for snackbar
-                    const { useNavigationStore } = await import('@/store/NavigationStore');
-                    const navigationStore = useNavigationStore();
                     navigationStore.dispatchTriggerAASListReload();
                     navigationStore.dispatchTriggerTreeviewReload();
                     navigationStore.dispatchSnackbar({
@@ -458,11 +464,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             const hasToken = infra.token?.accessToken;
 
             if (requiresKeycloakAuth && !hasToken && infra.auth?.keycloakConfig) {
-                // Directly trigger authentication for auth-code flow
-                const { authenticateKeycloak } = await import('@/composables/KeycloakAuth');
-                const { useNavigationStore } = await import('@/store/NavigationStore');
-                const navigationStore = useNavigationStore();
-
                 try {
                     const result = await authenticateKeycloak(infra.auth.keycloakConfig);
 
@@ -478,8 +479,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                     };
                     dispatchUpdateInfrastructure(updatedInfra);
                     setAuthenticationStatusForInfrastructure(infra.id, true);
-                    navigationStore.dispatchClearAASList();
-                    navigationStore.dispatchClearTreeview();
                     navigationStore.dispatchSnackbar({
                         status: true,
                         timeout: 4000,
@@ -498,6 +497,8 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                     });
                 }
             }
+            navigationStore.dispatchClearAASList();
+            navigationStore.dispatchClearTreeview();
 
             // Trigger connection check for all components
             await connectComponents();
@@ -864,6 +865,69 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         }
     }
 
+    function setUser(userValue: UserData | null): void {
+        user.value = userValue || null;
+
+        const envStore = useEnvStore();
+
+        if (
+            envStore.getKeycloakFeatureControl === true &&
+            userValue?.roles &&
+            Array.isArray(userValue.roles) &&
+            userValue.roles.length > 0
+        ) {
+            const keycloakFeatureControlRolePrefix = envStore.getKeycloakFeatureControlRolePrefix;
+            const keycloak_roles_features = [
+                {
+                    keycloakRole: keycloakFeatureControlRolePrefix + 'multiple-aas',
+                    feature: 'SINGLE_AAS',
+                    setFunction: 'setSingleAas',
+                    setValue: 'false',
+                },
+                {
+                    keycloakRole: keycloakFeatureControlRolePrefix + 'sm-viewer-editor',
+                    feature: 'SM_VIEWER_EDITOR',
+                    setFunction: 'setSmViewerEditor',
+                    setValue: 'true',
+                },
+                {
+                    keycloakRole: keycloakFeatureControlRolePrefix + 'allow-editing',
+                    feature: 'ALLOW_EDITING',
+                    setFunction: 'setAllowEditing',
+                    setValue: 'true',
+                },
+                {
+                    keycloakRole: keycloakFeatureControlRolePrefix + 'allow-uploading',
+                    feature: 'ALLOW_UPLOADING',
+                    setFunction: 'setAllowUploading',
+                    setValue: 'true',
+                },
+                {
+                    keycloakRole: keycloakFeatureControlRolePrefix + 'allow-logout',
+                    feature: 'ALLOW_LOGOUT',
+                    setFunction: 'setAllowLogout',
+                    setValue: 'true',
+                },
+                {
+                    keycloakRole: keycloakFeatureControlRolePrefix + 'endpoint-config-available',
+                    feature: 'ENDPOINT_CONFIG_AVAILABLE',
+                    setFunction: 'setEndpointConfigAvailable',
+                    setValue: 'true',
+                },
+            ];
+
+            keycloak_roles_features.forEach((keycloak_roles_feature: any) => {
+                const key = keycloak_roles_feature.setFunction as keyof typeof envStore;
+                if (
+                    userValue?.roles?.includes(keycloak_roles_feature.keycloakRole) &&
+                    typeof envStore[key] === 'function'
+                ) {
+                    envStore[key](keycloak_roles_feature.setValue);
+                }
+            });
+        }
+    }
+
     return {
         // Getters
         getInfrastructures,
@@ -894,5 +958,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         setAuthenticationStatusForInfrastructure,
         connectComponents,
         connectComponent,
+        setUser,
     };
 });

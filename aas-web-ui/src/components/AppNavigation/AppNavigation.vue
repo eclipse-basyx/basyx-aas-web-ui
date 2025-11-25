@@ -54,8 +54,9 @@
                                 <ThemeSwitch></ThemeSwitch>
                                 <v-divider class="mt-2"></v-divider>
                                 <InfrastructureSelector
+                                    v-if="endpointConfigAvailable"
                                     @open-manage="openInfrastructureManagement"></InfrastructureSelector>
-                                <v-divider class="mt-2"></v-divider>
+                                <v-divider v-if="endpointConfigAvailable" class="mt-2"></v-divider>
                             </v-col>
                             <v-col cols="12" class="text-center">
                                 <!-- Platform I 4.0 Logo -->

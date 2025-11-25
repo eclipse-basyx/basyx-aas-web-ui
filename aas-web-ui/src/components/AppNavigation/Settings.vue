@@ -12,8 +12,10 @@
                 <ThemeSwitch></ThemeSwitch>
                 <v-divider class="mt-3"></v-divider>
                 <!-- Backend Configuration (infrastructure selection) -->
-                <InfrastructureSelector @open-manage="openInfrastructureManagement"></InfrastructureSelector>
-                <v-divider class="mt-3"></v-divider>
+                <InfrastructureSelector
+                    v-if="endpointConfigAvailable"
+                    @open-manage="openInfrastructureManagement"></InfrastructureSelector>
+                <v-divider v-if="endpointConfigAvailable" class="mt-3"></v-divider>
                 <v-list-item class="py-0" density="compact" nav>
                     <v-list-item-title class="text-caption text-medium-emphasis pb-0">
                         <span>Version: </span>
@@ -34,11 +36,12 @@
 
 <script lang="ts" setup>
     import { computed, ref, watch } from 'vue';
+    import { useEnvStore } from '@/store/EnvironmentStore';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { getVersionDisplay } from '@/version';
 
-    // const envStore = useEnvStore();
+    const envStore = useEnvStore();
     const navigationStore = useNavigationStore();
     const infrastructureStore = useInfrastructureStore();
 
@@ -46,6 +49,7 @@
     const infrastructureManagementDialog = ref(false); // Variable to show the Infrastructure Management Dialog
 
     const isMobile = computed(() => navigationStore.getIsMobile);
+    const endpointConfigAvailable = computed(() => envStore.getEndpointConfigAvailable);
     const versionDisplay = getVersionDisplay();
 
     // Watch for trigger to open infrastructure management dialog (e.g., from token refresh failure)

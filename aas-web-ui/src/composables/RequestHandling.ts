@@ -10,7 +10,7 @@ export function useRequestHandling() {
         headers = addAuthorizationHeader(headers, path); // Add the Authorization header
         return fetch(path, { method: 'GET', headers: headers })
             .then(async (response) => {
-                // Check if the Server responded with content
+                // Check if the Server responded with content Hallo Rene
                 if (
                     response.headers.get('Content-Type')?.split(';')[0] === 'application/json' &&
                     response.headers.get('Content-Length') !== '0'

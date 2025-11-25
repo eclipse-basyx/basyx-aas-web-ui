@@ -1,5 +1,7 @@
 import type { KeycloakConnectionData } from '@/types/Infrastructure';
 import { usePopupOverlay } from '@/composables/PopupOverlay';
+import { useInfrastructureStore } from '@/store/InfrastructureStore';
+import { getUserFromToken } from '@/utils/TokenUtil';
 
 export interface KeycloakAuthResult {
     accessToken: string;
@@ -230,14 +232,20 @@ export async function authenticateKeycloak(config: KeycloakConnectionData): Prom
     if (!authFlow) {
         throw new Error('Auth flow not specified');
     }
-
+    let result: KeycloakAuthResult;
     if (authFlow === 'client-credentials') {
-        return authenticateWithClientCredentials(config);
+        result = await authenticateWithClientCredentials(config);
     } else if (authFlow === 'password') {
-        return authenticateWithPassword(config);
+        result = await authenticateWithPassword(config);
     } else {
-        return authenticateWithAuthCode(config);
+        result = await authenticateWithAuthCode(config);
     }
+    const infrastructureStore = useInfrastructureStore();
+
+    const userFromToken = getUserFromToken(result.accessToken);
+    infrastructureStore.setUser(userFromToken);
+
+    return result;
 }
 
 /**
