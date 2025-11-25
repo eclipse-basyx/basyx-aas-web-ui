@@ -4,6 +4,15 @@
             <v-card-title align="center">AAS Importer</v-card-title>
             <v-divider />
             <v-card-text>
+                <v-text-field
+                    v-model="assetId"
+                    density="compact"
+                    variant="outlined"
+                    label="Global Asset ID of the AAS to Import"
+                    prepend-inner-icon="mdi-qrcode"
+                    :error="assetId.length == 0"
+                    class="mb-4">
+                </v-text-field>
                 <v-select
                     v-model="selectedInfrastructureId"
                     :items="infrastructureItems"
@@ -15,8 +24,8 @@
                     no-data-text="No Infrastructure with an AAS Discovery configured"
                     placeholder="Please select..."
                     prepend-inner-icon="mdi-server-network"
-                    clearable
-                    class="mb-4">
+                    :error="isSourceSameAsDestination()"
+                    clearable>
                     <template #item="{ props, item }">
                         <v-list-item v-bind="props">
                             <template #subtitle>
@@ -25,15 +34,11 @@
                         </v-list-item>
                     </template>
                 </v-select>
-
-                <v-text-field
-                    v-model="assetId"
-                    density="compact"
-                    variant="outlined"
-                    label="Global Asset ID of the AAS to Import"
-                    class="mt-n5"
-                    prepend-inner-icon="mdi-qrcode">
-                </v-text-field>
+                <v-row>
+                    <v-col cols="12" align="center" class="mt-n5">
+                        <v-icon size="48" color="grey">mdi-arrow-down-thick</v-icon>
+                    </v-col>
+                </v-row>
 
                 <v-select
                     v-model="selectedDestinationInfrastructureId"
@@ -42,11 +47,12 @@
                     item-value="id"
                     density="compact"
                     variant="outlined"
-                    label="Import Destination Infrastructure"
+                    label="Destination Infrastructure with AAS Repository"
                     no-data-text="No Infrastructure with an AAS Repository configured"
                     placeholder="Please select..."
                     prepend-inner-icon="mdi-download"
                     clearable
+                    :error="isSourceSameAsDestination()"
                     class="mb-4">
                     <template #item="{ props, item }">
                         <v-list-item v-bind="props">
@@ -64,7 +70,26 @@
                     When clicking 'Import', the AAS along with its Submodels and Concept Descriptions (if configured)
                     will be fetched from the selected infrastructure and uploaded to your configured Infrastructure.
                 </v-alert>
-                <v-btn color="primary" block class="text-buttonText" :loading="loading" @click="startImport"
+
+                <v-alert v-if="assetId.length == 0" class="mb-6">
+                    <template #prepend>
+                        <v-icon color="error" size="x-small">mdi-information</v-icon>
+                    </template>
+                    Global Asset ID cannot be empty. Please provide a valid Asset ID.
+                </v-alert>
+                <v-alert v-if="isSourceSameAsDestination()" class="mb-6">
+                    <template #prepend>
+                        <v-icon color="error" size="x-small">mdi-information</v-icon>
+                    </template>
+                    Source and Destination Infrastructure cannot be the same. Please select different infrastructures.
+                </v-alert>
+                <v-btn
+                    color="primary"
+                    block
+                    class="text-buttonText"
+                    :loading="loading"
+                    :disabled="isSourceSameAsDestination()"
+                    @click="startImport"
                     >Import</v-btn
                 >
             </v-card-text>
@@ -311,5 +336,12 @@
         } finally {
             loading.value = false;
         }
+    }
+
+    function isSourceSameAsDestination(): boolean {
+        if (selectedInfrastructureId.value === null || selectedDestinationInfrastructureId.value === null) {
+            return false;
+        }
+        return selectedInfrastructureId.value === selectedDestinationInfrastructureId.value;
     }
 </script>
