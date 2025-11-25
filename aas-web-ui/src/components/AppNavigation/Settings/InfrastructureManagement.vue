@@ -809,6 +809,7 @@
 
     // Test connections for all infrastructures
     async function testAllInfrastructures(): Promise<void> {
+        const originalInfrastructureId = selectedInfrastructureId.value;
         for (const infra of infrastructures.value) {
             // Temporarily switch to this infrastructure to test its connections
             await infrastructureStore.dispatchSelectInfrastructure(infra.id);
@@ -816,8 +817,8 @@
             await infrastructureStore.connectComponents();
         }
         // Switch back to the originally selected infrastructure
-        if (selectedInfrastructureId.value) {
-            await infrastructureStore.dispatchSelectInfrastructure(selectedInfrastructureId.value);
+        if (originalInfrastructureId) {
+            await infrastructureStore.dispatchSelectInfrastructure(originalInfrastructureId);
         }
     }
 </script>

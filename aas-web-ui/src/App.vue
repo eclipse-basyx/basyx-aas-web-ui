@@ -63,8 +63,8 @@
     });
 
     async function authKeycloak(): Promise<void> {
+        const infra = currentInfrastructure.value;
         try {
-            const infra = currentInfrastructure.value;
             if (!infra || !infra.auth) return;
             const config = infra.auth.keycloakConfig!;
             const result = await authenticateKeycloak(config);
@@ -78,14 +78,16 @@
             infrastructureStore.dispatchUpdateInfrastructure(infra);
             navigationStore.dispatchTriggerAASListReload();
             navigationStore.dispatchTriggerTreeviewReload();
-        } catch (error) {
+        } catch (error: any) {
+            if (infra?.auth?.securityType === 'No Authentication') return;
+            if (infra?.isAuthenticated) return;
             // snackbar
             navigationStore.dispatchSnackbar({
                 status: true,
                 timeout: 10000,
                 color: 'error',
                 btnColor: 'buttonText',
-                text: `Authentication failed for the selected infrastructure. Please check your configuration.`,
+                text: error || 'Keycloak authentication failed. Please check your configuration.',
                 extendedError: (error as Error).message,
             });
         }

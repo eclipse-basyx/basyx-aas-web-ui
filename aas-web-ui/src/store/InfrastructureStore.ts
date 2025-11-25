@@ -130,6 +130,15 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     const getConceptDescriptionRepoURL = computed(() => ConceptDescriptionRepoURL.value);
     const getBasyxComponents = computed(() => basyxComponents);
 
+    function getDefaultInfrastructureId(): string {
+        // Look for infrastructure marked as default
+        const defaultInfra = infrastructures.value.find((infra) => infra.isDefault);
+        if (defaultInfra) {
+            return defaultInfra.id;
+        }
+        return '';
+    }
+
     // Helper Functions
     function generateInfrastructureId(): string {
         return 'infra_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
@@ -297,6 +306,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             };
 
             if (process.env.NODE_ENV === 'development') {
+                console.warn(infrastructures);
                 console.warn('[InfrastructureStore] Saving infrastructures to localStorage:', {
                     count: storage.infrastructures.length,
                     selected: storage.selectedInfrastructureId,
@@ -377,6 +387,10 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                 }
             }
         }
+
+        // Connect components after infrastructure is loaded and synced
+        await nextTick(); // Ensure watcher has run
+        await connectComponents();
     })();
 
     // Watch for changes to sync URL refs with selected infrastructure
@@ -528,14 +542,14 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             saveInfrastructuresToStorage();
 
             // If this is the selected infrastructure, update the URL refs
-            if (selectedInfrastructureId.value === infrastructure.id) {
-                AASDiscoveryURL.value = infrastructure.components.AASDiscovery.url;
-                AASRegistryURL.value = infrastructure.components.AASRegistry.url;
-                SubmodelRegistryURL.value = infrastructure.components.SubmodelRegistry.url;
-                AASRepoURL.value = infrastructure.components.AASRepo.url;
-                SubmodelRepoURL.value = infrastructure.components.SubmodelRepo.url;
-                ConceptDescriptionRepoURL.value = infrastructure.components.ConceptDescriptionRepo.url;
-            }
+            // if (selectedInfrastructureId.value === infrastructure.id) {
+            //     AASDiscoveryURL.value = infrastructure.components.AASDiscovery.url;
+            //     AASRegistryURL.value = infrastructure.components.AASRegistry.url;
+            //     SubmodelRegistryURL.value = infrastructure.components.SubmodelRegistry.url;
+            //     AASRepoURL.value = infrastructure.components.AASRepo.url;
+            //     SubmodelRepoURL.value = infrastructure.components.SubmodelRepo.url;
+            //     ConceptDescriptionRepoURL.value = infrastructure.components.ConceptDescriptionRepo.url;
+            // }
         }
     }
 
@@ -589,7 +603,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             if (infrastructureId && infrastructure.id !== infrastructureId) {
                 continue; // Skip if a specific infrastructureId is provided and doesn't match
             }
-            infrastructure.isAuthenticated = false;
             const auth = infrastructure.auth;
             const token = infrastructure.token;
 
@@ -600,8 +613,12 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
 
             // Check if token is expired or expiring soon
             if (!token.expiresAt || token.expiresAt > now + TOKEN_REFRESH_BUFFER) {
+                infrastructure.isAuthenticated = true; // Token is still valid
                 continue;
             }
+
+            // Token needs refresh - set to false
+            infrastructure.isAuthenticated = false;
 
             // Attempt token refresh
             try {
@@ -715,42 +732,25 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
 
         const connectionPromises: Promise<void>[] = [];
 
-        keys.forEach((repoKey) => {
-            const storedURL = window.localStorage.getItem(repoKey + 'URL');
+        // Get the current selected infrastructure
+        const selectedInfra = getSelectedInfrastructure.value;
 
-            if (endpointConfigAvailable.value && storedURL) {
-                basyxComponents[repoKey].url = storedURL;
+        if (!selectedInfra) {
+            console.warn('[InfrastructureStore] No infrastructure selected for connection');
+            return;
+        }
+
+        keys.forEach((repoKey) => {
+            // Use URL from the selected infrastructure
+            const infraUrl = selectedInfra.components[repoKey]?.url || '';
+
+            if (infraUrl.trim() !== '') {
+                // Set the component URL from the infrastructure
+                basyxComponents[repoKey].url = infraUrl;
                 connectionPromises.push(connectComponent(repoKey));
             } else {
-                // Check environment path
-                let envPath = '';
-                switch (repoKey) {
-                    case 'AASDiscovery':
-                        envPath = EnvAASDiscoveryPath.value;
-                        break;
-                    case 'AASRegistry':
-                        envPath = EnvAASRegistryPath.value;
-                        break;
-                    case 'SubmodelRegistry':
-                        envPath = EnvSubmodelRegistryPath.value;
-                        break;
-                    case 'AASRepo':
-                        envPath = EnvAASRepoPath.value;
-                        break;
-                    case 'SubmodelRepo':
-                        envPath = EnvSubmodelRepoPath.value;
-                        break;
-                    case 'ConceptDescriptionRepo':
-                        envPath = EnvConceptDescriptionRepoPath.value;
-                        break;
-                    default:
-                        break;
-                }
-
-                if (!basyxComponents[repoKey].url && envPath.trim() !== '') {
-                    basyxComponents[repoKey].url = envPath;
-                    connectionPromises.push(connectComponent(repoKey));
-                }
+                // If infrastructure has no URL for this component, mark as not connected
+                basyxComponents[repoKey].connected = false;
             }
         });
 
@@ -788,9 +788,9 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                     dispatchComponentURL(componentKey, basyxComponent.url);
 
                     // Save to localStorage if endpoint config is available
-                    if (endpointConfigAvailable.value) {
-                        window.localStorage.setItem(componentKey + 'URL', basyxComponent.url);
-                    }
+                    // if (endpointConfigAvailable.value) {
+                    //     window.localStorage.setItem(componentKey + 'URL', basyxComponent.url);
+                    // }
 
                     // Update the connected status
                     basyxComponent.connected = true;
@@ -822,9 +822,9 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                         dispatchComponentURL(componentKey, basyxComponent.url);
 
                         // Save to localStorage if endpoint config is available
-                        if (endpointConfigAvailable.value) {
-                            window.localStorage.setItem(componentKey + 'URL', basyxComponent.url);
-                        }
+                        // if (endpointConfigAvailable.value) {
+                        //     window.localStorage.setItem(componentKey + 'URL', basyxComponent.url);
+                        // }
 
                         // Update the connected status
                         basyxComponent.connected = true;
@@ -878,6 +878,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         getSubmodelRepoURL,
         getConceptDescriptionRepoURL,
         getBasyxComponents,
+        getDefaultInfrastructureId,
 
         // Actions
         dispatchComponentURL,

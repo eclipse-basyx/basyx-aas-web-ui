@@ -130,8 +130,8 @@ export async function createAppRouter(): Promise<Router> {
     const aasStore = useAASStore();
     const envStore = useEnvStore();
 
-    // Connect to (BaSyx) components, otherwise IDs redirecting not possible
-    infrastructureStore.connectComponents();
+    const defaultInfrastructureID = infrastructureStore.getDefaultInfrastructureId();
+    await infrastructureStore.dispatchSelectInfrastructure(defaultInfrastructureID);
 
     // Composables
     const { fetchAndDispatchAas, aasByEndpointHasSmeByPath } = useAASHandling();
