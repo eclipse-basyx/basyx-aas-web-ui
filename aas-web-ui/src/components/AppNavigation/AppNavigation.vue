@@ -256,6 +256,7 @@
     const selectedAas = computed(() => aasStore.getSelectedAAS); // get selected AAS from Store
     const selectedNode = computed(() => aasStore.getSelectedNode); // get selected AAS from Store
     const moduleRoutes = computed(() => navigationStore.getModuleRoutes); // get the module routes
+    const endpointConfigAvailable = computed(() => envStore.getEndpointConfigAvailable);
 
     const filteredAndOrderedModuleRoutes = computed(() => {
         const filteredModuleRoutes = moduleRoutes.value.filter((moduleRoute: RouteRecordRaw) => {
