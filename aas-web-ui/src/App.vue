@@ -19,8 +19,9 @@
 </template>
 
 <script lang="ts" setup>
-    import { onBeforeUnmount, onMounted, ref } from 'vue';
+    import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
     import { useRouter } from 'vue-router';
+    import { authenticateKeycloak } from '@/composables/KeycloakAuth';
     import { usePopupOverlay } from '@/composables/PopupOverlay';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -35,6 +36,18 @@
     // Popup Overlay
     const { isPopupOverlayVisible } = usePopupOverlay();
 
+    // Computed Properties
+    const currentInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure);
+
+    watch(
+        () => infrastructureStore.getSelectedInfrastructure,
+        (newInfra, oldInfra) => {
+            if (newInfra !== oldInfra) {
+                authKeycloak();
+            }
+        }
+    );
+
     // Data
     const mediaQueryList = window.matchMedia('(max-width: 600px)');
     const matchesMobile = ref(mediaQueryList.matches);
@@ -46,7 +59,37 @@
         tokenRefreshInterval = setInterval(async () => {
             await refreshTokens();
         }, 20000); // 60 seconds
+        authKeycloak();
     });
+
+    async function authKeycloak(): Promise<void> {
+        try {
+            const infra = currentInfrastructure.value;
+            if (!infra || !infra.auth) return;
+            const config = infra.auth.keycloakConfig!;
+            const result = await authenticateKeycloak(config);
+            const keycloakToken = {
+                accessToken: result.accessToken,
+                refreshToken: result.refreshToken,
+                expiresAt: result.expiresAt,
+                idToken: result.idToken,
+            };
+            infra.token = keycloakToken;
+            infrastructureStore.dispatchUpdateInfrastructure(infra);
+            navigationStore.dispatchTriggerAASListReload();
+            navigationStore.dispatchTriggerTreeviewReload();
+        } catch (error) {
+            // snackbar
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 10000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: `Authentication failed for the selected infrastructure. Please check your configuration.`,
+                extendedError: (error as Error).message,
+            });
+        }
+    }
 
     async function refreshTokens(): Promise<void> {
         const failures = await infrastructureStore.refreshInfrastructureTokens();

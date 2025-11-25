@@ -176,7 +176,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         if (EnvSubmodelRepoPath.value) infrastructure.components.SubmodelRepo.url = EnvSubmodelRepoPath.value;
         if (EnvConceptDescriptionRepoPath.value)
             infrastructure.components.ConceptDescriptionRepo.url = EnvConceptDescriptionRepoPath.value;
-        if (EnvKeycloakActive.value) {
+        if (EnvKeycloakActive.value || (EnvKeycloakUrl.value && EnvKeycloakRealm.value && EnvKeycloakClientId.value)) {
             const keycloakConfig: KeycloakConnectionData = {
                 serverUrl: EnvKeycloakUrl.value,
                 realm: EnvKeycloakRealm.value,
