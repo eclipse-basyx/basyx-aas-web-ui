@@ -299,7 +299,7 @@
     import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useClipboardUtil } from '@/composables/ClipboardUtil';
-    import { useAASStoreCmd } from '@/store/AASDataStore';
+    import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { base64Encode } from '@/utils/EncodeDecodeUtils';
@@ -329,7 +329,7 @@
 
     // Stores
     const navigationStore = useNavigationStore();
-    const aasStore = useAASStoreCmd();
+    const aasStore = useAASStore('commanderList');
     const envStore = useEnvStore();
 
     // Vuetify
