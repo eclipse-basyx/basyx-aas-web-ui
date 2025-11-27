@@ -246,6 +246,7 @@ export function useClipboardUtil() {
             delete cleaned.parent;
             delete cleaned.path;
             delete cleaned.timestamp;
+            delete cleaned.listIndex;
             delete cleaned.conceptDescriptions;
             delete cleaned.idLower;
             delete cleaned.idShortLower;
