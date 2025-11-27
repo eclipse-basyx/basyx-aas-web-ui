@@ -225,7 +225,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
     import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement';
@@ -264,6 +264,13 @@
     onMounted(() => {
         initializeVisualization();
     });
+
+    watch(
+        () => props.submodelElementData?.id,
+        () => {
+            initializeVisualization();
+        }
+    );
 
     async function initializeVisualization(): Promise<void> {
         isLoading.value = true;
