@@ -155,12 +155,12 @@ export function useCarbonFootprint_v1_0Utils() {
     ];
 
     /**
-     * Retrieves Technical Data Submodel (SM) of an Asset Administration Shell (AAS).
+     * Retrieves PCF Submodel (SM) of an Asset Administration Shell (AAS).
      *
      * @async
-     * @param {string} aasId - The ID of the AAS to retrieve its Technical Data SM.
+     * @param {string} aasId - The ID of the AAS to retrieve its PCF SM.
      * @param {boolean} withConceptDescriptions - Flag to specify if SM should be fetched with ConceptDescriptions (CDs)
-     * @returns {string} A promise that resolves to a Technical Data SM.
+     * @returns {Promise<any>} A promise that resolves to a PCF SM.
      */
     async function getSm(aasId: string, withConceptDescriptions: boolean = false): Promise<any> {
         const failResponse = {};
@@ -170,8 +170,6 @@ export function useCarbonFootprint_v1_0Utils() {
         aasId = aasId.trim();
 
         if (aasId === '') return failResponse;
-
-        aasId = aasId.trim();
 
         const smTechnicalDataId = await getSmIdOfAasIdBySemanticId(aasId, semanticId);
         const smTechnicalData = await fetchSmById(smTechnicalDataId, withConceptDescriptions);
@@ -188,7 +186,7 @@ export function useCarbonFootprint_v1_0Utils() {
         publicationDate: string;
         expirationDate: string;
     } {
-        const failReponse = {
+        const failResponse = {
             pcfCalculationMethods: [],
             pcfco2eq: '',
             pcfReferenceValueForCalculation: '',
@@ -198,13 +196,13 @@ export function useCarbonFootprint_v1_0Utils() {
             expirationDate: '',
         };
 
-        if (!productCarbonFootprintSmc || Object.keys(productCarbonFootprintSmc).length === 0) return failReponse;
+        if (!productCarbonFootprintSmc || Object.keys(productCarbonFootprintSmc).length === 0) return failResponse;
 
         if (
             !checkSemanticId(productCarbonFootprintSmc, semanticIdSmlProductCarbonFootprints) ||
             !checkIdShort(productCarbonFootprintSmc, 'productCarbonFootprint')
         )
-            return failReponse;
+            return failResponse;
 
         const pcfCalculationMethodsSml = productCarbonFootprintSmc.value.find(
             (sme: any) =>
@@ -213,11 +211,12 @@ export function useCarbonFootprint_v1_0Utils() {
                 checkSemanticId(sme, 'https://admin-shell.io/idta/CarbonFootprint/PcfCalculationMethods/1/0')
         );
 
-        const pcfCalculationMethods = pcfCalculationMethodsSml.value.filter(
-            (sme: any) =>
-                checkIdShort(sme, 'PcfCalculationMethod', true) || // mistake in specification
-                checkSemanticId(sme, 'https://admin-shell.io/idta/CarbonFootprint/PcfCalculationMethod/1/0')
-        );
+        const pcfCalculationMethods =
+            pcfCalculationMethodsSml?.value?.filter(
+                (sme: any) =>
+                    checkIdShort(sme, 'PcfCalculationMethod', true) || // mistake in specification
+                    checkSemanticId(sme, 'https://admin-shell.io/idta/CarbonFootprint/PcfCalculationMethod/1/0')
+            ) || [];
 
         const pcfco2eq = productCarbonFootprintSmc.value.find(
             (sme: any) => checkIdShort(sme, 'PcfCO2eq') || checkSemanticId(sme, '0173-1#02-ABG855#001')
@@ -239,11 +238,12 @@ export function useCarbonFootprint_v1_0Utils() {
                 checkSemanticId(sme, 'https://admin-shell.io/idta/CarbonFootprint/LifeCyclePhases/1/0')
         );
 
-        const lifeCyclePhases = lifeCyclePhasesSml.value.filter(
-            (sme: any) =>
-                checkIdShort(sme, 'LifeCyclePhase', true) || // mistake in specification
-                checkSemanticId(sme, 'https://admin-shell.io/idta/CarbonFootprint/LifeCyclePhase/1/0')
-        );
+        const lifeCyclePhases =
+            lifeCyclePhasesSml?.value?.filter(
+                (sme: any) =>
+                    checkIdShort(sme, 'LifeCyclePhase', true) || // mistake in specification
+                    checkSemanticId(sme, 'https://admin-shell.io/idta/CarbonFootprint/LifeCyclePhase/1/0')
+            ) || [];
 
         const publicationDate = productCarbonFootprintSmc.value.find(
             (sme: any) =>
@@ -254,7 +254,7 @@ export function useCarbonFootprint_v1_0Utils() {
         const expirationDate = productCarbonFootprintSmc.value.find(
             (sme: any) =>
                 checkIdShort(sme, 'ExpirationDate') ||
-                checkSemanticId(sme, 'https://admin-shell.io/idta/CarbonFootprint/ExpirationnDate/1/0')
+                checkSemanticId(sme, 'https://admin-shell.io/idta/CarbonFootprint/ExpirationDate/1/0')
         );
 
         const response = {

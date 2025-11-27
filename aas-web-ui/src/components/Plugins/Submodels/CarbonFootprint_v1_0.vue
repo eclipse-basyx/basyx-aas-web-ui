@@ -99,7 +99,7 @@
                                             pcfSMC.value.find(
                                                 (sme: any) =>
                                                     checkIdShort(sme, 'ReferenceImpactUnitForCalculation') ||
-                                                    checkIdShort(sme, '0173-1#02-ABG856#003')
+                                                    checkSemanticId(sme, '0173-1#02-ABG856#003')
                                             )
                                         )
                                     }}
@@ -115,7 +115,7 @@
                                             )
                                             .value.filter(
                                                 (sme: any) =>
-                                                    checkIdShort(sme, 'PCFCalculationMethod', true) ||
+                                                    checkIdShort(sme, 'PcfCalculationMethod', true) ||
                                                     checkSemanticId(sme, '0173-1#02-ABG854#003')
                                             )"
                                         :key="pcfCalculationMethod.idShort">
@@ -134,7 +134,7 @@
                                                     )
                                                     .value.filter(
                                                         (sme: any) =>
-                                                            checkIdShort(sme, 'PCFCalculationMethod', true) ||
+                                                            checkIdShort(sme, 'PcfCalculationMethod', true) ||
                                                             checkSemanticId(sme, '0173-1#02-ABG854#003')
                                                     ).length -
                                                     1
@@ -165,10 +165,10 @@
                                         v-if="
                                             pcfSMC.value.find(
                                                 (sme: any) =>
-                                                    checkIdShort(sme, 'ExpirationnDate') ||
+                                                    checkIdShort(sme, 'ExpirationDate') ||
                                                     checkSemanticId(
                                                         sme,
-                                                        'https://admin-shell.io/idta/CarbonFootprint/ExpirationnDate/1/0'
+                                                        'https://admin-shell.io/idta/CarbonFootprint/ExpirationDate/1/0'
                                                     )
                                             )
                                         ">
@@ -180,7 +180,7 @@
                                                         checkIdShort(sme, 'ExpirationDate') ||
                                                         checkSemanticId(
                                                             sme,
-                                                            'https://admin-shell.io/idta/CarbonFootprint/ExpirationnDate/1/0'
+                                                            'https://admin-shell.io/idta/CarbonFootprint/ExpirationDate/1/0'
                                                         )
                                                 )
                                             )
