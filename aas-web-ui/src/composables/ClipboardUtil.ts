@@ -150,7 +150,6 @@ export function useClipboardUtil() {
 
         const instanceOrError = jsonization.submodelElementFromJsonable(json);
         if (instanceOrError.error !== null) {
-            console.log('Error parsing SubmodelElement: ', instanceOrError.error);
             navigationStore.dispatchSnackbar({
                 status: true,
                 timeout: 4000,
