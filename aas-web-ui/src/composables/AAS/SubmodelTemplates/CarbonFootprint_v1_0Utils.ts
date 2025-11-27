@@ -284,9 +284,9 @@ export function useCarbonFootprint_v1_0Utils() {
                     : '',
             pcfLifeCyclePhases:
                 lifeCyclePhases && Array.isArray(lifeCyclePhases) && lifeCyclePhases.length > 0
-                    ? lifeCyclePhases.map((pcfCalculationMethod: any) => {
-                          return pcfCalculationMethod && Object.keys(pcfCalculationMethod).length > 0
-                              ? valueToDisplay(pcfCalculationMethod)
+                    ? lifeCyclePhases.map((lifeCyclePhase: any) => {
+                          return lifeCyclePhase && Object.keys(lifeCyclePhase).length > 0
+                              ? valueToDisplay(lifeCyclePhase)
                               : '';
                       })
                     : [],

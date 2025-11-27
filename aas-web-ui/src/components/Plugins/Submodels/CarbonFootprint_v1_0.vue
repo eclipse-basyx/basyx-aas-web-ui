@@ -297,6 +297,11 @@
             true
         );
 
+        if (!carbonFootprintData.value?.submodelElements) {
+            isLoading.value = false;
+            return;
+        }
+
         const productCarbonFootprintsSml = carbonFootprintData.value.submodelElements.find((sme: any) => {
             return (
                 checkIdShort(sme, 'ProductCarbonFootprint') || // Wrong semanticId was specified in SMT Spec v1.0
