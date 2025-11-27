@@ -15,6 +15,14 @@
             </v-card>
         </v-sheet>
         <template v-else-if="Object.keys(carbonFootprintData).length > 0">
+            <!-- Pie Chart -->
+            <v-card v-if="pieChartData && pieChartData.length > 0" class="mb-4">
+                <v-card-title class="text-subtitle-1">Carbon Footprint Distribution</v-card-title>
+                <v-card-text>
+                    <PieChart :chart-data="pieChartData" />
+                </v-card-text>
+            </v-card>
+            <!-- Timeline -->
             <v-card v-if="productCarbonFootprints && Object.keys(productCarbonFootprints).length > 0" class="mb-4">
                 <v-card-title class="text-subtitle-1">
                     {{ 'Product Carbon Footprint' + (Object.keys(productCarbonFootprints).length > 1 ? 's' : '') }}
@@ -251,6 +259,7 @@
     const isLoading = ref(false);
     const carbonFootprintData = ref({} as any);
     const productCarbonFootprints = ref({} as any);
+    const pieChartData = ref([] as Array<{ label: string; value: number }>);
 
     onMounted(() => {
         initializeVisualization();
@@ -288,6 +297,70 @@
             });
         }
 
+        // Prepare pie chart data
+        preparePieChartData();
+
         isLoading.value = false;
+    }
+
+    function preparePieChartData(): void {
+        pieChartData.value = [];
+
+        if (!productCarbonFootprints.value || productCarbonFootprints.value.length === 0) {
+            return;
+        }
+
+        productCarbonFootprints.value.forEach((pcfSMC: any) => {
+            // Extract PcfCO2eq value
+            const pcfCO2eqElement = pcfSMC.value.find(
+                (sme: any) => checkIdShort(sme, 'PcfCO2eq') || checkSemanticId(sme, '0173-1#02-ABG855#003')
+            );
+
+            if (!pcfCO2eqElement) return;
+
+            const pcfValue = parseFloat(valueToDisplay(pcfCO2eqElement));
+
+            if (isNaN(pcfValue)) return;
+
+            // Extract lifecycle phases for label
+            const lifeCyclePhasesSml = pcfSMC.value.find(
+                (sme: any) =>
+                    checkIdShort(sme, 'LifeCyclePhases') ||
+                    checkSemanticId(sme, 'https://admin-shell.io/idta/CarbonFootprint/LifeCyclePhases/1/0')
+            );
+
+            let label = pcfSMC.idShort || 'PCF';
+
+            if (lifeCyclePhasesSml && lifeCyclePhasesSml.value) {
+                const lifeCyclePhases = lifeCyclePhasesSml.value.filter(
+                    (sme: any) => checkIdShort(sme, 'LifeCyclePhase') || checkSemanticId(sme, '0173-1#02-ABG858#003')
+                );
+
+                if (lifeCyclePhases && lifeCyclePhases.length > 0) {
+                    const phaseLabels = lifeCyclePhases
+                        .map((phase: any) => {
+                            if (
+                                phase?.valueId?.keys &&
+                                Array.isArray(phase?.valueId?.keys) &&
+                                phase?.valueId?.keys.length > 0
+                            ) {
+                                const phaseInfo = getPcfLifeCyclePhaseFromId(phase.valueId.keys[0].value);
+                                return phaseInfo?.identifier || valueToDisplay(phase);
+                            }
+                            return valueToDisplay(phase);
+                        })
+                        .filter((label: string) => label && label.trim() !== '');
+
+                    if (phaseLabels.length > 0) {
+                        label = phaseLabels.join(', ');
+                    }
+                }
+            }
+
+            pieChartData.value.push({
+                label: label,
+                value: pcfValue,
+            });
+        });
     }
 </script>

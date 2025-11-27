@@ -248,6 +248,10 @@ export function useContactInformation_v1_0Utils() {
         ];
         const addressValues = {} as any;
 
+        if (!contactInformationSMC || !contactInformationSMC.value || contactInformationSMC.value.length === 0) {
+            return '';
+        }
+
         contactInformationSMC.value.forEach((sme: any) => {
             addressIdShorts.forEach((idShort: any) => {
                 if (checkIdShort(sme, idShort) && hasValue(sme)) {

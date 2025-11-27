@@ -75,6 +75,7 @@ declare module 'vue' {
     NumberType: typeof import('./components/SubmodelElements/ValueTypes/NumberType.vue')['default']
     Operation: typeof import('./components/SubmodelElements/Operation.vue')['default']
     PDFPreview: typeof import('./components/Plugins/PDFPreview.vue')['default']
+    PieChart: typeof import('./components/Widgets/PieChart.vue')['default']
     Property: typeof import('./components/SubmodelElements/Property.vue')['default']
     PropertyForm: typeof import('./components/EditorComponents/SubmodelElements/PropertyForm.vue')['default']
     QualifierElement: typeof import('./components/UIComponents/QualifierElement.vue')['default']
