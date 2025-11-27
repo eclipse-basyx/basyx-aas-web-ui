@@ -16,10 +16,18 @@
         </v-sheet>
         <template v-else-if="Object.keys(carbonFootprintData).length > 0">
             <!-- Pie Chart -->
-            <v-card v-if="pieChartData && pieChartData.length > 0" class="mb-4">
+            <v-card v-if="showPieChart && pieChartData && pieChartData.length > 0" class="mb-4">
                 <v-card-title class="text-subtitle-1">Carbon Footprint Distribution</v-card-title>
                 <v-card-text>
                     <PieChart :chart-data="pieChartData" />
+                </v-card-text>
+            </v-card>
+            <!-- Pie Chart Warning -->
+            <v-card v-else-if="pieChartWarning" class="mb-4">
+                <v-card-text>
+                    <v-alert type="info" variant="tonal" icon="mdi-information-outline">
+                        {{ pieChartWarning }}
+                    </v-alert>
                 </v-card-text>
             </v-card>
             <!-- Timeline -->
@@ -260,6 +268,8 @@
     const carbonFootprintData = ref({} as any);
     const productCarbonFootprints = ref({} as any);
     const pieChartData = ref([] as Array<{ label: string; value: number }>);
+    const showPieChart = ref(false);
+    const pieChartWarning = ref('');
 
     onMounted(() => {
         initializeVisualization();
@@ -312,11 +322,81 @@
 
     function preparePieChartData(): void {
         pieChartData.value = [];
+        showPieChart.value = false;
+        pieChartWarning.value = '';
 
         if (!productCarbonFootprints.value || productCarbonFootprints.value.length === 0) {
             return;
         }
 
+        // Only show pie chart if there are multiple PCFs
+        if (productCarbonFootprints.value.length < 2) {
+            return;
+        }
+
+        // Check compatibility of all PCFs
+        const pcfMetadata: Array<{
+            calculationMethods: string[];
+            referenceUnit: string;
+            quantity: string;
+        }> = [];
+
+        productCarbonFootprints.value.forEach((pcfSMC: any) => {
+            // Extract calculation methods
+            const pcfCalculationMethodsSml = pcfSMC.value.find(
+                (sme: any) =>
+                    checkIdShort(sme, 'PcfCalculationMethods') ||
+                    checkSemanticId(sme, 'https://admin-shell.io/idta/CarbonFootprint/PcfCalculationMethods/1/0')
+            );
+
+            const calculationMethods =
+                pcfCalculationMethodsSml?.value
+                    ?.filter(
+                        (sme: any) =>
+                            checkIdShort(sme, 'PcfCalculationMethod', true) ||
+                            checkSemanticId(sme, '0173-1#02-ABG854#003')
+                    )
+                    .map((method: any) => valueToDisplay(method))
+                    .sort() || [];
+
+            // Extract reference unit
+            const referenceUnitElement = pcfSMC.value.find(
+                (sme: any) =>
+                    checkIdShort(sme, 'ReferenceImpactUnitForCalculation') ||
+                    checkSemanticId(sme, '0173-1#02-ABG856#003')
+            );
+            const referenceUnit = referenceUnitElement ? valueToDisplay(referenceUnitElement) : '';
+
+            // Extract quantity
+            const quantityElement = pcfSMC.value.find(
+                (sme: any) =>
+                    checkIdShort(sme, 'QuantityOfMeasureForCalculation') || checkSemanticId(sme, '0173-1#02-ABG857#003')
+            );
+            const quantity = quantityElement ? valueToDisplay(quantityElement) : '';
+
+            pcfMetadata.push({
+                calculationMethods,
+                referenceUnit,
+                quantity,
+            });
+        });
+
+        // Check if all PCFs are compatible
+        const firstPcf = pcfMetadata[0];
+        const allCompatible = pcfMetadata.every(
+            (pcf) =>
+                JSON.stringify(pcf.calculationMethods) === JSON.stringify(firstPcf.calculationMethods) &&
+                pcf.referenceUnit === firstPcf.referenceUnit &&
+                pcf.quantity === firstPcf.quantity
+        );
+
+        if (!allCompatible) {
+            pieChartWarning.value =
+                'Pie chart unavailable: Product Carbon Footprints use different calculation methods or reference units and cannot be directly compared.';
+            return;
+        }
+
+        // If compatible, prepare pie chart data
         productCarbonFootprints.value.forEach((pcfSMC: any) => {
             // Extract PcfCO2eq value
             const pcfCO2eqElement = pcfSMC.value.find(
@@ -369,5 +449,7 @@
                 value: pcfValue,
             });
         });
+
+        showPieChart.value = pieChartData.value.length > 0;
     }
 </script>
