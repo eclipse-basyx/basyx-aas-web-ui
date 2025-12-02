@@ -352,6 +352,7 @@
     const triggerTreeviewReload = computed(() => navigationStore.getTriggerTreeviewReload); // Reload the Treeview
     const clearTreeview = computed(() => navigationStore.getClearTreeview); // Clear the Treeview
     const clipboardElementContentType = computed(() => clipboardStore.getClipboardElementModelType()); // Get the Clipboard Element Content Type
+    const isAuthenticating = computed(() => infrastructureStore.getIsAuthenticating); // Check if authentication is in progress
 
     // Watchers
     watch(
@@ -375,7 +376,9 @@
         () => {
             if (!['SMViewer', 'SMEditor'].includes(route.name as string)) {
                 submodelTree.value = [];
-                initialize();
+                if (!isAuthenticating.value) {
+                    initialize();
+                }
             }
         }
     );
@@ -383,7 +386,7 @@
     watch(
         () => triggerTreeviewReload.value,
         (triggerVal) => {
-            if (triggerVal === true) {
+            if (triggerVal === true && !isAuthenticating.value) {
                 initialize();
             }
         }
@@ -398,7 +401,9 @@
     );
 
     onMounted(() => {
-        initialize();
+        if (!isAuthenticating.value) {
+            initialize();
+        }
     });
 
     async function initialize(): Promise<void> {

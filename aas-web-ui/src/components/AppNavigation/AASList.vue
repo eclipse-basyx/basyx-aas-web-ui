@@ -393,12 +393,13 @@
     const allowUploading = computed(() => envStore.getAllowUploading); // Check if the current environment config allows uploading shells
     const statusCheck = computed(() => navigationStore.getStatusCheck);
     const copyIconAsRef = computed(() => copyIcon);
+    const isAuthenticating = computed(() => infrastructureStore.getIsAuthenticating); // Check if authentication is in progress
 
     // Watchers
     watch(
         () => aasRegistryURL.value,
         (newVal) => {
-            if (newVal && newVal.trim() !== '') {
+            if (newVal && newVal.trim() !== '' && !isAuthenticating.value) {
                 initialize();
             }
         },

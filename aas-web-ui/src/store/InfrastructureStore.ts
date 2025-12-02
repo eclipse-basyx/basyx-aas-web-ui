@@ -54,6 +54,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     const triggerInfrastructureDialog = ref(false);
     const openInfrastructureEditMode = ref(false);
     const user = ref<UserData | null>(null);
+    const isAuthenticating = ref(false);
 
     // Component URL States
     // Force reset to empty strings to prevent any stale values from previous sessions
@@ -138,6 +139,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     const getSubmodelRepoURL = computed(() => SubmodelRepoURL.value);
     const getConceptDescriptionRepoURL = computed(() => ConceptDescriptionRepoURL.value);
     const getBasyxComponents = computed(() => basyxComponents);
+    const getIsAuthenticating = computed(() => isAuthenticating.value);
 
     function getDefaultInfrastructureId(): string {
         // Look for infrastructure marked as default
@@ -363,6 +365,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                 // Directly trigger authentication for auth-code flow
                 const { authenticateKeycloak } = await import('@/composables/KeycloakAuth');
                 try {
+                    isAuthenticating.value = true;
                     const result = await authenticateKeycloak(selectedInfra.auth.keycloakConfig);
 
                     // Update infrastructure with new token
@@ -378,7 +381,10 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                     dispatchUpdateInfrastructure(updatedInfra);
                     setAuthenticationStatusForInfrastructure(selectedInfra.id, true);
 
-                    // Notify other parts of the app about successful authentication
+                    // Wait for Vue reactivity to process the infrastructure update
+                    await nextTick();
+
+                    // Notify about successful authentication
                     navigationStore.dispatchSnackbar({
                         status: true,
                         timeout: 4000,
@@ -389,6 +395,8 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                 } catch (error: unknown) {
                     // Silently fail on page load - user can manually authenticate later
                     console.warn('Authentication on load failed:', error);
+                } finally {
+                    isAuthenticating.value = false;
                 }
             }
         }
@@ -466,6 +474,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
 
         if (requiresKeycloakAuth && !hasToken && infra.auth?.keycloakConfig) {
             try {
+                isAuthenticating.value = true;
                 const result = await authenticateKeycloak(infra.auth.keycloakConfig);
 
                 // Update infrastructure with new token
@@ -487,6 +496,11 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                     btnColor: 'buttonText',
                     text: 'Successfully authenticated',
                 });
+
+                // Trigger reload after successful authentication
+                await nextTick();
+                navigationStore.dispatchTriggerAASListReload();
+                navigationStore.dispatchTriggerTreeviewReload();
             } catch (error: unknown) {
                 navigationStore.dispatchSnackbar({
                     status: true,
@@ -496,6 +510,8 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                     text: 'Authentication required for this infrastructure',
                     extendedError: error instanceof Error ? error.message : 'Please authenticate to continue',
                 });
+            } finally {
+                isAuthenticating.value = false;
             }
         }
 
@@ -930,6 +946,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         getConceptDescriptionRepoURL,
         getBasyxComponents,
         getDefaultInfrastructureId,
+        getIsAuthenticating,
 
         // Actions
         dispatchComponentURL,

@@ -68,8 +68,32 @@ async function initialize(): Promise<void> {
         ssr: false,
     });
 
-    // Create the router
+    // Create the router (this also initializes InfrastructureStore which may trigger auth)
     const router = await createAppRouter();
+
+    // Wait for infrastructure store to complete initial authentication check
+    // This ensures tokens are available before router navigation triggers data fetching
+    const infrastructureStore = (await import('@/store/InfrastructureStore')).useInfrastructureStore();
+
+    // Poll until initial auth check completes (if infrastructure requires auth)
+    const maxWaitTime = 60000; // 60 seconds max
+    const startTime = Date.now();
+    const selectedInfra = infrastructureStore.getSelectedInfrastructure;
+
+    if (
+        selectedInfra?.auth?.securityType === 'Keycloak' &&
+        selectedInfra?.auth?.keycloakConfig?.authFlow === 'auth-code' &&
+        !selectedInfra?.token?.accessToken
+    ) {
+        // Wait for authentication to complete
+        while (
+            !infrastructureStore.getSelectedInfrastructure?.token?.accessToken &&
+            Date.now() - startTime < maxWaitTime
+        ) {
+            await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+    }
+
     app.use(router);
 
     // Mount the app
