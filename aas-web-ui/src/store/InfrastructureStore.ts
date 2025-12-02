@@ -456,64 +456,67 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     // Infrastructure Actions
     async function dispatchSelectInfrastructure(infrastructureId: string, connect: boolean = true): Promise<void> {
         const infra = infrastructures.value.find((i) => i.id === infrastructureId);
-        if (infra) {
-            selectedInfrastructureId.value = infrastructureId;
-
-            saveInfrastructuresToStorage();
-
-            // Check if infrastructure requires authentication and doesn't have a token
-            const requiresKeycloakAuth =
-                infra.auth?.securityType === 'Keycloak' &&
-                infra.auth.keycloakConfig &&
-                infra.auth.keycloakConfig.authFlow === 'auth-code';
-            const hasToken = infra.token?.accessToken;
-
-            if (requiresKeycloakAuth && !hasToken && infra.auth?.keycloakConfig) {
-                try {
-                    const result = await authenticateKeycloak(infra.auth.keycloakConfig);
-
-                    // Update infrastructure with new token
-                    const updatedInfra = {
-                        ...infra,
-                        token: {
-                            accessToken: result.accessToken,
-                            refreshToken: result.refreshToken,
-                            idToken: result.idToken,
-                            expiresAt: result.expiresAt,
-                        },
-                    };
-                    dispatchUpdateInfrastructure(updatedInfra);
-                    setAuthenticationStatusForInfrastructure(infra.id, true);
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 4000,
-                        color: 'success',
-                        btnColor: 'buttonText',
-                        text: 'Successfully authenticated',
-                    });
-                } catch (error: unknown) {
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 6000,
-                        color: 'warning',
-                        btnColor: 'buttonText',
-                        text: 'Authentication required for this infrastructure',
-                        extendedError: error instanceof Error ? error.message : 'Please authenticate to continue',
-                    });
-                }
-            }
-            navigationStore.dispatchClearAASList();
-            navigationStore.dispatchClearTreeview();
-
-            // Trigger connection check for all components
-            if (connect) {
-                await connectComponents();
-            }
-
-            // Trigger reload of AAS list and treeview with data from new infrastructure
-            navigationStore.dispatchTriggerAASListReload();
-            navigationStore.dispatchTriggerTreeviewReload();
+        if (!infra) {
+            console.error(`[InfrastructureStore] Infrastructure with ID ${infrastructureId} not found`);
+            return;
         }
+
+        selectedInfrastructureId.value = infrastructureId;
+
+        saveInfrastructuresToStorage();
+
+        // Check if infrastructure requires authentication and doesn't have a token
+        const requiresKeycloakAuth =
+            infra.auth?.securityType === 'Keycloak' &&
+            infra.auth.keycloakConfig &&
+            infra.auth.keycloakConfig.authFlow === 'auth-code';
+        const hasToken = infra.token?.accessToken;
+
+        if (requiresKeycloakAuth && !hasToken && infra.auth?.keycloakConfig) {
+            try {
+                const result = await authenticateKeycloak(infra.auth.keycloakConfig);
+
+                // Update infrastructure with new token
+                const updatedInfra = {
+                    ...infra,
+                    token: {
+                        accessToken: result.accessToken,
+                        refreshToken: result.refreshToken,
+                        idToken: result.idToken,
+                        expiresAt: result.expiresAt,
+                    },
+                };
+                dispatchUpdateInfrastructure(updatedInfra);
+                setAuthenticationStatusForInfrastructure(infra.id, true);
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 4000,
+                    color: 'success',
+                    btnColor: 'buttonText',
+                    text: 'Successfully authenticated',
+                });
+            } catch (error: unknown) {
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 6000,
+                    color: 'warning',
+                    btnColor: 'buttonText',
+                    text: 'Authentication required for this infrastructure',
+                    extendedError: error instanceof Error ? error.message : 'Please authenticate to continue',
+                });
+            }
+        }
+        navigationStore.dispatchClearAASList();
+        navigationStore.dispatchClearTreeview();
+
+        // Trigger connection check for all components
+        if (connect) {
+            await connectComponents();
+        }
+
+        // Trigger reload of AAS list and treeview with data from new infrastructure
+        navigationStore.dispatchTriggerAASListReload();
+        navigationStore.dispatchTriggerTreeviewReload();
     }
 
     function dispatchAddInfrastructure(infrastructure: InfrastructureConfig): void {
@@ -568,21 +571,24 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     async function dispatchDeleteInfrastructure(infrastructureId: string): Promise<void> {
         const index = infrastructures.value.findIndex((i) => i.id === infrastructureId);
         if (index !== -1) {
+            const wasSelected = selectedInfrastructureId.value === infrastructureId;
             infrastructures.value.splice(index, 1);
 
             // If we deleted the selected infrastructure, select another one
-            if (selectedInfrastructureId.value === infrastructureId) {
+            if (wasSelected) {
                 if (infrastructures.value.length > 0) {
-                    selectedInfrastructureId.value = infrastructures.value[0].id;
+                    // Switch to first available infrastructure with full connection and reload
+                    await dispatchSelectInfrastructure(infrastructures.value[0].id);
                 } else {
                     // Create a new default infrastructure if none exist
                     const defaultInfra = await createDefaultInfrastructureFromEnv();
                     infrastructures.value.push(defaultInfra);
-                    selectedInfrastructureId.value = defaultInfra.id;
+                    await dispatchSelectInfrastructure(defaultInfra.id);
                 }
+            } else {
+                // Just save if we deleted a non-selected infrastructure
+                saveInfrastructuresToStorage();
             }
-
-            saveInfrastructuresToStorage();
         }
     }
 
