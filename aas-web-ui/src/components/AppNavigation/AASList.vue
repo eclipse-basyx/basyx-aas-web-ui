@@ -466,9 +466,6 @@
                 updateStatus();
             }, statusCheck.value.interval);
         }
-
-        // Don't initialize here - let the watcher handle it when the URL is set
-        // This prevents initializing with an empty or stale URL
     });
 
     onBeforeUnmount(() => {
