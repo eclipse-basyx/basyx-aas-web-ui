@@ -90,9 +90,8 @@
 
     // Methods
     async function onInfrastructureChange(infrastructureId: string): Promise<void> {
+        // dispatchSelectInfrastructure handles connection checking and data reload internally
         await infrastructureStore.dispatchSelectInfrastructure(infrastructureId);
-        // Check connections after switching infrastructure
-        await infrastructureStore.connectComponents();
         router.push({
             query: {},
         });

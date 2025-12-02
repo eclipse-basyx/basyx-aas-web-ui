@@ -254,18 +254,22 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             if (stored) {
                 const storage: InfrastructureStorage = JSON.parse(stored);
                 infrastructures.value = storage.infrastructures;
-                selectedInfrastructureId.value = storage.selectedInfrastructureId;
+                // Only set selectedInfrastructureId if it exists in the loaded infrastructures
+                if (
+                    storage.selectedInfrastructureId &&
+                    infrastructures.value.some((infra) => infra.id === storage.selectedInfrastructureId)
+                ) {
+                    selectedInfrastructureId.value = storage.selectedInfrastructureId;
+                } else {
+                    selectedInfrastructureId.value = null;
+                }
 
                 // Ensure at least one infrastructure is marked as default
                 const hasDefault = infrastructures.value.some((infra) => infra.isDefault);
                 if (!hasDefault && infrastructures.value.length > 0) {
-                    // If no default exists, mark the selected one (or first one) as default
-                    const defaultId = selectedInfrastructureId.value || infrastructures.value[0].id;
-                    const defaultInfra = infrastructures.value.find((infra) => infra.id === defaultId);
-                    if (defaultInfra) {
-                        defaultInfra.isDefault = true;
-                        saveInfrastructuresToStorage();
-                    }
+                    // Mark the first infrastructure as default without auto-selecting it
+                    infrastructures.value[0].isDefault = true;
+                    saveInfrastructuresToStorage();
                 }
 
                 console.warn('[InfrastructureStore] Loaded infrastructures from localStorage:', {
@@ -450,10 +454,11 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     }
 
     // Infrastructure Actions
-    async function dispatchSelectInfrastructure(infrastructureId: string): Promise<void> {
+    async function dispatchSelectInfrastructure(infrastructureId: string, connect: boolean = true): Promise<void> {
         const infra = infrastructures.value.find((i) => i.id === infrastructureId);
         if (infra) {
             selectedInfrastructureId.value = infrastructureId;
+
             saveInfrastructuresToStorage();
 
             // Check if infrastructure requires authentication and doesn't have a token
@@ -501,7 +506,13 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             navigationStore.dispatchClearTreeview();
 
             // Trigger connection check for all components
-            await connectComponents();
+            if (connect) {
+                await connectComponents();
+            }
+
+            // Trigger reload of AAS list and treeview with data from new infrastructure
+            navigationStore.dispatchTriggerAASListReload();
+            navigationStore.dispatchTriggerTreeviewReload();
         }
     }
 
@@ -756,6 +767,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         });
 
         await Promise.all(connectionPromises);
+        dispatchSelectInfrastructure(selectedInfra.id, false);
     }
 
     async function connectComponent(componentKey: keyof typeof basyxComponents): Promise<void> {
@@ -785,14 +797,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                 basyxComponent.loading = false;
 
                 if (response.success) {
-                    // Dispatch to the infrastructure store
-                    dispatchComponentURL(componentKey, basyxComponent.url);
-
-                    // Save to localStorage if endpoint config is available
-                    // if (endpointConfigAvailable.value) {
-                    //     window.localStorage.setItem(componentKey + 'URL', basyxComponent.url);
-                    // }
-
                     // Update the connected status
                     basyxComponent.connected = true;
                 } else {
@@ -819,21 +823,10 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                     basyxComponent.loading = false;
 
                     if (response.success) {
-                        // Dispatch to the infrastructure store
-                        dispatchComponentURL(componentKey, basyxComponent.url);
-
-                        // Save to localStorage if endpoint config is available
-                        // if (endpointConfigAvailable.value) {
-                        //     window.localStorage.setItem(componentKey + 'URL', basyxComponent.url);
-                        // }
-
                         // Update the connected status
                         basyxComponent.connected = true;
                     } else {
                         console.warn(context + ' (' + path + ') failed!');
-
-                        // Clear the URL in the infrastructure store
-                        dispatchComponentURL(componentKey, '');
 
                         // Remove from localStorage if endpoint config is available
                         if (endpointConfigAvailable.value) {
@@ -850,11 +843,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
 
                 // Clear the URL in the infrastructure store
                 dispatchComponentURL(componentKey, '');
-
-                // Remove from localStorage if endpoint config is available
-                if (endpointConfigAvailable.value) {
-                    window.localStorage.removeItem(componentKey + 'URL');
-                }
 
                 // Update the connected status
                 basyxComponent.connected = false;

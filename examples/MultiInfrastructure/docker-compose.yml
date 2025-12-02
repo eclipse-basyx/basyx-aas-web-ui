@@ -44,22 +44,6 @@ services:
     networks:
       - multiple-infrastructures
 
-  aas-web-ui-2:
-    image: eclipsebasyx/aas-gui:SNAPSHOT
-    container_name: aas-web-ui-2
-    extra_hosts:
-      - "keycloak.basyx.localhost:host-gateway"
-    ports:
-      - '3001:3000'
-    environment:
-      AAS_REGISTRY_PATH: http://localhost:9082/shell-descriptors
-      SUBMODEL_REGISTRY_PATH: http://localhost:9083/submodel-descriptors
-      AAS_REPO_PATH: http://localhost:9081/shells
-      SUBMODEL_REPO_PATH: http://localhost:9081/submodels
-      CD_REPO_PATH: http://localhost:9081/concept-descriptions
-      AAS_DISCOVERY_PATH: http://localhost:9084/lookup/shells
-    restart: unless-stopped
-
 networks:
   multiple-infrastructures:
     name: basyx-multi-infrastructures
