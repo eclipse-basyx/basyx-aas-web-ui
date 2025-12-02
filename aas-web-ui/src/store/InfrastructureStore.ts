@@ -381,9 +381,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                     setAuthenticationStatusForInfrastructure(selectedInfra.id, true);
 
                     // Notify other parts of the app about successful authentication
-                    // We'll need to import navigationStore for snackbar
-                    navigationStore.dispatchTriggerAASListReload();
-                    navigationStore.dispatchTriggerTreeviewReload();
                     navigationStore.dispatchSnackbar({
                         status: true,
                         timeout: 4000,
@@ -506,17 +503,16 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                 });
             }
         }
-        navigationStore.dispatchClearAASList();
-        navigationStore.dispatchClearTreeview();
 
-        // Trigger connection check for all components
+        // Only clear lists when actually switching infrastructure (connect=true)
+        // During initial load (connect=false), lists should not be cleared
         if (connect) {
+            navigationStore.dispatchClearAASList();
+            navigationStore.dispatchClearTreeview();
+            // Trigger connection check for all components
             await connectComponents();
         }
-
-        // Trigger reload of AAS list and treeview with data from new infrastructure
-        navigationStore.dispatchTriggerAASListReload();
-        navigationStore.dispatchTriggerTreeviewReload();
+        // Note: AAS list and treeview reload automatically via watchers when component URLs change
     }
 
     function dispatchAddInfrastructure(infrastructure: InfrastructureConfig): void {
