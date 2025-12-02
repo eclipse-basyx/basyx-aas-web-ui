@@ -847,9 +847,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                 basyxComponent.loading = false;
                 console.error(`Error connecting to ${basyxComponent.label}:`, error);
 
-                // Clear the URL in the infrastructure store
-                dispatchComponentURL(componentKey, '');
-
                 // Update the connected status
                 basyxComponent.connected = false;
             }
