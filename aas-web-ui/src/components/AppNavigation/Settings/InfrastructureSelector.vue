@@ -73,9 +73,6 @@
         return { icon: 'mdi-help-circle', color: 'grey' };
     });
 
-    // No need for onMounted connection check - connections are already established
-    // when the infrastructure store initializes
-
     // Watch for external changes to selected infrastructure
     watch(
         () => infrastructureStore.getSelectedInfrastructureId,

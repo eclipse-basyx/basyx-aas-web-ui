@@ -1,4 +1,3 @@
-import type { BaSyxComponentKey } from '@/types/BaSyx';
 import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 
@@ -7,7 +6,7 @@ export function useRequestHandling() {
     const infrastructureStore = useInfrastructureStore();
 
     function getRequest(path: string, context: string, disableMessage: boolean, headers: Headers = new Headers()): any {
-        headers = addAuthorizationHeader(headers, path); // Add the Authorization header
+        headers = addAuthorizationHeader(headers); // Add the Authorization header
         return fetch(path, { method: 'GET', headers: headers })
             .then(async (response) => {
                 // Check if the Server responded with content Hallo Rene
@@ -90,7 +89,7 @@ export function useRequestHandling() {
         isTSRequest: boolean = false
     ): any {
         if (!isTSRequest) {
-            headers = addAuthorizationHeader(headers, path); // Add the Authorization header
+            headers = addAuthorizationHeader(headers); // Add the Authorization header
         }
         return fetch(path, { method: 'POST', body: body, headers: headers })
             .then((response) => {
@@ -151,7 +150,7 @@ export function useRequestHandling() {
     }
 
     function putRequest(path: string, body: any, headers: Headers, context: string, disableMessage: boolean): any {
-        headers = addAuthorizationHeader(headers, path); // Add the Authorization header
+        headers = addAuthorizationHeader(headers); // Add the Authorization header
         return fetch(path, { method: 'PUT', body: body, headers: headers })
             .then((response) => {
                 // Check if the Server responded with content
@@ -200,7 +199,7 @@ export function useRequestHandling() {
     }
 
     function patchRequest(path: string, body: any, headers: Headers, context: string, disableMessage: boolean): any {
-        headers = addAuthorizationHeader(headers, path); // Add the Authorization header
+        headers = addAuthorizationHeader(headers); // Add the Authorization header
         return fetch(path, { method: 'PATCH', body: body, headers: headers })
             .then((response) => {
                 // Check if the Server responded with content
@@ -249,7 +248,7 @@ export function useRequestHandling() {
     }
 
     function deleteRequest(path: string, context: string, disableMessage: boolean): any {
-        return fetch(path, { method: 'DELETE', headers: addAuthorizationHeader(new Headers(), path) })
+        return fetch(path, { method: 'DELETE', headers: addAuthorizationHeader(new Headers()) })
             .then((response) => {
                 // Check if the Server responded with content
                 if (
@@ -293,91 +292,32 @@ export function useRequestHandling() {
             });
     }
 
-    function addAuthorizationHeader(headers: Headers, path: string): Headers {
+    function addAuthorizationHeader(headers: Headers): Headers {
         // Try to find which infrastructure component this request is for
         const selectedInfra = infrastructureStore.getSelectedInfrastructure;
 
-        // Debug logging (using warn to avoid lint errors)
-        if (process.env.NODE_ENV === 'development') {
-            console.warn('[RequestHandling] Adding auth header for path:', path);
-            console.warn('[RequestHandling] Selected infrastructure:', selectedInfra?.name);
-        }
-
         if (selectedInfra) {
-            // Check which component URL matches this request path
-            const componentKey = findMatchingComponent(path, selectedInfra);
-
-            if (process.env.NODE_ENV === 'development') {
-                console.warn('[RequestHandling] Matched component:', componentKey);
-            }
-
             // Use infrastructure-level authentication if configured
             const auth = selectedInfra.auth;
 
-            if (process.env.NODE_ENV === 'development') {
-                console.warn('[RequestHandling] Auth config:', {
-                    securityType: auth?.securityType,
-                    hasToken: !!selectedInfra.token?.accessToken,
-                    token: selectedInfra.token,
-                });
-            }
-
             if (auth && auth.securityType !== 'No Authentication') {
                 if (auth.securityType === 'Bearer Token' && auth.bearerToken?.token) {
-                    if (process.env.NODE_ENV === 'development') {
-                        console.warn('[RequestHandling] Using Bearer Token');
-                    }
                     headers.set('Authorization', 'Bearer ' + auth.bearerToken.token);
                     return headers;
                 } else if (auth.securityType === 'Basic Authentication' && auth.basicAuth) {
-                    if (process.env.NODE_ENV === 'development') {
-                        console.warn('[RequestHandling] Using Basic Auth');
-                    }
                     headers.set(
                         'Authorization',
                         'Basic ' + btoa(auth.basicAuth.username + ':' + auth.basicAuth.password)
                     );
                     return headers;
                 } else if (auth.securityType === 'Keycloak' && selectedInfra.token?.accessToken) {
-                    // Use stored token from infrastructure
-                    if (process.env.NODE_ENV === 'development') {
-                        console.warn(
-                            '[RequestHandling] Using Keycloak token:',
-                            selectedInfra.token.accessToken.substring(0, 20) + '...'
-                        );
-                    }
                     headers.set('Authorization', 'Bearer ' + selectedInfra.token.accessToken);
                     return headers;
-                } else {
-                    if (process.env.NODE_ENV === 'development') {
-                        console.warn('[RequestHandling] Auth configured but no valid credentials/token found');
-                    }
                 }
             }
         }
 
         return headers;
-    }
-
-    function findMatchingComponent(path: string, infrastructure: any): BaSyxComponentKey | null {
-        // Try to match the request path to one of the infrastructure components
-        const componentKeys: BaSyxComponentKey[] = [
-            'AASDiscovery',
-            'AASRegistry',
-            'SubmodelRegistry',
-            'AASRepo',
-            'SubmodelRepo',
-            'ConceptDescriptionRepo',
-        ];
-
-        for (const key of componentKeys) {
-            const componentUrl = infrastructure.components[key].url;
-            if (componentUrl && componentUrl.trim() !== '' && path.startsWith(componentUrl.trim())) {
-                return key;
-            }
-        }
-
-        return null;
     }
 
     function errorHandler(errorData: any, context: string): void {
