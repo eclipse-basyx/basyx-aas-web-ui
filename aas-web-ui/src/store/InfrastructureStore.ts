@@ -64,14 +64,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     const SubmodelRepoURL = ref<string>('');
     const ConceptDescriptionRepoURL = ref<string>('');
 
-    // Ensure refs are truly empty on store initialization
-    AASDiscoveryURL.value = '';
-    AASRegistryURL.value = '';
-    SubmodelRegistryURL.value = '';
-    AASRepoURL.value = '';
-    SubmodelRepoURL.value = '';
-    ConceptDescriptionRepoURL.value = '';
-
     // Reactive BaSyx Components Configurations
     const basyxComponents = reactive<Record<BaSyxComponentKey, BaSyxComponent>>({
         AASDiscovery: {
