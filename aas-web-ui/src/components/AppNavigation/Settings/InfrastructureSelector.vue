@@ -25,7 +25,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, onMounted, ref, watch } from 'vue';
+    import { computed, ref, watch } from 'vue';
     import { useRouter } from 'vue-router';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
 
@@ -73,13 +73,6 @@
         return { icon: 'mdi-help-circle', color: 'grey' };
     });
 
-    // On mount, check connections for the selected infrastructure
-    onMounted(async () => {
-        if (selectedInfraId.value) {
-            await infrastructureStore.connectComponents();
-        }
-    });
-
     // Watch for external changes to selected infrastructure
     watch(
         () => infrastructureStore.getSelectedInfrastructureId,
@@ -90,9 +83,8 @@
 
     // Methods
     async function onInfrastructureChange(infrastructureId: string): Promise<void> {
+        // dispatchSelectInfrastructure handles connection checking and data reload internally
         await infrastructureStore.dispatchSelectInfrastructure(infrastructureId);
-        // Check connections after switching infrastructure
-        await infrastructureStore.connectComponents();
         router.push({
             query: {},
         });

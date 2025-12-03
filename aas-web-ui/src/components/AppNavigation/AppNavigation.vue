@@ -213,9 +213,6 @@
             </div>
         </v-menu>
     </v-container>
-
-    <!-- Infrastructure Management Dialog -->
-    <InfrastructureManagement v-model:open="infrastructureManagementDialog"></InfrastructureManagement>
 </template>
 
 <script lang="ts" setup>

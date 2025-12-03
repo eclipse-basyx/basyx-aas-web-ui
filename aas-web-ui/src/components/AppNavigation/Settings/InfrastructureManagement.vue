@@ -427,7 +427,7 @@
     // Watch props
     watch(
         () => props.open,
-        (val) => {
+        async (val) => {
             dialogOpen.value = val;
             // If opening and edit mode is requested, automatically open edit for current infrastructure
             if (val && infrastructureStore.getOpenInfrastructureEditMode) {
@@ -435,6 +435,10 @@
                 if (currentInfra) {
                     editInfrastructure(currentInfra);
                 }
+            }
+            // Test connections for all infrastructures when dialog opens
+            if (val) {
+                await testAllInfrastructures();
             }
         }
     );
@@ -446,7 +450,7 @@
     });
 
     // Lifecycle
-    onMounted(async () => {
+    onMounted(() => {
         const defaultInfra = infrastructures.value.find((infra) => infra.isDefault);
         if (defaultInfra) {
             defaultInfrastructure.value = defaultInfra.id;
@@ -456,9 +460,6 @@
             defaultInfrastructure.value = firstInfra.id;
             infrastructureStore.dispatchSetDefaultInfrastructure(firstInfra.id);
         }
-
-        // Test connections for all infrastructures on mount
-        await testAllInfrastructures();
     });
 
     function changeDefault(newDefaultId: string | null): void {

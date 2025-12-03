@@ -54,14 +54,16 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     const triggerInfrastructureDialog = ref(false);
     const openInfrastructureEditMode = ref(false);
     const user = ref<UserData | null>(null);
+    const isAuthenticating = ref(false);
 
     // Component URL States
-    const AASDiscoveryURL = ref('');
-    const AASRegistryURL = ref('');
-    const SubmodelRegistryURL = ref('');
-    const AASRepoURL = ref('');
-    const SubmodelRepoURL = ref('');
-    const ConceptDescriptionRepoURL = ref('');
+    // Force reset to empty strings to prevent any stale values from previous sessions
+    const AASDiscoveryURL = ref<string>('');
+    const AASRegistryURL = ref<string>('');
+    const SubmodelRegistryURL = ref<string>('');
+    const AASRepoURL = ref<string>('');
+    const SubmodelRepoURL = ref<string>('');
+    const ConceptDescriptionRepoURL = ref<string>('');
 
     // Reactive BaSyx Components Configurations
     const basyxComponents = reactive<Record<BaSyxComponentKey, BaSyxComponent>>({
@@ -137,6 +139,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     const getSubmodelRepoURL = computed(() => SubmodelRepoURL.value);
     const getConceptDescriptionRepoURL = computed(() => ConceptDescriptionRepoURL.value);
     const getBasyxComponents = computed(() => basyxComponents);
+    const getIsAuthenticating = computed(() => isAuthenticating.value);
 
     function getDefaultInfrastructureId(): string {
         // Look for infrastructure marked as default
@@ -253,30 +256,33 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             const stored = window.localStorage.getItem('basyxInfrastructures');
             if (stored) {
                 const storage: InfrastructureStorage = JSON.parse(stored);
+
+                // Determine which infrastructure should be selected BEFORE setting infrastructures array
+                // This prevents the watcher from triggering with wrong infrastructure
+                let targetInfraId: string | null = null;
+                if (
+                    storage.selectedInfrastructureId &&
+                    storage.infrastructures.some((infra) => infra.id === storage.selectedInfrastructureId)
+                ) {
+                    targetInfraId = storage.selectedInfrastructureId;
+                } else if (storage.infrastructures.length > 0) {
+                    // Fallback: select default infrastructure or first available one
+                    const defaultInfra = storage.infrastructures.find((infra) => infra.isDefault);
+                    targetInfraId = defaultInfra ? defaultInfra.id : storage.infrastructures[0].id;
+                }
+
+                // Set selected ID first, then infrastructures array
+                // This ensures watcher triggers only once with correct infrastructure
+                selectedInfrastructureId.value = targetInfraId;
                 infrastructures.value = storage.infrastructures;
-                selectedInfrastructureId.value = storage.selectedInfrastructureId;
 
                 // Ensure at least one infrastructure is marked as default
                 const hasDefault = infrastructures.value.some((infra) => infra.isDefault);
                 if (!hasDefault && infrastructures.value.length > 0) {
-                    // If no default exists, mark the selected one (or first one) as default
-                    const defaultId = selectedInfrastructureId.value || infrastructures.value[0].id;
-                    const defaultInfra = infrastructures.value.find((infra) => infra.id === defaultId);
-                    if (defaultInfra) {
-                        defaultInfra.isDefault = true;
-                        saveInfrastructuresToStorage();
-                    }
+                    // Mark the first infrastructure as default without auto-selecting it
+                    infrastructures.value[0].isDefault = true;
+                    saveInfrastructuresToStorage();
                 }
-
-                console.warn('[InfrastructureStore] Loaded infrastructures from localStorage:', {
-                    count: infrastructures.value.length,
-                    selected: selectedInfrastructureId.value,
-                    infrastructures: infrastructures.value.map((infra) => ({
-                        id: infra.id,
-                        name: infra.name,
-                        hasToken: !!infra.token?.accessToken,
-                    })),
-                });
             } else {
                 // Migration from legacy storage
                 const legacyInfra = createInfrastructureFromLegacyStorage();
@@ -313,19 +319,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                 selectedInfrastructureId: selectedInfrastructureId.value,
             };
 
-            if (process.env.NODE_ENV === 'development') {
-                console.warn(infrastructures);
-                console.warn('[InfrastructureStore] Saving infrastructures to localStorage:', {
-                    count: storage.infrastructures.length,
-                    selected: storage.selectedInfrastructureId,
-                    infrastructuresWithTokens: storage.infrastructures.map((infra) => ({
-                        id: infra.id,
-                        name: infra.name,
-                        hasToken: !!infra.token?.accessToken,
-                    })),
-                });
-            }
-
             localStorage.setItem('basyxInfrastructures', JSON.stringify(storage));
         } catch (error) {
             console.error('Error saving infrastructures to storage:', error);
@@ -346,6 +339,17 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     // Initialize infrastructures on store creation
     loadInfrastructuresFromStorage();
 
+    // Explicitly set URLs from selected infrastructure before defining watcher
+    const initialInfra = getSelectedInfrastructure.value;
+    if (initialInfra) {
+        AASDiscoveryURL.value = initialInfra.components.AASDiscovery.url;
+        AASRegistryURL.value = initialInfra.components.AASRegistry.url;
+        SubmodelRegistryURL.value = initialInfra.components.SubmodelRegistry.url;
+        AASRepoURL.value = initialInfra.components.AASRepo.url;
+        SubmodelRepoURL.value = initialInfra.components.SubmodelRepo.url;
+        ConceptDescriptionRepoURL.value = initialInfra.components.ConceptDescriptionRepo.url;
+    }
+
     // Check if selected infrastructure needs authentication on load
     (async () => {
         await nextTick(); // Wait for Vue reactivity
@@ -361,6 +365,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                 // Directly trigger authentication for auth-code flow
                 const { authenticateKeycloak } = await import('@/composables/KeycloakAuth');
                 try {
+                    isAuthenticating.value = true;
                     const result = await authenticateKeycloak(selectedInfra.auth.keycloakConfig);
 
                     // Update infrastructure with new token
@@ -376,10 +381,10 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                     dispatchUpdateInfrastructure(updatedInfra);
                     setAuthenticationStatusForInfrastructure(selectedInfra.id, true);
 
-                    // Notify other parts of the app about successful authentication
-                    // We'll need to import navigationStore for snackbar
-                    navigationStore.dispatchTriggerAASListReload();
-                    navigationStore.dispatchTriggerTreeviewReload();
+                    // Wait for Vue reactivity to process the infrastructure update
+                    await nextTick();
+
+                    // Notify about successful authentication
                     navigationStore.dispatchSnackbar({
                         status: true,
                         timeout: 4000,
@@ -390,6 +395,8 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                 } catch (error: unknown) {
                     // Silently fail on page load - user can manually authenticate later
                     console.warn('Authentication on load failed:', error);
+                } finally {
+                    isAuthenticating.value = false;
                 }
             }
         }
@@ -399,22 +406,19 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         await connectComponents();
     })();
 
-    // Watch for changes to sync URL refs with selected infrastructure
-    watch(
-        [getSelectedInfrastructure],
-        () => {
-            const infra = getSelectedInfrastructure.value;
-            if (infra) {
-                AASDiscoveryURL.value = infra.components.AASDiscovery.url;
-                AASRegistryURL.value = infra.components.AASRegistry.url;
-                SubmodelRegistryURL.value = infra.components.SubmodelRegistry.url;
-                AASRepoURL.value = infra.components.AASRepo.url;
-                SubmodelRepoURL.value = infra.components.SubmodelRepo.url;
-                ConceptDescriptionRepoURL.value = infra.components.ConceptDescriptionRepo.url;
-            }
-        },
-        { immediate: true }
-    );
+    // Watch for changes to selected infrastructure ID (not the infrastructure object itself)
+    // This prevents triggering on token refreshes or other infrastructure mutations
+    watch(selectedInfrastructureId, (newId) => {
+        const infra = infrastructures.value.find((i) => i.id === newId);
+        if (infra) {
+            AASDiscoveryURL.value = infra.components.AASDiscovery.url;
+            AASRegistryURL.value = infra.components.AASRegistry.url;
+            SubmodelRegistryURL.value = infra.components.SubmodelRegistry.url;
+            AASRepoURL.value = infra.components.AASRepo.url;
+            SubmodelRepoURL.value = infra.components.SubmodelRepo.url;
+            ConceptDescriptionRepoURL.value = infra.components.ConceptDescriptionRepo.url;
+        }
+    });
 
     // Actions
     function dispatchComponentURL(componentKey: BaSyxComponentKey, url: string): void {
@@ -450,59 +454,76 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     }
 
     // Infrastructure Actions
-    async function dispatchSelectInfrastructure(infrastructureId: string): Promise<void> {
+    async function dispatchSelectInfrastructure(infrastructureId: string, connect: boolean = true): Promise<void> {
         const infra = infrastructures.value.find((i) => i.id === infrastructureId);
-        if (infra) {
-            selectedInfrastructureId.value = infrastructureId;
-            saveInfrastructuresToStorage();
+        if (!infra) {
+            console.error(`[InfrastructureStore] Infrastructure with ID ${infrastructureId} not found`);
+            return;
+        }
 
-            // Check if infrastructure requires authentication and doesn't have a token
-            const requiresKeycloakAuth =
-                infra.auth?.securityType === 'Keycloak' &&
-                infra.auth.keycloakConfig &&
-                infra.auth.keycloakConfig.authFlow === 'auth-code';
-            const hasToken = infra.token?.accessToken;
+        selectedInfrastructureId.value = infrastructureId;
 
-            if (requiresKeycloakAuth && !hasToken && infra.auth?.keycloakConfig) {
-                try {
-                    const result = await authenticateKeycloak(infra.auth.keycloakConfig);
+        saveInfrastructuresToStorage();
 
-                    // Update infrastructure with new token
-                    const updatedInfra = {
-                        ...infra,
-                        token: {
-                            accessToken: result.accessToken,
-                            refreshToken: result.refreshToken,
-                            idToken: result.idToken,
-                            expiresAt: result.expiresAt,
-                        },
-                    };
-                    dispatchUpdateInfrastructure(updatedInfra);
-                    setAuthenticationStatusForInfrastructure(infra.id, true);
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 4000,
-                        color: 'success',
-                        btnColor: 'buttonText',
-                        text: 'Successfully authenticated',
-                    });
-                } catch (error: unknown) {
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 6000,
-                        color: 'warning',
-                        btnColor: 'buttonText',
-                        text: 'Authentication required for this infrastructure',
-                        extendedError: error instanceof Error ? error.message : 'Please authenticate to continue',
-                    });
-                }
+        // Check if infrastructure requires authentication and doesn't have a token
+        const requiresKeycloakAuth =
+            infra.auth?.securityType === 'Keycloak' &&
+            infra.auth.keycloakConfig &&
+            infra.auth.keycloakConfig.authFlow === 'auth-code';
+        const hasToken = infra.token?.accessToken;
+
+        if (requiresKeycloakAuth && !hasToken && infra.auth?.keycloakConfig) {
+            try {
+                isAuthenticating.value = true;
+                const result = await authenticateKeycloak(infra.auth.keycloakConfig);
+
+                // Update infrastructure with new token
+                const updatedInfra = {
+                    ...infra,
+                    token: {
+                        accessToken: result.accessToken,
+                        refreshToken: result.refreshToken,
+                        idToken: result.idToken,
+                        expiresAt: result.expiresAt,
+                    },
+                };
+                dispatchUpdateInfrastructure(updatedInfra);
+                setAuthenticationStatusForInfrastructure(infra.id, true);
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 4000,
+                    color: 'success',
+                    btnColor: 'buttonText',
+                    text: 'Successfully authenticated',
+                });
+
+                // Trigger reload after successful authentication
+                await nextTick();
+                navigationStore.dispatchTriggerAASListReload();
+                navigationStore.dispatchTriggerTreeviewReload();
+            } catch (error: unknown) {
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 6000,
+                    color: 'warning',
+                    btnColor: 'buttonText',
+                    text: 'Authentication required for this infrastructure',
+                    extendedError: error instanceof Error ? error.message : 'Please authenticate to continue',
+                });
+            } finally {
+                isAuthenticating.value = false;
             }
+        }
+
+        // Only clear lists when actually switching infrastructure (connect=true)
+        // During initial load (connect=false), lists should not be cleared
+        if (connect) {
             navigationStore.dispatchClearAASList();
             navigationStore.dispatchClearTreeview();
-
             // Trigger connection check for all components
             await connectComponents();
         }
+        // Note: AAS list and treeview reload automatically via watchers when component URLs change
     }
 
     function dispatchAddInfrastructure(infrastructure: InfrastructureConfig): void {
@@ -557,21 +578,24 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     async function dispatchDeleteInfrastructure(infrastructureId: string): Promise<void> {
         const index = infrastructures.value.findIndex((i) => i.id === infrastructureId);
         if (index !== -1) {
+            const wasSelected = selectedInfrastructureId.value === infrastructureId;
             infrastructures.value.splice(index, 1);
 
             // If we deleted the selected infrastructure, select another one
-            if (selectedInfrastructureId.value === infrastructureId) {
+            if (wasSelected) {
                 if (infrastructures.value.length > 0) {
-                    selectedInfrastructureId.value = infrastructures.value[0].id;
+                    // Switch to first available infrastructure with full connection and reload
+                    await dispatchSelectInfrastructure(infrastructures.value[0].id);
                 } else {
                     // Create a new default infrastructure if none exist
                     const defaultInfra = await createDefaultInfrastructureFromEnv();
                     infrastructures.value.push(defaultInfra);
-                    selectedInfrastructureId.value = defaultInfra.id;
+                    await dispatchSelectInfrastructure(defaultInfra.id);
                 }
+            } else {
+                // Just save if we deleted a non-selected infrastructure
+                saveInfrastructuresToStorage();
             }
-
-            saveInfrastructuresToStorage();
         }
     }
 
@@ -746,8 +770,14 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             const infraUrl = selectedInfra.components[repoKey]?.url || '';
 
             if (infraUrl.trim() !== '') {
-                // Set the component URL from the infrastructure
-                basyxComponents[repoKey].url = infraUrl;
+                // Normalize URLs for comparison (trim and remove trailing slash)
+                const currentUrl = basyxComponents[repoKey].url.trim().replace(/\/$/, '');
+                const newUrl = infraUrl.trim().replace(/\/$/, '');
+
+                // Only set URL if it has actually changed to avoid triggering watchers unnecessarily
+                if (currentUrl !== newUrl) {
+                    basyxComponents[repoKey].url = infraUrl;
+                }
                 connectionPromises.push(connectComponent(repoKey));
             } else {
                 // If infrastructure has no URL for this component, mark as not connected
@@ -785,14 +815,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                 basyxComponent.loading = false;
 
                 if (response.success) {
-                    // Dispatch to the infrastructure store
-                    dispatchComponentURL(componentKey, basyxComponent.url);
-
-                    // Save to localStorage if endpoint config is available
-                    // if (endpointConfigAvailable.value) {
-                    //     window.localStorage.setItem(componentKey + 'URL', basyxComponent.url);
-                    // }
-
                     // Update the connected status
                     basyxComponent.connected = true;
                 } else {
@@ -819,21 +841,10 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                     basyxComponent.loading = false;
 
                     if (response.success) {
-                        // Dispatch to the infrastructure store
-                        dispatchComponentURL(componentKey, basyxComponent.url);
-
-                        // Save to localStorage if endpoint config is available
-                        // if (endpointConfigAvailable.value) {
-                        //     window.localStorage.setItem(componentKey + 'URL', basyxComponent.url);
-                        // }
-
                         // Update the connected status
                         basyxComponent.connected = true;
                     } else {
                         console.warn(context + ' (' + path + ') failed!');
-
-                        // Clear the URL in the infrastructure store
-                        dispatchComponentURL(componentKey, '');
 
                         // Remove from localStorage if endpoint config is available
                         if (endpointConfigAvailable.value) {
@@ -847,14 +858,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             } catch (error) {
                 basyxComponent.loading = false;
                 console.error(`Error connecting to ${basyxComponent.label}:`, error);
-
-                // Clear the URL in the infrastructure store
-                dispatchComponentURL(componentKey, '');
-
-                // Remove from localStorage if endpoint config is available
-                if (endpointConfigAvailable.value) {
-                    window.localStorage.removeItem(componentKey + 'URL');
-                }
 
                 // Update the connected status
                 basyxComponent.connected = false;
@@ -943,6 +946,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         getConceptDescriptionRepoURL,
         getBasyxComponents,
         getDefaultInfrastructureId,
+        getIsAuthenticating,
 
         // Actions
         dispatchComponentURL,

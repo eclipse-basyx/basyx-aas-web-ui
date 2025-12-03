@@ -393,13 +393,17 @@
     const allowUploading = computed(() => envStore.getAllowUploading); // Check if the current environment config allows uploading shells
     const statusCheck = computed(() => navigationStore.getStatusCheck);
     const copyIconAsRef = computed(() => copyIcon);
+    const isAuthenticating = computed(() => infrastructureStore.getIsAuthenticating); // Check if authentication is in progress
 
     // Watchers
     watch(
         () => aasRegistryURL.value,
-        () => {
-            initialize();
-        }
+        (newVal) => {
+            if (newVal && newVal.trim() !== '' && !isAuthenticating.value) {
+                initialize();
+            }
+        },
+        { immediate: true }
     );
 
     watch(
@@ -463,8 +467,6 @@
                 updateStatus();
             }, statusCheck.value.interval);
         }
-
-        initialize();
     });
 
     onBeforeUnmount(() => {
