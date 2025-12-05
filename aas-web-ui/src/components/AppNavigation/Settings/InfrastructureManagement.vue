@@ -202,6 +202,104 @@
                                             class="mb-2"></v-textarea>
                                     </template>
 
+                                    <!-- OAuth2 -->
+                                    <template v-if="editingInfrastructure.auth!.securityType === 'OAuth2'">
+                                        <v-select
+                                            v-model="oAuth2AuthFlow"
+                                            :items="keycloakAuthFlowOptions"
+                                            item-title="text"
+                                            item-value="value"
+                                            label="Auth Flow"
+                                            variant="outlined"
+                                            density="compact"
+                                            class="mb-2"></v-select>
+                                        <v-text-field
+                                            v-model="oauth2Data.host"
+                                            label="OAuth2 Host"
+                                            variant="outlined"
+                                            density="compact"
+                                            placeholder="https://oauth.example.com"
+                                            class="mb-2"></v-text-field>
+                                        <v-text-field
+                                            v-model="oauth2Data.clientId"
+                                            label="Client ID"
+                                            variant="outlined"
+                                            density="compact"
+                                            class="mb-2"></v-text-field>
+                                        <v-text-field
+                                            v-if="oAuth2AuthFlow === 'client-credentials'"
+                                            v-model="oauth2Data.clientSecret"
+                                            label="Client Secret"
+                                            type="password"
+                                            variant="outlined"
+                                            density="compact"
+                                            class="mb-2"></v-text-field>
+                                        <v-text-field
+                                            v-if="oAuth2AuthFlow === 'password'"
+                                            v-model="oauth2Data.username"
+                                            label="Username"
+                                            variant="outlined"
+                                            density="compact"
+                                            class="mb-2"></v-text-field>
+                                        <v-text-field
+                                            v-if="oAuth2AuthFlow === 'password'"
+                                            v-model="oauth2Data.password"
+                                            label="Password"
+                                            type="password"
+                                            variant="outlined"
+                                            density="compact"
+                                            class="mb-2"></v-text-field>
+                                        <v-text-field
+                                            v-model="oauth2Data.scope"
+                                            label="Scope (optional)"
+                                            variant="outlined"
+                                            density="compact"
+                                            class="mb-2"></v-text-field>
+                                        <v-row v-if="oAuth2AuthFlow === 'client-credentials'" class="mb-2">
+                                            <v-col>
+                                                <v-btn
+                                                    v-if="!oauth2Token"
+                                                    block
+                                                    variant="tonal"
+                                                    color="primary"
+                                                    :loading="oauth2Loading"
+                                                    @click="authenticateOAuth2()">
+                                                    Authenticate
+                                                </v-btn>
+                                                <v-btn
+                                                    v-else
+                                                    block
+                                                    variant="tonal"
+                                                    color="success"
+                                                    prepend-icon="mdi-check-circle"
+                                                    @click="authenticateOAuth2()">
+                                                    Authenticated
+                                                </v-btn>
+                                            </v-col>
+                                        </v-row>
+                                        <v-row v-if="oAuth2AuthFlow === 'auth-code'" class="mb-2">
+                                            <v-col>
+                                                <v-btn
+                                                    block
+                                                    variant="tonal"
+                                                    color="primary"
+                                                    prepend-icon="mdi-login"
+                                                    @click="authenticateOAuth2()">
+                                                    Login with OAuth2 Provider
+                                                </v-btn>
+                                            </v-col>
+                                        </v-row>
+                                        <v-alert
+                                            v-if="oAuth2AuthFlow === 'auth-code'"
+                                            type="info"
+                                            variant="tonal"
+                                            density="compact"
+                                            class="mb-2">
+                                            Configure the redirect URI in your OAuth2 provider to:
+                                            {{ getRedirectUri() }}
+                                        </v-alert>
+                                    </template>
+
                                     <!-- Keycloak -->
                                     <template v-if="editingInfrastructure.auth!.securityType === 'Keycloak'">
                                         <v-text-field
@@ -343,6 +441,7 @@
     import type { InfrastructureConfig, KeycloakConnectionData, SecurityType } from '@/types/Infrastructure';
     import { computed, onMounted, ref, watch } from 'vue';
     import { authenticateKeycloak } from '@/composables/KeycloakAuth';
+    import { authenticateOAuth2ClientCredentials, initiateOAuth2AuthorizationCodeFlow } from '@/composables/OAuth2Auth';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
@@ -389,7 +488,13 @@
         'ConceptDescriptionRepo',
     ];
 
-    const securityTypes: SecurityType[] = ['No Authentication', 'Basic Authentication', 'Bearer Token', 'Keycloak'];
+    const securityTypes: SecurityType[] = [
+        'No Authentication',
+        'Basic Authentication',
+        'Bearer Token',
+        'Keycloak',
+        'OAuth2',
+    ];
     const keycloakAuthFlowOptions = [
         { text: 'User Login (Authorization Code Flow)', value: 'auth-code' },
         { text: 'Service Account (Client Credentials)', value: 'client-credentials' },
@@ -416,6 +521,29 @@
     const keycloakLoading = ref<boolean>(false);
     const keycloakError = ref<string>('');
     const reauthenticating = ref(false);
+    const oauth2Data = ref<{
+        scope: string;
+        host: string;
+        clientId: string;
+        clientSecret: string;
+        username: string;
+        password: string;
+    }>({
+        scope: '',
+        host: '',
+        clientId: '',
+        clientSecret: '',
+        username: '',
+        password: '',
+    });
+    const oAuth2AuthFlow = ref<string>('');
+    const oauth2Token = ref<{
+        accessToken: string;
+        refreshToken?: string;
+        expiresAt?: number;
+        idToken?: string;
+    } | null>(null);
+    const oauth2Loading = ref<boolean>(false);
 
     // Component connection testing states
     const componentConnectionStatus = ref<Record<BaSyxComponentKey, boolean | null>>(
@@ -524,6 +652,16 @@
         keycloakUsername.value = '';
         keycloakPassword.value = '';
         keycloakToken.value = null;
+        oauth2Data.value = {
+            scope: '',
+            host: '',
+            clientId: '',
+            clientSecret: '',
+            username: '',
+            password: '',
+        };
+        oAuth2AuthFlow.value = '';
+        oauth2Token.value = null;
 
         // Reset component connection status
         componentKeys.forEach((key) => {
@@ -551,6 +689,25 @@
             // Load existing token if available
             if (token) {
                 keycloakToken.value = {
+                    accessToken: token.accessToken,
+                    refreshToken: token.refreshToken,
+                    expiresAt: token.expiresAt,
+                    idToken: token.idToken,
+                };
+            }
+        }
+        if (auth.oauth2) {
+            oauth2Data.value.host = auth.oauth2.host || '';
+            oauth2Data.value.clientId = auth.oauth2.clientId || '';
+            oauth2Data.value.clientSecret = auth.oauth2.clientSecret || '';
+            oauth2Data.value.scope = auth.oauth2.scope || '';
+            oauth2Data.value.username = '';
+            oauth2Data.value.password = '';
+            oAuth2AuthFlow.value = auth.oauth2.authFlow || 'client-credentials';
+
+            // Load existing token if available
+            if (token) {
+                oauth2Token.value = {
                     accessToken: token.accessToken,
                     refreshToken: token.refreshToken,
                     expiresAt: token.expiresAt,
@@ -591,6 +748,23 @@
                     accessToken: keycloakToken.value.accessToken,
                     refreshToken: keycloakToken.value.refreshToken,
                     expiresAt: keycloakToken.value.expiresAt,
+                };
+            }
+        } else if (auth.securityType === 'OAuth2') {
+            auth.oauth2 = {
+                host: oauth2Data.value.host || '',
+                clientId: oauth2Data.value.clientId || '',
+                clientSecret: oauth2Data.value.clientSecret || '',
+                scope: oauth2Data.value.scope || '',
+                authFlow: oAuth2AuthFlow.value as 'client-credentials' | 'authorization-code',
+            };
+
+            // Save token data if authenticated
+            if (oauth2Token.value) {
+                infra.token = {
+                    accessToken: oauth2Token.value.accessToken,
+                    refreshToken: oauth2Token.value.refreshToken,
+                    expiresAt: oauth2Token.value.expiresAt,
                 };
             }
         }
@@ -710,6 +884,25 @@
                             text: 'Bearer Token missing',
                         });
                     }
+                } else if (auth.securityType === 'OAuth2') {
+                    // Re-authenticate OAuth2
+                    await authenticateOAuth2();
+
+                    // Check if authentication was successful
+                    if (oauth2Token.value?.accessToken) {
+                        // Save the updated token to the infrastructure and persist to localStorage
+                        await saveAuthDataToInfrastructure(editingInfrastructure.value);
+                        infrastructureStore.dispatchUpdateInfrastructure(editingInfrastructure.value);
+                        await saveInfrastructure();
+
+                        navigationStore.dispatchSnackbar({
+                            status: true,
+                            timeout: 4000,
+                            color: 'success',
+                            btnColor: 'buttonText',
+                            text: 'Successfully re-authenticated OAuth2 and saved to storage',
+                        });
+                    }
                 }
             }
         } catch (error) {
@@ -768,6 +961,10 @@
         return !!value || 'This field is required';
     }
 
+    function getRedirectUri(): string {
+        return `${window.location.origin}/oauth2/callback`;
+    }
+
     // Test individual component connection
     async function testComponentConnection(componentKey: BaSyxComponentKey): Promise<void> {
         const url = editingInfrastructure.value.components[componentKey].url;
@@ -820,6 +1017,125 @@
         // Switch back to the originally selected infrastructure
         if (originalInfrastructureId) {
             await infrastructureStore.dispatchSelectInfrastructure(originalInfrastructureId);
+        }
+    }
+
+    type OAuth2Config = {
+        host: string;
+        clientId: string;
+        clientSecret?: string;
+        scope?: string;
+    };
+
+    async function authenticateOAuth2(flow: string, config: OAuth2Config): Promise<void> {
+        if (!config.host || !config.clientId) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Please fill in OAuth2 host and client ID',
+            });
+            return;
+        }
+
+        if (flow === 'client-credentials') {
+            if (!config.clientSecret) {
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 4000,
+                    color: 'error',
+                    btnColor: 'buttonText',
+                    text: 'Client secret is required for client credentials flow',
+                });
+                return;
+            }
+
+            oauth2Loading.value = true;
+            try {
+                const token = await authenticateOAuth2ClientCredentials({
+                    host: config.host,
+                    clientId: config.clientId,
+                    clientSecret: config.clientSecret,
+                    scope: config.scope || '',
+                });
+
+                // Store token in local state
+                oauth2Token.value = {
+                    accessToken: token.accessToken,
+                    refreshToken: token.refreshToken,
+                    expiresAt: token.expiresAt,
+                    idToken: token.idToken,
+                };
+
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 4000,
+                    color: 'success',
+                    btnColor: 'buttonText',
+                    text: 'OAuth2 authentication successful. Save infrastructure to persist.',
+                });
+
+                navigationStore.dispatchTriggerAASListReload();
+                navigationStore.dispatchTriggerTreeviewReload();
+            } catch (error) {
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 8000,
+                    color: 'error',
+                    btnColor: 'buttonText',
+                    text: 'OAuth2 authentication failed',
+                    extendedError: error instanceof Error ? error.message : 'Unknown error occurred',
+                });
+            } finally {
+                oauth2Loading.value = false;
+            }
+        } else if (oAuth2AuthFlow.value === 'auth-code') {
+            // Authorization Code Flow with PKCE
+            oauth2Loading.value = true;
+            console.log('Initiating OAuth2 Authorization Code Flow');
+            try {
+                // Fetch well-known configuration to get authorization endpoint
+                const wellKnownUrl = `${config.host}/.well-known/openid-configuration`;
+                const wellKnownResponse = await fetch(wellKnownUrl);
+
+                if (!wellKnownResponse.ok) {
+                    throw new Error('Failed to fetch OpenID configuration');
+                }
+
+                const wellKnownConfig = await wellKnownResponse.json();
+                const authorizationEndpoint = wellKnownConfig.authorization_endpoint;
+
+                if (!authorizationEndpoint) {
+                    throw new Error('Authorization endpoint not found in OpenID configuration');
+                }
+
+                // Use infrastructure ID as state to identify which infrastructure is being authenticated
+                const state = editingInfrastructure.value.id;
+
+                // Save the infrastructure before initiating flow (so it's available after redirect)
+                await saveAuthDataToInfrastructure(editingInfrastructure.value);
+                infrastructureStore.dispatchUpdateInfrastructure(editingInfrastructure.value);
+
+                // Initiate authorization code flow (will redirect to OAuth2 provider)
+                await initiateOAuth2AuthorizationCodeFlow({
+                    authorizationEndpoint,
+                    clientId: config.clientId,
+                    redirectUri: `${window.location.origin}/`,
+                    scope: config.scope || 'openid profile email',
+                    state,
+                });
+            } catch (error) {
+                oauth2Loading.value = false;
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 8000,
+                    color: 'error',
+                    btnColor: 'buttonText',
+                    text: 'Failed to initiate OAuth2 authorization flow',
+                    extendedError: error instanceof Error ? error.message : 'Unknown error occurred',
+                });
+            }
         }
     }
 </script>

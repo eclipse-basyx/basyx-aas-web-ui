@@ -3,7 +3,7 @@ import type { BaSyxComponentKey } from '@/types/BaSyx';
 /**
  * Security types supported for infrastructure authentication
  */
-export type SecurityType = 'No Authentication' | 'Keycloak' | 'Basic Authentication' | 'Bearer Token';
+export type SecurityType = 'No Authentication' | 'Keycloak' | 'Basic Authentication' | 'Bearer Token' | 'OAuth2';
 
 /**
  * Keycloak configuration for authentication
@@ -34,6 +34,19 @@ export interface BearerTokenData {
 }
 
 /**
+ * OAuth2 configuration for authentication
+ */
+export interface OAuth2ConnectionData {
+    host: string;
+    clientId: string;
+    clientSecret: string;
+    scope?: string;
+    authFlow?: 'client-credentials' | 'authorization-code';
+    tokenEndpoint?: string;
+    authorizationEndpoint?: string;
+}
+
+/**
  * Authentication configuration for a single component
  */
 export interface InfrastructureAuth {
@@ -41,6 +54,7 @@ export interface InfrastructureAuth {
     keycloakConfig?: KeycloakConnectionData;
     basicAuth?: BasicAuthData;
     bearerToken?: BearerTokenData;
+    oauth2?: OAuth2ConnectionData;
 }
 
 /**

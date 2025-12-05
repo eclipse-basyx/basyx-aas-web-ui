@@ -29,7 +29,7 @@
             <template #actions>
                 <v-icon size="small" class="ml-2"> mdi-lock-check </v-icon>
                 <span class="text-subtitleText text-subtitle-2">{{ authStatus }}</span>
-                <template v-if="allowLogout && !isClientCredentialsFlow">
+                <template v-if="allowLogout && !isClientCredentialsFlow && !isOAuth2ClientCredentials">
                     <v-spacer></v-spacer>
                     <v-btn
                         v-if="currentInfrastructure?.token?.accessToken"
@@ -85,7 +85,8 @@
         () =>
             currentInfrastructure.value?.auth?.keycloakConfig ||
             currentInfrastructure.value?.auth?.basicAuth ||
-            currentInfrastructure.value?.auth?.bearerToken
+            currentInfrastructure.value?.auth?.bearerToken ||
+            currentInfrastructure.value?.auth?.oauth2
     );
     const authUsername = computed(() => {
         const infra = currentInfrastructure.value;
@@ -122,9 +123,21 @@
         const infra = currentInfrastructure.value;
         return infra?.auth?.keycloakConfig?.authFlow === 'client-credentials';
     });
+    const isOAuth2ClientCredentials = computed(() => {
+        const infra = currentInfrastructure.value;
+        return infra?.auth?.oauth2?.authFlow === 'client-credentials';
+    });
 
     async function login(): Promise<void> {
         const infra = currentInfrastructure.value;
+
+        // Handle OAuth2 login
+        if (infra?.auth?.oauth2) {
+            infrastructureStore.dispatchTriggerInfrastructureDialog(true);
+            return;
+        }
+
+        // Handle Keycloak login
         if (!infra?.auth?.keycloakConfig) {
             return;
         }
@@ -184,33 +197,115 @@
         }
     }
 
+    function clearLocalToken(): void {
+        if (currentInfrastructure.value) {
+            infrastructureStore.setAuthenticationStatusForInfrastructure(currentInfrastructure.value.id, false);
+            const updatedInfra = { ...currentInfrastructure.value, token: undefined };
+            infrastructureStore.dispatchUpdateInfrastructure(updatedInfra);
+            navStore.dispatchClearAASList();
+            navStore.dispatchClearTreeview();
+            router.push({ query: {} });
+
+            navStore.dispatchSnackbar({
+                status: true,
+                timeout: 3000,
+                color: 'success',
+                btnColor: 'buttonText',
+                text: 'Logged out successfully',
+            });
+        }
+    }
+
     async function logout(): Promise<void> {
+        const infra = currentInfrastructure.value;
+        if (!infra) return;
+
         // Open popup window
         const width = 500;
         const height = 600;
         const left = window.screenX + (window.outerWidth - width) / 2;
         const top = window.screenY + (window.outerHeight - height) / 2;
-        const serverUrl = currentInfrastructure.value?.auth?.keycloakConfig?.serverUrl;
-        const realm = currentInfrastructure.value?.auth?.keycloakConfig?.realm;
-        const idToken = currentInfrastructure.value?.token?.idToken;
 
-        if (!serverUrl || !realm) {
+        let logoutUrl: URL;
+        const redirectUri = `${window.location.origin}/keycloak-logout.html`;
+
+        // Handle OAuth2 logout
+        if (infra.auth?.oauth2) {
+            const host = infra.auth.oauth2.host;
+            if (!host) {
+                return;
+            }
+
+            try {
+                // Fetch end_session_endpoint from well-known configuration
+                const wellKnownUrl = `${host}/.well-known/openid-configuration`;
+                const wellKnownResponse = await fetch(wellKnownUrl);
+
+                if (!wellKnownResponse.ok) {
+                    throw new Error('Failed to fetch OpenID configuration');
+                }
+
+                const wellKnownConfig = await wellKnownResponse.json();
+                const endSessionEndpoint = wellKnownConfig.end_session_endpoint;
+
+                if (!endSessionEndpoint) {
+                    // If no end_session_endpoint, just clear local token
+                    clearLocalToken();
+                    return;
+                }
+
+                logoutUrl = new URL(endSessionEndpoint);
+                logoutUrl.searchParams.set('post_logout_redirect_uri', redirectUri);
+
+                // Add id_token_hint if available (required by some OAuth2 providers)
+                const idToken = infra.token?.idToken;
+                if (idToken) {
+                    logoutUrl.searchParams.set('id_token_hint', idToken);
+                } else {
+                    // Some providers accept client_id instead of id_token_hint
+                    if (infra.auth.oauth2?.clientId) {
+                        logoutUrl.searchParams.set('client_id', infra.auth.oauth2.clientId);
+                    }
+                }
+            } catch (error) {
+                navStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 4000,
+                    color: 'error',
+                    btnColor: 'buttonText',
+                    text: 'Failed to initiate logout',
+                    extendedError: error instanceof Error ? error.message : 'Unknown error',
+                });
+                // Fallback: just clear local token
+                clearLocalToken();
+                return;
+            }
+        }
+        // Handle Keycloak logout
+        else if (infra.auth?.keycloakConfig) {
+            const serverUrl = infra.auth.keycloakConfig.serverUrl;
+            const realm = infra.auth.keycloakConfig.realm;
+            const idToken = infra.token?.idToken;
+
+            if (!serverUrl || !realm) {
+                return;
+            }
+
+            // Build Keycloak logout URL
+            logoutUrl = new URL(`${serverUrl.replace(/\/$/, '')}/realms/${realm}/protocol/openid-connect/logout`);
+            logoutUrl.searchParams.set('post_logout_redirect_uri', redirectUri);
+            if (idToken) {
+                logoutUrl.searchParams.set('id_token_hint', idToken);
+            }
+        } else {
             return;
         }
 
         // Show overlay before opening popup
         showOverlay();
 
-        // Build logout URL with post_logout_redirect_uri and id_token_hint
-        const redirectUri = `${window.location.origin}/keycloak-logout.html`;
-        const authUrl = new URL(`${serverUrl.replace(/\/$/, '')}/realms/${realm}/protocol/openid-connect/logout`);
-        authUrl.searchParams.set('post_logout_redirect_uri', redirectUri);
-        if (idToken) {
-            authUrl.searchParams.set('id_token_hint', idToken);
-        }
-
         const keycloakPopup = window.open(
-            authUrl.toString(),
+            logoutUrl.toString(),
             'keycloak-logout',
             `width=${width},height=${height},left=${left},top=${top},popup=yes,resizable=yes,scrollbars=yes`
         );

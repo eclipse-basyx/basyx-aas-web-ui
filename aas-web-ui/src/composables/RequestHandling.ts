@@ -313,6 +313,9 @@ export function useRequestHandling() {
                 } else if (auth.securityType === 'Keycloak' && selectedInfra.token?.accessToken) {
                     headers.set('Authorization', 'Bearer ' + selectedInfra.token.accessToken);
                     return headers;
+                } else if (auth.securityType === 'OAuth2' && selectedInfra.token?.accessToken) {
+                    headers.set('Authorization', 'Bearer ' + selectedInfra.token.accessToken);
+                    return headers;
                 }
             }
         }

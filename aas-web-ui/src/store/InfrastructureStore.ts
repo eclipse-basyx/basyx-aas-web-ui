@@ -613,7 +613,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     }
 
     /**
-     * Refreshes expired or expiring tokens for all infrastructures with Keycloak authentication.
+     * Refreshes expired or expiring tokens for all infrastructures with Keycloak or OAuth2 authentication.
      * Tokens are refreshed if they expire within 5 minutes (300 seconds).
      * Returns array of failed refresh attempts with infrastructure info.
      */
@@ -631,8 +631,8 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             const auth = infrastructure.auth;
             const token = infrastructure.token;
 
-            // Check if infrastructure uses Keycloak and has a token
-            if (auth?.securityType !== 'Keycloak' || !token?.accessToken) {
+            // Check if infrastructure uses Keycloak or OAuth2 and has a token
+            if ((auth?.securityType !== 'Keycloak' && auth?.securityType !== 'OAuth2') || !token?.accessToken) {
                 continue;
             }
 
@@ -649,7 +649,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             try {
                 if (!token.refreshToken) {
                     // No refresh token available (e.g., client credentials flow)
-                    // If is client-credentials, we can re-authenticate
+                    // If is Keycloak client-credentials, we can re-authenticate
                     if (auth.keycloakConfig?.authFlow === 'client-credentials') {
                         const result = await authenticateWithClientCredentials(auth.keycloakConfig);
                         // Update token in infrastructure
@@ -662,7 +662,26 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                         infrastructure.isAuthenticated = true;
                         if (process.env.NODE_ENV === 'development') {
                             console.warn(
-                                `[InfrastructureStore] Re-authenticated (client-credentials) for ${infrastructure.name}`
+                                `[InfrastructureStore] Re-authenticated (Keycloak client-credentials) for ${infrastructure.name}`
+                            );
+                        }
+                        continue;
+                    }
+                    // If is OAuth2 client-credentials, we can re-authenticate
+                    if (auth.oauth2?.authFlow === 'client-credentials') {
+                        const { authenticateOAuth2ClientCredentials } = await import('@/composables/OAuth2Auth');
+                        const result = await authenticateOAuth2ClientCredentials(auth.oauth2);
+                        // Update token in infrastructure
+                        infrastructure.token = {
+                            accessToken: result.accessToken,
+                            refreshToken: result.refreshToken,
+                            expiresAt: result.expiresAt,
+                            idToken: result.idToken,
+                        };
+                        infrastructure.isAuthenticated = true;
+                        if (process.env.NODE_ENV === 'development') {
+                            console.warn(
+                                `[InfrastructureStore] Re-authenticated (OAuth2 client-credentials) for ${infrastructure.name}`
                             );
                         }
                         continue;
@@ -674,54 +693,110 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                     continue;
                 }
 
-                if (!auth.keycloakConfig) {
-                    failures.push({
-                        infraName: infrastructure.name,
-                        error: 'Missing Keycloak configuration',
+                // Handle Keycloak token refresh
+                if (auth.securityType === 'Keycloak') {
+                    if (!auth.keycloakConfig) {
+                        failures.push({
+                            infraName: infrastructure.name,
+                            error: 'Missing Keycloak configuration',
+                        });
+                        continue;
+                    }
+
+                    const { serverUrl, realm, clientId, clientSecret } = auth.keycloakConfig;
+                    const tokenEndpoint = `${serverUrl.replace(/\/$/, '')}/realms/${realm}/protocol/openid-connect/token`;
+
+                    const params = new URLSearchParams({
+                        client_id: clientId,
+                        grant_type: 'refresh_token',
+                        refresh_token: token.refreshToken,
                     });
-                    continue;
-                }
 
-                const { serverUrl, realm, clientId, clientSecret } = auth.keycloakConfig;
-                const tokenEndpoint = `${serverUrl.replace(/\/$/, '')}/realms/${realm}/protocol/openid-connect/token`;
+                    if (clientSecret) {
+                        params.set('client_secret', clientSecret);
+                    }
 
-                const params = new URLSearchParams({
-                    client_id: clientId,
-                    grant_type: 'refresh_token',
-                    refresh_token: token.refreshToken,
-                });
-
-                if (clientSecret) {
-                    params.set('client_secret', clientSecret);
-                }
-
-                const response = await fetch(tokenEndpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: params.toString(),
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    failures.push({
-                        infraName: infrastructure.name,
-                        error: data.error_description || 'Token refresh failed',
+                    const response = await fetch(tokenEndpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: params.toString(),
                     });
-                    continue;
-                }
 
-                // Update token in infrastructure
-                const expiresAt = Date.now() + (data.expires_in || 300) * 1000;
-                infrastructure.token = {
-                    accessToken: data.access_token,
-                    refreshToken: data.refresh_token || token.refreshToken,
-                    idToken: data.id_token || token.idToken, // Preserve or update idToken
-                    expiresAt,
-                };
-                infrastructure.isAuthenticated = true;
-                if (process.env.NODE_ENV === 'development') {
-                    console.warn(`[InfrastructureStore] Refreshed token for ${infrastructure.name}`);
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        failures.push({
+                            infraName: infrastructure.name,
+                            error: data.error_description || 'Keycloak token refresh failed',
+                        });
+                        continue;
+                    }
+
+                    // Update token in infrastructure
+                    const expiresAt = Date.now() + (data.expires_in || 300) * 1000;
+                    infrastructure.token = {
+                        accessToken: data.access_token,
+                        refreshToken: data.refresh_token || token.refreshToken,
+                        idToken: data.id_token || token.idToken, // Preserve or update idToken
+                        expiresAt,
+                    };
+                    infrastructure.isAuthenticated = true;
+                    if (process.env.NODE_ENV === 'development') {
+                        console.warn(`[InfrastructureStore] Refreshed Keycloak token for ${infrastructure.name}`);
+                    }
+                }
+                // Handle OAuth2 token refresh
+                else if (auth.securityType === 'OAuth2') {
+                    if (!auth.oauth2) {
+                        failures.push({
+                            infraName: infrastructure.name,
+                            error: 'Missing OAuth2 configuration',
+                        });
+                        continue;
+                    }
+
+                    // Fetch token endpoint from well-known configuration
+                    const wellKnownUrl = `${auth.oauth2.host}/.well-known/openid-configuration`;
+                    const wellKnownResponse = await fetch(wellKnownUrl);
+
+                    if (!wellKnownResponse.ok) {
+                        failures.push({
+                            infraName: infrastructure.name,
+                            error: 'Failed to fetch OAuth2 OpenID configuration',
+                        });
+                        continue;
+                    }
+
+                    const wellKnownConfig = await wellKnownResponse.json();
+                    const tokenEndpoint = wellKnownConfig.token_endpoint;
+
+                    if (!tokenEndpoint) {
+                        failures.push({
+                            infraName: infrastructure.name,
+                            error: 'Token endpoint not found in OAuth2 configuration',
+                        });
+                        continue;
+                    }
+
+                    const { refreshOAuth2Token } = await import('@/composables/OAuth2Auth');
+                    const result = await refreshOAuth2Token({
+                        tokenEndpoint,
+                        clientId: auth.oauth2.clientId,
+                        refreshToken: token.refreshToken,
+                        clientSecret: auth.oauth2.clientSecret,
+                    });
+
+                    // Update token in infrastructure
+                    infrastructure.token = {
+                        accessToken: result.accessToken,
+                        refreshToken: result.refreshToken,
+                        expiresAt: result.expiresAt,
+                        idToken: result.idToken,
+                    };
+                    infrastructure.isAuthenticated = true;
+                    if (process.env.NODE_ENV === 'development') {
+                        console.warn(`[InfrastructureStore] Refreshed OAuth2 token for ${infrastructure.name}`);
+                    }
                 }
             } catch (error) {
                 failures.push({
@@ -732,11 +807,11 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         }
 
         // Save updated tokens to storage if any were refreshed
-        const totalKeycloakInfrastructures = infrastructures.value.filter(
-            (infra) => infra.auth?.securityType === 'Keycloak' && infra.token
+        const totalAuthenticatedInfrastructures = infrastructures.value.filter(
+            (infra) => (infra.auth?.securityType === 'Keycloak' || infra.auth?.securityType === 'OAuth2') && infra.token
         ).length;
 
-        if (failures.length < totalKeycloakInfrastructures) {
+        if (failures.length < totalAuthenticatedInfrastructures) {
             saveInfrastructuresToStorage();
         }
 
