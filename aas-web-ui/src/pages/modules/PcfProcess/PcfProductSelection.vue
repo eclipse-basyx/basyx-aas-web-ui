@@ -161,22 +161,20 @@
     );
 
     onMounted(async () => {
-        fetchShells();
+        await fetchShells();
     });
 
-    function fetchShells(): void {
-        fetchAasList().then((fetchedShells) => {
-            shells.value = fetchedShells;
-        });
+    async function fetchShells(): Promise<void> {
+        shells.value = await fetchAasList();
     }
 
-    function applySearch(): void {
+    async function applySearch(): Promise<void> {
         if (search.value) {
             shells.value = shells.value.filter((shell) =>
                 shell['idShort'].toLowerCase().includes(search.value?.toLowerCase() || '')
             );
         } else {
-            fetchShells();
+            await fetchShells();
         }
     }
 
@@ -185,7 +183,6 @@
     }
 
     function selectShell(shell: any): void {
-        // console.log('Selected shell:', shell);
         selectedShell.value = JSON.parse(JSON.stringify(shell));
         displayName.value = selectedShell.value['displayName'];
     }
@@ -196,8 +193,6 @@
 
     function produce(): void {
         if (selectedShell.value) {
-            console.log('Producing product of type:', selectedShell.value);
-            console.log('With display name:', displayName.value);
             modelValue.value = 2; // Move to next step
             emit('finished', selectedShell.value);
         }
