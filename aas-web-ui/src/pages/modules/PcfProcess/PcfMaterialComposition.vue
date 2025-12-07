@@ -96,24 +96,49 @@
         <v-divider></v-divider>
         <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn variant="flat" color="success" class="text-none text-buttonText" text="Complete" @click="complete" />
+            <v-btn
+                variant="flat"
+                color="success"
+                class="text-none text-buttonText"
+                text="Complete"
+                :loading="isCompleting"
+                @click="complete" />
             <v-spacer></v-spacer>
         </v-card-actions>
     </v-card>
 </template>
 
 <script lang="ts" setup>
+    import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
     import { computed, onMounted, ref } from 'vue';
+    import { useRouter } from 'vue-router';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
     import { useCarbonFootprint_v1_0Utils } from '@/composables/AAS/SubmodelTemplates/CarbonFootprint_v1_0Utils';
+    import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
+    import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
+    import { useNavigationStore } from '@/store/NavigationStore';
     import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils';
+    import { base64Encode } from '@/utils/EncodeDecodeUtils';
+    import PCF_TEMPLATE from './PCF_V1_0_Template.json';
+
+    const router = useRouter();
+    const infrastructureStore = useInfrastructureStore();
+    const navigationStore = useNavigationStore();
 
     const { nameToDisplay } = useReferableUtils();
     const { fetchAasList } = useAASHandling();
     const { fetchSmById } = useSMHandling();
-    const { extractProductCarbonFootprint } = useCarbonFootprint_v1_0Utils();
+    const {
+        extractProductCarbonFootprint,
+        semanticId: pcfSemanticId,
+        findPcfElement,
+        setPcfElementValue,
+    } = useCarbonFootprint_v1_0Utils();
+    const { postAas } = useAASRepositoryClient();
+    const { postSubmodel } = useSMRepositoryClient();
 
     const modelValue = defineModel<number>();
 
@@ -137,6 +162,7 @@
 
     const materialShells = ref<Array<any>>([]);
     const selectedMaterials = ref<Array<MaterialEntry>>([]);
+    const isCompleting = ref(false);
 
     const totalCarbonFootprint = computed(() => {
         return selectedMaterials.value
@@ -348,7 +374,289 @@
         selectedMaterials.value.splice(index, 1);
     }
 
-    function complete(): void {
-        console.log('Material composition completed for shell:', props.shell);
+    async function complete(): Promise<void> {
+        isCompleting.value = true;
+
+        try {
+            // Step 1: Create a copy of the shell
+            const shellCopy = JSON.parse(JSON.stringify(props.shell));
+
+            // Step 2: Generate new IDs with timestamp and random value
+            const timestamp = Date.now();
+            const randomValue = Math.floor(Math.random() * 1000000);
+            const idSuffix = `_${timestamp}_${randomValue}`;
+            const newAasId = shellCopy.id + idSuffix;
+
+            shellCopy.id = newAasId;
+            shellCopy.assetInformation.assetKind = 'Instance';
+
+            // Add specific asset ID with serial number
+            const randomSerialNumber = `SN-${timestamp}-${randomValue}`;
+            if (!shellCopy.assetInformation.specificAssetIds) {
+                shellCopy.assetInformation.specificAssetIds = [];
+            }
+            shellCopy.assetInformation.specificAssetIds.push({
+                name: 'serialNumber',
+                value: randomSerialNumber,
+            });
+
+            // Step 3: Fetch all submodels from original AAS
+            const submodels = [];
+            const submodelRefs = props.shell.submodels || [];
+
+            for (const submodelRef of submodelRefs) {
+                if (submodelRef.keys.length === 0) continue;
+                const smId = submodelRef.keys[0].value;
+
+                try {
+                    const submodel = await fetchSmById(smId);
+
+                    // Skip existing PCF submodels
+                    if (checkSemanticId(submodel, pcfSemanticId)) {
+                        continue;
+                    }
+
+                    // Step 4: Give submodel new ID with same suffix
+                    submodel.id = submodel.id + idSuffix;
+                    submodels.push(submodel);
+                } catch (error) {
+                    console.error('Error fetching submodel:', error);
+                }
+            }
+
+            // Step 5: Create PCF submodel from template
+            const pcfSubmodel = JSON.parse(JSON.stringify(PCF_TEMPLATE));
+            const pcfSubmodelId = pcfSubmodel.id + idSuffix;
+            pcfSubmodel.id = pcfSubmodelId;
+            pcfSubmodel.kind = 'Instance';
+
+            // Get current date in ISO format
+            const currentDate = new Date().toISOString();
+
+            // Find and populate the PCF values in the template using semantic IDs
+            const productCarbonFootprintsSml = findPcfElement(
+                pcfSubmodel,
+                'https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprints/1/0',
+                'ProductCarbonFootprints',
+                true
+            );
+
+            if (
+                productCarbonFootprintsSml &&
+                productCarbonFootprintsSml.value &&
+                productCarbonFootprintsSml.value.length > 0
+            ) {
+                const productCarbonFootprintSmc = productCarbonFootprintsSml.value[0];
+
+                // Set PcfCalculationMethod
+                const pcfCalculationMethodsSml = findPcfElement(
+                    productCarbonFootprintSmc,
+                    'https://admin-shell.io/idta/CarbonFootprint/PcfCalculationMethods/1/0',
+                    'PcfCalculationMethods',
+                    true
+                );
+                if (pcfCalculationMethodsSml) {
+                    pcfCalculationMethodsSml.value = [
+                        {
+                            modelType: 'Property',
+                            valueType: 'xs:string',
+                            value: 'BaSyx Web UI PCF Calculator',
+                            idShort: 'PcfCalculationMethod',
+                            semanticId: {
+                                type: 'ExternalReference',
+                                keys: [
+                                    {
+                                        type: 'GlobalReference',
+                                        value: '0173-1#02-ABG854#003',
+                                    },
+                                ],
+                            },
+                        },
+                    ];
+                }
+
+                // Set PcfCO2eq
+                setPcfElementValue(
+                    productCarbonFootprintSmc,
+                    '0173-1#02-ABG855#001',
+                    'PcfCO2eq',
+                    totalCarbonFootprint.value
+                );
+
+                // Set ReferenceImpactUnitForCalculation
+                setPcfElementValue(
+                    productCarbonFootprintSmc,
+                    '0173-1#02-ABG856#003',
+                    'ReferenceImpactUnitForCalculation',
+                    'piece'
+                );
+
+                // Set QuantityOfMeasureForCalculation
+                setPcfElementValue(
+                    productCarbonFootprintSmc,
+                    '0173-1#02-ABG857#003',
+                    'QuantityOfMeasureForCalculation',
+                    1
+                );
+
+                // Set LifeCyclePhases
+                const lifeCyclePhasesSml = findPcfElement(
+                    productCarbonFootprintSmc,
+                    'https://admin-shell.io/idta/CarbonFootprint/LifeCyclePhases/1/0',
+                    'LifeCyclePhases',
+                    true
+                );
+                if (lifeCyclePhasesSml) {
+                    lifeCyclePhasesSml.value = [
+                        {
+                            modelType: 'Property',
+                            valueType: 'xs:string',
+                            value: 'A3 - Production',
+                            valueId: {
+                                type: 'ExternalReference',
+                                keys: [
+                                    {
+                                        type: 'GlobalReference',
+                                        value: '0173-1#07-ABU210#003',
+                                    },
+                                ],
+                            },
+                            idShort: 'LifeCyclePhase',
+                        },
+                    ];
+                }
+
+                // Set PublicationDate
+                setPcfElementValue(
+                    productCarbonFootprintSmc,
+                    'https://admin-shell.io/idta/CarbonFootprint/PublicationDate/1/0',
+                    'PublicationDate',
+                    currentDate
+                );
+
+                // Remove ExpirationDate value (keep empty)
+                const expirationDateProp = findPcfElement(
+                    productCarbonFootprintSmc,
+                    'https://admin-shell.io/idta/CarbonFootprint/ExpirationDate/1/0',
+                    'ExpirationDate'
+                );
+                if (expirationDateProp) {
+                    delete expirationDateProp.value;
+                }
+            }
+
+            // Step 6: Clear old submodel references and add new ones
+            shellCopy.submodels = [];
+
+            // Add PCF submodel reference
+            shellCopy.submodels.push({
+                type: 'ModelReference',
+                keys: [
+                    {
+                        type: 'Submodel',
+                        value: pcfSubmodelId,
+                    },
+                ],
+            });
+
+            // Add other submodel references with new IDs
+            for (const submodel of submodels) {
+                shellCopy.submodels.push({
+                    type: 'ModelReference',
+                    keys: [
+                        {
+                            type: 'Submodel',
+                            value: submodel.id,
+                        },
+                    ],
+                });
+            }
+
+            // Step 7: Upload AAS to default infrastructure
+            delete shellCopy.endpoints;
+            const aasInstanceOrError = jsonization.assetAdministrationShellFromJsonable(shellCopy);
+            if (aasInstanceOrError.error !== null) {
+                throw new Error('Failed to convert AAS: ' + aasInstanceOrError.error);
+            }
+            const coreworksAAS = aasInstanceOrError.mustValue();
+            const aasUploaded = await postAas(coreworksAAS);
+
+            if (!aasUploaded) {
+                throw new Error('Failed to upload AAS');
+            }
+
+            // Step 8: Upload PCF Submodel
+            const pcfInstanceOrError = jsonization.submodelFromJsonable(pcfSubmodel);
+            if (pcfInstanceOrError.error !== null) {
+                throw new Error('Failed to convert PCF submodel: ' + pcfInstanceOrError.error);
+            }
+            const coreworksPcfSubmodel = pcfInstanceOrError.mustValue();
+            const pcfUploaded = await postSubmodel(coreworksPcfSubmodel);
+
+            if (!pcfUploaded) {
+                throw new Error('Failed to upload PCF submodel');
+            }
+
+            // Upload other submodels
+            let submodelsUploaded = 0;
+            for (const submodel of submodels) {
+                try {
+                    const smInstanceOrError = jsonization.submodelFromJsonable(submodel);
+                    if (smInstanceOrError.error !== null) {
+                        console.error('Failed to convert submodel:', smInstanceOrError.error);
+                        continue;
+                    }
+                    const coreworksSubmodel = smInstanceOrError.mustValue();
+                    const uploaded = await postSubmodel(coreworksSubmodel);
+                    if (uploaded) {
+                        submodelsUploaded++;
+                    }
+                } catch (error) {
+                    console.error('Error uploading submodel:', error);
+                }
+            }
+
+            // Step 9: Navigate to the new AAS with PCF submodel
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 8000,
+                color: 'success',
+                btnColor: 'buttonText',
+                text: `Successfully created AAS with PCF submodel (${submodelsUploaded + 1}/${submodels.length + 1} submodels uploaded)`,
+            });
+
+            // Construct AAS and PCF submodel endpoint paths
+            const aasRepoUrl = infrastructureStore.getAASRepoURL;
+            let aasEndpoint = aasRepoUrl;
+            if (!aasEndpoint.endsWith('/')) aasEndpoint += '/';
+            aasEndpoint += 'shells/' + base64Encode(newAasId);
+
+            const smRepoUrl = infrastructureStore.getSubmodelRepoURL;
+            let pcfEndpoint = smRepoUrl;
+            if (!pcfEndpoint.endsWith('/')) pcfEndpoint += '/';
+            pcfEndpoint += 'submodels/' + base64Encode(pcfSubmodelId);
+
+            // Navigate to the new AAS with the PCF submodel selected
+            // Don't dispatch to store - let the router handle fetching and dispatching
+            await router.push({
+                path: '/aassmviewer',
+                query: {
+                    aas: aasEndpoint,
+                    path: pcfEndpoint,
+                },
+            });
+        } catch (error) {
+            console.error('Error completing PCF calculation:', error);
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 8000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Failed to complete PCF calculation',
+                extendedError: error instanceof Error ? error.message : 'Unknown error occurred',
+            });
+        } finally {
+            isCompleting.value = false;
+        }
     }
 </script>

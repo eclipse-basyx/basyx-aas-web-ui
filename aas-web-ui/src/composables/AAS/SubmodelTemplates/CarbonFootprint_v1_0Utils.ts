@@ -319,6 +319,53 @@ export function useCarbonFootprint_v1_0Utils() {
         return failResponse;
     }
 
+    /**
+     * Finds a PCF submodel element by semantic ID or idShort
+     *
+     * @param {any} parentElement - The parent element containing the value array
+     * @param {string} semanticId - The semantic ID to search for
+     * @param {string} idShort - The idShort to search for
+     * @param {boolean} caseInsensitive - Whether to perform case-insensitive idShort matching
+     * @returns {any} The found element or undefined
+     */
+    function findPcfElement(
+        parentElement: any,
+        semanticId: string,
+        idShort: string,
+        caseInsensitive: boolean = false
+    ): any {
+        if (!parentElement || !parentElement.value) return undefined;
+
+        return parentElement.value.find(
+            (sme: any) => checkSemanticId(sme, semanticId) || checkIdShort(sme, idShort, caseInsensitive)
+        );
+    }
+
+    /**
+     * Sets the value of a PCF property element
+     *
+     * @param {any} parentElement - The parent element containing the value array
+     * @param {string} semanticId - The semantic ID to search for
+     * @param {string} idShort - The idShort to search for
+     * @param {any} value - The value to set
+     * @param {boolean} caseInsensitive - Whether to perform case-insensitive idShort matching
+     * @returns {boolean} Whether the element was found and updated
+     */
+    function setPcfElementValue(
+        parentElement: any,
+        semanticId: string,
+        idShort: string,
+        value: any,
+        caseInsensitive: boolean = false
+    ): boolean {
+        const element = findPcfElement(parentElement, semanticId, idShort, caseInsensitive);
+        if (element) {
+            element.value = value;
+            return true;
+        }
+        return false;
+    }
+
     return {
         semanticId,
         semanticIdSmlProductCarbonFootprints,
@@ -327,5 +374,7 @@ export function useCarbonFootprint_v1_0Utils() {
         getSm,
         getPcfLifeCyclePhaseFromId,
         extractProductCarbonFootprint,
+        findPcfElement,
+        setPcfElementValue,
     };
 }
