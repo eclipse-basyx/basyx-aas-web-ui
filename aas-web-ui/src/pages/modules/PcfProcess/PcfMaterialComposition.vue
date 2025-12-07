@@ -272,21 +272,43 @@
             return;
         }
 
-        // Get the first ProductCarbonFootprint SubmodelElementCollection
-        const productCarbonFootprintSmc = productCarbonFootprintsSml.value.find(
+        // Get all ProductCarbonFootprint SubmodelElementCollections
+        const productCarbonFootprints = productCarbonFootprintsSml.value.filter(
             (sme: any) =>
                 sme.idShort === 'ProductCarbonFootprint' ||
                 checkSemanticId(sme, 'https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/1/0')
         );
 
-        if (!productCarbonFootprintSmc) {
+        if (!productCarbonFootprints || productCarbonFootprints.length === 0) {
             materialEntry.hasError = true;
             materialEntry.errorMessage = 'Invalid PCF submodel structure: ProductCarbonFootprint missing';
             return;
         }
 
-        // Extract PCF data using the utility function
-        const pcfData = extractProductCarbonFootprint(productCarbonFootprintSmc);
+        // Extract PCF data from all entries and validate compatibility
+        const pcfDataArray = productCarbonFootprints.map((pcfSmc: any) => extractProductCarbonFootprint(pcfSmc));
+
+        // If multiple PCFs exist, validate compatibility
+        if (productCarbonFootprints.length > 1) {
+            const firstPcf = pcfDataArray[0];
+            const allCompatible = pcfDataArray.every(
+                (pcf: ReturnType<typeof extractProductCarbonFootprint>) =>
+                    JSON.stringify(pcf.pcfCalculationMethods.sort()) ===
+                        JSON.stringify(firstPcf.pcfCalculationMethods.sort()) &&
+                    pcf.pcfReferenceValueForCalculation === firstPcf.pcfReferenceValueForCalculation &&
+                    pcf.quantityOfMeasureForCalculation === firstPcf.quantityOfMeasureForCalculation
+            );
+
+            if (!allCompatible) {
+                materialEntry.hasError = true;
+                materialEntry.errorMessage =
+                    'Multiple PCF entries with incompatible calculation methods or reference units found';
+                return;
+            }
+        }
+
+        // Use the first PCF entry for reference unit and quantity (all are compatible if multiple exist)
+        const pcfData = pcfDataArray[0];
 
         // Check if extraction returned fail response (all empty)
         if (!pcfData.pcfco2eq && !pcfData.pcfReferenceValueForCalculation && !pcfData.quantityOfMeasureForCalculation) {
@@ -295,9 +317,18 @@
             return;
         }
 
+        // Sum all PCF CO2 eq values (they are compatible)
+        let totalPcfCO2eq = 0;
+        for (const pcf of pcfDataArray) {
+            const pcfValue = parseFloat(pcf.pcfco2eq);
+            if (!isNaN(pcfValue)) {
+                totalPcfCO2eq += pcfValue;
+            }
+        }
+
         // Extract values
-        const pcfCO2eqStr = pcfData.pcfco2eq;
-        const pcfCO2eq = parseFloat(pcfCO2eqStr);
+        const pcfCO2eqStr = totalPcfCO2eq.toString();
+        const pcfCO2eq = totalPcfCO2eq;
 
         const referenceUnit = pcfData.pcfReferenceValueForCalculation;
         const quantityStr = pcfData.quantityOfMeasureForCalculation;
@@ -477,8 +508,6 @@
             if (!aasUploaded) {
                 throw new Error('Failed to upload AAS');
             }
-
-            console.log('PCF Submodel:', pcfSubmodel);
 
             // Step 8: Upload PCF Submodel
             const pcfInstanceOrError = jsonization.submodelFromJsonable(pcfSubmodel as any);
