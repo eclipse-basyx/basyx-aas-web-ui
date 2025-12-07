@@ -199,8 +199,8 @@ export function useCarbonFootprint_v1_0Utils() {
         if (!productCarbonFootprintSmc || Object.keys(productCarbonFootprintSmc).length === 0) return failResponse;
 
         if (
-            !checkSemanticId(productCarbonFootprintSmc, semanticIdSmlProductCarbonFootprints) ||
-            !checkIdShort(productCarbonFootprintSmc, 'productCarbonFootprint')
+            !checkSemanticId(productCarbonFootprintSmc, semanticIdSmcProductCarbonFootprint) &&
+            !checkIdShort(productCarbonFootprintSmc, 'ProductCarbonFootprint', true)
         )
             return failResponse;
 

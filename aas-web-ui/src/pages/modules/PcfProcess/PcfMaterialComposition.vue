@@ -29,7 +29,8 @@
                             placeholder="Select Material"
                             clearable
                             hide-details
-                            return-object></v-combobox>
+                            return-object
+                            @update:model-value="fetchSubmodelsForMaterial"></v-combobox>
                         <span class="text-h6 mx-6">X</span>
                         <v-number-input
                             v-model="material.amount"
@@ -38,8 +39,9 @@
                             variant="outlined"
                             density="compact"
                             control-variant="stacked"
-                            suffix="l"
-                            hide-details></v-number-input>
+                            :suffix="material.unit || ''"
+                            hide-details
+                            @update:model-value="calculateFootprint(material)"></v-number-input>
                         <span class="text-h6 mx-6">=</span>
                         <v-text-field
                             v-model="material.footprint"
@@ -75,6 +77,7 @@
                     <div class="d-flex justify-end align-center">
                         <span class="subtitle-1 mr-4">Total Carbon Footprint:</span>
                         <v-text-field
+                            v-model="totalCarbonFootprint"
                             :width="200"
                             :max-width="200"
                             variant="outlined"
@@ -97,12 +100,17 @@
 </template>
 
 <script lang="ts" setup>
-    import { onMounted, ref } from 'vue';
+    import { computed, onMounted, ref } from 'vue';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
+    import { useSMHandling } from '@/composables/AAS/SMHandling';
+    import { useCarbonFootprint_v1_0Utils } from '@/composables/AAS/SubmodelTemplates/CarbonFootprint_v1_0Utils';
+    import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils';
 
     const { nameToDisplay } = useReferableUtils();
     const { fetchAasList } = useAASHandling();
+    const { fetchSmById } = useSMHandling();
+    const { extractProductCarbonFootprint } = useCarbonFootprint_v1_0Utils();
 
     const modelValue = defineModel<number>();
 
@@ -114,10 +122,23 @@
         shell: any;
         amount: number;
         footprint: string;
+        unit: string;
+        pcfCO2eq: number;
+        referenceQuantity: number;
+        pcfSubmodel: any;
     }
 
     const materialShells = ref<Array<any>>([]);
     const selectedMaterials = ref<Array<MaterialEntry>>([]);
+
+    const totalCarbonFootprint = computed(() => {
+        return selectedMaterials.value
+            .reduce((sum, material) => {
+                const footprint = parseFloat(material.footprint) || 0;
+                return sum + footprint;
+            }, 0)
+            .toFixed(2);
+    });
 
     onMounted(async () => {
         await fetchMaterialShells();
@@ -141,11 +162,102 @@
         );
     }
 
+    async function fetchSubmodelsForMaterial(selectedMaterial: any): Promise<void> {
+        if (!selectedMaterial) {
+            // Clear material data when deselected
+            const materialEntry = selectedMaterials.value.find((m) => m.shell === selectedMaterial);
+            if (materialEntry) {
+                materialEntry.unit = '';
+                materialEntry.pcfCO2eq = 0;
+                materialEntry.referenceQuantity = 1;
+                materialEntry.pcfSubmodel = null;
+                materialEntry.footprint = '0';
+            }
+            return;
+        }
+
+        const submodelRefs = selectedMaterial.submodels || [];
+
+        if (submodelRefs.length === 0) return;
+
+        for (const submodelRef of submodelRefs) {
+            // TODO: Optimize by only using the metadata endpoint once it is implemented in BaSyx Go
+            const submodel = await fetchSmById(submodelRef.keys[0].value);
+            // Check for carbon footprint semantic ID
+            if (checkSemanticId(submodel, 'https://admin-shell.io/idta/CarbonFootprint/CarbonFootprint/1/0')) {
+                // Find the material entry that was just updated
+                const materialEntry = selectedMaterials.value.find((m) => m.shell === selectedMaterial);
+                if (materialEntry) {
+                    await updateMaterialPcfData(materialEntry, submodel);
+                }
+                break;
+            }
+        }
+    }
+
+    async function updateMaterialPcfData(materialEntry: MaterialEntry, pcfSubmodel: any): Promise<void> {
+        materialEntry.pcfSubmodel = pcfSubmodel;
+
+        // Find ProductCarbonFootprints SubmodelElementList
+        const productCarbonFootprintsSml = pcfSubmodel.submodelElements?.find(
+            (sme: any) =>
+                sme.idShort === 'ProductCarbonFootprint' ||
+                sme.idShort === 'ProductCarbonFootprints' ||
+                checkSemanticId(sme, 'https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprints/1/0')
+        );
+
+        if (!productCarbonFootprintsSml || !productCarbonFootprintsSml.value) return;
+
+        // Get the first ProductCarbonFootprint SubmodelElementCollection
+        const productCarbonFootprintSmc = productCarbonFootprintsSml.value.find(
+            (sme: any) =>
+                sme.idShort === 'ProductCarbonFootprint' ||
+                checkSemanticId(sme, 'https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/1/0')
+        );
+
+        if (!productCarbonFootprintSmc) return;
+
+        // Extract PCF data using the utility function
+        const pcfData = extractProductCarbonFootprint(productCarbonFootprintSmc);
+
+        // Extract values
+        const pcfCO2eqStr = pcfData.pcfco2eq;
+        const pcfCO2eq = parseFloat(pcfCO2eqStr);
+
+        const referenceUnit = pcfData.pcfReferenceValueForCalculation;
+        const quantityStr = pcfData.quantityOfMeasureForCalculation;
+        const referenceQuantity = parseFloat(quantityStr);
+
+        // Update material entry
+        materialEntry.pcfCO2eq = isNaN(pcfCO2eq) ? 0 : pcfCO2eq;
+        materialEntry.referenceQuantity = isNaN(referenceQuantity) || referenceQuantity === 0 ? 1 : referenceQuantity;
+        materialEntry.unit = referenceUnit || '';
+
+        // Calculate footprint with current amount
+        calculateFootprint(materialEntry);
+    }
+
+    function calculateFootprint(materialEntry: MaterialEntry): void {
+        if (!materialEntry.pcfCO2eq || !materialEntry.referenceQuantity) {
+            materialEntry.footprint = '0';
+            return;
+        }
+
+        const amount = materialEntry.amount || 0;
+        const calculatedFootprint = (amount / materialEntry.referenceQuantity) * materialEntry.pcfCO2eq;
+
+        materialEntry.footprint = calculatedFootprint.toFixed(2);
+    }
+
     function addMaterial(): void {
         selectedMaterials.value.push({
             shell: null,
             amount: 0,
             footprint: '0',
+            unit: '',
+            pcfCO2eq: 0,
+            referenceQuantity: 1,
+            pcfSubmodel: null,
         });
     }
 
