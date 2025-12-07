@@ -15,7 +15,7 @@
             </v-list-item>
         </v-card-title>
         <v-divider></v-divider>
-        <v-card-text style="height: calc(100vh - 250px)">
+        <v-card-text style="height: calc(100vh - 250px); overflow-y: auto">
             <v-list style="max-width: 840px">
                 <v-list-item v-for="(material, index) in selectedMaterials" :key="index" class="px-0">
                     <div class="d-flex justify-space-around align-center">
@@ -28,21 +28,24 @@
                             density="compact"
                             placeholder="Select Material"
                             clearable
-                            hide-details
                             return-object
+                            :error="material.hasError"
+                            :error-messages="material.hasError ? material.errorMessage : []"
                             @update:model-value="fetchSubmodelsForMaterial"></v-combobox>
-                        <span class="text-h6 mx-6">X</span>
+                        <span class="text-h6 mx-6 mb-5">X</span>
                         <v-number-input
                             v-model="material.amount"
                             :max-width="180"
                             :min="0"
+                            :precision="null"
                             variant="outlined"
                             density="compact"
                             control-variant="stacked"
                             :suffix="material.unit || ''"
-                            hide-details
+                            :error="material.unitError"
+                            :error-messages="material.unitError ? material.unitErrorMessage : []"
                             @update:model-value="calculateFootprint(material)"></v-number-input>
-                        <span class="text-h6 mx-6">=</span>
+                        <span class="text-h6 mx-6 mb-6">=</span>
                         <v-text-field
                             v-model="material.footprint"
                             :width="200"
@@ -50,14 +53,14 @@
                             variant="outlined"
                             density="compact"
                             suffix="kg CO2 eq"
-                            readonly
-                            hide-details></v-text-field>
+                            readonly></v-text-field>
                         <v-btn
                             icon="mdi-delete"
                             variant="text"
                             color="error"
                             size="small"
                             :disabled="selectedMaterials.length === 1"
+                            class="mb-6"
                             @click="removeMaterial(index)"></v-btn>
                     </div>
                 </v-list-item>
@@ -126,6 +129,10 @@
         pcfCO2eq: number;
         referenceQuantity: number;
         pcfSubmodel: any;
+        hasError: boolean;
+        errorMessage: string;
+        unitError: boolean;
+        unitErrorMessage: string;
     }
 
     const materialShells = ref<Array<any>>([]);
@@ -163,35 +170,63 @@
     }
 
     async function fetchSubmodelsForMaterial(selectedMaterial: any): Promise<void> {
+        // Find the material entry that corresponds to this selection
+        const materialEntry = selectedMaterials.value.find((m) => m.shell === selectedMaterial);
+
         if (!selectedMaterial) {
             // Clear material data when deselected
-            const materialEntry = selectedMaterials.value.find((m) => m.shell === selectedMaterial);
             if (materialEntry) {
                 materialEntry.unit = '';
                 materialEntry.pcfCO2eq = 0;
                 materialEntry.referenceQuantity = 1;
                 materialEntry.pcfSubmodel = null;
                 materialEntry.footprint = '0';
+                materialEntry.hasError = false;
+                materialEntry.errorMessage = '';
+                materialEntry.unitError = false;
+                materialEntry.unitErrorMessage = '';
             }
             return;
         }
 
+        if (!materialEntry) return;
+
+        // Reset errors
+        materialEntry.hasError = false;
+        materialEntry.errorMessage = '';
+        materialEntry.unitError = false;
+        materialEntry.unitErrorMessage = '';
+
         const submodelRefs = selectedMaterial.submodels || [];
 
-        if (submodelRefs.length === 0) return;
+        if (submodelRefs.length === 0) {
+            materialEntry.hasError = true;
+            materialEntry.errorMessage = 'No submodels found for this material';
+            return;
+        }
 
-        for (const submodelRef of submodelRefs) {
-            // TODO: Optimize by only using the metadata endpoint once it is implemented in BaSyx Go
-            const submodel = await fetchSmById(submodelRef.keys[0].value);
-            // Check for carbon footprint semantic ID
-            if (checkSemanticId(submodel, 'https://admin-shell.io/idta/CarbonFootprint/CarbonFootprint/1/0')) {
-                // Find the material entry that was just updated
-                const materialEntry = selectedMaterials.value.find((m) => m.shell === selectedMaterial);
-                if (materialEntry) {
+        let pcfSubmodelFound = false;
+
+        try {
+            for (const submodelRef of submodelRefs) {
+                // TODO: Optimize by only using the metadata endpoint once it is implemented in BaSyx Go
+                const submodel = await fetchSmById(submodelRef.keys[0].value);
+                // Check for carbon footprint semantic ID
+                if (checkSemanticId(submodel, 'https://admin-shell.io/idta/CarbonFootprint/CarbonFootprint/1/0')) {
+                    pcfSubmodelFound = true;
                     await updateMaterialPcfData(materialEntry, submodel);
+                    break;
                 }
-                break;
             }
+
+            if (!pcfSubmodelFound) {
+                materialEntry.hasError = true;
+                materialEntry.errorMessage = 'No Carbon Footprint submodel found for this material';
+            }
+        } catch (error) {
+            materialEntry.hasError = true;
+            materialEntry.errorMessage = 'Failed to fetch submodel data';
+            console.error('Error fetching submodels:', error);
         }
     }
 
@@ -206,7 +241,11 @@
                 checkSemanticId(sme, 'https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprints/1/0')
         );
 
-        if (!productCarbonFootprintsSml || !productCarbonFootprintsSml.value) return;
+        if (!productCarbonFootprintsSml || !productCarbonFootprintsSml.value) {
+            materialEntry.hasError = true;
+            materialEntry.errorMessage = 'Invalid PCF submodel structure: ProductCarbonFootprints missing';
+            return;
+        }
 
         // Get the first ProductCarbonFootprint SubmodelElementCollection
         const productCarbonFootprintSmc = productCarbonFootprintsSml.value.find(
@@ -215,10 +254,21 @@
                 checkSemanticId(sme, 'https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/1/0')
         );
 
-        if (!productCarbonFootprintSmc) return;
+        if (!productCarbonFootprintSmc) {
+            materialEntry.hasError = true;
+            materialEntry.errorMessage = 'Invalid PCF submodel structure: ProductCarbonFootprint missing';
+            return;
+        }
 
         // Extract PCF data using the utility function
         const pcfData = extractProductCarbonFootprint(productCarbonFootprintSmc);
+
+        // Check if extraction returned fail response (all empty)
+        if (!pcfData.pcfco2eq && !pcfData.pcfReferenceValueForCalculation && !pcfData.quantityOfMeasureForCalculation) {
+            materialEntry.hasError = true;
+            materialEntry.errorMessage = 'Failed to extract PCF data from submodel';
+            return;
+        }
 
         // Extract values
         const pcfCO2eqStr = pcfData.pcfco2eq;
@@ -228,8 +278,37 @@
         const quantityStr = pcfData.quantityOfMeasureForCalculation;
         const referenceQuantity = parseFloat(quantityStr);
 
+        // Validate PCF CO2 value
+        if (!pcfCO2eqStr || isNaN(pcfCO2eq)) {
+            materialEntry.hasError = true;
+            materialEntry.errorMessage = 'Invalid or missing PcfCO2eq value in PCF data';
+            return;
+        }
+
+        if (pcfCO2eq < 0) {
+            materialEntry.hasError = true;
+            materialEntry.errorMessage = 'PcfCO2eq value cannot be negative';
+            return;
+        }
+
+        // Validate reference unit and quantity
+        if (!referenceUnit || !quantityStr) {
+            materialEntry.unitError = true;
+            materialEntry.unitErrorMessage = 'Missing reference unit or quantity in PCF data';
+        }
+
+        if (isNaN(referenceQuantity) || referenceQuantity === 0) {
+            materialEntry.unitError = true;
+            materialEntry.unitErrorMessage = 'Invalid or zero reference quantity';
+        }
+
+        if (referenceQuantity < 0) {
+            materialEntry.unitError = true;
+            materialEntry.unitErrorMessage = 'Reference quantity cannot be negative';
+        }
+
         // Update material entry
-        materialEntry.pcfCO2eq = isNaN(pcfCO2eq) ? 0 : pcfCO2eq;
+        materialEntry.pcfCO2eq = pcfCO2eq;
         materialEntry.referenceQuantity = isNaN(referenceQuantity) || referenceQuantity === 0 ? 1 : referenceQuantity;
         materialEntry.unit = referenceUnit || '';
 
@@ -258,6 +337,10 @@
             pcfCO2eq: 0,
             referenceQuantity: 1,
             pcfSubmodel: null,
+            hasError: false,
+            errorMessage: '',
+            unitError: false,
+            unitErrorMessage: '',
         });
     }
 
