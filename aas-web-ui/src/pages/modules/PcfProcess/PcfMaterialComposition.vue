@@ -134,8 +134,7 @@
     const {
         extractProductCarbonFootprint,
         semanticId: pcfSemanticId,
-        findPcfElement,
-        setPcfElementValue,
+        createPcfSubmodelFromTemplate,
     } = useCarbonFootprint_v1_0Utils();
     const { postAas } = useAASRepositoryClient();
     const { postSubmodel } = useSMRepositoryClient();
@@ -425,124 +424,18 @@
             }
 
             // Step 5: Create PCF submodel from template
-            const pcfSubmodel = JSON.parse(JSON.stringify(PCF_TEMPLATE));
-            const pcfSubmodelId = pcfSubmodel.id + idSuffix;
-            pcfSubmodel.id = pcfSubmodelId;
-            pcfSubmodel.kind = 'Instance';
+            const pcfSubmodelId = PCF_TEMPLATE.id + idSuffix;
+            const pcfSubmodel = createPcfSubmodelFromTemplate(PCF_TEMPLATE, {
+                submodelId: pcfSubmodelId,
+                pcfCalculationMethod: 'BaSyx Web UI PCF Calculator',
+                pcfCO2eq: totalCarbonFootprint.value,
+                referenceUnit: 'piece',
+                referenceQuantity: 1,
+                lifeCyclePhase: 'A3 - Production',
+            });
 
-            // Get current date in ISO format
-            const currentDate = new Date().toISOString();
-
-            // Find and populate the PCF values in the template using semantic IDs
-            const productCarbonFootprintsSml = findPcfElement(
-                pcfSubmodel,
-                'https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprints/1/0',
-                'ProductCarbonFootprints',
-                true
-            );
-
-            if (
-                productCarbonFootprintsSml &&
-                productCarbonFootprintsSml.value &&
-                productCarbonFootprintsSml.value.length > 0
-            ) {
-                const productCarbonFootprintSmc = productCarbonFootprintsSml.value[0];
-
-                // Set PcfCalculationMethod
-                const pcfCalculationMethodsSml = findPcfElement(
-                    productCarbonFootprintSmc,
-                    'https://admin-shell.io/idta/CarbonFootprint/PcfCalculationMethods/1/0',
-                    'PcfCalculationMethods',
-                    true
-                );
-                if (pcfCalculationMethodsSml) {
-                    pcfCalculationMethodsSml.value = [
-                        {
-                            modelType: 'Property',
-                            valueType: 'xs:string',
-                            value: 'BaSyx Web UI PCF Calculator',
-                            idShort: 'PcfCalculationMethod',
-                            semanticId: {
-                                type: 'ExternalReference',
-                                keys: [
-                                    {
-                                        type: 'GlobalReference',
-                                        value: '0173-1#02-ABG854#003',
-                                    },
-                                ],
-                            },
-                        },
-                    ];
-                }
-
-                // Set PcfCO2eq
-                setPcfElementValue(
-                    productCarbonFootprintSmc,
-                    '0173-1#02-ABG855#001',
-                    'PcfCO2eq',
-                    totalCarbonFootprint.value
-                );
-
-                // Set ReferenceImpactUnitForCalculation
-                setPcfElementValue(
-                    productCarbonFootprintSmc,
-                    '0173-1#02-ABG856#003',
-                    'ReferenceImpactUnitForCalculation',
-                    'piece'
-                );
-
-                // Set QuantityOfMeasureForCalculation
-                setPcfElementValue(
-                    productCarbonFootprintSmc,
-                    '0173-1#02-ABG857#003',
-                    'QuantityOfMeasureForCalculation',
-                    1
-                );
-
-                // Set LifeCyclePhases
-                const lifeCyclePhasesSml = findPcfElement(
-                    productCarbonFootprintSmc,
-                    'https://admin-shell.io/idta/CarbonFootprint/LifeCyclePhases/1/0',
-                    'LifeCyclePhases',
-                    true
-                );
-                if (lifeCyclePhasesSml) {
-                    lifeCyclePhasesSml.value = [
-                        {
-                            modelType: 'Property',
-                            valueType: 'xs:string',
-                            value: 'A3 - Production',
-                            valueId: {
-                                type: 'ExternalReference',
-                                keys: [
-                                    {
-                                        type: 'GlobalReference',
-                                        value: '0173-1#07-ABU210#003',
-                                    },
-                                ],
-                            },
-                            idShort: 'LifeCyclePhase',
-                        },
-                    ];
-                }
-
-                // Set PublicationDate
-                setPcfElementValue(
-                    productCarbonFootprintSmc,
-                    'https://admin-shell.io/idta/CarbonFootprint/PublicationDate/1/0',
-                    'PublicationDate',
-                    currentDate
-                );
-
-                // Remove ExpirationDate value (keep empty)
-                const expirationDateProp = findPcfElement(
-                    productCarbonFootprintSmc,
-                    'https://admin-shell.io/idta/CarbonFootprint/ExpirationDate/1/0',
-                    'ExpirationDate'
-                );
-                if (expirationDateProp) {
-                    delete expirationDateProp.value;
-                }
+            if (!pcfSubmodel) {
+                throw new Error('Failed to create PCF submodel from template');
             }
 
             // Step 6: Clear old submodel references and add new ones
@@ -576,7 +469,7 @@
             delete shellCopy.endpoints;
             const aasInstanceOrError = jsonization.assetAdministrationShellFromJsonable(shellCopy);
             if (aasInstanceOrError.error !== null) {
-                throw new Error('Failed to convert AAS: ' + aasInstanceOrError.error);
+                throw new Error('Failed to convert AAS: ' + JSON.stringify(aasInstanceOrError.error));
             }
             const coreworksAAS = aasInstanceOrError.mustValue();
             const aasUploaded = await postAas(coreworksAAS);
@@ -585,10 +478,12 @@
                 throw new Error('Failed to upload AAS');
             }
 
+            console.log('PCF Submodel:', pcfSubmodel);
+
             // Step 8: Upload PCF Submodel
-            const pcfInstanceOrError = jsonization.submodelFromJsonable(pcfSubmodel);
+            const pcfInstanceOrError = jsonization.submodelFromJsonable(pcfSubmodel as any);
             if (pcfInstanceOrError.error !== null) {
-                throw new Error('Failed to convert PCF submodel: ' + pcfInstanceOrError.error);
+                throw new Error('Failed to convert PCF submodel: ' + JSON.stringify(pcfInstanceOrError.error));
             }
             const coreworksPcfSubmodel = pcfInstanceOrError.mustValue();
             const pcfUploaded = await postSubmodel(coreworksPcfSubmodel);
@@ -603,7 +498,7 @@
                 try {
                     const smInstanceOrError = jsonization.submodelFromJsonable(submodel);
                     if (smInstanceOrError.error !== null) {
-                        console.error('Failed to convert submodel:', smInstanceOrError.error);
+                        console.error('Failed to convert submodel:', JSON.stringify(smInstanceOrError.error));
                         continue;
                     }
                     const coreworksSubmodel = smInstanceOrError.mustValue();
@@ -637,7 +532,6 @@
             pcfEndpoint += 'submodels/' + base64Encode(pcfSubmodelId);
 
             // Navigate to the new AAS with the PCF submodel selected
-            // Don't dispatch to store - let the router handle fetching and dispatching
             await router.push({
                 path: '/aassmviewer',
                 query: {

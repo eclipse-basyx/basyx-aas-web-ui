@@ -366,6 +366,165 @@ export function useCarbonFootprint_v1_0Utils() {
         return false;
     }
 
+    /**
+     * Creates a PCF submodel from template with the provided values
+     *
+     * @param {Record<string, unknown>} pcfTemplate - The PCF template JSON object
+     * @param {Object} params - Parameters for PCF submodel creation
+     * @param {string} params.submodelId - The ID to assign to the new submodel
+     * @param {string} params.pcfCalculationMethod - The calculation method used
+     * @param {number|string} params.pcfCO2eq - The CO2 equivalent value
+     * @param {string} params.referenceUnit - The reference impact unit for calculation (e.g., 'piece', 'kg')
+     * @param {number} params.referenceQuantity - The quantity of measure for calculation
+     * @param {string} params.lifeCyclePhase - The lifecycle phase (e.g., 'A3 - Production')
+     * @param {string} [params.publicationDate] - The publication date (ISO format). Defaults to current date.
+     * @param {string} [params.expirationDate] - Optional expiration date (ISO format)
+     * @returns {Record<string, unknown> | null} The populated PCF submodel or null if creation fails
+     */
+    function createPcfSubmodelFromTemplate(
+        pcfTemplate: Record<string, unknown>,
+        params: {
+            submodelId: string;
+            pcfCalculationMethod: string;
+            pcfCO2eq: number | string;
+            referenceUnit: string;
+            referenceQuantity: number;
+            lifeCyclePhase: string;
+            publicationDate?: string;
+            expirationDate?: string;
+        }
+    ): Record<string, unknown> | null {
+        try {
+            // Create a deep copy of the template
+            const pcfSubmodel = JSON.parse(JSON.stringify(pcfTemplate));
+
+            // Set submodel ID and kind
+            pcfSubmodel.id = params.submodelId;
+            pcfSubmodel.kind = 'Instance';
+
+            // Get publication date (use provided or current date)
+            const publicationDate = params.publicationDate || new Date().toISOString();
+
+            // Find ProductCarbonFootprints element (wrap in object with value property for findPcfElement)
+            const pcfSubmodelWrapper = { value: pcfSubmodel.submodelElements };
+            const productCarbonFootprintsSml = findPcfElement(
+                pcfSubmodelWrapper,
+                'https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprints/1/0',
+                'ProductCarbonFootprints',
+                true
+            );
+
+            if (
+                !productCarbonFootprintsSml ||
+                !productCarbonFootprintsSml.value ||
+                productCarbonFootprintsSml.value.length === 0
+            ) {
+                console.error('ProductCarbonFootprints element not found in template');
+                return null;
+            }
+
+            // Get the first ProductCarbonFootprint SubmodelElementCollection
+            const productCarbonFootprintSmc = productCarbonFootprintsSml.value[0];
+
+            // Set PcfCalculationMethod
+            const pcfCalculationMethodsSml = findPcfElement(
+                productCarbonFootprintSmc,
+                'https://admin-shell.io/idta/CarbonFootprint/PcfCalculationMethods/1/0',
+                'PcfCalculationMethods',
+                true
+            );
+            if (pcfCalculationMethodsSml) {
+                pcfCalculationMethodsSml.value = [
+                    {
+                        modelType: 'Property',
+                        valueType: 'xs:string',
+                        value: params.pcfCalculationMethod,
+                        idShort: 'PcfCalculationMethod',
+                        semanticId: {
+                            type: 'ExternalReference',
+                            keys: [
+                                {
+                                    type: 'GlobalReference',
+                                    value: '0173-1#02-ABG854#003',
+                                },
+                            ],
+                        },
+                    },
+                ];
+            }
+
+            // Set PcfCO2eq
+            setPcfElementValue(productCarbonFootprintSmc, '0173-1#02-ABG855#001', 'PcfCO2eq', params.pcfCO2eq);
+
+            // Set ReferenceImpactUnitForCalculation
+            setPcfElementValue(
+                productCarbonFootprintSmc,
+                '0173-1#02-ABG856#003',
+                'ReferenceImpactUnitForCalculation',
+                params.referenceUnit
+            );
+
+            // Set QuantityOfMeasureForCalculation
+            setPcfElementValue(
+                productCarbonFootprintSmc,
+                '0173-1#02-ABG857#003',
+                'QuantityOfMeasureForCalculation',
+                String(params.referenceQuantity)
+            );
+
+            // Set LifeCyclePhases
+            const lifeCyclePhasesSml = findPcfElement(
+                productCarbonFootprintSmc,
+                'https://admin-shell.io/idta/CarbonFootprint/LifeCyclePhases/1/0',
+                'LifeCyclePhases',
+                true
+            );
+            if (lifeCyclePhasesSml) {
+                lifeCyclePhasesSml.value = [
+                    {
+                        modelType: 'Property',
+                        valueType: 'xs:string',
+                        value: params.lifeCyclePhase,
+                        idShort: 'LifeCyclePhase',
+                    },
+                ];
+            }
+
+            // Set PublicationDate
+            setPcfElementValue(
+                productCarbonFootprintSmc,
+                'https://admin-shell.io/idta/CarbonFootprint/PublicationDate/1/0',
+                'PublicationDate',
+                publicationDate
+            );
+
+            // Handle ExpirationDate
+            if (params.expirationDate) {
+                setPcfElementValue(
+                    productCarbonFootprintSmc,
+                    'https://admin-shell.io/idta/CarbonFootprint/ExpirationDate/1/0',
+                    'ExpirationDate',
+                    params.expirationDate
+                );
+            } else {
+                // Remove ExpirationDate value (keep empty)
+                const expirationDateProp = findPcfElement(
+                    productCarbonFootprintSmc,
+                    'https://admin-shell.io/idta/CarbonFootprint/ExpirationDate/1/0',
+                    'ExpirationDate'
+                );
+                if (expirationDateProp) {
+                    delete expirationDateProp.value;
+                }
+            }
+
+            return pcfSubmodel;
+        } catch (error) {
+            console.error('Error creating PCF submodel from template:', error);
+            return null;
+        }
+    }
+
     return {
         semanticId,
         semanticIdSmlProductCarbonFootprints,
@@ -376,5 +535,6 @@ export function useCarbonFootprint_v1_0Utils() {
         extractProductCarbonFootprint,
         findPcfElement,
         setPcfElementValue,
+        createPcfSubmodelFromTemplate,
     };
 }
