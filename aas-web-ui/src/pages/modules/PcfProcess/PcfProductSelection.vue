@@ -127,7 +127,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, defineEmits, onMounted, ref } from 'vue';
+    import { computed, onMounted, ref } from 'vue';
     import { useTheme } from 'vuetify';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
