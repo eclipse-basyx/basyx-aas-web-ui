@@ -80,6 +80,13 @@
                 <v-card-text style="max-height: 200px; overflow-y: auto; max-width: 590px">
                     <pre class="text-subtitleText text-caption">{{ Snackbar.extendedError }}</pre>
                 </v-card-text>
+                <v-divider></v-divider>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn size="small" variant="text" prepend-icon="mdi-content-copy" @click="copyExtendedError()">
+                        Copy Error
+                    </v-btn>
+                </v-card-actions>
             </v-card>
             <span v-else class="text-buttonText">{{ Snackbar.text }}</span>
             <template #actions>
@@ -345,6 +352,28 @@
 
     function closeSnackbar(): void {
         navigationStore.dispatchSnackbar({ status: false });
+    }
+
+    async function copyExtendedError(): Promise<void> {
+        const errorText = `${Snackbar.value.baseError}\n\n${Snackbar.value.extendedError}`;
+        try {
+            await navigator.clipboard.writeText(errorText);
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 2000,
+                color: 'success',
+                btnColor: 'buttonText',
+                text: 'Error copied to clipboard',
+            });
+        } catch {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Failed to copy error to clipboard',
+            });
+        }
     }
 
     function applyTheme(): void {
