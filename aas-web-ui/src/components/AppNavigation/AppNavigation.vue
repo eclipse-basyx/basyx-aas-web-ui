@@ -354,9 +354,26 @@
         navigationStore.dispatchSnackbar({ status: false });
     }
 
-    function copyExtendedError(): void {
+    async function copyExtendedError(): Promise<void> {
         const errorText = `${Snackbar.value.baseError}\n\n${Snackbar.value.extendedError}`;
-        navigator.clipboard.writeText(errorText);
+        try {
+            await navigator.clipboard.writeText(errorText);
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 2000,
+                color: 'success',
+                btnColor: 'buttonText',
+                text: 'Error copied to clipboard',
+            });
+        } catch (error) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Failed to copy error to clipboard',
+            });
+        }
     }
 
     function applyTheme(): void {
