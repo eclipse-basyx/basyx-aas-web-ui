@@ -326,7 +326,7 @@ export function useCarbonFootprint_v1_0Utils() {
      * @param {string} semanticId - The semantic ID to search for
      * @param {string} idShort - The idShort to search for
      * @param {boolean} caseInsensitive - Whether to perform case-insensitive idShort matching
-     * @returns {any} The found element or undefined
+     * @returns {any} The found SubmodelElement or undefined
      */
     function findPcfElement(
         parentElement: any,

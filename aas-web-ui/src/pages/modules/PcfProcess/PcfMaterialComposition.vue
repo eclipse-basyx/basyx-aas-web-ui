@@ -102,6 +102,7 @@
                 class="text-none text-buttonText"
                 text="Complete"
                 :loading="isCompleting"
+                :disabled="hasValidationErrors"
                 @click="complete" />
             <v-spacer></v-spacer>
         </v-card-actions>
@@ -170,6 +171,10 @@
                 return sum + footprint;
             }, 0)
             .toFixed(2);
+    });
+
+    const hasValidationErrors = computed(() => {
+        return selectedMaterials.value.some((material) => material.hasError || material.unitError);
     });
 
     onMounted(async () => {
@@ -404,170 +409,201 @@
         selectedMaterials.value.splice(index, 1);
     }
 
-    async function complete(): Promise<void> {
-        isCompleting.value = true;
+    function createUniqueIdSuffix(): string {
+        const timestamp = Date.now();
+        const randomValue = Math.floor(Math.random() * 1000000);
+        return `_${timestamp}_${randomValue}`;
+    }
 
-        try {
-            // Step 1: Create a copy of the shell
-            const shellCopy = JSON.parse(JSON.stringify(props.shell));
+    function createAasInstance(idSuffix: string): any {
+        const shellCopy = JSON.parse(JSON.stringify(props.shell));
+        const newAasId = shellCopy.id + idSuffix;
 
-            // Step 2: Generate new IDs with timestamp and random value
-            const timestamp = Date.now();
-            const randomValue = Math.floor(Math.random() * 1000000);
-            const idSuffix = `_${timestamp}_${randomValue}`;
-            const newAasId = shellCopy.id + idSuffix;
+        shellCopy.id = newAasId;
+        shellCopy.assetInformation.assetKind = 'Instance';
 
-            shellCopy.id = newAasId;
-            shellCopy.assetInformation.assetKind = 'Instance';
+        // Add serial number as specific asset ID
+        const randomSerialNumber = `SN${idSuffix}`;
+        if (!shellCopy.assetInformation.specificAssetIds) {
+            shellCopy.assetInformation.specificAssetIds = [];
+        }
+        shellCopy.assetInformation.specificAssetIds.push({
+            name: 'serialNumber',
+            value: randomSerialNumber,
+        });
 
-            // Add specific asset ID with serial number
-            const randomSerialNumber = `SN-${timestamp}-${randomValue}`;
-            if (!shellCopy.assetInformation.specificAssetIds) {
-                shellCopy.assetInformation.specificAssetIds = [];
-            }
-            shellCopy.assetInformation.specificAssetIds.push({
-                name: 'serialNumber',
-                value: randomSerialNumber,
-            });
+        return shellCopy;
+    }
 
-            // Step 3: Fetch all submodels from original AAS
-            const submodels = [];
-            const submodelRefs = props.shell.submodels || [];
+    async function fetchAndCloneSubmodels(idSuffix: string): Promise<any[]> {
+        const submodels = [];
+        const submodelRefs = props.shell.submodels || [];
 
-            for (const submodelRef of submodelRefs) {
-                if (submodelRef.keys.length === 0) continue;
-                const smId = submodelRef.keys[0].value;
+        for (const submodelRef of submodelRefs) {
+            if (submodelRef.keys.length === 0) continue;
+            const smId = submodelRef.keys[0].value;
 
-                try {
-                    const submodel = await fetchSmById(smId);
+            try {
+                const submodel = await fetchSmById(smId);
 
-                    // Skip existing PCF submodels
-                    if (checkSemanticId(submodel, pcfSemanticId)) {
-                        continue;
-                    }
-
-                    // Step 4: Give submodel new ID with same suffix
-                    submodel.id = submodel.id + idSuffix;
-                    submodels.push(submodel);
-                } catch (error) {
-                    console.error('Error fetching submodel:', error);
+                // Skip existing PCF submodels
+                if (checkSemanticId(submodel, pcfSemanticId)) {
+                    continue;
                 }
+
+                // Give submodel new ID with same suffix
+                submodel.id = submodel.id + idSuffix;
+                submodels.push(submodel);
+            } catch (error) {
+                console.error('Error fetching submodel:', error);
             }
+        }
 
-            // Step 5: Create PCF submodel from template
-            const pcfSubmodelId = PCF_TEMPLATE.id + idSuffix;
-            const pcfSubmodel = createPcfSubmodelFromTemplate(PCF_TEMPLATE, {
-                submodelId: pcfSubmodelId,
-                pcfCalculationMethod: 'BaSyx Web UI PCF Calculator',
-                pcfCO2eq: totalCarbonFootprint.value,
-                referenceUnit: 'piece',
-                referenceQuantity: 1,
-                lifeCyclePhase: 'A3 - Production',
-            });
+        return submodels;
+    }
 
-            if (!pcfSubmodel) {
-                throw new Error('Failed to create PCF submodel from template');
-            }
+    function createPcfSubmodel(idSuffix: string): any {
+        const pcfSubmodelId = PCF_TEMPLATE.id + idSuffix;
+        const pcfSubmodel = createPcfSubmodelFromTemplate(PCF_TEMPLATE, {
+            submodelId: pcfSubmodelId,
+            pcfCalculationMethod: 'BaSyx Web UI PCF Calculator',
+            pcfCO2eq: totalCarbonFootprint.value,
+            referenceUnit: 'piece',
+            referenceQuantity: 1,
+            lifeCyclePhase: 'A3 - Production',
+        });
 
-            // Step 6: Clear old submodel references and add new ones
-            shellCopy.submodels = [];
+        if (!pcfSubmodel) {
+            throw new Error('Failed to create PCF submodel from template');
+        }
 
-            // Add PCF submodel reference
+        return pcfSubmodel;
+    }
+
+    function updateSubmodelReferences(shellCopy: any, pcfSubmodel: any, submodels: any[]): void {
+        shellCopy.submodels = [];
+
+        // Add PCF submodel reference
+        shellCopy.submodels.push({
+            type: 'ModelReference',
+            keys: [
+                {
+                    type: 'Submodel',
+                    value: pcfSubmodel.id,
+                },
+            ],
+        });
+
+        // Add other submodel references
+        for (const submodel of submodels) {
             shellCopy.submodels.push({
                 type: 'ModelReference',
                 keys: [
                     {
                         type: 'Submodel',
-                        value: pcfSubmodelId,
+                        value: submodel.id,
                     },
                 ],
             });
+        }
+    }
 
-            // Add other submodel references with new IDs
-            for (const submodel of submodels) {
-                shellCopy.submodels.push({
-                    type: 'ModelReference',
-                    keys: [
-                        {
-                            type: 'Submodel',
-                            value: submodel.id,
-                        },
-                    ],
-                });
-            }
+    async function uploadAas(shellCopy: any): Promise<void> {
+        delete shellCopy.endpoints;
+        const aasInstanceOrError = jsonization.assetAdministrationShellFromJsonable(shellCopy);
+        if (aasInstanceOrError.error !== null) {
+            throw new Error('Failed to convert AAS: ' + JSON.stringify(aasInstanceOrError.error));
+        }
+        const coreworksAAS = aasInstanceOrError.mustValue();
+        const aasUploaded = await postAas(coreworksAAS);
 
-            // Step 7: Upload AAS to default infrastructure
-            delete shellCopy.endpoints;
-            const aasInstanceOrError = jsonization.assetAdministrationShellFromJsonable(shellCopy);
-            if (aasInstanceOrError.error !== null) {
-                throw new Error('Failed to convert AAS: ' + JSON.stringify(aasInstanceOrError.error));
-            }
-            const coreworksAAS = aasInstanceOrError.mustValue();
-            const aasUploaded = await postAas(coreworksAAS);
+        if (!aasUploaded) {
+            throw new Error('Failed to upload AAS');
+        }
+    }
 
-            if (!aasUploaded) {
-                throw new Error('Failed to upload AAS');
-            }
+    async function uploadSubmodels(pcfSubmodel: any, submodels: any[]): Promise<number> {
+        // Upload PCF Submodel
+        const pcfInstanceOrError = jsonization.submodelFromJsonable(pcfSubmodel as any);
+        if (pcfInstanceOrError.error !== null) {
+            throw new Error('Failed to convert PCF submodel: ' + JSON.stringify(pcfInstanceOrError.error));
+        }
+        const coreworksPcfSubmodel = pcfInstanceOrError.mustValue();
+        const pcfUploaded = await postSubmodel(coreworksPcfSubmodel);
 
-            // Step 8: Upload PCF Submodel
-            const pcfInstanceOrError = jsonization.submodelFromJsonable(pcfSubmodel as any);
-            if (pcfInstanceOrError.error !== null) {
-                throw new Error('Failed to convert PCF submodel: ' + JSON.stringify(pcfInstanceOrError.error));
-            }
-            const coreworksPcfSubmodel = pcfInstanceOrError.mustValue();
-            const pcfUploaded = await postSubmodel(coreworksPcfSubmodel);
+        if (!pcfUploaded) {
+            throw new Error('Failed to upload PCF submodel');
+        }
 
-            if (!pcfUploaded) {
-                throw new Error('Failed to upload PCF submodel');
-            }
-
-            // Upload other submodels
-            let submodelsUploaded = 0;
-            for (const submodel of submodels) {
-                try {
-                    const smInstanceOrError = jsonization.submodelFromJsonable(submodel);
-                    if (smInstanceOrError.error !== null) {
-                        console.error('Failed to convert submodel:', JSON.stringify(smInstanceOrError.error));
-                        continue;
-                    }
-                    const coreworksSubmodel = smInstanceOrError.mustValue();
-                    const uploaded = await postSubmodel(coreworksSubmodel);
-                    if (uploaded) {
-                        submodelsUploaded++;
-                    }
-                } catch (error) {
-                    console.error('Error uploading submodel:', error);
+        // Upload other submodels
+        let submodelsUploaded = 0;
+        for (const submodel of submodels) {
+            try {
+                const smInstanceOrError = jsonization.submodelFromJsonable(submodel);
+                if (smInstanceOrError.error !== null) {
+                    console.error('Failed to convert submodel:', JSON.stringify(smInstanceOrError.error));
+                    continue;
                 }
+                const coreworksSubmodel = smInstanceOrError.mustValue();
+                const uploaded = await postSubmodel(coreworksSubmodel);
+                if (uploaded) {
+                    submodelsUploaded++;
+                }
+            } catch (error) {
+                console.error('Error uploading submodel:', error);
             }
+        }
 
-            // Step 9: Navigate to the new AAS with PCF submodel
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 8000,
-                color: 'success',
-                btnColor: 'buttonText',
-                text: `Successfully created AAS with PCF submodel (${submodelsUploaded + 1}/${submodels.length + 1} submodels uploaded)`,
-            });
+        return submodelsUploaded;
+    }
 
-            // Construct AAS and PCF submodel endpoint paths
-            const aasRepoUrl = infrastructureStore.getAASRepoURL;
-            let aasEndpoint = aasRepoUrl;
-            if (!aasEndpoint.endsWith('/')) aasEndpoint += '/';
-            aasEndpoint += 'shells/' + base64Encode(newAasId);
+    function showCompletionSnackbar(submodelsUploaded: number, totalSubmodels: number): void {
+        const allSubmodelsUploaded = submodelsUploaded === totalSubmodels;
+        navigationStore.dispatchSnackbar({
+            status: true,
+            timeout: 8000,
+            color: allSubmodelsUploaded ? 'success' : 'warning',
+            btnColor: 'buttonText',
+            text: `Successfully created AAS with PCF submodel (${submodelsUploaded + 1}/${totalSubmodels + 1} submodels uploaded)`,
+        });
+    }
 
-            const smRepoUrl = infrastructureStore.getSubmodelRepoURL;
-            let pcfEndpoint = smRepoUrl;
-            if (!pcfEndpoint.endsWith('/')) pcfEndpoint += '/';
-            pcfEndpoint += 'submodels/' + base64Encode(pcfSubmodelId);
+    async function navigateToNewAas(newAasId: string, pcfSubmodelId: string): Promise<void> {
+        const aasRepoUrl = infrastructureStore.getAASRepoURL;
+        let aasEndpoint = aasRepoUrl;
+        if (!aasEndpoint.endsWith('/')) aasEndpoint += '/';
+        aasEndpoint += 'shells/' + base64Encode(newAasId);
 
-            // Navigate to the new AAS with the PCF submodel selected
-            await router.push({
-                path: '/aassmviewer',
-                query: {
-                    aas: aasEndpoint,
-                    path: pcfEndpoint,
-                },
-            });
+        const smRepoUrl = infrastructureStore.getSubmodelRepoURL;
+        let pcfEndpoint = smRepoUrl;
+        if (!pcfEndpoint.endsWith('/')) pcfEndpoint += '/';
+        pcfEndpoint += 'submodels/' + base64Encode(pcfSubmodelId);
+
+        await router.push({
+            path: '/aassmviewer',
+            query: {
+                aas: aasEndpoint,
+                path: pcfEndpoint,
+            },
+        });
+    }
+
+    async function complete(): Promise<void> {
+        isCompleting.value = true;
+
+        try {
+            const idSuffix = createUniqueIdSuffix();
+            const shellCopy = createAasInstance(idSuffix);
+            const submodels = await fetchAndCloneSubmodels(idSuffix);
+            const pcfSubmodel = createPcfSubmodel(idSuffix);
+
+            updateSubmodelReferences(shellCopy, pcfSubmodel, submodels);
+
+            await uploadAas(shellCopy);
+            const submodelsUploaded = await uploadSubmodels(pcfSubmodel, submodels);
+
+            showCompletionSnackbar(submodelsUploaded, submodels.length);
+            await navigateToNewAas(shellCopy.id, pcfSubmodel.id);
         } catch (error) {
             console.error('Error completing PCF calculation:', error);
             navigationStore.dispatchSnackbar({

@@ -1,6 +1,6 @@
 <template>
     <v-card border rounded="lg" class="flex-grow-1">
-        <v-card-text class="pa-0 pa-0 d-flex">
+        <v-card-text class="pa-0 d-flex">
             <v-sheet :width="340" class="border-e-thin rounded-s-lg">
                 <!-- List of shells -->
                 <v-list
@@ -146,6 +146,7 @@
     const search = ref<string | null>(null);
     const selectedShell = ref<any>(null);
     const virtualScrollRef = ref<any>(null);
+    const allShells = ref<Array<any>>([]);
     const shells = ref<Array<any>>([]);
     const displayName = ref<any>(undefined);
 
@@ -165,16 +166,17 @@
     });
 
     async function fetchShells(): Promise<void> {
-        shells.value = await fetchAasList();
+        allShells.value = await fetchAasList();
+        shells.value = allShells.value;
     }
 
     async function applySearch(): Promise<void> {
         if (search.value) {
-            shells.value = shells.value.filter((shell) =>
+            shells.value = allShells.value.filter((shell) =>
                 shell['idShort'].toLowerCase().includes(search.value?.toLowerCase() || '')
             );
         } else {
-            await fetchShells();
+            shells.value = allShells.value;
         }
     }
 
