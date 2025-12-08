@@ -7,18 +7,19 @@
                 icon="mdi-arrow-left"
                 color="primary"
                 @click="modelValue!--" />
-            <v-divider vertical inset class="ml-3 mr-6"></v-divider>
-            <span>Material Selection for:</span>
+            <v-divider vertical inset class="ml-3 mr-6 hidden-sm-and-down"></v-divider>
+            <span class="hidden-md-and-down">Material Selection for:</span>
             <v-list-item>
                 <v-list-item-title class="text-primary">{{ nameToDisplay(shell) }}</v-list-item-title>
                 <v-list-item-subtitle>{{ shell.assetInformation.globalAssetId }}</v-list-item-subtitle>
             </v-list-item>
         </v-card-title>
         <v-divider></v-divider>
-        <v-card-text style="height: calc(100vh - 250px); overflow-y: auto">
-            <v-list style="max-width: 840px">
+        <v-card-text style="height: calc(100vh - 249px); overflow-y: auto">
+            <v-list>
                 <v-list-item v-for="(material, index) in selectedMaterials" :key="index" class="px-0">
-                    <div class="d-flex justify-space-around align-center">
+                    <!-- Desktop Layout -->
+                    <div class="d-none d-md-flex justify-space-around align-center" style="max-width: 840px">
                         <v-combobox
                             v-model="material.shell"
                             :items="materialShells"
@@ -63,21 +64,72 @@
                             class="mb-6"
                             @click="removeMaterial(index)"></v-btn>
                     </div>
-                </v-list-item>
-                <v-list-item class="px-0">
-                    <div class="d-flex justify-start align-center">
-                        <v-btn
-                            text="Add Material"
-                            prepend-icon="mdi-plus"
-                            variant="flat"
-                            color="primary"
-                            class="text-buttonText"
-                            @click="addMaterial" />
+
+                    <!-- Mobile Layout -->
+                    <div class="d-flex d-md-none flex-column" style="width: 100%">
+                        <v-combobox
+                            v-model="material.shell"
+                            :items="materialShells"
+                            item-title="idShort"
+                            item-value="id"
+                            variant="outlined"
+                            density="compact"
+                            placeholder="Select Material"
+                            clearable
+                            return-object
+                            :error="material.hasError"
+                            :error-messages="material.hasError ? material.errorMessage : []"
+                            class="mb-1"
+                            @update:model-value="fetchSubmodelsForMaterial">
+                            <template #append>
+                                <v-btn
+                                    icon="mdi-delete"
+                                    variant="text"
+                                    color="error"
+                                    size="small"
+                                    :disabled="selectedMaterials.length === 1"
+                                    @click="removeMaterial(index)"></v-btn>
+                            </template>
+                        </v-combobox>
+
+                        <v-number-input
+                            v-model="material.amount"
+                            :min="0"
+                            :precision="null"
+                            variant="outlined"
+                            density="compact"
+                            control-variant="stacked"
+                            label="Amount"
+                            :suffix="material.unit || ''"
+                            :error="material.unitError"
+                            :error-messages="material.unitError ? material.unitErrorMessage : []"
+                            class="mb-1"></v-number-input>
+
+                        <v-text-field
+                            v-model="material.footprint"
+                            variant="outlined"
+                            density="compact"
+                            suffix="kg CO2 eq"
+                            readonly
+                            prepend-inner-icon="mdi-equal"></v-text-field>
+
+                        <v-divider v-if="index < selectedMaterials.length - 1" class="my-2"></v-divider>
                     </div>
+                </v-list-item>
+                <v-list-item class="px-0" :class="mdAndDown ? 'mt-3' : ''">
+                    <v-btn
+                        text="Add Material"
+                        prepend-icon="mdi-plus"
+                        variant="flat"
+                        color="primary"
+                        class="text-buttonText"
+                        :block="mdAndDown"
+                        @click="addMaterial" />
                 </v-list-item>
                 <v-divider class="mb-2 mt-3"></v-divider>
                 <v-list-item class="px-0">
-                    <div class="d-flex justify-end align-center">
+                    <!-- Desktop Layout -->
+                    <div class="d-none d-md-flex justify-end align-center" style="max-width: 840px; width: 100%">
                         <span class="subtitle-1 mr-4">Total Carbon Footprint:</span>
                         <v-text-field
                             v-model="totalCarbonFootprint"
@@ -90,12 +142,24 @@
                             hide-details></v-text-field>
                         <div style="width: 40px"></div>
                     </div>
+
+                    <!-- Mobile Layout -->
+                    <div class="d-flex d-md-none flex-column" style="width: 100%">
+                        <span class="subtitle-1 mb-2">Total Carbon Footprint:</span>
+                        <v-text-field
+                            v-model="totalCarbonFootprint"
+                            variant="outlined"
+                            density="compact"
+                            suffix="kg CO2 eq"
+                            readonly
+                            hide-details></v-text-field>
+                    </div>
                 </v-list-item>
             </v-list>
         </v-card-text>
         <v-divider></v-divider>
-        <v-card-actions>
-            <v-spacer></v-spacer>
+        <v-card-actions :class="{ 'justify-center': smAndDown }">
+            <v-spacer v-if="!smAndDown"></v-spacer>
             <v-btn
                 variant="flat"
                 color="success"
@@ -104,7 +168,7 @@
                 :loading="isCompleting"
                 :disabled="hasValidationErrors"
                 @click="complete" />
-            <v-spacer></v-spacer>
+            <v-spacer v-if="!smAndDown"></v-spacer>
         </v-card-actions>
     </v-card>
 </template>
@@ -113,6 +177,7 @@
     import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
     import { computed, onMounted, ref } from 'vue';
     import { useRouter } from 'vue-router';
+    import { useDisplay } from 'vuetify';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
@@ -126,6 +191,9 @@
     import PCF_TEMPLATE from './PCF_V1_0_Template.json';
 
     const router = useRouter();
+
+    const display = useDisplay();
+
     const infrastructureStore = useInfrastructureStore();
     const navigationStore = useNavigationStore();
 
@@ -176,6 +244,9 @@
     const hasValidationErrors = computed(() => {
         return selectedMaterials.value.some((material) => material.hasError || material.unitError);
     });
+
+    const smAndDown = computed(() => display.smAndDown.value);
+    const mdAndDown = computed(() => display.mdAndDown.value);
 
     onMounted(async () => {
         await fetchMaterialShells();
