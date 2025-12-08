@@ -1,15 +1,22 @@
 <template>
     <v-card border rounded="lg" class="flex-grow-1">
-        <v-card-text class="pa-0 d-flex">
-            <v-sheet :width="340" class="border-e-thin rounded-s-lg">
+        <v-card-text
+            class="pa-0"
+            :class="mdAndDown ? 'd-flex flex-column' : 'd-flex'"
+            :style="mdAndDown ? { height: listHeight } : {}">
+            <v-sheet
+                :width="mdAndDown ? '100%' : 340"
+                :class="mdAndDown ? '' : 'border-e-thin rounded-s-lg'"
+                :style="mdAndDown ? { height: '50%', display: 'flex', 'flex-direction': 'column' } : {}">
                 <!-- List of shells -->
                 <v-list
                     nav
-                    class="px-0 pt-0 rounded-s-lg"
+                    class="px-0 pt-0"
+                    :class="mdAndDown ? 'flex-grow-0' : 'rounded-s-lg'"
                     :style="{
                         display: 'flex',
                         'flex-direction': 'column',
-                        height: listHeight,
+                        height: mdAndDown ? '100%' : listHeight,
                     }">
                     <!-- Title -->
                     <v-list-item class="pl-3">
@@ -34,7 +41,11 @@
                     </v-list-item>
                     <v-divider></v-divider>
                     <!-- List of Product Types -->
-                    <v-virtual-scroll ref="virtualScrollRef" :items="onlyTypeShells" :item-height="46">
+                    <v-virtual-scroll
+                        ref="virtualScrollRef"
+                        class="flex-grow-1"
+                        :items="onlyTypeShells"
+                        :item-height="46">
                         <template #default="{ item }">
                             <!-- Single AAS -->
                             <v-list-item
@@ -90,12 +101,16 @@
                     </v-virtual-scroll>
                 </v-list>
             </v-sheet>
-            <div class="flex-grow-1 pa-4">
+            <div
+                class="pa-4 d-flex flex-column"
+                :class="mdAndDown ? 'border-t-thin' : 'flex-grow-1'"
+                :style="mdAndDown ? { height: '50%', 'overflow-y': 'auto' } : {}">
                 <v-empty-state
                     v-if="!selectedShell"
                     icon="mdi-gesture-tap"
                     text="Please select a product type to create a production order."
-                    title="Select Product Type">
+                    title="Select Product Type"
+                    :class="mdAndDown ? 'py-8' : ''">
                     <template #media>
                         <v-icon size="64" />
                     </template>
@@ -111,9 +126,9 @@
             </div>
         </v-card-text>
         <v-divider></v-divider>
-        <v-card-actions>
-            <div style="width: 340px"></div>
-            <v-spacer></v-spacer>
+        <v-card-actions :class="mdAndDown ? 'justify-center' : ''">
+            <div v-if="!mdAndDown" style="width: 340px"></div>
+            <v-spacer v-if="!mdAndDown"></v-spacer>
             <v-btn
                 variant="flat"
                 color="success"
@@ -121,14 +136,14 @@
                 :disabled="!selectedShell"
                 text="Produce"
                 @click="produce" />
-            <v-spacer></v-spacer>
+            <v-spacer v-if="!mdAndDown"></v-spacer>
         </v-card-actions>
     </v-card>
 </template>
 
 <script lang="ts" setup>
     import { computed, onMounted, ref } from 'vue';
-    import { useTheme } from 'vuetify';
+    import { useDisplay, useTheme } from 'vuetify';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
 
@@ -136,6 +151,7 @@
     const { fetchAasList } = useAASHandling();
 
     const theme = useTheme();
+    const display = useDisplay();
 
     const emit = defineEmits<{
         (e: 'finished', shell: any): void;
@@ -151,6 +167,7 @@
     const displayName = ref<any>(undefined);
 
     const isDark = computed(() => theme.global.current.value.dark);
+    const mdAndDown = computed(() => display.mdAndDown.value);
     const primaryColor = computed(() => theme.current.value.colors.primary);
     const onlyTypeShells = computed(() =>
         shells.value.filter(

@@ -12,13 +12,15 @@
 
     defineOptions({
         inheritAttrs: false,
+        isDesktopModule: true,
+        isMobileModule: true,
         moduleTitle: 'PCF Process',
     });
 
     const step = ref(1);
     const newShell = ref<any>(undefined);
 
-    function finishedSelection(shell: any) {
+    function finishedSelection(shell: any): void {
         newShell.value = shell;
     }
 </script>
