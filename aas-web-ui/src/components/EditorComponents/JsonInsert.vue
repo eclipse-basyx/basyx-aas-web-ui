@@ -106,7 +106,7 @@
                 timeout: 20000,
                 color: 'error',
                 btnColor: 'buttonText',
-                baseError: instanceOrError.error.message,
+                baseError: instanceOrError.error?.message || String(instanceOrError.error),
                 extendedError: instanceOrError.error.path ? JSON.stringify(instanceOrError.error.path, null, 2) : '',
             });
             return;
