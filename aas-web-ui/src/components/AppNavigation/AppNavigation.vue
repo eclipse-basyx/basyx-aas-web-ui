@@ -365,7 +365,7 @@
                 btnColor: 'buttonText',
                 text: 'Error copied to clipboard',
             });
-        } catch (error) {
+        } catch {
             navigationStore.dispatchSnackbar({
                 status: true,
                 timeout: 4000,
