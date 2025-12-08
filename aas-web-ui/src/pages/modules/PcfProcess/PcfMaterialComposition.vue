@@ -103,7 +103,8 @@
                             :suffix="material.unit || ''"
                             :error="material.unitError"
                             :error-messages="material.unitError ? material.unitErrorMessage : []"
-                            class="mb-1"></v-number-input>
+                            class="mb-1"
+                            @update:model-value="calculateFootprint(material)"></v-number-input>
 
                         <v-text-field
                             v-model="material.footprint"
