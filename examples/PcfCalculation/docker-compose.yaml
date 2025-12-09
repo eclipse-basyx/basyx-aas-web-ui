@@ -1,0 +1,81 @@
+services:
+  # AAS Web UI
+  aas-web-ui:
+    image: eclipsebasyx/aas-gui:SNAPSHOT
+    container_name: aas-web-ui
+    ports:
+      - '3000:3000'
+    environment:
+      AAS_REGISTRY_PATH: http://localhost:8082/shell-descriptors
+      SUBMODEL_REGISTRY_PATH: http://localhost:8083/submodel-descriptors
+      AAS_REPO_PATH: http://localhost:8081/shells
+      SUBMODEL_REPO_PATH: http://localhost:8081/submodels
+      CD_REPO_PATH: http://localhost:8081/concept-descriptions
+      AAS_DISCOVERY_PATH: http://localhost:8084/lookup/shells
+    restart: unless-stopped
+
+  # AAS Discovery Service
+  aas-discovery:
+    image: eclipsebasyx/aas-discovery:2.0.0-SNAPSHOT
+    container_name: aas-discovery
+    environment:
+      SERVER_PORT: 8081
+      BASYX_BACKEND: InMemory
+      BASYX_CORS_ALLOWED_ORIGINS: '*'
+      BASYX_CORS_ALLOWED_METHODS: 'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD'
+    ports:
+      - '8084:8081'
+
+  # AAS Registry Service
+  aas-registry:
+    image: eclipsebasyx/aas-registry-log-mem:2.0.0-SNAPSHOT
+    container_name: aas-registry
+    ports:
+      - "8082:8080"
+    environment:
+      SERVER_PORT: 8080
+      SERVER_SERVLET_CONTEXT_PATH: /
+      BASYX_CORS_ALLOWED_ORIGINS: '*'
+      BASYX_CORS_ALLOWED_METHODS: GET,POST,PATCH,DELETE,PUT,OPTIONS,HEAD
+    restart: unless-stopped
+
+  # Submodel Registry Service
+  sm-registry:
+    image: eclipsebasyx/submodel-registry-log-mem:2.0.0-SNAPSHOT
+    container_name: sm-registry
+    environment:
+      SERVER_PORT: 8080
+      SERVER_SERVLET_CONTEXT_PATH: /
+      BASYX_CORS_ALLOWED_ORIGINS: '*'
+      BASYX_CORS_ALLOWED_METHODS: GET,POST,PATCH,DELETE,PUT,OPTIONS,HEAD
+    ports:
+      - "8083:8080"
+
+  # AAS Environment
+  aas-env:
+    image: eclipsebasyx/aas-environment:2.0.0-SNAPSHOT
+    container_name: aas-env
+    volumes:
+      - ./aas:/application/aas
+    ports:
+      - '8081:8081'
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8081
+      BASYX_BACKEND: InMemory
+      BASYX_CORS_ALLOWED_ORIGINS: '*'
+      BASYX_CORS_ALLOWED_METHODS: 'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD'
+      BASYX_ENVIRONMENT: file:aas
+      BASYX_AASREPOSITORY_FEATURE_DISCOVERYINTEGRATION: http://aas-discovery:8081
+      BASYX_AASREPOSITORY_FEATURE_REGISTRYINTEGRATION: http://aas-registry:8080
+      BASYX_SUBMODELREPOSITORY_FEATURE_REGISTRYINTEGRATION: http://sm-registry:8080
+      BASYX_EXTERNALURL: http://localhost:8081
+      SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: 1024MB
+      SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: 1024MB
+    depends_on:
+      aas-discovery:
+        condition: service_healthy
+      aas-registry:
+        condition: service_healthy
+      sm-registry:
+        condition: service_healthy
