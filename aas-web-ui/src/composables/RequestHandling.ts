@@ -1,3 +1,4 @@
+import { useAuth } from '@/composables/Auth/useAuth';
 import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 
@@ -8,6 +9,7 @@ let authErrorTimeout: NodeJS.Timeout | null = null;
 export function useRequestHandling() {
     const navigationStore = useNavigationStore();
     const infrastructureStore = useInfrastructureStore();
+    const { login } = useAuth();
 
     /**
      * Centralized error handler for catch blocks
@@ -40,6 +42,8 @@ export function useRequestHandling() {
                     btnColor: 'buttonText',
                     text: 'Authentication required',
                     extendedError: 'Please log in again using the user icon in the navigation.',
+                    actionText: 'Login',
+                    actionCallback: login,
                 });
             }
             return { success: false, status: 401 };

@@ -96,6 +96,7 @@ declare module 'vue' {
     SelectInput: typeof import('./components/EditorComponents/InputTypes/SelectInput.vue')['default']
     SemanticID: typeof import('./components/UIComponents/SemanticID.vue')['default']
     Settings: typeof import('./components/AppNavigation/Settings.vue')['default']
+    Snackbar: typeof import('./components/AppNavigation/Snackbar.vue')['default']
     SpecificAssetIds: typeof import('./components/UIComponents/SpecificAssetIds.vue')['default']
     StatusSwitch: typeof import('./components/AppNavigation/Settings/StatusSwitch.vue')['default']
     StringType: typeof import('./components/SubmodelElements/ValueTypes/StringType.vue')['default']
