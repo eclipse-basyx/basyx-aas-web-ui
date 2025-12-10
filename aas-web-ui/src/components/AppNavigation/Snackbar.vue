@@ -1,6 +1,6 @@
 <template>
     <v-snackbar v-model="snackbar.status" :color="snackbar.color" :timeout="snackbar.timeout" location="top">
-        <v-card v-if="snackbar.status === true && snackbar.color == 'error' && snackbar.baseError">
+        <v-card v-if="snackbar.status === true && snackbar.baseError">
             <v-card-title class="text-subtitle-2">{{ snackbar.baseError }}</v-card-title>
             <v-divider></v-divider>
             <v-card-text style="max-height: 200px; overflow-y: auto; max-width: 590px">

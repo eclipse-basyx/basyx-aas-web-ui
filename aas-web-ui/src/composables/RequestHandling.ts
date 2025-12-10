@@ -35,15 +35,17 @@ export function useRequestHandling() {
 
                 infrastructureStore.setAuthenticationStatusForInfrastructure(currentInfra?.id || '', false);
 
+                const isLoginAvailable = infrastructureStore.getIsLoginAvailable;
+
                 navigationStore.dispatchSnackbar({
                     status: true,
                     timeout: 8000,
                     color: 'warning',
                     btnColor: 'buttonText',
-                    text: 'Authentication required',
-                    extendedError: 'Please log in again using the user icon in the navigation.',
-                    actionText: 'Login',
-                    actionCallback: login,
+                    baseError: 'Authentication required!',
+                    extendedError: 'Please log in again.',
+                    actionText: isLoginAvailable ? 'Login' : undefined,
+                    actionCallback: isLoginAvailable ? login : undefined,
                 });
             }
             return { success: false, status: 401 };

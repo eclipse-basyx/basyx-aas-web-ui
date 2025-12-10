@@ -139,6 +139,16 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     const getConceptDescriptionRepoURL = computed(() => ConceptDescriptionRepoURL.value);
     const getBasyxComponents = computed(() => basyxComponents);
     const getIsAuthenticating = computed(() => isAuthenticating.value);
+    const getIsLoginAvailable = computed(() => {
+        const infra = getSelectedInfrastructure.value;
+        if (!infra || !infra.auth || infra.auth.securityType === 'No Authentication') {
+            return false;
+        }
+        const allowLogout = envStore.getAllowLogout;
+        const isClientCredentialsFlow = infra.auth.keycloakConfig?.authFlow === 'client-credentials';
+        const isOAuth2ClientCredentials = infra.auth.oauth2?.authFlow === 'client-credentials';
+        return allowLogout && !isClientCredentialsFlow && !isOAuth2ClientCredentials;
+    });
 
     function getDefaultInfrastructureId(): string {
         // Look for infrastructure marked as default
@@ -699,6 +709,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         getBasyxComponents,
         getDefaultInfrastructureId,
         getIsAuthenticating,
+        getIsLoginAvailable,
 
         // Actions
         dispatchComponentURL,
