@@ -154,15 +154,6 @@
                             </v-btn>
                         </v-col>
                     </v-row>
-                    <v-alert
-                        v-if="oAuth2AuthFlow === 'auth-code'"
-                        type="info"
-                        variant="tonal"
-                        density="compact"
-                        class="mb-2">
-                        Configure the redirect URI in your OAuth2 provider to:
-                        {{ getRedirectUri() }}
-                    </v-alert>
                 </template>
 
                 <!-- Keycloak -->
@@ -340,9 +331,5 @@
 
     function handleSecurityTypeChange(value: string): void {
         emit('update:securityType', value);
-    }
-
-    function getRedirectUri(): string {
-        return `${window.location.origin}/keycloak-callback.html`;
     }
 </script>
