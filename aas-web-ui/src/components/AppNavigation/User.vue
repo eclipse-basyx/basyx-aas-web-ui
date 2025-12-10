@@ -17,7 +17,7 @@
             min-width="300px"
             color="navigationMenu"
             style="border-style: solid; border-width: 1px">
-            <v-list nav class="bg-navigationMenu">
+            <v-list v-if="isAuthenticated" nav class="bg-navigationMenu">
                 <v-list-item class="py-2" :active="false" nav :subtitle="authUserEmail" :title="authUsername">
                     <template #prepend>
                         <v-avatar color="surface-light" icon="mdi-account" rounded>
@@ -27,9 +27,11 @@
                 </v-list-item>
             </v-list>
             <template #actions>
-                <v-icon size="small" class="ml-2"> mdi-lock-check </v-icon>
+                <v-icon size="small" class="ml-2">
+                    {{ authStatusIcon }}
+                </v-icon>
                 <span class="text-subtitleText text-subtitle-2">{{ authStatus }}</span>
-                <template v-if="allowLogout && !isClientCredentialsFlow && !isOAuth2ClientCredentials">
+                <template v-if="showAuthButtons">
                     <v-spacer></v-spacer>
                     <v-btn
                         v-if="currentInfrastructure?.token?.accessToken"
@@ -97,6 +99,11 @@
         const infra = currentInfrastructure.value;
         if (!infra) return 'Not Authenticated';
 
+        // Check if no authentication is configured
+        if (!infra.auth || infra.auth.securityType === 'No Authentication') {
+            return 'Authentication disabled';
+        }
+
         // Check if authenticated via token (OAuth2 or Keycloak)
         if (infra.token?.accessToken) {
             return 'Authenticated';
@@ -114,13 +121,28 @@
 
         return 'Not Authenticated';
     });
-    const isAuthEnabled = computed(
-        () =>
-            currentInfrastructure.value?.auth?.keycloakConfig ||
-            currentInfrastructure.value?.auth?.basicAuth ||
-            currentInfrastructure.value?.auth?.bearerToken ||
-            currentInfrastructure.value?.auth?.oauth2
-    );
+
+    const authStatusIcon = computed(() => {
+        const infra = currentInfrastructure.value;
+        if (!infra || !infra.auth || infra.auth.securityType === 'No Authentication') {
+            return 'mdi-lock-off-outline';
+        }
+        return 'mdi-lock-check';
+    });
+
+    const showAuthButtons = computed(() => {
+        const infra = currentInfrastructure.value;
+        if (!infra || !infra.auth || infra.auth.securityType === 'No Authentication') {
+            return false;
+        }
+        return allowLogout.value && !isClientCredentialsFlow.value && !isOAuth2ClientCredentials.value;
+    });
+
+    const isAuthEnabled = computed(() => {
+        const infra = currentInfrastructure.value;
+        if (!infra || !infra.auth) return false;
+        return infra.auth.securityType !== 'No Authentication';
+    });
     const authUsername = computed(() => {
         const infra = currentInfrastructure.value;
         // Try to get username from infrastructure token
