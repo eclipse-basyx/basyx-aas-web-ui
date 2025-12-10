@@ -1020,15 +1020,8 @@
         }
     }
 
-    type OAuth2Config = {
-        host: string;
-        clientId: string;
-        clientSecret?: string;
-        scope?: string;
-    };
-
-    async function authenticateOAuth2(flow: string, config: OAuth2Config): Promise<void> {
-        if (!config.host || !config.clientId) {
+    async function authenticateOAuth2(): Promise<void> {
+        if (!oauth2Data.value.host || !oauth2Data.value.clientId) {
             navigationStore.dispatchSnackbar({
                 status: true,
                 timeout: 4000,
@@ -1039,8 +1032,8 @@
             return;
         }
 
-        if (flow === 'client-credentials') {
-            if (!config.clientSecret) {
+        if (oAuth2AuthFlow.value === 'client-credentials') {
+            if (!oauth2Data.value.clientSecret) {
                 navigationStore.dispatchSnackbar({
                     status: true,
                     timeout: 4000,
@@ -1054,10 +1047,10 @@
             oauth2Loading.value = true;
             try {
                 const token = await authenticateOAuth2ClientCredentials({
-                    host: config.host,
-                    clientId: config.clientId,
-                    clientSecret: config.clientSecret,
-                    scope: config.scope || '',
+                    host: oauth2Data.value.host,
+                    clientId: oauth2Data.value.clientId,
+                    clientSecret: oauth2Data.value.clientSecret,
+                    scope: oauth2Data.value.scope || '',
                 });
 
                 // Store token in local state
@@ -1093,10 +1086,9 @@
         } else if (oAuth2AuthFlow.value === 'auth-code') {
             // Authorization Code Flow with PKCE
             oauth2Loading.value = true;
-            console.log('Initiating OAuth2 Authorization Code Flow');
             try {
                 // Fetch well-known configuration to get authorization endpoint
-                const wellKnownUrl = `${config.host}/.well-known/openid-configuration`;
+                const wellKnownUrl = `${oauth2Data.value.host}/.well-known/openid-configuration`;
                 const wellKnownResponse = await fetch(wellKnownUrl);
 
                 if (!wellKnownResponse.ok) {
@@ -1120,9 +1112,9 @@
                 // Initiate authorization code flow (will redirect to OAuth2 provider)
                 await initiateOAuth2AuthorizationCodeFlow({
                     authorizationEndpoint,
-                    clientId: config.clientId,
+                    clientId: oauth2Data.value.clientId,
                     redirectUri: `${window.location.origin}/`,
-                    scope: config.scope || 'openid profile email',
+                    scope: oauth2Data.value.scope || 'openid profile email',
                     state,
                 });
             } catch (error) {
