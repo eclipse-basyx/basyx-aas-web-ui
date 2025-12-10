@@ -152,9 +152,6 @@
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { requiredRule } from '@/utils/InfrastructureUtils';
-    import ComponentConfigPanel from './ComponentConfigPanel.vue';
-    import InfrastructureListTable from './InfrastructureListTable.vue';
-    import SecurityConfigPanel from './SecurityConfigPanel.vue';
 
     // Props
     const props = defineProps<{
