@@ -216,7 +216,9 @@ export async function createAppRouter(): Promise<Router> {
             const state = to.query.state as string;
             const code = to.query.code as string;
             const issuerURL = to.query.iss as string;
-            console.warn('[OAuth2 Callback] Received:', { state, code, issuerURL, query: to.query });
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('[OAuth2 Callback] Received:', { state, code, issuerURL, query: to.query });
+            }
 
             // Determine if this is OAuth2 callback (has iss parameter)
             if (issuerURL) {
