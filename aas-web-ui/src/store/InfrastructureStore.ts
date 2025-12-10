@@ -1,10 +1,5 @@
 import type { BaSyxComponent, BaSyxComponentKey } from '@/types/BaSyx';
-import type {
-    InfrastructureConfig,
-    InfrastructureStorage,
-    KeycloakConnectionData,
-    UserData,
-} from '@/types/Infrastructure';
+import type { InfrastructureConfig, UserData } from '@/types/Infrastructure';
 import { defineStore } from 'pinia';
 import { computed, nextTick, reactive, ref, watch } from 'vue';
 import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
@@ -13,8 +8,10 @@ import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient
 import { useCDRepositoryClient } from '@/composables/Client/CDRepositoryClient';
 import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
-import { authenticateKeycloak, authenticateWithClientCredentials } from '@/composables/KeycloakAuth';
+import { authenticateKeycloak } from '@/composables/KeycloakAuth';
 import { useRequestHandling } from '@/composables/RequestHandling';
+import { useInfrastructureAuth } from '@/composables/useInfrastructureAuth';
+import { useInfrastructureStorage } from '@/composables/useInfrastructureStorage';
 import { useEnvStore } from '@/store/EnvironmentStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { stripLastCharacter } from '@/utils/StringUtils';
@@ -26,6 +23,8 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
 
     // Composables
     const { getRequest } = useRequestHandling();
+    const infrastructureStorage = useInfrastructureStorage();
+    const infrastructureAuth = useInfrastructureAuth();
     const { endpointPath: aasDiscoveryEndpointPath } = useAASDiscoveryClient();
     const { endpointPath: aasRegistryEndpointPath } = useAASRegistryClient();
     const { endpointPath: smRegistryEndpointPath } = useSMRegistryClient();
@@ -150,179 +149,35 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         return '';
     }
 
-    // Helper Functions
-    function generateInfrastructureId(): string {
-        return 'infra_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
-    }
+    // Destructure createEmptyInfrastructure directly, others will be wrapped
+    const { createEmptyInfrastructure } = infrastructureStorage;
 
-    function createEmptyInfrastructure(name: string = 'New Infrastructure'): InfrastructureConfig {
-        return {
-            id: generateInfrastructureId(),
-            name,
-            auth: { securityType: 'No Authentication' },
-            components: {
-                AASDiscovery: {
-                    url: '',
-                },
-                AASRegistry: {
-                    url: '',
-                },
-                SubmodelRegistry: {
-                    url: '',
-                },
-                AASRepo: {
-                    url: '',
-                },
-                SubmodelRepo: {
-                    url: '',
-                },
-                ConceptDescriptionRepo: {
-                    url: '',
-                },
-            },
-        };
-    }
-
-    async function createDefaultInfrastructureFromEnv(): Promise<InfrastructureConfig> {
-        const infrastructure = createEmptyInfrastructure('Default Infrastructure');
-        infrastructure.isDefault = true;
-
-        // Populate from environment variables
-        if (EnvAASDiscoveryPath.value) infrastructure.components.AASDiscovery.url = EnvAASDiscoveryPath.value;
-        if (EnvAASRegistryPath.value) infrastructure.components.AASRegistry.url = EnvAASRegistryPath.value;
-        if (EnvSubmodelRegistryPath.value)
-            infrastructure.components.SubmodelRegistry.url = EnvSubmodelRegistryPath.value;
-        if (EnvAASRepoPath.value) infrastructure.components.AASRepo.url = EnvAASRepoPath.value;
-        if (EnvSubmodelRepoPath.value) infrastructure.components.SubmodelRepo.url = EnvSubmodelRepoPath.value;
-        if (EnvConceptDescriptionRepoPath.value)
-            infrastructure.components.ConceptDescriptionRepo.url = EnvConceptDescriptionRepoPath.value;
-        if (EnvKeycloakActive.value || (EnvKeycloakUrl.value && EnvKeycloakRealm.value && EnvKeycloakClientId.value)) {
-            const keycloakConfig: KeycloakConnectionData = {
-                serverUrl: EnvKeycloakUrl.value,
-                realm: EnvKeycloakRealm.value,
-                clientId: EnvKeycloakClientId.value,
-                authFlow: 'auth-code',
-            };
-
-            if (EnvPreconfiguredAuth.value) {
-                keycloakConfig.clientSecret = EnvPreconfiguredAuthClientSecret.value;
-                keycloakConfig.authFlow = 'client-credentials';
-            }
-
-            infrastructure.auth = {
-                securityType: 'Keycloak',
-                keycloakConfig,
-            };
-            if (EnvPreconfiguredAuth.value) {
-                // Trigger client-credentials flow
-                await refreshInfrastructureTokens(infrastructure.id);
-                const result = await authenticateWithClientCredentials(infrastructure.auth.keycloakConfig!);
-                infrastructure.token = {
-                    accessToken: result.accessToken,
-                    refreshToken: result.refreshToken,
-                    expiresAt: result.expiresAt,
-                    idToken: result.idToken,
-                };
-            }
-        }
-
-        return infrastructure;
-    }
-
-    function createInfrastructureFromLegacyStorage(): InfrastructureConfig {
-        const infrastructure = createEmptyInfrastructure('Legacy Infrastructure');
-
-        // Try to load from old localStorage keys
-        const legacyAASDiscoveryURL = window.localStorage.getItem('AASDiscoveryURL');
-        const legacyAASRegistryURL = window.localStorage.getItem('AASRegistryURL');
-        const legacySubmodelRegistryURL = window.localStorage.getItem('SubmodelRegistryURL');
-        const legacyAASRepoURL = window.localStorage.getItem('AASRepoURL');
-        const legacySubmodelRepoURL = window.localStorage.getItem('SubmodelRepoURL');
-        const legacyConceptDescriptionRepoURL = window.localStorage.getItem('ConceptDescriptionRepoURL');
-
-        if (legacyAASDiscoveryURL) infrastructure.components.AASDiscovery.url = legacyAASDiscoveryURL;
-        if (legacyAASRegistryURL) infrastructure.components.AASRegistry.url = legacyAASRegistryURL;
-        if (legacySubmodelRegistryURL) infrastructure.components.SubmodelRegistry.url = legacySubmodelRegistryURL;
-        if (legacyAASRepoURL) infrastructure.components.AASRepo.url = legacyAASRepoURL;
-        if (legacySubmodelRepoURL) infrastructure.components.SubmodelRepo.url = legacySubmodelRepoURL;
-        if (legacyConceptDescriptionRepoURL)
-            infrastructure.components.ConceptDescriptionRepo.url = legacyConceptDescriptionRepoURL;
-
-        return infrastructure;
-    }
-
+    // Wrapper functions that delegate to storage composable
     async function loadInfrastructuresFromStorage(): Promise<void> {
-        try {
-            const stored = window.localStorage.getItem('basyxInfrastructures');
-            if (stored) {
-                const storage: InfrastructureStorage = JSON.parse(stored);
+        const envConfig = {
+            aasDiscoveryPath: EnvAASDiscoveryPath.value,
+            aasRegistryPath: EnvAASRegistryPath.value,
+            submodelRegistryPath: EnvSubmodelRegistryPath.value,
+            aasRepoPath: EnvAASRepoPath.value,
+            submodelRepoPath: EnvSubmodelRepoPath.value,
+            conceptDescriptionRepoPath: EnvConceptDescriptionRepoPath.value,
+            keycloakActive: EnvKeycloakActive.value,
+            keycloakUrl: EnvKeycloakUrl.value,
+            keycloakRealm: EnvKeycloakRealm.value,
+            keycloakClientId: EnvKeycloakClientId.value,
+            preconfiguredAuth: EnvPreconfiguredAuth.value,
+            preconfiguredAuthClientSecret: EnvPreconfiguredAuthClientSecret.value,
+        };
 
-                // Determine which infrastructure should be selected BEFORE setting infrastructures array
-                // This prevents the watcher from triggering with wrong infrastructure
-                let targetInfraId: string | null = null;
-                if (
-                    storage.selectedInfrastructureId &&
-                    storage.infrastructures.some((infra) => infra.id === storage.selectedInfrastructureId)
-                ) {
-                    targetInfraId = storage.selectedInfrastructureId;
-                } else if (storage.infrastructures.length > 0) {
-                    // Fallback: select default infrastructure or first available one
-                    const defaultInfra = storage.infrastructures.find((infra) => infra.isDefault);
-                    targetInfraId = defaultInfra ? defaultInfra.id : storage.infrastructures[0].id;
-                }
+        const result = await infrastructureStorage.loadInfrastructuresFromStorage(envConfig);
 
-                // Set selected ID first, then infrastructures array
-                // This ensures watcher triggers only once with correct infrastructure
-                selectedInfrastructureId.value = targetInfraId;
-                infrastructures.value = storage.infrastructures;
-
-                // Ensure at least one infrastructure is marked as default
-                const hasDefault = infrastructures.value.some((infra) => infra.isDefault);
-                if (!hasDefault && infrastructures.value.length > 0) {
-                    // Mark the first infrastructure as default without auto-selecting it
-                    infrastructures.value[0].isDefault = true;
-                    saveInfrastructuresToStorage();
-                }
-            } else {
-                // Migration from legacy storage
-                const legacyInfra = createInfrastructureFromLegacyStorage();
-
-                // Check if any legacy URLs exist
-                const hasLegacyData = Object.values(legacyInfra.components).some((comp) => comp.url.trim() !== '');
-
-                if (hasLegacyData) {
-                    // Use legacy data as first infrastructure
-                    infrastructures.value = [legacyInfra];
-                    selectedInfrastructureId.value = legacyInfra.id;
-                } else {
-                    // Create default from environment
-                    const defaultInfra = await createDefaultInfrastructureFromEnv();
-                    infrastructures.value = [defaultInfra];
-                    selectedInfrastructureId.value = defaultInfra.id;
-                }
-
-                saveInfrastructuresToStorage();
-            }
-        } catch (error) {
-            console.error('Error loading infrastructures from storage:', error);
-            // Fallback to default
-            const defaultInfra = await createDefaultInfrastructureFromEnv();
-            infrastructures.value = [defaultInfra];
-            selectedInfrastructureId.value = defaultInfra.id;
-        }
+        // Set the loaded values
+        selectedInfrastructureId.value = result.selectedInfrastructureId;
+        infrastructures.value = result.infrastructures;
     }
 
     function saveInfrastructuresToStorage(): void {
-        try {
-            const storage: InfrastructureStorage = {
-                infrastructures: infrastructures.value,
-                selectedInfrastructureId: selectedInfrastructureId.value,
-            };
-
-            localStorage.setItem('basyxInfrastructures', JSON.stringify(storage));
-        } catch (error) {
-            console.error('Error saving infrastructures to storage:', error);
-        }
+        infrastructureStorage.saveInfrastructuresToStorage(infrastructures.value, selectedInfrastructureId.value);
     }
 
     function dispatchSetDefaultInfrastructure(infrastructureId: string): void {
@@ -588,7 +443,21 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                     await dispatchSelectInfrastructure(infrastructures.value[0].id);
                 } else {
                     // Create a new default infrastructure if none exist
-                    const defaultInfra = await createDefaultInfrastructureFromEnv();
+                    const envConfig = {
+                        aasDiscoveryPath: EnvAASDiscoveryPath.value,
+                        aasRegistryPath: EnvAASRegistryPath.value,
+                        submodelRegistryPath: EnvSubmodelRegistryPath.value,
+                        aasRepoPath: EnvAASRepoPath.value,
+                        submodelRepoPath: EnvSubmodelRepoPath.value,
+                        conceptDescriptionRepoPath: EnvConceptDescriptionRepoPath.value,
+                        keycloakActive: EnvKeycloakActive.value,
+                        keycloakUrl: EnvKeycloakUrl.value,
+                        keycloakRealm: EnvKeycloakRealm.value,
+                        keycloakClientId: EnvKeycloakClientId.value,
+                        preconfiguredAuth: EnvPreconfiguredAuth.value,
+                        preconfiguredAuthClientSecret: EnvPreconfiguredAuthClientSecret.value,
+                    };
+                    const defaultInfra = await infrastructureStorage.createDefaultInfrastructureFromEnv(envConfig);
                     infrastructures.value.push(defaultInfra);
                     await dispatchSelectInfrastructure(defaultInfra.id);
                 }
@@ -612,199 +481,11 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         triggerInfrastructureDialog.value = !triggerInfrastructureDialog.value;
     }
 
-    /**
-     * Refreshes expired or expiring tokens for all infrastructures with Keycloak or OAuth2 authentication.
-     * Tokens are refreshed if they expire within 5 minutes (300 seconds).
-     * Returns array of failed refresh attempts with infrastructure info.
-     */
+    // Wrapper functions that delegate to auth composable
     async function refreshInfrastructureTokens(
         infrastructureId?: string
     ): Promise<Array<{ infraName: string; error: string }>> {
-        const failures: Array<{ infraName: string; error: string }> = [];
-        const TOKEN_REFRESH_BUFFER = 5 * 60 * 1000; // 5 minutes in milliseconds
-        const now = Date.now();
-
-        for (const infrastructure of infrastructures.value) {
-            if (infrastructureId && infrastructure.id !== infrastructureId) {
-                continue; // Skip if a specific infrastructureId is provided and doesn't match
-            }
-            const auth = infrastructure.auth;
-            const token = infrastructure.token;
-
-            // Check if infrastructure uses Keycloak or OAuth2 and has a token
-            if ((auth?.securityType !== 'Keycloak' && auth?.securityType !== 'OAuth2') || !token?.accessToken) {
-                continue;
-            }
-
-            // Check if token is expired or expiring soon
-            if (!token.expiresAt || token.expiresAt > now + TOKEN_REFRESH_BUFFER) {
-                infrastructure.isAuthenticated = true; // Token is still valid
-                continue;
-            }
-
-            // Token needs refresh - set to false
-            infrastructure.isAuthenticated = false;
-
-            // Attempt token refresh
-            try {
-                if (!token.refreshToken) {
-                    // No refresh token available (e.g., client credentials flow)
-                    // If is Keycloak client-credentials, we can re-authenticate
-                    if (auth.keycloakConfig?.authFlow === 'client-credentials') {
-                        const result = await authenticateWithClientCredentials(auth.keycloakConfig);
-                        // Update token in infrastructure
-                        infrastructure.token = {
-                            accessToken: result.accessToken,
-                            refreshToken: result.refreshToken,
-                            idToken: result.idToken,
-                            expiresAt: result.expiresAt,
-                        };
-                        infrastructure.isAuthenticated = true;
-                        if (process.env.NODE_ENV === 'development') {
-                            console.warn(
-                                `[InfrastructureStore] Re-authenticated (Keycloak client-credentials) for ${infrastructure.name}`
-                            );
-                        }
-                        continue;
-                    }
-                    // If is OAuth2 client-credentials, we can re-authenticate
-                    if (auth.oauth2?.authFlow === 'client-credentials') {
-                        const { authenticateOAuth2ClientCredentials } = await import('@/composables/OAuth2Auth');
-                        const result = await authenticateOAuth2ClientCredentials(auth.oauth2);
-                        // Update token in infrastructure
-                        infrastructure.token = {
-                            accessToken: result.accessToken,
-                            refreshToken: result.refreshToken,
-                            expiresAt: result.expiresAt,
-                            idToken: result.idToken,
-                        };
-                        infrastructure.isAuthenticated = true;
-                        if (process.env.NODE_ENV === 'development') {
-                            console.warn(
-                                `[InfrastructureStore] Re-authenticated (OAuth2 client-credentials) for ${infrastructure.name}`
-                            );
-                        }
-                        continue;
-                    }
-                    failures.push({
-                        infraName: infrastructure.name,
-                        error: 'No refresh token available - re-authentication required',
-                    });
-                    continue;
-                }
-
-                // Handle Keycloak token refresh
-                if (auth.securityType === 'Keycloak') {
-                    if (!auth.keycloakConfig) {
-                        failures.push({
-                            infraName: infrastructure.name,
-                            error: 'Missing Keycloak configuration',
-                        });
-                        continue;
-                    }
-
-                    const { serverUrl, realm, clientId, clientSecret } = auth.keycloakConfig;
-                    const tokenEndpoint = `${serverUrl.replace(/\/$/, '')}/realms/${realm}/protocol/openid-connect/token`;
-
-                    const params = new URLSearchParams({
-                        client_id: clientId,
-                        grant_type: 'refresh_token',
-                        refresh_token: token.refreshToken,
-                    });
-
-                    if (clientSecret) {
-                        params.set('client_secret', clientSecret);
-                    }
-
-                    const response = await fetch(tokenEndpoint, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: params.toString(),
-                    });
-
-                    const data = await response.json();
-
-                    if (!response.ok) {
-                        failures.push({
-                            infraName: infrastructure.name,
-                            error: data.error_description || 'Keycloak token refresh failed',
-                        });
-                        continue;
-                    }
-
-                    // Update token in infrastructure
-                    const expiresAt = Date.now() + (data.expires_in || 300) * 1000;
-                    infrastructure.token = {
-                        accessToken: data.access_token,
-                        refreshToken: data.refresh_token || token.refreshToken,
-                        idToken: data.id_token || token.idToken, // Preserve or update idToken
-                        expiresAt,
-                    };
-                    infrastructure.isAuthenticated = true;
-                    if (process.env.NODE_ENV === 'development') {
-                        console.warn(`[InfrastructureStore] Refreshed Keycloak token for ${infrastructure.name}`);
-                    }
-                }
-                // Handle OAuth2 token refresh
-                else if (auth.securityType === 'OAuth2') {
-                    if (!auth.oauth2) {
-                        failures.push({
-                            infraName: infrastructure.name,
-                            error: 'Missing OAuth2 configuration',
-                        });
-                        continue;
-                    }
-
-                    // Fetch token endpoint from well-known configuration
-                    const wellKnownUrl = `${auth.oauth2.host}/.well-known/openid-configuration`;
-                    const wellKnownResponse = await fetch(wellKnownUrl);
-
-                    if (!wellKnownResponse.ok) {
-                        failures.push({
-                            infraName: infrastructure.name,
-                            error: 'Failed to fetch OAuth2 OpenID configuration',
-                        });
-                        continue;
-                    }
-
-                    const wellKnownConfig = await wellKnownResponse.json();
-                    const tokenEndpoint = wellKnownConfig.token_endpoint;
-
-                    if (!tokenEndpoint) {
-                        failures.push({
-                            infraName: infrastructure.name,
-                            error: 'Token endpoint not found in OAuth2 configuration',
-                        });
-                        continue;
-                    }
-
-                    const { refreshOAuth2Token } = await import('@/composables/OAuth2Auth');
-                    const result = await refreshOAuth2Token({
-                        tokenEndpoint,
-                        clientId: auth.oauth2.clientId,
-                        refreshToken: token.refreshToken,
-                        clientSecret: auth.oauth2.clientSecret,
-                    });
-
-                    // Update token in infrastructure
-                    infrastructure.token = {
-                        accessToken: result.accessToken,
-                        refreshToken: result.refreshToken,
-                        expiresAt: result.expiresAt,
-                        idToken: result.idToken,
-                    };
-                    infrastructure.isAuthenticated = true;
-                    if (process.env.NODE_ENV === 'development') {
-                        console.warn(`[InfrastructureStore] Refreshed OAuth2 token for ${infrastructure.name}`);
-                    }
-                }
-            } catch (error) {
-                failures.push({
-                    infraName: infrastructure.name,
-                    error: error instanceof Error ? error.message : 'Unknown error',
-                });
-            }
-        }
+        const failures = await infrastructureAuth.refreshInfrastructureTokens(infrastructures.value, infrastructureId);
 
         // Save updated tokens to storage if any were refreshed
         const totalAuthenticatedInfrastructures = infrastructures.value.filter(
@@ -819,11 +500,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     }
 
     function setAuthenticationStatusForInfrastructure(infrastructureId: string, state: boolean): void {
-        const infrastructure = infrastructures.value.find((i) => i.id === infrastructureId);
-        if (!infrastructure) {
-            return;
-        }
-        infrastructure.isAuthenticated = state;
+        infrastructureAuth.setAuthenticationStatusForInfrastructure(infrastructures.value, infrastructureId, state);
     }
 
     async function connectComponents(): Promise<void> {
