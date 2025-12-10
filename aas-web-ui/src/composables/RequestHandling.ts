@@ -33,7 +33,9 @@ export function useRequestHandling() {
                     authErrorTimeout = null;
                 }, 30000);
 
-                infrastructureStore.setAuthenticationStatusForInfrastructure(currentInfra?.id || '', false);
+                if (currentInfra?.id) {
+                    infrastructureStore.setAuthenticationStatusForInfrastructure(currentInfra.id, false);
+                }
 
                 const isLoginAvailable = infrastructureStore.getIsLoginAvailable;
 
