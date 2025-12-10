@@ -438,19 +438,12 @@
 
 <script lang="ts" setup>
     import type { BaSyxComponentKey } from '@/types/BaSyx';
-    import type {
-        AuthFlowOption,
-        AuthTokenState,
-        ComponentConnectionStatus,
-        ComponentTestingLoading,
-        InfrastructureConfig,
-        KeycloakConnectionData,
-        OAuth2FormData,
-        SecurityType,
-    } from '@/types/Infrastructure';
+    import type { AuthFlowOption, InfrastructureConfig, SecurityType } from '@/types/Infrastructure';
     import { computed, onMounted, ref, watch } from 'vue';
-    import { authenticateKeycloak } from '@/composables/KeycloakAuth';
-    import { authenticateOAuth2ClientCredentials, initiateOAuth2AuthorizationCodeFlow } from '@/composables/OAuth2Auth';
+    import { useBasicAuthForm } from '@/composables/useBasicAuthForm';
+    import { useComponentConnectionTesting } from '@/composables/useComponentConnectionTesting';
+    import { useKeycloakForm } from '@/composables/useKeycloakForm';
+    import { useOAuth2Form } from '@/composables/useOAuth2Form';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import {
@@ -510,37 +503,38 @@
         { text: 'Direct Grant (Username/Password)', value: 'password' },
     ];
 
-    // Auth data helpers (to simplify form binding)
-    const basicAuthUsername = ref<string>('');
-    const basicAuthPassword = ref<string>('');
-    const bearerToken = ref<string>('');
-    const keycloakServerUrl = ref<string>('');
-    const keycloakRealm = ref<string>('');
-    const keycloakClientId = ref<string>('');
-    const keycloakAuthFlow = ref<KeycloakConnectionData['authFlow']>('auth-code');
-    const keycloakClientSecret = ref<string>('');
-    const keycloakUsername = ref<string>('');
-    const keycloakPassword = ref<string>('');
-    const keycloakToken = ref<AuthTokenState | null>(null);
-    const keycloakLoading = ref<boolean>(false);
-    const keycloakError = ref<string>('');
-    const reauthenticating = ref(false);
-    const oauth2Data = ref<OAuth2FormData>({
-        scope: '',
-        host: '',
-        clientId: '',
-        clientSecret: '',
-        username: '',
-        password: '',
-    });
-    const oAuth2AuthFlow = ref<string>('');
-    const oauth2Token = ref<AuthTokenState | null>(null);
-    const oauth2Loading = ref<boolean>(false);
+    // Initialize composables for auth forms
+    const basicAuthForm = useBasicAuthForm();
+    const keycloakForm = useKeycloakForm();
+    const oauth2Form = useOAuth2Form();
+    const connectionTesting = useComponentConnectionTesting();
 
-    // Component connection testing states
-    const componentConnectionStatus = ref<ComponentConnectionStatus>({} as ComponentConnectionStatus);
-    const componentTestingLoading = ref<ComponentTestingLoading>({} as ComponentTestingLoading);
-    const testingAllConnections = ref(false);
+    // Expose for template usage (using direct references to maintain reactivity)
+    const basicAuthUsername = basicAuthForm.basicAuthUsername;
+    const basicAuthPassword = basicAuthForm.basicAuthPassword;
+    const bearerToken = basicAuthForm.bearerToken;
+
+    const keycloakServerUrl = keycloakForm.serverUrl;
+    const keycloakRealm = keycloakForm.realm;
+    const keycloakClientId = keycloakForm.clientId;
+    const keycloakAuthFlow = keycloakForm.authFlow;
+    const keycloakClientSecret = keycloakForm.clientSecret;
+    const keycloakUsername = keycloakForm.username;
+    const keycloakPassword = keycloakForm.password;
+    const keycloakToken = keycloakForm.token;
+    const keycloakLoading = keycloakForm.loading;
+    const keycloakError = keycloakForm.error;
+
+    const oauth2Data = oauth2Form.formData;
+    const oAuth2AuthFlow = oauth2Form.authFlow;
+    const oauth2Token = oauth2Form.token;
+    const oauth2Loading = oauth2Form.loading;
+
+    const componentConnectionStatus = connectionTesting.componentConnectionStatus;
+    const componentTestingLoading = connectionTesting.componentTestingLoading;
+    const testingAllConnections = connectionTesting.testingAllConnections;
+
+    const reauthenticating = ref(false);
 
     // Watch props
     watch(
@@ -607,140 +601,20 @@
     }
 
     function loadAuthDataFromInfrastructure(infra: InfrastructureConfig): void {
-        // Load auth data into separate refs for easier form binding
-        const auth = infra.auth;
-        const token = infra.token;
-
-        if (!auth) return;
-
-        // Reset all auth fields first
-        basicAuthUsername.value = '';
-        basicAuthPassword.value = '';
-        bearerToken.value = '';
-        keycloakServerUrl.value = '';
-        keycloakRealm.value = '';
-        keycloakClientId.value = '';
-        keycloakAuthFlow.value = 'auth-code';
-        keycloakClientSecret.value = '';
-        keycloakUsername.value = '';
-        keycloakPassword.value = '';
-        keycloakToken.value = null;
-        oauth2Data.value = {
-            scope: '',
-            host: '',
-            clientId: '',
-            clientSecret: '',
-            username: '',
-            password: '',
-        };
-        oAuth2AuthFlow.value = '';
-        oauth2Token.value = null;
+        // Load auth data using composables
+        basicAuthForm.loadFromInfrastructure(infra);
+        keycloakForm.loadFromInfrastructure(infra);
+        oauth2Form.loadFromInfrastructure(infra);
 
         // Reset component connection status
-        componentKeys.forEach((key) => {
-            componentConnectionStatus.value[key] = null;
-            componentTestingLoading.value[key] = false;
-        });
-
-        // Load based on security type
-        if (auth.basicAuth) {
-            basicAuthUsername.value = auth.basicAuth.username || '';
-            basicAuthPassword.value = auth.basicAuth.password || '';
-        }
-        if (auth.bearerToken) {
-            bearerToken.value = auth.bearerToken.token || '';
-        }
-        if (auth.keycloakConfig) {
-            keycloakServerUrl.value = auth.keycloakConfig.serverUrl || '';
-            keycloakRealm.value = auth.keycloakConfig.realm || '';
-            keycloakClientId.value = auth.keycloakConfig.clientId || '';
-            keycloakAuthFlow.value = auth.keycloakConfig.authFlow || 'auth-code';
-            keycloakClientSecret.value = auth.keycloakConfig.clientSecret || '';
-            keycloakUsername.value = auth.keycloakConfig.username || '';
-            keycloakPassword.value = auth.keycloakConfig.password || '';
-
-            // Load existing token if available
-            if (token) {
-                keycloakToken.value = {
-                    accessToken: token.accessToken,
-                    refreshToken: token.refreshToken,
-                    expiresAt: token.expiresAt,
-                    idToken: token.idToken,
-                };
-            }
-        }
-        if (auth.oauth2) {
-            oauth2Data.value.host = auth.oauth2.host || '';
-            oauth2Data.value.clientId = auth.oauth2.clientId || '';
-            oauth2Data.value.clientSecret = auth.oauth2.clientSecret || '';
-            oauth2Data.value.scope = auth.oauth2.scope || '';
-            oauth2Data.value.username = '';
-            oauth2Data.value.password = '';
-            oAuth2AuthFlow.value = auth.oauth2.authFlow || 'client-credentials';
-
-            // Load existing token if available
-            if (token) {
-                oauth2Token.value = {
-                    accessToken: token.accessToken,
-                    refreshToken: token.refreshToken,
-                    expiresAt: token.expiresAt,
-                    idToken: token.idToken,
-                };
-            }
-        }
+        connectionTesting.resetConnectionStatus();
     }
 
     async function saveAuthDataToInfrastructure(infra: InfrastructureConfig): Promise<void> {
-        // Save auth data from refs back to infrastructure object
-        const auth = infra.auth;
-        if (!auth) return;
-
-        if (auth.securityType === 'Basic Authentication') {
-            auth.basicAuth = {
-                username: basicAuthUsername.value || '',
-                password: basicAuthPassword.value || '',
-            };
-        } else if (auth.securityType === 'Bearer Token') {
-            auth.bearerToken = {
-                token: bearerToken.value || '',
-            };
-        } else if (auth.securityType === 'Keycloak') {
-            auth.keycloakConfig = {
-                serverUrl: keycloakServerUrl.value || '',
-                realm: keycloakRealm.value || '',
-                clientId: keycloakClientId.value || '',
-                authFlow: keycloakAuthFlow.value || 'auth-code',
-                clientSecret: keycloakClientSecret.value,
-                username: keycloakUsername.value,
-                password: keycloakPassword.value,
-            };
-
-            // Save token data if authenticated
-            if (keycloakToken.value) {
-                infra.token = {
-                    accessToken: keycloakToken.value.accessToken,
-                    refreshToken: keycloakToken.value.refreshToken,
-                    expiresAt: keycloakToken.value.expiresAt,
-                };
-            }
-        } else if (auth.securityType === 'OAuth2') {
-            auth.oauth2 = {
-                host: oauth2Data.value.host || '',
-                clientId: oauth2Data.value.clientId || '',
-                clientSecret: oauth2Data.value.clientSecret || '',
-                scope: oauth2Data.value.scope || '',
-                authFlow: oAuth2AuthFlow.value as 'client-credentials' | 'authorization-code',
-            };
-
-            // Save token data if authenticated
-            if (oauth2Token.value) {
-                infra.token = {
-                    accessToken: oauth2Token.value.accessToken,
-                    refreshToken: oauth2Token.value.refreshToken,
-                    expiresAt: oauth2Token.value.expiresAt,
-                };
-            }
-        }
+        // Save auth data using composables
+        basicAuthForm.saveToInfrastructure(infra);
+        keycloakForm.saveToInfrastructure(infra);
+        oauth2Form.saveToInfrastructure(infra);
     }
 
     async function saveInfrastructure(): Promise<void> {
@@ -894,80 +768,29 @@
 
     // Keycloak Authentication Methods
     async function authenticateKeycloakHandler(): Promise<void> {
-        keycloakLoading.value = true;
-        keycloakError.value = '';
+        await keycloakForm.authenticate();
 
-        const config: KeycloakConnectionData = {
-            serverUrl: keycloakServerUrl.value,
-            realm: keycloakRealm.value,
-            clientId: keycloakClientId.value,
-            authFlow: keycloakAuthFlow.value,
-            clientSecret: keycloakClientSecret.value,
-            username: keycloakUsername.value,
-            password: keycloakPassword.value,
-        };
-
-        if (!config.serverUrl || !config.realm || !config.clientId || !config.authFlow) {
-            keycloakError.value = 'Please fill in all required Keycloak fields';
-            keycloakLoading.value = false;
-            return;
-        }
-
-        try {
-            const result = await authenticateKeycloak(config);
-            keycloakToken.value = {
-                accessToken: result.accessToken,
-                refreshToken: result.refreshToken,
-                expiresAt: result.expiresAt,
-                idToken: result.idToken,
-            };
-            navigationStore.dispatchTriggerAASListReload();
-            navigationStore.dispatchTriggerTreeviewReload();
-        } catch (error: unknown) {
-            keycloakError.value = error instanceof Error ? error.message : 'Authentication failed';
-        } finally {
-            keycloakLoading.value = false;
+        // Save infrastructure after successful authentication to make token available for requests
+        if (keycloakToken.value) {
+            await saveAuthDataToInfrastructure(editingInfrastructure.value);
+            // Update the store to make token available immediately for API requests
+            infrastructureStore.dispatchUpdateInfrastructure(editingInfrastructure.value);
+            // Also update the selected infrastructure if we're editing the currently selected one
+            if (editingInfrastructure.value.id === selectedInfrastructureId.value) {
+                await infrastructureStore.dispatchSelectInfrastructure(editingInfrastructure.value.id, false);
+            }
         }
     }
 
     // Test individual component connection
     async function testComponentConnection(componentKey: BaSyxComponentKey): Promise<void> {
         const url = editingInfrastructure.value.components[componentKey].url;
-        if (!url || url.trim() === '') {
-            componentConnectionStatus.value[componentKey] = false;
-            return;
-        }
-
-        componentTestingLoading.value[componentKey] = true;
-        componentConnectionStatus.value[componentKey] = null;
-
-        try {
-            // Temporarily set the component URL in the store to test it
-            const originalUrl = infrastructureStore.getBasyxComponents[componentKey].url;
-            infrastructureStore.getBasyxComponents[componentKey].url = url;
-
-            // Test the connection
-            await infrastructureStore.connectComponent(componentKey);
-
-            // Get the connection result
-            const connected = infrastructureStore.getBasyxComponents[componentKey].connected;
-            componentConnectionStatus.value[componentKey] = connected;
-
-            // Restore original URL
-            infrastructureStore.getBasyxComponents[componentKey].url = originalUrl;
-        } catch {
-            componentConnectionStatus.value[componentKey] = false;
-        } finally {
-            componentTestingLoading.value[componentKey] = false;
-        }
+        await connectionTesting.testComponentConnection(componentKey, url);
     }
 
     // Test all component connections for the currently edited infrastructure
     async function testAllConnections(): Promise<void> {
-        testingAllConnections.value = true;
-        const testPromises = componentKeys.map((key) => testComponentConnection(key));
-        await Promise.all(testPromises);
-        testingAllConnections.value = false;
+        await connectionTesting.testAllConnections(editingInfrastructure.value.components);
     }
 
     // Test connections for all infrastructures
@@ -986,112 +809,16 @@
     }
 
     async function authenticateOAuth2(): Promise<void> {
-        if (!oauth2Data.value.host || !oauth2Data.value.clientId) {
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 4000,
-                color: 'error',
-                btnColor: 'buttonText',
-                text: 'Please fill in OAuth2 host and client ID',
-            });
-            return;
-        }
+        await oauth2Form.authenticate(editingInfrastructure.value.id);
 
-        if (oAuth2AuthFlow.value === 'client-credentials') {
-            if (!oauth2Data.value.clientSecret) {
-                navigationStore.dispatchSnackbar({
-                    status: true,
-                    timeout: 4000,
-                    color: 'error',
-                    btnColor: 'buttonText',
-                    text: 'Client secret is required for client credentials flow',
-                });
-                return;
-            }
-
-            oauth2Loading.value = true;
-            try {
-                const token = await authenticateOAuth2ClientCredentials({
-                    host: oauth2Data.value.host,
-                    clientId: oauth2Data.value.clientId,
-                    clientSecret: oauth2Data.value.clientSecret,
-                    scope: oauth2Data.value.scope || '',
-                });
-
-                // Store token in local state
-                oauth2Token.value = {
-                    accessToken: token.accessToken,
-                    refreshToken: token.refreshToken,
-                    expiresAt: token.expiresAt,
-                    idToken: token.idToken,
-                };
-
-                navigationStore.dispatchSnackbar({
-                    status: true,
-                    timeout: 4000,
-                    color: 'success',
-                    btnColor: 'buttonText',
-                    text: 'OAuth2 authentication successful. Save infrastructure to persist.',
-                });
-
-                navigationStore.dispatchTriggerAASListReload();
-                navigationStore.dispatchTriggerTreeviewReload();
-            } catch (error) {
-                navigationStore.dispatchSnackbar({
-                    status: true,
-                    timeout: 8000,
-                    color: 'error',
-                    btnColor: 'buttonText',
-                    text: 'OAuth2 authentication failed',
-                    extendedError: error instanceof Error ? error.message : 'Unknown error occurred',
-                });
-            } finally {
-                oauth2Loading.value = false;
-            }
-        } else if (oAuth2AuthFlow.value === 'auth-code') {
-            // Authorization Code Flow with PKCE
-            oauth2Loading.value = true;
-            try {
-                // Fetch well-known configuration to get authorization endpoint
-                const wellKnownUrl = `${oauth2Data.value.host}/.well-known/openid-configuration`;
-                const wellKnownResponse = await fetch(wellKnownUrl);
-
-                if (!wellKnownResponse.ok) {
-                    throw new Error('Failed to fetch OpenID configuration');
-                }
-
-                const wellKnownConfig = await wellKnownResponse.json();
-                const authorizationEndpoint = wellKnownConfig.authorization_endpoint;
-
-                if (!authorizationEndpoint) {
-                    throw new Error('Authorization endpoint not found in OpenID configuration');
-                }
-
-                // Use infrastructure ID as state to identify which infrastructure is being authenticated
-                const state = editingInfrastructure.value.id;
-
-                // Save the infrastructure before initiating flow (so it's available after redirect)
-                await saveAuthDataToInfrastructure(editingInfrastructure.value);
-                infrastructureStore.dispatchUpdateInfrastructure(editingInfrastructure.value);
-
-                // Initiate authorization code flow (will redirect to OAuth2 provider)
-                await initiateOAuth2AuthorizationCodeFlow({
-                    authorizationEndpoint,
-                    clientId: oauth2Data.value.clientId,
-                    redirectUri: `${window.location.origin}/`,
-                    scope: oauth2Data.value.scope || 'openid profile email',
-                    state,
-                });
-            } catch (error) {
-                oauth2Loading.value = false;
-                navigationStore.dispatchSnackbar({
-                    status: true,
-                    timeout: 8000,
-                    color: 'error',
-                    btnColor: 'buttonText',
-                    text: 'Failed to initiate OAuth2 authorization flow',
-                    extendedError: error instanceof Error ? error.message : 'Unknown error occurred',
-                });
+        // Save infrastructure after successful authentication to make token available for requests
+        if (oauth2Token.value) {
+            await saveAuthDataToInfrastructure(editingInfrastructure.value);
+            // Update the store to make token available immediately for API requests
+            infrastructureStore.dispatchUpdateInfrastructure(editingInfrastructure.value);
+            // Also update the selected infrastructure if we're editing the currently selected one
+            if (editingInfrastructure.value.id === selectedInfrastructureId.value) {
+                await infrastructureStore.dispatchSelectInfrastructure(editingInfrastructure.value.id, false);
             }
         }
     }

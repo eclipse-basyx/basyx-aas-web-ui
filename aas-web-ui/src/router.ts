@@ -268,6 +268,8 @@ export async function createAppRouter(): Promise<Router> {
 
                     // Save updated infrastructure
                     infraStore.dispatchUpdateInfrastructure(infrastructure);
+                    // Set authentication status to true
+                    infraStore.setAuthenticationStatusForInfrastructure(infrastructure.id, true);
 
                     // Show success notification
                     navigationStore.dispatchSnackbar({

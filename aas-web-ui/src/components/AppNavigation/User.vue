@@ -4,7 +4,7 @@
             <v-btn
                 v-if="isAuthEnabled"
                 v-bind="menuProps"
-                :icon="authStatus ? 'mdi-account-lock' : 'mdi-lock-remove'"></v-btn>
+                :icon="isAuthenticated ? 'mdi-account-lock' : 'mdi-lock-remove'"></v-btn>
             <v-tooltip v-else text="Authorization Status" location="bottom" :open-delay="600">
                 <template #activator="{ props: tooltipProps }">
                     <v-icon v-bind="tooltipProps">mdi-lock-off</v-icon>
@@ -71,15 +71,52 @@
     const { showOverlay, hideOverlay } = usePopupOverlay();
 
     // Computed properties
-    const authStatus = computed(() =>
-        currentInfrastructure.value?.isAuthenticated
-            ? 'Authenticated'
-            : currentInfrastructure.value?.auth?.basicAuth
-              ? 'Basic Authentication active'
-              : 'Not Authenticated'
-    );
     const currentInfrastructure = computed(() => {
         return infrastructureStore.getSelectedInfrastructure;
+    });
+
+    const isAuthenticated = computed(() => {
+        const infra = currentInfrastructure.value;
+        if (!infra) return false;
+
+        // Check if authenticated via token (OAuth2 or Keycloak)
+        if (infra.token?.accessToken) {
+            return true;
+        }
+
+        // Check if authenticated via basic auth
+        if (infra.auth?.basicAuth) {
+            return true;
+        }
+
+        // Check legacy isAuthenticated flag
+        if (infra.isAuthenticated) {
+            return true;
+        }
+
+        return false;
+    });
+
+    const authStatus = computed(() => {
+        const infra = currentInfrastructure.value;
+        if (!infra) return 'Not Authenticated';
+
+        // Check if authenticated via token (OAuth2 or Keycloak)
+        if (infra.token?.accessToken) {
+            return 'Authenticated';
+        }
+
+        // Check if authenticated via basic auth
+        if (infra.auth?.basicAuth) {
+            return 'Basic Authentication active';
+        }
+
+        // Check legacy isAuthenticated flag
+        if (infra.isAuthenticated) {
+            return 'Authenticated';
+        }
+
+        return 'Not Authenticated';
     });
     const isAuthEnabled = computed(
         () =>
