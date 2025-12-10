@@ -2,16 +2,16 @@ import type { BaSyxComponent, BaSyxComponentKey } from '@/types/BaSyx';
 import type { InfrastructureConfig, UserData } from '@/types/Infrastructure';
 import { defineStore } from 'pinia';
 import { computed, nextTick, reactive, ref, watch } from 'vue';
+import { authenticateKeycloak } from '@/composables/Auth/KeycloakAuth';
 import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
 import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
 import { useCDRepositoryClient } from '@/composables/Client/CDRepositoryClient';
 import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
-import { authenticateKeycloak } from '@/composables/KeycloakAuth';
+import { useInfrastructureAuth } from '@/composables/Infrastructure/useInfrastructureAuth';
+import { useInfrastructureStorage } from '@/composables/Infrastructure/useInfrastructureStorage';
 import { useRequestHandling } from '@/composables/RequestHandling';
-import { useInfrastructureAuth } from '@/composables/useInfrastructureAuth';
-import { useInfrastructureStorage } from '@/composables/useInfrastructureStorage';
 import { useEnvStore } from '@/store/EnvironmentStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 import { stripLastCharacter } from '@/utils/StringUtils';
@@ -218,7 +218,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
 
             if (requiresKeycloakAuth && !hasToken && selectedInfra.auth?.keycloakConfig) {
                 // Directly trigger authentication for auth-code flow
-                const { authenticateKeycloak } = await import('@/composables/KeycloakAuth');
+                const { authenticateKeycloak } = await import('@/composables/Auth/KeycloakAuth');
                 try {
                     isAuthenticating.value = true;
                     const result = await authenticateKeycloak(selectedInfra.auth.keycloakConfig);

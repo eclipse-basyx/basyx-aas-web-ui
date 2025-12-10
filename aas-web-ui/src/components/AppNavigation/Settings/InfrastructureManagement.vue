@@ -145,10 +145,10 @@
     import type { BaSyxComponentKey } from '@/types/BaSyx';
     import type { AuthFlowOption, InfrastructureConfig, SecurityType } from '@/types/Infrastructure';
     import { computed, onMounted, ref, watch } from 'vue';
-    import { useBasicAuthForm } from '@/composables/useBasicAuthForm';
-    import { useComponentConnectionTesting } from '@/composables/useComponentConnectionTesting';
-    import { useKeycloakForm } from '@/composables/useKeycloakForm';
-    import { useOAuth2Form } from '@/composables/useOAuth2Form';
+    import { useBasicAuthForm } from '@/composables/Auth/useBasicAuthForm';
+    import { useKeycloakForm } from '@/composables/Auth/useKeycloakForm';
+    import { useOAuth2Form } from '@/composables/Auth/useOAuth2Form';
+    import { useComponentConnectionTesting } from '@/composables/Infrastructure/useComponentConnectionTesting';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { requiredRule } from '@/utils/InfrastructureUtils';

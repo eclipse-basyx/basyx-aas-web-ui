@@ -1,5 +1,5 @@
 import type { InfrastructureConfig } from '@/types/Infrastructure';
-import { authenticateWithClientCredentials } from '@/composables/KeycloakAuth';
+import { authenticateWithClientCredentials } from '@/composables/Auth/KeycloakAuth';
 
 /**
  * Composable for managing infrastructure authentication and token refresh
@@ -76,7 +76,7 @@ export function useInfrastructureAuth(): {
                     }
                     // If is OAuth2 client-credentials, we can re-authenticate
                     if (auth.oauth2?.authFlow === 'client-credentials') {
-                        const { authenticateOAuth2ClientCredentials } = await import('@/composables/OAuth2Auth');
+                        const { authenticateOAuth2ClientCredentials } = await import('@/composables/Auth/OAuth2Auth');
                         const result = await authenticateOAuth2ClientCredentials(auth.oauth2);
                         // Update token in infrastructure
                         infrastructure.token = {
@@ -185,7 +185,7 @@ export function useInfrastructureAuth(): {
                         continue;
                     }
 
-                    const { refreshOAuth2Token } = await import('@/composables/OAuth2Auth');
+                    const { refreshOAuth2Token } = await import('@/composables/Auth/OAuth2Auth');
                     const result = await refreshOAuth2Token({
                         tokenEndpoint,
                         clientId: auth.oauth2.clientId,

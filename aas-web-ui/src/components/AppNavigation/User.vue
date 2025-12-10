@@ -54,7 +54,7 @@
 <script lang="ts" setup>
     import { computed } from 'vue';
     import { useRouter } from 'vue-router';
-    import { authenticateKeycloak } from '@/composables/KeycloakAuth';
+    import { authenticateKeycloak } from '@/composables/Auth/KeycloakAuth';
     import { usePopupOverlay } from '@/composables/PopupOverlay';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';

@@ -222,7 +222,7 @@ export async function createAppRouter(): Promise<Router> {
             if (issuerURL) {
                 // OAuth2 callback - handle authorization code exchange
                 try {
-                    const { exchangeOAuth2AuthorizationCode } = await import('@/composables/OAuth2Auth');
+                    const { exchangeOAuth2AuthorizationCode } = await import('@/composables/Auth/OAuth2Auth');
                     const infraStore = useInfrastructureStore();
 
                     // Find the infrastructure by state (infrastructure ID)

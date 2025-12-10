@@ -1,6 +1,9 @@
 import type { AuthTokenState, InfrastructureConfig, OAuth2FormData } from '@/types/Infrastructure';
 import { type Ref, ref } from 'vue';
-import { authenticateOAuth2ClientCredentials, initiateOAuth2AuthorizationCodeFlow } from '@/composables/OAuth2Auth';
+import {
+    authenticateOAuth2ClientCredentials,
+    initiateOAuth2AuthorizationCodeFlow,
+} from '@/composables/Auth/OAuth2Auth';
 import { useNavigationStore } from '@/store/NavigationStore';
 
 /**

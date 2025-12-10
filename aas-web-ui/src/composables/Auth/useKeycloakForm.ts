@@ -1,6 +1,6 @@
 import type { AuthTokenState, InfrastructureConfig, KeycloakConnectionData } from '@/types/Infrastructure';
 import { type Ref, ref } from 'vue';
-import { authenticateKeycloak } from '@/composables/KeycloakAuth';
+import { authenticateKeycloak } from '@/composables/Auth/KeycloakAuth';
 import { useNavigationStore } from '@/store/NavigationStore';
 
 /**

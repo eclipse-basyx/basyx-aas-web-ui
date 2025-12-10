@@ -1,5 +1,5 @@
 import type { InfrastructureConfig, InfrastructureStorage, KeycloakConnectionData } from '@/types/Infrastructure';
-import { authenticateWithClientCredentials } from '@/composables/KeycloakAuth';
+import { authenticateWithClientCredentials } from '@/composables/Auth/KeycloakAuth';
 
 /**
  * Composable for managing infrastructure storage operations
