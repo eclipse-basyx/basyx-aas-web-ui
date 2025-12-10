@@ -178,15 +178,19 @@ export async function exchangeOAuth2AuthorizationCode(config: {
 
     // Retrieve code verifier from localStorage using state as key
     const storageKey = state ? `oauth2_code_verifier_${state}` : 'oauth2_code_verifier';
-    console.warn(`[OAuth2] Looking for code verifier with key: ${storageKey}`);
-    console.warn(`[OAuth2] Current localStorage keys:`, Object.keys(localStorage));
+    if (process.env.NODE_ENV === 'development') {
+        console.warn(`[OAuth2] Looking for code verifier with key: ${storageKey}`);
+        console.warn(`[OAuth2] Current localStorage keys:`, Object.keys(localStorage));
+    }
     const codeVerifier = localStorage.getItem(storageKey);
     if (!codeVerifier) {
         console.error(`[OAuth2] Code verifier not found in localStorage for key: ${storageKey}`);
         throw new Error('Code verifier not found. Authorization flow may have been interrupted.');
     }
-    console.warn(`[OAuth2] Found code verifier, proceeding with token exchange`);
-    console.warn('Code Verifier:', codeVerifier);
+    if (process.env.NODE_ENV === 'development') {
+        console.warn(`[OAuth2] Found code verifier, proceeding with token exchange`);
+        console.warn('Code Verifier:', codeVerifier);
+    }
     // Prepare request
     const params = new URLSearchParams({
         grant_type: 'authorization_code',
