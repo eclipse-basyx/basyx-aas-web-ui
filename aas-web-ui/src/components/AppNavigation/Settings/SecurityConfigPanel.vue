@@ -59,6 +59,19 @@
                         density="compact"
                         class="mb-2"
                         @update:model-value="$emit('update:oAuth2AuthFlow', $event)"></v-select>
+                    <v-alert
+                        v-if="oAuth2AuthFlow === 'client-credentials'"
+                        type="warning"
+                        variant="tonal"
+                        density="compact"
+                        prominent
+                        icon="mdi-alert"
+                        class="mb-2">
+                        <strong>Security Warning:</strong> Client credentials flow stores the client secret in the
+                        browser's localStorage. This exposes the secret in the browser context and should
+                        <strong>only be used for development/testing</strong>. For production, use Authorization Code
+                        flow or implement a backend service.
+                    </v-alert>
                     <v-text-field
                         :model-value="oauth2Data.host"
                         label="OAuth2 Host"
@@ -186,6 +199,19 @@
                         density="compact"
                         class="mb-2"
                         @update:model-value="$emit('update:keycloakAuthFlow', $event)"></v-select>
+                    <v-alert
+                        v-if="keycloakAuthFlow === 'client-credentials'"
+                        type="warning"
+                        variant="tonal"
+                        density="compact"
+                        prominent
+                        icon="mdi-alert"
+                        class="mb-2">
+                        <strong>Security Warning:</strong> Client credentials flow stores the client secret in the
+                        browser's localStorage. This exposes the secret in the browser context and should
+                        <strong>only be used for development/testing</strong>. For production, use Authorization Code
+                        flow or implement a backend service.
+                    </v-alert>
                     <v-text-field
                         v-if="keycloakAuthFlow === 'client-credentials' || keycloakAuthFlow === 'password'"
                         :model-value="keycloakClientSecret"
