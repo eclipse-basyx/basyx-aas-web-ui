@@ -1,9 +1,62 @@
 import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 
+// Track if we've already shown auth error to avoid spam
+let authErrorShown = false;
+let authErrorTimeout: NodeJS.Timeout | null = null;
+
 export function useRequestHandling() {
     const navigationStore = useNavigationStore();
     const infrastructureStore = useInfrastructureStore();
+
+    /**
+     * Centralized error handler for catch blocks
+     * Handles authentication errors and general errors
+     */
+    function handleRequestError(error: unknown, disableMessage: boolean): { success: false; status?: number } {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const is401Error = errorMessage.includes('Error status: 401') || errorMessage.includes('401');
+        const isAuthFailure = is401Error || errorMessage.includes('Failed to fetch');
+
+        const currentInfra = infrastructureStore.getSelectedInfrastructure;
+        const hasAuth = currentInfra?.auth && currentInfra.auth.securityType !== 'No Authentication';
+
+        // Handle authentication errors
+        if (isAuthFailure && hasAuth) {
+            if (!authErrorShown) {
+                authErrorShown = true;
+                if (authErrorTimeout) clearTimeout(authErrorTimeout);
+                authErrorTimeout = setTimeout(() => {
+                    authErrorShown = false;
+                    authErrorTimeout = null;
+                }, 30000);
+
+                infrastructureStore.setAuthenticationStatusForInfrastructure(currentInfra?.id || '', false);
+
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 8000,
+                    color: 'warning',
+                    btnColor: 'buttonText',
+                    text: 'Authentication required',
+                    extendedError: 'Please log in again using the user icon in the navigation.',
+                });
+            }
+            return { success: false, status: 401 };
+        }
+
+        // Handle other errors
+        if (!disableMessage) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 60000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Error! Server responded with: ' + error,
+            });
+        }
+        return { success: false };
+    }
 
     function getRequest(path: string, context: string, disableMessage: boolean, headers: Headers = new Headers()): any {
         headers = addAuthorizationHeader(headers); // Add the Authorization header
@@ -65,19 +118,7 @@ export function useRequestHandling() {
                     throw new Error('Unexpected response format');
                 }
             })
-            .catch((error) => {
-                // Catch any errors
-                // console.error('Error: ', error); // Log the error
-                if (!disableMessage)
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 60000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'Error! Server responded with: ' + error,
-                    });
-                return { success: false };
-            });
+            .catch((error) => handleRequestError(error, disableMessage));
     }
 
     function postRequest(
@@ -134,19 +175,7 @@ export function useRequestHandling() {
                     throw new Error('Unexpected response format');
                 }
             })
-            .catch((error) => {
-                // Catch any errors
-                // console.error('Error: ', error); // Log the error
-                if (!disableMessage)
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 60000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'Error! Server responded with: ' + error,
-                    });
-                return { success: false };
-            });
+            .catch((error) => handleRequestError(error, disableMessage));
     }
 
     function putRequest(path: string, body: any, headers: Headers, context: string, disableMessage: boolean): any {
@@ -183,19 +212,7 @@ export function useRequestHandling() {
                     throw new Error('Unexpected response format');
                 }
             })
-            .catch((error) => {
-                // Catch any errors
-                // console.error('Error: ', error); // Log the error
-                if (!disableMessage)
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 60000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'Error! Server responded with: ' + error,
-                    });
-                return { success: false };
-            });
+            .catch((error) => handleRequestError(error, disableMessage));
     }
 
     function patchRequest(path: string, body: any, headers: Headers, context: string, disableMessage: boolean): any {
@@ -232,19 +249,7 @@ export function useRequestHandling() {
                     throw new Error('Unexpected response format');
                 }
             })
-            .catch((error) => {
-                // Catch any errors
-                // console.error('Error: ', error); // Log the error
-                if (!disableMessage)
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 60000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'Error! Server responded with: ' + error,
-                    });
-                return { success: false };
-            });
+            .catch((error) => handleRequestError(error, disableMessage));
     }
 
     function deleteRequest(path: string, context: string, disableMessage: boolean): any {
@@ -277,19 +282,7 @@ export function useRequestHandling() {
                     return { success: true };
                 }
             })
-            .catch((error) => {
-                // Catch any errors
-                // console.error('Error: ', error); // Log the error
-                if (!disableMessage)
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 60000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'Error! Server responded with: ' + error,
-                    });
-                return { success: false };
-            });
+            .catch((error) => handleRequestError(error, disableMessage));
     }
 
     function addAuthorizationHeader(headers: Headers): Headers {

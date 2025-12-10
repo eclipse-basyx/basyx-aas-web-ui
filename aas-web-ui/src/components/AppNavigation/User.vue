@@ -168,9 +168,86 @@
     async function login(): Promise<void> {
         const infra = currentInfrastructure.value;
 
-        // Handle OAuth2 login
+        // Handle OAuth2 login - authenticate directly without opening full dialog
         if (infra?.auth?.oauth2) {
-            infrastructureStore.dispatchTriggerInfrastructureDialog(true);
+            const config = infra.auth.oauth2;
+
+            if (!config.host || !config.clientId) {
+                navStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 4000,
+                    color: 'error',
+                    btnColor: 'buttonText',
+                    text: 'OAuth2 configuration incomplete. Please configure in settings.',
+                });
+                infrastructureStore.dispatchTriggerInfrastructureDialog(true);
+                return;
+            }
+
+            try {
+                // For client-credentials, authenticate directly
+                if (config.authFlow === 'client-credentials') {
+                    if (!config.clientSecret) {
+                        navStore.dispatchSnackbar({
+                            status: true,
+                            timeout: 4000,
+                            color: 'error',
+                            btnColor: 'buttonText',
+                            text: 'Client secret is required. Please configure in settings.',
+                        });
+                        infrastructureStore.dispatchTriggerInfrastructureDialog(true);
+                        return;
+                    }
+
+                    showOverlay();
+                    const { authenticateOAuth2ClientCredentials } = await import('@/composables/Auth/OAuth2Auth');
+                    const result = await authenticateOAuth2ClientCredentials(config);
+
+                    // Update infrastructure with new token
+                    const updatedInfra = {
+                        ...infra,
+                        token: {
+                            accessToken: result.accessToken,
+                            refreshToken: result.refreshToken,
+                            idToken: result.idToken,
+                            expiresAt: result.expiresAt,
+                        },
+                    };
+                    infrastructureStore.dispatchUpdateInfrastructure(updatedInfra);
+                    infrastructureStore.setAuthenticationStatusForInfrastructure(infra.id, true);
+                    navStore.dispatchTriggerAASListReload();
+                    navStore.dispatchTriggerTreeviewReload();
+
+                    navStore.dispatchSnackbar({
+                        status: true,
+                        timeout: 4000,
+                        color: 'success',
+                        btnColor: 'buttonText',
+                        text: 'Successfully authenticated with OAuth2',
+                    });
+                    hideOverlay();
+                } else {
+                    // For authorization-code flow, use the form composable which handles the redirect flow
+                    const { useOAuth2Form } = await import('@/composables/Auth/useOAuth2Form');
+                    const oauth2Form = useOAuth2Form();
+
+                    // Load current infrastructure config
+                    oauth2Form.loadFromInfrastructure(infra);
+
+                    // Authenticate - this will redirect the page for auth-code flow
+                    await oauth2Form.authenticate(infra.id);
+                }
+            } catch (error: unknown) {
+                hideOverlay();
+                navStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 4000,
+                    color: 'error',
+                    btnColor: 'buttonText',
+                    text: 'OAuth2 authentication failed',
+                    extendedError: error instanceof Error ? error.message : 'Unknown error',
+                });
+            }
             return;
         }
 
