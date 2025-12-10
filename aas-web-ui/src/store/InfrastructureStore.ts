@@ -202,21 +202,21 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     }
 
     // Initialize infrastructures on store creation
-    loadInfrastructuresFromStorage();
-
-    // Explicitly set URLs from selected infrastructure before defining watcher
-    const initialInfra = getSelectedInfrastructure.value;
-    if (initialInfra) {
-        AASDiscoveryURL.value = initialInfra.components.AASDiscovery.url;
-        AASRegistryURL.value = initialInfra.components.AASRegistry.url;
-        SubmodelRegistryURL.value = initialInfra.components.SubmodelRegistry.url;
-        AASRepoURL.value = initialInfra.components.AASRepo.url;
-        SubmodelRepoURL.value = initialInfra.components.SubmodelRepo.url;
-        ConceptDescriptionRepoURL.value = initialInfra.components.ConceptDescriptionRepo.url;
-    }
-
-    // Check if selected infrastructure needs authentication on load
     (async () => {
+        await loadInfrastructuresFromStorage();
+
+        // Explicitly set URLs from selected infrastructure after loading
+        const initialInfra = getSelectedInfrastructure.value;
+        if (initialInfra) {
+            AASDiscoveryURL.value = initialInfra.components.AASDiscovery.url;
+            AASRegistryURL.value = initialInfra.components.AASRegistry.url;
+            SubmodelRegistryURL.value = initialInfra.components.SubmodelRegistry.url;
+            AASRepoURL.value = initialInfra.components.AASRepo.url;
+            SubmodelRepoURL.value = initialInfra.components.SubmodelRepo.url;
+            ConceptDescriptionRepoURL.value = initialInfra.components.ConceptDescriptionRepo.url;
+        }
+
+        // Check if selected infrastructure needs authentication on load
         await nextTick(); // Wait for Vue reactivity
         const selectedInfra = getSelectedInfrastructure.value;
         if (selectedInfra) {
