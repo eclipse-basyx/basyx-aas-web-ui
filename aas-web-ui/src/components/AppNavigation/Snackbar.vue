@@ -6,6 +6,13 @@
             <v-card-text style="max-height: 200px; overflow-y: auto; max-width: 590px">
                 <pre class="text-subtitleText text-caption">{{ snackbar.extendedError }}</pre>
             </v-card-text>
+            <v-divider></v-divider>
+            <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn size="small" variant="text" prepend-icon="mdi-content-copy" @click="copyExtendedError()">
+                    Copy Error
+                </v-btn>
+            </v-card-actions>
         </v-card>
         <span v-else class="text-buttonText">{{ snackbar.text }}</span>
         <template #actions>
@@ -29,12 +36,12 @@
     import { computed } from 'vue';
     import { useNavigationStore } from '@/store/NavigationStore';
 
-    const navStore = useNavigationStore();
+    const navigationStore = useNavigationStore();
 
-    const snackbar = computed(() => navStore.getSnackbar);
+    const snackbar = computed(() => navigationStore.getSnackbar);
 
     function closeSnackbar(): void {
-        navStore.dispatchSnackbar({
+        navigationStore.dispatchSnackbar({
             status: false,
         });
     }
@@ -42,6 +49,28 @@
     async function handleAction(): Promise<void> {
         if (snackbar.value.actionCallback) {
             await snackbar.value.actionCallback();
+        }
+    }
+
+    async function copyExtendedError(): Promise<void> {
+        const errorText = `${snackbar.value.baseError}\n\n${snackbar.value.extendedError}`;
+        try {
+            await navigator.clipboard.writeText(errorText);
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 2000,
+                color: 'success',
+                btnColor: 'buttonText',
+                text: 'Error copied to clipboard',
+            });
+        } catch {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Failed to copy error to clipboard',
+            });
         }
     }
 </script>
