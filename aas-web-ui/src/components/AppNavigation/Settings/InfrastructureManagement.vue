@@ -4,68 +4,13 @@
             <v-card-title>Manage Infrastructures</v-card-title>
             <v-divider></v-divider>
             <v-card-text style="max-height: 600px">
-                <!-- Infrastructure List -->
-                <v-radio-group v-model="defaultInfrastructure" @update:model-value="changeDefault">
-                    <v-table density="compact" class="border rounded">
-                        <thead>
-                            <tr>
-                                <th class="text-left">Default</th>
-                                <th class="text-left">Infrastructure Name</th>
-                                <th class="text-left">Configuration</th>
-                                <th class="text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="infra in infrastructures"
-                                :key="infra.id"
-                                :class="{ 'bg-primary-lighten-5': infra.id === selectedInfrastructureId }">
-                                <td style="width: 80px">
-                                    <v-radio :value="infra.id"></v-radio>
-                                </td>
-                                <td>
-                                    <div class="d-flex align-center">
-                                        {{ infra.name }}
-                                        <v-chip v-if="infra.isDefault" size="x-small" color="primary" class="ml-2"
-                                            >Default</v-chip
-                                        >
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="text-caption text-medium-emphasis">{{
-                                        getInfrastructureSummary(infra)
-                                    }}</span>
-                                </td>
-                                <td style="width: 120px">
-                                    <div class="d-flex justify-end">
-                                        <v-btn
-                                            icon="mdi-pencil"
-                                            size="x-small"
-                                            variant="plain"
-                                            @click.stop="editInfrastructure(infra)">
-                                        </v-btn>
-                                        <v-btn
-                                            icon="mdi-delete"
-                                            size="x-small"
-                                            variant="plain"
-                                            class="ml-n2 mr-n2"
-                                            :disabled="infrastructures.length === 1 || infra.isDefault"
-                                            @click.stop="deleteInfrastructure(infra)">
-                                        </v-btn>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </v-table>
-                </v-radio-group>
-                <!-- Add Infrastructure Button -->
-                <v-btn
-                    color="primary"
-                    block
-                    class="mt-4 text-buttonText"
-                    text="Add Infrastructure"
-                    prepend-icon="mdi-plus"
-                    @click="addNewInfrastructure" />
+                <InfrastructureListTable
+                    v-model:default-infrastructure-id="defaultInfrastructure"
+                    :infrastructures="infrastructures"
+                    :selected-infrastructure-id="selectedInfrastructureId"
+                    @edit="editInfrastructure"
+                    @delete="deleteInfrastructure"
+                    @add="addNewInfrastructure" />
             </v-card-text>
 
             <v-divider></v-divider>
@@ -96,301 +41,61 @@
                             class="mb-2"></v-text-field>
 
                         <!-- Component Configurations -->
-                        <v-expansion-panels v-model="expandedPanels" multiple>
-                            <v-expansion-panel
-                                v-for="(componentKey, index) in componentKeys"
-                                :key="componentKey"
-                                :value="index">
-                                <v-expansion-panel-title>
-                                    <div class="d-flex align-center">
-                                        <v-icon
-                                            :color="
-                                                componentConnectionStatus[componentKey] === true
-                                                    ? 'success'
-                                                    : componentConnectionStatus[componentKey] === false
-                                                      ? 'error'
-                                                      : editingInfrastructure.components[componentKey].url
-                                                        ? 'grey'
-                                                        : 'grey'
-                                            "
-                                            size="small"
-                                            class="mr-2">
-                                            {{
-                                                componentConnectionStatus[componentKey] === true
-                                                    ? 'mdi-check-circle'
-                                                    : componentConnectionStatus[componentKey] === false
-                                                      ? 'mdi-alert-circle'
-                                                      : editingInfrastructure.components[componentKey].url
-                                                        ? 'mdi-help-circle'
-                                                        : 'mdi-circle-outline'
-                                            }}
-                                        </v-icon>
-                                        <span>{{ getComponentLabel(componentKey) }}</span>
-                                    </div>
-                                </v-expansion-panel-title>
-                                <v-expansion-panel-text>
-                                    <!-- Component URL -->
-                                    <v-text-field
-                                        v-model="editingInfrastructure.components[componentKey].url"
-                                        label="Endpoint URL"
-                                        variant="outlined"
-                                        density="compact"
-                                        placeholder="https://example.com/api"
-                                        class="mb-2"
-                                        @keyup.enter="testComponentConnection(componentKey)"
-                                        @update:model-value="componentConnectionStatus[componentKey] = null">
-                                        <template #append-inner>
-                                            <v-btn
-                                                icon
-                                                size="x-small"
-                                                variant="text"
-                                                :loading="componentTestingLoading[componentKey]"
-                                                :disabled="!editingInfrastructure.components[componentKey].url"
-                                                @click.stop="testComponentConnection(componentKey)">
-                                                <v-icon>mdi-connection</v-icon>
-                                                <v-tooltip activator="parent" location="bottom">
-                                                    Test Connection
-                                                </v-tooltip>
-                                            </v-btn>
-                                        </template>
-                                    </v-text-field>
-                                </v-expansion-panel-text>
-                            </v-expansion-panel>
-                        </v-expansion-panels>
-                        <v-expansion-panels class="mt-4">
-                            <v-expansion-panel>
-                                <v-expansion-panel-title>
-                                    <v-icon left size="small" class="mr-2">mdi-lock</v-icon>
-                                    Security Configuration (applies to all components)
-                                </v-expansion-panel-title>
-                                <v-expansion-panel-text>
-                                    <!-- Authentication -->
-                                    <v-select
-                                        v-model="editingInfrastructure.auth!.securityType"
-                                        :items="securityTypes"
-                                        label="Authentication Type"
-                                        variant="outlined"
-                                        density="compact"
-                                        class="mb-2"></v-select>
-
-                                    <!-- Basic Auth -->
-                                    <template
-                                        v-if="editingInfrastructure.auth!.securityType === 'Basic Authentication'">
-                                        <v-text-field
-                                            v-model="basicAuthUsername"
-                                            label="Username"
-                                            variant="outlined"
-                                            density="compact"
-                                            class="mb-2"></v-text-field>
-                                        <v-text-field
-                                            v-model="basicAuthPassword"
-                                            label="Password"
-                                            type="password"
-                                            variant="outlined"
-                                            density="compact"
-                                            class="mb-2"></v-text-field>
-                                    </template>
-
-                                    <!-- Bearer Token -->
-                                    <template v-if="editingInfrastructure.auth!.securityType === 'Bearer Token'">
-                                        <v-textarea
-                                            v-model="bearerToken"
-                                            label="Bearer Token"
-                                            variant="outlined"
-                                            density="compact"
-                                            rows="3"
-                                            class="mb-2"></v-textarea>
-                                    </template>
-
-                                    <!-- OAuth2 -->
-                                    <template v-if="editingInfrastructure.auth!.securityType === 'OAuth2'">
-                                        <v-select
-                                            v-model="oAuth2AuthFlow"
-                                            :items="keycloakAuthFlowOptions"
-                                            item-title="text"
-                                            item-value="value"
-                                            label="Auth Flow"
-                                            variant="outlined"
-                                            density="compact"
-                                            class="mb-2"></v-select>
-                                        <v-text-field
-                                            v-model="oauth2Data.host"
-                                            label="OAuth2 Host"
-                                            variant="outlined"
-                                            density="compact"
-                                            placeholder="https://oauth.example.com"
-                                            class="mb-2"></v-text-field>
-                                        <v-text-field
-                                            v-model="oauth2Data.clientId"
-                                            label="Client ID"
-                                            variant="outlined"
-                                            density="compact"
-                                            class="mb-2"></v-text-field>
-                                        <v-text-field
-                                            v-if="oAuth2AuthFlow === 'client-credentials'"
-                                            v-model="oauth2Data.clientSecret"
-                                            label="Client Secret"
-                                            type="password"
-                                            variant="outlined"
-                                            density="compact"
-                                            class="mb-2"></v-text-field>
-                                        <v-text-field
-                                            v-if="oAuth2AuthFlow === 'password'"
-                                            v-model="oauth2Data.username"
-                                            label="Username"
-                                            variant="outlined"
-                                            density="compact"
-                                            class="mb-2"></v-text-field>
-                                        <v-text-field
-                                            v-if="oAuth2AuthFlow === 'password'"
-                                            v-model="oauth2Data.password"
-                                            label="Password"
-                                            type="password"
-                                            variant="outlined"
-                                            density="compact"
-                                            class="mb-2"></v-text-field>
-                                        <v-text-field
-                                            v-model="oauth2Data.scope"
-                                            label="Scope (optional)"
-                                            variant="outlined"
-                                            density="compact"
-                                            class="mb-2"></v-text-field>
-                                        <v-row v-if="oAuth2AuthFlow === 'client-credentials'" class="mb-2">
-                                            <v-col>
-                                                <v-btn
-                                                    v-if="!oauth2Token"
-                                                    block
-                                                    variant="tonal"
-                                                    color="primary"
-                                                    :loading="oauth2Loading"
-                                                    @click="authenticateOAuth2()">
-                                                    Authenticate
-                                                </v-btn>
-                                                <v-btn
-                                                    v-else
-                                                    block
-                                                    variant="tonal"
-                                                    color="success"
-                                                    prepend-icon="mdi-check-circle"
-                                                    @click="authenticateOAuth2()">
-                                                    Authenticated
-                                                </v-btn>
-                                            </v-col>
-                                        </v-row>
-                                        <v-row v-if="oAuth2AuthFlow === 'auth-code'" class="mb-2">
-                                            <v-col>
-                                                <v-btn
-                                                    block
-                                                    variant="tonal"
-                                                    color="primary"
-                                                    prepend-icon="mdi-login"
-                                                    @click="authenticateOAuth2()">
-                                                    Login with OAuth2 Provider
-                                                </v-btn>
-                                            </v-col>
-                                        </v-row>
-                                        <v-alert
-                                            v-if="oAuth2AuthFlow === 'auth-code'"
-                                            type="info"
-                                            variant="tonal"
-                                            density="compact"
-                                            class="mb-2">
-                                            Configure the redirect URI in your OAuth2 provider to:
-                                            {{ getRedirectUri() }}
-                                        </v-alert>
-                                    </template>
-
-                                    <!-- Keycloak -->
-                                    <template v-if="editingInfrastructure.auth!.securityType === 'Keycloak'">
-                                        <v-text-field
-                                            v-model="keycloakServerUrl"
-                                            label="Keycloak Server URL"
-                                            variant="outlined"
-                                            density="compact"
-                                            placeholder="https://keycloak.example.com"
-                                            class="mb-2"></v-text-field>
-                                        <v-text-field
-                                            v-model="keycloakRealm"
-                                            label="Realm"
-                                            variant="outlined"
-                                            density="compact"
-                                            class="mb-2"></v-text-field>
-                                        <v-text-field
-                                            v-model="keycloakClientId"
-                                            label="Client ID"
-                                            variant="outlined"
-                                            density="compact"
-                                            class="mb-2"></v-text-field>
-                                        <v-select
-                                            v-model="keycloakAuthFlow"
-                                            :items="keycloakAuthFlowOptions"
-                                            item-title="text"
-                                            item-value="value"
-                                            label="Auth Flow"
-                                            variant="outlined"
-                                            density="compact"
-                                            class="mb-2"></v-select>
-                                        <v-text-field
-                                            v-if="
-                                                keycloakAuthFlow === 'client-credentials' ||
-                                                keycloakAuthFlow === 'password'
-                                            "
-                                            v-model="keycloakClientSecret"
-                                            label="Client Secret"
-                                            type="password"
-                                            variant="outlined"
-                                            density="compact"
-                                            class="mb-2"></v-text-field>
-                                        <template v-if="keycloakAuthFlow === 'password'">
-                                            <v-text-field
-                                                v-model="keycloakUsername"
-                                                label="Username"
-                                                variant="outlined"
-                                                density="compact"
-                                                class="mb-2"></v-text-field>
-                                            <v-text-field
-                                                v-model="keycloakPassword"
-                                                label="Password"
-                                                type="password"
-                                                variant="outlined"
-                                                density="compact"
-                                                class="mb-2"></v-text-field>
-                                        </template>
-                                        <v-row v-if="keycloakAuthFlow" class="mb-2">
-                                            <v-col>
-                                                <v-btn
-                                                    v-if="!keycloakToken"
-                                                    block
-                                                    variant="tonal"
-                                                    color="primary"
-                                                    :loading="keycloakLoading"
-                                                    @click="authenticateKeycloakHandler()">
-                                                    Authenticate
-                                                </v-btn>
-                                                <v-btn
-                                                    v-else
-                                                    block
-                                                    variant="tonal"
-                                                    color="success"
-                                                    prepend-icon="mdi-check-circle"
-                                                    @click="authenticateKeycloakHandler()">
-                                                    Authenticated
-                                                </v-btn>
-                                            </v-col>
-                                        </v-row>
-                                        <v-alert
-                                            v-if="keycloakError"
-                                            type="error"
-                                            density="compact"
-                                            closable
-                                            class="mb-2"
-                                            @click:close="keycloakError = ''">
-                                            {{ keycloakError }}
-                                        </v-alert>
-                                    </template>
-                                </v-expansion-panel-text>
-                            </v-expansion-panel>
-                        </v-expansion-panels>
+                        <ComponentConfigPanel
+                            v-model:expanded-panels="expandedPanels"
+                            :components="editingInfrastructure.components"
+                            :component-connection-status="componentConnectionStatus"
+                            :component-testing-loading="componentTestingLoading"
+                            @test-connection="testComponentConnection"
+                            @update:component-url="handleComponentUrlUpdate"
+                            @update:connection-status="handleConnectionStatusUpdate" />
+                        <!-- Security Configuration -->
+                        <SecurityConfigPanel
+                            :auth="editingInfrastructure.auth!"
+                            :security-types="securityTypes"
+                            :auth-flow-options="keycloakAuthFlowOptions"
+                            :basic-auth-username="basicAuthUsername"
+                            :basic-auth-password="basicAuthPassword"
+                            :bearer-token="bearerToken"
+                            :o-auth2-auth-flow="oAuth2AuthFlow"
+                            :oauth2-data="oauth2Data"
+                            :oauth2-token="oauth2Token"
+                            :oauth2-loading="oauth2Loading"
+                            :keycloak-server-url="keycloakServerUrl"
+                            :keycloak-realm="keycloakRealm"
+                            :keycloak-client-id="keycloakClientId"
+                            :keycloak-auth-flow="keycloakAuthFlow"
+                            :keycloak-client-secret="keycloakClientSecret"
+                            :keycloak-username="keycloakUsername"
+                            :keycloak-password="keycloakPassword"
+                            :keycloak-token="keycloakToken"
+                            :keycloak-loading="keycloakLoading"
+                            :keycloak-error="keycloakError"
+                            @update:security-type="editingInfrastructure.auth!.securityType = $event as SecurityType"
+                            @update:basic-auth-username="basicAuthUsername = $event"
+                            @update:basic-auth-password="basicAuthPassword = $event"
+                            @update:bearer-token="bearerToken = $event"
+                            @update:o-auth2-auth-flow="
+                                oAuth2AuthFlow = $event as 'auth-code' | 'client-credentials' | 'password'
+                            "
+                            @update:oauth2-host="oauth2Data.host = $event"
+                            @update:oauth2-client-id="oauth2Data.clientId = $event"
+                            @update:oauth2-client-secret="oauth2Data.clientSecret = $event"
+                            @update:oauth2-username="oauth2Data.username = $event"
+                            @update:oauth2-password="oauth2Data.password = $event"
+                            @update:oauth2-scope="oauth2Data.scope = $event"
+                            @update:keycloak-server-url="keycloakServerUrl = $event"
+                            @update:keycloak-realm="keycloakRealm = $event"
+                            @update:keycloak-client-id="keycloakClientId = $event"
+                            @update:keycloak-auth-flow="
+                                keycloakAuthFlow = $event as 'auth-code' | 'client-credentials' | 'password'
+                            "
+                            @update:keycloak-client-secret="keycloakClientSecret = $event"
+                            @update:keycloak-username="keycloakUsername = $event"
+                            @update:keycloak-password="keycloakPassword = $event"
+                            @authenticate-oauth2="authenticateOAuth2"
+                            @authenticate-keycloak="authenticateKeycloakHandler"
+                            @clear-keycloak-error="keycloakError = ''" />
                     </v-form>
                 </v-card-text>
 
@@ -446,13 +151,10 @@
     import { useOAuth2Form } from '@/composables/useOAuth2Form';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import {
-        BASYX_COMPONENT_KEYS,
-        getComponentLabel,
-        getInfrastructureSummary,
-        getRedirectUri,
-        requiredRule,
-    } from '@/utils/InfrastructureUtils';
+    import { requiredRule } from '@/utils/InfrastructureUtils';
+    import ComponentConfigPanel from './ComponentConfigPanel.vue';
+    import InfrastructureListTable from './InfrastructureListTable.vue';
+    import SecurityConfigPanel from './SecurityConfigPanel.vue';
 
     // Props
     const props = defineProps<{
@@ -486,9 +188,6 @@
     const expandedPanels = ref<number[]>([]);
     const formRef = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null);
     const defaultInfrastructure = ref<string>('');
-
-    // Component configuration
-    const componentKeys = BASYX_COMPONENT_KEYS;
 
     const securityTypes: SecurityType[] = [
         'No Authentication',
@@ -536,6 +235,13 @@
 
     const reauthenticating = ref(false);
 
+    // Watch for default infrastructure changes
+    watch(defaultInfrastructure, (newDefaultId) => {
+        if (newDefaultId) {
+            infrastructureStore.dispatchSetDefaultInfrastructure(newDefaultId);
+        }
+    });
+
     // Watch props
     watch(
         () => props.open,
@@ -573,11 +279,6 @@
             infrastructureStore.dispatchSetDefaultInfrastructure(firstInfra.id);
         }
     });
-
-    function changeDefault(newDefaultId: string | null): void {
-        if (newDefaultId === null) return;
-        infrastructureStore.dispatchSetDefaultInfrastructure(newDefaultId);
-    }
 
     // Methods
     function close(): void {
@@ -821,5 +522,15 @@
                 await infrastructureStore.dispatchSelectInfrastructure(editingInfrastructure.value.id, false);
             }
         }
+    }
+
+    // Component URL update handler
+    function handleComponentUrlUpdate(componentKey: BaSyxComponentKey, url: string): void {
+        editingInfrastructure.value.components[componentKey].url = url;
+    }
+
+    // Connection status update handler
+    function handleConnectionStatusUpdate(componentKey: BaSyxComponentKey, status: boolean | null): void {
+        componentConnectionStatus.value[componentKey] = status;
     }
 </script>
