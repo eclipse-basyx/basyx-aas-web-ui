@@ -438,12 +438,28 @@
 
 <script lang="ts" setup>
     import type { BaSyxComponentKey } from '@/types/BaSyx';
-    import type { InfrastructureConfig, KeycloakConnectionData, SecurityType } from '@/types/Infrastructure';
+    import type {
+        AuthFlowOption,
+        AuthTokenState,
+        ComponentConnectionStatus,
+        ComponentTestingLoading,
+        InfrastructureConfig,
+        KeycloakConnectionData,
+        OAuth2FormData,
+        SecurityType,
+    } from '@/types/Infrastructure';
     import { computed, onMounted, ref, watch } from 'vue';
     import { authenticateKeycloak } from '@/composables/KeycloakAuth';
     import { authenticateOAuth2ClientCredentials, initiateOAuth2AuthorizationCodeFlow } from '@/composables/OAuth2Auth';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import {
+        BASYX_COMPONENT_KEYS,
+        getComponentLabel,
+        getInfrastructureSummary,
+        getRedirectUri,
+        requiredRule,
+    } from '@/utils/InfrastructureUtils';
 
     // Props
     const props = defineProps<{
@@ -479,14 +495,7 @@
     const defaultInfrastructure = ref<string>('');
 
     // Component configuration
-    const componentKeys: BaSyxComponentKey[] = [
-        'AASDiscovery',
-        'AASRegistry',
-        'SubmodelRegistry',
-        'AASRepo',
-        'SubmodelRepo',
-        'ConceptDescriptionRepo',
-    ];
+    const componentKeys = BASYX_COMPONENT_KEYS;
 
     const securityTypes: SecurityType[] = [
         'No Authentication',
@@ -495,7 +504,7 @@
         'Keycloak',
         'OAuth2',
     ];
-    const keycloakAuthFlowOptions = [
+    const keycloakAuthFlowOptions: AuthFlowOption[] = [
         { text: 'User Login (Authorization Code Flow)', value: 'auth-code' },
         { text: 'Service Account (Client Credentials)', value: 'client-credentials' },
         { text: 'Direct Grant (Username/Password)', value: 'password' },
@@ -512,23 +521,11 @@
     const keycloakClientSecret = ref<string>('');
     const keycloakUsername = ref<string>('');
     const keycloakPassword = ref<string>('');
-    const keycloakToken = ref<{
-        accessToken: string;
-        refreshToken?: string;
-        expiresAt?: number;
-        idToken?: string;
-    } | null>(null);
+    const keycloakToken = ref<AuthTokenState | null>(null);
     const keycloakLoading = ref<boolean>(false);
     const keycloakError = ref<string>('');
     const reauthenticating = ref(false);
-    const oauth2Data = ref<{
-        scope: string;
-        host: string;
-        clientId: string;
-        clientSecret: string;
-        username: string;
-        password: string;
-    }>({
+    const oauth2Data = ref<OAuth2FormData>({
         scope: '',
         host: '',
         clientId: '',
@@ -537,19 +534,12 @@
         password: '',
     });
     const oAuth2AuthFlow = ref<string>('');
-    const oauth2Token = ref<{
-        accessToken: string;
-        refreshToken?: string;
-        expiresAt?: number;
-        idToken?: string;
-    } | null>(null);
+    const oauth2Token = ref<AuthTokenState | null>(null);
     const oauth2Loading = ref<boolean>(false);
 
     // Component connection testing states
-    const componentConnectionStatus = ref<Record<BaSyxComponentKey, boolean | null>>(
-        {} as Record<BaSyxComponentKey, boolean | null>
-    );
-    const componentTestingLoading = ref<Record<BaSyxComponentKey, boolean>>({} as Record<BaSyxComponentKey, boolean>);
+    const componentConnectionStatus = ref<ComponentConnectionStatus>({} as ComponentConnectionStatus);
+    const componentTestingLoading = ref<ComponentTestingLoading>({} as ComponentTestingLoading);
     const testingAllConnections = ref(false);
 
     // Watch props
@@ -598,23 +588,6 @@
     // Methods
     function close(): void {
         dialogOpen.value = false;
-    }
-
-    function getComponentLabel(key: BaSyxComponentKey): string {
-        const labels: Record<BaSyxComponentKey, string> = {
-            AASDiscovery: 'AAS Discovery',
-            AASRegistry: 'AAS Registry',
-            SubmodelRegistry: 'Submodel Registry',
-            AASRepo: 'AAS Repository',
-            SubmodelRepo: 'Submodel Repository',
-            ConceptDescriptionRepo: 'Concept Description Repository',
-        };
-        return labels[key];
-    }
-
-    function getInfrastructureSummary(infra: InfrastructureConfig): string {
-        const configuredCount = Object.values(infra.components).filter((comp) => comp.url.trim() !== '').length;
-        return `${configuredCount} of ${componentKeys.length} components configured`;
     }
 
     function addNewInfrastructure(): void {
@@ -955,14 +928,6 @@
         } finally {
             keycloakLoading.value = false;
         }
-    }
-
-    function requiredRule(value: string): string | boolean {
-        return !!value || 'This field is required';
-    }
-
-    function getRedirectUri(): string {
-        return `${window.location.origin}/oauth2/callback`;
     }
 
     // Test individual component connection
