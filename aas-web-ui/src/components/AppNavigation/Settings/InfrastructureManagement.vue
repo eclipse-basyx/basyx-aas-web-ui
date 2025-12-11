@@ -61,16 +61,6 @@
                             :oauth2-data="oauth2Data"
                             :oauth2-token="oauth2Token"
                             :oauth2-loading="oauth2Loading"
-                            :keycloak-server-url="keycloakServerUrl"
-                            :keycloak-realm="keycloakRealm"
-                            :keycloak-client-id="keycloakClientId"
-                            :keycloak-auth-flow="keycloakAuthFlow"
-                            :keycloak-client-secret="keycloakClientSecret"
-                            :keycloak-username="keycloakUsername"
-                            :keycloak-password="keycloakPassword"
-                            :keycloak-token="keycloakToken"
-                            :keycloak-loading="keycloakLoading"
-                            :keycloak-error="keycloakError"
                             @update:security-type="editingInfrastructure.auth!.securityType = $event as SecurityType"
                             @update:basic-auth-username="basicAuthUsername = $event"
                             @update:basic-auth-password="basicAuthPassword = $event"
@@ -84,32 +74,13 @@
                             @update:oauth2-username="oauth2Data.username = $event"
                             @update:oauth2-password="oauth2Data.password = $event"
                             @update:oauth2-scope="oauth2Data.scope = $event"
-                            @update:keycloak-server-url="keycloakServerUrl = $event"
-                            @update:keycloak-realm="keycloakRealm = $event"
-                            @update:keycloak-client-id="keycloakClientId = $event"
-                            @update:keycloak-auth-flow="
-                                keycloakAuthFlow = $event as 'auth-code' | 'client-credentials' | 'password'
-                            "
-                            @update:keycloak-client-secret="keycloakClientSecret = $event"
-                            @update:keycloak-username="keycloakUsername = $event"
-                            @update:keycloak-password="keycloakPassword = $event"
-                            @authenticate-oauth2="authenticateOAuth2"
-                            @authenticate-keycloak="authenticateKeycloakHandler"
-                            @clear-keycloak-error="keycloakError = ''" />
+                            @authenticate-oauth2="authenticateOAuth2" />
                     </v-form>
                 </v-card-text>
 
                 <v-divider></v-divider>
 
                 <v-card-actions>
-                    <v-btn
-                        color="info"
-                        class="mr-2"
-                        prepend-icon="mdi-refresh"
-                        text="Re-authenticate"
-                        :loading="reauthenticating"
-                        :disabled="!hasAuthenticatedComponents"
-                        @click="reauthenticateAll" />
                     <v-btn
                         color="primary"
                         variant="tonal"
@@ -146,11 +117,9 @@
     import type { AuthFlowOption, InfrastructureConfig, SecurityType } from '@/types/Infrastructure';
     import { computed, onMounted, ref, watch } from 'vue';
     import { useBasicAuthForm } from '@/composables/Auth/useBasicAuthForm';
-    import { useKeycloakForm } from '@/composables/Auth/useKeycloakForm';
     import { useOAuth2Form } from '@/composables/Auth/useOAuth2Form';
     import { useComponentConnectionTesting } from '@/composables/Infrastructure/useComponentConnectionTesting';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
-    import { useNavigationStore } from '@/store/NavigationStore';
     import { requiredRule } from '@/utils/InfrastructureUtils';
 
     // Props
@@ -165,15 +134,10 @@
 
     // Stores
     const infrastructureStore = useInfrastructureStore();
-    const navigationStore = useNavigationStore();
 
     // Computed Properties
     const infrastructures = computed(() => infrastructureStore.getInfrastructures);
     const selectedInfrastructureId = computed(() => infrastructureStore.getSelectedInfrastructureId);
-    const hasAuthenticatedComponents = computed(() => {
-        const auth = editingInfrastructure.value.auth;
-        return auth && auth.securityType !== 'No Authentication';
-    });
 
     // Local State
     const dialogOpen = ref(false);
@@ -186,13 +150,7 @@
     const formRef = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null);
     const defaultInfrastructure = ref<string>('');
 
-    const securityTypes: SecurityType[] = [
-        'No Authentication',
-        'Basic Authentication',
-        'Bearer Token',
-        'Keycloak',
-        'OAuth2',
-    ];
+    const securityTypes: SecurityType[] = ['No Authentication', 'Basic Authentication', 'Bearer Token', 'OAuth2'];
     const keycloakAuthFlowOptions: AuthFlowOption[] = [
         { text: 'User Login (Authorization Code Flow)', value: 'auth-code' },
         { text: 'Service Account (Client Credentials)', value: 'client-credentials' },
@@ -201,7 +159,6 @@
 
     // Initialize composables for auth forms
     const basicAuthForm = useBasicAuthForm();
-    const keycloakForm = useKeycloakForm();
     const oauth2Form = useOAuth2Form();
     const connectionTesting = useComponentConnectionTesting();
 
@@ -209,17 +166,6 @@
     const basicAuthUsername = basicAuthForm.basicAuthUsername;
     const basicAuthPassword = basicAuthForm.basicAuthPassword;
     const bearerToken = basicAuthForm.bearerToken;
-
-    const keycloakServerUrl = keycloakForm.serverUrl;
-    const keycloakRealm = keycloakForm.realm;
-    const keycloakClientId = keycloakForm.clientId;
-    const keycloakAuthFlow = keycloakForm.authFlow;
-    const keycloakClientSecret = keycloakForm.clientSecret;
-    const keycloakUsername = keycloakForm.username;
-    const keycloakPassword = keycloakForm.password;
-    const keycloakToken = keycloakForm.token;
-    const keycloakLoading = keycloakForm.loading;
-    const keycloakError = keycloakForm.error;
 
     const oauth2Data = oauth2Form.formData;
     const oAuth2AuthFlow = oauth2Form.authFlow;
@@ -229,8 +175,6 @@
     const componentConnectionStatus = connectionTesting.componentConnectionStatus;
     const componentTestingLoading = connectionTesting.componentTestingLoading;
     const testingAllConnections = connectionTesting.testingAllConnections;
-
-    const reauthenticating = ref(false);
 
     // Watch for default infrastructure changes
     watch(defaultInfrastructure, (newDefaultId) => {
@@ -301,7 +245,6 @@
     function loadAuthDataFromInfrastructure(infra: InfrastructureConfig): void {
         // Load auth data using composables
         basicAuthForm.loadFromInfrastructure(infra);
-        keycloakForm.loadFromInfrastructure(infra);
         oauth2Form.loadFromInfrastructure(infra);
 
         // Reset component connection status
@@ -311,7 +254,6 @@
     async function saveAuthDataToInfrastructure(infra: InfrastructureConfig): Promise<void> {
         // Save auth data using composables
         basicAuthForm.saveToInfrastructure(infra);
-        keycloakForm.saveToInfrastructure(infra);
         oauth2Form.saveToInfrastructure(infra);
     }
 
@@ -347,137 +289,6 @@
             infrastructureToDelete.value = null;
         }
         deleteDialogOpen.value = false;
-    }
-
-    // Re-authenticate all components
-    async function reauthenticateAll(): Promise<void> {
-        reauthenticating.value = true;
-        const auth = editingInfrastructure.value.auth;
-
-        if (!auth || auth.securityType === 'No Authentication') {
-            reauthenticating.value = false;
-            return;
-        }
-
-        try {
-            if (auth.securityType === 'Keycloak') {
-                // Clear previous error
-                keycloakError.value = '';
-
-                await authenticateKeycloakHandler();
-
-                // Check if authentication was successful by verifying token exists
-                if (keycloakToken.value?.accessToken && !keycloakError.value) {
-                    // Save the updated token to the infrastructure and persist to localStorage
-                    await saveAuthDataToInfrastructure(editingInfrastructure.value);
-                    infrastructureStore.dispatchUpdateInfrastructure(editingInfrastructure.value);
-                    saveInfrastructure();
-
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 4000,
-                        color: 'success',
-                        btnColor: 'buttonText',
-                        text: 'Successfully re-authenticated and saved to storage',
-                    });
-                } else {
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 8000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'Re-authentication failed',
-                        extendedError: keycloakError.value || 'Authentication failed - no token received',
-                    });
-                }
-            } else {
-                // For Basic Auth and Bearer Token, the credentials are already in the form
-                // Just validate they exist
-                if (auth.securityType === 'Basic Authentication') {
-                    if (basicAuthUsername.value && basicAuthPassword.value) {
-                        navigationStore.dispatchSnackbar({
-                            status: true,
-                            timeout: 4000,
-                            color: 'success',
-                            btnColor: 'buttonText',
-                            text: 'Basic Auth credentials are configured',
-                        });
-                    } else {
-                        navigationStore.dispatchSnackbar({
-                            status: true,
-                            timeout: 4000,
-                            color: 'error',
-                            btnColor: 'buttonText',
-                            text: 'Basic Auth credentials missing',
-                        });
-                    }
-                } else if (auth.securityType === 'Bearer Token') {
-                    if (bearerToken.value) {
-                        navigationStore.dispatchSnackbar({
-                            status: true,
-                            timeout: 4000,
-                            color: 'success',
-                            btnColor: 'buttonText',
-                            text: 'Bearer Token is configured',
-                        });
-                    } else {
-                        navigationStore.dispatchSnackbar({
-                            status: true,
-                            timeout: 4000,
-                            color: 'error',
-                            btnColor: 'buttonText',
-                            text: 'Bearer Token missing',
-                        });
-                    }
-                } else if (auth.securityType === 'OAuth2') {
-                    // Re-authenticate OAuth2
-                    await authenticateOAuth2();
-
-                    // Check if authentication was successful
-                    if (oauth2Token.value?.accessToken) {
-                        // Save the updated token to the infrastructure and persist to localStorage
-                        await saveAuthDataToInfrastructure(editingInfrastructure.value);
-                        infrastructureStore.dispatchUpdateInfrastructure(editingInfrastructure.value);
-                        await saveInfrastructure();
-
-                        navigationStore.dispatchSnackbar({
-                            status: true,
-                            timeout: 4000,
-                            color: 'success',
-                            btnColor: 'buttonText',
-                            text: 'Successfully re-authenticated OAuth2 and saved to storage',
-                        });
-                    }
-                }
-            }
-        } catch (error) {
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 8000,
-                color: 'error',
-                btnColor: 'buttonText',
-                text: 'Re-authentication failed',
-                extendedError: error instanceof Error ? error.message : 'Unknown error occurred',
-            });
-        } finally {
-            reauthenticating.value = false;
-        }
-    }
-
-    // Keycloak Authentication Methods
-    async function authenticateKeycloakHandler(): Promise<void> {
-        await keycloakForm.authenticate();
-
-        // Save infrastructure after successful authentication to make token available for requests
-        if (keycloakToken.value) {
-            await saveAuthDataToInfrastructure(editingInfrastructure.value);
-            // Update the store to make token available immediately for API requests
-            infrastructureStore.dispatchUpdateInfrastructure(editingInfrastructure.value);
-            // Also update the selected infrastructure if we're editing the currently selected one
-            if (editingInfrastructure.value.id === selectedInfrastructureId.value) {
-                await infrastructureStore.dispatchSelectInfrastructure(editingInfrastructure.value.id, false);
-            }
-        }
     }
 
     // Test individual component connection

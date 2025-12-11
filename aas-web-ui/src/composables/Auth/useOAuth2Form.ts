@@ -81,7 +81,7 @@ export function useOAuth2Form(): {
             clientId: formData.value.clientId || '',
             clientSecret: formData.value.clientSecret || '',
             scope: formData.value.scope || '',
-            authFlow: authFlow.value as 'client-credentials' | 'authorization-code',
+            authFlow: authFlow.value as 'client-credentials' | 'auth-code',
         };
 
         // Save token data if authenticated

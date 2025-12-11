@@ -2,7 +2,6 @@ import type { BaSyxComponent, BaSyxComponentKey } from '@/types/BaSyx';
 import type { InfrastructureConfig, UserData } from '@/types/Infrastructure';
 import { defineStore } from 'pinia';
 import { computed, nextTick, reactive, ref, watch } from 'vue';
-import { authenticateKeycloak } from '@/composables/Auth/KeycloakAuth';
 import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
 import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
@@ -145,9 +144,8 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             return false;
         }
         const allowLogout = envStore.getAllowLogout;
-        const isClientCredentialsFlow = infra.auth.keycloakConfig?.authFlow === 'client-credentials';
         const isOAuth2ClientCredentials = infra.auth.oauth2?.authFlow === 'client-credentials';
-        return allowLogout && !isClientCredentialsFlow && !isOAuth2ClientCredentials;
+        return allowLogout && !isOAuth2ClientCredentials;
     });
 
     function getDefaultInfrastructureId(): string {
@@ -216,56 +214,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             ConceptDescriptionRepoURL.value = initialInfra.components.ConceptDescriptionRepo.url;
         }
 
-        // Check if selected infrastructure needs authentication on load
-        await nextTick(); // Wait for Vue reactivity
-        const selectedInfra = getSelectedInfrastructure.value;
-        if (selectedInfra) {
-            const requiresKeycloakAuth =
-                selectedInfra.auth?.securityType === 'Keycloak' &&
-                selectedInfra.auth.keycloakConfig &&
-                selectedInfra.auth.keycloakConfig.authFlow === 'auth-code';
-            const hasToken = selectedInfra.token?.accessToken;
-
-            if (requiresKeycloakAuth && !hasToken && selectedInfra.auth?.keycloakConfig) {
-                // Directly trigger authentication for auth-code flow
-                const { authenticateKeycloak } = await import('@/composables/Auth/KeycloakAuth');
-                try {
-                    isAuthenticating.value = true;
-                    const result = await authenticateKeycloak(selectedInfra.auth.keycloakConfig);
-
-                    // Update infrastructure with new token
-                    const updatedInfra = {
-                        ...selectedInfra,
-                        token: {
-                            accessToken: result.accessToken,
-                            refreshToken: result.refreshToken,
-                            idToken: result.idToken,
-                            expiresAt: result.expiresAt,
-                        },
-                    };
-                    dispatchUpdateInfrastructure(updatedInfra);
-                    setAuthenticationStatusForInfrastructure(selectedInfra.id, true);
-
-                    // Wait for Vue reactivity to process the infrastructure update
-                    await nextTick();
-
-                    // Notify about successful authentication
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 4000,
-                        color: 'success',
-                        btnColor: 'buttonText',
-                        text: 'Successfully authenticated',
-                    });
-                } catch (error: unknown) {
-                    // Silently fail on page load - user can manually authenticate later
-                    console.warn('Authentication on load failed:', error);
-                } finally {
-                    isAuthenticating.value = false;
-                }
-            }
-        }
-
         // Connect components after infrastructure is loaded and synced
         await nextTick(); // Ensure watcher has run
         await connectComponents();
@@ -329,56 +277,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         selectedInfrastructureId.value = infrastructureId;
 
         saveInfrastructuresToStorage();
-
-        // Check if infrastructure requires authentication and doesn't have a token
-        const requiresKeycloakAuth =
-            infra.auth?.securityType === 'Keycloak' &&
-            infra.auth.keycloakConfig &&
-            infra.auth.keycloakConfig.authFlow === 'auth-code';
-        const hasToken = infra.token?.accessToken;
-
-        if (requiresKeycloakAuth && !hasToken && infra.auth?.keycloakConfig) {
-            try {
-                isAuthenticating.value = true;
-                const result = await authenticateKeycloak(infra.auth.keycloakConfig);
-
-                // Update infrastructure with new token
-                const updatedInfra = {
-                    ...infra,
-                    token: {
-                        accessToken: result.accessToken,
-                        refreshToken: result.refreshToken,
-                        idToken: result.idToken,
-                        expiresAt: result.expiresAt,
-                    },
-                };
-                dispatchUpdateInfrastructure(updatedInfra);
-                setAuthenticationStatusForInfrastructure(infra.id, true);
-                navigationStore.dispatchSnackbar({
-                    status: true,
-                    timeout: 4000,
-                    color: 'success',
-                    btnColor: 'buttonText',
-                    text: 'Successfully authenticated',
-                });
-
-                // Trigger reload after successful authentication
-                await nextTick();
-                navigationStore.dispatchTriggerAASListReload();
-                navigationStore.dispatchTriggerTreeviewReload();
-            } catch (error: unknown) {
-                navigationStore.dispatchSnackbar({
-                    status: true,
-                    timeout: 6000,
-                    color: 'warning',
-                    btnColor: 'buttonText',
-                    text: 'Authentication required for this infrastructure',
-                    extendedError: error instanceof Error ? error.message : 'Please authenticate to continue',
-                });
-            } finally {
-                isAuthenticating.value = false;
-            }
-        }
 
         // Only clear lists when actually switching infrastructure (connect=true)
         // During initial load (connect=false), lists should not be cleared
@@ -499,7 +397,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
 
         // Save updated tokens to storage if any were refreshed
         const totalAuthenticatedInfrastructures = infrastructures.value.filter(
-            (infra) => (infra.auth?.securityType === 'Keycloak' || infra.auth?.securityType === 'OAuth2') && infra.token
+            (infra) => infra.auth?.securityType === 'OAuth2' && infra.token
         ).length;
 
         if (failures.length < totalAuthenticatedInfrastructures) {

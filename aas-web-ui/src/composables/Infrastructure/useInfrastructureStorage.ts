@@ -1,6 +1,5 @@
-import type { InfrastructureConfig, InfrastructureStorage, KeycloakConnectionData } from '@/types/Infrastructure';
-import { authenticateWithClientCredentials } from '@/composables/Auth/KeycloakAuth';
-
+import type { InfrastructureConfig, InfrastructureStorage, OAuth2ConnectionData } from '@/types/Infrastructure';
+import { authenticateOAuth2ClientCredentials } from '@/composables/Auth/OAuth2Auth';
 /**
  * Composable for managing infrastructure storage operations
  * Handles loading/saving from localStorage, legacy migration, and default infrastructure creation
@@ -125,29 +124,28 @@ export function useInfrastructureStorage(): {
             envConfig.keycloakActive ||
             (envConfig.keycloakUrl && envConfig.keycloakRealm && envConfig.keycloakClientId)
         ) {
-            const keycloakConfig: KeycloakConnectionData = {
-                serverUrl: envConfig.keycloakUrl!,
-                realm: envConfig.keycloakRealm!,
+            const oauth2Config: OAuth2ConnectionData = {
+                host: envConfig.keycloakUrl! + '/realms/' + envConfig.keycloakRealm!,
                 clientId: envConfig.keycloakClientId!,
                 authFlow: 'auth-code',
             };
 
             if (envConfig.preconfiguredAuth) {
-                keycloakConfig.clientSecret = envConfig.preconfiguredAuthClientSecret;
-                keycloakConfig.authFlow = 'client-credentials';
+                oauth2Config.clientSecret = envConfig.preconfiguredAuthClientSecret;
+                oauth2Config.authFlow = 'client-credentials';
             }
 
             infrastructure.auth = {
-                securityType: 'Keycloak',
-                keycloakConfig,
+                securityType: 'OAuth2',
+                oauth2: oauth2Config,
             };
 
-            if (envConfig.preconfiguredAuth && keycloakConfig) {
+            if (envConfig.preconfiguredAuth && oauth2Config) {
                 // Trigger client-credentials flow
                 if (refreshTokensCallback) {
                     await refreshTokensCallback(infrastructure.id);
                 }
-                const result = await authenticateWithClientCredentials(keycloakConfig);
+                const result = await authenticateOAuth2ClientCredentials(oauth2Config);
                 infrastructure.token = {
                     accessToken: result.accessToken,
                     refreshToken: result.refreshToken,

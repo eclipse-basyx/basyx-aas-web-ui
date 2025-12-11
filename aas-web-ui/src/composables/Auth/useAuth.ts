@@ -1,5 +1,4 @@
 import { type Router } from 'vue-router';
-import { authenticateKeycloak } from '@/composables/Auth/KeycloakAuth';
 import { usePopupOverlay } from '@/composables/PopupOverlay';
 import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import { useNavigationStore } from '@/store/NavigationStore';
@@ -114,64 +113,6 @@ export function useAuth(router?: Router) {
             return;
         }
 
-        // Handle Keycloak login
-        if (infra.auth?.keycloakConfig) {
-            const config = infra.auth.keycloakConfig;
-
-            if (!config.serverUrl || !config.realm || !config.clientId || !config.authFlow) {
-                navStore.dispatchSnackbar({
-                    status: true,
-                    timeout: 4000,
-                    color: 'error',
-                    btnColor: 'buttonText',
-                    text: 'Keycloak configuration incomplete',
-                });
-                return;
-            }
-
-            try {
-                if (config.authFlow === 'auth-code') {
-                    const result = await authenticateKeycloak(config);
-
-                    // Update infrastructure with new token
-                    const updatedInfra = {
-                        ...infra,
-                        token: {
-                            accessToken: result.accessToken,
-                            refreshToken: result.refreshToken,
-                            idToken: result.idToken,
-                            expiresAt: result.expiresAt,
-                        },
-                    };
-                    infrastructureStore.dispatchUpdateInfrastructure(updatedInfra);
-                    infrastructureStore.setAuthenticationStatusForInfrastructure(infra.id, true);
-                    navStore.dispatchTriggerAASListReload();
-                    navStore.dispatchTriggerTreeviewReload();
-
-                    navStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 4000,
-                        color: 'success',
-                        btnColor: 'buttonText',
-                        text: 'Successfully authenticated',
-                    });
-                } else {
-                    // For client-credentials and password flows, need to open the dialog
-                    infrastructureStore.dispatchTriggerInfrastructureDialog(true);
-                }
-            } catch (error: unknown) {
-                navStore.dispatchSnackbar({
-                    status: true,
-                    timeout: 4000,
-                    color: 'error',
-                    btnColor: 'buttonText',
-                    text: 'Authentication failed',
-                    extendedError: error instanceof Error ? error.message : 'Unknown error',
-                });
-            }
-            return;
-        }
-
         // No authentication configured
         navStore.dispatchSnackbar({
             status: true,
@@ -216,23 +157,13 @@ export function useAuth(router?: Router) {
     async function logout(): Promise<void> {
         const infra = infrastructureStore.getSelectedInfrastructure;
         if (!infra) return;
-
-        // Open popup window
-        const width = 500;
-        const height = 600;
-        const left = window.screenX + (window.outerWidth - width) / 2;
-        const top = window.screenY + (window.outerHeight - height) / 2;
-
-        let logoutUrl: URL;
-        const redirectUri = `${window.location.origin}/keycloak-logout.html`;
-
         // Handle OAuth2 logout
         if (infra.auth?.oauth2) {
             const host = infra.auth.oauth2.host;
             if (!host) {
                 return;
             }
-
+            let logoutUrl;
             try {
                 // Fetch end_session_endpoint from well-known configuration
                 const wellKnownUrl = `${host}/.well-known/openid-configuration`;
@@ -244,7 +175,6 @@ export function useAuth(router?: Router) {
 
                 const wellKnownConfig = await wellKnownResponse.json();
                 const endSessionEndpoint = wellKnownConfig.end_session_endpoint;
-
                 if (!endSessionEndpoint) {
                     // If no end_session_endpoint, just clear local token
                     clearLocalToken();
@@ -252,7 +182,7 @@ export function useAuth(router?: Router) {
                 }
 
                 logoutUrl = new URL(endSessionEndpoint);
-                logoutUrl.searchParams.set('post_logout_redirect_uri', redirectUri);
+                logoutUrl.searchParams.set('post_logout_redirect_uri', window.location.origin + '/');
 
                 // Add id_token_hint if available (required by some OAuth2 providers)
                 const idToken = infra.token?.idToken;
@@ -277,78 +207,16 @@ export function useAuth(router?: Router) {
                 clearLocalToken();
                 return;
             }
-        }
-        // Handle Keycloak logout
-        else if (infra.auth?.keycloakConfig) {
-            const serverUrl = infra.auth.keycloakConfig.serverUrl;
-            const realm = infra.auth.keycloakConfig.realm;
-            const idToken = infra.token?.idToken;
-
-            if (!serverUrl || !realm) {
-                return;
+            if (logoutUrl) {
+                clearLocalToken();
+                window.location.href = logoutUrl.toString();
             }
-
-            // Build Keycloak logout URL
-            logoutUrl = new URL(`${serverUrl.replace(/\/$/, '')}/realms/${realm}/protocol/openid-connect/logout`);
-            logoutUrl.searchParams.set('post_logout_redirect_uri', redirectUri);
-            if (idToken) {
-                logoutUrl.searchParams.set('id_token_hint', idToken);
-            }
+            return;
         } else {
+            // No logout URL - just clear local token
+            clearLocalToken();
             return;
         }
-
-        // Show overlay before opening popup
-        showOverlay();
-
-        const keycloakPopup = window.open(
-            logoutUrl.toString(),
-            'keycloak-logout',
-            `width=${width},height=${height},left=${left},top=${top},popup=yes,resizable=yes,scrollbars=yes`
-        );
-
-        if (!keycloakPopup) {
-            hideOverlay();
-            throw new Error('Failed to open logout popup. Please allow popups for this site.');
-        }
-
-        // Listen for messages from popup
-        const messageHandler = async (event: MessageEvent): Promise<void> => {
-            if (event.origin !== window.location.origin) return;
-            if (event.data && event.data.type === 'keycloak-logout-complete') {
-                const currentInfra = infrastructureStore.getSelectedInfrastructure;
-                if (currentInfra) {
-                    infrastructureStore.setAuthenticationStatusForInfrastructure(currentInfra.id, false);
-                    // Remove token from infrastructure
-                    const updatedInfra = { ...currentInfra, token: undefined };
-                    infrastructureStore.dispatchUpdateInfrastructure(updatedInfra);
-                    navStore.dispatchClearAASList();
-                    navStore.dispatchClearTreeview();
-
-                    // Clear query params if router is available
-                    if (router) {
-                        router.push({ query: {} });
-                    }
-                }
-                hideOverlay();
-                window.removeEventListener('message', messageHandler);
-                if (keycloakPopup && !keycloakPopup.closed) {
-                    keycloakPopup.close();
-                }
-            }
-        };
-
-        window.addEventListener('message', messageHandler);
-
-        // Monitor if popup is closed manually
-        const popupCheckInterval = setInterval(() => {
-            if (keycloakPopup && keycloakPopup.closed) {
-                clearInterval(popupCheckInterval);
-                hideOverlay();
-                window.removeEventListener('message', messageHandler);
-                // Don't remove token if popup was just closed without completing logout
-            }
-        }, 500);
     }
 
     return {

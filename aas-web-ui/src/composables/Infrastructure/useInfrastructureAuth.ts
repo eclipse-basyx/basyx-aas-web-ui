@@ -1,5 +1,4 @@
 import type { InfrastructureConfig } from '@/types/Infrastructure';
-import { authenticateWithClientCredentials } from '@/composables/Auth/KeycloakAuth';
 
 /**
  * Composable for managing infrastructure authentication and token refresh
@@ -39,7 +38,7 @@ export function useInfrastructureAuth(): {
             const token = infrastructure.token;
 
             // Check if infrastructure uses Keycloak or OAuth2 and has a token
-            if ((auth?.securityType !== 'Keycloak' && auth?.securityType !== 'OAuth2') || !token?.accessToken) {
+            if (auth?.securityType !== 'OAuth2' || !token?.accessToken) {
                 continue;
             }
 
@@ -56,24 +55,6 @@ export function useInfrastructureAuth(): {
             try {
                 if (!token.refreshToken) {
                     // No refresh token available (e.g., client credentials flow)
-                    // If is Keycloak client-credentials, we can re-authenticate
-                    if (auth.keycloakConfig?.authFlow === 'client-credentials') {
-                        const result = await authenticateWithClientCredentials(auth.keycloakConfig);
-                        // Update token in infrastructure
-                        infrastructure.token = {
-                            accessToken: result.accessToken,
-                            refreshToken: result.refreshToken,
-                            idToken: result.idToken,
-                            expiresAt: result.expiresAt,
-                        };
-                        infrastructure.isAuthenticated = true;
-                        if (process.env.NODE_ENV === 'development') {
-                            console.warn(
-                                `[useInfrastructureAuth] Re-authenticated (Keycloak client-credentials) for ${infrastructure.name}`
-                            );
-                        }
-                        continue;
-                    }
                     // If is OAuth2 client-credentials, we can re-authenticate
                     if (auth.oauth2?.authFlow === 'client-credentials') {
                         const { authenticateOAuth2ClientCredentials } = await import('@/composables/Auth/OAuth2Auth');
@@ -100,58 +81,6 @@ export function useInfrastructureAuth(): {
                     continue;
                 }
 
-                // Handle Keycloak token refresh
-                if (auth.securityType === 'Keycloak') {
-                    if (!auth.keycloakConfig) {
-                        failures.push({
-                            infraName: infrastructure.name,
-                            error: 'Missing Keycloak configuration',
-                        });
-                        continue;
-                    }
-
-                    const { serverUrl, realm, clientId, clientSecret } = auth.keycloakConfig;
-                    const tokenEndpoint = `${serverUrl.replace(/\/$/, '')}/realms/${realm}/protocol/openid-connect/token`;
-
-                    const params = new URLSearchParams({
-                        client_id: clientId,
-                        grant_type: 'refresh_token',
-                        refresh_token: token.refreshToken,
-                    });
-
-                    if (clientSecret) {
-                        params.set('client_secret', clientSecret);
-                    }
-
-                    const response = await fetch(tokenEndpoint, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: params.toString(),
-                    });
-
-                    const data = await response.json();
-
-                    if (!response.ok) {
-                        failures.push({
-                            infraName: infrastructure.name,
-                            error: data.error_description || 'Keycloak token refresh failed',
-                        });
-                        continue;
-                    }
-
-                    // Update token in infrastructure
-                    const expiresAt = Date.now() + (data.expires_in || 300) * 1000;
-                    infrastructure.token = {
-                        accessToken: data.access_token,
-                        refreshToken: data.refresh_token || token.refreshToken,
-                        idToken: data.id_token || token.idToken, // Preserve or update idToken
-                        expiresAt,
-                    };
-                    infrastructure.isAuthenticated = true;
-                    if (process.env.NODE_ENV === 'development') {
-                        console.warn(`[useInfrastructureAuth] Refreshed Keycloak token for ${infrastructure.name}`);
-                    }
-                }
                 // Handle OAuth2 token refresh
                 else if (auth.securityType === 'OAuth2') {
                     if (!auth.oauth2) {
