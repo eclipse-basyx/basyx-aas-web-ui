@@ -48,7 +48,7 @@ function getCommitSha(): string {
 export default defineConfig(({ mode }) => {
     process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
     const isProduction = mode === 'production';
-    const base = isProduction ? process.env.BASE || '/__BASE_PATH_PLACEHOLDER__/' : '/aas-ui';
+    const base = isProduction ? process.env.BASE || '/__BASE_PATH_PLACEHOLDER__/' : '/';
 
     // Get version information
     // In Docker/CI: use environment variables passed as build args
