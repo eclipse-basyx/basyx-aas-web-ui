@@ -60,7 +60,7 @@
                         'Authorization',
                         `Basic ${btoa(auth.basicAuth.username + ':' + auth.basicAuth.password)}`
                     );
-                } else if (auth.securityType === 'Keycloak' && selectedInfra.value.token?.accessToken) {
+                } else if (auth.securityType === 'OAuth2' && selectedInfra.value.token?.accessToken) {
                     headers.set('Authorization', `Bearer ${selectedInfra.value.token.accessToken}`);
                 }
             }

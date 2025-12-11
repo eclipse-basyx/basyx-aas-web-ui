@@ -5,7 +5,7 @@ import { useNavigationStore } from '@/store/NavigationStore';
 
 /**
  * Composable for handling authentication logic
- * Centralizes login and logout functionality for OAuth2 and Keycloak
+ * Centralizes login and logout functionality for OAuth2
  */
 export function useAuth(router?: Router) {
     const infrastructureStore = useInfrastructureStore();
@@ -14,7 +14,7 @@ export function useAuth(router?: Router) {
 
     /**
      * Perform login for the current infrastructure
-     * Handles OAuth2 (both flows) and Keycloak authentication
+     * Handles OAuth2 (both flows) authentication
      */
     async function login(): Promise<void> {
         const infra = infrastructureStore.getSelectedInfrastructure;
@@ -152,7 +152,7 @@ export function useAuth(router?: Router) {
 
     /**
      * Perform logout for the current infrastructure
-     * Handles OAuth2 and Keycloak logout flows
+     * Handles OAuth2 logout flow
      */
     async function logout(): Promise<void> {
         const infra = infrastructureStore.getSelectedInfrastructure;

@@ -53,7 +53,7 @@
                         <SecurityConfigPanel
                             :auth="editingInfrastructure.auth!"
                             :security-types="securityTypes"
-                            :auth-flow-options="keycloakAuthFlowOptions"
+                            :auth-flow-options="authFlowOptions"
                             :basic-auth-username="basicAuthUsername"
                             :basic-auth-password="basicAuthPassword"
                             :bearer-token="bearerToken"
@@ -151,10 +151,9 @@
     const defaultInfrastructure = ref<string>('');
 
     const securityTypes: SecurityType[] = ['No Authentication', 'Basic Authentication', 'Bearer Token', 'OAuth2'];
-    const keycloakAuthFlowOptions: AuthFlowOption[] = [
+    const authFlowOptions: AuthFlowOption[] = [
         { text: 'User Login (Authorization Code Flow)', value: 'auth-code' },
         { text: 'Service Account (Client Credentials)', value: 'client-credentials' },
-        { text: 'Direct Grant (Username/Password)', value: 'password' },
     ];
 
     // Initialize composables for auth forms

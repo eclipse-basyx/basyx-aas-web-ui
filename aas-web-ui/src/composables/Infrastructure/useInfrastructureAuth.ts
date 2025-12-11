@@ -2,7 +2,7 @@ import type { InfrastructureConfig } from '@/types/Infrastructure';
 
 /**
  * Composable for managing infrastructure authentication and token refresh
- * Handles token refresh for Keycloak and OAuth2 authentication
+ * Handles token refresh for OAuth2 authentication
  */
 export function useInfrastructureAuth(): {
     refreshInfrastructureTokens: (
@@ -16,7 +16,7 @@ export function useInfrastructureAuth(): {
     ) => void;
 } {
     /**
-     * Refreshes expired or expiring tokens for all infrastructures with Keycloak or OAuth2 authentication.
+     * Refreshes expired or expiring tokens for all infrastructures with OAuth2 authentication.
      * Tokens are refreshed if they expire within 5 minutes (300 seconds).
      * @param infrastructures Array of infrastructure configurations
      * @param infrastructureId Optional specific infrastructure ID to refresh
@@ -37,7 +37,7 @@ export function useInfrastructureAuth(): {
             const auth = infrastructure.auth;
             const token = infrastructure.token;
 
-            // Check if infrastructure uses Keycloak or OAuth2 and has a token
+            // Check if infrastructure uses OAuth2 and has a token
             if (auth?.securityType !== 'OAuth2' || !token?.accessToken) {
                 continue;
             }

@@ -211,7 +211,7 @@ export async function createAppRouter(): Promise<Router> {
     });
 
     router.beforeEach(async (to, from, next) => {
-        // Handle OAuth2/Keycloak callback (state + code in URL)
+        // Handle OAuth2 callback (state + code in URL)
         if (to.query.state && to.query.code) {
             const state = to.query.state as string;
             const code = to.query.code as string;

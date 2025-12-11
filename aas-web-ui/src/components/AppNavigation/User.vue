@@ -77,7 +77,7 @@
         const infra = currentInfrastructure.value;
         if (!infra) return false;
 
-        // Check if authenticated via token (OAuth2 or Keycloak)
+        // Check if authenticated via token
         if (infra.token?.accessToken) {
             return true;
         }
@@ -104,7 +104,7 @@
             return 'Authentication disabled';
         }
 
-        // Check if authenticated via token (OAuth2 or Keycloak)
+        // Check if authenticated via token
         if (infra.token?.accessToken) {
             return 'Authenticated';
         }
@@ -135,7 +135,7 @@
         if (!infra || !infra.auth || infra.auth.securityType === 'No Authentication') {
             return false;
         }
-        return allowLogout.value && !isClientCredentialsFlow.value && !isOAuth2ClientCredentials.value;
+        return allowLogout.value && !isOAuth2ClientCredentials.value;
     });
 
     const isAuthEnabled = computed(() => {
@@ -174,10 +174,6 @@
         return '';
     });
     const allowLogout = computed(() => envStore.getAllowLogout);
-    const isClientCredentialsFlow = computed(() => {
-        const infra = currentInfrastructure.value;
-        return infra?.auth?.keycloakConfig?.authFlow === 'client-credentials';
-    });
     const isOAuth2ClientCredentials = computed(() => {
         const infra = currentInfrastructure.value;
         return infra?.auth?.oauth2?.authFlow === 'client-credentials';
