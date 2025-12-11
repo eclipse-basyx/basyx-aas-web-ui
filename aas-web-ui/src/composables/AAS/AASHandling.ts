@@ -91,7 +91,6 @@ export function useAASHandling() {
         const failResponse = [] as Array<any>;
 
         let aasDescriptorList = await fetchAasDescriptorListFromRegistry();
-        console.log('Fetched AAS Descriptor List:', aasDescriptorList);
 
         if (!aasDescriptorList || !Array.isArray(aasDescriptorList) || aasDescriptorList.length === 0)
             return failResponse;
