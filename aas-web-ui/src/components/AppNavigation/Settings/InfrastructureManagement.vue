@@ -116,6 +116,8 @@
     import type { BaSyxComponentKey } from '@/types/BaSyx';
     import type { AuthFlowOption, InfrastructureConfig, SecurityType } from '@/types/Infrastructure';
     import { computed, onMounted, ref, watch } from 'vue';
+    import { useRouter } from 'vue-router';
+    import { useAuth } from '@/composables/Auth/useAuth';
     import { useBasicAuthForm } from '@/composables/Auth/useBasicAuthForm';
     import { useOAuth2Form } from '@/composables/Auth/useOAuth2Form';
     import { useComponentConnectionTesting } from '@/composables/Infrastructure/useComponentConnectionTesting';
@@ -174,6 +176,10 @@
     const componentConnectionStatus = connectionTesting.componentConnectionStatus;
     const componentTestingLoading = connectionTesting.componentTestingLoading;
     const testingAllConnections = connectionTesting.testingAllConnections;
+
+    const router = useRouter();
+
+    const { logout: performLogout } = useAuth(router);
 
     // Watch for default infrastructure changes
     watch(defaultInfrastructure, (newDefaultId) => {
@@ -317,6 +323,8 @@
     }
 
     async function authenticateOAuth2(): Promise<void> {
+        await saveInfrastructure(); // Save infrastrucuture in case this is a new one
+        await performLogout(); // Logout first to clear any existing tokens
         await oauth2Form.authenticate(editingInfrastructure.value.id);
 
         // Save infrastructure after successful authentication to make token available for requests

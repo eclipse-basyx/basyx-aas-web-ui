@@ -1,4 +1,5 @@
 import { useAuth } from '@/composables/Auth/useAuth';
+import { useEnvStore } from '@/store/EnvironmentStore';
 import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 
@@ -9,6 +10,7 @@ let authErrorTimeout: NodeJS.Timeout | null = null;
 export function useRequestHandling() {
     const navigationStore = useNavigationStore();
     const infrastructureStore = useInfrastructureStore();
+    const environmentStore = useEnvStore();
     const { login } = useAuth();
 
     /**
@@ -67,10 +69,13 @@ export function useRequestHandling() {
     }
 
     function getRequest(path: string, context: string, disableMessage: boolean, headers: Headers = new Headers()): any {
-        headers = addAuthorizationHeader(headers); // Add the Authorization header
+        if (shouldAddAuthorizationHeader(path)) {
+            // No Authorization needed for the /description endpoint.
+            headers = addAuthorizationHeader(headers); // Add the Authorization header
+        }
         return fetch(path, { method: 'GET', headers: headers })
             .then(async (response) => {
-                // Check if the Server responded with content Hallo Rene
+                // Check if the Server responded with content.
                 if (
                     response.headers.get('Content-Type')?.split(';')[0] === 'application/json' &&
                     response.headers.get('Content-Length') !== '0'
@@ -300,10 +305,10 @@ export function useRequestHandling() {
         if (selectedInfra) {
             // Use infrastructure-level authentication if configured
             const auth = selectedInfra.auth;
-
+            const authorizationPrefix = environmentStore.getAuthorizationPrefix;
             if (auth && auth.securityType !== 'No Authentication') {
                 if (auth.securityType === 'Bearer Token' && auth.bearerToken?.token) {
-                    headers.set('Authorization', 'Bearer ' + auth.bearerToken.token);
+                    headers.set('Authorization', authorizationPrefix + ' ' + auth.bearerToken.token);
                     return headers;
                 } else if (auth.securityType === 'Basic Authentication' && auth.basicAuth) {
                     headers.set(
@@ -312,7 +317,7 @@ export function useRequestHandling() {
                     );
                     return headers;
                 } else if (auth.securityType === 'OAuth2' && selectedInfra.token?.accessToken) {
-                    headers.set('Authorization', 'Bearer ' + selectedInfra.token.accessToken);
+                    headers.set('Authorization', authorizationPrefix + ' ' + selectedInfra.token.accessToken);
                     return headers;
                 }
             }
@@ -352,6 +357,19 @@ export function useRequestHandling() {
             baseError: initialErrorMessage,
             extendedError: errorMessage,
         });
+    }
+
+    function shouldAddAuthorizationHeader(path: string): boolean {
+        const exemptionEnabled = environmentStore.getAuthorizationDescriptionEndpointExemption;
+        if (
+            exemptionEnabled &&
+            path.endsWith('/description') &&
+            !path.includes('/submodels/') &&
+            !path.includes('/submodel-elements/')
+        ) {
+            return false;
+        }
+        return true;
     }
 
     return {
