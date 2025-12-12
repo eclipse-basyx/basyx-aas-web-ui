@@ -4,68 +4,13 @@
             <v-card-title>Manage Infrastructures</v-card-title>
             <v-divider></v-divider>
             <v-card-text style="max-height: 600px">
-                <!-- Infrastructure List -->
-                <v-radio-group v-model="defaultInfrastructure" @update:model-value="changeDefault">
-                    <v-table density="compact" class="border rounded">
-                        <thead>
-                            <tr>
-                                <th class="text-left">Default</th>
-                                <th class="text-left">Infrastructure Name</th>
-                                <th class="text-left">Configuration</th>
-                                <th class="text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="infra in infrastructures"
-                                :key="infra.id"
-                                :class="{ 'bg-primary-lighten-5': infra.id === selectedInfrastructureId }">
-                                <td style="width: 80px">
-                                    <v-radio :value="infra.id"></v-radio>
-                                </td>
-                                <td>
-                                    <div class="d-flex align-center">
-                                        {{ infra.name }}
-                                        <v-chip v-if="infra.isDefault" size="x-small" color="primary" class="ml-2"
-                                            >Default</v-chip
-                                        >
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="text-caption text-medium-emphasis">{{
-                                        getInfrastructureSummary(infra)
-                                    }}</span>
-                                </td>
-                                <td style="width: 120px">
-                                    <div class="d-flex justify-end">
-                                        <v-btn
-                                            icon="mdi-pencil"
-                                            size="x-small"
-                                            variant="plain"
-                                            @click.stop="editInfrastructure(infra)">
-                                        </v-btn>
-                                        <v-btn
-                                            icon="mdi-delete"
-                                            size="x-small"
-                                            variant="plain"
-                                            class="ml-n2 mr-n2"
-                                            :disabled="infrastructures.length === 1 || infra.isDefault"
-                                            @click.stop="deleteInfrastructure(infra)">
-                                        </v-btn>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </v-table>
-                </v-radio-group>
-                <!-- Add Infrastructure Button -->
-                <v-btn
-                    color="primary"
-                    block
-                    class="mt-4 text-buttonText"
-                    text="Add Infrastructure"
-                    prepend-icon="mdi-plus"
-                    @click="addNewInfrastructure" />
+                <InfrastructureListTable
+                    v-model:default-infrastructure-id="defaultInfrastructure"
+                    :infrastructures="infrastructures"
+                    :selected-infrastructure-id="selectedInfrastructureId"
+                    @edit="editInfrastructure"
+                    @delete="deleteInfrastructure"
+                    @add="addNewInfrastructure" />
             </v-card-text>
 
             <v-divider></v-divider>
@@ -96,217 +41,46 @@
                             class="mb-2"></v-text-field>
 
                         <!-- Component Configurations -->
-                        <v-expansion-panels v-model="expandedPanels" multiple>
-                            <v-expansion-panel
-                                v-for="(componentKey, index) in componentKeys"
-                                :key="componentKey"
-                                :value="index">
-                                <v-expansion-panel-title>
-                                    <div class="d-flex align-center">
-                                        <v-icon
-                                            :color="
-                                                componentConnectionStatus[componentKey] === true
-                                                    ? 'success'
-                                                    : componentConnectionStatus[componentKey] === false
-                                                      ? 'error'
-                                                      : editingInfrastructure.components[componentKey].url
-                                                        ? 'grey'
-                                                        : 'grey'
-                                            "
-                                            size="small"
-                                            class="mr-2">
-                                            {{
-                                                componentConnectionStatus[componentKey] === true
-                                                    ? 'mdi-check-circle'
-                                                    : componentConnectionStatus[componentKey] === false
-                                                      ? 'mdi-alert-circle'
-                                                      : editingInfrastructure.components[componentKey].url
-                                                        ? 'mdi-help-circle'
-                                                        : 'mdi-circle-outline'
-                                            }}
-                                        </v-icon>
-                                        <span>{{ getComponentLabel(componentKey) }}</span>
-                                    </div>
-                                </v-expansion-panel-title>
-                                <v-expansion-panel-text>
-                                    <!-- Component URL -->
-                                    <v-text-field
-                                        v-model="editingInfrastructure.components[componentKey].url"
-                                        label="Endpoint URL"
-                                        variant="outlined"
-                                        density="compact"
-                                        placeholder="https://example.com/api"
-                                        class="mb-2"
-                                        @keyup.enter="testComponentConnection(componentKey)"
-                                        @update:model-value="componentConnectionStatus[componentKey] = null">
-                                        <template #append-inner>
-                                            <v-btn
-                                                icon
-                                                size="x-small"
-                                                variant="text"
-                                                :loading="componentTestingLoading[componentKey]"
-                                                :disabled="!editingInfrastructure.components[componentKey].url"
-                                                @click.stop="testComponentConnection(componentKey)">
-                                                <v-icon>mdi-connection</v-icon>
-                                                <v-tooltip activator="parent" location="bottom">
-                                                    Test Connection
-                                                </v-tooltip>
-                                            </v-btn>
-                                        </template>
-                                    </v-text-field>
-                                </v-expansion-panel-text>
-                            </v-expansion-panel>
-                        </v-expansion-panels>
-                        <v-expansion-panels class="mt-4">
-                            <v-expansion-panel>
-                                <v-expansion-panel-title>
-                                    <v-icon left size="small" class="mr-2">mdi-lock</v-icon>
-                                    Security Configuration (applies to all components)
-                                </v-expansion-panel-title>
-                                <v-expansion-panel-text>
-                                    <!-- Authentication -->
-                                    <v-select
-                                        v-model="editingInfrastructure.auth!.securityType"
-                                        :items="securityTypes"
-                                        label="Authentication Type"
-                                        variant="outlined"
-                                        density="compact"
-                                        class="mb-2"></v-select>
-
-                                    <!-- Basic Auth -->
-                                    <template
-                                        v-if="editingInfrastructure.auth!.securityType === 'Basic Authentication'">
-                                        <v-text-field
-                                            v-model="basicAuthUsername"
-                                            label="Username"
-                                            variant="outlined"
-                                            density="compact"
-                                            class="mb-2"></v-text-field>
-                                        <v-text-field
-                                            v-model="basicAuthPassword"
-                                            label="Password"
-                                            type="password"
-                                            variant="outlined"
-                                            density="compact"
-                                            class="mb-2"></v-text-field>
-                                    </template>
-
-                                    <!-- Bearer Token -->
-                                    <template v-if="editingInfrastructure.auth!.securityType === 'Bearer Token'">
-                                        <v-textarea
-                                            v-model="bearerToken"
-                                            label="Bearer Token"
-                                            variant="outlined"
-                                            density="compact"
-                                            rows="3"
-                                            class="mb-2"></v-textarea>
-                                    </template>
-
-                                    <!-- Keycloak -->
-                                    <template v-if="editingInfrastructure.auth!.securityType === 'Keycloak'">
-                                        <v-text-field
-                                            v-model="keycloakServerUrl"
-                                            label="Keycloak Server URL"
-                                            variant="outlined"
-                                            density="compact"
-                                            placeholder="https://keycloak.example.com"
-                                            class="mb-2"></v-text-field>
-                                        <v-text-field
-                                            v-model="keycloakRealm"
-                                            label="Realm"
-                                            variant="outlined"
-                                            density="compact"
-                                            class="mb-2"></v-text-field>
-                                        <v-text-field
-                                            v-model="keycloakClientId"
-                                            label="Client ID"
-                                            variant="outlined"
-                                            density="compact"
-                                            class="mb-2"></v-text-field>
-                                        <v-select
-                                            v-model="keycloakAuthFlow"
-                                            :items="keycloakAuthFlowOptions"
-                                            item-title="text"
-                                            item-value="value"
-                                            label="Auth Flow"
-                                            variant="outlined"
-                                            density="compact"
-                                            class="mb-2"></v-select>
-                                        <v-text-field
-                                            v-if="
-                                                keycloakAuthFlow === 'client-credentials' ||
-                                                keycloakAuthFlow === 'password'
-                                            "
-                                            v-model="keycloakClientSecret"
-                                            label="Client Secret"
-                                            type="password"
-                                            variant="outlined"
-                                            density="compact"
-                                            class="mb-2"></v-text-field>
-                                        <template v-if="keycloakAuthFlow === 'password'">
-                                            <v-text-field
-                                                v-model="keycloakUsername"
-                                                label="Username"
-                                                variant="outlined"
-                                                density="compact"
-                                                class="mb-2"></v-text-field>
-                                            <v-text-field
-                                                v-model="keycloakPassword"
-                                                label="Password"
-                                                type="password"
-                                                variant="outlined"
-                                                density="compact"
-                                                class="mb-2"></v-text-field>
-                                        </template>
-                                        <v-row v-if="keycloakAuthFlow" class="mb-2">
-                                            <v-col>
-                                                <v-btn
-                                                    v-if="!keycloakToken"
-                                                    block
-                                                    variant="tonal"
-                                                    color="primary"
-                                                    :loading="keycloakLoading"
-                                                    @click="authenticateKeycloakHandler()">
-                                                    Authenticate
-                                                </v-btn>
-                                                <v-btn
-                                                    v-else
-                                                    block
-                                                    variant="tonal"
-                                                    color="success"
-                                                    prepend-icon="mdi-check-circle"
-                                                    @click="authenticateKeycloakHandler()">
-                                                    Authenticated
-                                                </v-btn>
-                                            </v-col>
-                                        </v-row>
-                                        <v-alert
-                                            v-if="keycloakError"
-                                            type="error"
-                                            density="compact"
-                                            closable
-                                            class="mb-2"
-                                            @click:close="keycloakError = ''">
-                                            {{ keycloakError }}
-                                        </v-alert>
-                                    </template>
-                                </v-expansion-panel-text>
-                            </v-expansion-panel>
-                        </v-expansion-panels>
+                        <ComponentConfigPanel
+                            v-model:expanded-panels="expandedPanels"
+                            :components="editingInfrastructure.components"
+                            :component-connection-status="componentConnectionStatus"
+                            :component-testing-loading="componentTestingLoading"
+                            @test-connection="testComponentConnection"
+                            @update:component-url="handleComponentUrlUpdate"
+                            @update:connection-status="handleConnectionStatusUpdate" />
+                        <!-- Security Configuration -->
+                        <SecurityConfigPanel
+                            :auth="editingInfrastructure.auth!"
+                            :security-types="securityTypes"
+                            :auth-flow-options="authFlowOptions"
+                            :basic-auth-username="basicAuthUsername"
+                            :basic-auth-password="basicAuthPassword"
+                            :bearer-token="bearerToken"
+                            :o-auth2-auth-flow="oAuth2AuthFlow"
+                            :oauth2-data="oauth2Data"
+                            :oauth2-token="oauth2Token"
+                            :oauth2-loading="oauth2Loading"
+                            @update:security-type="editingInfrastructure.auth!.securityType = $event as SecurityType"
+                            @update:basic-auth-username="basicAuthUsername = $event"
+                            @update:basic-auth-password="basicAuthPassword = $event"
+                            @update:bearer-token="bearerToken = $event"
+                            @update:o-auth2-auth-flow="
+                                oAuth2AuthFlow = $event as 'auth-code' | 'client-credentials' | 'password'
+                            "
+                            @update:oauth2-host="oauth2Data.host = $event"
+                            @update:oauth2-client-id="oauth2Data.clientId = $event"
+                            @update:oauth2-client-secret="oauth2Data.clientSecret = $event"
+                            @update:oauth2-username="oauth2Data.username = $event"
+                            @update:oauth2-password="oauth2Data.password = $event"
+                            @update:oauth2-scope="oauth2Data.scope = $event"
+                            @authenticate-oauth2="authenticateOAuth2" />
                     </v-form>
                 </v-card-text>
 
                 <v-divider></v-divider>
 
                 <v-card-actions>
-                    <v-btn
-                        color="info"
-                        class="mr-2"
-                        prepend-icon="mdi-refresh"
-                        text="Re-authenticate"
-                        :loading="reauthenticating"
-                        :disabled="!hasAuthenticatedComponents"
-                        @click="reauthenticateAll" />
                     <v-btn
                         color="primary"
                         variant="tonal"
@@ -340,11 +114,15 @@
 
 <script lang="ts" setup>
     import type { BaSyxComponentKey } from '@/types/BaSyx';
-    import type { InfrastructureConfig, KeycloakConnectionData, SecurityType } from '@/types/Infrastructure';
+    import type { AuthFlowOption, InfrastructureConfig, SecurityType } from '@/types/Infrastructure';
     import { computed, onMounted, ref, watch } from 'vue';
-    import { authenticateKeycloak } from '@/composables/KeycloakAuth';
+    import { useRouter } from 'vue-router';
+    import { useAuth } from '@/composables/Auth/useAuth';
+    import { useBasicAuthForm } from '@/composables/Auth/useBasicAuthForm';
+    import { useOAuth2Form } from '@/composables/Auth/useOAuth2Form';
+    import { useComponentConnectionTesting } from '@/composables/Infrastructure/useComponentConnectionTesting';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
-    import { useNavigationStore } from '@/store/NavigationStore';
+    import { requiredRule } from '@/utils/InfrastructureUtils';
 
     // Props
     const props = defineProps<{
@@ -358,15 +136,10 @@
 
     // Stores
     const infrastructureStore = useInfrastructureStore();
-    const navigationStore = useNavigationStore();
 
     // Computed Properties
     const infrastructures = computed(() => infrastructureStore.getInfrastructures);
     const selectedInfrastructureId = computed(() => infrastructureStore.getSelectedInfrastructureId);
-    const hasAuthenticatedComponents = computed(() => {
-        const auth = editingInfrastructure.value.auth;
-        return auth && auth.securityType !== 'No Authentication';
-    });
 
     // Local State
     const dialogOpen = ref(false);
@@ -379,50 +152,41 @@
     const formRef = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null);
     const defaultInfrastructure = ref<string>('');
 
-    // Component configuration
-    const componentKeys: BaSyxComponentKey[] = [
-        'AASDiscovery',
-        'AASRegistry',
-        'SubmodelRegistry',
-        'AASRepo',
-        'SubmodelRepo',
-        'ConceptDescriptionRepo',
-    ];
-
-    const securityTypes: SecurityType[] = ['No Authentication', 'Basic Authentication', 'Bearer Token', 'Keycloak'];
-    const keycloakAuthFlowOptions = [
+    const securityTypes: SecurityType[] = ['No Authentication', 'Basic Authentication', 'Bearer Token', 'OAuth2'];
+    const authFlowOptions: AuthFlowOption[] = [
         { text: 'User Login (Authorization Code Flow)', value: 'auth-code' },
         { text: 'Service Account (Client Credentials)', value: 'client-credentials' },
-        { text: 'Direct Grant (Username/Password)', value: 'password' },
     ];
 
-    // Auth data helpers (to simplify form binding)
-    const basicAuthUsername = ref<string>('');
-    const basicAuthPassword = ref<string>('');
-    const bearerToken = ref<string>('');
-    const keycloakServerUrl = ref<string>('');
-    const keycloakRealm = ref<string>('');
-    const keycloakClientId = ref<string>('');
-    const keycloakAuthFlow = ref<KeycloakConnectionData['authFlow']>('auth-code');
-    const keycloakClientSecret = ref<string>('');
-    const keycloakUsername = ref<string>('');
-    const keycloakPassword = ref<string>('');
-    const keycloakToken = ref<{
-        accessToken: string;
-        refreshToken?: string;
-        expiresAt?: number;
-        idToken?: string;
-    } | null>(null);
-    const keycloakLoading = ref<boolean>(false);
-    const keycloakError = ref<string>('');
-    const reauthenticating = ref(false);
+    // Initialize composables for auth forms
+    const basicAuthForm = useBasicAuthForm();
+    const oauth2Form = useOAuth2Form();
+    const connectionTesting = useComponentConnectionTesting();
 
-    // Component connection testing states
-    const componentConnectionStatus = ref<Record<BaSyxComponentKey, boolean | null>>(
-        {} as Record<BaSyxComponentKey, boolean | null>
-    );
-    const componentTestingLoading = ref<Record<BaSyxComponentKey, boolean>>({} as Record<BaSyxComponentKey, boolean>);
-    const testingAllConnections = ref(false);
+    // Expose for template usage (using direct references to maintain reactivity)
+    const basicAuthUsername = basicAuthForm.basicAuthUsername;
+    const basicAuthPassword = basicAuthForm.basicAuthPassword;
+    const bearerToken = basicAuthForm.bearerToken;
+
+    const oauth2Data = oauth2Form.formData;
+    const oAuth2AuthFlow = oauth2Form.authFlow;
+    const oauth2Token = oauth2Form.token;
+    const oauth2Loading = oauth2Form.loading;
+
+    const componentConnectionStatus = connectionTesting.componentConnectionStatus;
+    const componentTestingLoading = connectionTesting.componentTestingLoading;
+    const testingAllConnections = connectionTesting.testingAllConnections;
+
+    const router = useRouter();
+
+    const { logout: performLogout } = useAuth(router);
+
+    // Watch for default infrastructure changes
+    watch(defaultInfrastructure, (newDefaultId) => {
+        if (newDefaultId) {
+            infrastructureStore.dispatchSetDefaultInfrastructure(newDefaultId);
+        }
+    });
 
     // Watch props
     watch(
@@ -462,31 +226,9 @@
         }
     });
 
-    function changeDefault(newDefaultId: string | null): void {
-        if (newDefaultId === null) return;
-        infrastructureStore.dispatchSetDefaultInfrastructure(newDefaultId);
-    }
-
     // Methods
     function close(): void {
         dialogOpen.value = false;
-    }
-
-    function getComponentLabel(key: BaSyxComponentKey): string {
-        const labels: Record<BaSyxComponentKey, string> = {
-            AASDiscovery: 'AAS Discovery',
-            AASRegistry: 'AAS Registry',
-            SubmodelRegistry: 'Submodel Registry',
-            AASRepo: 'AAS Repository',
-            SubmodelRepo: 'Submodel Repository',
-            ConceptDescriptionRepo: 'Concept Description Repository',
-        };
-        return labels[key];
-    }
-
-    function getInfrastructureSummary(infra: InfrastructureConfig): string {
-        const configuredCount = Object.values(infra.components).filter((comp) => comp.url.trim() !== '').length;
-        return `${configuredCount} of ${componentKeys.length} components configured`;
     }
 
     function addNewInfrastructure(): void {
@@ -506,94 +248,18 @@
     }
 
     function loadAuthDataFromInfrastructure(infra: InfrastructureConfig): void {
-        // Load auth data into separate refs for easier form binding
-        const auth = infra.auth;
-        const token = infra.token;
-
-        if (!auth) return;
-
-        // Reset all auth fields first
-        basicAuthUsername.value = '';
-        basicAuthPassword.value = '';
-        bearerToken.value = '';
-        keycloakServerUrl.value = '';
-        keycloakRealm.value = '';
-        keycloakClientId.value = '';
-        keycloakAuthFlow.value = 'auth-code';
-        keycloakClientSecret.value = '';
-        keycloakUsername.value = '';
-        keycloakPassword.value = '';
-        keycloakToken.value = null;
+        // Load auth data using composables
+        basicAuthForm.loadFromInfrastructure(infra);
+        oauth2Form.loadFromInfrastructure(infra);
 
         // Reset component connection status
-        componentKeys.forEach((key) => {
-            componentConnectionStatus.value[key] = null;
-            componentTestingLoading.value[key] = false;
-        });
-
-        // Load based on security type
-        if (auth.basicAuth) {
-            basicAuthUsername.value = auth.basicAuth.username || '';
-            basicAuthPassword.value = auth.basicAuth.password || '';
-        }
-        if (auth.bearerToken) {
-            bearerToken.value = auth.bearerToken.token || '';
-        }
-        if (auth.keycloakConfig) {
-            keycloakServerUrl.value = auth.keycloakConfig.serverUrl || '';
-            keycloakRealm.value = auth.keycloakConfig.realm || '';
-            keycloakClientId.value = auth.keycloakConfig.clientId || '';
-            keycloakAuthFlow.value = auth.keycloakConfig.authFlow || 'auth-code';
-            keycloakClientSecret.value = auth.keycloakConfig.clientSecret || '';
-            keycloakUsername.value = auth.keycloakConfig.username || '';
-            keycloakPassword.value = auth.keycloakConfig.password || '';
-
-            // Load existing token if available
-            if (token) {
-                keycloakToken.value = {
-                    accessToken: token.accessToken,
-                    refreshToken: token.refreshToken,
-                    expiresAt: token.expiresAt,
-                    idToken: token.idToken,
-                };
-            }
-        }
+        connectionTesting.resetConnectionStatus();
     }
 
     async function saveAuthDataToInfrastructure(infra: InfrastructureConfig): Promise<void> {
-        // Save auth data from refs back to infrastructure object
-        const auth = infra.auth;
-        if (!auth) return;
-
-        if (auth.securityType === 'Basic Authentication') {
-            auth.basicAuth = {
-                username: basicAuthUsername.value || '',
-                password: basicAuthPassword.value || '',
-            };
-        } else if (auth.securityType === 'Bearer Token') {
-            auth.bearerToken = {
-                token: bearerToken.value || '',
-            };
-        } else if (auth.securityType === 'Keycloak') {
-            auth.keycloakConfig = {
-                serverUrl: keycloakServerUrl.value || '',
-                realm: keycloakRealm.value || '',
-                clientId: keycloakClientId.value || '',
-                authFlow: keycloakAuthFlow.value || 'auth-code',
-                clientSecret: keycloakClientSecret.value,
-                username: keycloakUsername.value,
-                password: keycloakPassword.value,
-            };
-
-            // Save token data if authenticated
-            if (keycloakToken.value) {
-                infra.token = {
-                    accessToken: keycloakToken.value.accessToken,
-                    refreshToken: keycloakToken.value.refreshToken,
-                    expiresAt: keycloakToken.value.expiresAt,
-                };
-            }
-        }
+        // Save auth data using composables
+        basicAuthForm.saveToInfrastructure(infra);
+        oauth2Form.saveToInfrastructure(infra);
     }
 
     async function saveInfrastructure(): Promise<void> {
@@ -630,182 +296,15 @@
         deleteDialogOpen.value = false;
     }
 
-    // Re-authenticate all components
-    async function reauthenticateAll(): Promise<void> {
-        reauthenticating.value = true;
-        const auth = editingInfrastructure.value.auth;
-
-        if (!auth || auth.securityType === 'No Authentication') {
-            reauthenticating.value = false;
-            return;
-        }
-
-        try {
-            if (auth.securityType === 'Keycloak') {
-                // Clear previous error
-                keycloakError.value = '';
-
-                await authenticateKeycloakHandler();
-
-                // Check if authentication was successful by verifying token exists
-                if (keycloakToken.value?.accessToken && !keycloakError.value) {
-                    // Save the updated token to the infrastructure and persist to localStorage
-                    await saveAuthDataToInfrastructure(editingInfrastructure.value);
-                    infrastructureStore.dispatchUpdateInfrastructure(editingInfrastructure.value);
-                    saveInfrastructure();
-
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 4000,
-                        color: 'success',
-                        btnColor: 'buttonText',
-                        text: 'Successfully re-authenticated and saved to storage',
-                    });
-                } else {
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 8000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'Re-authentication failed',
-                        extendedError: keycloakError.value || 'Authentication failed - no token received',
-                    });
-                }
-            } else {
-                // For Basic Auth and Bearer Token, the credentials are already in the form
-                // Just validate they exist
-                if (auth.securityType === 'Basic Authentication') {
-                    if (basicAuthUsername.value && basicAuthPassword.value) {
-                        navigationStore.dispatchSnackbar({
-                            status: true,
-                            timeout: 4000,
-                            color: 'success',
-                            btnColor: 'buttonText',
-                            text: 'Basic Auth credentials are configured',
-                        });
-                    } else {
-                        navigationStore.dispatchSnackbar({
-                            status: true,
-                            timeout: 4000,
-                            color: 'error',
-                            btnColor: 'buttonText',
-                            text: 'Basic Auth credentials missing',
-                        });
-                    }
-                } else if (auth.securityType === 'Bearer Token') {
-                    if (bearerToken.value) {
-                        navigationStore.dispatchSnackbar({
-                            status: true,
-                            timeout: 4000,
-                            color: 'success',
-                            btnColor: 'buttonText',
-                            text: 'Bearer Token is configured',
-                        });
-                    } else {
-                        navigationStore.dispatchSnackbar({
-                            status: true,
-                            timeout: 4000,
-                            color: 'error',
-                            btnColor: 'buttonText',
-                            text: 'Bearer Token missing',
-                        });
-                    }
-                }
-            }
-        } catch (error) {
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 8000,
-                color: 'error',
-                btnColor: 'buttonText',
-                text: 'Re-authentication failed',
-                extendedError: error instanceof Error ? error.message : 'Unknown error occurred',
-            });
-        } finally {
-            reauthenticating.value = false;
-        }
-    }
-
-    // Keycloak Authentication Methods
-    async function authenticateKeycloakHandler(): Promise<void> {
-        keycloakLoading.value = true;
-        keycloakError.value = '';
-
-        const config: KeycloakConnectionData = {
-            serverUrl: keycloakServerUrl.value,
-            realm: keycloakRealm.value,
-            clientId: keycloakClientId.value,
-            authFlow: keycloakAuthFlow.value,
-            clientSecret: keycloakClientSecret.value,
-            username: keycloakUsername.value,
-            password: keycloakPassword.value,
-        };
-
-        if (!config.serverUrl || !config.realm || !config.clientId || !config.authFlow) {
-            keycloakError.value = 'Please fill in all required Keycloak fields';
-            keycloakLoading.value = false;
-            return;
-        }
-
-        try {
-            const result = await authenticateKeycloak(config);
-            keycloakToken.value = {
-                accessToken: result.accessToken,
-                refreshToken: result.refreshToken,
-                expiresAt: result.expiresAt,
-                idToken: result.idToken,
-            };
-            navigationStore.dispatchTriggerAASListReload();
-            navigationStore.dispatchTriggerTreeviewReload();
-        } catch (error: unknown) {
-            keycloakError.value = error instanceof Error ? error.message : 'Authentication failed';
-        } finally {
-            keycloakLoading.value = false;
-        }
-    }
-
-    function requiredRule(value: string): string | boolean {
-        return !!value || 'This field is required';
-    }
-
     // Test individual component connection
     async function testComponentConnection(componentKey: BaSyxComponentKey): Promise<void> {
         const url = editingInfrastructure.value.components[componentKey].url;
-        if (!url || url.trim() === '') {
-            componentConnectionStatus.value[componentKey] = false;
-            return;
-        }
-
-        componentTestingLoading.value[componentKey] = true;
-        componentConnectionStatus.value[componentKey] = null;
-
-        try {
-            // Temporarily set the component URL in the store to test it
-            const originalUrl = infrastructureStore.getBasyxComponents[componentKey].url;
-            infrastructureStore.getBasyxComponents[componentKey].url = url;
-
-            // Test the connection
-            await infrastructureStore.connectComponent(componentKey);
-
-            // Get the connection result
-            const connected = infrastructureStore.getBasyxComponents[componentKey].connected;
-            componentConnectionStatus.value[componentKey] = connected;
-
-            // Restore original URL
-            infrastructureStore.getBasyxComponents[componentKey].url = originalUrl;
-        } catch {
-            componentConnectionStatus.value[componentKey] = false;
-        } finally {
-            componentTestingLoading.value[componentKey] = false;
-        }
+        await connectionTesting.testComponentConnection(componentKey, url);
     }
 
     // Test all component connections for the currently edited infrastructure
     async function testAllConnections(): Promise<void> {
-        testingAllConnections.value = true;
-        const testPromises = componentKeys.map((key) => testComponentConnection(key));
-        await Promise.all(testPromises);
-        testingAllConnections.value = false;
+        await connectionTesting.testAllConnections(editingInfrastructure.value.components);
     }
 
     // Test connections for all infrastructures
@@ -821,5 +320,32 @@
         if (originalInfrastructureId) {
             await infrastructureStore.dispatchSelectInfrastructure(originalInfrastructureId);
         }
+    }
+
+    async function authenticateOAuth2(): Promise<void> {
+        await saveInfrastructure(); // Save infrastrucuture in case this is a new one
+        await performLogout(); // Logout first to clear any existing tokens
+        await oauth2Form.authenticate(editingInfrastructure.value.id);
+
+        // Save infrastructure after successful authentication to make token available for requests
+        if (oauth2Token.value) {
+            await saveAuthDataToInfrastructure(editingInfrastructure.value);
+            // Update the store to make token available immediately for API requests
+            infrastructureStore.dispatchUpdateInfrastructure(editingInfrastructure.value);
+            // Also update the selected infrastructure if we're editing the currently selected one
+            if (editingInfrastructure.value.id === selectedInfrastructureId.value) {
+                await infrastructureStore.dispatchSelectInfrastructure(editingInfrastructure.value.id, false);
+            }
+        }
+    }
+
+    // Component URL update handler
+    function handleComponentUrlUpdate(componentKey: BaSyxComponentKey, url: string): void {
+        editingInfrastructure.value.components[componentKey].url = url;
+    }
+
+    // Connection status update handler
+    function handleConnectionStatusUpdate(componentKey: BaSyxComponentKey, status: boolean | null): void {
+        componentConnectionStatus.value[componentKey] = status;
     }
 </script>

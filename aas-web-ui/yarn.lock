@@ -3398,11 +3398,6 @@ katex@^0.16.22:
   dependencies:
     commander "^8.3.0"
 
-keycloak-js@^26.2.1:
-  version "26.2.1"
-  resolved "https://registry.yarnpkg.com/keycloak-js/-/keycloak-js-26.2.1.tgz#644e8b8403268f7a39c3980183e22a6fb64f17db"
-  integrity sha512-bZt6fQj/TLBAmivXSxSlqAJxBx/knNZDQGJIW4ensGYGN4N6tUKV8Zj3Y7/LOV8eIpvWsvqV70fbACihK8Ze0Q==
-
 keyv@^4.5.4:
   version "4.5.4"
   resolved "https://registry.yarnpkg.com/keyv/-/keyv-4.5.4.tgz#a879a99e29452f942439f2a405e3af8b31d4de93"

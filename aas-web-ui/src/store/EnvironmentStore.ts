@@ -106,6 +106,14 @@ export const useEnvStore = defineStore('envStore', () => {
     const editorIdPrefix = ref(
         import.meta.env.VITE_EDITOR_ID_PREFIX || (isProduction ? '/__EDITOR_ID_PREFIX_PLACEHOLDER__/' : '')
     );
+    const authorizationPrefix = ref(
+        import.meta.env.VITE_AUTHORIZATION_HEADER_PREFIX ||
+            (isProduction ? '/__AUTHORIZATION_HEADER_PREFIX_PLACEHOLDER__/' : '')
+    );
+    const authorizationDescriptionEndpointExemption = ref(
+        import.meta.env.VITE_AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION ||
+            (isProduction ? '/__AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION_PLACEHOLDER__/' : '')
+    );
 
     // Getters
     const getEnvBasePath = computed(() => basePath.value);
@@ -157,6 +165,10 @@ export const useEnvStore = defineStore('envStore', () => {
         }
         return editorIdPrefix.value;
     });
+    const getAuthorizationPrefix = computed(() => authorizationPrefix.value);
+    const getAuthorizationDescriptionEndpointExemption = computed(
+        () => authorizationDescriptionEndpointExemption.value === 'true'
+    );
 
     // Actions
     function setSingleAas(singleAasValue: string): void {
@@ -216,6 +228,8 @@ export const useEnvStore = defineStore('envStore', () => {
         getBasicAuthUsername,
         getBasicAuthPassword,
         getEditorIdPrefix,
+        getAuthorizationPrefix,
+        getAuthorizationDescriptionEndpointExemption,
 
         // Actions
         setSingleAas,

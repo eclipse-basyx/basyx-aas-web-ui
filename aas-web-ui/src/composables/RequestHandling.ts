@@ -1,15 +1,81 @@
+import { useAuth } from '@/composables/Auth/useAuth';
+import { useEnvStore } from '@/store/EnvironmentStore';
 import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import { useNavigationStore } from '@/store/NavigationStore';
+
+// Track if we've already shown auth error to avoid spam
+let authErrorShown = false;
+let authErrorTimeout: NodeJS.Timeout | null = null;
 
 export function useRequestHandling() {
     const navigationStore = useNavigationStore();
     const infrastructureStore = useInfrastructureStore();
+    const environmentStore = useEnvStore();
+    const { login } = useAuth();
+
+    /**
+     * Centralized error handler for catch blocks
+     * Handles authentication errors and general errors
+     */
+    function handleRequestError(error: unknown, disableMessage: boolean): { success: false; status?: number } {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const is401Error = errorMessage.includes('Error status: 401') || errorMessage.includes('401');
+        const isAuthFailure = is401Error || errorMessage.includes('Failed to fetch');
+
+        const currentInfra = infrastructureStore.getSelectedInfrastructure;
+        const hasAuth = currentInfra?.auth && currentInfra.auth.securityType !== 'No Authentication';
+
+        // Handle authentication errors
+        if (isAuthFailure && hasAuth) {
+            if (!authErrorShown) {
+                authErrorShown = true;
+                if (authErrorTimeout) clearTimeout(authErrorTimeout);
+                authErrorTimeout = setTimeout(() => {
+                    authErrorShown = false;
+                    authErrorTimeout = null;
+                }, 30000);
+
+                if (currentInfra?.id) {
+                    infrastructureStore.setAuthenticationStatusForInfrastructure(currentInfra.id, false);
+                }
+
+                const isLoginAvailable = infrastructureStore.getIsLoginAvailable;
+
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 8000,
+                    color: 'warning',
+                    btnColor: 'buttonText',
+                    baseError: 'Authentication required!',
+                    extendedError: 'Please log in again.',
+                    actionText: isLoginAvailable ? 'Login' : undefined,
+                    actionCallback: isLoginAvailable ? login : undefined,
+                });
+            }
+            return { success: false, status: 401 };
+        }
+
+        // Handle other errors
+        if (!disableMessage) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 60000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Error! Server responded with: ' + error,
+            });
+        }
+        return { success: false };
+    }
 
     function getRequest(path: string, context: string, disableMessage: boolean, headers: Headers = new Headers()): any {
-        headers = addAuthorizationHeader(headers); // Add the Authorization header
+        if (shouldAddAuthorizationHeader(path)) {
+            // No Authorization needed for the /description endpoint.
+            headers = addAuthorizationHeader(headers); // Add the Authorization header
+        }
         return fetch(path, { method: 'GET', headers: headers })
             .then(async (response) => {
-                // Check if the Server responded with content Hallo Rene
+                // Check if the Server responded with content.
                 if (
                     response.headers.get('Content-Type')?.split(';')[0] === 'application/json' &&
                     response.headers.get('Content-Length') !== '0'
@@ -65,19 +131,7 @@ export function useRequestHandling() {
                     throw new Error('Unexpected response format');
                 }
             })
-            .catch((error) => {
-                // Catch any errors
-                // console.error('Error: ', error); // Log the error
-                if (!disableMessage)
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 60000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'Error! Server responded with: ' + error,
-                    });
-                return { success: false };
-            });
+            .catch((error) => handleRequestError(error, disableMessage));
     }
 
     function postRequest(
@@ -134,19 +188,7 @@ export function useRequestHandling() {
                     throw new Error('Unexpected response format');
                 }
             })
-            .catch((error) => {
-                // Catch any errors
-                // console.error('Error: ', error); // Log the error
-                if (!disableMessage)
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 60000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'Error! Server responded with: ' + error,
-                    });
-                return { success: false };
-            });
+            .catch((error) => handleRequestError(error, disableMessage));
     }
 
     function putRequest(path: string, body: any, headers: Headers, context: string, disableMessage: boolean): any {
@@ -183,19 +225,7 @@ export function useRequestHandling() {
                     throw new Error('Unexpected response format');
                 }
             })
-            .catch((error) => {
-                // Catch any errors
-                // console.error('Error: ', error); // Log the error
-                if (!disableMessage)
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 60000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'Error! Server responded with: ' + error,
-                    });
-                return { success: false };
-            });
+            .catch((error) => handleRequestError(error, disableMessage));
     }
 
     function patchRequest(path: string, body: any, headers: Headers, context: string, disableMessage: boolean): any {
@@ -232,19 +262,7 @@ export function useRequestHandling() {
                     throw new Error('Unexpected response format');
                 }
             })
-            .catch((error) => {
-                // Catch any errors
-                // console.error('Error: ', error); // Log the error
-                if (!disableMessage)
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 60000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'Error! Server responded with: ' + error,
-                    });
-                return { success: false };
-            });
+            .catch((error) => handleRequestError(error, disableMessage));
     }
 
     function deleteRequest(path: string, context: string, disableMessage: boolean): any {
@@ -277,19 +295,7 @@ export function useRequestHandling() {
                     return { success: true };
                 }
             })
-            .catch((error) => {
-                // Catch any errors
-                // console.error('Error: ', error); // Log the error
-                if (!disableMessage)
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 60000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'Error! Server responded with: ' + error,
-                    });
-                return { success: false };
-            });
+            .catch((error) => handleRequestError(error, disableMessage));
     }
 
     function addAuthorizationHeader(headers: Headers): Headers {
@@ -299,10 +305,10 @@ export function useRequestHandling() {
         if (selectedInfra) {
             // Use infrastructure-level authentication if configured
             const auth = selectedInfra.auth;
-
+            const authorizationPrefix = environmentStore.getAuthorizationPrefix;
             if (auth && auth.securityType !== 'No Authentication') {
                 if (auth.securityType === 'Bearer Token' && auth.bearerToken?.token) {
-                    headers.set('Authorization', 'Bearer ' + auth.bearerToken.token);
+                    headers.set('Authorization', authorizationPrefix + ' ' + auth.bearerToken.token);
                     return headers;
                 } else if (auth.securityType === 'Basic Authentication' && auth.basicAuth) {
                     headers.set(
@@ -310,8 +316,8 @@ export function useRequestHandling() {
                         'Basic ' + btoa(auth.basicAuth.username + ':' + auth.basicAuth.password)
                     );
                     return headers;
-                } else if (auth.securityType === 'Keycloak' && selectedInfra.token?.accessToken) {
-                    headers.set('Authorization', 'Bearer ' + selectedInfra.token.accessToken);
+                } else if (auth.securityType === 'OAuth2' && selectedInfra.token?.accessToken) {
+                    headers.set('Authorization', authorizationPrefix + ' ' + selectedInfra.token.accessToken);
                     return headers;
                 }
             }
@@ -351,6 +357,19 @@ export function useRequestHandling() {
             baseError: initialErrorMessage,
             extendedError: errorMessage,
         });
+    }
+
+    function shouldAddAuthorizationHeader(path: string): boolean {
+        const exemptionEnabled = environmentStore.getAuthorizationDescriptionEndpointExemption;
+        if (
+            exemptionEnabled &&
+            path.endsWith('/description') &&
+            !path.includes('/submodels/') &&
+            !path.includes('/submodel-elements/')
+        ) {
+            return false;
+        }
+        return true;
     }
 
     return {

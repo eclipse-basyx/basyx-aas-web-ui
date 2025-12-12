@@ -6,6 +6,8 @@ export interface SnackbarType {
     text?: string;
     baseError?: string;
     extendedError?: string;
+    actionText?: string;
+    actionCallback?: () => void | Promise<void>;
 }
 
 export interface AutoSyncType {
