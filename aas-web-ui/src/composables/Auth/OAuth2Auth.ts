@@ -29,7 +29,7 @@ export async function authenticateOAuth2ClientCredentials(config: OAuth2Connecti
         throw new Error('Missing required OAuth2 configuration');
     }
 
-    // 1. Step - fetch well known oid config host/.well-known/openid-configuration
+    // 1. Step - fetch well known OIDC config host/.well-known/openid-configuration
     const result = await fetch(`${host}/.well-known/openid-configuration`);
     if (!result.ok) {
         throw new Error(`Failed to fetch OpenID configuration: ${result.status} ${result.statusText}`);

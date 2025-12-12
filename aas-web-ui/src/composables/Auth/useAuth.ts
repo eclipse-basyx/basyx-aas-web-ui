@@ -207,10 +207,8 @@ export function useAuth(router?: Router) {
                 clearLocalToken();
                 return;
             }
-            if (logoutUrl) {
-                clearLocalToken();
-                window.location.href = logoutUrl.toString();
-            }
+            clearLocalToken();
+            window.location.href = logoutUrl.toString();
             return;
         } else {
             // No logout URL - just clear local token
