@@ -38,7 +38,7 @@
     "three": "^0.182.0",
     "uuid": "^13.0.0",
     "vue": "^3.5.25",
-    "vue-router": "^4.6.3",
+    "vue-router": "^4.6.4",
     "vue3-apexcharts": "^1.10.0",
     "vuetify": "^3.11.3",
     "web-ifc": "^0.0.70",
