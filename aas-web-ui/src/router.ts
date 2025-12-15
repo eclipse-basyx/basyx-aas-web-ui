@@ -255,7 +255,7 @@ export async function createAppRouter(): Promise<Router> {
                     const tokenData = await exchangeOAuth2AuthorizationCode({
                         tokenEndpoint,
                         clientId: infrastructure.auth.oauth2.clientId,
-                        redirectUri: `${window.location.origin}${to.path}`,
+                        redirectUri: `${window.location.origin}${window.location.pathname}`,
                         code,
                         state, // Pass state to retrieve correct code verifier
                     });
