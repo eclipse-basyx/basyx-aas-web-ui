@@ -182,7 +182,10 @@ export function useAuth(router?: Router) {
                 }
 
                 logoutUrl = new URL(endSessionEndpoint);
-                logoutUrl.searchParams.set('post_logout_redirect_uri', window.location.origin + '/');
+                logoutUrl.searchParams.set(
+                    'post_logout_redirect_uri',
+                    window.location.origin + window.location.pathname
+                );
 
                 // Add id_token_hint if available (required by some OAuth2 providers)
                 const idToken = infra.token?.idToken;

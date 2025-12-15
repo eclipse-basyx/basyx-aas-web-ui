@@ -207,7 +207,7 @@
     }
 
     function getHref(shell: any): string {
-        return `${window.location.origin}?aas=${shell.path}`;
+        return `${window.location.origin}${window.location.pathname}?aas=${shell.path}`;
     }
 
     function produce(): void {

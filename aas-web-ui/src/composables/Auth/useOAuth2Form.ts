@@ -188,7 +188,7 @@ export function useOAuth2Form(): {
                 await initiateOAuth2AuthorizationCodeFlow({
                     authorizationEndpoint,
                     clientId: formData.value.clientId,
-                    redirectUri: `${window.location.origin}/`,
+                    redirectUri: `${window.location.origin}${window.location.pathname}`,
                     scope: formData.value.scope || 'openid profile email',
                     state,
                 });
