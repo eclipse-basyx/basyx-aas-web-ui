@@ -72,7 +72,7 @@
     "prettier": "^3.7.4",
     "sass": "^1.96.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.49.0",
+    "typescript-eslint": "^8.50.0",
     "unplugin-auto-import": "^20.3.0",
     "unplugin-vue-components": "^30.0.0",
     "vite": "^7.3.0",
