@@ -265,33 +265,35 @@ export function useInfrastructureStorage(): {
                         // Find an infrastructure that matches the environment configuration
                         matchingInfra =
                             storage.infrastructures.find((infra) => {
-                                // Require at least one URL from envConfig to be defined before considering a match
-                                const hasAnyEnvUrl = !!(
-                                    envConfig.aasDiscoveryPath ||
-                                    envConfig.aasRegistryPath ||
-                                    envConfig.submodelRegistryPath ||
-                                    envConfig.aasRepoPath ||
-                                    envConfig.submodelRepoPath ||
-                                    envConfig.conceptDescriptionRepoPath
-                                );
+                                const isNonEmptyUrl = (value?: string): boolean =>
+                                    typeof value === 'string' && value.trim().length > 0;
+
+                                // Require at least one URL from envConfig to be defined (non-empty) before considering a match
+                                const hasAnyEnvUrl =
+                                    isNonEmptyUrl(envConfig.aasDiscoveryPath) ||
+                                    isNonEmptyUrl(envConfig.aasRegistryPath) ||
+                                    isNonEmptyUrl(envConfig.submodelRegistryPath) ||
+                                    isNonEmptyUrl(envConfig.aasRepoPath) ||
+                                    isNonEmptyUrl(envConfig.submodelRepoPath) ||
+                                    isNonEmptyUrl(envConfig.conceptDescriptionRepoPath);
 
                                 if (!hasAnyEnvUrl) {
                                     return false;
                                 }
 
-                                // Check if component URLs match; only constrain URLs that are defined in envConfig
+                                // Check if component URLs match; only constrain URLs that are defined (non-empty) in envConfig
                                 const urlsMatch =
-                                    (envConfig.aasDiscoveryPath === undefined ||
+                                    (!isNonEmptyUrl(envConfig.aasDiscoveryPath) ||
                                         infra.components.AASDiscovery.url === envConfig.aasDiscoveryPath) &&
-                                    (envConfig.aasRegistryPath === undefined ||
+                                    (!isNonEmptyUrl(envConfig.aasRegistryPath) ||
                                         infra.components.AASRegistry.url === envConfig.aasRegistryPath) &&
-                                    (envConfig.submodelRegistryPath === undefined ||
+                                    (!isNonEmptyUrl(envConfig.submodelRegistryPath) ||
                                         infra.components.SubmodelRegistry.url === envConfig.submodelRegistryPath) &&
-                                    (envConfig.aasRepoPath === undefined ||
+                                    (!isNonEmptyUrl(envConfig.aasRepoPath) ||
                                         infra.components.AASRepo.url === envConfig.aasRepoPath) &&
-                                    (envConfig.submodelRepoPath === undefined ||
+                                    (!isNonEmptyUrl(envConfig.submodelRepoPath) ||
                                         infra.components.SubmodelRepo.url === envConfig.submodelRepoPath) &&
-                                    (envConfig.conceptDescriptionRepoPath === undefined ||
+                                    (!isNonEmptyUrl(envConfig.conceptDescriptionRepoPath) ||
                                         infra.components.ConceptDescriptionRepo.url ===
                                             envConfig.conceptDescriptionRepoPath);
 
