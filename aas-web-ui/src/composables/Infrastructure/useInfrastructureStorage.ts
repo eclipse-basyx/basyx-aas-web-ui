@@ -88,7 +88,7 @@ export function useInfrastructureStorage(): {
         for (let i = 0; i < configString.length; i++) {
             const char = configString.charCodeAt(i);
             hash = (hash << 5) - hash + char;
-            hash = hash & hash; // Convert to 32bit integer
+            hash |= 0; // Convert to 32-bit integer
         }
 
         return 'infra_env_' + Math.abs(hash).toString(36);
