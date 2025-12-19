@@ -301,8 +301,11 @@ export function useInfrastructureStorage(): {
                                 const hasKeycloakConfig =
                                     !!envConfig.keycloakActive &&
                                     typeof envConfig.keycloakUrl === 'string' &&
+                                    envConfig.keycloakUrl.trim().length > 0 &&
                                     typeof envConfig.keycloakRealm === 'string' &&
-                                    typeof envConfig.keycloakClientId === 'string';
+                                    envConfig.keycloakRealm.trim().length > 0 &&
+                                    typeof envConfig.keycloakClientId === 'string' &&
+                                    envConfig.keycloakClientId.trim().length > 0;
 
                                 if (hasKeycloakConfig) {
                                     const expectedHost = envConfig.keycloakUrl + '/realms/' + envConfig.keycloakRealm;
