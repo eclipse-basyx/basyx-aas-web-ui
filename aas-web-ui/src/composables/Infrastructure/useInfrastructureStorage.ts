@@ -256,11 +256,13 @@ export function useInfrastructureStorage(): {
 
                                 // Check if auth config matches
                                 const hasKeycloakConfig =
-                                    envConfig.keycloakActive ||
-                                    (envConfig.keycloakUrl && envConfig.keycloakRealm && envConfig.keycloakClientId);
+                                    !!envConfig.keycloakActive &&
+                                    typeof envConfig.keycloakUrl === 'string' &&
+                                    typeof envConfig.keycloakRealm === 'string' &&
+                                    typeof envConfig.keycloakClientId === 'string';
 
                                 if (hasKeycloakConfig) {
-                                    const expectedHost = envConfig.keycloakUrl! + '/realms/' + envConfig.keycloakRealm!;
+                                    const expectedHost = envConfig.keycloakUrl + '/realms/' + envConfig.keycloakRealm;
                                     const expectedAuthFlow = envConfig.preconfiguredAuth
                                         ? 'client-credentials'
                                         : 'auth-code';
