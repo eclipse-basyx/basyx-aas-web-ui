@@ -56,6 +56,7 @@ export function useAuth(router?: Router) {
                             btnColor: 'buttonText',
                             text: 'Client secret is required. Please configure in settings.',
                         });
+                        return;
                     }
 
                     showOverlay();
