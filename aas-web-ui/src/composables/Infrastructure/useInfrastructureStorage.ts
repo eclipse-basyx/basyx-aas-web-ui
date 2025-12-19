@@ -329,11 +329,6 @@ export function useInfrastructureStorage(): {
                 // If we found a matching infrastructure, use it (preserves token and ID)
                 if (matchingInfra) {
                     matchingInfra.isDefault = true;
-                    console.log('[InfrastructureStorage] Found matching infrastructure:', {
-                        id: matchingInfra.id,
-                        name: matchingInfra.name,
-                        hasToken: !!matchingInfra.token?.accessToken,
-                    });
                     return {
                         infrastructures: [matchingInfra],
                         selectedInfrastructureId: matchingInfra.id,
@@ -341,7 +336,6 @@ export function useInfrastructureStorage(): {
                 }
 
                 // No match found, create new infrastructure from env
-                console.log('[InfrastructureStorage] No matching infrastructure found, creating new one');
                 const defaultInfra = await createDefaultInfrastructureFromEnv(envConfig, refreshTokensCallback);
                 return {
                     infrastructures: [defaultInfra],
@@ -420,15 +414,6 @@ export function useInfrastructureStorage(): {
                 infrastructures,
                 selectedInfrastructureId,
             };
-
-            console.log('[InfrastructureStorage] Saving to localStorage:', {
-                count: infrastructures.length,
-                infrastructures: infrastructures.map((i) => ({
-                    id: i.id,
-                    name: i.name,
-                    hasToken: !!i.token?.accessToken,
-                })),
-            });
 
             localStorage.setItem('basyxInfrastructures', JSON.stringify(storage));
         } catch (error) {
