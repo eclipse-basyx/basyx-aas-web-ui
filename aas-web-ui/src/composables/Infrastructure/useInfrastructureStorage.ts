@@ -223,15 +223,36 @@ export function useInfrastructureStorage(): {
                         // Find an infrastructure that matches the environment configuration
                         matchingInfra =
                             storage.infrastructures.find((infra) => {
-                                // Check if component URLs match
+                                // Require at least one URL from envConfig to be defined before considering a match
+                                const hasAnyEnvUrl =
+                                    !!(
+                                        envConfig.aasDiscoveryPath ||
+                                        envConfig.aasRegistryPath ||
+                                        envConfig.submodelRegistryPath ||
+                                        envConfig.aasRepoPath ||
+                                        envConfig.submodelRepoPath ||
+                                        envConfig.conceptDescriptionRepoPath
+                                    );
+
+                                if (!hasAnyEnvUrl) {
+                                    return false;
+                                }
+
+                                // Check if component URLs match; only constrain URLs that are defined in envConfig
                                 const urlsMatch =
-                                    infra.components.AASDiscovery.url === (envConfig.aasDiscoveryPath || '') &&
-                                    infra.components.AASRegistry.url === (envConfig.aasRegistryPath || '') &&
-                                    infra.components.SubmodelRegistry.url === (envConfig.submodelRegistryPath || '') &&
-                                    infra.components.AASRepo.url === (envConfig.aasRepoPath || '') &&
-                                    infra.components.SubmodelRepo.url === (envConfig.submodelRepoPath || '') &&
-                                    infra.components.ConceptDescriptionRepo.url ===
-                                        (envConfig.conceptDescriptionRepoPath || '');
+                                    (envConfig.aasDiscoveryPath === undefined ||
+                                        infra.components.AASDiscovery.url === envConfig.aasDiscoveryPath) &&
+                                    (envConfig.aasRegistryPath === undefined ||
+                                        infra.components.AASRegistry.url === envConfig.aasRegistryPath) &&
+                                    (envConfig.submodelRegistryPath === undefined ||
+                                        infra.components.SubmodelRegistry.url === envConfig.submodelRegistryPath) &&
+                                    (envConfig.aasRepoPath === undefined ||
+                                        infra.components.AASRepo.url === envConfig.aasRepoPath) &&
+                                    (envConfig.submodelRepoPath === undefined ||
+                                        infra.components.SubmodelRepo.url === envConfig.submodelRepoPath) &&
+                                    (envConfig.conceptDescriptionRepoPath === undefined ||
+                                        infra.components.ConceptDescriptionRepo.url ===
+                                            envConfig.conceptDescriptionRepoPath);
 
                                 // Check if auth config matches
                                 const hasKeycloakConfig =
