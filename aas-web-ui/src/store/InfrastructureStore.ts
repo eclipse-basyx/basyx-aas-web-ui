@@ -49,7 +49,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     // Infrastructure States
     const infrastructures = ref<InfrastructureConfig[]>([]);
     const selectedInfrastructureId = ref<string | null>(null);
-    const triggerInfrastructureDialog = ref(false);
     const openInfrastructureEditMode = ref(false);
     const user = ref<UserData | null>(null);
     const isAuthenticating = ref(false);
@@ -128,7 +127,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         if (!selectedInfrastructureId.value) return null;
         return infrastructures.value.find((infra) => infra.id === selectedInfrastructureId.value) || null;
     });
-    const getTriggerInfrastructureDialog = computed(() => triggerInfrastructureDialog.value);
     const getOpenInfrastructureEditMode = computed(() => openInfrastructureEditMode.value);
     const getAASDiscoveryURL = computed(() => AASDiscoveryURL.value);
     const getAASRegistryURL = computed(() => AASRegistryURL.value);
@@ -384,11 +382,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         }
     }
 
-    function dispatchTriggerInfrastructureDialog(editMode = false): void {
-        openInfrastructureEditMode.value = editMode;
-        triggerInfrastructureDialog.value = !triggerInfrastructureDialog.value;
-    }
-
     // Wrapper functions that delegate to auth composable
     async function refreshInfrastructureTokens(
         infrastructureId?: string
@@ -596,7 +589,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         getInfrastructures,
         getSelectedInfrastructureId,
         getSelectedInfrastructure,
-        getTriggerInfrastructureDialog,
         getOpenInfrastructureEditMode,
         getAASDiscoveryURL,
         getAASRegistryURL,
@@ -616,7 +608,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         dispatchUpdateInfrastructure,
         dispatchDeleteInfrastructure,
         dispatchUpdateInfrastructureAuth,
-        dispatchTriggerInfrastructureDialog,
         dispatchSetDefaultInfrastructure,
         createEmptyInfrastructure,
         refreshInfrastructureTokens,

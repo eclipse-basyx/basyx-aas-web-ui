@@ -14,7 +14,7 @@
             <template #prepend-inner>
                 <v-icon :icon="connectionStatus.icon" :color="connectionStatus.color" size="x-small"></v-icon>
             </template>
-            <template #append>
+            <template v-if="endpointConfigAvailable" #append>
                 <v-btn icon="mdi-cog" size="small" variant="text" @click="openManageDialog">
                     <v-icon>mdi-cog</v-icon>
                     <v-tooltip activator="parent" location="bottom" :open-delay="600">Manage Infrastructures</v-tooltip>
@@ -27,10 +27,12 @@
 <script lang="ts" setup>
     import { computed, ref, watch } from 'vue';
     import { useRouter } from 'vue-router';
+    import { useEnvStore } from '@/store/EnvironmentStore';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
 
     // Stores
     const infrastructureStore = useInfrastructureStore();
+    const envStore = useEnvStore();
 
     const router = useRouter();
 
@@ -42,6 +44,7 @@
     // Computed Properties
     const infrastructures = computed(() => infrastructureStore.getInfrastructures);
     const basyxComponents = computed(() => infrastructureStore.getBasyxComponents);
+    const endpointConfigAvailable = computed(() => envStore.getEndpointConfigAvailable);
 
     // Local State
     const selectedInfraId = ref<string | null>(infrastructureStore.getSelectedInfrastructureId);
