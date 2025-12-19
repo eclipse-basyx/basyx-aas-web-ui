@@ -224,15 +224,14 @@ export function useInfrastructureStorage(): {
                         matchingInfra =
                             storage.infrastructures.find((infra) => {
                                 // Require at least one URL from envConfig to be defined before considering a match
-                                const hasAnyEnvUrl =
-                                    !!(
-                                        envConfig.aasDiscoveryPath ||
-                                        envConfig.aasRegistryPath ||
-                                        envConfig.submodelRegistryPath ||
-                                        envConfig.aasRepoPath ||
-                                        envConfig.submodelRepoPath ||
-                                        envConfig.conceptDescriptionRepoPath
-                                    );
+                                const hasAnyEnvUrl = !!(
+                                    envConfig.aasDiscoveryPath ||
+                                    envConfig.aasRegistryPath ||
+                                    envConfig.submodelRegistryPath ||
+                                    envConfig.aasRepoPath ||
+                                    envConfig.submodelRepoPath ||
+                                    envConfig.conceptDescriptionRepoPath
+                                );
 
                                 if (!hasAnyEnvUrl) {
                                     return false;
