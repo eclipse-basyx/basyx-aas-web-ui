@@ -39,6 +39,7 @@ export function useInfrastructureStorage(): {
             keycloakClientId?: string;
             preconfiguredAuth?: boolean;
             preconfiguredAuthClientSecret?: string;
+            endpointConfigAvailable?: boolean;
         },
         refreshTokensCallback?: (infrastructureId: string) => Promise<void>
     ) => Promise<{ infrastructures: InfrastructureConfig[]; selectedInfrastructureId: string | null }>;
@@ -204,10 +205,20 @@ export function useInfrastructureStorage(): {
             keycloakClientId?: string;
             preconfiguredAuth?: boolean;
             preconfiguredAuthClientSecret?: string;
+            endpointConfigAvailable?: boolean;
         },
         refreshTokensCallback?: (infrastructureId: string) => Promise<void>
     ): Promise<{ infrastructures: InfrastructureConfig[]; selectedInfrastructureId: string | null }> {
         try {
+            // If endpointConfigAvailable is false, always use environment config
+            if (envConfig.endpointConfigAvailable === false) {
+                const defaultInfra = await createDefaultInfrastructureFromEnv(envConfig, refreshTokensCallback);
+                return {
+                    infrastructures: [defaultInfra],
+                    selectedInfrastructureId: defaultInfra.id,
+                };
+            }
+
             const stored = window.localStorage.getItem('basyxInfrastructures');
             if (stored) {
                 const storage: InfrastructureStorage = JSON.parse(stored);

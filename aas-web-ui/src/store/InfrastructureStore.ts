@@ -173,6 +173,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             keycloakClientId: EnvKeycloakClientId.value,
             preconfiguredAuth: EnvPreconfiguredAuth.value,
             preconfiguredAuthClientSecret: EnvPreconfiguredAuthClientSecret.value,
+            endpointConfigAvailable: endpointConfigAvailable.value,
         };
 
         const result = await infrastructureStorage.loadInfrastructuresFromStorage(envConfig);
