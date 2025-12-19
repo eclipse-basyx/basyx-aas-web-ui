@@ -42,7 +42,6 @@ export function useAuth(router?: Router) {
                     btnColor: 'buttonText',
                     text: 'OAuth2 configuration incomplete. Please configure in settings.',
                 });
-                infrastructureStore.dispatchTriggerInfrastructureDialog(true);
                 return;
             }
 
@@ -57,7 +56,6 @@ export function useAuth(router?: Router) {
                             btnColor: 'buttonText',
                             text: 'Client secret is required. Please configure in settings.',
                         });
-                        infrastructureStore.dispatchTriggerInfrastructureDialog(true);
                         return;
                     }
 

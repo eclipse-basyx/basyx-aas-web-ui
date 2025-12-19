@@ -39,6 +39,7 @@ export function useInfrastructureStorage(): {
             keycloakClientId?: string;
             preconfiguredAuth?: boolean;
             preconfiguredAuthClientSecret?: string;
+            endpointConfigAvailable?: boolean;
         },
         refreshTokensCallback?: (infrastructureId: string) => Promise<void>
     ) => Promise<{ infrastructures: InfrastructureConfig[]; selectedInfrastructureId: string | null }>;
@@ -52,6 +53,45 @@ export function useInfrastructureStorage(): {
      */
     function generateInfrastructureId(): string {
         return 'infra_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+    }
+
+    /**
+     * Generates a deterministic infrastructure ID based on configuration
+     * Used when endpointConfigAvailable=false to ensure stable IDs across reloads
+     */
+    function generateDeterministicInfrastructureId(envConfig: {
+        aasDiscoveryPath?: string;
+        aasRegistryPath?: string;
+        submodelRegistryPath?: string;
+        aasRepoPath?: string;
+        submodelRepoPath?: string;
+        conceptDescriptionRepoPath?: string;
+        keycloakUrl?: string;
+        keycloakRealm?: string;
+        keycloakClientId?: string;
+    }): string {
+        // Create a stable hash from the configuration
+        const configString = JSON.stringify({
+            aasDiscovery: envConfig.aasDiscoveryPath || '',
+            aasRegistry: envConfig.aasRegistryPath || '',
+            submodelRegistry: envConfig.submodelRegistryPath || '',
+            aasRepo: envConfig.aasRepoPath || '',
+            submodelRepo: envConfig.submodelRepoPath || '',
+            cdRepo: envConfig.conceptDescriptionRepoPath || '',
+            keycloakUrl: envConfig.keycloakUrl || '',
+            keycloakRealm: envConfig.keycloakRealm || '',
+            keycloakClientId: envConfig.keycloakClientId || '',
+        });
+
+        // Simple hash function to create a deterministic ID
+        let hash = 0;
+        for (let i = 0; i < configString.length; i++) {
+            const char = configString.charCodeAt(i);
+            hash = (hash << 5) - hash + char;
+            hash |= 0; // Convert to 32-bit integer
+        }
+
+        return 'infra_env_' + Math.abs(hash).toString(36);
     }
 
     /**
@@ -109,6 +149,9 @@ export function useInfrastructureStorage(): {
     ): Promise<InfrastructureConfig> {
         const infrastructure = createEmptyInfrastructure('Default Infrastructure');
         infrastructure.isDefault = true;
+
+        // Use deterministic ID based on configuration for stability across reloads
+        infrastructure.id = generateDeterministicInfrastructureId(envConfig);
 
         // Populate from environment variables
         if (envConfig.aasDiscoveryPath) infrastructure.components.AASDiscovery.url = envConfig.aasDiscoveryPath;
@@ -204,10 +247,121 @@ export function useInfrastructureStorage(): {
             keycloakClientId?: string;
             preconfiguredAuth?: boolean;
             preconfiguredAuthClientSecret?: string;
+            endpointConfigAvailable?: boolean;
         },
         refreshTokensCallback?: (infrastructureId: string) => Promise<void>
     ): Promise<{ infrastructures: InfrastructureConfig[]; selectedInfrastructureId: string | null }> {
         try {
+            // If endpointConfigAvailable is false, use environment config but preserve existing infrastructure
+            // Strategy: When endpoint configuration is locked (e.g., in production), we need to:
+            // 1. Always use URLs and auth settings from environment variables (non-editable by users)
+            // 2. BUT preserve the infrastructure ID and token from localStorage if a match exists
+            // 3. This ensures OAuth2 flows work correctly (state parameter contains stable infrastructure ID)
+            // 4. And user authentication persists across page reloads (token is preserved)
+            if (envConfig.endpointConfigAvailable === false) {
+                const stored = window.localStorage.getItem('basyxInfrastructures');
+                let matchingInfra: InfrastructureConfig | null = null;
+
+                if (stored) {
+                    try {
+                        const storage: InfrastructureStorage = JSON.parse(stored);
+
+                        // Find an infrastructure that matches the environment configuration
+                        // Matching criteria: URLs and auth config must match env vars
+                        // If found, we reuse it (preserving its ID and token)
+                        matchingInfra =
+                            storage.infrastructures.find((infra) => {
+                                // Helper to check if a URL is defined and non-empty
+                                const isNonEmptyUrl = (value?: string): boolean =>
+                                    typeof value === 'string' && value.trim().length > 0;
+
+                                // Ensure at least one URL is configured in env vars (prevents matching empty configs)
+                                const hasAnyEnvUrl =
+                                    isNonEmptyUrl(envConfig.aasDiscoveryPath) ||
+                                    isNonEmptyUrl(envConfig.aasRegistryPath) ||
+                                    isNonEmptyUrl(envConfig.submodelRegistryPath) ||
+                                    isNonEmptyUrl(envConfig.aasRepoPath) ||
+                                    isNonEmptyUrl(envConfig.submodelRepoPath) ||
+                                    isNonEmptyUrl(envConfig.conceptDescriptionRepoPath);
+
+                                if (!hasAnyEnvUrl) {
+                                    return false;
+                                }
+
+                                // Check if all non-empty URLs in env config match the infrastructure's URLs
+                                // Only URLs that are defined in env vars are compared (allows partial configuration)
+                                const urlsMatch =
+                                    (!isNonEmptyUrl(envConfig.aasDiscoveryPath) ||
+                                        infra.components.AASDiscovery.url === envConfig.aasDiscoveryPath) &&
+                                    (!isNonEmptyUrl(envConfig.aasRegistryPath) ||
+                                        infra.components.AASRegistry.url === envConfig.aasRegistryPath) &&
+                                    (!isNonEmptyUrl(envConfig.submodelRegistryPath) ||
+                                        infra.components.SubmodelRegistry.url === envConfig.submodelRegistryPath) &&
+                                    (!isNonEmptyUrl(envConfig.aasRepoPath) ||
+                                        infra.components.AASRepo.url === envConfig.aasRepoPath) &&
+                                    (!isNonEmptyUrl(envConfig.submodelRepoPath) ||
+                                        infra.components.SubmodelRepo.url === envConfig.submodelRepoPath) &&
+                                    (!isNonEmptyUrl(envConfig.conceptDescriptionRepoPath) ||
+                                        infra.components.ConceptDescriptionRepo.url ===
+                                            envConfig.conceptDescriptionRepoPath);
+
+                                // Check if auth configuration matches
+                                // If Keycloak is configured in env, infrastructure must have matching OAuth2 settings
+                                const hasKeycloakConfig =
+                                    !!envConfig.keycloakActive &&
+                                    typeof envConfig.keycloakUrl === 'string' &&
+                                    envConfig.keycloakUrl.trim().length > 0 &&
+                                    typeof envConfig.keycloakRealm === 'string' &&
+                                    envConfig.keycloakRealm.trim().length > 0 &&
+                                    typeof envConfig.keycloakClientId === 'string' &&
+                                    envConfig.keycloakClientId.trim().length > 0;
+
+                                if (hasKeycloakConfig) {
+                                    // Keycloak configured: verify OAuth2 settings match
+                                    const expectedHost = envConfig.keycloakUrl + '/realms/' + envConfig.keycloakRealm;
+                                    const expectedAuthFlow = envConfig.preconfiguredAuth
+                                        ? 'client-credentials'
+                                        : 'auth-code';
+
+                                    const authMatches =
+                                        infra.auth?.securityType === 'OAuth2' &&
+                                        infra.auth.oauth2?.host === expectedHost &&
+                                        infra.auth.oauth2?.clientId === envConfig.keycloakClientId &&
+                                        infra.auth.oauth2?.authFlow === expectedAuthFlow;
+
+                                    return urlsMatch && authMatches;
+                                } else {
+                                    // No Keycloak in env: infrastructure must have no authentication configured
+                                    const noAuth = !infra.auth || infra.auth.securityType === 'No Authentication';
+                                    return urlsMatch && noAuth;
+                                }
+                            }) || null;
+                    } catch (err) {
+                        console.warn('Failed to load infrastructure from storage:', err);
+                    }
+                }
+
+                // Matching infrastructure found: reuse it to preserve token and stable ID
+                // This is critical for OAuth2 flows - the ID must remain constant across page reloads
+                // so the OAuth2 state parameter matches after redirect from identity provider
+                if (matchingInfra) {
+                    matchingInfra.isDefault = true;
+                    return {
+                        infrastructures: [matchingInfra],
+                        selectedInfrastructureId: matchingInfra.id,
+                    };
+                }
+
+                // No matching infrastructure found: create new one from environment variables
+                // This happens on first load or when env config changes significantly
+                // A deterministic ID is generated based on env config (see generateDeterministicInfrastructureId)
+                const defaultInfra = await createDefaultInfrastructureFromEnv(envConfig, refreshTokensCallback);
+                return {
+                    infrastructures: [defaultInfra],
+                    selectedInfrastructureId: defaultInfra.id,
+                };
+            }
+
             const stored = window.localStorage.getItem('basyxInfrastructures');
             if (stored) {
                 const storage: InfrastructureStorage = JSON.parse(stored);

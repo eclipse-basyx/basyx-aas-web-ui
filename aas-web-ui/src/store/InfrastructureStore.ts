@@ -49,7 +49,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     // Infrastructure States
     const infrastructures = ref<InfrastructureConfig[]>([]);
     const selectedInfrastructureId = ref<string | null>(null);
-    const triggerInfrastructureDialog = ref(false);
     const openInfrastructureEditMode = ref(false);
     const user = ref<UserData | null>(null);
     const isAuthenticating = ref(false);
@@ -128,7 +127,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         if (!selectedInfrastructureId.value) return null;
         return infrastructures.value.find((infra) => infra.id === selectedInfrastructureId.value) || null;
     });
-    const getTriggerInfrastructureDialog = computed(() => triggerInfrastructureDialog.value);
     const getOpenInfrastructureEditMode = computed(() => openInfrastructureEditMode.value);
     const getAASDiscoveryURL = computed(() => AASDiscoveryURL.value);
     const getAASRegistryURL = computed(() => AASRegistryURL.value);
@@ -175,6 +173,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             keycloakClientId: EnvKeycloakClientId.value,
             preconfiguredAuth: EnvPreconfiguredAuth.value,
             preconfiguredAuthClientSecret: EnvPreconfiguredAuthClientSecret.value,
+            endpointConfigAvailable: endpointConfigAvailable.value,
         };
 
         const result = await infrastructureStorage.loadInfrastructuresFromStorage(envConfig);
@@ -202,6 +201,9 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     // Initialize infrastructures on store creation
     (async () => {
         await loadInfrastructuresFromStorage();
+
+        // Save to localStorage after loading to persist any newly created infrastructures
+        saveInfrastructuresToStorage();
 
         // Explicitly set URLs from selected infrastructure after loading
         const initialInfra = getSelectedInfrastructure.value;
@@ -382,11 +384,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             infrastructure.auth = auth;
             saveInfrastructuresToStorage();
         }
-    }
-
-    function dispatchTriggerInfrastructureDialog(editMode = false): void {
-        openInfrastructureEditMode.value = editMode;
-        triggerInfrastructureDialog.value = !triggerInfrastructureDialog.value;
     }
 
     // Wrapper functions that delegate to auth composable
@@ -596,7 +593,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         getInfrastructures,
         getSelectedInfrastructureId,
         getSelectedInfrastructure,
-        getTriggerInfrastructureDialog,
         getOpenInfrastructureEditMode,
         getAASDiscoveryURL,
         getAASRegistryURL,
@@ -616,7 +612,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         dispatchUpdateInfrastructure,
         dispatchDeleteInfrastructure,
         dispatchUpdateInfrastructureAuth,
-        dispatchTriggerInfrastructureDialog,
         dispatchSetDefaultInfrastructure,
         createEmptyInfrastructure,
         refreshInfrastructureTokens,

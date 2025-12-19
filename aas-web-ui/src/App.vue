@@ -82,9 +82,6 @@
                 text: `Token refresh failed for ${failures.length} component(s). Please re-authenticate.`,
                 extendedError: failureMessages,
             });
-
-            // Trigger opening the infrastructure management dialog for user to re-authenticate
-            infrastructureStore.dispatchTriggerInfrastructureDialog();
         }
     }
 
