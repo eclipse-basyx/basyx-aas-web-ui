@@ -56,6 +56,45 @@ export function useInfrastructureStorage(): {
     }
 
     /**
+     * Generates a deterministic infrastructure ID based on configuration
+     * Used when endpointConfigAvailable=false to ensure stable IDs across reloads
+     */
+    function generateDeterministicInfrastructureId(envConfig: {
+        aasDiscoveryPath?: string;
+        aasRegistryPath?: string;
+        submodelRegistryPath?: string;
+        aasRepoPath?: string;
+        submodelRepoPath?: string;
+        conceptDescriptionRepoPath?: string;
+        keycloakUrl?: string;
+        keycloakRealm?: string;
+        keycloakClientId?: string;
+    }): string {
+        // Create a stable hash from the configuration
+        const configString = JSON.stringify({
+            aasDiscovery: envConfig.aasDiscoveryPath || '',
+            aasRegistry: envConfig.aasRegistryPath || '',
+            submodelRegistry: envConfig.submodelRegistryPath || '',
+            aasRepo: envConfig.aasRepoPath || '',
+            submodelRepo: envConfig.submodelRepoPath || '',
+            cdRepo: envConfig.conceptDescriptionRepoPath || '',
+            keycloakUrl: envConfig.keycloakUrl || '',
+            keycloakRealm: envConfig.keycloakRealm || '',
+            keycloakClientId: envConfig.keycloakClientId || '',
+        });
+
+        // Simple hash function to create a deterministic ID
+        let hash = 0;
+        for (let i = 0; i < configString.length; i++) {
+            const char = configString.charCodeAt(i);
+            hash = (hash << 5) - hash + char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+
+        return 'infra_env_' + Math.abs(hash).toString(36);
+    }
+
+    /**
      * Creates an empty infrastructure configuration with default values
      */
     function createEmptyInfrastructure(name: string = 'New Infrastructure'): InfrastructureConfig {
@@ -110,6 +149,9 @@ export function useInfrastructureStorage(): {
     ): Promise<InfrastructureConfig> {
         const infrastructure = createEmptyInfrastructure('Default Infrastructure');
         infrastructure.isDefault = true;
+
+        // Use deterministic ID based on configuration for stability across reloads
+        infrastructure.id = generateDeterministicInfrastructureId(envConfig);
 
         // Populate from environment variables
         if (envConfig.aasDiscoveryPath) infrastructure.components.AASDiscovery.url = envConfig.aasDiscoveryPath;
@@ -287,6 +329,11 @@ export function useInfrastructureStorage(): {
                 // If we found a matching infrastructure, use it (preserves token and ID)
                 if (matchingInfra) {
                     matchingInfra.isDefault = true;
+                    console.log('[InfrastructureStorage] Found matching infrastructure:', {
+                        id: matchingInfra.id,
+                        name: matchingInfra.name,
+                        hasToken: !!matchingInfra.token?.accessToken,
+                    });
                     return {
                         infrastructures: [matchingInfra],
                         selectedInfrastructureId: matchingInfra.id,
@@ -294,6 +341,7 @@ export function useInfrastructureStorage(): {
                 }
 
                 // No match found, create new infrastructure from env
+                console.log('[InfrastructureStorage] No matching infrastructure found, creating new one');
                 const defaultInfra = await createDefaultInfrastructureFromEnv(envConfig, refreshTokensCallback);
                 return {
                     infrastructures: [defaultInfra],
@@ -372,6 +420,15 @@ export function useInfrastructureStorage(): {
                 infrastructures,
                 selectedInfrastructureId,
             };
+
+            console.log('[InfrastructureStorage] Saving to localStorage:', {
+                count: infrastructures.length,
+                infrastructures: infrastructures.map((i) => ({
+                    id: i.id,
+                    name: i.name,
+                    hasToken: !!i.token?.accessToken,
+                })),
+            });
 
             localStorage.setItem('basyxInfrastructures', JSON.stringify(storage));
         } catch (error) {

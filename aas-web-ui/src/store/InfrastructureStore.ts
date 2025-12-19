@@ -202,6 +202,9 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     (async () => {
         await loadInfrastructuresFromStorage();
 
+        // Save to localStorage after loading to persist any newly created infrastructures
+        saveInfrastructuresToStorage();
+
         // Explicitly set URLs from selected infrastructure after loading
         const initialInfra = getSelectedInfrastructure.value;
         if (initialInfra) {
