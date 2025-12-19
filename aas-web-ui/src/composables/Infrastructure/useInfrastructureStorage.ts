@@ -210,8 +210,68 @@ export function useInfrastructureStorage(): {
         refreshTokensCallback?: (infrastructureId: string) => Promise<void>
     ): Promise<{ infrastructures: InfrastructureConfig[]; selectedInfrastructureId: string | null }> {
         try {
-            // If endpointConfigAvailable is false, always use environment config
+            // If endpointConfigAvailable is false, use environment config
+            // but preserve the infrastructure from localStorage that matches the env config
             if (envConfig.endpointConfigAvailable === false) {
+                const stored = window.localStorage.getItem('basyxInfrastructures');
+                let matchingInfra: InfrastructureConfig | null = null;
+
+                if (stored) {
+                    try {
+                        const storage: InfrastructureStorage = JSON.parse(stored);
+
+                        // Find an infrastructure that matches the environment configuration
+                        matchingInfra =
+                            storage.infrastructures.find((infra) => {
+                                // Check if component URLs match
+                                const urlsMatch =
+                                    infra.components.AASDiscovery.url === (envConfig.aasDiscoveryPath || '') &&
+                                    infra.components.AASRegistry.url === (envConfig.aasRegistryPath || '') &&
+                                    infra.components.SubmodelRegistry.url === (envConfig.submodelRegistryPath || '') &&
+                                    infra.components.AASRepo.url === (envConfig.aasRepoPath || '') &&
+                                    infra.components.SubmodelRepo.url === (envConfig.submodelRepoPath || '') &&
+                                    infra.components.ConceptDescriptionRepo.url ===
+                                        (envConfig.conceptDescriptionRepoPath || '');
+
+                                // Check if auth config matches
+                                const hasKeycloakConfig =
+                                    envConfig.keycloakActive ||
+                                    (envConfig.keycloakUrl && envConfig.keycloakRealm && envConfig.keycloakClientId);
+
+                                if (hasKeycloakConfig) {
+                                    const expectedHost = envConfig.keycloakUrl! + '/realms/' + envConfig.keycloakRealm!;
+                                    const expectedAuthFlow = envConfig.preconfiguredAuth
+                                        ? 'client-credentials'
+                                        : 'auth-code';
+
+                                    const authMatches =
+                                        infra.auth?.securityType === 'OAuth2' &&
+                                        infra.auth.oauth2?.host === expectedHost &&
+                                        infra.auth.oauth2?.clientId === envConfig.keycloakClientId &&
+                                        infra.auth.oauth2?.authFlow === expectedAuthFlow;
+
+                                    return urlsMatch && authMatches;
+                                } else {
+                                    // No auth in env, check infrastructure has no auth
+                                    const noAuth = !infra.auth || infra.auth.securityType === 'No Authentication';
+                                    return urlsMatch && noAuth;
+                                }
+                            }) || null;
+                    } catch (err) {
+                        console.warn('Failed to load infrastructure from storage:', err);
+                    }
+                }
+
+                // If we found a matching infrastructure, use it (preserves token and ID)
+                if (matchingInfra) {
+                    matchingInfra.isDefault = true;
+                    return {
+                        infrastructures: [matchingInfra],
+                        selectedInfrastructureId: matchingInfra.id,
+                    };
+                }
+
+                // No match found, create new infrastructure from env
                 const defaultInfra = await createDefaultInfrastructureFromEnv(envConfig, refreshTokensCallback);
                 return {
                     infrastructures: [defaultInfra],
