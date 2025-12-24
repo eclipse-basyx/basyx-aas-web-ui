@@ -18,6 +18,7 @@ export function useSMHandling() {
         getSmEndpointById: getSmEndpointByIdFromRepo,
         fetchSme: fetchSmeFromRepo,
         smIsAvailable: smIsAvailableInRepo,
+        deleteSubmodel: deleteSubmodelFromRepo,
     } = useSMRepositoryClient();
     const { fetchCds } = useConceptDescriptionHandling();
     const { generateUUID } = useIDUtils();
@@ -185,6 +186,49 @@ export function useSMHandling() {
     }
 
     /**
+     * Deletes a Submodel by the provided Submodel ID.
+     *
+     * @async
+     * @param {string} smId - The ID of the Submodel to delete.
+     * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
+     */
+    async function deleteSmById(smId: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!smId) return failResponse;
+
+        smId = smId.trim();
+
+        if (smId === '') return failResponse;
+
+        const smEndpoint = await getSmEndpointById(smId);
+        if (smEndpoint && smEndpoint.trim() !== '') {
+            return await deleteSm(smEndpoint.trim());
+        }
+
+        return failResponse;
+    }
+
+    /**
+     * Deletes a Submodel by the provided Submodel endpoint.
+     *
+     * @async
+     * @param {string} smEndpoint - The endpoint URL of the Submodel to delete.
+     * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
+     */
+    async function deleteSm(smEndpoint: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!smEndpoint) return failResponse;
+
+        smEndpoint = smEndpoint.trim();
+
+        if (smEndpoint === '') return failResponse;
+
+        return await deleteSubmodelFromRepo(smEndpoint);
+    }
+
+    /**
      * Retrieves the Submodel (Sm) endpoint URL by its ID.
      *
      * This function attempts to obtain the SM endpoint using two methods: first by querying
@@ -240,7 +284,8 @@ export function useSMHandling() {
         smOrSme: any,
         path: string,
         withConceptDescriptions: boolean = false,
-        timestamp: string = ''
+        timestamp: string = '',
+        cdEndpoint?: string
     ): Promise<any> {
         const failResponse = {};
 
@@ -258,7 +303,7 @@ export function useSMHandling() {
                 !Array.isArray(smOrSme.conceptDescriptions) ||
                 smOrSme.conceptDescriptions.length === 0)
         ) {
-            smOrSme.conceptDescriptions = await fetchCds(smOrSme);
+            smOrSme.conceptDescriptions = await fetchCds(smOrSme, cdEndpoint);
         }
 
         if (
@@ -312,6 +357,95 @@ export function useSMHandling() {
         return smOrSme;
     }
 
+    /**
+     * Iteratively fetches all Concept Descriptions (CDs) for a Submodel (SM) or SubmodelElement (SME) and all its nested elements.
+     * This function uses a stack-based approach to traverse the entire SM/SME hierarchy without recursion.
+     *
+     * The function processes different types of structures:
+     * - For **Submodel**, it processes all `submodelElements` recursively
+     * - For **SubmodelElementCollection**, it processes all items in the `value` array
+     * - For **SubmodelElementList**, it processes all items in the `value` array
+     * - For **Entity**, it processes all `statements`
+     *
+     * Each element is checked for Concept Descriptions via `fetchCds()`, and all found CDs are collected
+     * into a single array that is returned.
+     *
+     * @async
+     * @param {any} smOrSme - The Submodel or SubmodelElement object to process
+     * @param {string} path - The base path string (used for tracking context during traversal)
+     * @param {string} [cdEndpoint] - Optional Concept Description repository endpoint URL
+     * @returns {Promise<any>} A promise that resolves to the array of all fetched Concept Descriptions.
+     */
+    async function fetchAllConceptDescriptions(smOrSme: any, path: string, cdEndpoint?: string): Promise<any> {
+        const failResponse = {};
+        const conceptDescriptions = [] as Array<any>;
+        if (!smOrSme || Object.keys(smOrSme).length === 0) return failResponse;
+
+        if (!path || path.trim() === '') return failResponse;
+
+        // Stack to process elements: [element, path]
+        const stack: Array<{ element: any; path: string }> = [{ element: smOrSme, path }];
+
+        while (stack.length > 0) {
+            const { element, path: currentPath } = stack.pop()!;
+
+            conceptDescriptions.push(...(await fetchCds(element, cdEndpoint)));
+            // Process child elements based on modelType
+            if (
+                element.modelType === 'Submodel' &&
+                element.submodelElements &&
+                Array.isArray(element.submodelElements) &&
+                element.submodelElements.length > 0
+            ) {
+                // Submodel - process submodelElements
+                for (const sme of element.submodelElements) {
+                    stack.push({
+                        element: sme,
+                        path: currentPath + '/submodel-elements/' + sme.idShort,
+                    });
+                }
+            } else if (
+                ['SubmodelElementCollection', 'SubmodelElementList'].includes(element.modelType) &&
+                element.value &&
+                Array.isArray(element.value) &&
+                element.value.length > 0
+            ) {
+                if (element.modelType === 'SubmodelElementCollection') {
+                    // SubmodelElementCollection
+                    for (const childElement of element.value) {
+                        stack.push({
+                            element: childElement,
+                            path: currentPath + '.' + childElement.idShort,
+                        });
+                    }
+                } else if (element.modelType === 'SubmodelElementList') {
+                    // SubmodelElementList
+                    for (let index = 0; index < element.value.length; index++) {
+                        stack.push({
+                            element: element.value[index],
+                            path: currentPath + encodeURIComponent('[') + index + encodeURIComponent(']'),
+                        });
+                    }
+                }
+            } else if (
+                element.modelType === 'Entity' &&
+                element.statements &&
+                Array.isArray(element.statements) &&
+                element.statements.length > 0
+            ) {
+                // Entity - process statements
+                for (const statement of element.statements) {
+                    stack.push({
+                        element: statement,
+                        path: currentPath + '.' + statement.idShort,
+                    });
+                }
+            }
+        }
+
+        return conceptDescriptions;
+    }
+
     async function smIsAvailableById(smId: string): Promise<boolean> {
         const failResponse = false;
 
@@ -335,5 +469,8 @@ export function useSMHandling() {
         fetchSmDescriptor,
         fetchSmList,
         setData,
+        fetchAllConceptDescriptions,
+        deleteSm,
+        deleteSmById,
     };
 }

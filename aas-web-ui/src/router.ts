@@ -1,3 +1,4 @@
+import type { InfrastructureConfig } from '@/types/Infrastructure';
 import type { Router, RouteRecordNameGeneric, RouteRecordRaw } from 'vue-router';
 import _ from 'lodash';
 import { createRouter, createWebHistory } from 'vue-router';
@@ -17,6 +18,7 @@ import SMEditor from '@/pages/SMEditor.vue';
 import SMViewer from '@/pages/SMViewer.vue';
 import { useAASStore } from '@/store/AASDataStore';
 import { useEnvStore } from '@/store/EnvironmentStore';
+import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 
 // Static routes
@@ -135,9 +137,6 @@ export async function createAppRouter(): Promise<Router> {
     const aasStore = useAASStore();
     const envStore = useEnvStore();
 
-    // Connect to (BaSyx) components, otherwise IDs redirecting not possible
-    navigationStore.connectComponents();
-
     // Composables
     const { fetchAndDispatchAas, aasByEndpointHasSmeByPath } = useAASHandling();
     const { fetchAndDispatchSme } = useSMEHandling();
@@ -222,6 +221,100 @@ export async function createAppRouter(): Promise<Router> {
     });
 
     router.beforeEach(async (to, from, next) => {
+        // Handle OAuth2 callback (state + code in URL)
+        if (to.query.state && to.query.code) {
+            const state = to.query.state as string;
+            const code = to.query.code as string;
+            const issuerURL = to.query.iss as string;
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('[OAuth2 Callback] Received:', { state, code, issuerURL, query: to.query });
+            }
+
+            // Determine if this is OAuth2 callback (has iss parameter)
+            if (issuerURL) {
+                // OAuth2 callback - handle authorization code exchange
+                try {
+                    const { exchangeOAuth2AuthorizationCode } = await import('@/composables/Auth/OAuth2Auth');
+                    const infraStore = useInfrastructureStore();
+
+                    // Find the infrastructure by state (infrastructure ID)
+                    const infrastructure = infraStore.getInfrastructures.find(
+                        (infra: InfrastructureConfig) => infra.id === state
+                    );
+
+                    if (!infrastructure || !infrastructure.auth?.oauth2) {
+                        throw new Error('Infrastructure or OAuth2 configuration not found');
+                    }
+
+                    // Fetch .well-known configuration to get token endpoint
+                    const wellKnownUrl = `${issuerURL}/.well-known/openid-configuration`;
+                    const wellKnownResponse = await fetch(wellKnownUrl);
+
+                    if (!wellKnownResponse.ok) {
+                        throw new Error('Failed to fetch OpenID configuration');
+                    }
+
+                    const wellKnownConfig = await wellKnownResponse.json();
+                    const tokenEndpoint = wellKnownConfig.token_endpoint;
+
+                    if (!tokenEndpoint) {
+                        throw new Error('Token endpoint not found in OpenID configuration');
+                    }
+
+                    // Exchange authorization code for tokens
+                    const tokenData = await exchangeOAuth2AuthorizationCode({
+                        tokenEndpoint,
+                        clientId: infrastructure.auth.oauth2.clientId,
+                        redirectUri: `${window.location.origin}${window.location.pathname}`,
+                        code,
+                        state, // Pass state to retrieve correct code verifier
+                    });
+
+                    // Update infrastructure with token
+                    infrastructure.token = {
+                        accessToken: tokenData.accessToken,
+                        refreshToken: tokenData.refreshToken,
+                        expiresAt: tokenData.expiresAt,
+                        idToken: tokenData.idToken,
+                    };
+
+                    // Save updated infrastructure
+                    infraStore.dispatchUpdateInfrastructure(infrastructure);
+                    // Set authentication status to true
+                    infraStore.setAuthenticationStatusForInfrastructure(infrastructure.id, true);
+
+                    // Show success notification
+                    navigationStore.dispatchSnackbar({
+                        status: true,
+                        timeout: 3000,
+                        color: 'success',
+                        btnColor: 'buttonText',
+                        text: 'OAuth2 authentication successful!',
+                    });
+
+                    // Clean up URL and redirect to home
+                    next({ path: '/', replace: true });
+                    return;
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : 'OAuth2 authentication failed';
+                    console.error('OAuth2 authorization code exchange failed:', error);
+                    // Show error notification
+                    navigationStore.dispatchSnackbar({
+                        status: true,
+                        timeout: 10000,
+                        color: 'error',
+                        btnColor: 'buttonText',
+                        text: 'OAuth2 authentication failed',
+                        extendedError: errorMessage,
+                    });
+
+                    // Clean up URL and redirect to home
+                    next({ path: '/', replace: true });
+                    return;
+                }
+            }
+        }
+
         // Handle redirection of `globalAssetId`, `aasId` and `smId`
         if (
             await idRedirectHandled(

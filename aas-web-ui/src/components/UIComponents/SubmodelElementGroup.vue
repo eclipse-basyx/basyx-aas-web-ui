@@ -258,7 +258,7 @@
                                 variant="outlined"></v-alert>
                         </v-list-item-title>
                     </v-list-item>
-                    <v-divider v-if="i < smeObject[smeLocator].length - 1" class="mt-2 mb-1"></v-divider>
+                    <v-divider v-if="(i as number) < smeObject[smeLocator].length - 1" class="mt-2 mb-1"></v-divider>
                 </div>
             </v-list>
             <v-list v-else nav class="bg-elevatedCard pt-0">

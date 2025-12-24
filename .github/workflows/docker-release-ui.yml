@@ -5,7 +5,24 @@ on:
     types: [published]
 
 jobs:
+  guard:
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.check.outputs.should-run }}
+    steps:
+      - id: check
+        run: |
+          if [[ "${GITHUB_REPOSITORY}" == "eclipse-basyx/basyx-aas-web-ui" && "${GITHUB_EVENT_REPOSITORY_FORK}" != "true" ]]; then
+            echo "✅ Running in upstream repository"
+            echo "should-run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "⏭️ Skipping build — fork detected (${GITHUB_REPOSITORY})"
+            echo "should-run=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build-and-push-release:
+    needs: guard
+    if: ${{ needs.guard.outputs.should-run == 'true' }}
     runs-on: ubuntu-latest
 
     env:
@@ -15,7 +32,7 @@ jobs:
     steps:
       # Step 1: Checkout the repository
       - name: Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Step 2: Set up Docker Buildx
       - name: Set up QEMU
@@ -68,7 +85,7 @@ jobs:
 
       # Step 10: Upload SBOM as an Artifact
       - name: Upload SBOM
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: sbom
           path: ${{ env.SBOM_FILE }}

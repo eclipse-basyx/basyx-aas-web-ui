@@ -20,8 +20,9 @@
 : "${KEYCLOAK_URL:=}"
 : "${KEYCLOAK_REALM:=}"
 : "${KEYCLOAK_CLIENT_ID:=}"
-: "${PRECONFIGURED_AUTH_USERNAME:=}"
-: "${PRECONFIGURED_AUTH_PASSWORD:=}"
+: "${KEYCLOAK_FEATURE_CONTROL:=false}"
+: "${KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX:=basyx-aas-web-ui-feature-}"
+: "${PRECONFIGURED_AUTH_CLIENT_SECRET:=}"
 : "${ENDPOINT_CONFIG_AVAILABLE:=true}"
 : "${SINGLE_AAS:=false}"
 : "${SINGLE_AAS_REDIRECT:=}"
@@ -32,6 +33,8 @@
 : "${BASIC_AUTH_USERNAME:=}"
 : "${BASIC_AUTH_PASSWORD:=}"
 : "${EDITOR_ID_PREFIX:=https://example.com/}"
+: "${AUTHORIZATION_HEADER_PREFIX:=Bearer}"
+: "${AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION:=true}"
 
 # Replace ${BASE_PATH} in the NGINX config template (without trailing slash)
 envsubst '${BASE_PATH}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
@@ -101,9 +104,10 @@ printf "%-38s %s\n" "Keycloak active:" "$KEYCLOAK_ACTIVE"
 printf "%-38s %s\n" "Keycloak URL:" "$KEYCLOAK_URL"
 printf "%-38s %s\n" "Keycloak realm:" "$KEYCLOAK_REALM"
 printf "%-38s %s\n" "Keycloak client ID:" "$KEYCLOAK_CLIENT_ID"
+printf "%-38s %s\n" "Keycloak feature control:" "$KEYCLOAK_FEATURE_CONTROL"
+printf "%-38s %s\n" "Keycloak feature control, role prefix:" "$KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX"
 printf "%-38s %s\n" "Preconfigured auth:" "$PRECONFIGURED_AUTH"
-printf "%-38s %s\n" "Preconfigured auth username:" "$PRECONFIGURED_AUTH_USERNAME"
-printf "%-38s %s\n" "Preconfigured auth password:" "$PRECONFIGURED_AUTH_PASSWORD"
+printf "%-38s %s\n" "Preconfigured auth client secret:" "*********"
 printf "%-38s %s\n" "InfluxDB token:" "$INFLUXDB_TOKEN"
 printf "%-38s %s\n" "Endpoint config available:" "$ENDPOINT_CONFIG_AVAILABLE"
 printf "%-38s %s\n" "Single AAS:" "$SINGLE_AAS"
@@ -116,6 +120,8 @@ printf "%-38s %s\n" "Basic Auth active:" "$BASIC_AUTH_ACTIVE"
 printf "%-38s %s\n" "Basic Auth username:" "$BASIC_AUTH_USERNAME"
 printf "%-38s %s\n" "Basic Auth password:" "$BASIC_AUTH_PASSWORD"
 printf "%-38s %s\n" "Editor ID prefix:" "$EDITOR_ID_PREFIX"
+printf "%-38s %s\n" "Authorization header prefix:" "$AUTHORIZATION_HEADER_PREFIX"
+printf "%-38s %s\n" "Authorization header description endpoint exemption:" "$AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION"
 echo "-------------------------------------------------------------------------------------------------------------------------"
 
 # Replace the placeholders in all relevant files (.js, .html, .css)
@@ -136,9 +142,10 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__KEYCLOAK_URL_PLACEHOLDER__/|$KEYCLOAK_URL|g" \
     -e "s|/__KEYCLOAK_REALM_PLACEHOLDER__/|$KEYCLOAK_REALM|g" \
     -e "s|/__KEYCLOAK_CLIENT_ID_PLACEHOLDER__/|$KEYCLOAK_CLIENT_ID|g" \
+    -e "s|/__KEYCLOAK_FEATURE_CONTROL_PLACEHOLDER__/|$KEYCLOAK_FEATURE_CONTROL|g" \
+    -e "s|/__KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX_PLACEHOLDER__/|$KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX|g" \
     -e "s|/__PRECONFIGURED_AUTH_PLACEHOLDER__/|$PRECONFIGURED_AUTH|g" \
-    -e "s|/__PRECONFIGURED_AUTH_USERNAME_PLACEHOLDER__/|$PRECONFIGURED_AUTH_USERNAME|g" \
-    -e "s|/__PRECONFIGURED_AUTH_PASSWORD_PLACEHOLDER__/|$PRECONFIGURED_AUTH_PASSWORD|g" \
+    -e "s|/__PRECONFIGURED_AUTH_CLIENT_SECRET_PLACEHOLDER__/|$PRECONFIGURED_AUTH_CLIENT_SECRET|g" \
     -e "s|/__ENDPOINT_CONFIG_AVAILABLE_PLACEHOLDER__/|$ENDPOINT_CONFIG_AVAILABLE|g" \
     -e "s|/__SINGLE_AAS_PLACEHOLDER__/|$SINGLE_AAS|g" \
     -e "s|/__SINGLE_AAS_REDIRECT_PLACEHOLDER__/|$SINGLE_AAS_REDIRECT|g" \
@@ -150,6 +157,8 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__BASIC_AUTH_USERNAME_PLACEHOLDER__/|$BASIC_AUTH_USERNAME|g" \
     -e "s|/__BASIC_AUTH_PASSWORD_PLACEHOLDER__/|$BASIC_AUTH_PASSWORD|g" \
     -e "s|/__EDITOR_ID_PREFIX_PLACEHOLDER__/|$EDITOR_ID_PREFIX|g" \
+    -e "s|/__AUTHORIZATION_HEADER_PREFIX_PLACEHOLDER__/|$AUTHORIZATION_HEADER_PREFIX|g" \
+    -e "s|/__AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION_PLACEHOLDER__/|$AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION|g" \
     {} \;
 
 # Start Nginx

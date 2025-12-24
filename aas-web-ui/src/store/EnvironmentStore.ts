@@ -59,16 +59,20 @@ export const useEnvStore = defineStore('envStore', () => {
     const keycloakClientId = ref(
         import.meta.env.VITE_KEYCLOAK_CLIENT_ID || (isProduction ? '/__KEYCLOAK_CLIENT_ID_PLACEHOLDER__/' : '')
     );
+    const keycloakFeatureControl = ref(
+        import.meta.env.VITE_KEYCLOAK_FEATURE_CONTROL ||
+            (isProduction ? '/__KEYCLOAK_FEATURE_CONTROL_PLACEHOLDER__/' : '')
+    );
+    const keycloakFeatureControlRolePrefix = ref(
+        import.meta.env.VITE_KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX ||
+            (isProduction ? '/__KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX_PLACEHOLDER__/' : '')
+    );
     const preconfiguredAuth = ref(
         import.meta.env.VITE_PRECONFIGURED_AUTH || (isProduction ? '/__PRECONFIGURED_AUTH_PLACEHOLDER__/' : '')
     );
-    const preconfiguredAuthUsername = ref(
-        import.meta.env.VITE_PRECONFIGURED_AUTH_USERNAME ||
-            (isProduction ? '/__PRECONFIGURED_AUTH_USERNAME_PLACEHOLDER__/' : '')
-    );
-    const preconfiguredAuthPassword = ref(
-        import.meta.env.VITE_PRECONFIGURED_AUTH_PASSWORD ||
-            (isProduction ? '/__PRECONFIGURED_AUTH_PASSWORD_PLACEHOLDER__/' : '')
+    const preconfiguredAuthClientSecret = ref(
+        import.meta.env.VITE_PRECONFIGURED_AUTH_CLIENT_SECRET ||
+            (isProduction ? '/__PRECONFIGURED_AUTH_CLIENT_SECRET_PLACEHOLDER__/' : '')
     );
     const endpointConfigAvailable = ref(
         import.meta.env.VITE_ENDPOINT_CONFIG_AVAILABLE ||
@@ -102,6 +106,14 @@ export const useEnvStore = defineStore('envStore', () => {
     const editorIdPrefix = ref(
         import.meta.env.VITE_EDITOR_ID_PREFIX || (isProduction ? '/__EDITOR_ID_PREFIX_PLACEHOLDER__/' : '')
     );
+    const authorizationPrefix = ref(
+        import.meta.env.VITE_AUTHORIZATION_HEADER_PREFIX ||
+            (isProduction ? '/__AUTHORIZATION_HEADER_PREFIX_PLACEHOLDER__/' : '')
+    );
+    const authorizationDescriptionEndpointExemption = ref(
+        import.meta.env.VITE_AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION ||
+            (isProduction ? '/__AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION_PLACEHOLDER__/' : '')
+    );
 
     // Getters
     const getEnvBasePath = computed(() => basePath.value);
@@ -120,11 +132,12 @@ export const useEnvStore = defineStore('envStore', () => {
     const getKeycloakUrl = computed(() => keycloakUrl.value);
     const getKeycloakRealm = computed(() => keycloakRealm.value);
     const getKeycloakClientId = computed(() => keycloakClientId.value);
+    const getKeycloakFeatureControl = computed(() => keycloakFeatureControl.value === 'true');
+    const getKeycloakFeatureControlRolePrefix = computed(() => keycloakFeatureControlRolePrefix.value);
     const getPreconfiguredAuth = computed(
         () => !Object.hasOwn(initialUrlQueryParameter.value, 'ignorePreConfAuth') && preconfiguredAuth.value === 'true'
     );
-    const getPreconfiguredAuthUsername = computed(() => preconfiguredAuthUsername.value);
-    const getPreconfiguredAuthPassword = computed(() => preconfiguredAuthPassword.value);
+    const getPreconfiguredAuthClientSecret = computed(() => preconfiguredAuthClientSecret.value);
     const getEndpointConfigAvailable = computed(() => endpointConfigAvailable.value === 'true');
     const getSingleAas = computed(() => singleAas.value === 'true');
     const getSingleAasRedirect = computed(() => {
@@ -152,8 +165,38 @@ export const useEnvStore = defineStore('envStore', () => {
         }
         return editorIdPrefix.value;
     });
+    const getAuthorizationPrefix = computed(() => authorizationPrefix.value);
+    const getAuthorizationDescriptionEndpointExemption = computed(
+        () => authorizationDescriptionEndpointExemption.value === 'true'
+    );
+
+    // Actions
+    function setSingleAas(singleAasValue: string): void {
+        singleAas.value = singleAasValue;
+    }
+
+    function setSmViewerEditor(smViewerEditorValue: string): void {
+        smViewerEditor.value = smViewerEditorValue;
+    }
+
+    function setAllowEditing(allowEditingValue: string): void {
+        allowEditing.value = allowEditingValue;
+    }
+
+    function setAllowUploading(allowUploadingValue: string): void {
+        allowUploading.value = allowUploadingValue;
+    }
+
+    function setAllowLogout(allowLogoutValue: string): void {
+        allowLogout.value = allowLogoutValue;
+    }
+
+    function setEndpointConfigAvailable(endpointConfigAvailableValue: string): void {
+        endpointConfigAvailable.value = endpointConfigAvailableValue;
+    }
 
     return {
+        // Getters
         getEnvBasePath,
         getEnvLogoLightPath,
         getEnvLogoDarkPath,
@@ -170,9 +213,10 @@ export const useEnvStore = defineStore('envStore', () => {
         getKeycloakUrl,
         getKeycloakRealm,
         getKeycloakClientId,
+        getKeycloakFeatureControl,
+        getKeycloakFeatureControlRolePrefix,
         getPreconfiguredAuth,
-        getPreconfiguredAuthUsername,
-        getPreconfiguredAuthPassword,
+        getPreconfiguredAuthClientSecret,
         getEndpointConfigAvailable,
         getSingleAas,
         getSingleAasRedirect,
@@ -184,5 +228,15 @@ export const useEnvStore = defineStore('envStore', () => {
         getBasicAuthUsername,
         getBasicAuthPassword,
         getEditorIdPrefix,
+        getAuthorizationPrefix,
+        getAuthorizationDescriptionEndpointExemption,
+
+        // Actions
+        setSingleAas,
+        setSmViewerEditor,
+        setAllowEditing,
+        setAllowUploading,
+        setAllowLogout,
+        setEndpointConfigAvailable,
     };
 });

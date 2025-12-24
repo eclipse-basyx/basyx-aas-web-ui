@@ -4,10 +4,10 @@
             <v-btn
                 v-if="isAuthEnabled"
                 v-bind="menuProps"
-                :icon="authStatus ? 'mdi-account-lock' : 'mdi-lock-remove'"></v-btn>
+                :icon="isAuthenticated ? 'mdi-account-lock' : 'mdi-lock-remove'"></v-btn>
             <v-tooltip v-else text="Authorization Status" location="bottom" :open-delay="600">
                 <template #activator="{ props: tooltipProps }">
-                    <v-icon v-bind="tooltipProps">mdi-lock-off</v-icon>
+                    <v-icon v-bind="tooltipProps" class="mx-3">mdi-lock-off</v-icon>
                 </template>
                 <span>Authentication disabled</span>
             </v-tooltip>
@@ -17,8 +17,8 @@
             min-width="300px"
             color="navigationMenu"
             style="border-style: solid; border-width: 1px">
-            <v-list nav class="bg-navigationMenu">
-                <v-list-item class="py-2" :active="false" nav :subtitle="authStatus" :title="authUsername">
+            <v-list v-if="isAuthenticated" nav class="bg-navigationMenu">
+                <v-list-item class="py-2" :active="false" nav :subtitle="authUserEmail" :title="authUsername">
                     <template #prepend>
                         <v-avatar color="surface-light" icon="mdi-account" rounded>
                             <v-icon color="medium-emphasis" />
@@ -26,9 +26,28 @@
                     </template>
                 </v-list-item>
             </v-list>
-            <template v-if="authStore.getAuthStatus && allowLogout" #actions>
-                <v-spacer></v-spacer>
-                <v-btn append-icon="mdi-logout" class="text-none" color="primary" text="Logout" @click="logout" />
+            <template #actions>
+                <v-icon size="small" class="ml-2">
+                    {{ authStatusIcon }}
+                </v-icon>
+                <span class="text-subtitleText text-subtitle-2">{{ authStatus }}</span>
+                <template v-if="showAuthButtons">
+                    <v-spacer></v-spacer>
+                    <v-btn
+                        v-if="currentInfrastructure?.token?.accessToken"
+                        append-icon="mdi-logout"
+                        class="text-none"
+                        color="primary"
+                        text="Logout"
+                        @click="logout" />
+                    <v-btn
+                        v-else
+                        append-icon="mdi-login"
+                        class="text-none"
+                        color="primary"
+                        text="Login"
+                        @click="login" />
+                </template>
             </template>
         </v-card>
     </v-menu>
@@ -36,126 +55,135 @@
 
 <script lang="ts" setup>
     import { computed } from 'vue';
-    import { useRoute } from 'vue-router';
-    import { useAuthStore } from '@/store/AuthStore';
+    import { useRouter } from 'vue-router';
+    import { useAuth } from '@/composables/Auth/useAuth';
     import { useEnvStore } from '@/store/EnvironmentStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
+    import { getUserFromToken } from '@/utils/TokenUtil';
 
     // Stores
     const envStore = useEnvStore();
-    const authStore = useAuthStore();
+    const infrastructureStore = useInfrastructureStore();
+    const router = useRouter();
 
-    const route = useRoute();
+    const { login: performLogin, logout: performLogout } = useAuth(router);
 
     // Computed properties
-    const authStatus = computed(() =>
-        authStore.getAuthStatus
-            ? 'Authenticated'
-            : envStore.getBasicAuthActive
-              ? 'Basic Authentication active'
-              : 'Not Authenticated'
-    );
-    const isAuthEnabled = computed(() => authStore.getAuthEnabled || envStore.getBasicAuthActive);
-    const authUsername = computed(
-        () => authStore.getUsername || (envStore.getBasicAuthActive ? envStore.getBasicAuthUsername : '')
-    );
+    const currentInfrastructure = computed(() => {
+        return infrastructureStore.getSelectedInfrastructure;
+    });
+
+    const isAuthenticated = computed(() => {
+        const infra = currentInfrastructure.value;
+        if (!infra) return false;
+
+        // Check if authenticated via token
+        if (infra.token?.accessToken) {
+            return true;
+        }
+
+        // Check if authenticated via basic auth
+        if (infra.auth?.basicAuth) {
+            return true;
+        }
+
+        // Check legacy isAuthenticated flag
+        if (infra.isAuthenticated) {
+            return true;
+        }
+
+        return false;
+    });
+
+    const authStatus = computed(() => {
+        const infra = currentInfrastructure.value;
+        if (!infra) return 'Not Authenticated';
+
+        // Check if no authentication is configured
+        if (!infra.auth || infra.auth.securityType === 'No Authentication') {
+            return 'Authentication disabled';
+        }
+
+        // Check if authenticated via token
+        if (infra.token?.accessToken) {
+            return 'Authenticated';
+        }
+
+        // Check if authenticated via basic auth
+        if (infra.auth?.basicAuth) {
+            return 'Basic Authentication active';
+        }
+
+        // Check legacy isAuthenticated flag
+        if (infra.isAuthenticated) {
+            return 'Authenticated';
+        }
+
+        return 'Not Authenticated';
+    });
+
+    const authStatusIcon = computed(() => {
+        const infra = currentInfrastructure.value;
+        if (!infra || !infra.auth || infra.auth.securityType === 'No Authentication') {
+            return 'mdi-lock-off-outline';
+        }
+        return 'mdi-lock-check';
+    });
+
+    const showAuthButtons = computed(() => {
+        const infra = currentInfrastructure.value;
+        if (!infra || !infra.auth || infra.auth.securityType === 'No Authentication') {
+            return false;
+        }
+        return allowLogout.value && !isOAuth2ClientCredentials.value;
+    });
+
+    const isAuthEnabled = computed(() => {
+        const infra = currentInfrastructure.value;
+        if (!infra || !infra.auth) return false;
+        return infra.auth.securityType !== 'No Authentication';
+    });
+    const authUsername = computed(() => {
+        const infra = currentInfrastructure.value;
+        // Try to get username from infrastructure token
+        if (infra?.token?.accessToken) {
+            try {
+                const user = getUserFromToken(infra.token.accessToken);
+                return user.username || '';
+            } catch {
+                // If token parsing fails, fall through to other methods
+            }
+        }
+        // Fallback to basic auth username
+        if (infra?.auth?.basicAuth?.username) {
+            return infra.auth.basicAuth.username;
+        }
+        return '';
+    });
+    const authUserEmail = computed(() => {
+        const infra = currentInfrastructure.value;
+        // Try to get email from infrastructure token
+        if (infra?.token?.accessToken) {
+            try {
+                const user = getUserFromToken(infra.token.accessToken);
+                return user.email || '';
+            } catch {
+                // If token parsing fails, return empty string
+            }
+        }
+        return '';
+    });
     const allowLogout = computed(() => envStore.getAllowLogout);
+    const isOAuth2ClientCredentials = computed(() => {
+        const infra = currentInfrastructure.value;
+        return infra?.auth?.oauth2?.authFlow === 'client-credentials';
+    });
+
+    async function login(): Promise<void> {
+        await performLogin();
+    }
 
     async function logout(): Promise<void> {
-        // Store the clean path to redirect to after logout
-        const cleanPath = {
-            path: route.path,
-            hash: route.hash,
-        };
-        sessionStorage.setItem('logout_redirect', JSON.stringify(cleanPath));
-
-        // Clear any refresh interval
-        const refreshIntervalId = authStore.getRefreshIntervalId;
-        if (refreshIntervalId) {
-            window.clearInterval(refreshIntervalId);
-        }
-
-        // Check if we're using preconfigured auth (direct grant)
-        if (envStore.getPreconfiguredAuth) {
-            // For preconfigured auth, revoke tokens via Keycloak API before clearing state
-            const refreshToken = authStore.getRefreshToken;
-            if (refreshToken && envStore.getKeycloakUrl && envStore.getKeycloakRealm && envStore.getKeycloakClientId) {
-                try {
-                    const logoutEndpoint = `${envStore.getKeycloakUrl}/realms/${envStore.getKeycloakRealm}/protocol/openid-connect/logout`;
-                    const logoutParams = new URLSearchParams({
-                        client_id: envStore.getKeycloakClientId,
-                        refresh_token: refreshToken,
-                    });
-
-                    await fetch(logoutEndpoint, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: logoutParams.toString(),
-                    });
-                } catch (error) {
-                    console.error('Failed to revoke tokens:', error);
-                }
-            }
-
-            // Clear local auth state
-            authStore.setAuthStatus(false);
-            authStore.setAuthEnabled(false);
-            authStore.setToken(undefined);
-            authStore.setRefreshToken(undefined);
-            authStore.setUsername(undefined);
-            authStore.setKeycloak(null);
-            authStore.setRefreshIntervalId(undefined);
-
-            // Redirect with ignorePreConfAuth parameter
-            const params = new URLSearchParams(window.location.search);
-            params.set('ignorePreConfAuth', '');
-
-            let redirectUri = '';
-            if (envStore.getSingleAas && envStore.getSingleAasRedirect) {
-                redirectUri = envStore.getSingleAasRedirect;
-            } else {
-                redirectUri = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
-            }
-
-            window.location.href = redirectUri;
-            return;
-        }
-
-        // For all logout scenarios, manually revoke tokens via Keycloak API and clear state
-        // This works for both standard Keycloak auth and direct grant auth
-        const refreshToken = authStore.getRefreshToken;
-        if (refreshToken && envStore.getKeycloakUrl && envStore.getKeycloakRealm && envStore.getKeycloakClientId) {
-            try {
-                const logoutEndpoint = `${envStore.getKeycloakUrl}/realms/${envStore.getKeycloakRealm}/protocol/openid-connect/logout`;
-                const logoutParams = new URLSearchParams({
-                    client_id: envStore.getKeycloakClientId,
-                    refresh_token: refreshToken,
-                });
-
-                await fetch(logoutEndpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: logoutParams.toString(),
-                });
-            } catch (revokeError) {
-                console.error('Failed to revoke tokens:', revokeError);
-            }
-        } // Clear auth state
-        authStore.setAuthStatus(false);
-        authStore.setAuthEnabled(false);
-        authStore.setToken(undefined);
-        authStore.setRefreshToken(undefined);
-        authStore.setUsername(undefined);
-        authStore.setKeycloak(null);
-        authStore.setRefreshIntervalId(undefined);
-
-        // Determine redirect URI
-        let redirectUri = '';
-        if (envStore.getSingleAas && envStore.getSingleAasRedirect) {
-            redirectUri = envStore.getSingleAasRedirect;
-        } else {
-            redirectUri = `${window.location.origin}${window.location.pathname}${window.location.search}`;
-        }
-
-        window.location.href = redirectUri;
+        await performLogout();
     }
 </script>

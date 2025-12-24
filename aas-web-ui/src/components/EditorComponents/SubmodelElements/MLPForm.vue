@@ -19,7 +19,7 @@
                                         v-model="mlpIdShort"
                                         label="IdShort"
                                         :error="hasError('idShort')"
-                                        :rules="[rules.required]"
+                                        :rules="isParentSubmodelElementList ? [] : [rules.required]"
                                         :error-messages="getError('idShort')" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
@@ -157,6 +157,8 @@
 
     const errors = ref<Map<string, string>>(new Map());
 
+    const isParentSubmodelElementList = computed(() => props.parentElement?.modelType === 'SubmodelElementList');
+
     const rules = {
         required: (value: any) => !!value || 'Required.',
     };
@@ -233,7 +235,7 @@
 
         if (mlpIdShort.value !== null) {
             mlpObject.value.idShort = mlpIdShort.value;
-        } else {
+        } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'MultiLanguageProperty IdShort is required');
             return;
         }

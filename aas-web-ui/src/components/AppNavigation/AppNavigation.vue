@@ -32,7 +32,6 @@
                     <MainMenu @close-menu="mainMenu = false"></MainMenu>
                 </v-menu>
                 <v-spacer></v-spacer>
-                <!-- Settings-Menu for Auto-Sync and Sync-Interval -->
                 <AutoSync v-if="showAutoSync"></AutoSync>
                 <!-- Platform I 4.0 Logo -->
                 <v-img v-if="!isMobile" src="@/assets/IDTA_Logo_Blue_Web_S.svg" max-width="120px" />
@@ -53,9 +52,11 @@
                         <v-row justify="center" align="start" style="max-height: calc(100vh - 64px); overflow-y: auto">
                             <v-col cols="12" class="text-center px-5">
                                 <ThemeSwitch></ThemeSwitch>
+                                <v-divider class="mt-2"></v-divider>
+                                <InfrastructureSelector
+                                    v-if="endpointConfigAvailable"
+                                    @open-manage="openInfrastructureManagement"></InfrastructureSelector>
                                 <v-divider v-if="endpointConfigAvailable" class="mt-2"></v-divider>
-                                <!-- Backend Configuration -->
-                                <BackendConfig v-if="endpointConfigAvailable"></BackendConfig>
                             </v-col>
                             <v-col cols="12" class="text-center">
                                 <!-- Platform I 4.0 Logo -->
@@ -72,21 +73,7 @@
         </v-app-bar>
 
         <!-- global Snackbar -->
-        <v-snackbar v-model="Snackbar.status" :color="Snackbar.color" :timeout="Snackbar.timeout" location="top">
-            <v-card v-if="Snackbar.status === true && Snackbar.color == 'error' && Snackbar.baseError">
-                <v-card-title class="text-subtitle-2">{{ Snackbar.baseError }}</v-card-title>
-                <v-divider></v-divider>
-                <v-card-text style="max-height: 200px; overflow-y: auto; max-width: 590px">
-                    <pre class="text-subtitleText text-caption">{{ Snackbar.extendedError }}</pre>
-                </v-card-text>
-            </v-card>
-            <span v-else class="text-buttonText">{{ Snackbar.text }}</span>
-            <template #actions>
-                <v-btn :color="Snackbar.btnColor" variant="plain" @click="closeSnackbar()">
-                    <v-icon>mdi-close</v-icon>
-                </v-btn>
-            </template>
-        </v-snackbar>
+        <Snackbar />
 
         <!-- App Footer -->
         <v-footer app class="bg-appBar text-center d-flex flex-column py-0">
@@ -219,6 +206,7 @@
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
+    import Snackbar from '@/components/AppNavigation/Snackbar.vue';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -237,18 +225,22 @@
 
     // Data
     const mainMenu = ref(false); // Variable to show the Main Menu
+
     const mobileMenu = ref(false); // Variable to show the Mobile Menu
-    const endpointConfigAvailable = ref(envStore.getEndpointConfigAvailable);
     const drawerVisibility = ref(true); // Variable to show the AAS List Drawer
+
+    const infrastructureMenu = ref(false); // Variable to show the Infrastructure Menu
+    const infrastructureManagementDialog = ref(false); // Variable to show the Infrastructure Management Dialog
 
     // Computed Properties
     const currentRoute = computed(() => route.name); // get the current route name
     const isMobile = computed(() => navigationStore.getIsMobile);
     const isDark = computed(() => theme.global.current.value.dark);
-    const Snackbar = computed(() => navigationStore.getSnackbar);
     const selectedAas = computed(() => aasStore.getSelectedAAS); // get selected AAS from Store
     const selectedNode = computed(() => aasStore.getSelectedNode); // get selected AAS from Store
     const moduleRoutes = computed(() => navigationStore.getModuleRoutes); // get the module routes
+    const endpointConfigAvailable = computed(() => envStore.getEndpointConfigAvailable);
+
     const filteredAndOrderedModuleRoutes = computed(() => {
         const filteredModuleRoutes = moduleRoutes.value.filter((moduleRoute: RouteRecordRaw) => {
             if (isMobile.value && !moduleRoute?.meta?.isMobileModule) return false;
@@ -305,16 +297,6 @@
         ].includes(route.name as string);
     });
 
-    // Watch for changes in the Snackbar Object and close it after the Timeout
-    watch(
-        () => Snackbar.value,
-        () => {
-            if (Snackbar.value.status) {
-                setTimeout(() => closeSnackbar(), Snackbar.value.timeout);
-            }
-        }
-    );
-
     watch(
         () => drawerState.value,
         () => {
@@ -338,11 +320,7 @@
         }
     });
 
-    function closeSnackbar() {
-        navigationStore.dispatchSnackbar({ status: false });
-    }
-
-    function applyTheme() {
+    function applyTheme(): void {
         // check the local storage for a saved theme preference
         const storedTheme = localStorage.getItem('theme');
         if (storedTheme) {
@@ -366,13 +344,18 @@
         }
     }
 
-    function extendSidebar() {
+    function extendSidebar(): void {
         drawerVisibility.value = true;
         navigationStore.dispatchDrawerState(true);
     }
 
-    function updateDrawerState(value: boolean) {
+    function updateDrawerState(value: boolean): void {
         // console.log('updateDrawerState: ', value);
         navigationStore.dispatchDrawerState(value);
+    }
+
+    function openInfrastructureManagement(): void {
+        infrastructureMenu.value = false;
+        infrastructureManagementDialog.value = true;
     }
 </script>

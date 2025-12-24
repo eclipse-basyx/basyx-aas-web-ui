@@ -1,0 +1,105 @@
+services:
+  # Infrastructure 2 AAS Discovery service
+  aas-discovery-infra2:
+    image: eclipsebasyx/aas-discovery:2.0.0-SNAPSHOT
+    container_name: aas-discovery
+    environment:
+      # Component configuration
+      SERVER_PORT: 8081
+      BASYX_BACKEND: MongoDB
+      SPRING_DATA_MONGODB_HOST: mongo
+      SPRING_DATA_MONGODB_DATABASE: aas-discovery-2
+      SPRING_DATA_MONGODB_AUTHENTICATION_DATABASE: admin
+      SPRING_DATA_MONGODB_USERNAME: mongoAdmin
+      SPRING_DATA_MONGODB_PASSWORD: mongoPassword
+      BASYX_CORS_ALLOWED_ORIGINS: '*'
+      BASYX_CORS_ALLOWED_METHODS: 'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD'
+    ports:
+      - '9084:8081'
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - multiple-infrastructures
+
+  # Infrastructure 2 AAS Registry service
+  aas-registry-infra2:
+    image: eclipsebasyx/aas-registry-log-mongodb:2.0.0-SNAPSHOT
+    container_name: aas-registry
+    ports:
+      - "9082:8080"
+    environment:
+      # Component configuration
+      SERVER_PORT: 8080
+      SPRING_DATA_MONGODB_URI: mongodb://mongoAdmin:mongoPassword@mongo:27017
+      SPRING_DATA_MONGODB_DATABASE: aas-registry-2
+      SERVER_SERVLET_CONTEXT_PATH: /
+      BASYX_CORS_ALLOWED_ORIGINS: '*'
+      BASYX_CORS_ALLOWED_METHODS: GET,POST,PATCH,DELETE,PUT,OPTIONS,HEAD
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - multiple-infrastructures
+
+  # Infrastructure 2 Submodel Registry service
+  sm-registry-infra2:
+    image: eclipsebasyx/submodel-registry-log-mongodb:2.0.0-SNAPSHOT
+    container_name: sm-registry 
+    environment:
+      # Component configuration
+      SERVER_PORT: 8080
+      SPRING_DATA_MONGODB_URI: mongodb://mongoAdmin:mongoPassword@mongo:27017
+      SPRING_DATA_MONGODB_DATABASE: sm-registry-2
+      SERVER_SERVLET_CONTEXT_PATH: /
+      BASYX_CORS_ALLOWED_ORIGINS: '*'
+      BASYX_CORS_ALLOWED_METHODS: GET,POST,PATCH,DELETE,PUT,OPTIONS,HEAD
+    ports:
+      - "9083:8080"
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - multiple-infrastructures
+
+  # Infrastructure 2 AAS Environment service
+  aas-env-infra2:
+    image: eclipsebasyx/aas-environment:2.0.0-SNAPSHOT
+    container_name: aas-env
+    volumes:
+      - ./aas:/application/aas
+    ports:
+      - '9081:8081'
+    restart: unless-stopped
+    environment:
+      # Component configuration
+      SERVER_PORT: 8081
+      BASYX_BACKEND: MongoDB
+      SPRING_DATA_MONGODB_HOST: mongo
+      SPRING_DATA_MONGODB_DATABASE: aas-env-2
+      SPRING_DATA_MONGODB_AUTHENTICATION_DATABASE: admin
+      SPRING_DATA_MONGODB_USERNAME: mongoAdmin
+      SPRING_DATA_MONGODB_PASSWORD: mongoPassword
+      BASYX_CORS_ALLOWED_ORIGINS: '*'
+      BASYX_CORS_ALLOWED_METHODS: 'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD'
+      BASYX_ENVIRONMENT: file:aas
+      BASYX_AASREPOSITORY_FEATURE_DISCOVERYINTEGRATION: http://aas-discovery-infra2:8081
+      BASYX_AASREPOSITORY_FEATURE_REGISTRYINTEGRATION: http://aas-registry-infra2:8080
+      BASYX_SUBMODELREPOSITORY_FEATURE_REGISTRYINTEGRATION: http://sm-registry-infra2:8080
+      BASYX_EXTERNALURL: http://localhost:9081
+      SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: 1024MB
+      SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: 1024MB
+    depends_on:
+      mongo:
+        condition: service_healthy
+      aas-discovery-infra2:
+        condition: service_healthy
+      aas-registry-infra2:
+        condition: service_healthy
+      sm-registry-infra2:
+        condition: service_healthy
+    networks:
+      - multiple-infrastructures

@@ -25,16 +25,19 @@
 
 <script lang="ts" setup>
     import { ref, watch } from 'vue';
-    import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
-    import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+    import { useAASHandling } from '@/composables/AAS/AASHandling';
+    import { useSMHandling } from '@/composables/AAS/SMHandling';
     import { useIDUtils } from '@/composables/IDUtils';
     import { useRequestHandling } from '@/composables/RequestHandling';
+    import { useNavigationStore } from '@/store/NavigationStore';
     import { base64Encode } from '@/utils/EncodeDecodeUtils';
     import { downloadFile } from '@/utils/generalUtils';
 
-    const { getSubmodelRefsById } = useAASRepositoryClient();
-    const { fetchSmById } = useSMRepositoryClient();
+    const navigationStore = useNavigationStore();
+
+    const { fetchSmById } = useSMHandling();
     const { generateUUIDFromString } = useIDUtils();
+    const { getAasEndpointById, getSubmodelRefsById } = useAASHandling();
 
     const { getRequest } = useRequestHandling();
 
@@ -64,10 +67,26 @@
             downloadEndpoint.value = '';
             downloadCDs.value = true;
             downloadLoading.value = false;
+
             if (!props.aas) return;
+
             const submodelRefs = await getSubmodelRefsById(props.aas.id);
-            downloadEndpoint.value = props.aas.endpoints[0].protocolInformation.href.split('/shells')[0];
+
+            const aasEndpoint = await getAasEndpointById(props.aas.id);
+            if (!aasEndpoint || aasEndpoint.trim() === '') {
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 4000,
+                    color: 'error',
+                    btnColor: 'buttonText',
+                    text: 'Failed to retrieve AAS endpoint.',
+                });
+                return;
+            }
+            downloadEndpoint.value = aasEndpoint.split('/shells')[0];
+
             for (const submodelRef of submodelRefs) {
+                // TODO: Optimize by only using the metadata endpoint once it is implemented in BaSyx Go
                 const submodel = await fetchSmById(submodelRef.keys[0].value);
                 submodelIds.value.push({ smId: submodelRef.keys[0].value, smIdShort: submodel.idShort, submodel });
                 selected.value.push(submodelRef.keys[0].value);

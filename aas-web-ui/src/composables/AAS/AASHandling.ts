@@ -7,7 +7,7 @@ import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 import { extractId as extractIdFromReference } from '@/utils/AAS/ReferenceUtil';
 import { formatDate } from '@/utils/DateUtils';
 
-export function useAASHandling(forCommander?: boolean, useSecondaryRepo?: boolean) {
+export function useAASHandling() {
     // Composables
     const {
         fetchAasDescriptorById: fetchAasDescriptorByIdFromRegistry,
@@ -20,12 +20,13 @@ export function useAASHandling(forCommander?: boolean, useSecondaryRepo?: boolea
         getAasEndpointById: getAasEndpointByIdFromRepo,
         aasIsAvailable: aasIsAvailableInRepo,
         getSubmodelRefs: getSubmodelRefsFromRepo,
-    } = useAASRepositoryClient(useSecondaryRepo);
+        deleteAas: deleteAasFromRepo,
+    } = useAASRepositoryClient();
     const { fetchSmDescriptor, fetchSmById } = useSMHandling();
     const { getSmIdOfSmePath } = useSMEHandling();
 
     // Stores
-    const aasStore = useAASStore('commanderList');
+    const aasStore = useAASStore();
 
     /**
      * Fetches an Asset Administration Shell (AAS) by the provided AAS endpoint
@@ -239,6 +240,49 @@ export function useAASHandling(forCommander?: boolean, useSecondaryRepo?: boolea
     }
 
     /**
+     * Deletes an Asset Administration Shell (AAS) by the provided AAS ID.
+     *
+     * @async
+     * @param {string} aasId - The ID of the AAS to delete.
+     * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
+     */
+    async function deleteAasById(aasId: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!aasId) return failResponse;
+
+        aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
+
+        const aasEndpoint = await getAasEndpointById(aasId);
+        if (aasEndpoint && aasEndpoint.trim() !== '') {
+            return await deleteAas(aasEndpoint.trim());
+        }
+
+        return failResponse;
+    }
+
+    /**
+     * Deletes an Asset Administration Shell (AAS) by the provided AAS endpoint.
+     *
+     * @async
+     * @param {string} aasEndpoint - The endpoint URL of the AAS to delete.
+     * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
+     */
+    async function deleteAas(aasEndpoint: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!aasEndpoint) return failResponse;
+
+        aasEndpoint = aasEndpoint.trim();
+
+        if (aasEndpoint === '') return failResponse;
+
+        return await deleteAasFromRepo(aasEndpoint);
+    }
+
+    /**
      * Fetches a list of all available Submodel (SM) Descriptors of a specified Asset Administration Shell (AAS).
      *
      * @async
@@ -403,5 +447,7 @@ export function useAASHandling(forCommander?: boolean, useSecondaryRepo?: boolea
         fetchAas,
         fetchAasById,
         fetchAasSmListById,
+        deleteAasById,
+        deleteAas,
     };
 }

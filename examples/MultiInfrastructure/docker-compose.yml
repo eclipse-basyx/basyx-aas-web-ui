@@ -1,0 +1,50 @@
+include:
+  - ./Infrastructure1/docker-compose-infra1.yml
+  - ./Infrastructure2/docker-compose-infra2.yml
+
+services:
+  # Common MongoDB service for multiple infrastructures
+  mongo:
+    image: mongo:5.0
+    container_name: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongoAdmin
+      MONGO_INITDB_ROOT_PASSWORD: mongoPassword
+    restart: unless-stopped
+    healthcheck:
+      test: mongo
+      interval: 10s
+      start_period: 5s
+      retries: 5
+    networks:
+      - multiple-infrastructures
+
+  # Common AAS Web UI service for multiple infrastructures
+  aas-web-ui:
+    image: eclipsebasyx/aas-gui:SNAPSHOT
+    container_name: aas-web-ui
+    extra_hosts:
+      - "keycloak.basyx.localhost:host-gateway"
+    ports:
+      - '3000:3000'
+    environment:
+      VIRTUAL_HOST: aasgui.basyx.localhost
+      VIRTUAL_PORT: "3000"
+      # Preconfigured default for infrastructure 1
+      AAS_REGISTRY_PATH: http://aasreg.basyx.localhost/shell-descriptors
+      SUBMODEL_REGISTRY_PATH: http://smreg.basyx.localhost/submodel-descriptors
+      AAS_REPO_PATH: http://aasenv.basyx.localhost/shells
+      SUBMODEL_REPO_PATH: http://aasenv.basyx.localhost/submodels
+      CD_REPO_PATH: http://aasenv.basyx.localhost/concept-descriptions
+      AAS_DISCOVERY_PATH: http://discovery.basyx.localhost/lookup/shells
+      KEYCLOAK_URL: http://keycloak.basyx.localhost
+      KEYCLOAK_REALM: BaSyx
+      KEYCLOAK_CLIENT_ID: basyx-web-ui
+    restart: unless-stopped
+    networks:
+      - multiple-infrastructures
+
+networks:
+  multiple-infrastructures:
+    name: basyx-multi-infrastructures
+    driver: bridge

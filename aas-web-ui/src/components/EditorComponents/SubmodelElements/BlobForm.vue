@@ -19,7 +19,7 @@
                                         v-model="blobIdShort"
                                         label="IdShort"
                                         :error="hasError('idShort')"
-                                        :rules="[rules.required]"
+                                        :rules="isParentSubmodelElementList ? [] : [rules.required]"
                                         :error-messages="getError('idShort')" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
@@ -169,6 +169,8 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
 
     const errors = ref<Map<string, string>>(new Map());
 
+    const isParentSubmodelElementList = computed(() => props.parentElement?.modelType === 'SubmodelElementList');
+
     const rules = {
         required: (value: any) => !!value || 'Required.',
     };
@@ -296,7 +298,7 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
 
         if (blobIdShort.value !== null) {
             blobObject.value.idShort = blobIdShort.value;
-        } else {
+        } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'Blob Element IdShort is required');
             return;
         }
