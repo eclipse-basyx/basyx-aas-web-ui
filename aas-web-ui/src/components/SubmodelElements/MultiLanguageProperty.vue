@@ -17,7 +17,7 @@
                             :clearable="isEditable"
                             :readonly="!isEditable"
                             :append-icon="isEditable ? 'mdi-delete' : undefined"
-                            @click:append="removeEntry(i)"
+                            @click:append="removeEntry(i as number)"
                             @update:focused="setFocus($event, value)"
                             @keydown.enter="updateValue()">
                             <template #prepend-inner>

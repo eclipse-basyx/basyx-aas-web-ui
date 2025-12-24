@@ -46,7 +46,7 @@
                                     :clearable="isEditable"
                                     :readonly="!isEditable"
                                     append-icon="mdi-delete"
-                                    @click:append="removeReferenceKey(i)"
+                                    @click:append="removeReferenceKey(i as number)"
                                     @update:focused="setFocus($event)"
                                     @keydown.enter="updateReferenceElementObject()">
                                     <template #prepend-inner>
@@ -85,7 +85,7 @@
                                 </v-text-field>
                             </template>
                         </v-list-item>
-                        <v-divider v-if="i < reference?.keys.length - 1" class="mt-3"></v-divider>
+                        <v-divider v-if="(i as number) < reference?.keys.length - 1" class="mt-3"></v-divider>
                     </template>
                 </template>
             </v-list>

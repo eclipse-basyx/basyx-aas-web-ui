@@ -31,7 +31,7 @@
                                         :key="contactInformationProperty.idShort">
                                         <tr
                                             v-if="hasValue(contactInformationProperty)"
-                                            :class="i % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
+                                            :class="(i as number) % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
                                             <td>
                                                 <div class="text-subtitleText text-caption">
                                                     <span>{{ nameToDisplay(contactInformationProperty) }}</span>

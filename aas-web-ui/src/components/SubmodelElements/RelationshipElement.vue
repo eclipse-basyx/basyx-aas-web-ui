@@ -30,7 +30,7 @@
                             </template>
                         </v-list-item>
                         <v-divider
-                            v-if="i < getReferences[referenceKey as 'first' | 'second'].keys.length - 1"
+                            v-if="(i as number) < getReferences[referenceKey as 'first' | 'second'].keys.length - 1"
                             class="mt-3"></v-divider>
                     </template>
                 </v-list>
