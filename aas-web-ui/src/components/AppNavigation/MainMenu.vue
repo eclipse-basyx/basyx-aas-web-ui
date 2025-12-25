@@ -75,6 +75,22 @@
                             </template>
                         </v-list-item>
                         <v-list-item
+                            v-if="currentTab === 'aas'"
+                            class="mt-3 py-2"
+                            nav
+                            :active="false"
+                            :border="isActiveRoutePath('/aascommander')"
+                            subtitle="Norton's Way of Managing AAS"
+                            title="AAS Commander"
+                            :to="isActiveRoutePath('/aascommander') ? '' : '/aascommander'"
+                            @click="closeMenu">
+                            <template #prepend>
+                                <v-avatar color="surface-light" icon="mdi-rocket-launch" rounded>
+                                    <v-icon color="medium-emphasis" />
+                                </v-avatar>
+                            </template>
+                        </v-list-item>
+                        <v-list-item
                             v-if="smViewerEditor && currentTab === 'submodel'"
                             class="py-2"
                             nav
@@ -284,7 +300,12 @@
     }
 
     function setTabByRoutePath(): void {
-        if (isActiveRoutePath('/') || isActiveRoutePath('/aaseditor') || isActiveRoutePath('/aassmviewer')) {
+        if (
+            isActiveRoutePath('/') ||
+            isActiveRoutePath('/aaseditor') ||
+            isActiveRoutePath('/aassmviewer') ||
+            isActiveRoutePath('/aascommander')
+        ) {
             currentTab.value = 'aas';
         } else if (isActiveRoutePath('/smviewer') || isActiveRoutePath('/smeditor') || isActiveRoutePath('/visu')) {
             currentTab.value = 'submodel';

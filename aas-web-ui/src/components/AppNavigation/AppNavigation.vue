@@ -293,6 +293,7 @@
             'Visualization',
             'AASEditor',
             'AASSubmodelViewer',
+            'AASCommander',
         ].includes(route.name as string);
     });
 

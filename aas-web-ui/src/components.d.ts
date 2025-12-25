@@ -30,6 +30,7 @@ declare module 'vue' {
     CarbonFootprint_v0_9: typeof import('./components/Plugins/Submodels/CarbonFootprint_v0_9.vue')['default']
     CarbonFootprint_v1_0: typeof import('./components/Plugins/Submodels/CarbonFootprint_v1_0.vue')['default']
     CollectionForm: typeof import('./components/EditorComponents/SubmodelElements/CollectionForm.vue')['default']
+    CommanderList: typeof import('./components/CommanderList.vue')['default']
     ComponentConfigPanel: typeof import('./components/AppNavigation/Settings/ComponentConfigPanel.vue')['default']
     ComponentVisualization: typeof import('./components/ComponentVisualization.vue')['default']
     ConceptDescription: typeof import('./components/UIComponents/ConceptDescription.vue')['default']
