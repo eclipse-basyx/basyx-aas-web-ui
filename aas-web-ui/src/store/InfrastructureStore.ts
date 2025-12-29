@@ -386,6 +386,60 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         }
     }
 
+    async function dispatchResetToDefaultInfrastructures(): Promise<void> {
+        // Store the currently selected infrastructure ID before clearing
+        const previousSelectedId = selectedInfrastructureId.value;
+
+        // Clear infrastructure data from localStorage
+        localStorage.removeItem('basyxInfrastructures');
+
+        // Reload infrastructures from storage - this will recreate from env vars or create empty infrastructure
+        await loadInfrastructuresFromStorage();
+
+        // Determine which infrastructure to select after reset
+        let targetInfraId: string | null = null;
+
+        // Check if the previously selected infrastructure still exists after reset
+        if (previousSelectedId && infrastructures.value.some((infra) => infra.id === previousSelectedId)) {
+            targetInfraId = previousSelectedId;
+        } else {
+            // Select the preconfigured/default infrastructure
+            const defaultInfra = infrastructures.value.find((infra) => infra.isDefault);
+            if (defaultInfra) {
+                targetInfraId = defaultInfra.id;
+            } else if (infrastructures.value.length > 0) {
+                // Fallback: select first available infrastructure
+                targetInfraId = infrastructures.value[0].id;
+            }
+        }
+
+        // Update selected infrastructure ID
+        if (targetInfraId) {
+            selectedInfrastructureId.value = targetInfraId;
+        }
+
+        // Save the reset state to localStorage
+        saveInfrastructuresToStorage();
+
+        // Update URL refs from selected infrastructure
+        const selectedInfra = getSelectedInfrastructure.value;
+        if (selectedInfra) {
+            AASDiscoveryURL.value = selectedInfra.components.AASDiscovery.url;
+            AASRegistryURL.value = selectedInfra.components.AASRegistry.url;
+            SubmodelRegistryURL.value = selectedInfra.components.SubmodelRegistry.url;
+            AASRepoURL.value = selectedInfra.components.AASRepo.url;
+            SubmodelRepoURL.value = selectedInfra.components.SubmodelRepo.url;
+            ConceptDescriptionRepoURL.value = selectedInfra.components.ConceptDescriptionRepo.url;
+        }
+
+        // Clear AAS list and treeview
+        navigationStore.dispatchClearAASList();
+        navigationStore.dispatchClearTreeview();
+
+        // Reconnect to all components
+        await connectComponents();
+    }
+
     // Wrapper functions that delegate to auth composable
     async function refreshInfrastructureTokens(
         infrastructureId?: string
@@ -613,6 +667,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         dispatchDeleteInfrastructure,
         dispatchUpdateInfrastructureAuth,
         dispatchSetDefaultInfrastructure,
+        dispatchResetToDefaultInfrastructures,
         createEmptyInfrastructure,
         refreshInfrastructureTokens,
         setAuthenticationStatusForInfrastructure,
