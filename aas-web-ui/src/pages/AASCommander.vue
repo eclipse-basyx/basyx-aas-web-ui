@@ -3,14 +3,13 @@
         <div ref="panesContainerRef" class="panes-container">
             <!-- Left Pane -->
             <div
-                ref="leftPaneRef"
                 class="pane"
                 :style="{
                     width: `calc(${leftWidth}% - 6px)`,
                     transition: isTransitioning ? 'width 0.3s ease' : 'none',
                 }">
                 <div class="pane-content">
-                    <CommanderPane />
+                    <CommanderPane side="left" />
                 </div>
             </div>
 
@@ -22,22 +21,33 @@
                     transition: isTransitioning ? 'width 0.3s ease' : 'none',
                 }">
                 <div class="pane-content">
-                    <CommanderPane />
+                    <CommanderPane side="right" />
                 </div>
             </div>
 
-            <!-- Divider / Splitter (Absolutely positioned overlay) -->
+            <!-- Divider / Splitter -->
             <div
+                ref="splitterRef"
                 class="splitter"
                 :class="{ 'splitter-active': isResizing, 'splitter-hover': isHovering }"
                 :style="{
                     left: splitterLeft,
                     transition: isTransitioning ? 'left 0.3s ease' : 'none',
                 }"
-                @mousedown="startResize"
+                role="separator"
+                aria-orientation="vertical"
+                :aria-valuenow="Math.round(leftWidth)"
+                :aria-valuemin="MIN_PANE_WIDTH"
+                :aria-valuemax="100 - MIN_PANE_WIDTH"
+                tabindex="0"
+                @pointerdown="startResize"
+                @pointerup="stopResize"
+                @pointercancel="stopResize"
+                @lostpointercapture="stopResize"
                 @dblclick="resetSplit"
                 @mouseenter="isHovering = true"
-                @mouseleave="isHovering = false">
+                @mouseleave="isHovering = false"
+                @keydown="onSplitterKeyDown">
                 <v-icon class="splitter-icon-left">mdi-pan-left</v-icon>
                 <v-icon class="splitter-icon-right">mdi-pan-right</v-icon>
             </div>
@@ -46,11 +56,11 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+    import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
     // Refs
-    const leftPaneRef = ref<HTMLElement | null>(null);
     const panesContainerRef = ref<HTMLElement | null>(null);
+    const splitterRef = ref<HTMLElement | null>(null);
 
     // State
     const leftWidth = ref(50);
@@ -59,145 +69,233 @@
     const isHovering = ref(false);
     const isTransitioning = ref(false);
 
-    // Computed splitter position in pixels, attached to the right border of the left pane
+    // Splitter position in px
     const splitterLeft = ref('50%');
 
-    // Watch for changes in leftWidth and window resize
-    watch(leftWidth, async () => {
-        await nextTick();
-        updateSplitterLeft();
-    });
-
-    onMounted(() => {
-        updateSplitterLeft();
-        window.addEventListener('keydown', handleKeyDown);
-        window.addEventListener('resize', updateSplitterLeft);
-    });
-
-    onBeforeUnmount(() => {
-        window.removeEventListener('keydown', handleKeyDown);
-        window.removeEventListener('resize', updateSplitterLeft);
-        document.removeEventListener('mousemove', handleResize);
-        document.removeEventListener('mouseup', stopResize);
-    });
-
     // Constants
-    const MIN_PANE_WIDTH = 20; // 20% minimum width
+    const MIN_PANE_WIDTH = 20; // in percent
     const DEFAULT_WIDTH = 50;
     const FOCUS_LEFT_WIDTH = 70;
     const FOCUS_RIGHT_WIDTH = 30;
 
+    // Keep in sync with CSS
+    const PADDING_PX = 12;
+
+    // Must match pane width calc(... - 6px)
+    const HALF_GAP_COMP_PX = 6;
+
     // Resize state
     let startX = 0;
     let startLeftWidth = 0;
+    let activePointerId: number | null = null;
+
+    // rAF throttle
+    let rafId: number | null = null;
+
+    // Resize observer
+    let resizeObserver: ResizeObserver | null = null;
+
+    onMounted(() => {
+        updateSplitterLeftFromModel();
+
+        // Keep resizing responsive even if pointer leaves splitter/container
+        window.addEventListener('pointermove', handleResize);
+        window.addEventListener('pointerup', stopResize);
+        window.addEventListener('pointercancel', stopResize);
+
+        // If window loses focus mid-drag, stop resizing
+        window.addEventListener('blur', () => stopResize());
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        if (panesContainerRef.value) {
+            resizeObserver = new ResizeObserver(() => scheduleSplitterUpdate());
+            resizeObserver.observe(panesContainerRef.value);
+        }
+    });
+
+    onBeforeUnmount(() => {
+        window.removeEventListener('pointermove', handleResize);
+        window.removeEventListener('pointerup', stopResize);
+        window.removeEventListener('pointercancel', stopResize);
+
+        window.removeEventListener('keydown', handleKeyDown);
+
+        resizeObserver?.disconnect();
+        resizeObserver = null;
+
+        if (rafId !== null) cancelAnimationFrame(rafId);
+
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+    });
+
+    function clampLeftWidth(v: number): number {
+        return Math.min(100 - MIN_PANE_WIDTH, Math.max(MIN_PANE_WIDTH, v));
+    }
+
+    function scheduleSplitterUpdate(): void {
+        if (rafId !== null) return;
+        rafId = requestAnimationFrame(() => {
+            rafId = null;
+            updateSplitterLeftFromModel();
+        });
+    }
 
     /**
-     * Start resizing when mouse is pressed on splitter
+     * Position splitter at the right edge of the left pane,
+     * but computed from model to avoid layout lag.
+     *
+     * IMPORTANT: panes use width: calc(X% - 6px). MUST include the -6px,
+     * otherwise the splitter appears too far to the right.
      */
-    function startResize(event: MouseEvent): void {
+    function updateSplitterLeftFromModel(): void {
+        const container = panesContainerRef.value;
+        if (!container) return;
+
+        const containerWidth = container.clientWidth; // includes padding
+        const innerWidth = containerWidth - 2 * PADDING_PX; // content box excluding padding
+        if (innerWidth <= 0) return;
+
+        // Percent part
+        const leftPercentPx = (leftWidth.value / 100) * innerWidth;
+
+        // Apply the same "- 6px" used in CSS for the left pane width
+        const leftPanePx = leftPercentPx - HALF_GAP_COMP_PX;
+
+        // Splitter at right edge of left pane:
+        const leftEdge = PADDING_PX + leftPanePx;
+
+        splitterLeft.value = `${leftEdge}px`;
+    }
+
+    function withTransition(fn: () => void): void {
+        isTransitioning.value = true;
+        fn();
+        scheduleSplitterUpdate();
+
+        window.setTimeout(() => {
+            isTransitioning.value = false;
+            scheduleSplitterUpdate();
+        }, 300);
+    }
+
+    /**
+     * Pointer-based resizing
+     */
+    function startResize(event: PointerEvent): void {
         event.preventDefault();
+
         isResizing.value = true;
         isTransitioning.value = false;
+
+        activePointerId = event.pointerId;
         startX = event.clientX;
         startLeftWidth = leftWidth.value;
 
-        document.addEventListener('mousemove', handleResize);
-        document.addEventListener('mouseup', stopResize);
+        splitterRef.value?.setPointerCapture(event.pointerId);
+
         document.body.style.cursor = 'col-resize';
         document.body.style.userSelect = 'none';
     }
 
-    /**
-     * Handle mouse move during resize
-     */
-    function handleResize(event: MouseEvent): void {
-        if (!isResizing.value || !leftPaneRef.value) return;
+    function handleResize(event: PointerEvent): void {
+        if (!isResizing.value) return;
+        if (activePointerId !== null && event.pointerId !== activePointerId) return;
 
-        const containerWidth = leftPaneRef.value.parentElement?.clientWidth || 0;
-        if (containerWidth === 0) return;
+        const container = panesContainerRef.value;
+        if (!container) return;
+
+        const innerWidth = container.clientWidth - 2 * PADDING_PX;
+        if (innerWidth <= 0) return;
 
         const deltaX = event.clientX - startX;
-        const deltaPercent = (deltaX / containerWidth) * 100;
-        const newLeftWidth = startLeftWidth + deltaPercent;
+        const deltaPercent = (deltaX / innerWidth) * 100;
 
-        // Apply constraints
-        if (newLeftWidth >= MIN_PANE_WIDTH && newLeftWidth <= 100 - MIN_PANE_WIDTH) {
-            leftWidth.value = newLeftWidth;
-        }
+        leftWidth.value = clampLeftWidth(startLeftWidth + deltaPercent);
+        scheduleSplitterUpdate();
     }
 
-    /**
-     * Stop resizing when mouse is released
-     */
-    function stopResize(): void {
+    function stopResize(event?: PointerEvent): void {
+        if (!isResizing.value) return;
+
+        // Ignore events that don't match the active pointer
+        if (event && activePointerId !== null && event.pointerId !== activePointerId) return;
+
         isResizing.value = false;
-        document.removeEventListener('mousemove', handleResize);
-        document.removeEventListener('mouseup', stopResize);
+
+        // Release capture if possible
+        if (activePointerId !== null) {
+            try {
+                splitterRef.value?.releasePointerCapture(activePointerId);
+            } catch {
+                // Ignore
+            }
+        }
+
+        activePointerId = null;
+
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
+
+        scheduleSplitterUpdate();
     }
 
-    /**
-     * Reset split to default 50/50 (triggered by double-click)
-     */
     function resetSplit(): void {
-        isTransitioning.value = true;
-        leftWidth.value = DEFAULT_WIDTH;
-        setTimeout(() => {
-            isTransitioning.value = false;
-        }, 300);
+        withTransition(() => {
+            leftWidth.value = DEFAULT_WIDTH;
+        });
     }
 
-    /**
-     * Focus left pane (70/30 split)
-     */
     function focusLeft(): void {
-        isTransitioning.value = true;
-        leftWidth.value = FOCUS_LEFT_WIDTH;
-        setTimeout(() => {
-            isTransitioning.value = false;
-        }, 300);
+        withTransition(() => {
+            leftWidth.value = FOCUS_LEFT_WIDTH;
+        });
     }
 
-    /**
-     * Focus right pane (30/70 split)
-     */
     function focusRight(): void {
-        isTransitioning.value = true;
-        leftWidth.value = FOCUS_RIGHT_WIDTH;
-        setTimeout(() => {
-            isTransitioning.value = false;
-        }, 300);
+        withTransition(() => {
+            leftWidth.value = FOCUS_RIGHT_WIDTH;
+        });
     }
 
     /**
-     * Handle keyboard shortcuts
+     * Global keyboard shortcuts
      */
     function handleKeyDown(event: KeyboardEvent): void {
-        // Ctrl+Alt+← (focus left)
-        if (event.ctrlKey && event.altKey && event.key === 'ArrowLeft') {
+        if (!(event.ctrlKey && event.altKey)) return;
+
+        if (event.key === 'ArrowLeft') {
             event.preventDefault();
             focusLeft();
-        }
-        // Ctrl+Alt+→ (focus right)
-        else if (event.ctrlKey && event.altKey && event.key === 'ArrowRight') {
+        } else if (event.key === 'ArrowRight') {
             event.preventDefault();
             focusRight();
-        }
-        // Ctrl+Alt+0 (reset to center 50/50)
-        else if (
-            event.ctrlKey &&
-            event.altKey &&
-            (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === '0' || event.key === 'Numpad0')
-        ) {
+        } else if (['ArrowUp', 'ArrowDown', '0', 'Numpad0'].includes(event.key)) {
             event.preventDefault();
             resetSplit();
         }
     }
 
-    function updateSplitterLeft(): void {
-        if (leftPaneRef.value) {
-            splitterLeft.value = leftPaneRef.value.offsetLeft + leftPaneRef.value.offsetWidth + 'px';
+    /**
+     * Splitter keyboard (accessibility)
+     */
+    function onSplitterKeyDown(event: KeyboardEvent): void {
+        const step = event.shiftKey ? 10 : 2;
+
+        if (event.key === 'ArrowLeft') {
+            event.preventDefault();
+            withTransition(() => {
+                leftWidth.value = clampLeftWidth(leftWidth.value - step);
+            });
+        } else if (event.key === 'ArrowRight') {
+            event.preventDefault();
+            withTransition(() => {
+                leftWidth.value = clampLeftWidth(leftWidth.value + step);
+            });
+        } else if (event.key === 'Home') {
+            event.preventDefault();
+            resetSplit();
         }
     }
 </script>
@@ -237,9 +335,15 @@
         align-items: center;
         justify-content: center;
         opacity: 0;
+        outline: none;
         transition:
             opacity 0.2s ease,
             background-color 0.2s ease;
+    }
+
+    .splitter:focus-visible {
+        opacity: 1;
+        box-shadow: 0 0 0 2px rgba(var(--v-theme-primary), 0.35);
     }
 
     .splitter:hover,
