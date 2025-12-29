@@ -16,6 +16,12 @@
             <v-divider></v-divider>
 
             <v-card-actions>
+                <v-btn
+                    text="reset to defaults"
+                    prepend-icon="mdi-arrow-u-left-top"
+                    variant="outlined"
+                    color="error"
+                    @click="resetDialogOpen = true" />
                 <v-spacer></v-spacer>
                 <v-btn @click="close">Close</v-btn>
             </v-card-actions>
@@ -109,6 +115,22 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+
+        <!-- Reset Cornfirmation Dialog -->
+        <v-dialog v-model="resetDialogOpen" max-width="400px">
+            <v-card>
+                <v-card-title>Confirm Reset to Defaults</v-card-title>
+                <v-card-text>
+                    Are you sure you want to reset all infrastructures to their default settings? This action cannot be
+                    undone.
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn @click="resetDialogOpen = false">Cancel</v-btn>
+                    <v-btn color="error" @click="confirmReset">Reset</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </v-dialog>
 </template>
 
@@ -145,6 +167,7 @@
     const dialogOpen = ref(false);
     const editDialogOpen = ref(false);
     const deleteDialogOpen = ref(false);
+    const resetDialogOpen = ref(false);
     const editMode = ref<'add' | 'edit'>('edit');
     const editingInfrastructure = ref<InfrastructureConfig>(infrastructureStore.createEmptyInfrastructure());
     const infrastructureToDelete = ref<InfrastructureConfig | null>(null);
@@ -294,6 +317,11 @@
             infrastructureToDelete.value = null;
         }
         deleteDialogOpen.value = false;
+    }
+
+    async function confirmReset(): Promise<void> {
+        await infrastructureStore.dispatchResetToDefaultInfrastructures();
+        resetDialogOpen.value = false;
     }
 
     // Test individual component connection
