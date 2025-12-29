@@ -298,14 +298,14 @@
     import { useTheme } from 'vuetify';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
+    import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
+    import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useClipboardUtil } from '@/composables/ClipboardUtil';
+    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { base64Encode } from '@/utils/EncodeDecodeUtils';
-    import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
-    import { useRequestHandling } from '@/composables/RequestHandling';
-    import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
 
     // Extend the ComponentPublicInstance type to include scrollToIndex
     interface VirtualScrollInstance extends ComponentPublicInstance {

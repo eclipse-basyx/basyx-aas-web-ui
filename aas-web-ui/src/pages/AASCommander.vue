@@ -13,7 +13,7 @@
                 <v-icon style="position: absolute; top: -3px; right: -16.5px">mdi-pan-right</v-icon>
             </div>
             <div class="pa-0 window" style="width: 50%">
-                <CommanderList :useSecondaryRepo="true"/>
+                <CommanderList :useSecondaryRepo="true" />
             </div>
         </div>
     </v-container>
