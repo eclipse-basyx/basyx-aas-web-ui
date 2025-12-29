@@ -17,7 +17,7 @@
 
             <v-card-actions>
                 <v-btn
-                    text="reset to defaults"
+                    text="Reset to defaults"
                     prepend-icon="mdi-arrow-u-left-top"
                     variant="outlined"
                     color="error"
@@ -116,7 +116,7 @@
             </v-card>
         </v-dialog>
 
-        <!-- Reset Cornfirmation Dialog -->
+        <!-- Reset Confirmation Dialog -->
         <v-dialog v-model="resetDialogOpen" max-width="400px">
             <v-card>
                 <v-card-title>Confirm Reset to Defaults</v-card-title>
