@@ -46,7 +46,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+    import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
     // Refs
     const leftPaneRef = ref<HTMLElement | null>(null);
@@ -59,14 +59,26 @@
     const isHovering = ref(false);
     const isTransitioning = ref(false);
 
-    // Computed splitter position in pixels
-    const splitterLeft = computed(() => {
-        if (!panesContainerRef.value) return '50%';
-        const containerWidth = panesContainerRef.value.clientWidth;
-        const contentWidth = containerWidth - 24; // subtract left and right padding
-        const leftPaneWidth = (leftWidth.value / 100) * contentWidth - 6; // subtract half gap
-        const position = 12 + leftPaneWidth; // add left padding
-        return `${position}px`;
+    // Computed splitter position in pixels, attached to the right border of the left pane
+    const splitterLeft = ref('50%');
+
+    // Watch for changes in leftWidth and window resize
+    watch(leftWidth, async () => {
+        await nextTick();
+        updateSplitterLeft();
+    });
+
+    onMounted(() => {
+        updateSplitterLeft();
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('resize', updateSplitterLeft);
+    });
+
+    onBeforeUnmount(() => {
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('resize', updateSplitterLeft);
+        document.removeEventListener('mousemove', handleResize);
+        document.removeEventListener('mouseup', stopResize);
     });
 
     // Constants
@@ -183,16 +195,11 @@
         }
     }
 
-    // Lifecycle hooks
-    onMounted(() => {
-        window.addEventListener('keydown', handleKeyDown);
-    });
-
-    onBeforeUnmount(() => {
-        window.removeEventListener('keydown', handleKeyDown);
-        document.removeEventListener('mousemove', handleResize);
-        document.removeEventListener('mouseup', stopResize);
-    });
+    function updateSplitterLeft(): void {
+        if (leftPaneRef.value) {
+            splitterLeft.value = leftPaneRef.value.offsetLeft + leftPaneRef.value.offsetWidth + 'px';
+        }
+    }
 </script>
 
 <style scoped>
