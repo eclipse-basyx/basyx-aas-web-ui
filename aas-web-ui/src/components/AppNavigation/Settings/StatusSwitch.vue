@@ -17,7 +17,7 @@
         >
     </v-list-item>
     <!-- Input Field to set the sync-interval -->
-    <v-list-item class="py-y0 mt-n3">
+    <v-list-item class="py-0 mt-n3 mb-3">
         <v-text-field
             v-model="statusCheck.interval"
             density="compact"

@@ -165,7 +165,6 @@ export async function createAppRouter(): Promise<Router> {
         'AASEditor', // just desktop
         'AASViewer', // just desktop
         'AASSubmodelViewer', // just desktop
-        'AASCommander',
 
         'AASList', // just mobile
         'SubmodelList', // just mobile
@@ -176,7 +175,6 @@ export async function createAppRouter(): Promise<Router> {
         'AASEditor', // just desktop
         'AASViewer', // just desktop
         'AASSubmodelViewer', // just desktop
-        'AASCommander',
         'SMEditor', // just desktop
         'SMViewer', // just desktop
 
