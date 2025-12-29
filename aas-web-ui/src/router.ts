@@ -8,10 +8,10 @@ import SubmodelList from '@/components/SubmodelList.vue';
 import { useAASHandling } from '@/composables/AAS/AASHandling';
 import { useSMEHandling } from '@/composables/AAS/SMEHandling';
 import { useRouteHandling } from '@/composables/routeHandling';
+import AASCommander from '@/pages/AASCommander.vue';
 import AASEditor from '@/pages/AASEditor.vue';
 import AASSubmodelViewer from '@/pages/AASSubmodelViewer.vue';
 import AASViewer from '@/pages/AASViewer.vue';
-import AASCommander from '@/pages/AASCommander.vue';
 import About from '@/pages/About.vue';
 import Page404 from '@/pages/Page404.vue';
 import SMEditor from '@/pages/SMEditor.vue';
@@ -49,7 +49,7 @@ const staticRoutes: Array<RouteRecordRaw> = [
         path: '/aascommander',
         name: 'AASCommander',
         component: AASCommander,
-        meta: { name: 'AAS Commander', subtitle: 'Norton\'s Way of Managing AAS' },
+        meta: { name: 'AAS Commander', subtitle: "Norton's Way of Managing AAS" },
     },
     {
         path: '/smviewer',
