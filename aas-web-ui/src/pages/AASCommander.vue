@@ -57,9 +57,13 @@
 
 <script lang="ts" setup>
     import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-    import { useShortcutManager } from '@/composables/useShortcutManager';
+    import { useCommanderShortcuts } from '@/composables/shortcuts/useCommanderShortcuts';
 
-    const shortcuts = useShortcutManager();
+    useCommanderShortcuts({
+        focusLeft,
+        focusRight,
+        resetSplit,
+    });
 
     // Refs
     const panesContainerRef = ref<HTMLElement | null>(null);
@@ -98,9 +102,6 @@
     // Resize observer
     let resizeObserver: ResizeObserver | null = null;
 
-    // Unregister function for commander scoped shortcuts
-    let unregisterCommanderShortcuts: (() => void) | null = null;
-
     onMounted(() => {
         updateSplitterLeftFromModel();
 
@@ -116,13 +117,6 @@
             resizeObserver = new ResizeObserver(() => scheduleSplitterUpdate());
             resizeObserver.observe(panesContainerRef.value);
         }
-
-        // register commander shortcuts and set scope
-        unregisterCommanderShortcuts = shortcuts.register(
-            'commander',
-            commanderShortcuts /*, { allowInInputs: false } */
-        );
-        shortcuts.setScope('commander');
     });
 
     onBeforeUnmount(() => {
@@ -137,11 +131,6 @@
 
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
-
-        unregisterCommanderShortcuts?.();
-        unregisterCommanderShortcuts = null;
-
-        shortcuts.setScope('global');
     });
 
     function clampLeftWidth(v: number): number {
@@ -271,29 +260,6 @@
         withTransition(() => {
             leftWidth.value = FOCUS_RIGHT_WIDTH;
         });
-    }
-
-    /**
-     * Commander keyboard shortcuts
-     */
-    function commanderShortcuts(event: KeyboardEvent): boolean {
-        // your existing logic
-        if (!(event.ctrlKey && event.altKey)) return false;
-
-        if (event.key === 'ArrowLeft') {
-            event.preventDefault();
-            focusLeft();
-            return true;
-        } else if (event.key === 'ArrowRight') {
-            event.preventDefault();
-            focusRight();
-            return true;
-        } else if (['ArrowUp', 'ArrowDown', '0', 'Numpad0'].includes(event.key)) {
-            event.preventDefault();
-            resetSplit();
-            return true;
-        }
-        return false;
     }
 
     /**
