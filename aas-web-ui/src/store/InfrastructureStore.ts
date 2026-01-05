@@ -43,6 +43,10 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     const EnvKeycloakUrl = computed(() => envStore.getKeycloakUrl);
     const EnvKeycloakRealm = computed(() => envStore.getKeycloakRealm);
     const EnvKeycloakClientId = computed(() => envStore.getKeycloakClientId);
+    const EnvOidcActive = computed(() => envStore.getOidcActive);
+    const EnvOidcUrl = computed(() => envStore.getOidcUrl);
+    const EnvOidcScope = computed(() => envStore.getOidcScope);
+    const EnvOidcClientId = computed(() => envStore.getOidcClientId);
     const EnvPreconfiguredAuth = computed(() => envStore.getPreconfiguredAuth);
     const EnvPreconfiguredAuthClientSecret = computed(() => envStore.getPreconfiguredAuthClientSecret);
 
@@ -171,6 +175,10 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             keycloakUrl: EnvKeycloakUrl.value,
             keycloakRealm: EnvKeycloakRealm.value,
             keycloakClientId: EnvKeycloakClientId.value,
+            oidcActive: EnvOidcActive.value,
+            oidcUrl: EnvOidcUrl.value,
+            oidcScope: EnvOidcScope.value,
+            oidcClientId: EnvOidcClientId.value,
             preconfiguredAuth: EnvPreconfiguredAuth.value,
             preconfiguredAuthClientSecret: EnvPreconfiguredAuthClientSecret.value,
             endpointConfigAvailable: endpointConfigAvailable.value,

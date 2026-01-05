@@ -19,6 +19,10 @@ export function useInfrastructureStorage(): {
             keycloakUrl?: string;
             keycloakRealm?: string;
             keycloakClientId?: string;
+            oidcActive?: boolean;
+            oidcUrl?: string;
+            oidcScope?: string;
+            oidcClientId?: string;
             preconfiguredAuth?: boolean;
             preconfiguredAuthClientSecret?: string;
         },
@@ -37,6 +41,10 @@ export function useInfrastructureStorage(): {
             keycloakUrl?: string;
             keycloakRealm?: string;
             keycloakClientId?: string;
+            oidcActive?: boolean;
+            oidcUrl?: string;
+            oidcScope?: string;
+            oidcClientId?: string;
             preconfiguredAuth?: boolean;
             preconfiguredAuthClientSecret?: string;
             endpointConfigAvailable?: boolean;
@@ -69,6 +77,9 @@ export function useInfrastructureStorage(): {
         keycloakUrl?: string;
         keycloakRealm?: string;
         keycloakClientId?: string;
+        oidcUrl?: string;
+        oidcScope?: string;
+        oidcClientId?: string;
     }): string {
         // Create a stable hash from the configuration
         const configString = JSON.stringify({
@@ -81,6 +92,9 @@ export function useInfrastructureStorage(): {
             keycloakUrl: envConfig.keycloakUrl || '',
             keycloakRealm: envConfig.keycloakRealm || '',
             keycloakClientId: envConfig.keycloakClientId || '',
+            oidcUrl: envConfig.oidcUrl || '',
+            oidcScope: envConfig.oidcScope || '',
+            oidcClientId: envConfig.oidcClientId || '',
         });
 
         // Simple hash function to create a deterministic ID
@@ -127,7 +141,7 @@ export function useInfrastructureStorage(): {
 
     /**
      * Creates a default infrastructure from environment variables
-     * @param envConfig Environment configuration object containing endpoint paths and Keycloak settings
+     * @param envConfig Environment configuration object containing endpoint paths and identity provider settings
      * @param refreshTokensCallback Optional callback to refresh tokens for the created infrastructure
      */
     async function createDefaultInfrastructureFromEnv(
@@ -142,6 +156,10 @@ export function useInfrastructureStorage(): {
             keycloakUrl?: string;
             keycloakRealm?: string;
             keycloakClientId?: string;
+            oidcActive?: boolean;
+            oidcUrl?: string;
+            oidcScope?: string;
+            oidcClientId?: string;
             preconfiguredAuth?: boolean;
             preconfiguredAuthClientSecret?: string;
         },
@@ -163,15 +181,55 @@ export function useInfrastructureStorage(): {
         if (envConfig.conceptDescriptionRepoPath)
             infrastructure.components.ConceptDescriptionRepo.url = envConfig.conceptDescriptionRepoPath;
 
-        if (
+        // Precedence logic: Keycloak takes precedence over generic OIDC if both are configured
+        const hasKeycloakConfig =
             envConfig.keycloakActive ||
-            (envConfig.keycloakUrl && envConfig.keycloakRealm && envConfig.keycloakClientId)
-        ) {
+            (envConfig.keycloakUrl && envConfig.keycloakRealm && envConfig.keycloakClientId);
+        const hasOidcConfig = envConfig.oidcActive || (envConfig.oidcUrl && envConfig.oidcClientId);
+
+        if (hasKeycloakConfig) {
+            // Use Keycloak configuration (takes precedence)
             const oauth2Config: OAuth2ConnectionData = {
                 host: envConfig.keycloakUrl! + '/realms/' + envConfig.keycloakRealm!,
                 clientId: envConfig.keycloakClientId!,
                 authFlow: 'auth-code',
             };
+
+            if (envConfig.preconfiguredAuth) {
+                oauth2Config.clientSecret = envConfig.preconfiguredAuthClientSecret;
+                oauth2Config.authFlow = 'client-credentials';
+            }
+
+            infrastructure.auth = {
+                securityType: 'OAuth2',
+                oauth2: oauth2Config,
+            };
+
+            if (envConfig.preconfiguredAuth && oauth2Config) {
+                // Trigger client-credentials flow
+                if (refreshTokensCallback) {
+                    await refreshTokensCallback(infrastructure.id);
+                }
+                const result = await authenticateOAuth2ClientCredentials(oauth2Config);
+                infrastructure.token = {
+                    accessToken: result.accessToken,
+                    refreshToken: result.refreshToken,
+                    expiresAt: result.expiresAt,
+                    idToken: result.idToken,
+                };
+            }
+        } else if (hasOidcConfig) {
+            // Use generic OIDC configuration (only if Keycloak is not configured)
+            const oauth2Config: OAuth2ConnectionData = {
+                host: envConfig.oidcUrl!,
+                clientId: envConfig.oidcClientId!,
+                authFlow: 'auth-code',
+            };
+
+            // Store scope for potential use in OAuth2 flow
+            if (envConfig.oidcScope) {
+                oauth2Config.scope = envConfig.oidcScope;
+            }
 
             if (envConfig.preconfiguredAuth) {
                 oauth2Config.clientSecret = envConfig.preconfiguredAuthClientSecret;
@@ -245,6 +303,10 @@ export function useInfrastructureStorage(): {
             keycloakUrl?: string;
             keycloakRealm?: string;
             keycloakClientId?: string;
+            oidcActive?: boolean;
+            oidcUrl?: string;
+            oidcScope?: string;
+            oidcClientId?: string;
             preconfiguredAuth?: boolean;
             preconfiguredAuthClientSecret?: string;
             endpointConfigAvailable?: boolean;
@@ -305,8 +367,7 @@ export function useInfrastructureStorage(): {
                                         infra.components.ConceptDescriptionRepo.url ===
                                             envConfig.conceptDescriptionRepoPath);
 
-                                // Check if auth configuration matches
-                                // If Keycloak is configured in env, infrastructure must have matching OAuth2 settings
+                                // Check if auth configuration matches (Keycloak takes precedence over OIDC)
                                 const hasKeycloakConfig =
                                     !!envConfig.keycloakActive &&
                                     typeof envConfig.keycloakUrl === 'string' &&
@@ -315,6 +376,14 @@ export function useInfrastructureStorage(): {
                                     envConfig.keycloakRealm.trim().length > 0 &&
                                     typeof envConfig.keycloakClientId === 'string' &&
                                     envConfig.keycloakClientId.trim().length > 0;
+
+                                const hasOidcConfig =
+                                    !hasKeycloakConfig && // Only check OIDC if Keycloak is not configured
+                                    !!envConfig.oidcActive &&
+                                    typeof envConfig.oidcUrl === 'string' &&
+                                    envConfig.oidcUrl.trim().length > 0 &&
+                                    typeof envConfig.oidcClientId === 'string' &&
+                                    envConfig.oidcClientId.trim().length > 0;
 
                                 if (hasKeycloakConfig) {
                                     // Keycloak configured: verify OAuth2 settings match
@@ -330,8 +399,23 @@ export function useInfrastructureStorage(): {
                                         infra.auth.oauth2?.authFlow === expectedAuthFlow;
 
                                     return urlsMatch && authMatches;
+                                } else if (hasOidcConfig) {
+                                    // Generic OIDC configured: verify OAuth2 settings match
+                                    const expectedHost = envConfig.oidcUrl;
+                                    const expectedAuthFlow = envConfig.preconfiguredAuth
+                                        ? 'client-credentials'
+                                        : 'auth-code';
+
+                                    const authMatches =
+                                        infra.auth?.securityType === 'OAuth2' &&
+                                        infra.auth.oauth2?.host === expectedHost &&
+                                        infra.auth.oauth2?.clientId === envConfig.oidcClientId &&
+                                        infra.auth.oauth2?.authFlow === expectedAuthFlow &&
+                                        (!envConfig.oidcScope || infra.auth.oauth2?.scope === envConfig.oidcScope);
+
+                                    return urlsMatch && authMatches;
                                 } else {
-                                    // No Keycloak in env: infrastructure must have no authentication configured
+                                    // No auth in env: infrastructure must have no authentication configured
                                     const noAuth = !infra.auth || infra.auth.securityType === 'No Authentication';
                                     return urlsMatch && noAuth;
                                 }
