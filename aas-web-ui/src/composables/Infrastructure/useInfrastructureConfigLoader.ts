@@ -17,7 +17,9 @@ export function useInfrastructureConfigLoader(): {
      */
     async function loadInfrastructureConfig(): Promise<ParsedInfrastructureConfig | null> {
         try {
-            const response = await fetch('/config/basyx-infra.yml', {
+            // Use BASE_URL to support custom base paths
+            const configUrl = `${import.meta.env.BASE_URL}config/basyx-infra.yml`;
+            const response = await fetch(configUrl, {
                 method: 'GET',
             });
 
