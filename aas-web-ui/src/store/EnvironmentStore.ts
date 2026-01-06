@@ -67,6 +67,12 @@ export const useEnvStore = defineStore('envStore', () => {
         import.meta.env.VITE_KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX ||
             (isProduction ? '/__KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX_PLACEHOLDER__/' : '')
     );
+    const oidcActive = ref(import.meta.env.VITE_OIDC_ACTIVE || (isProduction ? '/__OIDC_ACTIVE_PLACEHOLDER__/' : ''));
+    const oidcUrl = ref(import.meta.env.VITE_OIDC_URL || (isProduction ? '/__OIDC_URL_PLACEHOLDER__/' : ''));
+    const oidcScope = ref(import.meta.env.VITE_OIDC_SCOPE || (isProduction ? '/__OIDC_SCOPE_PLACEHOLDER__/' : ''));
+    const oidcClientId = ref(
+        import.meta.env.VITE_OIDC_CLIENT_ID || (isProduction ? '/__OIDC_CLIENT_ID_PLACEHOLDER__/' : '')
+    );
     const preconfiguredAuth = ref(
         import.meta.env.VITE_PRECONFIGURED_AUTH || (isProduction ? '/__PRECONFIGURED_AUTH_PLACEHOLDER__/' : '')
     );
@@ -134,6 +140,10 @@ export const useEnvStore = defineStore('envStore', () => {
     const getKeycloakClientId = computed(() => keycloakClientId.value);
     const getKeycloakFeatureControl = computed(() => keycloakFeatureControl.value === 'true');
     const getKeycloakFeatureControlRolePrefix = computed(() => keycloakFeatureControlRolePrefix.value);
+    const getOidcActive = computed(() => oidcActive.value === 'true');
+    const getOidcUrl = computed(() => oidcUrl.value);
+    const getOidcScope = computed(() => oidcScope.value);
+    const getOidcClientId = computed(() => oidcClientId.value);
     const getPreconfiguredAuth = computed(
         () => !Object.hasOwn(initialUrlQueryParameter.value, 'ignorePreConfAuth') && preconfiguredAuth.value === 'true'
     );
@@ -215,6 +225,10 @@ export const useEnvStore = defineStore('envStore', () => {
         getKeycloakClientId,
         getKeycloakFeatureControl,
         getKeycloakFeatureControlRolePrefix,
+        getOidcActive,
+        getOidcUrl,
+        getOidcScope,
+        getOidcClientId,
         getPreconfiguredAuth,
         getPreconfiguredAuthClientSecret,
         getEndpointConfigAvailable,

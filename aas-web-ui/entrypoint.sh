@@ -22,6 +22,9 @@
 : "${KEYCLOAK_CLIENT_ID:=}"
 : "${KEYCLOAK_FEATURE_CONTROL:=false}"
 : "${KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX:=basyx-aas-web-ui-feature-}"
+: "${OIDC_URL:=}"
+: "${OIDC_SCOPE:=}"
+: "${OIDC_CLIENT_ID:=}"
 : "${PRECONFIGURED_AUTH_CLIENT_SECRET:=}"
 : "${ENDPOINT_CONFIG_AVAILABLE:=true}"
 : "${SINGLE_AAS:=false}"
@@ -59,6 +62,13 @@ if [ -n "$KEYCLOAK_URL" ] && [ -n "$KEYCLOAK_REALM" ] && [ -n "$KEYCLOAK_CLIENT_
     KEYCLOAK_ACTIVE=true
 else
     KEYCLOAK_ACTIVE=false
+fi
+
+# Automatically set OIDC_ACTIVE if URL and CLIENT_ID are set
+if [ -n "$OIDC_URL" ] && [ -n "$OIDC_CLIENT_ID" ]; then
+    OIDC_ACTIVE=true
+else
+    OIDC_ACTIVE=false
 fi
 
 # Automatically set BASIC_AUTH_ACTIVE if BASIC_AUTH_USERNAME and BASIC_AUTH_PASSWORD are set
@@ -106,6 +116,10 @@ printf "%-38s %s\n" "Keycloak realm:" "$KEYCLOAK_REALM"
 printf "%-38s %s\n" "Keycloak client ID:" "$KEYCLOAK_CLIENT_ID"
 printf "%-38s %s\n" "Keycloak feature control:" "$KEYCLOAK_FEATURE_CONTROL"
 printf "%-38s %s\n" "Keycloak feature control, role prefix:" "$KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX"
+printf "%-38s %s\n" "OIDC active:" "$OIDC_ACTIVE"
+printf "%-38s %s\n" "OIDC URL:" "$OIDC_URL"
+printf "%-38s %s\n" "OIDC scope:" "$OIDC_SCOPE"
+printf "%-38s %s\n" "OIDC client ID:" "$OIDC_CLIENT_ID"
 printf "%-38s %s\n" "Preconfigured auth:" "$PRECONFIGURED_AUTH"
 printf "%-38s %s\n" "Preconfigured auth client secret:" "*********"
 printf "%-38s %s\n" "InfluxDB token:" "$INFLUXDB_TOKEN"
@@ -144,6 +158,10 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__KEYCLOAK_CLIENT_ID_PLACEHOLDER__/|$KEYCLOAK_CLIENT_ID|g" \
     -e "s|/__KEYCLOAK_FEATURE_CONTROL_PLACEHOLDER__/|$KEYCLOAK_FEATURE_CONTROL|g" \
     -e "s|/__KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX_PLACEHOLDER__/|$KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX|g" \
+    -e "s|/__OIDC_ACTIVE_PLACEHOLDER__/|$OIDC_ACTIVE|g" \
+    -e "s|/__OIDC_URL_PLACEHOLDER__/|$OIDC_URL|g" \
+    -e "s|/__OIDC_SCOPE_PLACEHOLDER__/|$OIDC_SCOPE|g" \
+    -e "s|/__OIDC_CLIENT_ID_PLACEHOLDER__/|$OIDC_CLIENT_ID|g" \
     -e "s|/__PRECONFIGURED_AUTH_PLACEHOLDER__/|$PRECONFIGURED_AUTH|g" \
     -e "s|/__PRECONFIGURED_AUTH_CLIENT_SECRET_PLACEHOLDER__/|$PRECONFIGURED_AUTH_CLIENT_SECRET|g" \
     -e "s|/__ENDPOINT_CONFIG_AVAILABLE_PLACEHOLDER__/|$ENDPOINT_CONFIG_AVAILABLE|g" \
