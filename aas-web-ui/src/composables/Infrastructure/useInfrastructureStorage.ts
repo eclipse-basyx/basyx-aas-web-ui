@@ -109,6 +109,27 @@ export function useInfrastructureStorage(): {
     }
 
     /**
+     * Authenticates using OAuth2 client credentials flow and updates infrastructure token
+     */
+    async function authenticateAndSetToken(
+        infrastructure: InfrastructureConfig,
+        oauth2Config: OAuth2ConnectionData,
+        refreshTokensCallback?: (infrastructureId: string) => Promise<void>
+    ): Promise<void> {
+        // Trigger client-credentials flow
+        if (refreshTokensCallback) {
+            await refreshTokensCallback(infrastructure.id);
+        }
+        const result = await authenticateOAuth2ClientCredentials(oauth2Config);
+        infrastructure.token = {
+            accessToken: result.accessToken,
+            refreshToken: result.refreshToken,
+            expiresAt: result.expiresAt,
+            idToken: result.idToken,
+        };
+    }
+
+    /**
      * Creates an empty infrastructure configuration with default values
      */
     function createEmptyInfrastructure(name: string = 'New Infrastructure'): InfrastructureConfig {
@@ -206,17 +227,7 @@ export function useInfrastructureStorage(): {
             };
 
             if (envConfig.preconfiguredAuth && oauth2Config) {
-                // Trigger client-credentials flow
-                if (refreshTokensCallback) {
-                    await refreshTokensCallback(infrastructure.id);
-                }
-                const result = await authenticateOAuth2ClientCredentials(oauth2Config);
-                infrastructure.token = {
-                    accessToken: result.accessToken,
-                    refreshToken: result.refreshToken,
-                    expiresAt: result.expiresAt,
-                    idToken: result.idToken,
-                };
+                await authenticateAndSetToken(infrastructure, oauth2Config, refreshTokensCallback);
             }
         } else if (hasOidcConfig) {
             // Use generic OIDC configuration (only if Keycloak is not configured)
@@ -242,17 +253,7 @@ export function useInfrastructureStorage(): {
             };
 
             if (envConfig.preconfiguredAuth && oauth2Config) {
-                // Trigger client-credentials flow
-                if (refreshTokensCallback) {
-                    await refreshTokensCallback(infrastructure.id);
-                }
-                const result = await authenticateOAuth2ClientCredentials(oauth2Config);
-                infrastructure.token = {
-                    accessToken: result.accessToken,
-                    refreshToken: result.refreshToken,
-                    expiresAt: result.expiresAt,
-                    idToken: result.idToken,
-                };
+                await authenticateAndSetToken(infrastructure, oauth2Config, refreshTokensCallback);
             }
         }
 
@@ -377,13 +378,16 @@ export function useInfrastructureStorage(): {
                                     typeof envConfig.keycloakClientId === 'string' &&
                                     envConfig.keycloakClientId.trim().length > 0;
 
-                                const hasOidcConfig =
-                                    !hasKeycloakConfig && // Only check OIDC if Keycloak is not configured
-                                    !!envConfig.oidcActive &&
+                                const hasOidcUrlAndClientId =
                                     typeof envConfig.oidcUrl === 'string' &&
                                     envConfig.oidcUrl.trim().length > 0 &&
                                     typeof envConfig.oidcClientId === 'string' &&
                                     envConfig.oidcClientId.trim().length > 0;
+
+                                const hasOidcConfig =
+                                    !hasKeycloakConfig && // Only check OIDC if Keycloak is not configured
+                                    (!!envConfig.oidcActive || hasOidcUrlAndClientId) &&
+                                    hasOidcUrlAndClientId;
 
                                 if (hasKeycloakConfig) {
                                     // Keycloak configured: verify OAuth2 settings match
