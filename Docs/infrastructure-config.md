@@ -2,15 +2,33 @@
 
 This document describes how to configure infrastructure connections for the BaSyx AAS Web UI, including authentication and component endpoints.
 
-## Basic Configuration Example
+## Overview
+
+The BaSyx AAS Web UI supports two methods for configuring infrastructure connections:
+
+1. **YAML Configuration File** (Recommended for production): Define multiple infrastructures in a YAML file that can be mounted to Docker containers or placed in the development environment.
+2. **Environment Variables** (Legacy): Configure a single infrastructure using environment variables.
+
+The YAML configuration method is preferred as it allows system administrators to preconfigure multiple infrastructures with different authentication methods, making it easier to manage complex deployments.
+
+## YAML Configuration
+
+### File Locations
+
+- **Development Mode**: Place the file at `/aas-web-ui/public/config/basyx-infra.yml`
+- **Production Mode (Docker)**: Mount the file to `/basyx-infra.yml` in the container
+
+The configuration file will be automatically processed at container startup and converted to JSON format that the application can consume.
+
+### Basic Configuration Example
 
 Below is an example of a basic infrastructure configuration without authentication:
 
 ```yaml
 infrastructures:
-  default: infra1
+  default: local
 
-  infra1:
+  local:
     name: My BaSyx Infrastructure
     components:
       aasDiscovery:
@@ -39,63 +57,65 @@ Use this flow for user-based authentication where users log in through a browser
 
 ```yaml
 infrastructures:
-  default: infra1
+  default: production
 
-  infra1:
+  production:
     name: BaSyx with OAuth2 (Authorization Code)
     components:
       aasDiscovery:
-        baseUrl: "http://discovery.basyx.localhost"
+        baseUrl: "https://discovery.basyx.example.com"
       aasRegistry:
-        baseUrl: "http://aasreg.basyx.localhost"
+        baseUrl: "https://aasreg.basyx.example.com"
       submodelRegistry:
-        baseUrl: "http://smreg.basyx.localhost"
+        baseUrl: "https://smreg.basyx.example.com"
       aasRepository:
-        baseUrl: "http://aasenv.basyx.localhost"
+        baseUrl: "https://aasenv.basyx.example.com"
       submodelRepository:
-        baseUrl: "http://aasenv.basyx.localhost"
+        baseUrl: "https://aasenv.basyx.example.com"
       conceptDescriptionRepository:
-        baseUrl: "http://aasenv.basyx.localhost"
+        baseUrl: "https://aasenv.basyx.example.com"
     security:
       type: oauth2
       config:
         flow: auth_code
-        issuer: "http://keycloak.basyx.localhost/auth/realms/BaSyx"
-        scope: "openid profile email"
+        issuer: "https://keycloak.example.com/auth/realms/BaSyx"
         clientId: "basyx-web-ui"
+        scope: "openid profile email"
 ```
 
 ### Client Credentials Flow
 
 Use this flow for machine-to-machine authentication where the application authenticates directly with the identity provider using a client ID and secret.
 
+> **⚠️ Security Warning**: Client secrets stored in the YAML file are in plain text. Only use this flow in secure environments with proper secret management practices. For production deployments, consider using Kubernetes secrets, Docker secrets, or other secure secret management solutions.
+
 ```yaml
 infrastructures:
-  default: infra1
+  default: service
 
-  infra1:
+  service:
     name: BaSyx with OAuth2 (Client Credentials)
     components:
       aasDiscovery:
-        baseUrl: "http://discovery.basyx.localhost"
+        baseUrl: "https://discovery.basyx.service.com"
       aasRegistry:
-        baseUrl: "http://aasreg.basyx.localhost"
+        baseUrl: "https://aasreg.basyx.service.com"
       submodelRegistry:
-        baseUrl: "http://smreg.basyx.localhost"
+        baseUrl: "https://smreg.basyx.service.com"
       aasRepository:
-        baseUrl: "http://aasenv.basyx.localhost"
+        baseUrl: "https://aasenv.basyx.service.com"
       submodelRepository:
-        baseUrl: "http://aasenv.basyx.localhost"
+        baseUrl: "https://aasenv.basyx.service.com"
       conceptDescriptionRepository:
-        baseUrl: "http://aasenv.basyx.localhost"
+        baseUrl: "https://aasenv.basyx.service.com"
     security:
       type: oauth2
       config:
         flow: client_credentials
-        issuer: "http://keycloak.basyx.localhost/auth/realms/BaSyx"
-        scope: ""
+        issuer: "https://keycloak.service.com/auth/realms/BaSyx"
         clientId: "basyx-service-client"
-        clientSecret: "your-client-secret"
+        clientSecret: "your-client-secret-here"
+        scope: ""
 ```
 
 ## Other Authentication Methods
@@ -104,12 +124,23 @@ infrastructures:
 
 ```yaml
 infrastructures:
-  default: infra1
+  default: staging
 
-  infra1:
+  staging:
     name: BaSyx with Basic Auth
     components:
-      # ... component configuration
+      aasDiscovery:
+        baseUrl: "https://discovery.staging.basyx.com"
+      aasRegistry:
+        baseUrl: "https://aasreg.staging.basyx.com"
+      submodelRegistry:
+        baseUrl: "https://smreg.staging.basyx.com"
+      aasRepository:
+        baseUrl: "https://aasenv.staging.basyx.com"
+      submodelRepository:
+        baseUrl: "https://aasenv.staging.basyx.com"
+      conceptDescriptionRepository:
+        baseUrl: "https://aasenv.staging.basyx.com"
     security:
       type: basic
       config:
@@ -121,12 +152,23 @@ infrastructures:
 
 ```yaml
 infrastructures:
-  default: infra1
+  default: test
 
-  infra1:
+  test:
     name: BaSyx with Bearer Token
     components:
-      # ... component configuration
+      aasDiscovery:
+        baseUrl: "https://discovery.test.basyx.com"
+      aasRegistry:
+        baseUrl: "https://aasreg.test.basyx.com"
+      submodelRegistry:
+        baseUrl: "https://smreg.test.basyx.com"
+      aasRepository:
+        baseUrl: "https://aasenv.test.basyx.com"
+      submodelRepository:
+        baseUrl: "https://aasenv.test.basyx.com"
+      conceptDescriptionRepository:
+        baseUrl: "https://aasenv.test.basyx.com"
     security:
       type: bearer
       config:
@@ -159,12 +201,55 @@ infrastructures:
       type: none
 ```
 
+## Docker Deployment
+
+### Mounting the Configuration File
+
+To use YAML-based infrastructure configuration in Docker, mount your configuration file to `/basyx-infra.yml`:
+
+```yaml
+services:
+  aas-web-ui:
+    image: eclipsebasyx/aas-gui:latest
+    ports:
+      - '3000:3000'
+    volumes:
+      # Mount infrastructure configuration file
+      - ./basyx-infra.yml:/basyx-infra.yml:ro
+    environment:
+      # Allow users to edit/add custom infrastructures in the UI
+      ENDPOINT_CONFIG_AVAILABLE: "true"
+```
+
+### Configuration Precedence
+
+The `ENDPOINT_CONFIG_AVAILABLE` environment variable controls how YAML configurations interact with user settings:
+
+- **`ENDPOINT_CONFIG_AVAILABLE=false`** (Locked Mode):
+  - YAML configuration takes full precedence
+  - Users cannot add or edit infrastructures in the UI
+  - All infrastructure definitions come from the YAML file
+  - Recommended for production environments with strict security requirements
+
+- **`ENDPOINT_CONFIG_AVAILABLE=true`** (Editable Mode - Default):
+  - YAML configurations are loaded as templates
+  - Users can edit YAML-defined infrastructures (changes stored in browser localStorage)
+  - Users can create additional custom infrastructures
+  - YAML-defined infrastructures are merged with user modifications
+  - Recommended for development and flexible production environments
+
+### Complete Docker Compose Example
+
+For a complete working example with multiple infrastructures, see the [MultiInfrastructure example](../examples/MultiInfrastructure/).
+
 ## Design Notes
 
-- Infrastructure keys are used as identifiers (IDs will be generated internally).
-- The `name` field is optional. If not defined, the infrastructure name defaults to the key.
-- The `default` field specifies which infrastructure to use by default.
-- Error handling for invalid configurations is implemented in the application.
+- Infrastructure keys (e.g., `local`, `production`) become stable IDs with the format `yaml_<key>`
+- The `name` field is optional. If not defined, the infrastructure name defaults to the key
+- The `default` field specifies which infrastructure to select by default on first load
+- Error handling for invalid configurations is implemented in the application
+- YAML processing happens at container startup via the entrypoint script
+- The YAML is converted to JSON and served at `/config/infrastructure-config.json`
 
 ## Security Configuration Reference
 
@@ -199,64 +284,80 @@ The `security.type` field specifies the authentication method. Supported values:
 
 - **`token`** (required): The bearer token to be used for authentication.
 
-## Implementation Plan
+## Implementation Details
 
-- Phase 1: Infrastructure & Types
-  1. Add YAML configuration types to Infrastructure.ts
-  2. Create YAML parser/mapper composable to convert YAML format to internal format
-  3. Create sample YAML file at /aas-web-ui/public/config/basyx-infra.yml
-- Phase 2: Backend Processing (Docker/Production)
-
-  4. Update entrypoint.sh to:
-     - Check if /basyx-infra.yml is mounted
-     - Use jq to convert YAML to JSON (via a conversion script or inline)
-     - Write to /usr/src/app/dist/config/infrastructure-config.json
-- Phase 3: Frontend Loading
-
-  5. Create infrastructure config loader composable that:
-     - Fetches /config/infrastructure-config.json at app startup
-     - Handles 404 gracefully (no YAML = use env vars)
-     - Parses and validates the structure
-     - Update useInfrastructureStorage to:
-  6. Load YAML-based infrastructures if available
-     - Merge with localStorage based on ENDPOINT_CONFIG_AVAILABLE flag
-     - Handle stable IDs for YAML infrastructures (use YAML keys)
-     - Apply precedence rules
-  7. Update InfrastructureStore to:
-     - Initialize with YAML config loader
-     - Properly handle the merge logic
-
-- Phase 4: Documentation & Testing
-  1. Update infrastructure-config.md with YAML examples
-  2. Add README section about YAML configuration
-  3. Create docker-compose example showing YAML mount
-
-## Detailed Technical Plan
-
-File Structure
+### File Structure
 
 ```
 aas-web-ui/
   public/
     config/
-      basyx-infra.yml (sample for dev mode)
-      infrastructure-config.json (generated in prod)
+      basyx-infra.yml              # Sample configuration for development
+      infrastructure-config.json   # Generated at runtime in production
   src/
     composables/
       Infrastructure/
-        useInfrastructureConfigLoader.ts (NEW)
-        useInfrastructureYamlParser.ts (NEW)
-        useInfrastructureStorage.ts (MODIFY)
+        useInfrastructureConfigLoader.ts  # Loads JSON config from server
+        useInfrastructureYamlParser.ts    # Parses and validates YAML structure
+        useInfrastructureStorage.ts       # Merges YAML with localStorage
     types/
-      Infrastructure.ts (MODIFY - add YAML types)
-  entrypoint.sh (MODIFY)
+      Infrastructure.ts                   # TypeScript types for YAML config
+  Dockerfile                             # Installs yq for YAML processing
+  entrypoint.sh                          # Converts YAML to JSON at startup
 ```
 
-Key Design Decisions:
+### Key Design Decisions
 
-1. Infrastructure IDs: `yaml_<yamlKey>` for YAML-based, `infra_<timestamp>` for user-created
-2. JSON Format: Matches internal structure after mapping (PascalCase keys, url not baseUrl)
-3. Loading Order: YAML config → localStorage merge → env vars fallback
-4. Precedence:
-   - `ENDPOINT_CONFIG_AVAILABLE=false`: YAML always wins
-   - `ENDPOINT_CONFIG_AVAILABLE=true`: localStorage edits preserved for YAML infras, plus user-created ones
+1. **Infrastructure IDs**: 
+   - YAML-based: `yaml_<yamlKey>` (stable across reloads)
+   - User-created: `infra_<timestamp>` (unique per creation)
+
+2. **YAML to Internal Format Mapping**:
+   - YAML uses `baseUrl` → Internal uses `url`
+   - YAML uses `snake_case` for some fields → Internal uses `camelCase`
+   - Component keys map: `aasDiscovery` → `AASDiscovery`, etc.
+   - Security types map: `none` → `No Authentication`, `oauth2` → `OAuth2`, etc.
+
+3. **Loading Order**:
+   - YAML config loaded from `/config/infrastructure-config.json`
+   - Merged with localStorage based on `ENDPOINT_CONFIG_AVAILABLE`
+   - Falls back to environment variables if no YAML config exists
+
+4. **Merge Strategy**:
+   - `ENDPOINT_CONFIG_AVAILABLE=false`: YAML takes full precedence, no user edits allowed
+   - `ENDPOINT_CONFIG_AVAILABLE=true`: 
+     - YAML configs merged with localStorage edits (user changes preserved)
+     - User-created infrastructures added alongside YAML-defined ones
+     - Selected infrastructure persists in localStorage
+
+5. **OAuth2 Client Credentials**:
+   - Automatic authentication on app load for `client_credentials` flow
+   - Token stored in memory and localStorage
+   - Token refresh handled automatically
+
+### Processing Pipeline
+
+1. **Container Startup** (entrypoint.sh):
+   ```bash
+   if [ -f /basyx-infra.yml ]; then
+     yq eval -o=json /basyx-infra.yml > infrastructure-config.json
+     jq empty infrastructure-config.json  # Validate JSON
+     cp infrastructure-config.json /usr/src/app/dist/config/
+   fi
+   ```
+
+2. **Application Startup** (useInfrastructureConfigLoader):
+   - Fetch `/config/infrastructure-config.json`
+   - Parse and validate structure
+   - Return null if file doesn't exist (404)
+
+3. **Configuration Merging** (useInfrastructureStorage):
+   - Call config loader
+   - If YAML exists, merge with localStorage
+   - If no YAML, use traditional env var logic
+   - Authenticate client credentials flows automatically
+
+4. **Storage Management**:
+   - YAML infrastructures: ID format `yaml_<key>`
+   - User infrastructures: ID format `infra_<timestamp>`
+   - All stored in localStorage under `basyxInfrastructures` key
