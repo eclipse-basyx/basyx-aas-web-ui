@@ -32,96 +32,96 @@ infrastructures:
     security:
       type: none
 
-  # Production infrastructure with OAuth2 (Authorization Code Flow)
-  production:
-    name: Production BaSyx
-    components:
-      aasDiscovery:
-        baseUrl: "https://discovery.basyx.example.com"
-      aasRegistry:
-        baseUrl: "https://aasreg.basyx.example.com"
-      submodelRegistry:
-        baseUrl: "https://smreg.basyx.example.com"
-      aasRepository:
-        baseUrl: "https://aasenv.basyx.example.com"
-      submodelRepository:
-        baseUrl: "https://aasenv.basyx.example.com"
-      conceptDescriptionRepository:
-        baseUrl: "https://aasenv.basyx.example.com"
-    security:
-      type: oauth2
-      config:
-        flow: auth_code
-        issuer: "https://keycloak.example.com/auth/realms/BaSyx"
-        clientId: "basyx-web-ui"
-        scope: "openid profile email"
+  # # Production infrastructure with OAuth2 (Authorization Code Flow)
+  # production:
+  #   name: Production BaSyx
+  #   components:
+  #     aasDiscovery:
+  #       baseUrl: "https://discovery.basyx.example.com"
+  #     aasRegistry:
+  #       baseUrl: "https://aasreg.basyx.example.com"
+  #     submodelRegistry:
+  #       baseUrl: "https://smreg.basyx.example.com"
+  #     aasRepository:
+  #       baseUrl: "https://aasenv.basyx.example.com"
+  #     submodelRepository:
+  #       baseUrl: "https://aasenv.basyx.example.com"
+  #     conceptDescriptionRepository:
+  #       baseUrl: "https://aasenv.basyx.example.com"
+  #   security:
+  #     type: oauth2
+  #     config:
+  #       flow: auth_code
+  #       issuer: "https://keycloak.example.com/auth/realms/BaSyx"
+  #       clientId: "basyx-web-ui"
+  #       scope: "openid profile email"
 
-  # Service infrastructure with OAuth2 (Client Credentials Flow)
-  # WARNING: Client secrets in this file are stored in plain text!
-  # Only use this for non-production scenarios or with proper secret management.
-  service:
-    name: Service Account BaSyx
-    components:
-      aasDiscovery:
-        baseUrl: "https://discovery.basyx.service.com"
-      aasRegistry:
-        baseUrl: "https://aasreg.basyx.service.com"
-      submodelRegistry:
-        baseUrl: "https://smreg.basyx.service.com"
-      aasRepository:
-        baseUrl: "https://aasenv.basyx.service.com"
-      submodelRepository:
-        baseUrl: "https://aasenv.basyx.service.com"
-      conceptDescriptionRepository:
-        baseUrl: "https://aasenv.basyx.service.com"
-    security:
-      type: oauth2
-      config:
-        flow: client_credentials
-        issuer: "https://keycloak.service.com/auth/realms/BaSyx"
-        clientId: "basyx-service-client"
-        clientSecret: "your-client-secret-here"
-        scope: ""
+  # # Service infrastructure with OAuth2 (Client Credentials Flow)
+  # # WARNING: Client secrets in this file are stored in plain text!
+  # # Only use this for non-production scenarios or with proper secret management.
+  # service:
+  #   name: Service Account BaSyx
+  #   components:
+  #     aasDiscovery:
+  #       baseUrl: "https://discovery.basyx.service.com"
+  #     aasRegistry:
+  #       baseUrl: "https://aasreg.basyx.service.com"
+  #     submodelRegistry:
+  #       baseUrl: "https://smreg.basyx.service.com"
+  #     aasRepository:
+  #       baseUrl: "https://aasenv.basyx.service.com"
+  #     submodelRepository:
+  #       baseUrl: "https://aasenv.basyx.service.com"
+  #     conceptDescriptionRepository:
+  #       baseUrl: "https://aasenv.basyx.service.com"
+  #   security:
+  #     type: oauth2
+  #     config:
+  #       flow: client_credentials
+  #       issuer: "https://keycloak.service.com/auth/realms/BaSyx"
+  #       clientId: "basyx-service-client"
+  #       clientSecret: "your-client-secret-here"
+  #       scope: ""
 
-  # Infrastructure with Basic Authentication
-  staging:
-    name: Staging BaSyx
-    components:
-      aasDiscovery:
-        baseUrl: "https://discovery.staging.basyx.com"
-      aasRegistry:
-        baseUrl: "https://aasreg.staging.basyx.com"
-      submodelRegistry:
-        baseUrl: "https://smreg.staging.basyx.com"
-      aasRepository:
-        baseUrl: "https://aasenv.staging.basyx.com"
-      submodelRepository:
-        baseUrl: "https://aasenv.staging.basyx.com"
-      conceptDescriptionRepository:
-        baseUrl: "https://aasenv.staging.basyx.com"
-    security:
-      type: basic
-      config:
-        username: "admin"
-        password: "admin123"
+  # # Infrastructure with Basic Authentication
+  # staging:
+  #   name: Staging BaSyx
+  #   components:
+  #     aasDiscovery:
+  #       baseUrl: "https://discovery.staging.basyx.com"
+  #     aasRegistry:
+  #       baseUrl: "https://aasreg.staging.basyx.com"
+  #     submodelRegistry:
+  #       baseUrl: "https://smreg.staging.basyx.com"
+  #     aasRepository:
+  #       baseUrl: "https://aasenv.staging.basyx.com"
+  #     submodelRepository:
+  #       baseUrl: "https://aasenv.staging.basyx.com"
+  #     conceptDescriptionRepository:
+  #       baseUrl: "https://aasenv.staging.basyx.com"
+  #   security:
+  #     type: basic
+  #     config:
+  #       username: "admin"
+  #       password: "admin123"
 
-  # Infrastructure with Bearer Token
-  test:
-    name: Test BaSyx
-    components:
-      aasDiscovery:
-        baseUrl: "https://discovery.test.basyx.com"
-      aasRegistry:
-        baseUrl: "https://aasreg.test.basyx.com"
-      submodelRegistry:
-        baseUrl: "https://smreg.test.basyx.com"
-      aasRepository:
-        baseUrl: "https://aasenv.test.basyx.com"
-      submodelRepository:
-        baseUrl: "https://aasenv.test.basyx.com"
-      conceptDescriptionRepository:
-        baseUrl: "https://aasenv.test.basyx.com"
-    security:
-      type: bearer
-      config:
-        token: "your-bearer-token-here"
+  # # Infrastructure with Bearer Token
+  # test:
+  #   name: Test BaSyx
+  #   components:
+  #     aasDiscovery:
+  #       baseUrl: "https://discovery.test.basyx.com"
+  #     aasRegistry:
+  #       baseUrl: "https://aasreg.test.basyx.com"
+  #     submodelRegistry:
+  #       baseUrl: "https://smreg.test.basyx.com"
+  #     aasRepository:
+  #       baseUrl: "https://aasenv.test.basyx.com"
+  #     submodelRepository:
+  #       baseUrl: "https://aasenv.test.basyx.com"
+  #     conceptDescriptionRepository:
+  #       baseUrl: "https://aasenv.test.basyx.com"
+  #   security:
+  #     type: bearer
+  #     config:
+  #       token: "your-bearer-token-here"

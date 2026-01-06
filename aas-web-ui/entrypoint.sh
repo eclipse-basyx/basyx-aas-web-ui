@@ -47,8 +47,8 @@ BASE_PATH_WITH_SLASH=$(echo "$BASE_PATH" | sed 's|/*$|/|')
 
 # Process YAML infrastructure configuration if present
 YAML_CONFIG_PATH="/basyx-infra.yml"
-JSON_OUTPUT_DIR="/usr/src/app/dist/config"
-JSON_OUTPUT_PATH="$JSON_OUTPUT_DIR/infrastructure-config.json"
+CONFIG_OUTPUT_DIR="/usr/src/app/dist/config"
+YAML_OUTPUT_PATH="$CONFIG_OUTPUT_DIR/basyx-infra.yml"
 
 if [ -f "$YAML_CONFIG_PATH" ]; then
     echo "========================================="
@@ -57,26 +57,15 @@ if [ -f "$YAML_CONFIG_PATH" ]; then
     echo "YAML config found at: $YAML_CONFIG_PATH"
     
     # Create config directory if it doesn't exist
-    mkdir -p "$JSON_OUTPUT_DIR"
+    mkdir -p "$CONFIG_OUTPUT_DIR"
     
-    # Convert YAML to JSON using yq
-    # yq reads YAML and outputs JSON
-    if yq eval -o=json '.' "$YAML_CONFIG_PATH" > "$JSON_OUTPUT_PATH" 2>/dev/null; then
-        echo "Successfully converted YAML to JSON"
-        echo "Output written to: $JSON_OUTPUT_PATH"
-        
-        # Validate JSON structure
-        if jq empty "$JSON_OUTPUT_PATH" 2>/dev/null; then
-            echo "JSON validation successful"
-            # Show infrastructure count for debugging
-            INFRA_COUNT=$(jq -r '.infrastructures | keys | length - 1' "$JSON_OUTPUT_PATH" 2>/dev/null || echo "unknown")
-            echo "Number of infrastructures configured: $INFRA_COUNT"
-        else
-            echo "WARNING: Generated JSON is invalid, removing file"
-            rm -f "$JSON_OUTPUT_PATH"
-        fi
+    # Copy YAML file to config directory (will be parsed by the application)
+    if cp "$YAML_CONFIG_PATH" "$YAML_OUTPUT_PATH"; then
+        echo "Successfully copied YAML configuration"
+        echo "Output written to: $YAML_OUTPUT_PATH"
+        echo "Configuration will be parsed by the application"
     else
-        echo "ERROR: Failed to convert YAML to JSON"
+        echo "ERROR: Failed to copy YAML configuration"
         echo "Infrastructure configuration will not be available"
     fi
     echo

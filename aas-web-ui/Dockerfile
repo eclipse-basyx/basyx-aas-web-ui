@@ -31,8 +31,6 @@ ARG HTTPS_PROXY
 WORKDIR /usr/src/app
 # Install jq for JSON processing
 RUN apk add --no-cache jq
-# Install yq for YAML processing
-RUN apk add --no-cache yq
 # Install gettext for envsubst
 RUN apk add --no-cache gettext
 # Create a non-root user and group
