@@ -45,6 +45,47 @@ envsubst '${BASE_PATH}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 # Add a trailing slash to BASE_PATH for the replacement in files
 BASE_PATH_WITH_SLASH=$(echo "$BASE_PATH" | sed 's|/*$|/|')
 
+# Process YAML infrastructure configuration if present
+YAML_CONFIG_PATH="/basyx-infra.yml"
+JSON_OUTPUT_DIR="/usr/src/app/dist/config"
+JSON_OUTPUT_PATH="$JSON_OUTPUT_DIR/infrastructure-config.json"
+
+if [ -f "$YAML_CONFIG_PATH" ]; then
+    echo "========================================="
+    echo "Processing infrastructure configuration"
+    echo "========================================="
+    echo "YAML config found at: $YAML_CONFIG_PATH"
+    
+    # Create config directory if it doesn't exist
+    mkdir -p "$JSON_OUTPUT_DIR"
+    
+    # Convert YAML to JSON using yq
+    # yq reads YAML and outputs JSON
+    if yq eval -o=json '.' "$YAML_CONFIG_PATH" > "$JSON_OUTPUT_PATH" 2>/dev/null; then
+        echo "Successfully converted YAML to JSON"
+        echo "Output written to: $JSON_OUTPUT_PATH"
+        
+        # Validate JSON structure
+        if jq empty "$JSON_OUTPUT_PATH" 2>/dev/null; then
+            echo "JSON validation successful"
+            # Show infrastructure count for debugging
+            INFRA_COUNT=$(jq -r '.infrastructures | keys | length - 1' "$JSON_OUTPUT_PATH" 2>/dev/null || echo "unknown")
+            echo "Number of infrastructures configured: $INFRA_COUNT"
+        else
+            echo "WARNING: Generated JSON is invalid, removing file"
+            rm -f "$JSON_OUTPUT_PATH"
+        fi
+    else
+        echo "ERROR: Failed to convert YAML to JSON"
+        echo "Infrastructure configuration will not be available"
+    fi
+    echo
+else
+    echo "No infrastructure configuration file found at $YAML_CONFIG_PATH"
+    echo "Skipping infrastructure configuration processing"
+    echo
+fi
+
 # Set LOGO_LIGHT_PATH and LOGO_DARK_PATH based on LOGO_PATH
 if [ -n "$LOGO_PATH" ]; then
     LOGO_LIGHT_PATH="$LOGO_PATH"

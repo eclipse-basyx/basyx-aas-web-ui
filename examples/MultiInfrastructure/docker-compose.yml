@@ -27,19 +27,14 @@ services:
       - "keycloak.basyx.localhost:host-gateway"
     ports:
       - '3000:3000'
+    volumes:
+      # Mount infrastructure configuration file
+      - ./basyx-infra.yml:/basyx-infra.yml:ro
     environment:
       VIRTUAL_HOST: aasgui.basyx.localhost
       VIRTUAL_PORT: "3000"
-      # Preconfigured default for infrastructure 1
-      AAS_REGISTRY_PATH: http://aasreg.basyx.localhost/shell-descriptors
-      SUBMODEL_REGISTRY_PATH: http://smreg.basyx.localhost/submodel-descriptors
-      AAS_REPO_PATH: http://aasenv.basyx.localhost/shells
-      SUBMODEL_REPO_PATH: http://aasenv.basyx.localhost/submodels
-      CD_REPO_PATH: http://aasenv.basyx.localhost/concept-descriptions
-      AAS_DISCOVERY_PATH: http://discovery.basyx.localhost/lookup/shells
-      KEYCLOAK_URL: http://keycloak.basyx.localhost
-      KEYCLOAK_REALM: BaSyx
-      KEYCLOAK_CLIENT_ID: basyx-web-ui
+      # Allow users to edit/add custom infrastructures
+      ENDPOINT_CONFIG_AVAILABLE: "true"
     restart: unless-stopped
     networks:
       - multiple-infrastructures

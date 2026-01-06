@@ -1,0 +1,3 @@
+# This directory is used to store infrastructure configuration files
+# - basyx-infra.yml: Sample YAML configuration for development
+# - infrastructure-config.json: Generated JSON configuration (production)
