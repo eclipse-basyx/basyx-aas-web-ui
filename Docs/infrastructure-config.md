@@ -87,7 +87,20 @@ infrastructures:
 
 Use this flow for machine-to-machine authentication where the application authenticates directly with the identity provider using a client ID and secret.
 
-> **⚠️ Security Warning**: Client secrets stored in the YAML file are in plain text. Only use this flow in secure environments with proper secret management practices. For production deployments, consider using Kubernetes secrets, Docker secrets, or other secure secret management solutions.
+> **⚠️ CRITICAL SECURITY WARNING**: **Client Credentials Flow is inherently insecure for browser-based applications!** 
+> 
+> The client secret must be included in the YAML configuration, which means:
+> - The secret is sent to the browser and visible in browser developer tools
+> - The secret is exposed in network requests and can be intercepted
+> - Any user with access to the application can extract the secret
+> - The secret cannot be truly protected in a client-side application
+>
+> **This flow should ONLY be used for:**
+> - Internal development/testing environments
+> - Trusted network environments with no external access
+> - Demo/showcase scenarios with non-production credentials
+>
+> **For production use, always prefer Authorization Code Flow** which keeps secrets on the server side and provides proper user-based authentication.
 
 ```yaml
 infrastructures:

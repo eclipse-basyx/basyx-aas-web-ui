@@ -62,7 +62,7 @@ infrastructures:
       config:
         flow: auth_code
         issuer: "http://keycloak.basyx.localhost/realms/BaSyx"
-        clientId: "basyx-client"
+        clientId: "basyx-web-ui"
 
   infra2:
     name: Local BaSyx
