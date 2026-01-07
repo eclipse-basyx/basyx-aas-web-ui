@@ -45,6 +45,36 @@ envsubst '${BASE_PATH}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 # Add a trailing slash to BASE_PATH for the replacement in files
 BASE_PATH_WITH_SLASH=$(echo "$BASE_PATH" | sed 's|/*$|/|')
 
+# Process YAML infrastructure configuration if present
+YAML_CONFIG_PATH="/basyx-infra.yml"
+CONFIG_OUTPUT_DIR="/usr/src/app/dist/config"
+YAML_OUTPUT_PATH="$CONFIG_OUTPUT_DIR/basyx-infra.yml"
+
+if [ -f "$YAML_CONFIG_PATH" ]; then
+    echo "========================================="
+    echo "Processing infrastructure configuration"
+    echo "========================================="
+    echo "YAML config found at: $YAML_CONFIG_PATH"
+    
+    # Create config directory if it doesn't exist
+    mkdir -p "$CONFIG_OUTPUT_DIR"
+    
+    # Copy YAML file to config directory (will be parsed by the application)
+    if cp "$YAML_CONFIG_PATH" "$YAML_OUTPUT_PATH"; then
+        echo "Successfully copied YAML configuration"
+        echo "Output written to: $YAML_OUTPUT_PATH"
+        echo "Configuration will be parsed by the application"
+    else
+        echo "ERROR: Failed to copy YAML configuration"
+        echo "Infrastructure configuration will not be available"
+    fi
+    echo
+else
+    echo "No infrastructure configuration file found at $YAML_CONFIG_PATH"
+    echo "Skipping infrastructure configuration processing"
+    echo
+fi
+
 # Set LOGO_LIGHT_PATH and LOGO_DARK_PATH based on LOGO_PATH
 if [ -n "$LOGO_PATH" ]; then
     LOGO_LIGHT_PATH="$LOGO_PATH"

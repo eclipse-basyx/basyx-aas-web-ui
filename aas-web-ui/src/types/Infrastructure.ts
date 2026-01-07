@@ -73,6 +73,16 @@ export interface InfrastructureConfig {
     components: {
         [key in BaSyxComponentKey]: ComponentConfig;
     };
+    /**
+     * Hash of the original YAML configuration (if loaded from YAML)
+     * Used to detect when YAML file has been updated
+     */
+    yamlHash?: string;
+    /**
+     * Flag indicating that the YAML source has been updated but user has local edits
+     * When true, UI should warn user that their edits may override newer YAML config
+     */
+    yamlConfigOutdated?: boolean;
 }
 
 /**
@@ -131,3 +141,69 @@ export interface AuthTokenState {
  * Loading state for component connection testing
  */
 export type ComponentTestingLoading = Record<BaSyxComponentKey, boolean>;
+
+/**
+ * YAML Configuration Types
+ * These types represent the structure of the basyx-infra.yml file
+ */
+
+/**
+ * Component configuration in YAML format (uses camelCase and baseUrl)
+ */
+export interface YamlComponentConfig {
+    baseUrl: string;
+}
+
+/**
+ * Security configuration in YAML format
+ */
+export interface YamlSecurityConfig {
+    type: 'none' | 'basic' | 'bearer' | 'oauth2';
+    config?: {
+        // Basic auth
+        username?: string;
+        password?: string;
+        // Bearer token
+        token?: string;
+        // OAuth2
+        flow?: 'auth_code' | 'client_credentials';
+        issuer?: string;
+        clientId?: string;
+        clientSecret?: string;
+        scope?: string;
+    };
+}
+
+/**
+ * Single infrastructure configuration in YAML format
+ */
+export interface YamlInfrastructureConfig {
+    name?: string;
+    components: {
+        aasDiscovery?: YamlComponentConfig;
+        aasRegistry?: YamlComponentConfig;
+        submodelRegistry?: YamlComponentConfig;
+        aasRepository?: YamlComponentConfig;
+        submodelRepository?: YamlComponentConfig;
+        conceptDescriptionRepository?: YamlComponentConfig;
+    };
+    security: YamlSecurityConfig;
+}
+
+/**
+ * Root YAML configuration structure
+ */
+export interface YamlInfrastructuresConfig {
+    infrastructures: {
+        default?: string;
+        [key: string]: YamlInfrastructureConfig | string | undefined;
+    };
+}
+
+/**
+ * Parsed infrastructure configuration ready for use in the app
+ */
+export interface ParsedInfrastructureConfig {
+    infrastructures: InfrastructureConfig[];
+    defaultInfrastructureId: string | null;
+}

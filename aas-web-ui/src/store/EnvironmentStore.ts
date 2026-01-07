@@ -9,6 +9,12 @@ function extractInitialUrlQueryParameter(): any {
     return Object.fromEntries(params.entries());
 }
 
+// Helper function to parse boolean environment variables
+// Handles both quoted ("true") and unquoted (true/True/TRUE) YAML values
+function parseBooleanEnv(value: string): boolean {
+    return value?.toLowerCase() === 'true';
+}
+
 export const useEnvStore = defineStore('envStore', () => {
     const initialUrlQueryParameter = ref(extractInitialUrlQueryParameter());
 
@@ -134,24 +140,26 @@ export const useEnvStore = defineStore('envStore', () => {
     const getEnvPrimaryLightColor = computed(() => primaryLightColor.value);
     const getEnvPrimaryDarkColor = computed(() => primaryDarkColor.value);
     const getEnvInfluxdbToken = computed(() => influxdbToken.value);
-    const getKeycloakActive = computed(() => keycloakActive.value === 'true');
+    const getKeycloakActive = computed(() => parseBooleanEnv(keycloakActive.value));
     const getKeycloakUrl = computed(() => keycloakUrl.value);
     const getKeycloakRealm = computed(() => keycloakRealm.value);
     const getKeycloakClientId = computed(() => keycloakClientId.value);
-    const getKeycloakFeatureControl = computed(() => keycloakFeatureControl.value === 'true');
+    const getKeycloakFeatureControl = computed(() => parseBooleanEnv(keycloakFeatureControl.value));
     const getKeycloakFeatureControlRolePrefix = computed(() => keycloakFeatureControlRolePrefix.value);
-    const getOidcActive = computed(() => oidcActive.value === 'true');
+    const getOidcActive = computed(() => parseBooleanEnv(oidcActive.value));
     const getOidcUrl = computed(() => oidcUrl.value);
     const getOidcScope = computed(() => oidcScope.value);
     const getOidcClientId = computed(() => oidcClientId.value);
     const getPreconfiguredAuth = computed(
-        () => !Object.hasOwn(initialUrlQueryParameter.value, 'ignorePreConfAuth') && preconfiguredAuth.value === 'true'
+        () =>
+            !Object.hasOwn(initialUrlQueryParameter.value, 'ignorePreConfAuth') &&
+            parseBooleanEnv(preconfiguredAuth.value)
     );
     const getPreconfiguredAuthClientSecret = computed(() => preconfiguredAuthClientSecret.value);
-    const getEndpointConfigAvailable = computed(() => endpointConfigAvailable.value === 'true');
-    const getSingleAas = computed(() => singleAas.value === 'true');
+    const getEndpointConfigAvailable = computed(() => parseBooleanEnv(endpointConfigAvailable.value));
+    const getSingleAas = computed(() => parseBooleanEnv(singleAas.value));
     const getSingleAasRedirect = computed(() => {
-        if (singleAas.value === 'true' && singleAasRedirect.value) {
+        if (parseBooleanEnv(singleAas.value) && singleAasRedirect.value) {
             if (urlRegex.test(singleAasRedirect.value)) {
                 return singleAasRedirect.value;
             }
@@ -159,11 +167,11 @@ export const useEnvStore = defineStore('envStore', () => {
         }
         return undefined;
     });
-    const getSmViewerEditor = computed(() => smViewerEditor.value === 'true');
-    const getAllowEditing = computed(() => allowEditing.value === 'true');
-    const getAllowUploading = computed(() => allowUploading.value === 'true');
-    const getAllowLogout = computed(() => allowLogout.value === 'true');
-    const getBasicAuthActive = computed(() => basicAuthActive.value === 'true');
+    const getSmViewerEditor = computed(() => parseBooleanEnv(smViewerEditor.value));
+    const getAllowEditing = computed(() => parseBooleanEnv(allowEditing.value));
+    const getAllowUploading = computed(() => parseBooleanEnv(allowUploading.value));
+    const getAllowLogout = computed(() => parseBooleanEnv(allowLogout.value));
+    const getBasicAuthActive = computed(() => parseBooleanEnv(basicAuthActive.value));
     const getBasicAuthUsername = computed(() => basicAuthUsername.value);
     const getBasicAuthPassword = computed(() => basicAuthPassword.value);
     const getEditorIdPrefix = computed(() => {
@@ -176,8 +184,8 @@ export const useEnvStore = defineStore('envStore', () => {
         return editorIdPrefix.value;
     });
     const getAuthorizationPrefix = computed(() => authorizationPrefix.value);
-    const getAuthorizationDescriptionEndpointExemption = computed(
-        () => authorizationDescriptionEndpointExemption.value === 'true'
+    const getAuthorizationDescriptionEndpointExemption = computed(() =>
+        parseBooleanEnv(authorizationDescriptionEndpointExemption.value)
     );
 
     // Actions

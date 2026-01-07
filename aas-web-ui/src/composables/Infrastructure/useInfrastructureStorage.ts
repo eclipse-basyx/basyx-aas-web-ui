@@ -1,5 +1,30 @@
 import type { InfrastructureConfig, InfrastructureStorage, OAuth2ConnectionData } from '@/types/Infrastructure';
 import { authenticateOAuth2ClientCredentials } from '@/composables/Auth/OAuth2Auth';
+import { useInfrastructureConfigLoader } from '@/composables/Infrastructure/useInfrastructureConfigLoader';
+import { useNavigationStore } from '@/store/NavigationStore';
+
+/**
+ * Computes a simple hash of infrastructure configuration for change detection
+ * Used to detect when YAML configurations have been updated
+ */
+function computeInfrastructureHash(infra: InfrastructureConfig): string {
+    // Create stable string representation of configuration (excluding runtime fields)
+    const configForHashing = {
+        name: infra.name,
+        components: infra.components,
+        auth: infra.auth,
+        // Exclude: id (stable), token (runtime), isDefault (user preference), yamlConfigOutdated (runtime flag)
+    };
+    const configString = JSON.stringify(configForHashing);
+
+    // Simple hash function (djb2)
+    let hash = 5381;
+    for (let i = 0; i < configString.length; i++) {
+        hash = (hash << 5) + hash + configString.charCodeAt(i); // hash * 33 + c
+    }
+    return hash.toString(36);
+}
+
 /**
  * Composable for managing infrastructure storage operations
  * Handles loading/saving from localStorage, legacy migration, and default infrastructure creation
@@ -287,6 +312,349 @@ export function useInfrastructureStorage(): {
     }
 
     /**
+     * Handles YAML configuration merge with localStorage
+     * Implements precedence rules based on ENDPOINT_CONFIG_AVAILABLE
+     */
+    async function handleYamlConfigurationMerge(
+        yamlConfig: { infrastructures: InfrastructureConfig[]; defaultInfrastructureId: string | null },
+        envConfig: { endpointConfigAvailable?: boolean },
+        refreshTokensCallback?: (infrastructureId: string) => Promise<void>
+    ): Promise<{ infrastructures: InfrastructureConfig[]; selectedInfrastructureId: string | null }> {
+        // ENDPOINT_CONFIG_AVAILABLE=false: YAML takes full precedence
+        if (envConfig.endpointConfigAvailable === false) {
+            // Authenticate client credentials flows if configured
+            for (const infra of yamlConfig.infrastructures) {
+                if (
+                    infra.auth?.securityType === 'OAuth2' &&
+                    infra.auth.oauth2?.authFlow === 'client-credentials' &&
+                    infra.auth.oauth2.clientSecret
+                ) {
+                    await authenticateAndSetToken(infra, infra.auth.oauth2, refreshTokensCallback);
+                }
+            }
+
+            return {
+                infrastructures: yamlConfig.infrastructures,
+                selectedInfrastructureId:
+                    yamlConfig.defaultInfrastructureId || yamlConfig.infrastructures[0]?.id || null,
+            };
+        }
+
+        // ENDPOINT_CONFIG_AVAILABLE=true: Merge YAML with localStorage
+        // Note: User edits in localStorage take precedence over YAML updates.
+        // This is by design for user modifications, but means YAML updates won't
+        // automatically apply to user-edited infrastructures. We detect this case
+        // and flag it for potential UI warnings.
+        const stored = window.localStorage.getItem('basyxInfrastructures');
+        const yamlInfraMap = new Map(yamlConfig.infrastructures.map((infra) => [infra.id, infra]));
+        const mergedInfrastructures: InfrastructureConfig[] = [];
+        let selectedId: string | null = null;
+        const navigationStore = useNavigationStore();
+
+        if (stored) {
+            try {
+                const storage: InfrastructureStorage = JSON.parse(stored);
+
+                // Merge YAML infrastructures with localStorage edits
+                for (const yamlInfra of yamlConfig.infrastructures) {
+                    const storedInfra = storage.infrastructures.find((infra) => infra.id === yamlInfra.id);
+                    if (storedInfra) {
+                        // User has edited this YAML infrastructure - preserve their changes
+                        // But check if the YAML source has been updated
+                        const currentYamlHash = computeInfrastructureHash(yamlInfra);
+                        const storedYamlHash = storedInfra.yamlHash;
+
+                        if (storedYamlHash && storedYamlHash !== currentYamlHash) {
+                            // YAML configuration has changed since user last edited
+                            // Mark the infrastructure as potentially outdated
+                            storedInfra.yamlConfigOutdated = true;
+
+                            navigationStore.dispatchSnackbar({
+                                status: true,
+                                timeout: 8000,
+                                color: 'warning',
+                                btnColor: 'buttonText',
+                                text: `YAML configuration for "${storedInfra.name}" has been updated, but your local edits take precedence. Review changes in Infrastructure Management.`,
+                            });
+                        }
+
+                        mergedInfrastructures.push(storedInfra);
+                    } else {
+                        // New or unmodified YAML infrastructure
+                        // Store hash for future change detection
+                        yamlInfra.yamlHash = computeInfrastructureHash(yamlInfra);
+                        mergedInfrastructures.push(yamlInfra);
+                    }
+                }
+
+                // Add user-created infrastructures (not from YAML)
+                for (const storedInfra of storage.infrastructures) {
+                    if (!yamlInfraMap.has(storedInfra.id)) {
+                        mergedInfrastructures.push(storedInfra);
+                    }
+                }
+
+                // Determine selected infrastructure
+                if (
+                    storage.selectedInfrastructureId &&
+                    mergedInfrastructures.some((infra) => infra.id === storage.selectedInfrastructureId)
+                ) {
+                    selectedId = storage.selectedInfrastructureId;
+                } else {
+                    // Fallback to YAML default or first infrastructure
+                    selectedId = yamlConfig.defaultInfrastructureId || mergedInfrastructures[0]?.id || null;
+                }
+            } catch (err) {
+                console.warn('Failed to parse localStorage, using YAML config only:', err);
+                mergedInfrastructures.push(...yamlConfig.infrastructures);
+                selectedId = yamlConfig.defaultInfrastructureId || yamlConfig.infrastructures[0]?.id || null;
+            }
+        } else {
+            // No localStorage - use YAML config
+            mergedInfrastructures.push(...yamlConfig.infrastructures);
+            selectedId = yamlConfig.defaultInfrastructureId || yamlConfig.infrastructures[0]?.id || null;
+        }
+
+        // Authenticate client credentials flows
+        for (const infra of mergedInfrastructures) {
+            if (
+                infra.auth?.securityType === 'OAuth2' &&
+                infra.auth.oauth2?.authFlow === 'client-credentials' &&
+                infra.auth.oauth2.clientSecret &&
+                !infra.token // Only authenticate if no token exists
+            ) {
+                await authenticateAndSetToken(infra, infra.auth.oauth2, refreshTokensCallback);
+            }
+        }
+
+        // Ensure at least one infrastructure is marked as default
+        const hasDefault = mergedInfrastructures.some((infra) => infra.isDefault);
+        if (!hasDefault && mergedInfrastructures.length > 0) {
+            const selectedInfra = mergedInfrastructures.find((infra) => infra.id === selectedId);
+            if (selectedInfra) {
+                selectedInfra.isDefault = true;
+            } else {
+                mergedInfrastructures[0].isDefault = true;
+            }
+        }
+
+        return {
+            infrastructures: mergedInfrastructures,
+            selectedInfrastructureId: selectedId,
+        };
+    }
+
+    /**
+     * Handles traditional configuration (env vars and localStorage) without YAML
+     */
+    async function handleTraditionalConfiguration(
+        envConfig: {
+            aasDiscoveryPath?: string;
+            aasRegistryPath?: string;
+            submodelRegistryPath?: string;
+            aasRepoPath?: string;
+            submodelRepoPath?: string;
+            conceptDescriptionRepoPath?: string;
+            keycloakActive?: boolean;
+            keycloakUrl?: string;
+            keycloakRealm?: string;
+            keycloakClientId?: string;
+            oidcActive?: boolean;
+            oidcUrl?: string;
+            oidcScope?: string;
+            oidcClientId?: string;
+            preconfiguredAuth?: boolean;
+            preconfiguredAuthClientSecret?: string;
+            endpointConfigAvailable?: boolean;
+        },
+        refreshTokensCallback?: (infrastructureId: string) => Promise<void>
+    ): Promise<{ infrastructures: InfrastructureConfig[]; selectedInfrastructureId: string | null }> {
+        // If endpointConfigAvailable is false, use environment config but preserve existing infrastructure
+        // Strategy: When endpoint configuration is locked (e.g., in production), we need to:
+        // 1. Always use URLs and auth settings from environment variables (non-editable by users)
+        // 2. BUT preserve the infrastructure ID and token from localStorage if a match exists
+        // 3. This ensures OAuth2 flows work correctly (state parameter contains stable infrastructure ID)
+        // 4. And user authentication persists across page reloads (token is preserved)
+        if (envConfig.endpointConfigAvailable === false) {
+            const stored = window.localStorage.getItem('basyxInfrastructures');
+            let matchingInfra: InfrastructureConfig | null = null;
+
+            if (stored) {
+                try {
+                    const storage: InfrastructureStorage = JSON.parse(stored);
+
+                    // Find an infrastructure that matches the environment configuration
+                    // Matching criteria: URLs and auth config must match env vars
+                    // If found, we reuse it (preserving its ID and token)
+                    matchingInfra =
+                        storage.infrastructures.find((infra) => {
+                            // Helper to check if a URL is defined and non-empty
+                            const isNonEmptyUrl = (value?: string): boolean =>
+                                typeof value === 'string' && value.trim().length > 0;
+
+                            // Ensure at least one URL is configured in env vars (prevents matching empty configs)
+                            const hasAnyEnvUrl =
+                                isNonEmptyUrl(envConfig.aasDiscoveryPath) ||
+                                isNonEmptyUrl(envConfig.aasRegistryPath) ||
+                                isNonEmptyUrl(envConfig.submodelRegistryPath) ||
+                                isNonEmptyUrl(envConfig.aasRepoPath) ||
+                                isNonEmptyUrl(envConfig.submodelRepoPath) ||
+                                isNonEmptyUrl(envConfig.conceptDescriptionRepoPath);
+
+                            if (!hasAnyEnvUrl) {
+                                return false;
+                            }
+
+                            // Check if all non-empty URLs in env config match the infrastructure's URLs
+                            // Only URLs that are defined in env vars are compared (allows partial configuration)
+                            const urlsMatch =
+                                (!isNonEmptyUrl(envConfig.aasDiscoveryPath) ||
+                                    infra.components.AASDiscovery.url === envConfig.aasDiscoveryPath) &&
+                                (!isNonEmptyUrl(envConfig.aasRegistryPath) ||
+                                    infra.components.AASRegistry.url === envConfig.aasRegistryPath) &&
+                                (!isNonEmptyUrl(envConfig.submodelRegistryPath) ||
+                                    infra.components.SubmodelRegistry.url === envConfig.submodelRegistryPath) &&
+                                (!isNonEmptyUrl(envConfig.aasRepoPath) ||
+                                    infra.components.AASRepo.url === envConfig.aasRepoPath) &&
+                                (!isNonEmptyUrl(envConfig.submodelRepoPath) ||
+                                    infra.components.SubmodelRepo.url === envConfig.submodelRepoPath) &&
+                                (!isNonEmptyUrl(envConfig.conceptDescriptionRepoPath) ||
+                                    infra.components.ConceptDescriptionRepo.url ===
+                                        envConfig.conceptDescriptionRepoPath);
+
+                            // Check if auth configuration matches (Keycloak takes precedence over OIDC)
+                            const hasKeycloakConfig =
+                                !!envConfig.keycloakActive &&
+                                typeof envConfig.keycloakUrl === 'string' &&
+                                envConfig.keycloakUrl.trim().length > 0 &&
+                                typeof envConfig.keycloakRealm === 'string' &&
+                                envConfig.keycloakRealm.trim().length > 0 &&
+                                typeof envConfig.keycloakClientId === 'string' &&
+                                envConfig.keycloakClientId.trim().length > 0;
+
+                            const hasOidcUrlAndClientId =
+                                typeof envConfig.oidcUrl === 'string' &&
+                                envConfig.oidcUrl.trim().length > 0 &&
+                                typeof envConfig.oidcClientId === 'string' &&
+                                envConfig.oidcClientId.trim().length > 0;
+
+                            const hasOidcConfig =
+                                !hasKeycloakConfig && // Only check OIDC if Keycloak is not configured
+                                (!!envConfig.oidcActive || hasOidcUrlAndClientId) &&
+                                hasOidcUrlAndClientId;
+
+                            if (hasKeycloakConfig) {
+                                // Keycloak configured: verify OAuth2 settings match
+                                const expectedHost = envConfig.keycloakUrl + '/realms/' + envConfig.keycloakRealm;
+                                const expectedAuthFlow = envConfig.preconfiguredAuth
+                                    ? 'client-credentials'
+                                    : 'auth-code';
+
+                                const authMatches =
+                                    infra.auth?.securityType === 'OAuth2' &&
+                                    infra.auth.oauth2?.host === expectedHost &&
+                                    infra.auth.oauth2?.clientId === envConfig.keycloakClientId &&
+                                    infra.auth.oauth2?.authFlow === expectedAuthFlow;
+
+                                return urlsMatch && authMatches;
+                            } else if (hasOidcConfig) {
+                                // Generic OIDC configured: verify OAuth2 settings match
+                                const expectedHost = envConfig.oidcUrl;
+                                const expectedAuthFlow = envConfig.preconfiguredAuth
+                                    ? 'client-credentials'
+                                    : 'auth-code';
+
+                                const authMatches =
+                                    infra.auth?.securityType === 'OAuth2' &&
+                                    infra.auth.oauth2?.host === expectedHost &&
+                                    infra.auth.oauth2?.clientId === envConfig.oidcClientId &&
+                                    infra.auth.oauth2?.authFlow === expectedAuthFlow &&
+                                    (!envConfig.oidcScope || infra.auth.oauth2?.scope === envConfig.oidcScope);
+
+                                return urlsMatch && authMatches;
+                            } else {
+                                // No auth in env: infrastructure must have no authentication configured
+                                const noAuth = !infra.auth || infra.auth.securityType === 'No Authentication';
+                                return urlsMatch && noAuth;
+                            }
+                        }) || null;
+                } catch (err) {
+                    console.warn('Failed to load infrastructure from storage:', err);
+                }
+            }
+
+            // Matching infrastructure found: reuse it to preserve token and stable ID
+            // This is critical for OAuth2 flows - the ID must remain constant across page reloads
+            // so the OAuth2 state parameter matches after redirect from identity provider
+            if (matchingInfra) {
+                matchingInfra.isDefault = true;
+                return {
+                    infrastructures: [matchingInfra],
+                    selectedInfrastructureId: matchingInfra.id,
+                };
+            }
+
+            // No matching infrastructure found: create new one from environment variables
+            // This happens on first load or when env config changes significantly
+            // A deterministic ID is generated based on env config (see generateDeterministicInfrastructureId)
+            const defaultInfra = await createDefaultInfrastructureFromEnv(envConfig, refreshTokensCallback);
+            return {
+                infrastructures: [defaultInfra],
+                selectedInfrastructureId: defaultInfra.id,
+            };
+        }
+
+        const stored = window.localStorage.getItem('basyxInfrastructures');
+        if (stored) {
+            const storage: InfrastructureStorage = JSON.parse(stored);
+
+            // Determine which infrastructure should be selected
+            let targetInfraId: string | null = null;
+            if (
+                storage.selectedInfrastructureId &&
+                storage.infrastructures.some((infra) => infra.id === storage.selectedInfrastructureId)
+            ) {
+                targetInfraId = storage.selectedInfrastructureId;
+            } else if (storage.infrastructures.length > 0) {
+                // Fallback: select default infrastructure or first available one
+                const defaultInfra = storage.infrastructures.find((infra) => infra.isDefault);
+                targetInfraId = defaultInfra ? defaultInfra.id : storage.infrastructures[0].id;
+            }
+
+            // Ensure at least one infrastructure is marked as default
+            const hasDefault = storage.infrastructures.some((infra) => infra.isDefault);
+            if (!hasDefault && storage.infrastructures.length > 0) {
+                storage.infrastructures[0].isDefault = true;
+            }
+
+            return {
+                infrastructures: storage.infrastructures,
+                selectedInfrastructureId: targetInfraId,
+            };
+        } else {
+            // Migration from legacy storage
+            const legacyInfra = createInfrastructureFromLegacyStorage();
+
+            // Check if any legacy URLs exist
+            const hasLegacyData = Object.values(legacyInfra.components).some((comp) => comp.url.trim() !== '');
+
+            if (hasLegacyData) {
+                return {
+                    infrastructures: [legacyInfra],
+                    selectedInfrastructureId: legacyInfra.id,
+                };
+            } else {
+                // Create default from environment
+                const defaultInfra = await createDefaultInfrastructureFromEnv(envConfig, refreshTokensCallback);
+                return {
+                    infrastructures: [defaultInfra],
+                    selectedInfrastructureId: defaultInfra.id,
+                };
+            }
+        }
+    }
+
+    /**
      * Loads infrastructures from localStorage
      * @param envConfig Environment configuration for creating default infrastructure
      * @param refreshTokensCallback Optional callback to refresh tokens
@@ -315,189 +683,17 @@ export function useInfrastructureStorage(): {
         refreshTokensCallback?: (infrastructureId: string) => Promise<void>
     ): Promise<{ infrastructures: InfrastructureConfig[]; selectedInfrastructureId: string | null }> {
         try {
-            // If endpointConfigAvailable is false, use environment config but preserve existing infrastructure
-            // Strategy: When endpoint configuration is locked (e.g., in production), we need to:
-            // 1. Always use URLs and auth settings from environment variables (non-editable by users)
-            // 2. BUT preserve the infrastructure ID and token from localStorage if a match exists
-            // 3. This ensures OAuth2 flows work correctly (state parameter contains stable infrastructure ID)
-            // 4. And user authentication persists across page reloads (token is preserved)
-            if (envConfig.endpointConfigAvailable === false) {
-                const stored = window.localStorage.getItem('basyxInfrastructures');
-                let matchingInfra: InfrastructureConfig | null = null;
+            // Load YAML configuration first (if available)
+            const { loadInfrastructureConfig } = useInfrastructureConfigLoader();
+            const yamlConfig = await loadInfrastructureConfig();
 
-                if (stored) {
-                    try {
-                        const storage: InfrastructureStorage = JSON.parse(stored);
-
-                        // Find an infrastructure that matches the environment configuration
-                        // Matching criteria: URLs and auth config must match env vars
-                        // If found, we reuse it (preserving its ID and token)
-                        matchingInfra =
-                            storage.infrastructures.find((infra) => {
-                                // Helper to check if a URL is defined and non-empty
-                                const isNonEmptyUrl = (value?: string): boolean =>
-                                    typeof value === 'string' && value.trim().length > 0;
-
-                                // Ensure at least one URL is configured in env vars (prevents matching empty configs)
-                                const hasAnyEnvUrl =
-                                    isNonEmptyUrl(envConfig.aasDiscoveryPath) ||
-                                    isNonEmptyUrl(envConfig.aasRegistryPath) ||
-                                    isNonEmptyUrl(envConfig.submodelRegistryPath) ||
-                                    isNonEmptyUrl(envConfig.aasRepoPath) ||
-                                    isNonEmptyUrl(envConfig.submodelRepoPath) ||
-                                    isNonEmptyUrl(envConfig.conceptDescriptionRepoPath);
-
-                                if (!hasAnyEnvUrl) {
-                                    return false;
-                                }
-
-                                // Check if all non-empty URLs in env config match the infrastructure's URLs
-                                // Only URLs that are defined in env vars are compared (allows partial configuration)
-                                const urlsMatch =
-                                    (!isNonEmptyUrl(envConfig.aasDiscoveryPath) ||
-                                        infra.components.AASDiscovery.url === envConfig.aasDiscoveryPath) &&
-                                    (!isNonEmptyUrl(envConfig.aasRegistryPath) ||
-                                        infra.components.AASRegistry.url === envConfig.aasRegistryPath) &&
-                                    (!isNonEmptyUrl(envConfig.submodelRegistryPath) ||
-                                        infra.components.SubmodelRegistry.url === envConfig.submodelRegistryPath) &&
-                                    (!isNonEmptyUrl(envConfig.aasRepoPath) ||
-                                        infra.components.AASRepo.url === envConfig.aasRepoPath) &&
-                                    (!isNonEmptyUrl(envConfig.submodelRepoPath) ||
-                                        infra.components.SubmodelRepo.url === envConfig.submodelRepoPath) &&
-                                    (!isNonEmptyUrl(envConfig.conceptDescriptionRepoPath) ||
-                                        infra.components.ConceptDescriptionRepo.url ===
-                                            envConfig.conceptDescriptionRepoPath);
-
-                                // Check if auth configuration matches (Keycloak takes precedence over OIDC)
-                                const hasKeycloakConfig =
-                                    !!envConfig.keycloakActive &&
-                                    typeof envConfig.keycloakUrl === 'string' &&
-                                    envConfig.keycloakUrl.trim().length > 0 &&
-                                    typeof envConfig.keycloakRealm === 'string' &&
-                                    envConfig.keycloakRealm.trim().length > 0 &&
-                                    typeof envConfig.keycloakClientId === 'string' &&
-                                    envConfig.keycloakClientId.trim().length > 0;
-
-                                const hasOidcUrlAndClientId =
-                                    typeof envConfig.oidcUrl === 'string' &&
-                                    envConfig.oidcUrl.trim().length > 0 &&
-                                    typeof envConfig.oidcClientId === 'string' &&
-                                    envConfig.oidcClientId.trim().length > 0;
-
-                                const hasOidcConfig =
-                                    !hasKeycloakConfig && // Only check OIDC if Keycloak is not configured
-                                    (!!envConfig.oidcActive || hasOidcUrlAndClientId) &&
-                                    hasOidcUrlAndClientId;
-
-                                if (hasKeycloakConfig) {
-                                    // Keycloak configured: verify OAuth2 settings match
-                                    const expectedHost = envConfig.keycloakUrl + '/realms/' + envConfig.keycloakRealm;
-                                    const expectedAuthFlow = envConfig.preconfiguredAuth
-                                        ? 'client-credentials'
-                                        : 'auth-code';
-
-                                    const authMatches =
-                                        infra.auth?.securityType === 'OAuth2' &&
-                                        infra.auth.oauth2?.host === expectedHost &&
-                                        infra.auth.oauth2?.clientId === envConfig.keycloakClientId &&
-                                        infra.auth.oauth2?.authFlow === expectedAuthFlow;
-
-                                    return urlsMatch && authMatches;
-                                } else if (hasOidcConfig) {
-                                    // Generic OIDC configured: verify OAuth2 settings match
-                                    const expectedHost = envConfig.oidcUrl;
-                                    const expectedAuthFlow = envConfig.preconfiguredAuth
-                                        ? 'client-credentials'
-                                        : 'auth-code';
-
-                                    const authMatches =
-                                        infra.auth?.securityType === 'OAuth2' &&
-                                        infra.auth.oauth2?.host === expectedHost &&
-                                        infra.auth.oauth2?.clientId === envConfig.oidcClientId &&
-                                        infra.auth.oauth2?.authFlow === expectedAuthFlow &&
-                                        (!envConfig.oidcScope || infra.auth.oauth2?.scope === envConfig.oidcScope);
-
-                                    return urlsMatch && authMatches;
-                                } else {
-                                    // No auth in env: infrastructure must have no authentication configured
-                                    const noAuth = !infra.auth || infra.auth.securityType === 'No Authentication';
-                                    return urlsMatch && noAuth;
-                                }
-                            }) || null;
-                    } catch (err) {
-                        console.warn('Failed to load infrastructure from storage:', err);
-                    }
-                }
-
-                // Matching infrastructure found: reuse it to preserve token and stable ID
-                // This is critical for OAuth2 flows - the ID must remain constant across page reloads
-                // so the OAuth2 state parameter matches after redirect from identity provider
-                if (matchingInfra) {
-                    matchingInfra.isDefault = true;
-                    return {
-                        infrastructures: [matchingInfra],
-                        selectedInfrastructureId: matchingInfra.id,
-                    };
-                }
-
-                // No matching infrastructure found: create new one from environment variables
-                // This happens on first load or when env config changes significantly
-                // A deterministic ID is generated based on env config (see generateDeterministicInfrastructureId)
-                const defaultInfra = await createDefaultInfrastructureFromEnv(envConfig, refreshTokensCallback);
-                return {
-                    infrastructures: [defaultInfra],
-                    selectedInfrastructureId: defaultInfra.id,
-                };
+            // If YAML config is available, merge it with localStorage
+            if (yamlConfig && yamlConfig.infrastructures.length > 0) {
+                return await handleYamlConfigurationMerge(yamlConfig, envConfig, refreshTokensCallback);
             }
 
-            const stored = window.localStorage.getItem('basyxInfrastructures');
-            if (stored) {
-                const storage: InfrastructureStorage = JSON.parse(stored);
-
-                // Determine which infrastructure should be selected
-                let targetInfraId: string | null = null;
-                if (
-                    storage.selectedInfrastructureId &&
-                    storage.infrastructures.some((infra) => infra.id === storage.selectedInfrastructureId)
-                ) {
-                    targetInfraId = storage.selectedInfrastructureId;
-                } else if (storage.infrastructures.length > 0) {
-                    // Fallback: select default infrastructure or first available one
-                    const defaultInfra = storage.infrastructures.find((infra) => infra.isDefault);
-                    targetInfraId = defaultInfra ? defaultInfra.id : storage.infrastructures[0].id;
-                }
-
-                // Ensure at least one infrastructure is marked as default
-                const hasDefault = storage.infrastructures.some((infra) => infra.isDefault);
-                if (!hasDefault && storage.infrastructures.length > 0) {
-                    storage.infrastructures[0].isDefault = true;
-                }
-
-                return {
-                    infrastructures: storage.infrastructures,
-                    selectedInfrastructureId: targetInfraId,
-                };
-            } else {
-                // Migration from legacy storage
-                const legacyInfra = createInfrastructureFromLegacyStorage();
-
-                // Check if any legacy URLs exist
-                const hasLegacyData = Object.values(legacyInfra.components).some((comp) => comp.url.trim() !== '');
-
-                if (hasLegacyData) {
-                    return {
-                        infrastructures: [legacyInfra],
-                        selectedInfrastructureId: legacyInfra.id,
-                    };
-                } else {
-                    // Create default from environment
-                    const defaultInfra = await createDefaultInfrastructureFromEnv(envConfig, refreshTokensCallback);
-                    return {
-                        infrastructures: [defaultInfra],
-                        selectedInfrastructureId: defaultInfra.id,
-                    };
-                }
-            }
+            // No YAML config - proceed with original logic (env vars and localStorage)
+            return await handleTraditionalConfiguration(envConfig, refreshTokensCallback);
         } catch (error) {
             console.error('Error loading infrastructures from storage:', error);
             // Fallback to default
