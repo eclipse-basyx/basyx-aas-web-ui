@@ -73,6 +73,16 @@ export interface InfrastructureConfig {
     components: {
         [key in BaSyxComponentKey]: ComponentConfig;
     };
+    /**
+     * Hash of the original YAML configuration (if loaded from YAML)
+     * Used to detect when YAML file has been updated
+     */
+    yamlHash?: string;
+    /**
+     * Flag indicating that the YAML source has been updated but user has local edits
+     * When true, UI should warn user that their edits may override newer YAML config
+     */
+    yamlConfigOutdated?: boolean;
 }
 
 /**

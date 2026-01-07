@@ -1,6 +1,30 @@
 import type { InfrastructureConfig, InfrastructureStorage, OAuth2ConnectionData } from '@/types/Infrastructure';
 import { authenticateOAuth2ClientCredentials } from '@/composables/Auth/OAuth2Auth';
 import { useInfrastructureConfigLoader } from '@/composables/Infrastructure/useInfrastructureConfigLoader';
+import { useNavigationStore } from '@/store/NavigationStore';
+
+/**
+ * Computes a simple hash of infrastructure configuration for change detection
+ * Used to detect when YAML configurations have been updated
+ */
+function computeInfrastructureHash(infra: InfrastructureConfig): string {
+    // Create stable string representation of configuration (excluding runtime fields)
+    const configForHashing = {
+        name: infra.name,
+        components: infra.components,
+        auth: infra.auth,
+        // Exclude: id (stable), token (runtime), isDefault (user preference), yamlConfigOutdated (runtime flag)
+    };
+    const configString = JSON.stringify(configForHashing);
+
+    // Simple hash function (djb2)
+    let hash = 5381;
+    for (let i = 0; i < configString.length; i++) {
+        hash = (hash << 5) + hash + configString.charCodeAt(i); // hash * 33 + c
+    }
+    return hash.toString(36);
+}
+
 /**
  * Composable for managing infrastructure storage operations
  * Handles loading/saving from localStorage, legacy migration, and default infrastructure creation
@@ -317,10 +341,15 @@ export function useInfrastructureStorage(): {
         }
 
         // ENDPOINT_CONFIG_AVAILABLE=true: Merge YAML with localStorage
+        // Note: User edits in localStorage take precedence over YAML updates.
+        // This is by design for user modifications, but means YAML updates won't
+        // automatically apply to user-edited infrastructures. We detect this case
+        // and flag it for potential UI warnings.
         const stored = window.localStorage.getItem('basyxInfrastructures');
         const yamlInfraMap = new Map(yamlConfig.infrastructures.map((infra) => [infra.id, infra]));
         const mergedInfrastructures: InfrastructureConfig[] = [];
         let selectedId: string | null = null;
+        const navigationStore = useNavigationStore();
 
         if (stored) {
             try {
@@ -331,9 +360,29 @@ export function useInfrastructureStorage(): {
                     const storedInfra = storage.infrastructures.find((infra) => infra.id === yamlInfra.id);
                     if (storedInfra) {
                         // User has edited this YAML infrastructure - preserve their changes
+                        // But check if the YAML source has been updated
+                        const currentYamlHash = computeInfrastructureHash(yamlInfra);
+                        const storedYamlHash = storedInfra.yamlHash;
+
+                        if (storedYamlHash && storedYamlHash !== currentYamlHash) {
+                            // YAML configuration has changed since user last edited
+                            // Mark the infrastructure as potentially outdated
+                            storedInfra.yamlConfigOutdated = true;
+
+                            navigationStore.dispatchSnackbar({
+                                status: true,
+                                timeout: 8000,
+                                color: 'warning',
+                                btnColor: 'buttonText',
+                                text: `YAML configuration for "${storedInfra.name}" has been updated, but your local edits take precedence. Review changes in Infrastructure Management.`,
+                            });
+                        }
+
                         mergedInfrastructures.push(storedInfra);
                     } else {
                         // New or unmodified YAML infrastructure
+                        // Store hash for future change detection
+                        yamlInfra.yamlHash = computeInfrastructureHash(yamlInfra);
                         mergedInfrastructures.push(yamlInfra);
                     }
                 }
