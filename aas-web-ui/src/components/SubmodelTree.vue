@@ -827,7 +827,7 @@
                     if (childrenKey !== '') {
                         // Create a shallow copy without the childrenKey and synthetic 'children' properties
                         return Object.fromEntries(
-                            Object.entries(item).filter(([key]) => key !== childrenKey && key !== 'children'),
+                            Object.entries(item).filter(([key]) => key !== childrenKey && key !== 'children')
                         );
                     }
                     return item;
