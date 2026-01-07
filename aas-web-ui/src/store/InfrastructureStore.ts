@@ -20,6 +20,10 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     const envStore = useEnvStore();
     const navigationStore = useNavigationStore();
 
+    // Initialization state
+    const isInitialized = ref(false);
+    const initializationPromise = ref<Promise<void> | null>(null);
+
     // Composables
     const { getRequest } = useRequestHandling();
     const infrastructureStorage = useInfrastructureStorage();
@@ -207,7 +211,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     }
 
     // Initialize infrastructures on store creation
-    (async () => {
+    initializationPromise.value = (async () => {
         await loadInfrastructuresFromStorage();
 
         // Save to localStorage after loading to persist any newly created infrastructures
@@ -227,6 +231,8 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         // Connect components after infrastructure is loaded and synced
         await nextTick(); // Ensure watcher has run
         await connectComponents();
+
+        isInitialized.value = true;
     })();
 
     // Watch for changes to selected infrastructure ID (not the infrastructure object itself)
@@ -470,6 +476,17 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         infrastructureAuth.setAuthenticationStatusForInfrastructure(infrastructures.value, infrastructureId, state);
     }
 
+    /**
+     * Wait for the store to finish initializing
+     * Used by router to ensure infrastructures are loaded before processing OAuth2 callbacks
+     */
+    async function waitForInitialization(): Promise<void> {
+        if (isInitialized.value) return;
+        if (initializationPromise.value) {
+            await initializationPromise.value;
+        }
+    }
+
     async function connectComponents(): Promise<void> {
         // Ensure that Object.keys returns RepositoryKey[]
         const keys = Object.keys(basyxComponents) as BaSyxComponentKey[];
@@ -656,6 +673,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         getSelectedInfrastructureId,
         getSelectedInfrastructure,
         getOpenInfrastructureEditMode,
+        isInitialized,
         getAASDiscoveryURL,
         getAASRegistryURL,
         getSubmodelRegistryURL,
@@ -679,6 +697,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         createEmptyInfrastructure,
         refreshInfrastructureTokens,
         setAuthenticationStatusForInfrastructure,
+        waitForInitialization,
         connectComponents,
         connectComponent,
         setUser,

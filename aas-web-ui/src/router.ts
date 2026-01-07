@@ -216,92 +216,95 @@ export async function createAppRouter(): Promise<Router> {
             const state = to.query.state as string;
             const code = to.query.code as string;
             const issuerURL = to.query.iss as string;
-            if (process.env.NODE_ENV === 'development') {
-                console.warn('[OAuth2 Callback] Received:', { state, code, issuerURL, query: to.query });
-            }
 
-            // Determine if this is OAuth2 callback (has iss parameter)
-            if (issuerURL) {
-                // OAuth2 callback - handle authorization code exchange
-                try {
-                    const { exchangeOAuth2AuthorizationCode } = await import('@/composables/Auth/OAuth2Auth');
-                    const infraStore = useInfrastructureStore();
+            // Try to handle OAuth2 callback
+            try {
+                const { exchangeOAuth2AuthorizationCode } = await import('@/composables/Auth/OAuth2Auth');
+                const infraStore = useInfrastructureStore();
 
-                    // Find the infrastructure by state (infrastructure ID)
-                    const infrastructure = infraStore.getInfrastructures.find(
-                        (infra: InfrastructureConfig) => infra.id === state
-                    );
+                // Wait for infrastructure store to finish loading
+                await infraStore.waitForInitialization();
 
-                    if (!infrastructure || !infrastructure.auth?.oauth2) {
-                        throw new Error('Infrastructure or OAuth2 configuration not found');
-                    }
+                // Find the infrastructure by state (infrastructure ID)
+                const infrastructure = infraStore.getInfrastructures.find(
+                    (infra: InfrastructureConfig) => infra.id === state
+                );
 
-                    // Fetch .well-known configuration to get token endpoint
-                    const wellKnownUrl = `${issuerURL}/.well-known/openid-configuration`;
-                    const wellKnownResponse = await fetch(wellKnownUrl);
-
-                    if (!wellKnownResponse.ok) {
-                        throw new Error('Failed to fetch OpenID configuration');
-                    }
-
-                    const wellKnownConfig = await wellKnownResponse.json();
-                    const tokenEndpoint = wellKnownConfig.token_endpoint;
-
-                    if (!tokenEndpoint) {
-                        throw new Error('Token endpoint not found in OpenID configuration');
-                    }
-
-                    // Exchange authorization code for tokens
-                    const tokenData = await exchangeOAuth2AuthorizationCode({
-                        tokenEndpoint,
-                        clientId: infrastructure.auth.oauth2.clientId,
-                        redirectUri: `${window.location.origin}${window.location.pathname}`,
-                        code,
-                        state, // Pass state to retrieve correct code verifier
-                    });
-
-                    // Update infrastructure with token
-                    infrastructure.token = {
-                        accessToken: tokenData.accessToken,
-                        refreshToken: tokenData.refreshToken,
-                        expiresAt: tokenData.expiresAt,
-                        idToken: tokenData.idToken,
-                    };
-
-                    // Save updated infrastructure
-                    infraStore.dispatchUpdateInfrastructure(infrastructure);
-                    // Set authentication status to true
-                    infraStore.setAuthenticationStatusForInfrastructure(infrastructure.id, true);
-
-                    // Show success notification
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 3000,
-                        color: 'success',
-                        btnColor: 'buttonText',
-                        text: 'OAuth2 authentication successful!',
-                    });
-
-                    // Clean up URL and redirect to home
-                    next({ path: '/', replace: true });
-                    return;
-                } catch (error) {
-                    const errorMessage = error instanceof Error ? error.message : 'OAuth2 authentication failed';
-                    console.error('OAuth2 authorization code exchange failed:', error);
-                    // Show error notification
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 10000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'OAuth2 authentication failed',
-                        extendedError: errorMessage,
-                    });
-
-                    // Clean up URL and redirect to home
-                    next({ path: '/', replace: true });
-                    return;
+                if (!infrastructure || !infrastructure.auth?.oauth2) {
+                    throw new Error(`Infrastructure with ID '${state}' not found or missing OAuth2 config`);
                 }
+
+                // Get issuer URL from infrastructure config if not in query params
+                const issuer = issuerURL || infrastructure.auth.oauth2.host;
+                if (!issuer) {
+                    throw new Error('OAuth2 issuer URL not found in callback or infrastructure config');
+                }
+
+                // Fetch .well-known configuration to get token endpoint
+                const wellKnownUrl = `${issuer}/.well-known/openid-configuration`;
+                const wellKnownResponse = await fetch(wellKnownUrl);
+
+                if (!wellKnownResponse.ok) {
+                    throw new Error(`Failed to fetch OpenID configuration: ${wellKnownResponse.status}`);
+                }
+
+                const wellKnownConfig = await wellKnownResponse.json();
+                const tokenEndpoint = wellKnownConfig.token_endpoint;
+
+                if (!tokenEndpoint) {
+                    throw new Error('Token endpoint not found in OpenID configuration');
+                }
+
+                // Exchange authorization code for tokens
+                const tokenData = await exchangeOAuth2AuthorizationCode({
+                    tokenEndpoint,
+                    clientId: infrastructure.auth.oauth2.clientId,
+                    redirectUri: `${window.location.origin}${window.location.pathname}`,
+                    code,
+                    state, // Pass state to retrieve correct code verifier
+                });
+
+                // Update infrastructure with token
+                infrastructure.token = {
+                    accessToken: tokenData.accessToken,
+                    refreshToken: tokenData.refreshToken,
+                    expiresAt: tokenData.expiresAt,
+                    idToken: tokenData.idToken,
+                };
+
+                // Save updated infrastructure
+                infraStore.dispatchUpdateInfrastructure(infrastructure);
+                // Set authentication status to true
+                infraStore.setAuthenticationStatusForInfrastructure(infrastructure.id, true);
+
+                // Show success notification
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 3000,
+                    color: 'success',
+                    btnColor: 'buttonText',
+                    text: 'OAuth2 authentication successful!',
+                });
+
+                // Clean up URL and redirect to home
+                next({ path: '/', replace: true });
+                return;
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'OAuth2 authentication failed';
+                console.error('[OAuth2 Callback] Failed:', errorMessage, error);
+                // Show error notification
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 10000,
+                    color: 'error',
+                    btnColor: 'buttonText',
+                    text: 'OAuth2 authentication failed',
+                    extendedError: errorMessage,
+                });
+
+                // Clean up URL and redirect to home
+                next({ path: '/', replace: true });
+                return;
             }
         }
 
