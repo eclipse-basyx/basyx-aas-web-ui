@@ -137,7 +137,7 @@
 <script lang="ts" setup>
     import type { BaSyxComponentKey } from '@/types/BaSyx';
     import type { AuthFlowOption, InfrastructureConfig, SecurityType } from '@/types/Infrastructure';
-    import { computed, onMounted, ref, watch } from 'vue';
+    import { computed, ref, watch } from 'vue';
     import { useRouter } from 'vue-router';
     import { useAuth } from '@/composables/Auth/useAuth';
     import { useBasicAuthForm } from '@/composables/Auth/useBasicAuthForm';
@@ -173,7 +173,19 @@
     const infrastructureToDelete = ref<InfrastructureConfig | null>(null);
     const expandedPanels = ref<number[]>([]);
     const formRef = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null);
-    const defaultInfrastructure = ref<string>('');
+
+    // Computed property that automatically syncs with the actual default infrastructure
+    const defaultInfrastructure = computed({
+        get: () => {
+            const defaultInfra = infrastructures.value.find((infra) => infra.isDefault);
+            return defaultInfra?.id || infrastructures.value[0]?.id || '';
+        },
+        set: (value: string) => {
+            if (value) {
+                infrastructureStore.dispatchSetDefaultInfrastructure(value);
+            }
+        },
+    });
 
     const securityTypes: SecurityType[] = ['No Authentication', 'Basic Authentication', 'Bearer Token', 'OAuth2'];
     const authFlowOptions: AuthFlowOption[] = [
@@ -204,13 +216,6 @@
 
     const { logout: performLogout } = useAuth(router);
 
-    // Watch for default infrastructure changes
-    watch(defaultInfrastructure, (newDefaultId) => {
-        if (newDefaultId) {
-            infrastructureStore.dispatchSetDefaultInfrastructure(newDefaultId);
-        }
-    });
-
     // Watch props
     watch(
         () => props.open,
@@ -233,19 +238,6 @@
     watch(dialogOpen, (val) => {
         if (!val) {
             emit('update:open', false);
-        }
-    });
-
-    // Lifecycle
-    onMounted(() => {
-        const defaultInfra = infrastructures.value.find((infra) => infra.isDefault);
-        if (defaultInfra) {
-            defaultInfrastructure.value = defaultInfra.id;
-        } else if (infrastructures.value.length > 0) {
-            // If no default exists, set the first one as default
-            const firstInfra = infrastructures.value[0];
-            defaultInfrastructure.value = firstInfra.id;
-            infrastructureStore.dispatchSetDefaultInfrastructure(firstInfra.id);
         }
     });
 
