@@ -236,19 +236,29 @@ services:
 
 ### Configuration Precedence
 
-The `ENDPOINT_CONFIG_AVAILABLE` environment variable controls how YAML configurations interact with user settings:
+**Important**: Environment variables always take precedence over YAML configurations to maintain backwards compatibility with existing deployments.
+
+#### Precedence Order (Highest to Lowest)
+
+1. **Environment Variables**: If any infrastructure-related environment variables are set (e.g., `AAS_REGISTRY_PATH`, `KEYCLOAK_URL`), the application uses the traditional environment variable configuration and ignores the YAML file.
+2. **YAML Configuration**: Only used if no environment variables are configured.
+3. **User Edits (localStorage)**: User modifications in the UI are preserved and merged with the active configuration source.
+
+#### Configuration Modes
+
+The `ENDPOINT_CONFIG_AVAILABLE` environment variable controls whether users can modify infrastructures:
 
 - **`ENDPOINT_CONFIG_AVAILABLE=false`** (Locked Mode):
-  - YAML configuration takes full precedence
+  - Active configuration source (env vars or YAML) takes full precedence
   - Users cannot add or edit infrastructures in the UI
-  - All infrastructure definitions come from the YAML file
+  - All infrastructure definitions come from the configuration source
   - Recommended for production environments with strict security requirements
 
 - **`ENDPOINT_CONFIG_AVAILABLE=true`** (Editable Mode - Default):
-  - YAML configurations are loaded as templates
-  - Users can edit YAML-defined infrastructures (changes stored in browser localStorage)
+  - Configurations from active source are loaded as templates
+  - Users can edit defined infrastructures (changes stored in browser localStorage)
   - Users can create additional custom infrastructures
-  - YAML-defined infrastructures are merged with user modifications
+  - User modifications are merged with the configuration source
   - Recommended for development and flexible production environments
 
 ### Complete Docker Compose Example
@@ -257,6 +267,7 @@ For a complete working example with multiple infrastructures, see the [MultiInfr
 
 ## Design Notes
 
+- **Configuration Precedence**: Environment variables take precedence over YAML for backwards compatibility. YAML is only used when no environment variables are configured.
 - Infrastructure keys (e.g., `local`, `production`) become stable IDs with the format `yaml_<key>`
 - The `name` field is optional. If not defined, the infrastructure name defaults to the key
 - The `default` field specifies which infrastructure to select by default on first load
@@ -332,15 +343,17 @@ aas-web-ui/
    - Security types map: `none` → `No Authentication`, `oauth2` → `OAuth2`, etc.
 
 3. **Loading Order**:
-   - YAML config loaded from `/config/infrastructure-config.json`
-   - Merged with localStorage based on `ENDPOINT_CONFIG_AVAILABLE`
-   - Falls back to environment variables if no YAML config exists
+   - Check if environment variables are configured first (backwards compatibility)
+   - If env vars exist, use traditional configuration
+   - If no env vars, load YAML config from `/config/basyx-infra.yml`
+   - Merge active configuration with localStorage based on `ENDPOINT_CONFIG_AVAILABLE`
 
 4. **Merge Strategy**:
-   - `ENDPOINT_CONFIG_AVAILABLE=false`: YAML takes full precedence, no user edits allowed
+   - Environment variables checked first, take precedence over YAML
+   - `ENDPOINT_CONFIG_AVAILABLE=false`: Active config source takes full precedence, no user edits allowed
    - `ENDPOINT_CONFIG_AVAILABLE=true`: 
-     - YAML configs merged with localStorage edits (user changes preserved)
-     - User-created infrastructures added alongside YAML-defined ones
+     - Configurations merged with localStorage edits (user changes preserved)
+     - User-created infrastructures added alongside defined ones
      - Selected infrastructure persists in localStorage
 
 5. **OAuth2 Client Credentials**:
@@ -374,9 +387,10 @@ aas-web-ui/
    - Generate infrastructure IDs: `yaml_<yamlKey>`
 
 4. **Configuration Merging** (useInfrastructureStorage):
-   - Call config loader to get parsed YAML
-   - If YAML exists, merge with localStorage based on `ENDPOINT_CONFIG_AVAILABLE`
-   - If no YAML, use traditional env var logic
+   - Check if environment variables are configured (backwards compatibility)
+   - If env vars exist, use traditional configuration (env vars take precedence)
+   - If no env vars, load and use YAML configuration
+   - Merge active configuration with localStorage based on `ENDPOINT_CONFIG_AVAILABLE`
    - Authenticate client credentials flows automatically
 
 5. **Storage Management**:
