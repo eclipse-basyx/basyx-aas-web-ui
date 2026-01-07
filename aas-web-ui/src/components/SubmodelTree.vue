@@ -825,8 +825,10 @@
                 // If item matches predicate, return it (without children if none matched)
                 if (predicate(item)) {
                     if (childrenKey !== '') {
-                        // Create a shallow copy without the childrenKey property
-                        return Object.fromEntries(Object.entries(item).filter(([key]) => key !== childrenKey));
+                        // Create a shallow copy without the childrenKey and synthetic 'children' properties
+                        return Object.fromEntries(
+                            Object.entries(item).filter(([key]) => key !== childrenKey && key !== 'children'),
+                        );
                     }
                     return item;
                 }
