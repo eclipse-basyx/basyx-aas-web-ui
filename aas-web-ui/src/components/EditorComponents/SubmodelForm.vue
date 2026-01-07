@@ -152,7 +152,6 @@
 <script lang="ts" setup>
     import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
-    import _ from 'lodash';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
@@ -373,7 +372,7 @@
             // Add Submodel Reference to AAS
             await addSubmodelReferenceToAas(submodelObject.value);
             // Fetch and dispatch Submodel
-            const query = _.cloneDeep(route.query);
+            const query = structuredClone(route.query);
             query.path = submodelRepoUrl.value + '/' + base64Encode(submodelObject.value.id);
             router.push({ query: query });
             navigationStore.dispatchTriggerTreeviewReload();

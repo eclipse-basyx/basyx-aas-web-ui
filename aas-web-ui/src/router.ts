@@ -1,6 +1,5 @@
 import type { InfrastructureConfig } from '@/types/Infrastructure';
 import type { Router, RouteRecordNameGeneric, RouteRecordRaw } from 'vue-router';
-import _ from 'lodash';
 import { createRouter, createWebHistory } from 'vue-router';
 import AASList from '@/components/AppNavigation/AASList.vue';
 import ComponentVisualization from '@/components/ComponentVisualization.vue';
@@ -339,7 +338,7 @@ export async function createAppRouter(): Promise<Router> {
             if (from.query !== to.query && Object.keys(to.query).length > 0) {
                 // --> Save url query parameter
 
-                const queryToDispatch = _.cloneDeep(to.query);
+                const queryToDispatch = { ...to.query };
                 const queryLoaded = navigationStore.getUrlQuery;
 
                 if (routesUsingAasOrPathUrlQuery.includes(to.name)) {
@@ -381,7 +380,7 @@ export async function createAppRouter(): Promise<Router> {
             if (Object.keys(from.query).length > 0) {
                 // --> Save url query parameter
 
-                const queryToDispatch = _.cloneDeep(from.query);
+                const queryToDispatch = { ...from.query };
                 const queryLoaded = navigationStore.getUrlQuery;
 
                 if (routesUsingAasOrPathUrlQuery.includes(from.name) || from.path.startsWith('/modules/')) {
@@ -420,8 +419,7 @@ export async function createAppRouter(): Promise<Router> {
                 // --> Load url query parameter
 
                 const queryLoaded = navigationStore.getUrlQuery;
-                const updatedRoute = _.cloneDeep(to);
-                updatedRoute.query = {};
+                const updatedRoute = { path: to.path, name: to.name, query: {} as Record<string, any> };
 
                 if (routesUsingAasOrPathUrlQuery.includes(to.name) || to.path.startsWith('/modules/')) {
                     // Just for switching TO a route using url query parameter
@@ -490,23 +488,26 @@ export async function createAppRouter(): Promise<Router> {
             Object.hasOwn(to.query, 'path')
         ) {
             // --> Delete path url query parameter
-            const updatedRoute = _.cloneDeep(to);
-            delete updatedRoute.query.path;
+            const query = { ...to.query };
+            delete query.path;
+            const updatedRoute = { path: to.path, query };
             next(updatedRoute);
             return;
         }
 
         if (routesUsingOnlyAasUrlQuery.includes(to.name) && Object.hasOwn(to.query, 'path')) {
             // --> Delete path url query parameter
-            const updatedRoute = _.cloneDeep(to);
-            delete updatedRoute.query.path;
+            const query = { ...to.query };
+            delete query.path;
+            const updatedRoute = { path: to.path, query };
             next(updatedRoute);
             return;
         }
         if (routesUsingOnlyPathUrlQuery.includes(to.name) && Object.hasOwn(to.query, 'aas')) {
             // --> Delete aas url query parameter
-            const updatedRoute = _.cloneDeep(to);
-            delete updatedRoute.query.aas;
+            const query = { ...to.query };
+            delete query.aas;
+            const updatedRoute = { path: to.path, query };
             next(updatedRoute);
             return;
         }
@@ -605,8 +606,9 @@ export async function createAppRouter(): Promise<Router> {
             );
             if (!combinationAasPathIsOk) {
                 // Remove path query for not available SME path in AAS
-                const updatedRoute = _.cloneDeep(to);
-                delete updatedRoute.query.path;
+                const query = { ...to.query };
+                delete query.path;
+                const updatedRoute = { path: to.path, query };
                 next(updatedRoute);
                 return;
             }
@@ -625,8 +627,9 @@ export async function createAppRouter(): Promise<Router> {
             const aas = await fetchAndDispatchAas(to.query.aas as string);
             if (!aas || Object.keys(aas).length === 0) {
                 // Remove aas query for not available AAS endpoint
-                const updatedRoute = _.cloneDeep(to);
-                delete updatedRoute.query.aas;
+                const query = { ...to.query };
+                delete query.aas;
+                const updatedRoute = { path: to.path, query };
                 next(updatedRoute);
                 return;
             }
@@ -647,8 +650,9 @@ export async function createAppRouter(): Promise<Router> {
             const sme = await fetchAndDispatchSme(to.query.path as string, true);
             if (!sme || Object.keys(sme).length === 0) {
                 // Remove path query for not available SME path
-                const updatedRoute = _.cloneDeep(to);
-                delete updatedRoute.query.path;
+                const query = { ...to.query };
+                delete query.path;
+                const updatedRoute = { path: to.path, query };
                 next(updatedRoute);
                 return;
             }

@@ -114,7 +114,6 @@
 
 <script setup lang="ts">
     import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
-    import _ from 'lodash';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
@@ -264,7 +263,7 @@
                 await postSubmodelElement(mlpObject.value, props.parentElement.id);
 
                 // Navigate to the new MLP
-                const query = _.cloneDeep(route.query);
+                const query = structuredClone(route.query);
                 query.path = props.parentElement.path + '/submodel-elements/' + mlpObject.value.idShort;
 
                 router.push({
@@ -281,7 +280,7 @@
 
                 // Navigate to the new MLP
                 if (props.parentElement.modelType === 'SubmodelElementCollection') {
-                    const query = _.cloneDeep(route.query);
+                    const query = structuredClone(route.query);
                     query.path = props.parentElement.path + '.' + mlpObject.value.idShort;
 
                     router.push({
