@@ -240,6 +240,19 @@ export async function createAppRouter(): Promise<Router> {
                     throw new Error('OAuth2 issuer URL not found in callback or infrastructure config');
                 }
 
+                // Validate issuer URL format
+                try {
+                    const issuerUrl = new URL(issuer);
+                    if (!['http:', 'https:'].includes(issuerUrl.protocol)) {
+                        throw new Error(`Invalid issuer URL protocol: ${issuerUrl.protocol}. Must be http: or https:`);
+                    }
+                } catch (error) {
+                    if (error instanceof TypeError) {
+                        throw new Error(`Invalid issuer URL format: ${issuer}. Must be a valid HTTP(S) URL.`);
+                    }
+                    throw error;
+                }
+
                 // Fetch .well-known configuration to get token endpoint
                 const wellKnownUrl = `${issuer}/.well-known/openid-configuration`;
                 const wellKnownResponse = await fetch(wellKnownUrl);
