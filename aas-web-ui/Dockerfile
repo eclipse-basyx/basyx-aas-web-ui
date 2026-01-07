@@ -29,7 +29,7 @@ ARG HTTP_PROXY
 ARG HTTPS_PROXY
 # Set working directory
 WORKDIR /usr/src/app
-# Install jq for JSON processing
+# Install jq
 RUN apk add --no-cache jq
 # Install gettext for envsubst
 RUN apk add --no-cache gettext
