@@ -101,7 +101,7 @@ export function downloadFile(filename: string, fileContent: Blob): void {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function removeNullValues(obj: any): any {
     if (Array.isArray(obj)) {
-        return obj.map(removeNullValues);
+        return obj.map(removeNullValues).filter((v) => v !== null);
     } else if (obj !== null && typeof obj === 'object') {
         return Object.fromEntries(
             Object.entries(obj)
