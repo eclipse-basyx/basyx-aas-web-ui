@@ -18,7 +18,7 @@ The YAML configuration method is preferred as it allows system administrators to
 - **Development Mode**: Place the file at `/aas-web-ui/public/config/basyx-infra.yml`
 - **Production Mode (Docker)**: Mount the file to `/basyx-infra.yml` in the container
 
-The configuration file will be automatically processed at container startup and converted to JSON format that the application can consume.
+The configuration file is copied to the application's config directory at container startup and parsed by the browser using the `js-yaml` library.
 
 ### Basic Configuration Example
 
@@ -248,8 +248,8 @@ For a complete working example with multiple infrastructures, see the [MultiInfr
 - The `name` field is optional. If not defined, the infrastructure name defaults to the key
 - The `default` field specifies which infrastructure to select by default on first load
 - Error handling for invalid configurations is implemented in the application
-- YAML processing happens at container startup via the entrypoint script
-- The YAML is converted to JSON and served at `/config/infrastructure-config.json`
+- YAML parsing is done client-side using `js-yaml` library in the browser (works in both dev and production)
+- The YAML file is served as-is without server-side conversion, eliminating the need for system dependencies like `yq`
 
 ## Security Configuration Reference
 
@@ -293,17 +293,17 @@ aas-web-ui/
   public/
     config/
       basyx-infra.yml              # Sample configuration for development
-      infrastructure-config.json   # Generated at runtime in production
   src/
     composables/
       Infrastructure/
-        useInfrastructureConfigLoader.ts  # Loads JSON config from server
-        useInfrastructureYamlParser.ts    # Parses and validates YAML structure
+        useInfrastructureConfigLoader.ts  # Loads and parses YAML using js-yaml
+        useInfrastructureYamlParser.ts    # Validates and converts YAML to internal format
         useInfrastructureStorage.ts       # Merges YAML with localStorage
     types/
       Infrastructure.ts                   # TypeScript types for YAML config
-  Dockerfile                             # Installs yq for YAML processing
-  entrypoint.sh                          # Converts YAML to JSON at startup
+  package.json                            # Includes js-yaml dependency
+  Dockerfile                             # No YAML processing dependencies needed
+  entrypoint.sh                          # Copies YAML file to dist/config
 ```
 
 ### Key Design Decisions
@@ -340,24 +340,34 @@ aas-web-ui/
 1. **Container Startup** (entrypoint.sh):
    ```bash
    if [ -f /basyx-infra.yml ]; then
-     yq eval -o=json /basyx-infra.yml > infrastructure-config.json
-     jq empty infrastructure-config.json  # Validate JSON
-     cp infrastructure-config.json /usr/src/app/dist/config/
+     mkdir -p /usr/src/app/dist/config
+     cp /basyx-infra.yml /usr/src/app/dist/config/basyx-infra.yml
+     echo "YAML configuration copied to application"
    fi
    ```
 
 2. **Application Startup** (useInfrastructureConfigLoader):
-   - Fetch `/config/infrastructure-config.json`
-   - Parse and validate structure
+   - Determine base path (dev: `import.meta.env.BASE_URL`, prod: `envStore.getEnvBasePath`)
+   - Fetch YAML file from `/config/basyx-infra.yml`
+   - Parse YAML using `js-yaml.load()`
+   - Validate structure with `validateYamlConfig()`
    - Return null if file doesn't exist (404)
 
-3. **Configuration Merging** (useInfrastructureStorage):
-   - Call config loader
-   - If YAML exists, merge with localStorage
+3. **YAML Parsing** (useInfrastructureYamlParser):
+   - Convert YAML structure to internal format
+   - Map security types: `none` → `No Authentication`, `oauth2` → `OAuth2`, etc.
+   - Map OAuth2 flows: `auth_code` → `auth-code`, `client_credentials` → `client-credentials`
+   - Map component keys: `aasDiscovery` → `AASDiscovery`, `baseUrl` → `url`
+   - Generate infrastructure IDs: `yaml_<yamlKey>`
+
+4. **Configuration Merging** (useInfrastructureStorage):
+   - Call config loader to get parsed YAML
+   - If YAML exists, merge with localStorage based on `ENDPOINT_CONFIG_AVAILABLE`
    - If no YAML, use traditional env var logic
    - Authenticate client credentials flows automatically
 
-4. **Storage Management**:
+5. **Storage Management**:
    - YAML infrastructures: ID format `yaml_<key>`
    - User infrastructures: ID format `infra_<timestamp>`
    - All stored in localStorage under `basyxInfrastructures` key
+   - User modifications to YAML infrastructures override YAML definitions
