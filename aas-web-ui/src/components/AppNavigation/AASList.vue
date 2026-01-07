@@ -309,8 +309,6 @@
 
 <script lang="ts" setup>
     import type { ComponentPublicInstance } from 'vue';
-    import _ from 'lodash';
-    import debounce from 'lodash/debounce';
     import { computed, onActivated, onBeforeUnmount, onMounted, Ref, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
@@ -321,6 +319,7 @@
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { debounce } from '@/utils/generalUtils';
 
     // Extend the ComponentPublicInstance type to include scrollToIndex
     interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -566,7 +565,7 @@
         }
         if (isSelected(aas)) {
             // Deselect AAS: remove aas and path url query parameter
-            const query = _.cloneDeep(route.query);
+            const query = structuredClone(route.query);
             if (Object.hasOwn(query, 'aas')) delete query.aas;
             if (Object.hasOwn(query, 'path')) delete query.path;
 
@@ -578,7 +577,7 @@
             //     scrollToAas = true;
             // }
 
-            const query = _.cloneDeep(route.query);
+            const query = structuredClone(route.query);
             query.aas = aas.path;
             if (Object.hasOwn(query, 'path')) delete query.path;
 

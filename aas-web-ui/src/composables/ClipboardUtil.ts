@@ -1,6 +1,5 @@
 import type { JsonValue } from '@aas-core-works/aas-core3.0-typescript/jsonization';
 import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
-import _ from 'lodash';
 import { useRoute, useRouter } from 'vue-router';
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
@@ -140,7 +139,7 @@ export function useClipboardUtil() {
         // Add Submodel Reference to AAS
         await addSubmodelReferenceToAas(submodel);
         // Fetch and dispatch Submodel
-        const query = _.cloneDeep(route.query);
+        const query = structuredClone(route.query);
         query.path = submodelRepoUrl.value + '/' + base64Encode(submodel.id);
         router.push({ query: query });
 
@@ -173,7 +172,7 @@ export function useClipboardUtil() {
             await postSubmodelElement(submodelElement, parentElement.id);
 
             // Navigate to the new property
-            const query = _.cloneDeep(route.query);
+            const query = structuredClone(route.query);
             query.path = parentElement.path + '/submodel-elements/' + submodelElement.idShort;
             router.push({
                 query: query,
@@ -189,7 +188,7 @@ export function useClipboardUtil() {
 
             // Navigate to the new property
             if (parentElement.modelType === 'SubmodelElementCollection') {
-                const query = _.cloneDeep(route.query);
+                const query = structuredClone(route.query);
                 query.path = parentElement.path + '.' + submodelElement.idShort;
                 router.push({
                     query: query,

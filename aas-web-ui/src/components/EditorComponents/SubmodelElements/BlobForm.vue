@@ -123,7 +123,6 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
 */
 
     import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
-    import _ from 'lodash';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
@@ -336,7 +335,7 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
                 const newElementPath = props.parentElement.path + '/submodel-elements/' + blobObject.value.idShort;
 
                 // Navigate to the new Blob Element
-                const query = _.cloneDeep(route.query);
+                const query = structuredClone(route.query);
                 query.path = newElementPath;
 
                 router.push({
@@ -355,7 +354,7 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
 
                 // Navigate to the new Blob Element
                 if (props.parentElement.modelType === 'SubmodelElementCollection') {
-                    const query = _.cloneDeep(route.query);
+                    const query = structuredClone(route.query);
                     query.path = newElementPath;
 
                     router.push({

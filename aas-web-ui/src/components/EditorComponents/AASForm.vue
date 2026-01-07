@@ -177,7 +177,6 @@
 <script lang="ts" setup>
     import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
-    import _ from 'lodash';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
@@ -419,7 +418,7 @@
                 await putThumbnail(fileThumbnail.value, AASObject.value.id);
             }
 
-            const query = _.cloneDeep(route.query);
+            const query = structuredClone(route.query);
             query.aas = await getAasEndpointById(AASObject.value.id);
             if (Object.hasOwn(query, 'path')) delete query.path;
 
