@@ -72,11 +72,15 @@ export function removeNullValues(obj: any): any {
 }
 
 // Function to debounce a function call
-export function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
+export function debounce<T extends (...args: any[]) => any>(
+    func: T,
+    wait: number
+): (this: ThisParameterType<T>, ...args: Parameters<T>) => void {
     let timeout: ReturnType<typeof setTimeout> | null = null;
 
-    return function (...args: Parameters<T>) {
+    return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
+        const context = this;
         if (timeout) clearTimeout(timeout);
-        timeout = setTimeout(() => func(...args), wait);
+        timeout = setTimeout(() => func.apply(context, args), wait);
     };
 }
