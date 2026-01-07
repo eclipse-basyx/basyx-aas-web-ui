@@ -100,7 +100,7 @@ Use this flow for machine-to-machine authentication where the application authen
 > - Trusted network environments with no external access
 > - Demo/showcase scenarios with non-production credentials
 >
-> **For production use, always prefer Authorization Code Flow** which keeps secrets on the server side and provides proper user-based authentication.
+> **For production use, always prefer Authorization Code Flow** which provides proper user-based authentication.
 
 ```yaml
 infrastructures:
