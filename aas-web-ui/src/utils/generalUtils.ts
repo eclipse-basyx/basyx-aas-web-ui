@@ -10,7 +10,7 @@
  * isNumber('xs:double') // true
  * isNumber('string') // false
  */
-export function isNumber(valueType: string) {
+export function isNumber(valueType: string): boolean {
     if (!valueType) return false;
     // List of all number types
     const numberTypes = [
@@ -54,7 +54,8 @@ export function isNumber(valueType: string) {
  * const data = { name: 'Test', value: 42 };
  * downloadJson(data, 'data.json');
  */
-export function downloadJson(obj: any, fileName: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function downloadJson(obj: any, fileName: string): void {
     const jsonStr = JSON.stringify(obj, null, 4);
     const blob = new Blob([jsonStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -77,7 +78,7 @@ export function downloadJson(obj: any, fileName: string) {
  * const blob = new Blob(['Hello World'], { type: 'text/plain' });
  * downloadFile('hello.txt', blob);
  */
-export function downloadFile(filename: string, fileContent: Blob) {
+export function downloadFile(filename: string, fileContent: Blob): void {
     const link = document.createElement('a');
     link.href = window.URL.createObjectURL(fileContent);
     link.download = filename;
@@ -97,6 +98,7 @@ export function downloadFile(filename: string, fileContent: Blob) {
  * const input = { a: 1, b: null, c: { d: null, e: 2 } };
  * removeNullValues(input); // { a: 1, c: { e: 2 } }
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function removeNullValues(obj: any): any {
     if (Array.isArray(obj)) {
         return obj.map(removeNullValues);
@@ -125,11 +127,14 @@ export function removeNullValues(obj: any): any {
  * const debouncedSearch = debounce(search, 300);
  * debouncedSearch('test'); // Only executes after 300ms of no further calls
  */
-export function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function debounce<T extends (...args: any[]) => any>(
+    func: T,
+    wait: number
+): (this: ThisParameterType<T>, ...args: Parameters<T>) => void {
     let timeout: ReturnType<typeof setTimeout> | null = null;
-
-    return function (...args: Parameters<T>) {
+    return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
         if (timeout) clearTimeout(timeout);
-        timeout = setTimeout(() => func(...args), wait);
+        timeout = setTimeout(() => func.apply(this, args), wait);
     };
 }
