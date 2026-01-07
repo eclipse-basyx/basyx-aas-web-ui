@@ -685,19 +685,23 @@ export function useInfrastructureStorage(): {
         try {
             // Check if environment variables are configured (backwards compatibility)
             // Environment variables take precedence over YAML to avoid breaking existing deployments
-            const hasEnvVars = !!(
-                envConfig.aasDiscoveryPath ||
-                envConfig.aasRegistryPath ||
-                envConfig.submodelRegistryPath ||
-                envConfig.aasRepoPath ||
-                envConfig.submodelRepoPath ||
-                envConfig.conceptDescriptionRepoPath ||
-                envConfig.keycloakActive ||
-                (envConfig.keycloakUrl && envConfig.keycloakRealm && envConfig.keycloakClientId) ||
-                envConfig.oidcActive ||
-                (envConfig.oidcUrl && envConfig.oidcClientId)
-            );
+            function isNonEmptyString(value: unknown): value is string {
+                return typeof value === 'string' && value.trim().length > 0;
+            }
 
+            const hasEnvVars =
+                isNonEmptyString(envConfig.aasDiscoveryPath) ||
+                isNonEmptyString(envConfig.aasRegistryPath) ||
+                isNonEmptyString(envConfig.submodelRegistryPath) ||
+                isNonEmptyString(envConfig.aasRepoPath) ||
+                isNonEmptyString(envConfig.submodelRepoPath) ||
+                isNonEmptyString(envConfig.conceptDescriptionRepoPath) ||
+                envConfig.keycloakActive === true ||
+                (isNonEmptyString(envConfig.keycloakUrl) &&
+                    isNonEmptyString(envConfig.keycloakRealm) &&
+                    isNonEmptyString(envConfig.keycloakClientId)) ||
+                envConfig.oidcActive === true ||
+                (isNonEmptyString(envConfig.oidcUrl) && isNonEmptyString(envConfig.oidcClientId));
             // If environment variables are configured, use traditional configuration (backwards compatibility)
             if (hasEnvVars) {
                 return await handleTraditionalConfiguration(envConfig, refreshTokensCallback);
