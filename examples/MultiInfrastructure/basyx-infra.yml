@@ -20,14 +20,14 @@ infrastructures:
       type: oauth2
       config:
         flow: auth_code
-        issuer: "http://keycloak.basyx.localhost/auth/realms/BaSyx"
-        clientId: "basyx-client"
+        issuer: "http://keycloak.basyx.localhost/realms/BaSyx"
+        clientId: "basyx-web-ui"
 
   infra2:
     name: Local BaSyx
     components:
       aasDiscovery:
-        baseUrl: "https://localhost:9084"
+        baseUrl: "http://localhost:9084"
       aasRegistry:
         baseUrl: "http://localhost:9082"
       submodelRegistry:
