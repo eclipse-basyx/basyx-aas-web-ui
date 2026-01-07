@@ -683,7 +683,27 @@ export function useInfrastructureStorage(): {
         refreshTokensCallback?: (infrastructureId: string) => Promise<void>
     ): Promise<{ infrastructures: InfrastructureConfig[]; selectedInfrastructureId: string | null }> {
         try {
-            // Load YAML configuration first (if available)
+            // Check if environment variables are configured (backwards compatibility)
+            // Environment variables take precedence over YAML to avoid breaking existing deployments
+            const hasEnvVars = !!(
+                envConfig.aasDiscoveryPath ||
+                envConfig.aasRegistryPath ||
+                envConfig.submodelRegistryPath ||
+                envConfig.aasRepoPath ||
+                envConfig.submodelRepoPath ||
+                envConfig.conceptDescriptionRepoPath ||
+                envConfig.keycloakActive ||
+                (envConfig.keycloakUrl && envConfig.keycloakRealm && envConfig.keycloakClientId) ||
+                envConfig.oidcActive ||
+                (envConfig.oidcUrl && envConfig.oidcClientId)
+            );
+
+            // If environment variables are configured, use traditional configuration (backwards compatibility)
+            if (hasEnvVars) {
+                return await handleTraditionalConfiguration(envConfig, refreshTokensCallback);
+            }
+
+            // No environment variables - try loading YAML configuration
             const { loadInfrastructureConfig } = useInfrastructureConfigLoader();
             const yamlConfig = await loadInfrastructureConfig();
 
@@ -692,7 +712,7 @@ export function useInfrastructureStorage(): {
                 return await handleYamlConfigurationMerge(yamlConfig, envConfig, refreshTokensCallback);
             }
 
-            // No YAML config - proceed with original logic (env vars and localStorage)
+            // No env vars and no YAML - proceed with localStorage only
             return await handleTraditionalConfiguration(envConfig, refreshTokensCallback);
         } catch (error) {
             console.error('Error loading infrastructures from storage:', error);
