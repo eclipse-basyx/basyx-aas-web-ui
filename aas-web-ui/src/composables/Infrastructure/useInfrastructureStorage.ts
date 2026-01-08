@@ -335,9 +335,21 @@ export function useInfrastructureStorage(): {
                     for (const yamlInfra of yamlConfig.infrastructures) {
                         const storedInfra = storage.infrastructures.find((infra) => infra.id === yamlInfra.id);
                         if (storedInfra) {
-                            // Restore token if it exists
+                            // Restore token if it exists and has at least the required structure
                             if (storedInfra.token) {
-                                yamlInfra.token = storedInfra.token;
+                                const candidateToken: unknown = storedInfra.token;
+                                if (
+                                    candidateToken &&
+                                    typeof candidateToken === 'object' &&
+                                    typeof (candidateToken as any).accessToken === 'string'
+                                ) {
+                                    yamlInfra.token = candidateToken as typeof yamlInfra.token;
+                                } else {
+                                    console.warn(
+                                        'Ignoring invalid token data from localStorage for infrastructure:',
+                                        yamlInfra.id
+                                    );
+                                }
                             }
                             // Restore authentication status
                             if (storedInfra.isAuthenticated !== undefined) {
