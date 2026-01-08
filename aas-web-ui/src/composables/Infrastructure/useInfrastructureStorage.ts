@@ -322,12 +322,61 @@ export function useInfrastructureStorage(): {
     ): Promise<{ infrastructures: InfrastructureConfig[]; selectedInfrastructureId: string | null }> {
         // ENDPOINT_CONFIG_AVAILABLE=false: YAML takes full precedence
         if (envConfig.endpointConfigAvailable === false) {
-            // Authenticate client credentials flows if configured
+            // Check localStorage for stored tokens and selected infrastructure
+            let selectedId: string | null =
+                yamlConfig.defaultInfrastructureId || yamlConfig.infrastructures[0]?.id || null;
+            const stored = window.localStorage.getItem('basyxInfrastructures');
+
+            if (stored) {
+                try {
+                    const storage: InfrastructureStorage = JSON.parse(stored);
+
+                    // Restore tokens and authentication status from localStorage into YAML infrastructures
+                    for (const yamlInfra of yamlConfig.infrastructures) {
+                        const storedInfra = storage.infrastructures.find((infra) => infra.id === yamlInfra.id);
+                        if (storedInfra) {
+                            // Restore token if it exists and has at least the required structure
+                            if (storedInfra.token) {
+                                const candidateToken: unknown = storedInfra.token;
+                                if (
+                                    candidateToken &&
+                                    typeof candidateToken === 'object' &&
+                                    typeof (candidateToken as any).accessToken === 'string'
+                                ) {
+                                    yamlInfra.token = candidateToken as typeof yamlInfra.token;
+                                } else {
+                                    console.warn(
+                                        'Ignoring invalid token data from localStorage for infrastructure:',
+                                        yamlInfra.id
+                                    );
+                                }
+                            }
+                            // Restore authentication status
+                            if (storedInfra.isAuthenticated !== undefined) {
+                                yamlInfra.isAuthenticated = storedInfra.isAuthenticated;
+                            }
+                        }
+                    }
+
+                    // Use stored selection if it's one of the available YAML infrastructures
+                    if (
+                        storage.selectedInfrastructureId &&
+                        yamlConfig.infrastructures.some((infra) => infra.id === storage.selectedInfrastructureId)
+                    ) {
+                        selectedId = storage.selectedInfrastructureId;
+                    }
+                } catch (err) {
+                    console.warn('Failed to parse localStorage for infrastructure data:', err);
+                }
+            }
+
+            // Authenticate client credentials flows if configured and no token exists
             for (const infra of yamlConfig.infrastructures) {
                 if (
                     infra.auth?.securityType === 'OAuth2' &&
                     infra.auth.oauth2?.authFlow === 'client-credentials' &&
-                    infra.auth.oauth2.clientSecret
+                    infra.auth.oauth2.clientSecret &&
+                    !infra.token // Only authenticate if no token exists (not restored from storage)
                 ) {
                     await authenticateAndSetToken(infra, infra.auth.oauth2, refreshTokensCallback);
                 }
@@ -335,8 +384,7 @@ export function useInfrastructureStorage(): {
 
             return {
                 infrastructures: yamlConfig.infrastructures,
-                selectedInfrastructureId:
-                    yamlConfig.defaultInfrastructureId || yamlConfig.infrastructures[0]?.id || null,
+                selectedInfrastructureId: selectedId,
             };
         }
 
