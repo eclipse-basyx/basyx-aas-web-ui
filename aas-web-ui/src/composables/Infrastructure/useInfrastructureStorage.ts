@@ -370,7 +370,7 @@ export function useInfrastructureStorage(): {
                 }
             }
 
-            // Authenticate client credentials flows if configured and not already authenticated
+            // Authenticate client credentials flows if configured and no token exists
             for (const infra of yamlConfig.infrastructures) {
                 if (
                     infra.auth?.securityType === 'OAuth2' &&
