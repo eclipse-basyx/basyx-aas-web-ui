@@ -965,10 +965,10 @@
     "@thatopen/ui" "~3.1.0"
     lit "3.1.2"
 
-"@thatopen/ui@^3.2.3":
-  version "3.2.3"
-  resolved "https://registry.yarnpkg.com/@thatopen/ui/-/ui-3.2.3.tgz#aabe6b1d40165ea01a05c952ce8865dcb93b43d9"
-  integrity sha512-daWqSI+ECCnYMyjxcjNDvk1JbIj+IPAK6TRuobiT6tBaqyuHY5/MPfmbh+Am8IAynFU8yhOKcEmx1L9919fhhQ==
+"@thatopen/ui@^3.2.4":
+  version "3.2.4"
+  resolved "https://registry.yarnpkg.com/@thatopen/ui/-/ui-3.2.4.tgz#eee839588ece295f5c5736e3c55237d80c0bc265"
+  integrity sha512-r10CCXmlwI+SlHCWdiNbcPctmWY9G4S7gWYKSRZcrGaty+ErstJ2NfZc9SMJWgA6jtiODLd3vW599TBBNwN/AA==
   dependencies:
     "@floating-ui/dom" "1.6.3"
     iconify-icon "2.0.0"
