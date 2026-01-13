@@ -309,8 +309,6 @@
 
 <script lang="ts" setup>
     import type { ComponentPublicInstance } from 'vue';
-    import _ from 'lodash';
-    import debounce from 'lodash/debounce';
     import { computed, onActivated, onBeforeUnmount, onMounted, Ref, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
@@ -321,6 +319,7 @@
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { debounce } from '@/utils/generalUtils';
 
     // Extend the ComponentPublicInstance type to include scrollToIndex
     interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -393,13 +392,27 @@
     const allowUploading = computed(() => envStore.getAllowUploading); // Check if the current environment config allows uploading shells
     const statusCheck = computed(() => navigationStore.getStatusCheck);
     const copyIconAsRef = computed(() => copyIcon);
+    const isAuthenticating = computed(() => infrastructureStore.getIsAuthenticating); // Check if authentication is in progress
+    const isTestingConnections = computed(() => infrastructureStore.getIsTestingConnections); // Check if testing connections
+    const selectedInfrastructureId = computed(() => infrastructureStore.getSelectedInfrastructureId); // Get selected infrastructure ID
 
     // Watchers
+    // Reload when AAS Registry URL or selected infrastructure changes
     watch(
-        () => aasRegistryURL.value,
-        () => {
-            initialize();
-        }
+        [() => aasRegistryURL.value, () => selectedInfrastructureId.value],
+        ([newUrl, newId], [oldUrl, oldId]) => {
+            // Only reload when URL is valid and not authenticating and not testing connections
+            if (
+                newUrl &&
+                newUrl.trim() !== '' &&
+                !isAuthenticating.value &&
+                !isTestingConnections.value &&
+                (newUrl !== oldUrl || newId !== oldId)
+            ) {
+                initialize();
+            }
+        },
+        { immediate: true }
     );
 
     watch(
@@ -463,8 +476,6 @@
                 updateStatus();
             }, statusCheck.value.interval);
         }
-
-        initialize();
     });
 
     onBeforeUnmount(() => {
@@ -564,7 +575,7 @@
         }
         if (isSelected(aas)) {
             // Deselect AAS: remove aas and path url query parameter
-            const query = _.cloneDeep(route.query);
+            const query = structuredClone(route.query);
             if (Object.hasOwn(query, 'aas')) delete query.aas;
             if (Object.hasOwn(query, 'path')) delete query.path;
 
@@ -576,7 +587,7 @@
             //     scrollToAas = true;
             // }
 
-            const query = _.cloneDeep(route.query);
+            const query = structuredClone(route.query);
             query.aas = aas.path;
             if (Object.hasOwn(query, 'path')) delete query.path;
 

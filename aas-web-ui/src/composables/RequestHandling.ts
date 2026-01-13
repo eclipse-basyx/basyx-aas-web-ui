@@ -1,16 +1,81 @@
-import type { BaSyxComponentKey } from '@/types/BaSyx';
+import { useAuth } from '@/composables/Auth/useAuth';
+import { useEnvStore } from '@/store/EnvironmentStore';
 import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import { useNavigationStore } from '@/store/NavigationStore';
+
+// Track if we've already shown auth error to avoid spam
+let authErrorShown = false;
+let authErrorTimeout: NodeJS.Timeout | null = null;
 
 export function useRequestHandling() {
     const navigationStore = useNavigationStore();
     const infrastructureStore = useInfrastructureStore();
+    const environmentStore = useEnvStore();
+    const { login } = useAuth();
+
+    /**
+     * Centralized error handler for catch blocks
+     * Handles authentication errors and general errors
+     */
+    function handleRequestError(error: unknown, disableMessage: boolean): { success: false; status?: number } {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const is401Error = errorMessage.includes('Error status: 401') || errorMessage.includes('401');
+        const isAuthFailure = is401Error || errorMessage.includes('Failed to fetch');
+
+        const currentInfra = infrastructureStore.getSelectedInfrastructure;
+        const hasAuth = currentInfra?.auth && currentInfra.auth.securityType !== 'No Authentication';
+
+        // Handle authentication errors
+        if (isAuthFailure && hasAuth) {
+            if (!authErrorShown) {
+                authErrorShown = true;
+                if (authErrorTimeout) clearTimeout(authErrorTimeout);
+                authErrorTimeout = setTimeout(() => {
+                    authErrorShown = false;
+                    authErrorTimeout = null;
+                }, 30000);
+
+                if (currentInfra?.id) {
+                    infrastructureStore.setAuthenticationStatusForInfrastructure(currentInfra.id, false);
+                }
+
+                const isLoginAvailable = infrastructureStore.getIsLoginAvailable;
+
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 8000,
+                    color: 'warning',
+                    btnColor: 'buttonText',
+                    baseError: 'Authentication required!',
+                    extendedError: 'Please log in again.',
+                    actionText: isLoginAvailable ? 'Login' : undefined,
+                    actionCallback: isLoginAvailable ? login : undefined,
+                });
+            }
+            return { success: false, status: 401 };
+        }
+
+        // Handle other errors
+        if (!disableMessage) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 60000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Error! Server responded with: ' + error,
+            });
+        }
+        return { success: false };
+    }
 
     function getRequest(path: string, context: string, disableMessage: boolean, headers: Headers = new Headers()): any {
-        headers = addAuthorizationHeader(headers, path); // Add the Authorization header
+        if (shouldAddAuthorizationHeader(path)) {
+            // No Authorization needed for the /description endpoint.
+            headers = addAuthorizationHeader(headers); // Add the Authorization header
+        }
         return fetch(path, { method: 'GET', headers: headers })
             .then(async (response) => {
-                // Check if the Server responded with content Hallo Rene
+                // Check if the Server responded with content.
                 if (
                     response.headers.get('Content-Type')?.split(';')[0] === 'application/json' &&
                     response.headers.get('Content-Length') !== '0'
@@ -66,19 +131,7 @@ export function useRequestHandling() {
                     throw new Error('Unexpected response format');
                 }
             })
-            .catch((error) => {
-                // Catch any errors
-                // console.error('Error: ', error); // Log the error
-                if (!disableMessage)
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 60000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'Error! Server responded with: ' + error,
-                    });
-                return { success: false };
-            });
+            .catch((error) => handleRequestError(error, disableMessage));
     }
 
     function postRequest(
@@ -90,7 +143,7 @@ export function useRequestHandling() {
         isTSRequest: boolean = false
     ): any {
         if (!isTSRequest) {
-            headers = addAuthorizationHeader(headers, path); // Add the Authorization header
+            headers = addAuthorizationHeader(headers); // Add the Authorization header
         }
         return fetch(path, { method: 'POST', body: body, headers: headers })
             .then((response) => {
@@ -135,23 +188,11 @@ export function useRequestHandling() {
                     throw new Error('Unexpected response format');
                 }
             })
-            .catch((error) => {
-                // Catch any errors
-                // console.error('Error: ', error); // Log the error
-                if (!disableMessage)
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 60000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'Error! Server responded with: ' + error,
-                    });
-                return { success: false };
-            });
+            .catch((error) => handleRequestError(error, disableMessage));
     }
 
     function putRequest(path: string, body: any, headers: Headers, context: string, disableMessage: boolean): any {
-        headers = addAuthorizationHeader(headers, path); // Add the Authorization header
+        headers = addAuthorizationHeader(headers); // Add the Authorization header
         return fetch(path, { method: 'PUT', body: body, headers: headers })
             .then((response) => {
                 // Check if the Server responded with content
@@ -184,23 +225,11 @@ export function useRequestHandling() {
                     throw new Error('Unexpected response format');
                 }
             })
-            .catch((error) => {
-                // Catch any errors
-                // console.error('Error: ', error); // Log the error
-                if (!disableMessage)
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 60000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'Error! Server responded with: ' + error,
-                    });
-                return { success: false };
-            });
+            .catch((error) => handleRequestError(error, disableMessage));
     }
 
     function patchRequest(path: string, body: any, headers: Headers, context: string, disableMessage: boolean): any {
-        headers = addAuthorizationHeader(headers, path); // Add the Authorization header
+        headers = addAuthorizationHeader(headers); // Add the Authorization header
         return fetch(path, { method: 'PATCH', body: body, headers: headers })
             .then((response) => {
                 // Check if the Server responded with content
@@ -233,23 +262,11 @@ export function useRequestHandling() {
                     throw new Error('Unexpected response format');
                 }
             })
-            .catch((error) => {
-                // Catch any errors
-                // console.error('Error: ', error); // Log the error
-                if (!disableMessage)
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 60000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'Error! Server responded with: ' + error,
-                    });
-                return { success: false };
-            });
+            .catch((error) => handleRequestError(error, disableMessage));
     }
 
     function deleteRequest(path: string, context: string, disableMessage: boolean): any {
-        return fetch(path, { method: 'DELETE', headers: addAuthorizationHeader(new Headers(), path) })
+        return fetch(path, { method: 'DELETE', headers: addAuthorizationHeader(new Headers()) })
             .then((response) => {
                 // Check if the Server responded with content
                 if (
@@ -278,106 +295,35 @@ export function useRequestHandling() {
                     return { success: true };
                 }
             })
-            .catch((error) => {
-                // Catch any errors
-                // console.error('Error: ', error); // Log the error
-                if (!disableMessage)
-                    navigationStore.dispatchSnackbar({
-                        status: true,
-                        timeout: 60000,
-                        color: 'error',
-                        btnColor: 'buttonText',
-                        text: 'Error! Server responded with: ' + error,
-                    });
-                return { success: false };
-            });
+            .catch((error) => handleRequestError(error, disableMessage));
     }
 
-    function addAuthorizationHeader(headers: Headers, path: string): Headers {
+    function addAuthorizationHeader(headers: Headers): Headers {
         // Try to find which infrastructure component this request is for
         const selectedInfra = infrastructureStore.getSelectedInfrastructure;
 
-        // Debug logging (using warn to avoid lint errors)
-        if (process.env.NODE_ENV === 'development') {
-            console.warn('[RequestHandling] Adding auth header for path:', path);
-            console.warn('[RequestHandling] Selected infrastructure:', selectedInfra?.name);
-        }
-
         if (selectedInfra) {
-            // Check which component URL matches this request path
-            const componentKey = findMatchingComponent(path, selectedInfra);
-
-            if (process.env.NODE_ENV === 'development') {
-                console.warn('[RequestHandling] Matched component:', componentKey);
-            }
-
             // Use infrastructure-level authentication if configured
             const auth = selectedInfra.auth;
-
-            if (process.env.NODE_ENV === 'development') {
-                console.warn('[RequestHandling] Auth config:', {
-                    securityType: auth?.securityType,
-                    hasToken: !!selectedInfra.token?.accessToken,
-                    token: selectedInfra.token,
-                });
-            }
-
+            const authorizationPrefix = environmentStore.getAuthorizationPrefix;
             if (auth && auth.securityType !== 'No Authentication') {
                 if (auth.securityType === 'Bearer Token' && auth.bearerToken?.token) {
-                    if (process.env.NODE_ENV === 'development') {
-                        console.warn('[RequestHandling] Using Bearer Token');
-                    }
-                    headers.set('Authorization', 'Bearer ' + auth.bearerToken.token);
+                    headers.set('Authorization', authorizationPrefix + ' ' + auth.bearerToken.token);
                     return headers;
                 } else if (auth.securityType === 'Basic Authentication' && auth.basicAuth) {
-                    if (process.env.NODE_ENV === 'development') {
-                        console.warn('[RequestHandling] Using Basic Auth');
-                    }
                     headers.set(
                         'Authorization',
                         'Basic ' + btoa(auth.basicAuth.username + ':' + auth.basicAuth.password)
                     );
                     return headers;
-                } else if (auth.securityType === 'Keycloak' && selectedInfra.token?.accessToken) {
-                    // Use stored token from infrastructure
-                    if (process.env.NODE_ENV === 'development') {
-                        console.warn(
-                            '[RequestHandling] Using Keycloak token:',
-                            selectedInfra.token.accessToken.substring(0, 20) + '...'
-                        );
-                    }
-                    headers.set('Authorization', 'Bearer ' + selectedInfra.token.accessToken);
+                } else if (auth.securityType === 'OAuth2' && selectedInfra.token?.accessToken) {
+                    headers.set('Authorization', authorizationPrefix + ' ' + selectedInfra.token.accessToken);
                     return headers;
-                } else {
-                    if (process.env.NODE_ENV === 'development') {
-                        console.warn('[RequestHandling] Auth configured but no valid credentials/token found');
-                    }
                 }
             }
         }
 
         return headers;
-    }
-
-    function findMatchingComponent(path: string, infrastructure: any): BaSyxComponentKey | null {
-        // Try to match the request path to one of the infrastructure components
-        const componentKeys: BaSyxComponentKey[] = [
-            'AASDiscovery',
-            'AASRegistry',
-            'SubmodelRegistry',
-            'AASRepo',
-            'SubmodelRepo',
-            'ConceptDescriptionRepo',
-        ];
-
-        for (const key of componentKeys) {
-            const componentUrl = infrastructure.components[key].url;
-            if (componentUrl && componentUrl.trim() !== '' && path.startsWith(componentUrl.trim())) {
-                return key;
-            }
-        }
-
-        return null;
     }
 
     function errorHandler(errorData: any, context: string): void {
@@ -411,6 +357,19 @@ export function useRequestHandling() {
             baseError: initialErrorMessage,
             extendedError: errorMessage,
         });
+    }
+
+    function shouldAddAuthorizationHeader(path: string): boolean {
+        const exemptionEnabled = environmentStore.getAuthorizationDescriptionEndpointExemption;
+        if (
+            exemptionEnabled &&
+            path.endsWith('/description') &&
+            !path.includes('/submodels/') &&
+            !path.includes('/submodel-elements/')
+        ) {
+            return false;
+        }
+        return true;
     }
 
     return {

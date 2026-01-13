@@ -27,7 +27,6 @@
 </template>
 
 <script lang="ts" setup>
-    import _ from 'lodash';
     import { ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
@@ -116,7 +115,7 @@
             if (!error) {
                 // Check if the selected AAS is the one being deleted
                 if (aasStore.getSelectedAAS.id === props.aas.id) {
-                    const query = _.cloneDeep(route.query);
+                    const query = structuredClone(route.query);
                     if (Object.hasOwn(query, 'aas')) delete query.aas;
                     if (Object.hasOwn(query, 'path')) delete query.path;
 

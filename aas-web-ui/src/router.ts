@@ -1,5 +1,5 @@
+import type { InfrastructureConfig } from '@/types/Infrastructure';
 import type { Router, RouteRecordNameGeneric, RouteRecordRaw } from 'vue-router';
-import _ from 'lodash';
 import { createRouter, createWebHistory } from 'vue-router';
 import AASList from '@/components/AppNavigation/AASList.vue';
 import ComponentVisualization from '@/components/ComponentVisualization.vue';
@@ -125,13 +125,9 @@ export async function createAppRouter(): Promise<Router> {
     const routes: Array<RouteRecordRaw> = [...staticRoutes, ...moduleRoutes];
 
     // Stores
-    const infrastructureStore = useInfrastructureStore();
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
     const envStore = useEnvStore();
-
-    const defaultInfrastructureID = infrastructureStore.getDefaultInfrastructureId();
-    await infrastructureStore.dispatchSelectInfrastructure(defaultInfrastructureID);
 
     // Composables
     const { fetchAndDispatchAas, aasByEndpointHasSmeByPath } = useAASHandling();
@@ -214,6 +210,116 @@ export async function createAppRouter(): Promise<Router> {
     });
 
     router.beforeEach(async (to, from, next) => {
+        // Handle OAuth2 callback (state + code in URL)
+        if (to.query.state && to.query.code) {
+            const state = to.query.state as string;
+            const code = to.query.code as string;
+            const issuerURL = to.query.iss as string;
+
+            // Try to handle OAuth2 callback
+            try {
+                const { exchangeOAuth2AuthorizationCode } = await import('@/composables/Auth/OAuth2Auth');
+                const infraStore = useInfrastructureStore();
+
+                // Wait for infrastructure store to finish loading
+                await infraStore.waitForInitialization();
+
+                // Find the infrastructure by state (infrastructure ID)
+                const infrastructure = infraStore.getInfrastructures.find(
+                    (infra: InfrastructureConfig) => infra.id === state
+                );
+
+                if (!infrastructure || !infrastructure.auth?.oauth2) {
+                    throw new Error(`Infrastructure with ID '${state}' not found or missing OAuth2 config`);
+                }
+
+                // Get issuer URL from infrastructure config if not in query params
+                const issuer = issuerURL || infrastructure.auth.oauth2.host;
+                if (!issuer) {
+                    throw new Error('OAuth2 issuer URL not found in callback or infrastructure config');
+                }
+
+                // Validate issuer URL format
+                try {
+                    const issuerUrl = new URL(issuer);
+                    if (!['http:', 'https:'].includes(issuerUrl.protocol)) {
+                        throw new Error(`Invalid issuer URL protocol: ${issuerUrl.protocol}. Must be http: or https:`);
+                    }
+                } catch (error) {
+                    if (error instanceof TypeError) {
+                        throw new Error(`Invalid issuer URL format: ${issuer}. Must be a valid HTTP(S) URL.`);
+                    }
+                    throw error;
+                }
+
+                // Fetch .well-known configuration to get token endpoint
+                const wellKnownUrl = `${issuer}/.well-known/openid-configuration`;
+                const wellKnownResponse = await fetch(wellKnownUrl);
+
+                if (!wellKnownResponse.ok) {
+                    throw new Error(`Failed to fetch OpenID configuration: ${wellKnownResponse.status}`);
+                }
+
+                const wellKnownConfig = await wellKnownResponse.json();
+                const tokenEndpoint = wellKnownConfig.token_endpoint;
+
+                if (!tokenEndpoint) {
+                    throw new Error('Token endpoint not found in OpenID configuration');
+                }
+
+                // Exchange authorization code for tokens
+                const tokenData = await exchangeOAuth2AuthorizationCode({
+                    tokenEndpoint,
+                    clientId: infrastructure.auth.oauth2.clientId,
+                    redirectUri: `${window.location.origin}${window.location.pathname}`,
+                    code,
+                    state, // Pass state to retrieve correct code verifier
+                });
+
+                // Update infrastructure with token
+                infrastructure.token = {
+                    accessToken: tokenData.accessToken,
+                    refreshToken: tokenData.refreshToken,
+                    expiresAt: tokenData.expiresAt,
+                    idToken: tokenData.idToken,
+                };
+
+                // Save updated infrastructure
+                infraStore.dispatchUpdateInfrastructure(infrastructure);
+                // Set authentication status to true
+                infraStore.setAuthenticationStatusForInfrastructure(infrastructure.id, true);
+
+                // Show success notification
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 3000,
+                    color: 'success',
+                    btnColor: 'buttonText',
+                    text: 'OAuth2 authentication successful!',
+                });
+
+                // Clean up URL and redirect to home
+                next({ path: '/', replace: true });
+                return;
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'OAuth2 authentication failed';
+                console.error('[OAuth2 Callback] Failed:', errorMessage, error);
+                // Show error notification
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 10000,
+                    color: 'error',
+                    btnColor: 'buttonText',
+                    text: 'OAuth2 authentication failed',
+                    extendedError: errorMessage,
+                });
+
+                // Clean up URL and redirect to home
+                next({ path: '/', replace: true });
+                return;
+            }
+        }
+
         // Handle redirection of `globalAssetId`, `aasId` and `smId`
         if (
             await idRedirectHandled(
@@ -232,7 +338,7 @@ export async function createAppRouter(): Promise<Router> {
             if (from.query !== to.query && Object.keys(to.query).length > 0) {
                 // --> Save url query parameter
 
-                const queryToDispatch = _.cloneDeep(to.query);
+                const queryToDispatch = { ...to.query };
                 const queryLoaded = navigationStore.getUrlQuery;
 
                 if (routesUsingAasOrPathUrlQuery.includes(to.name)) {
@@ -274,7 +380,7 @@ export async function createAppRouter(): Promise<Router> {
             if (Object.keys(from.query).length > 0) {
                 // --> Save url query parameter
 
-                const queryToDispatch = _.cloneDeep(from.query);
+                const queryToDispatch = { ...from.query };
                 const queryLoaded = navigationStore.getUrlQuery;
 
                 if (routesUsingAasOrPathUrlQuery.includes(from.name) || from.path.startsWith('/modules/')) {
@@ -313,8 +419,7 @@ export async function createAppRouter(): Promise<Router> {
                 // --> Load url query parameter
 
                 const queryLoaded = navigationStore.getUrlQuery;
-                const updatedRoute = _.cloneDeep(to);
-                updatedRoute.query = {};
+                const updatedRoute = { path: to.path, name: to.name, query: {} as Record<string, any> };
 
                 if (routesUsingAasOrPathUrlQuery.includes(to.name) || to.path.startsWith('/modules/')) {
                     // Just for switching TO a route using url query parameter
@@ -383,23 +488,26 @@ export async function createAppRouter(): Promise<Router> {
             Object.hasOwn(to.query, 'path')
         ) {
             // --> Delete path url query parameter
-            const updatedRoute = _.cloneDeep(to);
-            delete updatedRoute.query.path;
+            const query = { ...to.query };
+            delete query.path;
+            const updatedRoute = { path: to.path, query };
             next(updatedRoute);
             return;
         }
 
         if (routesUsingOnlyAasUrlQuery.includes(to.name) && Object.hasOwn(to.query, 'path')) {
             // --> Delete path url query parameter
-            const updatedRoute = _.cloneDeep(to);
-            delete updatedRoute.query.path;
+            const query = { ...to.query };
+            delete query.path;
+            const updatedRoute = { path: to.path, query };
             next(updatedRoute);
             return;
         }
         if (routesUsingOnlyPathUrlQuery.includes(to.name) && Object.hasOwn(to.query, 'aas')) {
             // --> Delete aas url query parameter
-            const updatedRoute = _.cloneDeep(to);
-            delete updatedRoute.query.aas;
+            const query = { ...to.query };
+            delete query.aas;
+            const updatedRoute = { path: to.path, query };
             next(updatedRoute);
             return;
         }
@@ -498,8 +606,9 @@ export async function createAppRouter(): Promise<Router> {
             );
             if (!combinationAasPathIsOk) {
                 // Remove path query for not available SME path in AAS
-                const updatedRoute = _.cloneDeep(to);
-                delete updatedRoute.query.path;
+                const query = { ...to.query };
+                delete query.path;
+                const updatedRoute = { path: to.path, query };
                 next(updatedRoute);
                 return;
             }
@@ -518,8 +627,9 @@ export async function createAppRouter(): Promise<Router> {
             const aas = await fetchAndDispatchAas(to.query.aas as string);
             if (!aas || Object.keys(aas).length === 0) {
                 // Remove aas query for not available AAS endpoint
-                const updatedRoute = _.cloneDeep(to);
-                delete updatedRoute.query.aas;
+                const query = { ...to.query };
+                delete query.aas;
+                const updatedRoute = { path: to.path, query };
                 next(updatedRoute);
                 return;
             }
@@ -540,8 +650,9 @@ export async function createAppRouter(): Promise<Router> {
             const sme = await fetchAndDispatchSme(to.query.path as string, true);
             if (!sme || Object.keys(sme).length === 0) {
                 // Remove path query for not available SME path
-                const updatedRoute = _.cloneDeep(to);
-                delete updatedRoute.query.path;
+                const query = { ...to.query };
+                delete query.path;
+                const updatedRoute = { path: to.path, query };
                 next(updatedRoute);
                 return;
             }

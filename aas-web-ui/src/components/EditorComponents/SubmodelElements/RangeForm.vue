@@ -136,7 +136,6 @@
 */
 
     import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
-    import _ from 'lodash';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
@@ -287,7 +286,7 @@
                 await postSubmodelElement(rangeObject.value, props.parentElement.id);
 
                 // Navigate to the new Range Element
-                const query = _.cloneDeep(route.query);
+                const query = structuredClone(route.query);
                 query.path = props.parentElement.path + '/submodel-elements/' + rangeObject.value.idShort;
 
                 router.push({
@@ -304,7 +303,7 @@
 
                 // Navigate to the new Range Element
                 if (props.parentElement.modelType === 'SubmodelElementCollection') {
-                    const query = _.cloneDeep(route.query);
+                    const query = structuredClone(route.query);
                     query.path = props.parentElement.path + '.' + rangeObject.value.idShort;
 
                     router.push({

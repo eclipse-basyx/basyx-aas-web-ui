@@ -27,7 +27,6 @@
 <script lang="ts" setup>
     import type { JsonValue } from '@aas-core-works/aas-core3.0-typescript/jsonization';
     import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
-    import _ from 'lodash';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
@@ -103,10 +102,11 @@
         if (instanceOrError.error !== null) {
             navigationStore.dispatchSnackbar({
                 status: true,
-                timeout: 4000,
+                timeout: 20000,
                 color: 'error',
                 btnColor: 'buttonText',
-                text: 'Error parsing Submodel: ' + instanceOrError.error,
+                baseError: instanceOrError.error?.message || String(instanceOrError.error),
+                extendedError: instanceOrError.error.path ? JSON.stringify(instanceOrError.error.path, null, 2) : '',
             });
             return;
         }
@@ -117,7 +117,7 @@
         // Add Submodel Reference to AAS
         await addSubmodelReferenceToAas(submodel);
         // Fetch and dispatch Submodel
-        const query = _.cloneDeep(route.query);
+        const query = structuredClone(route.query);
         query.path = submodelRepoUrl.value + '/' + base64Encode(submodel.id);
 
         router.push({ query: query });
@@ -131,10 +131,11 @@
         if (instanceOrError.error !== null) {
             navigationStore.dispatchSnackbar({
                 status: true,
-                timeout: 4000,
+                timeout: 20000,
                 color: 'error',
                 btnColor: 'buttonText',
-                text: 'Error parsing SubmodelElement: ' + instanceOrError.error,
+                baseError: instanceOrError.error?.message || String(instanceOrError.error),
+                extendedError: instanceOrError.error.path ? JSON.stringify(instanceOrError.error.path, null, 2) : '',
             });
             return;
         }
@@ -145,7 +146,7 @@
             await postSubmodelElement(submodelElement, props.parentElement.id);
 
             // Navigate to the new property
-            const query = _.cloneDeep(route.query);
+            const query = structuredClone(route.query);
             query.path = props.parentElement.path + '/submodel-elements/' + submodelElement.idShort;
 
             router.push({
@@ -162,7 +163,7 @@
 
             // Navigate to the new property
             if (props.parentElement.modelType === 'SubmodelElementCollection') {
-                const query = _.cloneDeep(route.query);
+                const query = structuredClone(route.query);
                 query.path = props.parentElement.path + '.' + submodelElement.idShort;
 
                 router.push({

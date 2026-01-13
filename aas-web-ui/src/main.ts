@@ -68,8 +68,9 @@ async function initialize(): Promise<void> {
         ssr: false,
     });
 
-    // Create the router
+    // Create the router (this also initializes InfrastructureStore which may trigger auth)
     const router = await createAppRouter();
+
     app.use(router);
 
     // Mount the app

@@ -73,21 +73,7 @@
         </v-app-bar>
 
         <!-- global Snackbar -->
-        <v-snackbar v-model="Snackbar.status" :color="Snackbar.color" :timeout="Snackbar.timeout" location="top">
-            <v-card v-if="Snackbar.status === true && Snackbar.color == 'error' && Snackbar.baseError">
-                <v-card-title class="text-subtitle-2">{{ Snackbar.baseError }}</v-card-title>
-                <v-divider></v-divider>
-                <v-card-text style="max-height: 200px; overflow-y: auto; max-width: 590px">
-                    <pre class="text-subtitleText text-caption">{{ Snackbar.extendedError }}</pre>
-                </v-card-text>
-            </v-card>
-            <span v-else class="text-buttonText">{{ Snackbar.text }}</span>
-            <template #actions>
-                <v-btn :color="Snackbar.btnColor" variant="plain" @click="closeSnackbar()">
-                    <v-icon>mdi-close</v-icon>
-                </v-btn>
-            </template>
-        </v-snackbar>
+        <Snackbar />
 
         <!-- App Footer -->
         <v-footer app class="bg-appBar text-center d-flex flex-column py-0">
@@ -213,9 +199,6 @@
             </div>
         </v-menu>
     </v-container>
-
-    <!-- Infrastructure Management Dialog -->
-    <InfrastructureManagement v-model:open="infrastructureManagementDialog"></InfrastructureManagement>
 </template>
 
 <script lang="ts" setup>
@@ -223,6 +206,7 @@
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
+    import Snackbar from '@/components/AppNavigation/Snackbar.vue';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -252,7 +236,6 @@
     const currentRoute = computed(() => route.name); // get the current route name
     const isMobile = computed(() => navigationStore.getIsMobile);
     const isDark = computed(() => theme.global.current.value.dark);
-    const Snackbar = computed(() => navigationStore.getSnackbar);
     const selectedAas = computed(() => aasStore.getSelectedAAS); // get selected AAS from Store
     const selectedNode = computed(() => aasStore.getSelectedNode); // get selected AAS from Store
     const moduleRoutes = computed(() => navigationStore.getModuleRoutes); // get the module routes
@@ -313,16 +296,6 @@
         ].includes(route.name as string);
     });
 
-    // Watch for changes in the Snackbar Object and close it after the Timeout
-    watch(
-        () => Snackbar.value,
-        () => {
-            if (Snackbar.value.status) {
-                setTimeout(() => closeSnackbar(), Snackbar.value.timeout);
-            }
-        }
-    );
-
     watch(
         () => drawerState.value,
         () => {
@@ -345,10 +318,6 @@
             navigationStore.dispatchStatusCheck(statusCheckToDispatch);
         }
     });
-
-    function closeSnackbar(): void {
-        navigationStore.dispatchSnackbar({ status: false });
-    }
 
     function applyTheme(): void {
         // check the local storage for a saved theme preference

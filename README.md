@@ -186,11 +186,78 @@ docker run -p 3000:3000 eclipsebasyx/aas-ui
 http://localhost:3000/<base_path>
 ```
 
-#### Docker Compose:
+#### YAML-based Infrastructure Configuration (Recommended):
 
-If you want to use the AAS Web UI as part of a Docker Compose project you can use the following example in your `docker-compose.yml`
+The recommended way to configure multiple BaSyx infrastructures is using a YAML configuration file. This allows you to preconfigure multiple environments with different authentication methods.
 
+**Example `docker-compose.yml`:**
+
+```yaml
+services:
+  aas-web-gui:
+    image: eclipsebasyx/aas-gui:<tag>
+    container_name: aas-web-gui
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount your infrastructure configuration
+      - ./basyx-infra.yml:/basyx-infra.yml:ro
+      # Optional: Custom logo folder
+      - <local_path_to_logo_folder>:/usr/src/app/dist/Logo
+    environment:
+      # Allow users to edit infrastructures in the UI
+      ENDPOINT_CONFIG_AVAILABLE: "true"
+      # Optional styling
+      PRIMARY_COLOR: "<primary_color>"
+      BASE_PATH: "<base_path>"
 ```
+
+**Example `basyx-infra.yml`:**
+
+```yaml
+infrastructures:
+  default: local
+
+  local:
+    name: Local BaSyx
+    components:
+      aasDiscovery:
+        baseUrl: "http://localhost:9084"
+      aasRegistry:
+        baseUrl: "http://localhost:9082"
+      submodelRegistry:
+        baseUrl: "http://localhost:9083"
+      aasRepository:
+        baseUrl: "http://localhost:9081"
+      submodelRepository:
+        baseUrl: "http://localhost:9081"
+      conceptDescriptionRepository:
+        baseUrl: "http://localhost:9081"
+    security:
+      type: none
+
+  production:
+    name: Production with OAuth2
+    components:
+      aasDiscovery:
+        baseUrl: "https://discovery.basyx.example.com"
+      # ... other components
+    security:
+      type: oauth2
+      config:
+        flow: auth_code
+        issuer: "https://keycloak.example.com/auth/realms/BaSyx"
+        clientId: "basyx-web-ui"
+        scope: "openid profile email"
+```
+
+> For complete configuration examples including OAuth2, Basic Auth, and Bearer Token authentication, see the [Infrastructure Configuration Documentation](./Docs/infrastructure-config.md) and the [MultiInfrastructure Example](./examples/MultiInfrastructure/).
+
+#### Docker Compose (Legacy - Environment Variables):
+
+You can also configure a single infrastructure using environment variables:
+
+```yaml
 aas-web-gui:
     image: eclipsebasyx/aas-gui:<tag>
     container_name: aas-web-gui

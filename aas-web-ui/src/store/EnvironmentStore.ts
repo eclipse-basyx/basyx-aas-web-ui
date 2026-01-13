@@ -9,6 +9,12 @@ function extractInitialUrlQueryParameter(): any {
     return Object.fromEntries(params.entries());
 }
 
+// Helper function to parse boolean environment variables
+// Handles both quoted ("true") and unquoted (true/True/TRUE) YAML values
+function parseBooleanEnv(value: string): boolean {
+    return value?.toLowerCase() === 'true';
+}
+
 export const useEnvStore = defineStore('envStore', () => {
     const initialUrlQueryParameter = ref(extractInitialUrlQueryParameter());
 
@@ -67,6 +73,12 @@ export const useEnvStore = defineStore('envStore', () => {
         import.meta.env.VITE_KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX ||
             (isProduction ? '/__KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX_PLACEHOLDER__/' : '')
     );
+    const oidcActive = ref(import.meta.env.VITE_OIDC_ACTIVE || (isProduction ? '/__OIDC_ACTIVE_PLACEHOLDER__/' : ''));
+    const oidcUrl = ref(import.meta.env.VITE_OIDC_URL || (isProduction ? '/__OIDC_URL_PLACEHOLDER__/' : ''));
+    const oidcScope = ref(import.meta.env.VITE_OIDC_SCOPE || (isProduction ? '/__OIDC_SCOPE_PLACEHOLDER__/' : ''));
+    const oidcClientId = ref(
+        import.meta.env.VITE_OIDC_CLIENT_ID || (isProduction ? '/__OIDC_CLIENT_ID_PLACEHOLDER__/' : '')
+    );
     const preconfiguredAuth = ref(
         import.meta.env.VITE_PRECONFIGURED_AUTH || (isProduction ? '/__PRECONFIGURED_AUTH_PLACEHOLDER__/' : '')
     );
@@ -106,6 +118,14 @@ export const useEnvStore = defineStore('envStore', () => {
     const editorIdPrefix = ref(
         import.meta.env.VITE_EDITOR_ID_PREFIX || (isProduction ? '/__EDITOR_ID_PREFIX_PLACEHOLDER__/' : '')
     );
+    const authorizationPrefix = ref(
+        import.meta.env.VITE_AUTHORIZATION_HEADER_PREFIX ||
+            (isProduction ? '/__AUTHORIZATION_HEADER_PREFIX_PLACEHOLDER__/' : '')
+    );
+    const authorizationDescriptionEndpointExemption = ref(
+        import.meta.env.VITE_AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION ||
+            (isProduction ? '/__AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION_PLACEHOLDER__/' : '')
+    );
 
     // Getters
     const getEnvBasePath = computed(() => basePath.value);
@@ -120,20 +140,26 @@ export const useEnvStore = defineStore('envStore', () => {
     const getEnvPrimaryLightColor = computed(() => primaryLightColor.value);
     const getEnvPrimaryDarkColor = computed(() => primaryDarkColor.value);
     const getEnvInfluxdbToken = computed(() => influxdbToken.value);
-    const getKeycloakActive = computed(() => keycloakActive.value === 'true');
+    const getKeycloakActive = computed(() => parseBooleanEnv(keycloakActive.value));
     const getKeycloakUrl = computed(() => keycloakUrl.value);
     const getKeycloakRealm = computed(() => keycloakRealm.value);
     const getKeycloakClientId = computed(() => keycloakClientId.value);
-    const getKeycloakFeatureControl = computed(() => keycloakFeatureControl.value === 'true');
+    const getKeycloakFeatureControl = computed(() => parseBooleanEnv(keycloakFeatureControl.value));
     const getKeycloakFeatureControlRolePrefix = computed(() => keycloakFeatureControlRolePrefix.value);
+    const getOidcActive = computed(() => parseBooleanEnv(oidcActive.value));
+    const getOidcUrl = computed(() => oidcUrl.value);
+    const getOidcScope = computed(() => oidcScope.value);
+    const getOidcClientId = computed(() => oidcClientId.value);
     const getPreconfiguredAuth = computed(
-        () => !Object.hasOwn(initialUrlQueryParameter.value, 'ignorePreConfAuth') && preconfiguredAuth.value === 'true'
+        () =>
+            !Object.hasOwn(initialUrlQueryParameter.value, 'ignorePreConfAuth') &&
+            parseBooleanEnv(preconfiguredAuth.value)
     );
     const getPreconfiguredAuthClientSecret = computed(() => preconfiguredAuthClientSecret.value);
-    const getEndpointConfigAvailable = computed(() => endpointConfigAvailable.value === 'true');
-    const getSingleAas = computed(() => singleAas.value === 'true');
+    const getEndpointConfigAvailable = computed(() => parseBooleanEnv(endpointConfigAvailable.value));
+    const getSingleAas = computed(() => parseBooleanEnv(singleAas.value));
     const getSingleAasRedirect = computed(() => {
-        if (singleAas.value === 'true' && singleAasRedirect.value) {
+        if (parseBooleanEnv(singleAas.value) && singleAasRedirect.value) {
             if (urlRegex.test(singleAasRedirect.value)) {
                 return singleAasRedirect.value;
             }
@@ -141,11 +167,11 @@ export const useEnvStore = defineStore('envStore', () => {
         }
         return undefined;
     });
-    const getSmViewerEditor = computed(() => smViewerEditor.value === 'true');
-    const getAllowEditing = computed(() => allowEditing.value === 'true');
-    const getAllowUploading = computed(() => allowUploading.value === 'true');
-    const getAllowLogout = computed(() => allowLogout.value === 'true');
-    const getBasicAuthActive = computed(() => basicAuthActive.value === 'true');
+    const getSmViewerEditor = computed(() => parseBooleanEnv(smViewerEditor.value));
+    const getAllowEditing = computed(() => parseBooleanEnv(allowEditing.value));
+    const getAllowUploading = computed(() => parseBooleanEnv(allowUploading.value));
+    const getAllowLogout = computed(() => parseBooleanEnv(allowLogout.value));
+    const getBasicAuthActive = computed(() => parseBooleanEnv(basicAuthActive.value));
     const getBasicAuthUsername = computed(() => basicAuthUsername.value);
     const getBasicAuthPassword = computed(() => basicAuthPassword.value);
     const getEditorIdPrefix = computed(() => {
@@ -157,6 +183,10 @@ export const useEnvStore = defineStore('envStore', () => {
         }
         return editorIdPrefix.value;
     });
+    const getAuthorizationPrefix = computed(() => authorizationPrefix.value);
+    const getAuthorizationDescriptionEndpointExemption = computed(() =>
+        parseBooleanEnv(authorizationDescriptionEndpointExemption.value)
+    );
 
     // Actions
     function setSingleAas(singleAasValue: string): void {
@@ -203,6 +233,10 @@ export const useEnvStore = defineStore('envStore', () => {
         getKeycloakClientId,
         getKeycloakFeatureControl,
         getKeycloakFeatureControlRolePrefix,
+        getOidcActive,
+        getOidcUrl,
+        getOidcScope,
+        getOidcClientId,
         getPreconfiguredAuth,
         getPreconfiguredAuthClientSecret,
         getEndpointConfigAvailable,
@@ -216,6 +250,8 @@ export const useEnvStore = defineStore('envStore', () => {
         getBasicAuthUsername,
         getBasicAuthPassword,
         getEditorIdPrefix,
+        getAuthorizationPrefix,
+        getAuthorizationDescriptionEndpointExemption,
 
         // Actions
         setSingleAas,

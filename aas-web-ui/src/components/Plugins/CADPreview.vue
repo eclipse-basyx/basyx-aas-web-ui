@@ -24,12 +24,16 @@
     import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
     import { computed, onMounted, ref, watch } from 'vue';
     import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
+    import { useEnvStore } from '@/store/EnvironmentStore';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
 
     // Props
     const props = defineProps<{
         submodelElementData: any;
     }>();
+
+    // Store
+    const environmentStore = useEnvStore();
 
     // Template refs
     const viewerContainer = ref<HTMLElement>();
@@ -51,17 +55,17 @@
 
         if (selectedInfra.value) {
             const auth = selectedInfra.value.auth;
-
+            const authHeaderPrefix = environmentStore.getAuthorizationPrefix;
             if (auth && auth.securityType !== 'No Authentication') {
                 if (auth.securityType === 'Bearer Token' && auth.bearerToken?.token) {
-                    headers.set('Authorization', `Bearer ${auth.bearerToken.token}`);
+                    headers.set('Authorization', `${authHeaderPrefix} ${auth.bearerToken.token}`);
                 } else if (auth.securityType === 'Basic Authentication' && auth.basicAuth) {
                     headers.set(
                         'Authorization',
                         `Basic ${btoa(auth.basicAuth.username + ':' + auth.basicAuth.password)}`
                     );
-                } else if (auth.securityType === 'Keycloak' && selectedInfra.value.token?.accessToken) {
-                    headers.set('Authorization', `Bearer ${selectedInfra.value.token.accessToken}`);
+                } else if (auth.securityType === 'OAuth2' && selectedInfra.value.token?.accessToken) {
+                    headers.set('Authorization', `${authHeaderPrefix} ${selectedInfra.value.token.accessToken}`);
                 }
             }
         }

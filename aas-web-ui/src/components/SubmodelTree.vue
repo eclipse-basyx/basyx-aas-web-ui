@@ -280,7 +280,6 @@
 </template>
 
 <script lang="ts" setup>
-    import { chain, debounce, has, isEmpty, omit } from 'lodash';
     import { computed, onMounted, Ref, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
@@ -292,6 +291,7 @@
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { debounce } from '@/utils/generalUtils';
     import { isEmptyString } from '@/utils/StringUtils';
 
     // Vue Router
@@ -352,6 +352,7 @@
     const triggerTreeviewReload = computed(() => navigationStore.getTriggerTreeviewReload); // Reload the Treeview
     const clearTreeview = computed(() => navigationStore.getClearTreeview); // Clear the Treeview
     const clipboardElementContentType = computed(() => clipboardStore.getClipboardElementModelType()); // Get the Clipboard Element Content Type
+    const isAuthenticating = computed(() => infrastructureStore.getIsAuthenticating); // Check if authentication is in progress
 
     // Watchers
     watch(
@@ -375,7 +376,9 @@
         () => {
             if (!['SMViewer', 'SMEditor'].includes(route.name as string)) {
                 submodelTree.value = [];
-                initialize();
+                if (!isAuthenticating.value) {
+                    initialize();
+                }
             }
         }
     );
@@ -383,7 +386,7 @@
     watch(
         () => triggerTreeviewReload.value,
         (triggerVal) => {
-            if (triggerVal === true) {
+            if (triggerVal === true && !isAuthenticating.value) {
                 initialize();
             }
         }
@@ -398,7 +401,9 @@
     );
 
     onMounted(() => {
-        initialize();
+        if (!isAuthenticating.value) {
+            initialize();
+        }
     });
 
     async function initialize(): Promise<void> {
@@ -777,7 +782,7 @@
     }
 
     function deepFilter(array: Array<any>, predicate: { (item: any): any; (arg0: any): any }): Array<any> {
-        return chain(array)
+        return array
             .map((item: any) => {
                 let childrenKey = '';
                 if (
@@ -804,10 +809,10 @@
                 }
 
                 if (childrenKey !== '') {
-                    if (has(item, childrenKey)) {
+                    if (Object.hasOwn(item, childrenKey)) {
                         const filteredChildren = deepFilter(item[childrenKey], predicate);
                         // Return item with filtered children if any children match
-                        if (!isEmpty(filteredChildren)) {
+                        if (filteredChildren.length > 0) {
                             return {
                                 ...item,
                                 [childrenKey]: filteredChildren,
@@ -819,14 +824,19 @@
 
                 // If item matches predicate, return it (without children if none matched)
                 if (predicate(item)) {
-                    return omit(item, [childrenKey]);
+                    if (childrenKey !== '') {
+                        // Create a shallow copy without the childrenKey and synthetic 'children' properties
+                        return Object.fromEntries(
+                            Object.entries(item).filter(([key]) => key !== childrenKey && key !== 'children')
+                        );
+                    }
+                    return item;
                 }
 
                 // Otherwise, discard
                 return null;
             })
-            .filter(Boolean)
-            .value();
+            .filter(Boolean);
     }
 </script>
 
