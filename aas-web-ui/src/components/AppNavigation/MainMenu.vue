@@ -1,6 +1,6 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-card class="pa-2" border color="navigationMenu" :min-width="620">
+        <v-card class="pa-2" border rounded="lg" color="navigationMenu" :min-width="620">
             <v-container>
                 <v-sheet
                     class="overflow-hidden mx-auto mb-4"

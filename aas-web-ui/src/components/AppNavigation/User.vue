@@ -18,6 +18,7 @@
             v-if="isAuthEnabled"
             min-width="300px"
             color="navigationMenu"
+            rounded="lg"
             style="border-style: solid; border-width: 1px">
             <v-list v-if="isAuthenticated" nav class="bg-navigationMenu">
                 <v-list-item class="py-2" :active="false" nav :subtitle="authUserEmail" :title="authUsername">

@@ -9,7 +9,8 @@
         <v-card
             :width="364"
             :color="isMobile ? 'card' : 'navigationMenu'"
-            :style="{ 'border-style': isMobile ? '' : 'solid', 'border-width': isMobile ? '' : '1px' }">
+            :rounded="isMobile ? '' : 'lg'"
+            :border="!isMobile">
             <v-list nav class="py-0" :class="isMobile ? 'bg-card' : 'bg-navigationMenu'">
                 <!-- Switch to change the app theme -->
                 <ThemeSwitch></ThemeSwitch>

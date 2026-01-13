@@ -14,7 +14,7 @@
         <v-icon>mdi-autorenew</v-icon>
         <v-icon>mdi-menu-down</v-icon>
         <v-menu activator="parent" :close-on-content-click="false" width="300px">
-            <v-list nav class="py-0 bg-navigationMenu" style="border-style: solid; border-width: 1px">
+            <v-list nav class="py-0 bg-navigationMenu" border rounded="lg">
                 <!-- Switch to activate/deactive auto-sync -->
                 <v-list-item class="py-0">
                     <v-switch
