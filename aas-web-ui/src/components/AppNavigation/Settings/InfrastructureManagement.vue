@@ -55,7 +55,6 @@
                         <v-list-subheader class="mb-3">Component Endpoints</v-list-subheader>
                         <!-- Component Configurations -->
                         <ComponentConfigPanel
-                            v-model:expanded-panels="expandedPanels"
                             :components="editingInfrastructure.components"
                             :component-connection-status="componentConnectionStatus"
                             :component-testing-loading="componentTestingLoading"
@@ -344,7 +343,7 @@
     }
 
     async function authenticateOAuth2(): Promise<void> {
-        await saveInfrastructure(); // Save infrastrucuture in case this is a new one
+        await saveInfrastructure(); // Save infrastructure in case this is a new one
         await performLogout(); // Logout first to clear any existing tokens
         await oauth2Form.authenticate(editingInfrastructure.value.id);
 

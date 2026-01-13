@@ -400,14 +400,14 @@
     // Reload when AAS Registry URL or selected infrastructure changes
     watch(
         [() => aasRegistryURL.value, () => selectedInfrastructureId.value],
-        ([newUrl], [oldUrl, oldId]) => {
+        ([newUrl, newId], [oldUrl, oldId]) => {
             // Only reload when URL is valid and not authenticating and not testing connections
             if (
                 newUrl &&
                 newUrl.trim() !== '' &&
                 !isAuthenticating.value &&
                 !isTestingConnections.value &&
-                (newUrl !== oldUrl || selectedInfrastructureId.value !== oldId)
+                (newUrl !== oldUrl || newId !== oldId)
             ) {
                 initialize();
             }
