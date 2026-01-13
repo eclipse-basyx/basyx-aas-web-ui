@@ -10,7 +10,7 @@
         <v-btn icon="mdi-autorenew"></v-btn>
     </v-badge>
     <!-- Desktop Autosync Menu -->
-    <v-btn v-else variant="plain" icon size="small" style="padding-right: 28px; padding-left: 28px">
+    <v-btn v-else variant="tonal" icon size="small" style="padding-right: 28px; padding-left: 28px">
         <v-icon>mdi-autorenew</v-icon>
         <v-icon>mdi-menu-down</v-icon>
         <v-menu activator="parent" :close-on-content-click="false" width="300px">

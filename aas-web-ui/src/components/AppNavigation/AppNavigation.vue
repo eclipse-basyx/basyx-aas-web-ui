@@ -12,9 +12,10 @@
                     <v-tooltip open-delay="600" location="bottom">
                         <template #activator="{ props }">
                             <v-btn
-                                variant="plain"
+                                variant="tonal"
                                 style="padding-right: 20px; padding-left: 20px"
                                 icon
+                                :active="false"
                                 v-bind="props"
                                 :to="{ name: currentRoute, query: {} }">
                                 <v-icon size="small">mdi-home-outline</v-icon>
@@ -38,7 +39,7 @@
                                         class="text-none"
                                         v-bind="{ ...tooltipProps, ...menuProps }"
                                         append-icon="mdi-menu-down"
-                                        variant="plain"
+                                        variant="tonal"
                                         size="small">
                                         {{
                                             route.meta?.title
@@ -57,7 +58,7 @@
                     <v-divider vertical inset></v-divider>
                     <v-tooltip open-delay="600" location="bottom">
                         <template #activator="{ props }">
-                            <v-btn variant="plain" style="padding-right: 20px; padding-left: 20px" icon v-bind="props">
+                            <v-btn variant="tonal" style="padding-right: 20px; padding-left: 20px" icon v-bind="props">
                                 <v-icon size="small">mdi-console-line</v-icon>
                             </v-btn>
                         </template>

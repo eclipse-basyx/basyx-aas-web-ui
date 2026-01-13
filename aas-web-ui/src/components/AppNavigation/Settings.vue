@@ -1,7 +1,7 @@
 <template>
     <v-menu :close-on-content-click="false" location="bottom">
         <template #activator="{ props }">
-            <v-btn v-bind="props" icon variant="plain" size="small" style="padding-right: 28px; padding-left: 28px">
+            <v-btn v-bind="props" icon variant="tonal" size="small" style="padding-right: 28px; padding-left: 28px">
                 <v-icon>mdi-cog</v-icon>
                 <v-icon>mdi-menu-down</v-icon>
             </v-btn>
