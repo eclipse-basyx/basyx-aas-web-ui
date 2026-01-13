@@ -164,6 +164,7 @@
     import IDTALogo from '@/assets/Companies/IDTA_Logo.png';
     import IESELogoDark from '@/assets/Companies/IESE_Logo_dark.svg';
     import IESELogoLight from '@/assets/Companies/IESE_Logo_light.svg';
+    import RocheLogo from '@/assets/Companies/Roche_Logo.svg'; // Logo only for AAS UI permitted
     // Import contributor images
     import Buettner from '@/assets/Contributors/Buettner.jpg';
     import Eicke from '@/assets/Contributors/Eicke.jpg';
@@ -236,6 +237,12 @@
             srcLight: ARENA2036LogoLight,
             altText: 'ARENA2036 Logo',
         },
+        {
+            href: 'https://www.roche.com/',
+            isDynamic: false,
+            srcStatic: RocheLogo,
+            altText: 'Roche Logo',
+        },
     ]);
 
     // Array of contributor objects with imported images
@@ -265,9 +272,9 @@
             linkedin_link: 'https://www.linkedin.com/in/fiona-helena-buettner',
         },
         {
-            name: 'Rene Pascal Fischer',
-            company: 'Fraunhofer IESE',
-            email: 'Rene-Pascal.Fischer@iese.fraunhofer.de',
+            name: 'Rene-Pascal Fischer',
+            company: 'F. Hoffmann-La Roche AG',
+            email: 'Rene-Pascal.Fischer@roche.com',
             image: Fischer,
             github_link: 'https://github.com/FischerRene',
             linkedin_link: 'https://www.linkedin.com/in/fischer-rene',
