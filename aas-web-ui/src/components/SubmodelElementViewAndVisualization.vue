@@ -9,6 +9,7 @@
                         color="primary"
                         variant="outlined"
                         divided
+                        mandatory
                         density="compact"
                         class="pa-0 ma-0"
                         style="height: 32px !important">

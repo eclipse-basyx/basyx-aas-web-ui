@@ -9,6 +9,7 @@
                 style="margin-top: -10px"
                 variant="outlined"
                 divided
+                mandatory
                 class="mt-2">
                 <v-btn value="system" @click="toggleTheme">
                     <span>System</span>
