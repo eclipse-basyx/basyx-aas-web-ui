@@ -33,24 +33,14 @@
                     <!-- Menu Toggle (Desktop) -->
                     <v-menu v-model="mainMenu" :close-on-content-click="false" :offset="8">
                         <template #activator="{ props: menuProps }">
-                            <v-tooltip open-delay="600" location="bottom">
-                                <template #activator="{ props: tooltipProps }">
-                                    <v-btn
-                                        class="text-none"
-                                        v-bind="{ ...tooltipProps, ...menuProps }"
-                                        append-icon="mdi-menu-down"
-                                        variant="tonal"
-                                        size="small">
-                                        {{
-                                            route.meta?.title
-                                                ? route.meta.title.toString()
-                                                : route.meta?.name?.toString()
-                                        }}
-                                    </v-btn>
-                                </template>
-                                <v-hotkey :keys="navigationMenuCombo" variant="elevated" class="mr-2" />
-                                <span>Navigate to</span>
-                            </v-tooltip>
+                            <v-btn
+                                class="text-none"
+                                v-bind="menuProps"
+                                append-icon="mdi-menu-down"
+                                variant="tonal"
+                                size="small">
+                                {{ route.meta?.title ? route.meta.title.toString() : route.meta?.name?.toString() }}
+                            </v-btn>
                         </template>
                         <!-- Main Menu Component -->
                         <MainMenu @close-menu="mainMenu = false"></MainMenu>
@@ -275,7 +265,6 @@
     const isMac = computed(() => typeof navigator !== 'undefined' && /macintosh|mac os x/i.test(navigator.userAgent));
     const commandPaletteCombo = computed(() => (isMac.value ? 'cmd+k' : 'ctrl+k'));
     const homeCombo = computed(() => (isMac.value ? 'cmd+shift+h' : 'ctrl+shift+h'));
-    const navigationMenuCombo = computed(() => (isMac.value ? '/' : '/'));
 
     // Data
     const mainMenu = ref(false); // Variable to show the Main Menu

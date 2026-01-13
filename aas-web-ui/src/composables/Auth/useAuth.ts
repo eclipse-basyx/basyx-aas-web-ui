@@ -1,5 +1,4 @@
 import { type Router } from 'vue-router';
-import { usePopupOverlay } from '@/composables/PopupOverlay';
 import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 
@@ -10,7 +9,6 @@ import { useNavigationStore } from '@/store/NavigationStore';
 export function useAuth(router?: Router) {
     const infrastructureStore = useInfrastructureStore();
     const navStore = useNavigationStore();
-    const { showOverlay, hideOverlay } = usePopupOverlay();
 
     /**
      * Perform login for the current infrastructure
@@ -59,7 +57,6 @@ export function useAuth(router?: Router) {
                         return;
                     }
 
-                    showOverlay();
                     const { authenticateOAuth2ClientCredentials } = await import('@/composables/Auth/OAuth2Auth');
                     const result = await authenticateOAuth2ClientCredentials(config);
 
@@ -85,7 +82,6 @@ export function useAuth(router?: Router) {
                         btnColor: 'buttonText',
                         text: 'Successfully authenticated with OAuth2',
                     });
-                    hideOverlay();
                 } else {
                     // For authorization-code flow, use the form composable which handles the redirect flow
                     const { useOAuth2Form } = await import('@/composables/Auth/useOAuth2Form');
@@ -98,7 +94,6 @@ export function useAuth(router?: Router) {
                     await oauth2Form.authenticate(infra.id);
                 }
             } catch (error: unknown) {
-                hideOverlay();
                 navStore.dispatchSnackbar({
                     status: true,
                     timeout: 4000,
