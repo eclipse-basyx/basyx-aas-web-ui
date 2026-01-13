@@ -13,7 +13,6 @@
 <script lang="ts" setup>
     import { onBeforeUnmount, onMounted, ref } from 'vue';
     import { useRouter } from 'vue-router';
-    import { useGlobalShortcuts } from '@/composables/Shortcuts/useGlobalShortcuts';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
@@ -23,9 +22,6 @@
     // Stores
     const infrastructureStore = useInfrastructureStore();
     const navigationStore = useNavigationStore();
-
-    // Register global shortcuts
-    useGlobalShortcuts();
 
     // Data
     const mediaQueryList = window.matchMedia('(max-width: 600px)');

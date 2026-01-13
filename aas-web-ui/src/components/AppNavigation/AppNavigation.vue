@@ -48,7 +48,12 @@
                     <v-divider vertical inset></v-divider>
                     <v-tooltip open-delay="600" location="bottom">
                         <template #activator="{ props }">
-                            <v-btn variant="tonal" style="padding-right: 20px; padding-left: 20px" icon v-bind="props">
+                            <v-btn
+                                variant="tonal"
+                                style="padding-right: 20px; padding-left: 20px"
+                                icon
+                                v-bind="props"
+                                @click="commandPaletteDialog = true">
                                 <v-icon size="small">mdi-console-line</v-icon>
                             </v-btn>
                         </template>
@@ -106,6 +111,9 @@
 
         <!-- global Snackbar -->
         <Snackbar />
+
+        <!-- Command Palette -->
+        <CommandPalette v-model="commandPaletteDialog" />
 
         <!-- App Footer -->
         <v-footer app class="bg-appBar text-center d-flex py-0">
@@ -245,6 +253,7 @@
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
     import Snackbar from '@/components/AppNavigation/Snackbar.vue';
+    import { useGlobalShortcuts } from '@/composables/Shortcuts/useGlobalShortcuts';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -266,8 +275,14 @@
     const commandPaletteCombo = computed(() => (isMac.value ? 'cmd+k' : 'ctrl+k'));
     const homeCombo = computed(() => (isMac.value ? 'cmd+shift+h' : 'ctrl+shift+h'));
 
+    // Register global shortcuts with command palette callback
+    useGlobalShortcuts(() => {
+        commandPaletteDialog.value = true;
+    });
+
     // Data
     const mainMenu = ref(false); // Variable to show the Main Menu
+    const commandPaletteDialog = ref(false); // Variable to show the Command Palette Dialog
 
     const mobileMenu = ref(false); // Variable to show the Mobile Menu
     const drawerVisibility = ref(true); // Variable to show the AAS List Drawer
