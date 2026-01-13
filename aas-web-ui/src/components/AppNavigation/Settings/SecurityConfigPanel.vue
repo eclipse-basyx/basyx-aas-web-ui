@@ -13,7 +13,7 @@
                             <span v-else class="d-flex flex-row align-center">
                                 <div class="d-flex flex-row align-center">
                                     <span class="mr-2">Type:</span>
-                                    <v-chip border variant="tonal" size="small" color="primary">{{
+                                    <v-chip border label variant="tonal" size="small" color="primary">{{
                                         auth.securityType || 'No Authentication'
                                     }}</v-chip>
                                 </div>
