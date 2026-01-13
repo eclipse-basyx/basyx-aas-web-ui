@@ -176,9 +176,17 @@ docker run -p 3000:3000 eclipsebasyx/aas-ui
 
 `-e ENDPOINT_CONFIG_AVAILABLE=<true/false>`
 
-4. If you want to use a custom logo, you can mount a folder containing the logo and the favicon.ico to the container by adding the following argument to the run command:
+4. If you want to use a custom logo, you can either mount a folder containing the logo and the favicon.ico to the container or use a hosted file from your content delivery network.
 
-`-v <local_path_to_logo_folder>:/usr/src/app/dist/Logo`
+    4.1. Using a mounted file: Add the following argument to the run command:
+
+    `-v <local_path_to_logo_folder>:/usr/src/app/dist/Logo`
+
+    4.2. Using a content delivery network: Add the URL path as part of the environment variables form before, e.g.
+
+    `-e LOGO_LIGHT_PATH=<your-custom-url>`
+
+    `-e LOGO_DARK_PATH=<your-custom-url>`
 
 5. The GUI is now available at:
 
@@ -210,6 +218,8 @@ services:
       # Optional styling
       PRIMARY_COLOR: "<primary_color>"
       BASE_PATH: "<base_path>"
+      # Optional: Logo using CDN
+      LOGO_PATH: "<your-custom-url>"
 ```
 
 **Example `basyx-infra.yml`:**
