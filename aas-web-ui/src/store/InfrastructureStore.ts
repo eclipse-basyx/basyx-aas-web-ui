@@ -60,6 +60,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     const openInfrastructureEditMode = ref(false);
     const user = ref<UserData | null>(null);
     const isAuthenticating = ref(false);
+    const isTestingConnections = ref(false);
 
     // Component URL States
     // Force reset to empty strings to prevent any stale values from previous sessions
@@ -144,6 +145,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     const getConceptDescriptionRepoURL = computed(() => ConceptDescriptionRepoURL.value);
     const getBasyxComponents = computed(() => basyxComponents);
     const getIsAuthenticating = computed(() => isAuthenticating.value);
+    const getIsTestingConnections = computed(() => isTestingConnections.value);
     const getIsLoginAvailable = computed(() => {
         const infra = getSelectedInfrastructure.value;
         if (!infra || !infra.auth || infra.auth.securityType === 'No Authentication') {
@@ -303,6 +305,10 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             await connectComponents();
         }
         // Note: AAS list and treeview reload automatically via watchers when component URLs change
+    }
+
+    function dispatchIsTestingConnections(state: boolean): void {
+        isTestingConnections.value = state;
     }
 
     function dispatchAddInfrastructure(infrastructure: InfrastructureConfig): void {
@@ -683,6 +689,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         getBasyxComponents,
         getDefaultInfrastructureId,
         getIsAuthenticating,
+        getIsTestingConnections,
         getIsLoginAvailable,
 
         // Actions
@@ -701,5 +708,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         connectComponents,
         connectComponent,
         setUser,
+        dispatchIsTestingConnections,
     };
 });

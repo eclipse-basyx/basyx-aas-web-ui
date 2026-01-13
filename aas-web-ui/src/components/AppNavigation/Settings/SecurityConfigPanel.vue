@@ -1,9 +1,32 @@
 <template>
-    <v-expansion-panels class="mt-4">
+    <v-expansion-panels class="border rounded" :elevation="0">
         <v-expansion-panel>
-            <v-expansion-panel-title>
-                <v-icon left size="small" class="mr-2">mdi-lock</v-icon>
-                Security Configuration (applies to all components)
+            <v-expansion-panel-title v-slot="{ expanded }">
+                <v-row no-gutters>
+                    <v-col class="d-flex justify-start align-center" cols="4">
+                        <v-icon size="small" class="mr-2">mdi-lock</v-icon>
+                        Security Configuration
+                    </v-col>
+                    <v-col class="text-grey" cols="8">
+                        <v-fade-transition leave-absolute>
+                            <span v-if="expanded">Applies to all components</span>
+                            <span v-else class="d-flex flex-row align-center">
+                                <div class="d-flex flex-row align-center">
+                                    <span class="mr-2">Type:</span>
+                                    <v-chip border label variant="tonal" size="small" color="primary">{{
+                                        auth.securityType || 'No Authentication'
+                                    }}</v-chip>
+                                </div>
+                                <v-spacer></v-spacer>
+                                <template v-if="auth.securityType === 'OAuth2'">
+                                    <span class="mr-3">{{
+                                        authFlowOptions.find((opt) => opt.value === oAuth2AuthFlow)?.text
+                                    }}</span>
+                                </template>
+                            </span>
+                        </v-fade-transition>
+                    </v-col>
+                </v-row>
             </v-expansion-panel-title>
             <v-expansion-panel-text>
                 <!-- Authentication Type Selection -->

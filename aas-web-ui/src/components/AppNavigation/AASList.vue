@@ -393,12 +393,22 @@
     const statusCheck = computed(() => navigationStore.getStatusCheck);
     const copyIconAsRef = computed(() => copyIcon);
     const isAuthenticating = computed(() => infrastructureStore.getIsAuthenticating); // Check if authentication is in progress
+    const isTestingConnections = computed(() => infrastructureStore.getIsTestingConnections); // Check if testing connections
+    const selectedInfrastructureId = computed(() => infrastructureStore.getSelectedInfrastructureId); // Get selected infrastructure ID
 
     // Watchers
+    // Reload when AAS Registry URL or selected infrastructure changes
     watch(
-        () => aasRegistryURL.value,
-        (newVal) => {
-            if (newVal && newVal.trim() !== '' && !isAuthenticating.value) {
+        [() => aasRegistryURL.value, () => selectedInfrastructureId.value],
+        ([newUrl, newId], [oldUrl, oldId]) => {
+            // Only reload when URL is valid and not authenticating and not testing connections
+            if (
+                newUrl &&
+                newUrl.trim() !== '' &&
+                !isAuthenticating.value &&
+                !isTestingConnections.value &&
+                (newUrl !== oldUrl || newId !== oldId)
+            ) {
                 initialize();
             }
         },

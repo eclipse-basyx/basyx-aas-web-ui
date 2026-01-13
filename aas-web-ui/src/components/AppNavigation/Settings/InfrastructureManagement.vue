@@ -1,7 +1,7 @@
 <template>
     <v-dialog v-model="dialogOpen" max-width="900px" persistent scrollable>
-        <v-card>
-            <v-card-title>Manage Infrastructures</v-card-title>
+        <v-sheet rounded="lg" border>
+            <v-card-title class="bg-cardHeader">Manage Infrastructures</v-card-title>
             <v-divider></v-divider>
             <v-card-text style="max-height: 600px">
                 <InfrastructureListTable
@@ -19,36 +19,42 @@
                 <v-btn
                     text="Reset to defaults"
                     prepend-icon="mdi-arrow-u-left-top"
-                    variant="outlined"
-                    color="error"
+                    border
+                    variant="flat"
+                    rounded="lg"
+                    color="surface-light"
                     @click="resetDialogOpen = true" />
                 <v-spacer></v-spacer>
-                <v-btn @click="close">Close</v-btn>
+                <v-btn text="close" rounded="lg" @click="close" />
             </v-card-actions>
-        </v-card>
+        </v-sheet>
 
         <!-- Edit/Add Infrastructure Dialog -->
-        <v-dialog v-model="editDialogOpen" max-width="1200px" persistent scrollable>
-            <v-card>
-                <v-card-title>
-                    <span class="text-h6">{{ editMode === 'add' ? 'Add' : 'Edit' }} Infrastructure</span>
-                </v-card-title>
+        <v-dialog v-model="editDialogOpen" max-width="1200px" persistent>
+            <v-sheet rounded="lg" border>
+                <v-card-title class="bg-cardHeader"
+                    >{{ editMode === 'add' ? 'Add' : 'Edit' }} Infrastructure</v-card-title
+                >
                 <v-divider></v-divider>
 
-                <v-card-text style="max-height: 700px">
+                <v-card-text style="max-height: calc(100vh - 200px); overflow-y: auto" class="pt-1">
                     <v-form ref="formRef">
                         <!-- Infrastructure Name -->
+                        <v-list-subheader class="mb-1">Infrastructure Name</v-list-subheader>
                         <v-text-field
                             v-model="editingInfrastructure.name"
-                            label="Infrastructure Name"
+                            bg-color="surface-light"
                             variant="outlined"
                             density="compact"
+                            label="Infrastructure Name"
+                            flat
+                            single-line
                             :rules="[requiredRule]"
                             class="mb-2"></v-text-field>
-
+                        <v-divider></v-divider>
+                        <v-list-subheader class="mb-3">Component Endpoints</v-list-subheader>
                         <!-- Component Configurations -->
                         <ComponentConfigPanel
-                            v-model:expanded-panels="expandedPanels"
                             :components="editingInfrastructure.components"
                             :component-connection-status="componentConnectionStatus"
                             :component-testing-loading="componentTestingLoading"
@@ -56,6 +62,8 @@
                             @update:component-url="handleComponentUrlUpdate"
                             @update:connection-status="handleConnectionStatusUpdate" />
                         <!-- Security Configuration -->
+                        <v-divider></v-divider>
+                        <v-list-subheader class="mb-3">Security Configuration</v-list-subheader>
                         <SecurityConfigPanel
                             :auth="editingInfrastructure.auth!"
                             :security-types="securityTypes"
@@ -88,17 +96,25 @@
 
                 <v-card-actions>
                     <v-btn
-                        color="primary"
-                        variant="tonal"
+                        variant="flat"
+                        color="surface-light"
+                        border
+                        rounded="lg"
                         prepend-icon="mdi-connection"
                         text="Test all connections"
                         :loading="testingAllConnections"
                         @click="testAllConnections" />
                     <v-spacer></v-spacer>
-                    <v-btn @click="cancelEdit">Cancel</v-btn>
-                    <v-btn color="primary" @click="saveInfrastructure">Save</v-btn>
+                    <v-btn text="Cancel" rounded="lg" @click="cancelEdit" />
+                    <v-btn
+                        color="primary"
+                        variant="flat"
+                        rounded="lg"
+                        class="text-buttonText"
+                        text="Save"
+                        @click="saveInfrastructure" />
                 </v-card-actions>
-            </v-card>
+            </v-sheet>
         </v-dialog>
 
         <!-- Delete Confirmation Dialog -->
@@ -228,10 +244,6 @@
                     editInfrastructure(currentInfra);
                 }
             }
-            // Test connections for all infrastructures when dialog opens
-            if (val) {
-                await testAllInfrastructures();
-            }
         }
     );
 
@@ -254,12 +266,15 @@
         editDialogOpen.value = true;
     }
 
-    function editInfrastructure(infra: InfrastructureConfig): void {
+    async function editInfrastructure(infra: InfrastructureConfig): Promise<void> {
         editMode.value = 'edit';
         editingInfrastructure.value = JSON.parse(JSON.stringify(infra)); // Deep clone
         loadAuthDataFromInfrastructure(editingInfrastructure.value);
         expandedPanels.value = [];
         editDialogOpen.value = true;
+
+        // Automatically test all connections when editing an existing infrastructure
+        await testAllConnections();
     }
 
     function loadAuthDataFromInfrastructure(infra: InfrastructureConfig): void {
@@ -327,23 +342,8 @@
         await connectionTesting.testAllConnections(editingInfrastructure.value.components);
     }
 
-    // Test connections for all infrastructures
-    async function testAllInfrastructures(): Promise<void> {
-        const originalInfrastructureId = selectedInfrastructureId.value;
-        for (const infra of infrastructures.value) {
-            // Temporarily switch to this infrastructure to test its connections
-            await infrastructureStore.dispatchSelectInfrastructure(infra.id);
-            // Test connections for this infrastructure
-            await infrastructureStore.connectComponents();
-        }
-        // Switch back to the originally selected infrastructure
-        if (originalInfrastructureId) {
-            await infrastructureStore.dispatchSelectInfrastructure(originalInfrastructureId);
-        }
-    }
-
     async function authenticateOAuth2(): Promise<void> {
-        await saveInfrastructure(); // Save infrastrucuture in case this is a new one
+        await saveInfrastructure(); // Save infrastructure in case this is a new one
         await performLogout(); // Logout first to clear any existing tokens
         await oauth2Form.authenticate(editingInfrastructure.value.id);
 
