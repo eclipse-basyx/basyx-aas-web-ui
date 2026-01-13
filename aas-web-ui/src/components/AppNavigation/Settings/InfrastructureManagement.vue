@@ -245,10 +245,6 @@
                     editInfrastructure(currentInfra);
                 }
             }
-            // Test connections for all infrastructures when dialog opens
-            if (val) {
-                await testAllInfrastructures();
-            }
         }
     );
 
@@ -271,12 +267,15 @@
         editDialogOpen.value = true;
     }
 
-    function editInfrastructure(infra: InfrastructureConfig): void {
+    async function editInfrastructure(infra: InfrastructureConfig): Promise<void> {
         editMode.value = 'edit';
         editingInfrastructure.value = JSON.parse(JSON.stringify(infra)); // Deep clone
         loadAuthDataFromInfrastructure(editingInfrastructure.value);
         expandedPanels.value = [];
         editDialogOpen.value = true;
+
+        // Automatically test all connections when editing an existing infrastructure
+        await testAllConnections();
     }
 
     function loadAuthDataFromInfrastructure(infra: InfrastructureConfig): void {
@@ -342,21 +341,6 @@
     // Test all component connections for the currently edited infrastructure
     async function testAllConnections(): Promise<void> {
         await connectionTesting.testAllConnections(editingInfrastructure.value.components);
-    }
-
-    // Test connections for all infrastructures
-    async function testAllInfrastructures(): Promise<void> {
-        const originalInfrastructureId = selectedInfrastructureId.value;
-        for (const infra of infrastructures.value) {
-            // Temporarily switch to this infrastructure to test its connections
-            await infrastructureStore.dispatchSelectInfrastructure(infra.id);
-            // Test connections for this infrastructure
-            await infrastructureStore.connectComponents();
-        }
-        // Switch back to the originally selected infrastructure
-        if (originalInfrastructureId) {
-            await infrastructureStore.dispatchSelectInfrastructure(originalInfrastructureId);
-        }
     }
 
     async function authenticateOAuth2(): Promise<void> {

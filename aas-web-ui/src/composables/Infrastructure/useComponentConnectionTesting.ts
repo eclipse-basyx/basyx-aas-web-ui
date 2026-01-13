@@ -37,6 +37,7 @@ export function useComponentConnectionTesting(): {
         try {
             // Temporarily set the component URL in the store to test it
             const originalUrl = infrastructureStore.getBasyxComponents[componentKey].url;
+            infrastructureStore.dispatchIsTestingConnections(true);
             infrastructureStore.getBasyxComponents[componentKey].url = url;
 
             // Test the connection
@@ -51,6 +52,7 @@ export function useComponentConnectionTesting(): {
         } catch {
             componentConnectionStatus.value[componentKey] = false;
         } finally {
+            infrastructureStore.dispatchIsTestingConnections(false);
             componentTestingLoading.value[componentKey] = false;
         }
     }
