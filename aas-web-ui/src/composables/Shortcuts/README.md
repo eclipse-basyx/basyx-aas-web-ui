@@ -6,7 +6,6 @@ This directory contains the keyboard shortcut system for the BaSyx AAS Web UI. T
 
 ### Files Overview
 
-- **`useShortcutManager.ts`** - Central keyboard event dispatcher with scope management
 - **`useShortcutDefinitions.ts`** - Global shortcut definitions available across all pages
 - **`useRouteShortcuts.ts`** - Route-specific shortcut definitions that extend global shortcuts
 - **`useGlobalShortcuts.ts`** - Registers all shortcuts (global + route-specific) with the event manager
