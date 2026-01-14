@@ -17,7 +17,7 @@
                         <v-list-subheader v-if="command.isHeader" class="mt-2">
                             {{ command.category }}
                         </v-list-subheader>
-                        <v-list-item v-else :title="command.title" link rounded>
+                        <v-list-item v-else :title="command.title" link rounded @click="executeCommand(command)">
                             <template #prepend>
                                 <v-icon
                                     v-if="command.prependIcon"
@@ -79,12 +79,20 @@
                     prependIcon: shortcut.prependIcon,
                     shortcut: getDisplayKeys(shortcut),
                     category: category,
+                    handler: shortcut.handler,
                 });
                 return acc;
             },
             {} as Record<
                 string,
-                Array<{ id: string; title: string; prependIcon?: string; shortcut: string; category: string }>
+                Array<{
+                    id: string;
+                    title: string;
+                    prependIcon?: string;
+                    shortcut: string;
+                    category: string;
+                    handler: (event: KeyboardEvent) => void;
+                }>
             >
         );
 
@@ -96,6 +104,7 @@
             shortcut?: string;
             category: string;
             isHeader?: boolean;
+            handler?: (event: KeyboardEvent) => void;
         }> = [];
         Object.keys(grouped).forEach((category) => {
             result.push({ id: `header-${category}`, category, isHeader: true });
@@ -109,4 +118,14 @@
         get: () => props.modelValue,
         set: (value: boolean) => emit('update:modelValue', value),
     });
+
+    function executeCommand(command: { handler?: (event: KeyboardEvent) => void }): void {
+        if (command.handler) {
+            // Create a synthetic keyboard event for the handler
+            const syntheticEvent = new KeyboardEvent('keydown');
+            command.handler(syntheticEvent);
+            // Close the dialog after executing
+            dialogModel.value = false;
+        }
+    }
 </script>
