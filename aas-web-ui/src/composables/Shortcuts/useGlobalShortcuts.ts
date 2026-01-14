@@ -28,6 +28,18 @@ export function useGlobalShortcuts(onCommandPalette?: () => void): void {
     }
 
     function globalShortcutsHandler(event: KeyboardEvent): boolean {
+        // Allow command palette to always work (even when other inputs are focused)
+        for (const shortcut of globalShortcuts.value) {
+            if (shortcut.id === 'command-palette' && matchesShortcut(event, shortcut.keys)) {
+                // Blur active element (e.g., input field) when opening command palette
+                if (document.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur();
+                }
+                shortcut.handler(event);
+                return true;
+            }
+        }
+
         // Check route-specific shortcuts first
         for (const shortcut of routeShortcuts.value) {
             if (matchesShortcut(event, shortcut.keys)) {
@@ -36,9 +48,9 @@ export function useGlobalShortcuts(onCommandPalette?: () => void): void {
             }
         }
 
-        // Then check global shortcuts
+        // Then check other global shortcuts
         for (const shortcut of globalShortcuts.value) {
-            if (matchesShortcut(event, shortcut.keys)) {
+            if (shortcut.id !== 'command-palette' && matchesShortcut(event, shortcut.keys)) {
                 shortcut.handler(event);
                 return true;
             }
@@ -49,7 +61,7 @@ export function useGlobalShortcuts(onCommandPalette?: () => void): void {
     let unregister: (() => void) | null = null;
 
     onMounted(() => {
-        unregister = shortcutManager.register('global', globalShortcutsHandler);
+        unregister = shortcutManager.register('global', globalShortcutsHandler, { allowInInputs: true });
     });
 
     onBeforeUnmount(() => {
