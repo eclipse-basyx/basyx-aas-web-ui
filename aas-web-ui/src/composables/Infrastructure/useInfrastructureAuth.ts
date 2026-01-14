@@ -93,25 +93,25 @@ export function useInfrastructureAuth(): {
 
                     // Fetch token endpoint from well-known configuration
                     const wellKnownUrl = `${auth.oauth2.host}/.well-known/openid-configuration`;
-                    const wellKnownResponse = await fetch(wellKnownUrl);
+                    let tokenEndpoint;
 
-                    if (!wellKnownResponse.ok) {
-                        failures.push({
-                            infraName: infrastructure.name,
-                            error: 'Failed to fetch OAuth2 OpenID configuration',
-                        });
-                        continue;
+                    try {
+                        const wellKnownResponse = await fetch(wellKnownUrl);
+
+                        if (wellKnownResponse.ok) {
+                            const wellKnownConfig = await wellKnownResponse.json();
+                            tokenEndpoint = wellKnownConfig.token_endpoint;
+                        }
+                    } catch (error) {
+                        console.warn(
+                            `[useInfrastructureAuth] Failed to fetch .well-known configuration for ${infrastructure.name}, using fallback`,
+                            error
+                        );
                     }
 
-                    const wellKnownConfig = await wellKnownResponse.json();
-                    const tokenEndpoint = wellKnownConfig.token_endpoint;
-
+                    // Fallback to host + /token if well-known config is not available
                     if (!tokenEndpoint) {
-                        failures.push({
-                            infraName: infrastructure.name,
-                            error: 'Token endpoint not found in OAuth2 configuration',
-                        });
-                        continue;
+                        tokenEndpoint = `${auth.oauth2.host}/token`;
                     }
 
                     const { refreshOAuth2Token } = await import('@/composables/Auth/OAuth2Auth');

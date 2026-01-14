@@ -160,14 +160,19 @@ export function useAuth(router?: Router) {
             try {
                 // Fetch end_session_endpoint from well-known configuration
                 const wellKnownUrl = `${host}/.well-known/openid-configuration`;
-                const wellKnownResponse = await fetch(wellKnownUrl);
+                let endSessionEndpoint;
 
-                if (!wellKnownResponse.ok) {
-                    throw new Error('Failed to fetch OpenID configuration');
+                try {
+                    const wellKnownResponse = await fetch(wellKnownUrl);
+
+                    if (wellKnownResponse.ok) {
+                        const wellKnownConfig = await wellKnownResponse.json();
+                        endSessionEndpoint = wellKnownConfig.end_session_endpoint;
+                    }
+                } catch (error) {
+                    console.warn('[useAuth] Failed to fetch .well-known configuration for logout', error);
                 }
 
-                const wellKnownConfig = await wellKnownResponse.json();
-                const endSessionEndpoint = wellKnownConfig.end_session_endpoint;
                 if (!endSessionEndpoint) {
                     // If no end_session_endpoint, just clear local token
                     clearLocalToken();
@@ -175,10 +180,9 @@ export function useAuth(router?: Router) {
                 }
 
                 logoutUrl = new URL(endSessionEndpoint);
-                logoutUrl.searchParams.set(
-                    'post_logout_redirect_uri',
-                    window.location.origin + window.location.pathname
-                );
+                // Normalize redirect URI (remove trailing slash for root path)
+                const pathname = window.location.pathname === '/' ? '' : window.location.pathname;
+                logoutUrl.searchParams.set('post_logout_redirect_uri', window.location.origin + pathname);
 
                 // Add id_token_hint if available (required by some OAuth2 providers)
                 const idToken = infra.token?.idToken;
