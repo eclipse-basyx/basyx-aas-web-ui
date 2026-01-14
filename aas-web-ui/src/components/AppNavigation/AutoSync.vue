@@ -70,7 +70,7 @@
                 <StatusSwitch></StatusSwitch>
             </v-list>
         </v-menu>
-        <v-badge dot :color="autoSync.state ? 'success' : 'rgba(0,0,0,0)'" :offset-x="16" :offset-y="-10"> </v-badge>
+        <v-badge dot :color="autoSync.state ? 'success' : 'rgba(0,0,0,0)'" :offset-x="16" :offset-y="-10" />
     </v-btn>
 </template>
 
