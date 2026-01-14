@@ -190,7 +190,7 @@ export function useOAuth2Form(): {
                 const state = infrastructureId;
 
                 // Normalize redirect URI (remove trailing slash for root path)
-                const pathname = window.location.pathname === '/' ? '' : window.location.pathname;
+                const pathname = window.location.pathname;
                 const redirectUri = `${window.location.origin}${pathname}`;
 
                 // Initiate authorization code flow (will redirect to OAuth2 provider)

@@ -273,7 +273,7 @@ export async function createAppRouter(): Promise<Router> {
                 }
 
                 // Normalize redirect URI (remove trailing slash for root path)
-                const pathname = window.location.pathname === '/' ? '' : window.location.pathname;
+                const pathname = window.location.pathname;
                 const redirectUri = `${window.location.origin}${pathname}`;
 
                 // Exchange authorization code for tokens

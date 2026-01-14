@@ -180,9 +180,10 @@ export function useAuth(router?: Router) {
                 }
 
                 logoutUrl = new URL(endSessionEndpoint);
-                // Normalize redirect URI (remove trailing slash for root path)
-                const pathname = window.location.pathname === '/' ? '' : window.location.pathname;
-                logoutUrl.searchParams.set('post_logout_redirect_uri', window.location.origin + pathname);
+                logoutUrl.searchParams.set(
+                    'post_logout_redirect_uri',
+                    window.location.origin + window.location.pathname
+                );
 
                 // Add id_token_hint if available (required by some OAuth2 providers)
                 const idToken = infra.token?.idToken;
