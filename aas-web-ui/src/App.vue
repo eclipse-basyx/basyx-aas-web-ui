@@ -22,6 +22,7 @@
     import { onBeforeUnmount, onMounted, ref } from 'vue';
     import { useRouter } from 'vue-router';
     import { usePopupOverlay } from '@/composables/PopupOverlay';
+    import { useGlobalShortcuts } from '@/composables/shortcuts/useGlobalShortcuts';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
@@ -31,6 +32,9 @@
     // Stores
     const infrastructureStore = useInfrastructureStore();
     const navigationStore = useNavigationStore();
+
+    // Register global shortcuts
+    useGlobalShortcuts();
 
     // Popup Overlay
     const { isPopupOverlayVisible } = usePopupOverlay();

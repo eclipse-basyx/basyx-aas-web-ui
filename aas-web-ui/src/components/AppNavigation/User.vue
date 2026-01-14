@@ -4,6 +4,8 @@
             <v-btn
                 v-if="isAuthEnabled"
                 v-bind="menuProps"
+                variant="tonal"
+                size="small"
                 :icon="isAuthenticated ? 'mdi-account-lock' : 'mdi-lock-remove'"></v-btn>
             <v-tooltip v-else text="Authorization Status" location="bottom" :open-delay="600">
                 <template #activator="{ props: tooltipProps }">

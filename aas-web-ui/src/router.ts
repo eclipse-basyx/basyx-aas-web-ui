@@ -7,6 +7,7 @@ import SubmodelList from '@/components/SubmodelList.vue';
 import { useAASHandling } from '@/composables/AAS/AASHandling';
 import { useSMEHandling } from '@/composables/AAS/SMEHandling';
 import { useRouteHandling } from '@/composables/routeHandling';
+import AASCommander from '@/pages/AASCommander.vue';
 import AASEditor from '@/pages/AASEditor.vue';
 import AASSubmodelViewer from '@/pages/AASSubmodelViewer.vue';
 import AASViewer from '@/pages/AASViewer.vue';
@@ -42,6 +43,12 @@ const staticRoutes: Array<RouteRecordRaw> = [
         name: 'AASSubmodelViewer',
         component: AASSubmodelViewer,
         meta: { name: 'AAS Submodel Viewer', subtitle: 'Visualize Submodels of AAS' },
+    },
+    {
+        path: '/aascommander',
+        name: 'AASCommander',
+        component: AASCommander,
+        meta: { name: 'AAS Commander', subtitle: "Norton's Way of Managing AAS" },
     },
     {
         path: '/smviewer',
@@ -141,6 +148,7 @@ export async function createAppRouter(): Promise<Router> {
         'AASEditor',
         'AASViewer',
         'AASSubmodelViewer',
+        'AASCommander',
         'SMEditor',
         'SMViewer',
         'Visualization',
