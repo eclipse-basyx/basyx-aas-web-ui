@@ -3,47 +3,60 @@ import { computed, type ComputedRef, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useNavigationStore } from '@/store/NavigationStore';
 
-// Type for module shortcut definitions
-export type ModuleShortcutDefinitions = (params: { route: any; [key: string]: any }) => ShortcutDefinition[];
+// Type for page/module shortcut definitions
+export type PageShortcutDefinitions = (params: { route: any; [key: string]: any }) => ShortcutDefinition[];
 
-// Cache for dynamically loaded module shortcuts
-const moduleShortcutsCache = new Map<string, ModuleShortcutDefinitions | null>();
+// Cache for dynamically loaded page shortcuts
+const pageShortcutsCache = new Map<string, PageShortcutDefinitions | null>();
 
 /**
- * Dynamically loads shortcuts from a module file if it exports a `shortcuts` function.
- * Modules can define shortcuts like:
+ * Dynamically loads shortcuts from a page or module file if it exports a `shortcuts` function.
+ * Works for both core pages and modules:
+ * - Core pages: @/pages/PageName.vue
+ * - Modules: @/pages/modules/ModuleName.vue
  *
- * export const shortcuts: ModuleShortcutDefinitions = ({ route, ... }) => [
+ * Pages can define shortcuts like:
+ *
+ * export const shortcuts: PageShortcutDefinitions = ({ route, ... }) => [
  *   {
- *     id: 'module-action',
- *     title: 'Module Action',
- *     category: 'Module Shortcuts',
+ *     id: 'page-action',
+ *     title: 'Page Action',
+ *     category: 'Page Shortcuts',
  *     keys: { mac: 'cmd+m', windows: 'ctrl+m' },
  *     handler: () => { ... }
  *   }
  * ];
  */
-async function loadModuleShortcuts(moduleName: string): Promise<ModuleShortcutDefinitions | null> {
+async function loadPageShortcuts(routeName: string): Promise<PageShortcutDefinitions | null> {
     // Check cache first
-    if (moduleShortcutsCache.has(moduleName)) {
-        return moduleShortcutsCache.get(moduleName) ?? null;
+    if (pageShortcutsCache.has(routeName)) {
+        return pageShortcutsCache.get(routeName) ?? null;
     }
 
     try {
-        // Dynamically import the module
-        const module = await import(`../../pages/modules/${moduleName}.vue`);
+        // Try loading from core pages first
+        const corePage = await import(`../../pages/${routeName}.vue`);
 
-        // Check if module exports shortcuts
-        if (module.shortcuts && typeof module.shortcuts === 'function') {
-            moduleShortcutsCache.set(moduleName, module.shortcuts);
-            return module.shortcuts;
+        if (corePage.shortcuts && typeof corePage.shortcuts === 'function') {
+            pageShortcutsCache.set(routeName, corePage.shortcuts);
+            return corePage.shortcuts;
         }
-    } catch (error) {
-        console.warn(`No shortcuts found for module: ${moduleName}`, error);
+    } catch {
+        // Not a core page, try modules
+        try {
+            const modulePage = await import(`../../pages/modules/${routeName}.vue`);
+
+            if (modulePage.shortcuts && typeof modulePage.shortcuts === 'function') {
+                pageShortcutsCache.set(routeName, modulePage.shortcuts);
+                return modulePage.shortcuts;
+            }
+        } catch {
+            // Neither core page nor module has shortcuts - this is not an error
+        }
     }
 
     // Cache null to avoid repeated failed imports
-    moduleShortcutsCache.set(moduleName, null);
+    pageShortcutsCache.set(routeName, null);
     return null;
 }
 
@@ -52,82 +65,30 @@ export function useRouteShortcuts(): {
 } {
     const route = useRoute();
     const navigationStore = useNavigationStore();
-    const moduleShortcuts = ref<ShortcutDefinition[]>([]);
+    const pageShortcuts = ref<ShortcutDefinition[]>([]);
 
-    // Watch for route changes and load module shortcuts
+    // Watch for route changes and load page shortcuts
     watch(
         () => route.name,
         async (currentRoute) => {
             const routeName = currentRoute as string;
 
-            // Check if this is a module route (not a core route)
-            if (
-                routeName &&
-                !['AASViewer', 'AASEditor', 'SMViewer', 'SMEditor', 'About', 'NotFound404'].includes(routeName)
-            ) {
-                const shortcutsFn = await loadModuleShortcuts(routeName);
+            if (routeName) {
+                const shortcutsFn = await loadPageShortcuts(routeName);
                 if (shortcutsFn) {
-                    moduleShortcuts.value = shortcutsFn({ route, navigationStore });
+                    pageShortcuts.value = shortcutsFn({ route, navigationStore });
                 } else {
-                    moduleShortcuts.value = [];
+                    pageShortcuts.value = [];
                 }
             } else {
-                moduleShortcuts.value = [];
+                pageShortcuts.value = [];
             }
         },
         { immediate: true }
     );
 
     const shortcuts = computed<ShortcutDefinition[]>(() => {
-        const currentRoute = route.name as string;
-        const routeShortcuts: ShortcutDefinition[] = [];
-
-        // AAS Viewer specific shortcuts
-        if (currentRoute === 'AASViewer') {
-            routeShortcuts.push({
-                id: 'aas-viewer-refresh',
-                title: 'Refresh AAS List',
-                description: 'Reload the AAS list',
-                prependIcon: 'mdi-refresh',
-                category: 'AAS Viewer Shortcuts',
-                keys: {
-                    mac: 'cmd+shift+r',
-                    windows: 'ctrl+shift+r',
-                },
-                handler: (event: KeyboardEvent) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    // Trigger AAS list reload through the navigation store
-                    navigationStore.dispatchTriggerAASListReload();
-                },
-            });
-        }
-
-        // AAS Editor specific shortcuts
-        if (currentRoute === 'AASEditor') {
-            routeShortcuts.push({
-                id: 'aas-editor-refresh',
-                title: 'Refresh AAS List',
-                description: 'Reload the AAS list',
-                prependIcon: 'mdi-refresh',
-                category: 'AAS Editor Shortcuts',
-                keys: {
-                    mac: 'cmd+shift+r',
-                    windows: 'ctrl+shift+r',
-                },
-                handler: (event: KeyboardEvent) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    // Trigger AAS list reload through the navigation store
-                    navigationStore.dispatchTriggerAASListReload();
-                },
-            });
-        }
-
-        // Add more route-specific shortcuts here for other routes
-        // if (currentRoute === 'SMViewer') { ... }
-
-        return [...routeShortcuts, ...moduleShortcuts.value];
+        return pageShortcuts.value;
     });
 
     return {

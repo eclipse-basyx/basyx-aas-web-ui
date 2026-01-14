@@ -61,54 +61,9 @@ Global shortcuts are available on all pages. Define them in `useShortcutDefiniti
 
 ## Adding Route-Specific Shortcuts
 
-Route-specific shortcuts are only visible and active when on a particular page. Define them in `useRouteShortcuts.ts`:
+All pages (both core pages and modules) can define their own shortcuts using the same pattern. Add a second `<script>` block to your page file that exports a `shortcuts` function.
 
-### Step 1: Add Shortcut Definition
-
-```typescript
-// Example: Add shortcuts for the SubmodelEditor page
-if (currentRoute === 'SMEditor') {
-    const envStore = useEnvStore();
-    
-    routeShortcuts.push({
-        id: 'save-submodel',
-        title: 'Save Submodel',
-        description: 'Save the current submodel',
-        prependIcon: 'mdi-content-save',
-        category: 'SM Editor Shortcuts',
-        keys: {
-            mac: 'cmd+s',
-            windows: 'ctrl+s'
-        },
-        handler: () => {
-            // Implement save logic
-            console.log('Saving submodel...');
-        }
-    });
-}
-```
-
-**Important:** The `category` field should follow the format `'<Route Name> Shortcuts'` where the route name is human-readable (e.g., `'AAS Viewer Shortcuts'`, `'SM Editor Shortcuts'`). This ensures shortcuts are grouped under their respective page sections in the Command Palette with proper subheaders.
-
-### Step 2: Ensure Route Name Matches
-
-The route name must match the name defined in your router configuration (`router.ts`). For example:
-
-```typescript
-{
-    path: '/submodelelement-editor',
-    name: 'SMEditor',  // This is the route name to use
-    component: () => import('@/pages/SMEditor.vue')
-}
-```
-
-## Adding Module-Specific Shortcuts
-
-Modules (pages in `@/pages/modules/`) can define their own shortcuts without modifying core application code. This is perfect for keeping module functionality self-contained.
-
-### How to Add Shortcuts to a Module
-
-Add a second `<script>` block to your module file that exports a `shortcuts` function:
+### How to Add Shortcuts to Any Page
 
 ```typescript
 <script setup lang="ts">
@@ -120,16 +75,16 @@ Add a second `<script>` block to your module file that exports a `shortcuts` fun
 </script>
 
 <script lang="ts">
-    import type { ModuleShortcutDefinitions } from '@/composables/Shortcuts/useRouteShortcuts';
+    import type { PageShortcutDefinitions } from '@/composables/Shortcuts/useRouteShortcuts';
 
-    // Module shortcuts - automatically loaded when module route is active
-    export const shortcuts: ModuleShortcutDefinitions = ({ route, navigationStore }) => [
+    // Page shortcuts - automatically loaded when page is active
+    export const shortcuts: PageShortcutDefinitions = ({ route, navigationStore }) => [
         {
-            id: 'my-module-action',
+            id: 'my-page-action',
             title: 'My Action',
-            description: 'Perform a module-specific action',
+            description: 'Perform a page-specific action',
             prependIcon: 'mdi-cog',
-            category: 'My Module Shortcuts',  // Will appear as a subheader
+            category: 'My Page Shortcuts',  // Will appear as a subheader
             keys: {
                 mac: 'cmd+m',
                 windows: 'ctrl+m'
@@ -138,12 +93,14 @@ Add a second `<script>` block to your module file that exports a `shortcuts` fun
                 event.preventDefault();
                 event.stopPropagation();
                 // Your action logic here
-                console.log('Module shortcut triggered!');
+                console.log('Page shortcut triggered!');
             }
         }
     ];
 </script>
 ```
+
+**Important:** The `category` field should follow the format `'<Page Name> Shortcuts'` where the page name is human-readable (e.g., `'AAS Viewer Shortcuts'`, `'SM Editor Shortcuts'`). This ensures shortcuts are grouped under their respective page sections in the Command Palette with proper subheaders.
 
 ### Available Parameters
 
@@ -156,9 +113,9 @@ The shortcuts function receives an object with:
 
 ```typescript
 <script lang="ts">
-    import type { ModuleShortcutDefinitions } from '@/composables/Shortcuts/useRouteShortcuts';
+    import type { PageShortcutDefinitions } from '@/composables/Shortcuts/useRouteShortcuts';
 
-    export const shortcuts: ModuleShortcutDefinitions = () => [
+    export const shortcuts: PageShortcutDefinitions = () => [
         {
             id: 'aas-importer-clear',
             title: 'Clear Input',
@@ -182,10 +139,11 @@ The shortcuts function receives an object with:
 ```
 
 **Important Notes:**
-- Module shortcuts are only active when the module route is active
-- Shortcuts are cached for performance
+- Page shortcuts are only active when that page/route is active
+- Shortcuts are cached for performance after first load
+- Works identically for core pages (`@/pages/*.vue`) and modules (`@/pages/modules/*.vue`)
 - No core application code changes needed
-- Category should be `'<Module Name> Shortcuts'` for consistency
+- Category should be `'<Page Name> Shortcuts'` for consistency
 
 ## Key Combination Format
 
@@ -225,25 +183,27 @@ keys: {
 ## Complete Example: Adding Shortcuts to a New Page
 
 Let's say you're creating a new "Dashboard" page and want to add shortcuts for it.
+Create your page file `@/pages/Dashboard.vue`:
 
-### 1. Define the route in `router.ts`:
+```vue
+<template>
+    <v-container>
+        <h1>Dashboard</h1>
+        <!-- Your component code -->
+    </v-container>
+</template>
 
-```typescript
-{
-    path: '/dashboard',
-    name: 'Dashboard',
-    component: () => import('@/pages/Dashboard.vue')
-}
-```
-
-### 2. Add shortcuts in `useRouteShortcuts.ts`:
-
-```typescript
-// Dashboard specific shortcuts
-if (currentRoute === 'Dashboard') {
-    const aasStore = useAASStore();
+<script setup lang="ts">
+    import { ref } from 'vue';
     
-    routeShortcuts.push(
+    const viewMode = ref('grid');
+    // ... component logic
+</script>
+
+<script lang="ts">
+    import type { PageShortcutDefinitions } from '@/composables/Shortcuts/useRouteShortcuts';
+
+    export const shortcuts: PageShortcutDefinitions = () => [
         {
             id: 'refresh-dashboard',
             title: 'Refresh Dashboard',
@@ -254,8 +214,9 @@ if (currentRoute === 'Dashboard') {
                 mac: 'cmd+r',
                 windows: 'ctrl+r'
             },
-            handler: () => {
-                // Refresh logic
+            handler: (event: KeyboardEvent) => {
+                event.preventDefault();
+                event.stopPropagation();
                 window.location.reload();
             }
         },
@@ -269,11 +230,24 @@ if (currentRoute === 'Dashboard') {
                 mac: 'cmd+shift+v',
                 windows: 'ctrl+shift+v'
             },
-            handler: () => {
+            handler: (event: KeyboardEvent) => {
+                event.preventDefault();
+                event.stopPropagation();
                 // Toggle view logic
                 console.log('Toggling view...');
             }
         }
+    ];
+</script>
+```
+
+### 2. Define the route in `router.ts`:
+
+```typescript
+{
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: () => import('@/pages/Dashboard.vue')  }
     );
 }
 ```

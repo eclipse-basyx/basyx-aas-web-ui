@@ -347,10 +347,10 @@
 </script>
 
 <script lang="ts">
-    import type { ModuleShortcutDefinitions } from '@/composables/Shortcuts/useRouteShortcuts';
+    import type { PageShortcutDefinitions } from '@/composables/Shortcuts/useRouteShortcuts';
 
     // Module shortcuts definition - available when this module is active
-    export const shortcuts: ModuleShortcutDefinitions = () => [
+    export const shortcuts: PageShortcutDefinitions = () => [
         {
             id: 'aas-importer-clear-asset-id',
             title: 'Clear Asset ID',
