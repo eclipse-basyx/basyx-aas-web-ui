@@ -5,6 +5,7 @@
             <v-divider />
             <v-card-text>
                 <v-text-field
+                    id="asset-id-input"
                     v-model="assetId"
                     density="compact"
                     variant="outlined"
@@ -364,8 +365,7 @@
             handler: (event: KeyboardEvent) => {
                 event.preventDefault();
                 event.stopPropagation();
-                // Access the assetId through the component's exposed ref
-                const assetIdInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+                const assetIdInput = document.querySelector('#asset-id-input input') as HTMLInputElement;
                 if (assetIdInput) {
                     assetIdInput.value = '';
                     assetIdInput.dispatchEvent(new Event('input', { bubbles: true }));
