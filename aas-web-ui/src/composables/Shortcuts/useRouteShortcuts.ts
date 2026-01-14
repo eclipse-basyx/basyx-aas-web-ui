@@ -1,11 +1,13 @@
 import type { ShortcutDefinition } from './useShortcutDefinitions';
 import { computed, type ComputedRef, ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { type RouteLocationNormalizedLoaded, useRoute } from 'vue-router';
 import { useNavigationStore } from '@/store/NavigationStore';
 
 // Type for page/module shortcut definitions
-export type PageShortcutDefinitions = (params: { route: any; [key: string]: any }) => ShortcutDefinition[];
-
+export type PageShortcutDefinitions = (params: {
+    route: RouteLocationNormalizedLoaded;
+    [key: string]: any;
+}) => ShortcutDefinition[];
 // Cache for dynamically loaded page shortcuts
 const pageShortcutsCache = new Map<string, PageShortcutDefinitions | null>();
 
