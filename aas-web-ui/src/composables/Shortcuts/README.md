@@ -27,10 +27,7 @@ interface ShortcutDefinition {
     description: string;           // Description shown in command palette
     prependIcon: string;          // Vuetify icon (e.g., 'mdi-home')
     category: string;             // Category for grouping (e.g., 'Global Shortcuts', 'AAS Viewer Shortcuts')
-    keys: {
-        mac: string;              // Mac key combination (e.g., 'cmd+shift+h')
-        windows: string;          // Windows key combination (e.g., 'ctrl+shift+h')
-    };
+    keys: string;                 // Key combination (e.g., 'cmd+shift+h' - 'cmd' becomes 'Ctrl' on Windows/Linux automatically)
     handler: () => void;          // Function to execute when shortcut is triggered
 }
 ```
@@ -47,10 +44,7 @@ Global shortcuts are available on all pages. Define them in `useShortcutDefiniti
     description: 'Navigate to settings page',
     prependIcon: 'mdi-cog',
     category: 'Global Shortcuts',
-    keys: {
-        mac: 'cmd+,',
-        windows: 'ctrl+,'
-    },
+    keys: 'cmd+,',  // 'cmd' automatically becomes 'Ctrl' on Windows/Linux
     handler: () => {
         router.push({ name: 'Settings' });
     }
@@ -85,10 +79,7 @@ All pages (both core pages and modules) can define their own shortcuts using the
             description: 'Perform a page-specific action',
             prependIcon: 'mdi-cog',
             category: 'My Page Shortcuts',  // Will appear as a subheader
-            keys: {
-                mac: 'cmd+m',
-                windows: 'ctrl+m'
-            },
+            keys: 'cmd+m',  // 'cmd' automatically becomes 'Ctrl' on Windows/Linux
             handler: (event: KeyboardEvent) => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -105,6 +96,7 @@ All pages (both core pages and modules) can define their own shortcuts using the
 ### Available Parameters
 
 The shortcuts function receives an object with:
+
 - `route` - Current Vue Router route object
 - `navigationStore` - Access to navigation store methods
 - Any other stores can be imported and used within the function
@@ -122,10 +114,7 @@ The shortcuts function receives an object with:
             description: 'Clear the asset ID input field',
             prependIcon: 'mdi-eraser',
             category: 'AAS Importer Shortcuts',
-            keys: {
-                mac: 'cmd+shift+backspace',
-                windows: 'ctrl+shift+backspace'
-            },
+            keys: 'cmd+shift+backspace',  // 'cmd' automatically becomes 'Ctrl' on Windows/Linux
             handler: (event: KeyboardEvent) => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -139,6 +128,7 @@ The shortcuts function receives an object with:
 ```
 
 **Important Notes:**
+
 - Page shortcuts are only active when that page/route is active
 - Shortcuts are cached for performance after first load
 - Works identically for core pages (`@/pages/*.vue`) and modules (`@/pages/modules/*.vue`)
@@ -147,19 +137,20 @@ The shortcuts function receives an object with:
 
 ## Key Combination Format
 
-Key combinations are strings with modifiers and keys separated by `+`:
+Key combinations are strings with modifiers and keys separated by `+`. The system uses Vuetify's `useHotkey` composable which automatically handles platform differences.
 
-- **Modifiers**: `cmd`, `ctrl`, `alt`, `shift`
+- **Modifiers**: `cmd`, `ctrl`, `alt`, `shift`, `meta`
 - **Keys**: Any letter, number, or special key name
+- **Platform-aware**: Use `cmd` for shortcuts - it automatically becomes `Ctrl` on Windows/Linux
 
 ### Examples
 
 ```typescript
 // Single key with modifier
-'cmd+k'          // Command + K (Mac) or Ctrl + K (Windows)
+'cmd+k'          // Command + K (Mac) or Ctrl + K (Windows/Linux)
 
 // Multiple modifiers
-'cmd+shift+h'    // Command + Shift + H
+'cmd+shift+h'    // Command + Shift + H (Mac) or Ctrl + Shift + H (Windows/Linux)
 
 // Letter keys
 'cmd+s'          // Command + S (save)
@@ -167,17 +158,22 @@ Key combinations are strings with modifiers and keys separated by `+`:
 // Special keys
 'cmd+enter'      // Command + Enter
 'escape'         // Escape key alone
+
+// Explicit Ctrl (same on all platforms)
+'ctrl+a'         // Ctrl + A on all platforms
 ```
 
 ### Platform Differences
 
-Always provide both `mac` and `windows` key combinations:
+The `cmd` modifier is **automatically translated**:
+
+- On **macOS**: `cmd` → Command (⌘)
+- On **Windows/Linux**: `cmd` → Control (Ctrl)
+
+Simply use `'cmd+key'` format - no need for separate mac/windows definitions!
 
 ```typescript
-keys: {
-    mac: 'cmd+s',      // Uses Command key on Mac
-    windows: 'ctrl+s'  // Uses Control key on Windows
-}
+keys: 'cmd+s'  // Automatically works as Cmd+S on Mac, Ctrl+S on Windows/Linux
 ```
 
 ## Complete Example: Adding Shortcuts to a New Page
@@ -210,10 +206,7 @@ Create your page file `@/pages/Dashboard.vue`:
             description: 'Reload dashboard data',
             prependIcon: 'mdi-refresh',
             category: 'Dashboard Shortcuts',
-            keys: {
-                mac: 'cmd+r',
-                windows: 'ctrl+r'
-            },
+            keys: 'cmd+r',  // Automatically Cmd+R on Mac, Ctrl+R on Windows/Linux
             handler: (event: KeyboardEvent) => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -226,10 +219,7 @@ Create your page file `@/pages/Dashboard.vue`:
             description: 'Switch between grid and list view',
             prependIcon: 'mdi-view-dashboard',
             category: 'Dashboard Shortcuts',
-            keys: {
-                mac: 'cmd+shift+v',
-                windows: 'ctrl+shift+v'
-            },
+            keys: 'cmd+shift+v',  // Automatically adapts to platform
             handler: (event: KeyboardEvent) => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -241,18 +231,17 @@ Create your page file `@/pages/Dashboard.vue`:
 </script>
 ```
 
-### 2. Define the route in `router.ts`:
+### 2. Define the route in `router.ts`
 
 ```typescript
 {
     path: '/dashboard',
     name: 'Dashboard',
-    component: () => import('@/pages/Dashboard.vue')  }
-    );
+    component: () => import('@/pages/Dashboard.vue')
 }
 ```
 
-### 3. Test your shortcuts:
+### 3. Test your shortcuts
 
 1. Navigate to your Dashboard page
 2. Press `Cmd+K` (or `Ctrl+K` on Windows) to open the Command Palette

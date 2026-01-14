@@ -22,7 +22,7 @@ const pageShortcutsCache = new Map<string, PageShortcutDefinitions | null>();
  *     id: 'page-action',
  *     title: 'Page Action',
  *     category: 'Page Shortcuts',
- *     keys: { mac: 'cmd+m', windows: 'ctrl+m' },
+ *     keys: 'cmd+m',
  *     handler: () => { ... }
  *   }
  * ];

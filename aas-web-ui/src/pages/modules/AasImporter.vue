@@ -358,10 +358,7 @@
             description: 'Clear the asset ID input field',
             prependIcon: 'mdi-eraser',
             category: 'AAS Importer Shortcuts',
-            keys: {
-                mac: 'cmd+shift+backspace',
-                windows: 'ctrl+shift+backspace',
-            },
+            keys: 'cmd+shift+backspace',
             handler: (event: KeyboardEvent) => {
                 event.preventDefault();
                 event.stopPropagation();

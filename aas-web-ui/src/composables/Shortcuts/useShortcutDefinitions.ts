@@ -7,21 +7,16 @@ export type ShortcutDefinition = {
     description?: string;
     prependIcon?: string;
     category: string;
-    keys: {
-        mac: string;
-        windows: string;
-    };
+    keys: string; // e.g., 'cmd+k' (cmd automatically becomes Ctrl on Windows/Linux)
     handler: (event: KeyboardEvent) => void;
 };
 
 export function useShortcutDefinitions(onCommandPalette?: () => void): {
     shortcuts: ComputedRef<ShortcutDefinition[]>;
     getDisplayKeys: (shortcut: ShortcutDefinition) => string;
-    isMac: ComputedRef<boolean>;
 } {
     const router = useRouter();
     const route = useRoute();
-    const isMac = computed(() => typeof navigator !== 'undefined' && /macintosh|mac os x/i.test(navigator.userAgent));
 
     const shortcuts = computed<ShortcutDefinition[]>(() => [
         {
@@ -30,10 +25,7 @@ export function useShortcutDefinitions(onCommandPalette?: () => void): {
             description: 'Navigate to home and clear query parameters',
             prependIcon: 'mdi-home',
             category: 'Global Shortcuts',
-            keys: {
-                mac: 'cmd+shift+h',
-                windows: 'ctrl+shift+h',
-            },
+            keys: 'cmd+shift+h',
             handler: (event: KeyboardEvent) => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -46,10 +38,7 @@ export function useShortcutDefinitions(onCommandPalette?: () => void): {
             description: 'Open the command palette for quick actions',
             prependIcon: 'mdi-console-line',
             category: 'Global Shortcuts',
-            keys: {
-                mac: 'cmd+k',
-                windows: 'ctrl+k',
-            },
+            keys: 'cmd+k',
             handler: (event: KeyboardEvent) => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -61,12 +50,11 @@ export function useShortcutDefinitions(onCommandPalette?: () => void): {
     ]);
 
     const getDisplayKeys = (shortcut: ShortcutDefinition): string => {
-        return isMac.value ? shortcut.keys.mac : shortcut.keys.windows;
+        return shortcut.keys;
     };
 
     return {
         shortcuts,
         getDisplayKeys,
-        isMac,
     };
 }
