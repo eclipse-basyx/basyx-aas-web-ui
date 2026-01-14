@@ -345,3 +345,32 @@
         return selectedInfrastructureId.value === selectedDestinationInfrastructureId.value;
     }
 </script>
+
+<script lang="ts">
+    import type { ModuleShortcutDefinitions } from '@/composables/Shortcuts/useRouteShortcuts';
+
+    // Module shortcuts definition - available when this module is active
+    export const shortcuts: ModuleShortcutDefinitions = () => [
+        {
+            id: 'aas-importer-clear-asset-id',
+            title: 'Clear Asset ID',
+            description: 'Clear the asset ID input field',
+            prependIcon: 'mdi-eraser',
+            category: 'AAS Importer Shortcuts',
+            keys: {
+                mac: 'cmd+shift+backspace',
+                windows: 'ctrl+shift+backspace',
+            },
+            handler: (event: KeyboardEvent) => {
+                event.preventDefault();
+                event.stopPropagation();
+                // Access the assetId through the component's exposed ref
+                const assetIdInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+                if (assetIdInput) {
+                    assetIdInput.value = '';
+                    assetIdInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            },
+        },
+    ];
+</script>

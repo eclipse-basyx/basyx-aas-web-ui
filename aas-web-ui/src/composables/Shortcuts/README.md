@@ -102,6 +102,91 @@ The route name must match the name defined in your router configuration (`router
 }
 ```
 
+## Adding Module-Specific Shortcuts
+
+Modules (pages in `@/pages/modules/`) can define their own shortcuts without modifying core application code. This is perfect for keeping module functionality self-contained.
+
+### How to Add Shortcuts to a Module
+
+Add a second `<script>` block to your module file that exports a `shortcuts` function:
+
+```typescript
+<script setup lang="ts">
+    // Your regular component setup code
+    import { ref } from 'vue';
+    
+    const myData = ref('');
+    // ... component logic
+</script>
+
+<script lang="ts">
+    import type { ModuleShortcutDefinitions } from '@/composables/Shortcuts/useRouteShortcuts';
+
+    // Module shortcuts - automatically loaded when module route is active
+    export const shortcuts: ModuleShortcutDefinitions = ({ route, navigationStore }) => [
+        {
+            id: 'my-module-action',
+            title: 'My Action',
+            description: 'Perform a module-specific action',
+            prependIcon: 'mdi-cog',
+            category: 'My Module Shortcuts',  // Will appear as a subheader
+            keys: {
+                mac: 'cmd+m',
+                windows: 'ctrl+m'
+            },
+            handler: (event: KeyboardEvent) => {
+                event.preventDefault();
+                event.stopPropagation();
+                // Your action logic here
+                console.log('Module shortcut triggered!');
+            }
+        }
+    ];
+</script>
+```
+
+### Available Parameters
+
+The shortcuts function receives an object with:
+- `route` - Current Vue Router route object
+- `navigationStore` - Access to navigation store methods
+- Any other stores can be imported and used within the function
+
+### Example: AasImporter Module
+
+```typescript
+<script lang="ts">
+    import type { ModuleShortcutDefinitions } from '@/composables/Shortcuts/useRouteShortcuts';
+
+    export const shortcuts: ModuleShortcutDefinitions = () => [
+        {
+            id: 'aas-importer-clear',
+            title: 'Clear Input',
+            description: 'Clear the asset ID input field',
+            prependIcon: 'mdi-eraser',
+            category: 'AAS Importer Shortcuts',
+            keys: {
+                mac: 'cmd+shift+backspace',
+                windows: 'ctrl+shift+backspace'
+            },
+            handler: (event: KeyboardEvent) => {
+                event.preventDefault();
+                event.stopPropagation();
+                // Clear the input
+                const input = document.querySelector('input') as HTMLInputElement;
+                if (input) input.value = '';
+            }
+        }
+    ];
+</script>
+```
+
+**Important Notes:**
+- Module shortcuts are only active when the module route is active
+- Shortcuts are cached for performance
+- No core application code changes needed
+- Category should be `'<Module Name> Shortcuts'` for consistency
+
 ## Key Combination Format
 
 Key combinations are strings with modifiers and keys separated by `+`:
