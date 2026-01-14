@@ -45,10 +45,26 @@ export function extractEndpointHref(descriptor_or_model: any, interfaceShortName
 
     const endpoints = descriptor_or_model.endpoints;
 
-    // find the right endpoint based on the interfaceShortName (has to match endpoint.interface)
-    const endpoint = endpoints.find((endpoint: any) => {
+    // First, try to find exact match
+    let endpoint = endpoints.find((endpoint: any) => {
         return endpoint?.interface === interfaceShortName;
     });
+
+    // If not found and it's AAS-3.X, try AAS-REPOSITORY-3.X as fallback
+    if (!endpoint && interfaceShortName.startsWith('AAS-3.')) {
+        const fallbackInterface = interfaceShortName.replace(/^AAS-3\./, 'AAS-REPOSITORY-3.');
+        endpoint = endpoints.find((endpoint: any) => {
+            return endpoint?.interface === fallbackInterface;
+        });
+    }
+
+    // If not found and it's SUBMODEL-3.X, try SUBMODEL-REPOSITORY-3.X as fallback
+    if (!endpoint && interfaceShortName.startsWith('SUBMODEL-3.')) {
+        const fallbackInterface = interfaceShortName.replace(/^SUBMODEL-3\./, 'SUBMODEL-REPOSITORY-3.');
+        endpoint = endpoints.find((endpoint: any) => {
+            return endpoint?.interface === fallbackInterface;
+        });
+    }
 
     return endpoint?.protocolInformation?.href ? endpoint.protocolInformation.href : '';
 }
