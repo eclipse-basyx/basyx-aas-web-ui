@@ -35,6 +35,18 @@ async function loadPageShortcuts(routeName: string): Promise<PageShortcutDefinit
         return pageShortcutsCache.get(routeName) ?? null;
     }
 
+    // Validate route name to prevent path traversal and invalid characters
+    if (!routeName || typeof routeName !== 'string' || /[/\\.]/.test(routeName)) {
+        if (import.meta.env.DEV) {
+            console.warn(`[useRouteShortcuts] Invalid route name: "${routeName}"`);
+        }
+        pageShortcutsCache.set(routeName, null);
+        return null;
+    }
+
+    let corePageError: Error | null = null;
+    let modulePageError: Error | null = null;
+
     try {
         // Try loading from core pages first
         const corePage = await import(`../../pages/${routeName}.vue`);
@@ -43,7 +55,8 @@ async function loadPageShortcuts(routeName: string): Promise<PageShortcutDefinit
             pageShortcutsCache.set(routeName, corePage.shortcuts);
             return corePage.shortcuts;
         }
-    } catch {
+    } catch (error) {
+        corePageError = error as Error;
         // Not a core page, try modules
         try {
             const modulePage = await import(`../../pages/modules/${routeName}.vue`);
@@ -52,8 +65,25 @@ async function loadPageShortcuts(routeName: string): Promise<PageShortcutDefinit
                 pageShortcutsCache.set(routeName, modulePage.shortcuts);
                 return modulePage.shortcuts;
             }
-        } catch {
-            // Neither core page nor module has shortcuts - this is not an error
+        } catch (error) {
+            modulePageError = error as Error;
+            // Neither core page nor module has shortcuts - this is normal for most routes
+        }
+    }
+
+    // Log detailed error information in development mode only if both imports failed unexpectedly
+    if (import.meta.env.DEV && corePageError && modulePageError) {
+        // Only log if it's not a simple "module not found" error
+        const isExpectedError =
+            corePageError.message.includes('Cannot find module') || corePageError.message.includes('Unknown variable');
+        if (!isExpectedError) {
+            console.warn(
+                `[useRouteShortcuts] Failed to load shortcuts for route "${routeName}":`,
+                '\nCore page error:',
+                corePageError.message,
+                '\nModule page error:',
+                modulePageError.message
+            );
         }
     }
 
