@@ -6,14 +6,15 @@ This directory contains the keyboard shortcut system for the BaSyx AAS Web UI. T
 
 ### Files Overview
 
+- **Vuetify `useHotkey` composable** - Central keyboard event handler with scope management (provided by Vuetify)
 - **`useShortcutDefinitions.ts`** - Global shortcut definitions available across all pages
 - **`useRouteShortcuts.ts`** - Route-specific shortcut definitions that extend global shortcuts
-- **`useGlobalShortcuts.ts`** - Registers all shortcuts (global + route-specific) with the event manager
+- **`useGlobalShortcuts.ts`** - Registers all shortcuts (global + route-specific) using Vuetify's `useHotkey`
 
 ### How It Works
 
-1. The shortcut manager listens for keyboard events at the global level
-2. When a key combination is pressed, it dispatches to registered handlers based on scope
+1. Global keyboard events are listened to via Vuetify's `useHotkey` composable
+2. When a key combination is pressed, it is dispatched to registered handlers based on scope
 3. Route-specific shortcuts are checked first, then global shortcuts
 4. Shortcuts are displayed in the Command Palette (`CommandPalette.vue`)
 
