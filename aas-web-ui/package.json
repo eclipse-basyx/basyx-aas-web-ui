@@ -69,7 +69,7 @@
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-vue": "^10.6.2",
     "jsdom": "^27.4.0",
-    "prettier": "^3.7.4",
+    "prettier": "^3.8.0",
     "sass": "^1.97.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.53.0",
