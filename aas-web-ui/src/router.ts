@@ -269,7 +269,8 @@ export async function createAppRouter(): Promise<Router> {
 
                 // Fallback to issuer + /token if well-known config is not available
                 if (!tokenEndpoint) {
-                    tokenEndpoint = `${issuer}/token`;
+                    const normalizedIssuer = issuer.endsWith('/') ? issuer.slice(0, -1) : issuer;
+                    tokenEndpoint = `${normalizedIssuer}/token`;
                 }
 
                 // Normalize redirect URI (remove trailing slash for root path)

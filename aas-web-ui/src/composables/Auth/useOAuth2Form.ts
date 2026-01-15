@@ -183,7 +183,10 @@ export function useOAuth2Form(): {
 
                 // Fallback to host + /authorize if well-known config is not available
                 if (!authorizationEndpoint) {
-                    authorizationEndpoint = `${formData.value.host}/authorize`;
+                    const normalizedHost = formData.value.host.endsWith('/')
+                        ? formData.value.host.slice(0, -1)
+                        : formData.value.host;
+                    authorizationEndpoint = `${normalizedHost}/authorize`;
                 }
 
                 // Use infrastructure ID as state parameter so router can find the infrastructure after callback

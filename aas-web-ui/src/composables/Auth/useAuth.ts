@@ -174,9 +174,9 @@ export function useAuth(router?: Router) {
                 }
 
                 if (!endSessionEndpoint) {
-                    // If no end_session_endpoint, just clear local token
-                    clearLocalToken();
-                    return;
+                    // Fallback to host + /logout if well-known config doesn't provide end_session_endpoint
+                    const normalizedHost = host.endsWith('/') ? host.slice(0, -1) : host;
+                    endSessionEndpoint = `${normalizedHost}/logout`;
                 }
 
                 logoutUrl = new URL(endSessionEndpoint);

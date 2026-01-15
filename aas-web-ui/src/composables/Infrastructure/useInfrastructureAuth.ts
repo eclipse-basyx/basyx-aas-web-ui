@@ -111,7 +111,10 @@ export function useInfrastructureAuth(): {
 
                     // Fallback to host + /token if well-known config is not available
                     if (!tokenEndpoint) {
-                        tokenEndpoint = `${auth.oauth2.host}/token`;
+                        const normalizedHost = auth.oauth2.host.endsWith('/')
+                            ? auth.oauth2.host.slice(0, -1)
+                            : auth.oauth2.host;
+                        tokenEndpoint = `${normalizedHost}/token`;
                     }
 
                     const { refreshOAuth2Token } = await import('@/composables/Auth/OAuth2Auth');
