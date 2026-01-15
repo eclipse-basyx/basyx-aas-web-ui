@@ -86,6 +86,114 @@ const testData = [
         interfaceShortName: 'AAS-3.0',
         result: '',
     },
+    // Fallback tests: AAS-3.0 not found, but AAS-REPOSITORY-3.0 exists
+    {
+        testId: 'fb5d2c1a-7e3f-4a9b-8c2d-9e1f4a5b6c7d',
+        aasDescriptor: {
+            endpoints: [
+                {
+                    interface: 'AAS-REPOSITORY-3.0',
+                    protocolInformation: {
+                        href: 'http://example.com/aas-repository',
+                    },
+                },
+            ],
+        },
+        interfaceShortName: 'AAS-3.0',
+        result: 'http://example.com/aas-repository',
+    },
+    // Fallback tests: AAS-3.0.1 not found, but AAS-REPOSITORY-3.0.1 exists (multi-part version)
+    {
+        testId: '2a3b4c5d-6e7f-8a9b-0c1d-2e3f4a5b6c7d',
+        aasDescriptor: {
+            endpoints: [
+                {
+                    interface: 'AAS-REPOSITORY-3.0.1',
+                    protocolInformation: {
+                        href: 'http://example.com/aas-repository-v3.0.1',
+                    },
+                },
+            ],
+        },
+        interfaceShortName: 'AAS-3.0.1',
+        result: 'http://example.com/aas-repository-v3.0.1',
+    },
+    // Fallback tests: SUBMODEL-3.0 not found, but SUBMODEL-REPOSITORY-3.0 exists
+    {
+        testId: '3b4c5d6e-7f8a-9b0c-1d2e-3f4a5b6c7d8e',
+        aasDescriptor: {
+            endpoints: [
+                {
+                    interface: 'SUBMODEL-REPOSITORY-3.0',
+                    protocolInformation: {
+                        href: 'http://example.com/submodel-repository',
+                    },
+                },
+            ],
+        },
+        interfaceShortName: 'SUBMODEL-3.0',
+        result: 'http://example.com/submodel-repository',
+    },
+    // Fallback tests: SUBMODEL-3.0.2 not found, but SUBMODEL-REPOSITORY-3.0.2 exists (multi-part version)
+    {
+        testId: '4c5d6e7f-8a9b-0c1d-2e3f-4a5b6c7d8e9f',
+        aasDescriptor: {
+            endpoints: [
+                {
+                    interface: 'SUBMODEL-REPOSITORY-3.0.2',
+                    protocolInformation: {
+                        href: 'http://example.com/submodel-repository-v3.0.2',
+                    },
+                },
+            ],
+        },
+        interfaceShortName: 'SUBMODEL-3.0.2',
+        result: 'http://example.com/submodel-repository-v3.0.2',
+    },
+    // Test that exact match takes priority over fallback
+    {
+        testId: '5d6e7f8a-9b0c-1d2e-3f4a-5b6c7d8e9f0a',
+        aasDescriptor: {
+            endpoints: [
+                {
+                    interface: 'AAS-3.0',
+                    protocolInformation: {
+                        href: 'http://example.com/aas-exact',
+                    },
+                },
+                {
+                    interface: 'AAS-REPOSITORY-3.0',
+                    protocolInformation: {
+                        href: 'http://example.com/aas-repository',
+                    },
+                },
+            ],
+        },
+        interfaceShortName: 'AAS-3.0',
+        result: 'http://example.com/aas-exact',
+    },
+    // Test that exact match takes priority over fallback for SUBMODEL
+    {
+        testId: '6e7f8a9b-0c1d-2e3f-4a5b-6c7d8e9f0a1b',
+        aasDescriptor: {
+            endpoints: [
+                {
+                    interface: 'SUBMODEL-3.0',
+                    protocolInformation: {
+                        href: 'http://example.com/submodel-exact',
+                    },
+                },
+                {
+                    interface: 'SUBMODEL-REPOSITORY-3.0',
+                    protocolInformation: {
+                        href: 'http://example.com/submodel-repository',
+                    },
+                },
+            ],
+        },
+        interfaceShortName: 'SUBMODEL-3.0',
+        result: 'http://example.com/submodel-exact',
+    },
 ];
 
 describe("DescriptorUtils.ts; Tests for 'extractEndpointHref()'", () => {
