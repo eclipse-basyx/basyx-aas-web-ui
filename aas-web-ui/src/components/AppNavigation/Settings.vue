@@ -1,12 +1,16 @@
 <template>
     <v-menu :close-on-content-click="false" location="bottom">
         <template #activator="{ props }">
-            <v-btn v-bind="props" icon="mdi-cog" class="ml-3"></v-btn>
+            <v-btn v-bind="props" icon variant="tonal" size="small" style="padding-right: 28px; padding-left: 28px">
+                <v-icon>mdi-cog</v-icon>
+                <v-icon>mdi-menu-down</v-icon>
+            </v-btn>
         </template>
         <v-card
             :width="364"
             :color="isMobile ? 'card' : 'navigationMenu'"
-            :style="{ 'border-style': isMobile ? '' : 'solid', 'border-width': isMobile ? '' : '1px' }">
+            :rounded="isMobile ? '' : 'lg'"
+            :border="!isMobile">
             <v-list nav class="py-0" :class="isMobile ? 'bg-card' : 'bg-navigationMenu'">
                 <!-- Switch to change the app theme -->
                 <ThemeSwitch></ThemeSwitch>

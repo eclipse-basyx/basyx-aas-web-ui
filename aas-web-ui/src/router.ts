@@ -254,24 +254,34 @@ export async function createAppRouter(): Promise<Router> {
 
                 // Fetch .well-known configuration to get token endpoint
                 const wellKnownUrl = `${issuer}/.well-known/openid-configuration`;
-                const wellKnownResponse = await fetch(wellKnownUrl);
+                let tokenEndpoint;
 
-                if (!wellKnownResponse.ok) {
-                    throw new Error(`Failed to fetch OpenID configuration: ${wellKnownResponse.status}`);
+                try {
+                    const wellKnownResponse = await fetch(wellKnownUrl);
+
+                    if (wellKnownResponse.ok) {
+                        const wellKnownConfig = await wellKnownResponse.json();
+                        tokenEndpoint = wellKnownConfig.token_endpoint;
+                    }
+                } catch (error) {
+                    console.warn('[OAuth2 Callback] Failed to fetch .well-known configuration, using fallback', error);
                 }
 
-                const wellKnownConfig = await wellKnownResponse.json();
-                const tokenEndpoint = wellKnownConfig.token_endpoint;
-
+                // Fallback to issuer + /token if well-known config is not available
                 if (!tokenEndpoint) {
-                    throw new Error('Token endpoint not found in OpenID configuration');
+                    const normalizedIssuer = issuer.endsWith('/') ? issuer.slice(0, -1) : issuer;
+                    tokenEndpoint = `${normalizedIssuer}/token`;
                 }
+
+                // Normalize redirect URI (remove trailing slash for root path)
+                const pathname = window.location.pathname;
+                const redirectUri = `${window.location.origin}${pathname}`;
 
                 // Exchange authorization code for tokens
                 const tokenData = await exchangeOAuth2AuthorizationCode({
                     tokenEndpoint,
                     clientId: infrastructure.auth.oauth2.clientId,
-                    redirectUri: `${window.location.origin}${window.location.pathname}`,
+                    redirectUri,
                     code,
                     state, // Pass state to retrieve correct code verifier
                 });
