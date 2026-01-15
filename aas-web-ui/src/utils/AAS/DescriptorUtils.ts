@@ -51,7 +51,7 @@ export function extractEndpointHref(descriptor_or_model: any, interfaceShortName
     });
 
     // If not found and it's AAS-3.X, try AAS-REPOSITORY-3.X as fallback
-    if (!endpoint && /^AAS-3\.[^.-]+$/.test(interfaceShortName)) {
+    if (!endpoint && /^AAS-3\.[^-]+$/.test(interfaceShortName)) {
         const versionPart = interfaceShortName.substring('AAS-'.length); // e.g., "3.0"
         const fallbackInterface = 'AAS-REPOSITORY-' + versionPart;
         endpoint = endpoints.find((endpoint: any) => {
@@ -60,7 +60,7 @@ export function extractEndpointHref(descriptor_or_model: any, interfaceShortName
     }
 
     // If not found and it's SUBMODEL-3.X, try SUBMODEL-REPOSITORY-3.X as fallback
-    if (!endpoint && /^SUBMODEL-3\.[^.-]+$/.test(interfaceShortName)) {
+    if (!endpoint && /^SUBMODEL-3\.[^-]+$/.test(interfaceShortName)) {
         const versionPart = interfaceShortName.substring('SUBMODEL-'.length); // e.g., "3.0"
         const fallbackInterface = 'SUBMODEL-REPOSITORY-' + versionPart;
         endpoint = endpoints.find((endpoint: any) => {
