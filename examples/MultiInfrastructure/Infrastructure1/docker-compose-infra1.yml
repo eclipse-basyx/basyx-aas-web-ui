@@ -8,7 +8,6 @@ services:
       - "80:80"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - ./nginx/vhost.d:/etc/nginx/vhost.d:ro
     environment:
       DEFAULT_HOST: aasgui.basyx.localhost
     networks:
