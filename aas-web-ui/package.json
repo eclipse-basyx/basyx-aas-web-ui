@@ -67,7 +67,7 @@
     "eslint-plugin-prettier": "^5.5.5",
     "eslint-plugin-promise": "^7.2.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
-    "eslint-plugin-vue": "^10.6.2",
+    "eslint-plugin-vue": "^10.7.0",
     "jsdom": "^27.4.0",
     "prettier": "^3.8.0",
     "sass": "^1.97.2",
