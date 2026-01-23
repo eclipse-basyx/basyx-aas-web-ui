@@ -127,18 +127,12 @@
                                     <HelpInfoButton help-type="assetKind" />
                                 </v-col>
                             </v-row>
-                            <v-row align="center">
-                                <v-col class="py-0">
-                                    <TextInput
-                                        v-model="globalAssetId"
-                                        label="Global Asset ID"
-                                        :show-generate-iri-button="true"
-                                        type="Asset" />
-                                </v-col>
-                                <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="globalAssetId" />
-                                </v-col>
-                            </v-row>
+                            <AssetIdInput
+                                v-model:global-asset-id="globalAssetId"
+                                v-model:specific-asset-ids="specificAssetIds"
+                                :show-specific-asset-ids="true"
+                                :show-generate-iri-for-global="true"
+                                :show-generate-iri-for-specific="true" />
                             <v-row align="center">
                                 <v-col class="py-0">
                                     <TextInput v-model="assetType" label="Asset Type" />
@@ -228,6 +222,7 @@
 
     const assetKind = ref<aasTypes.AssetKind>(aasTypes.AssetKind.Instance);
     const globalAssetId = ref<string | null>(null);
+    const specificAssetIds = ref<Array<aasTypes.SpecificAssetId> | null>(null);
     const assetType = ref<string | null>(null);
     const defaultThumbnail = ref<aasTypes.Resource | null>(null);
 
@@ -312,6 +307,7 @@
             if (AASObject.value.assetInformation !== null && AASObject.value.assetInformation !== undefined) {
                 assetKind.value = AASObject.value.assetInformation.assetKind;
                 globalAssetId.value = AASObject.value.assetInformation.globalAssetId;
+                specificAssetIds.value = AASObject.value.assetInformation.specificAssetIds;
                 assetType.value = AASObject.value.assetInformation.assetType;
                 defaultThumbnail.value = AASObject.value.assetInformation.defaultThumbnail;
             }
@@ -326,7 +322,10 @@
             assetInformation.globalAssetId = globalAssetId.value;
         }
 
-        // TODO: Add optional parameter specificAssetIds
+        // Add optional parameter specificAssetIds
+        if (specificAssetIds.value !== null && specificAssetIds.value.length > 0) {
+            assetInformation.specificAssetIds = specificAssetIds.value;
+        }
 
         // Add optional parameter assetType
         if (assetType.value !== null) {
@@ -462,6 +461,7 @@
         templateId.value = null;
         assetKind.value = aasTypes.AssetKind.Instance;
         globalAssetId.value = null;
+        specificAssetIds.value = null;
         assetType.value = null;
         defaultThumbnail.value = null;
         // Reset state of expansion panels
