@@ -261,12 +261,16 @@
 
         entityObject.value.category = entityCategory.value;
 
-        if (globalAssetId.value !== null) {
+        if (globalAssetId.value !== null && globalAssetId.value !== '') {
             entityObject.value.globalAssetId = globalAssetId.value;
+        } else {
+            delete entityObject.value.globalAssetId;
         }
 
         if (specificAssetIds.value !== null && specificAssetIds.value.length > 0) {
             entityObject.value.specificAssetIds = specificAssetIds.value;
+        } else {
+            delete entityObject.value.specificAssetIds;
         }
 
         if (props.newEntity) {
