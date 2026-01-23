@@ -68,6 +68,7 @@
             'Defines whether order in list is relevant.\nIf orderRelevant = false, the list represents a set or a bag.',
         'sml-typeValueListElement': 'The submodel element type of the submodel elements contained in the list.',
         'sml-valueTypeListElement': 'The value type of the submodel element contained in the list.',
+        entityType: 'Enumeration for denoting whether an entity is a self-managed entity or a co-managed entity.',
     };
 
     const helpLinksData = helpLinks as Record<string, string>;

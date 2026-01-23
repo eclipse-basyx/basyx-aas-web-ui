@@ -264,13 +264,13 @@
         if (globalAssetId.value !== null && globalAssetId.value !== '') {
             entityObject.value.globalAssetId = globalAssetId.value;
         } else {
-            delete entityObject.value.globalAssetId;
+            entityObject.value.globalAssetId = null;
         }
 
         if (specificAssetIds.value !== null && specificAssetIds.value.length > 0) {
             entityObject.value.specificAssetIds = specificAssetIds.value;
         } else {
-            delete entityObject.value.specificAssetIds;
+            entityObject.value.specificAssetIds = null;
         }
 
         if (props.newEntity) {

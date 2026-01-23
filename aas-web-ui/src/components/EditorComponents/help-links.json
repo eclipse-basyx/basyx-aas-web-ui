@@ -27,6 +27,7 @@
   "blob-contentType": "https://industrialdigitaltwin.io/aas-specifications/IDTA-01001/v3.1/spec-metamodel/datatypes.html#ContentType",
   "sml-orderRelevant": "https://industrialdigitaltwin.io/aas-specifications/IDTA-01001/v3.1/spec-metamodel/submodel-elements.html#submodel-element-list-attributes",
   "sml-typeValueListElement": "https://industrialdigitaltwin.io/aas-specifications/IDTA-01001/v3.1/spec-metamodel/referencing.html#AasSubmodelElements",
-  "sml-valueTypeListElement": "https://industrialdigitaltwin.io/aas-specifications/IDTA-01001/v3.1/spec-metamodel/datatypes.html#DataTypeDefXsd"
+  "sml-valueTypeListElement": "https://industrialdigitaltwin.io/aas-specifications/IDTA-01001/v3.1/spec-metamodel/datatypes.html#DataTypeDefXsd",
+  "entityType": "https://industrialdigitaltwin.io/aas-specifications/IDTA-01001/v3.1/spec-metamodel/submodel-elements.html#entity-type-enumeration"
 }
 
