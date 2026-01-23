@@ -68,7 +68,7 @@
                     <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(1)">
                         <v-expansion-panel-title>Value</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <v-row align="center">
+                            <v-row align="center" class="mb-3">
                                 <v-col class="py-0">
                                     <SelectInput v-model="entityType" label="Entity Type" type="entityType" />
                                 </v-col>
@@ -375,7 +375,7 @@
             if (entityObject.value.specificAssetIds) {
                 specificAssetIds.value = entityObject.value.specificAssetIds;
             }
-            openPanels.value = [0];
+            openPanels.value = [0, 1];
         } else {
             entityIdShort.value = null;
             displayName.value = null;
@@ -385,7 +385,7 @@
             entityType.value = aasTypes.EntityType.SelfManagedEntity;
             globalAssetId.value = null;
             specificAssetIds.value = null;
-            openPanels.value = [0];
+            openPanels.value = [0, 1];
         }
     }
 </script>

@@ -119,7 +119,7 @@
                     <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
                         <v-expansion-panel-title>Asset</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <v-row align="center">
+                            <v-row align="center" class="mb-3">
                                 <v-col class="py-0">
                                     <SelectInput v-model="assetKind" label="Asset Kind" type="assetKind"></SelectInput>
                                 </v-col>
@@ -133,7 +133,7 @@
                                 :show-specific-asset-ids="true"
                                 :show-generate-iri-for-global="true"
                                 :show-generate-iri-for-specific="true" />
-                            <v-row align="center">
+                            <v-row align="center" class="mt-0">
                                 <v-col class="py-0">
                                     <TextInput v-model="assetType" label="Asset Type" />
                                 </v-col>

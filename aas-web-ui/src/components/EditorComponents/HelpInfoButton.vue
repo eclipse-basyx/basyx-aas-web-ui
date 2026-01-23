@@ -28,6 +28,9 @@
     const additionalHelp: Record<string, string> = {
         aas: 'Standardized digital representation of an asset.',
         globalAssetId: 'Identifier of the asset, the Asset Administration Shell is representing.',
+        specificAssetIds:
+            'Additional domain-specific, typically proprietary identifier for the asset like serial number,\n' +
+            'manufacturer part ID, customer part IDs, etc.',
         assetType:
             'In case AssetInformation/assetKind is not NotApplicable the AssetInformation/assetType is the asset ID\n' +
             'of the type asset of the asset under consideration as identified by AssetInformation/globalAssetId.',

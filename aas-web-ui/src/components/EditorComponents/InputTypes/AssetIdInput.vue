@@ -1,5 +1,5 @@
 <template>
-    <v-container fluid class="pa-0">
+    <v-container fluid class="px-0">
         <!-- Global Asset ID -->
         <v-row v-if="showGlobalAssetId" align="center">
             <v-col class="py-0">
@@ -30,17 +30,34 @@
 
         <!-- Specific Asset IDs -->
         <template v-if="showSpecificAssetIds">
-            <v-divider v-if="showGlobalAssetId" class="my-3"></v-divider>
-            <span class="text-subtitle-2 font-weight-medium">Specific Asset Ids</span>
-            <v-list-item v-for="(assetId, i) in specificAssetIdsValue" :key="i" class="px-0">
-                <v-row>
-                    <v-col class="py-0">
+            <v-divider v-if="showGlobalAssetId" class="mt-2"></v-divider>
+            <v-list-item v-if="showGlobalAssetId" class="pl-0 pt-0">
+                <template #title>
+                    <div class="text-subtitle-2">{{ 'Specific Asset Ids' }}</div>
+                </template>
+            </v-list-item>
+            <v-row align="center">
+                <v-col>
+                    <v-list-item v-for="(assetId, i) in specificAssetIdsValue" :key="i" class="pa-0">
+                        <template #prepend>
+                            <v-text-field
+                                v-model="assetId.name"
+                                :width="300"
+                                label="Name"
+                                variant="outlined"
+                                density="comfortable"
+                                class="mr-3 mt-2"
+                                clearable>
+                            </v-text-field>
+                        </template>
                         <v-text-field
-                            v-model="assetId.name"
-                            label="Name"
+                            v-model="assetId.value"
+                            label="Value"
                             variant="outlined"
                             density="comfortable"
-                            clearable>
+                            append-icon="mdi-delete"
+                            class="mt-2"
+                            @click:append="deleteSpecificAssetId(assetId)">
                             <template v-if="showGenerateIriForSpecific" #append-inner>
                                 <v-btn
                                     color="primary"
@@ -50,28 +67,22 @@
                                     variant="text"
                                     text="Generate IRI"
                                     class="text-none"
-                                    @click.stop="assetId.name = generateIri('SpecificAssetId')" />
+                                    @click.stop="assetId.value = generateIri('SpecificAssetId')" />
                             </template>
                         </v-text-field>
-                    </v-col>
-                    <v-col class="py-0">
-                        <v-text-field
-                            v-model="assetId.value"
-                            label="Value"
-                            variant="outlined"
-                            density="comfortable"
-                            append-icon="mdi-delete"
-                            @click:append="deleteSpecificAssetId(assetId)"></v-text-field>
-                    </v-col>
-                </v-row>
-            </v-list-item>
-            <v-btn
-                color="primary"
-                prepend-icon="mdi-plus"
-                variant="outlined"
-                text="Add"
-                class="text-none mt-1"
-                @click="addSpecificAssetId"></v-btn>
+                    </v-list-item>
+                    <v-btn
+                        color="primary"
+                        prepend-icon="mdi-plus"
+                        variant="outlined"
+                        text="Add"
+                        class="text-none mt-2"
+                        @click="addSpecificAssetId"></v-btn>
+                </v-col>
+                <v-col cols="auto" class="px-0 mt-n4">
+                    <HelpInfoButton help-type="specificAssetIds" />
+                </v-col>
+            </v-row>
         </template>
     </v-container>
 </template>
@@ -144,11 +155,11 @@
         }
     );
 
-    function addSpecificAssetId() {
+    function addSpecificAssetId(): void {
         specificAssetIdsValue.value.push(new aasTypes.SpecificAssetId('', ''));
     }
 
-    function deleteSpecificAssetId(assetId: aasTypes.SpecificAssetId) {
+    function deleteSpecificAssetId(assetId: aasTypes.SpecificAssetId): void {
         const index = specificAssetIdsValue.value.indexOf(assetId);
         if (index !== -1) {
             specificAssetIdsValue.value.splice(index, 1);
