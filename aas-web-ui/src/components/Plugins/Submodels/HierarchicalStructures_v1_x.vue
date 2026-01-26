@@ -18,7 +18,7 @@
                     </v-list-item>
                     <!-- Export Button -->
                     <v-list-item class="px-2 pb-3">
-                        <v-btn color="primary" size="small" @click="exportToXML">Export to XML</v-btn>
+                        <v-btn @click="exportToXML" color="primary" size="small">Export to XML</v-btn>
                     </v-list-item>
                     <div style="height: 600px; border: 1px solid rgba(0, 0, 0, 0.12)">
                         <VueFlow
@@ -106,8 +106,6 @@
     const edges = ref<Edge[]>([]);
     const nodeMap = ref<Map<string, unknown>>(new Map());
     const hasSelfLoopEdges = ref(false);
-    // Map node id to DOM ref
-    const nodeRefs = ref<Record<string, HTMLElement | null>>({});
 
     // VueFlow instance
     const { fitView } = useVueFlow();
@@ -154,7 +152,7 @@
                               'dominant-baseline': 'middle',
                               style: 'font-size: 12px; fill: #000;',
                           },
-                          String(label)
+                          label
                       )
                   )
                 : null,
@@ -221,7 +219,7 @@
         const tempEdges: Edge[] = [];
 
         addNodesToFlow(entryNode!, tempNodes, tempEdges, 0, 0);
-        applyHierarchicalLayout(tempNodes);
+        applyHierarchicalLayout(tempNodes, tempEdges);
 
         // Check if there are self-loop edges
         hasSelfLoopEdges.value = tempEdges.some((e) => e.type === 'selfloop');
@@ -230,43 +228,10 @@
         edges.value = tempEdges;
     }
 
-    // Adjust y positions of child nodes based on parent node height
-    function adjustNodeVerticalPositions(): void {
-        // Build a map of node id to node object
-        const nodeObjMap: Record<string, Node> = {};
-        nodes.value.forEach((n) => {
-            nodeObjMap[n.id] = n;
-        });
-
-        // For each node, if it has children, adjust their y based on this node's height
-        nodes.value.forEach((parentNode) => {
-            const children = parentNode.data?.children as Record<string, unknown>[] | undefined;
-            if (!children || !Array.isArray(children)) return;
-            const parentEl = nodeRefs.value[parentNode.id];
-            const parentHeight = parentEl ? parentEl.offsetHeight : 60; // fallback height
-            children.forEach((child: Record<string, unknown>) => {
-                const childNode = nodeObjMap[child.idShort as string];
-                if (childNode) {
-                    // Place child below parent, add margin
-                    childNode.position.y = parentNode.position.y + parentHeight + 40;
-                }
-            });
-        });
-    }
-
     function onNodesInitialized(): void {
         // Use extra padding if there are self-loop edges to ensure they're visible
         const padding = hasSelfLoopEdges.value ? 0.4 : 0.2;
         fitView({ padding, includeHiddenNodes: false });
-
-        // Set refs for height measurement
-        nodes.value.forEach((node) => {
-            const el = document.querySelector(`.vue-flow__node[data-id="${node.id}"]`) as HTMLElement;
-            if (el) nodeRefs.value[node.id] = el;
-        });
-
-        // Adjust positions after refs are set
-        adjustNodeVerticalPositions();
     }
 
     function findEntryNode(bomData: Record<string, unknown>): Record<string, unknown> | undefined {
@@ -335,6 +300,10 @@
             const node = createFlowNode(nodeData, level, positionInLevel, parentX);
             node.data.children = children;
             node.data.parent = nodeData;
+            if (node.data.parent.statements)
+                node.data.childrenCountOnCurrentLevel = node.data.parent.statements.filter(
+                    (s: any) => s.modelType === 'Entity'
+                ).length;
             tempNodes.push(node);
             nodeMap.value.set(nodeId, nodeData);
             return node;
@@ -348,7 +317,6 @@
         positionInLevel: number,
         parentX?: number
     ): Node {
-        // If parentX is provided, align child under parent; else use default x
         const x = typeof parentX === 'number' ? parentX : 250;
         return {
             id: nodeData.idShort as string,
@@ -462,87 +430,96 @@
         return childPosition + 1;
     }
 
-    function applyHierarchicalLayout(tempNodes: Node[]): void {
-        const levelMap = groupNodesByLevel(tempNodes);
-        setNodeDataNodesWithSameParent(tempNodes);
-        centerNodesAtEachLevel(levelMap, tempNodes);
-    }
+    function applyHierarchicalLayout(tempNodes: Node[], tempEdges: Edge[]): void {
+        const nodeSpacingX = 200;
+        const nodeSpacingY = 150;
 
-    function setNodeDataNodesWithSameParent(tempNodes: Node[]): void {
-        const parentMap = new Map<string, Node[]>();
+        if (tempNodes.length === 0) return;
 
-        tempNodes.forEach((node) => {
-            const parentId = (node.data.parent as Record<string, unknown>).idShort as string;
-            if (!parentMap.has(parentId)) {
-                parentMap.set(parentId, []);
-            }
-            parentMap.get(parentId)?.push(node);
-        });
+        // Build a map from node id to node
+        const nodeById = new Map<string, Node>();
+        tempNodes.forEach((node) => nodeById.set(node.id, node));
 
-        tempNodes.forEach((node) => {
-            const parentId = (node.data.parent as Record<string, unknown>).idShort as string;
-            node.data.nodesWithSameParent = parentMap.get(parentId)?.length || 1;
-        });
-    }
+        // Build parent-child relationships from edges
+        const childrenMap = new Map<string, string[]>();
+        const parentMap = new Map<string, string>();
 
-    function groupNodesByLevel(nodes: Node[]): Map<number, Node[]> {
-        const levelMap = new Map<number, Node[]>();
-        nodes.forEach((node) => {
-            const level = node.position.y;
-            if (!levelMap.has(level)) {
-                levelMap.set(level, []);
-            }
-            levelMap.get(level)?.push(node);
-        });
-
-        return levelMap;
-    }
-
-    function centerNodesAtEachLevel(levelMap: Map<number, Node[]>, tempNodes: Node[]): void {
-        const levels = levelMap.size;
-        let currentLevel = 1;
-        levelMap.forEach((nodesAtLevel) => {
-            // Group nodes by their parent
-            const parentGroups = new Map<string, Node[]>();
-            nodesAtLevel.forEach((node) => {
-                const parentId = node.data.parent
-                    ? ((node.data.parent as Record<string, unknown>).idShort as string)
-                    : 'root';
-                if (!parentGroups.has(parentId)) {
-                    parentGroups.set(parentId, []);
+        tempEdges.forEach((edge) => {
+            if (edge.source !== edge.target) {
+                // Skip self-loops
+                if (!childrenMap.has(edge.source)) {
+                    childrenMap.set(edge.source, []);
                 }
-                parentGroups.get(parentId)!.push(node);
-            });
-
-            // Position nodes in each group
-            parentGroups.forEach((children, parentId) => {
-                if (children.length === 1) {
-                    // Single child: align directly under parent
-                    const parentNode = parentId === 'root' ? null : tempNodes.find((n) => n.id === parentId);
-                    const parentX = parentNode ? parentNode.position.x : 250; // Default for root
-                    children[0].position.x = parentX;
-                } else {
-                    // Multiple children: center them around parent's x
-                    const parentNode = parentId === 'root' ? null : tempNodes.find((n) => n.id === parentId);
-                    const parentX = parentNode ? parentNode.position.x : 250;
-                    const spacing = 250;
-                    const totalWidth = (children.length - 1) * spacing;
-                    const startX = parentX - totalWidth / 2;
-                    children.forEach((node, index) => {
-                        node.position.x = startX + index * spacing;
-                    });
-                }
-            });
-
-            // Set metadata
-            nodesAtLevel.forEach((node) => {
-                node.data.widthOnLevel = nodesAtLevel.length * 250; // Or adjust as needed
-                node.data.level = currentLevel;
-                node.data.levels = levels;
-                node.data.nodesOnSameLevel = nodesAtLevel.length;
-            });
-            currentLevel++;
+                childrenMap.get(edge.source)!.push(edge.target);
+                parentMap.set(edge.target, edge.source);
+            }
         });
+
+        // Find root nodes (nodes without parents)
+        const rootNodes = tempNodes.filter((node) => !parentMap.has(node.id));
+
+        // Calculate subtree widths bottom-up
+        const subtreeWidths = new Map<string, number>();
+
+        function calculateSubtreeWidth(nodeId: string): number {
+            const children = childrenMap.get(nodeId) || [];
+
+            if (children.length === 0) {
+                // Leaf node - width is 1 unit (nodeSpacingX)
+                subtreeWidths.set(nodeId, nodeSpacingX);
+                return nodeSpacingX;
+            }
+
+            // Sum of all children's subtree widths
+            let totalChildWidth = 0;
+            children.forEach((childId) => {
+                totalChildWidth += calculateSubtreeWidth(childId);
+            });
+
+            subtreeWidths.set(nodeId, totalChildWidth);
+            return totalChildWidth;
+        }
+
+        // Calculate widths for all trees starting from roots
+        rootNodes.forEach((root) => calculateSubtreeWidth(root.id));
+
+        // Position nodes recursively, centering children under their parent
+        function positionSubtree(nodeId: string, xStart: number, level: number): void {
+            const node = nodeById.get(nodeId);
+            if (!node) return;
+
+            const children = childrenMap.get(nodeId) || [];
+            const subtreeWidth = subtreeWidths.get(nodeId) || nodeSpacingX;
+
+            // Position this node at the center of its subtree
+            node.position.x = xStart + subtreeWidth / 2 - nodeSpacingX / 2;
+            node.position.y = level * nodeSpacingY;
+
+            // Position children
+            let childXStart = xStart;
+            children.forEach((childId) => {
+                const childSubtreeWidth = subtreeWidths.get(childId) || nodeSpacingX;
+                positionSubtree(childId, childXStart, level + 1);
+                childXStart += childSubtreeWidth;
+            });
+        }
+
+        // Position all root trees side by side
+        let currentX = 0;
+        rootNodes.forEach((root) => {
+            positionSubtree(root.id, currentX, 0);
+            currentX += subtreeWidths.get(root.id) || nodeSpacingX;
+        });
+
+        // Center the entire graph around x=0
+        if (tempNodes.length > 0) {
+            const minX = Math.min(...tempNodes.map((n) => n.position.x));
+            const maxX = Math.max(...tempNodes.map((n) => n.position.x));
+            const centerOffset = (minX + maxX) / 2;
+            tempNodes.forEach((node) => {
+                node.position.x -= centerOffset;
+            });
+        }
     }
 
     function getNodeStyle(): Record<string, string> {
@@ -572,7 +549,6 @@
             edge.labelStyle = { fill: '#000', fontSize: '12px' };
             edge.labelBgStyle = { fill: '#fff' };
         });
-        setTimeout(adjustNodeVerticalPositions, 0);
     }
 
     function onNodeClick(event: { node: { data?: Record<string, unknown> } }): void {
@@ -623,7 +599,7 @@
         nodes.value.forEach((node) => {
             const nodeElement = xmlDoc.createElement('node');
             nodeElement.setAttribute('id', node.id);
-            nodeElement.setAttribute('label', String(node.label || ''));
+            nodeElement.setAttribute('label', node.label || '');
             nodeElement.setAttribute('x', node.position.x.toString());
             nodeElement.setAttribute('y', node.position.y.toString());
             root.appendChild(nodeElement);
@@ -634,7 +610,7 @@
             const edgeElement = xmlDoc.createElement('edge');
             edgeElement.setAttribute('source', edge.source);
             edgeElement.setAttribute('target', edge.target);
-            edgeElement.setAttribute('label', String(edge.label || ''));
+            edgeElement.setAttribute('label', edge.label || '');
             root.appendChild(edgeElement);
         });
 
