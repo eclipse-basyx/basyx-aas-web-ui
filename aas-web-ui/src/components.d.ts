@@ -92,6 +92,7 @@ declare module 'vue' {
     ReferenceElementForm: typeof import('./components/EditorComponents/SubmodelElements/ReferenceElementForm.vue')['default']
     ReferenceInput: typeof import('./components/EditorComponents/InputTypes/ReferenceInput.vue')['default']
     RelationshipElement: typeof import('./components/SubmodelElements/RelationshipElement.vue')['default']
+    RelationshipElementForm: typeof import('./components/EditorComponents/SubmodelElements/RelationshipElementForm.vue')['default']
     ResourceInput: typeof import('./components/EditorComponents/InputTypes/ResourceInput.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

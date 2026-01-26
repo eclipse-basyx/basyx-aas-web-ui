@@ -285,6 +285,13 @@
         :parent-element="elementToAddSME"
         :path="submodelElementPath"
         :reference-element="submodelElementToEdit"></ReferenceElementForm>
+    <!-- Dialog for creating/editing RelationshipElements -->
+    <RelationshipElementForm
+        v-model="relationshipElementDialog"
+        :new-relationship-element="newRelationshipElement"
+        :parent-element="elementToAddSME"
+        :path="submodelElementPath"
+        :relationship-element="submodelElementToEdit"></RelationshipElementForm>
     <!-- Dialog for creating/editing Submodel -->
     <SubmodelForm v-model="editDialog" :new-sm="newSubmodel" :submodel="submodelToEdit"></SubmodelForm>
     <!-- Dialog for inserting JSON -->
@@ -337,6 +344,7 @@
     const blobDialog = ref(false); // Variable to store if the BlobForm Dialog should be shown
     const entityDialog = ref(false); // Variable to store if the EntityForm Dialog should be shown
     const referenceElementDialog = ref(false); // Variable to store if the ReferenceElementForm Dialog should be shown
+    const relationshipElementDialog = ref(false); // Variable to store if the RelationshipElementForm Dialog should be shown
     const smcDialog = ref(false); // Variable to store if the PropertyForm Dialog should be shown
     const smlDialog = ref(false); // Variable to store if the SubmodelElementListForm Dialog should be shown
     const editDialog = ref(false); // Variable to store if the Edit Dialog should be shown
@@ -349,6 +357,7 @@
     const newSML = ref(false); // Variable to store if a new SubmodelElementList should be created
     const newEntity = ref(false); // Variable to store if a new Entity should be created
     const newReferenceElement = ref(false); // Variable to store if a new ReferenceElement should be created
+    const newRelationshipElement = ref(false); // Variable to store if a new RelationshipElement should be created
     const newSubmodel = ref(false); // Variable to store if a new Submodel should be created
     const submodelToEdit = ref<any | undefined>(undefined); // Variable to store the Submodel to be edited
     const deleteDialog = ref(false); // Variable to store if the Delete Dialog should be shown
@@ -740,6 +749,12 @@
             submodelElementPath.value = element.path;
             elementToAddSME.value = element.parent;
             submodelElementToEdit.value = element;
+        } else if (element.modelType === 'RelationshipElement') {
+            relationshipElementDialog.value = true;
+            newRelationshipElement.value = false;
+            submodelElementPath.value = element.path;
+            elementToAddSME.value = element.parent;
+            submodelElementToEdit.value = element;
         } else {
             console.error(`Specified invalid SubmodelElement Type "${element.modelType}"`);
         }
@@ -800,6 +815,12 @@
                 submodelElementPath.value = undefined;
                 submodelElementToEdit.value = undefined;
                 referenceElementDialog.value = true;
+                break;
+            case 'RelationshipElement':
+                newRelationshipElement.value = true;
+                submodelElementPath.value = undefined;
+                submodelElementToEdit.value = undefined;
+                relationshipElementDialog.value = true;
                 break;
             default:
                 console.error(`Specified invalid SubmodelElement Type "${smeType}"`);
