@@ -152,7 +152,7 @@
                               'dominant-baseline': 'middle',
                               style: 'font-size: 12px; fill: #000;',
                           },
-                          label
+                          label as any
                       )
                   )
                 : null,
@@ -432,7 +432,8 @@
 
     function applyHierarchicalLayout(tempNodes: Node[], tempEdges: Edge[]): void {
         const nodeSpacingX = 200;
-        const nodeSpacingY = 150;
+        const baseNodeSpacingY = 100; // Minimum spacing between levels
+        const defaultNodeHeight = 50; // Default height estimate for a node
 
         if (tempNodes.length === 0) return;
 
@@ -483,23 +484,65 @@
         // Calculate widths for all trees starting from roots
         rootNodes.forEach((root) => calculateSubtreeWidth(root.id));
 
+        // Assign levels to nodes and track node levels
+        const nodeLevels = new Map<string, number>();
+
+        function assignLevels(nodeId: string, level: number): void {
+            nodeLevels.set(nodeId, level);
+            const children = childrenMap.get(nodeId) || [];
+            children.forEach((childId) => assignLevels(childId, level + 1));
+        }
+
+        rootNodes.forEach((root) => assignLevels(root.id, 0));
+
+        // Estimate node height based on label length
+        function estimateNodeHeight(node: Node): number {
+            const label = node.label || '';
+            const labelLength = typeof label === 'string' ? label.length : 0;
+            // Assume ~15 chars per line, ~20px per line, with padding
+            const estimatedLines = Math.ceil(labelLength / 15);
+            const estimatedHeight = Math.max(defaultNodeHeight, estimatedLines * 20 + 30);
+            return estimatedHeight;
+        }
+
+        // Group nodes by level and find max height per level
+        const maxHeightPerLevel = new Map<number, number>();
+        tempNodes.forEach((node) => {
+            const level = nodeLevels.get(node.id) ?? 0;
+            const nodeHeight = estimateNodeHeight(node);
+            const currentMax = maxHeightPerLevel.get(level) || 0;
+            maxHeightPerLevel.set(level, Math.max(currentMax, nodeHeight));
+        });
+
+        // Calculate cumulative Y positions for each level
+        const levelYPositions = new Map<number, number>();
+        const maxLevel = Math.max(...Array.from(nodeLevels.values()), 0);
+        let cumulativeY = 0;
+
+        for (let level = 0; level <= maxLevel; level++) {
+            levelYPositions.set(level, cumulativeY);
+            const levelHeight = maxHeightPerLevel.get(level) || defaultNodeHeight;
+            cumulativeY += levelHeight + baseNodeSpacingY;
+        }
+
         // Position nodes recursively, centering children under their parent
-        function positionSubtree(nodeId: string, xStart: number, level: number): void {
+        function positionSubtree(nodeId: string, xStart: number): void {
             const node = nodeById.get(nodeId);
             if (!node) return;
 
             const children = childrenMap.get(nodeId) || [];
             const subtreeWidth = subtreeWidths.get(nodeId) || nodeSpacingX;
+            const level = nodeLevels.get(nodeId) ?? 0;
 
             // Position this node at the center of its subtree
             node.position.x = xStart + subtreeWidth / 2 - nodeSpacingX / 2;
-            node.position.y = level * nodeSpacingY;
+            node.position.y = levelYPositions.get(level) ?? 0;
 
             // Position children
             let childXStart = xStart;
             children.forEach((childId) => {
                 const childSubtreeWidth = subtreeWidths.get(childId) || nodeSpacingX;
-                positionSubtree(childId, childXStart, level + 1);
+                positionSubtree(childId, childXStart);
                 childXStart += childSubtreeWidth;
             });
         }
@@ -507,7 +550,7 @@
         // Position all root trees side by side
         let currentX = 0;
         rootNodes.forEach((root) => {
-            positionSubtree(root.id, currentX, 0);
+            positionSubtree(root.id, currentX);
             currentX += subtreeWidths.get(root.id) || nodeSpacingX;
         });
 
@@ -599,7 +642,7 @@
         nodes.value.forEach((node) => {
             const nodeElement = xmlDoc.createElement('node');
             nodeElement.setAttribute('id', node.id);
-            nodeElement.setAttribute('label', node.label || '');
+            nodeElement.setAttribute('label', node.data.label || '');
             nodeElement.setAttribute('x', node.position.x.toString());
             nodeElement.setAttribute('y', node.position.y.toString());
             root.appendChild(nodeElement);
@@ -610,7 +653,7 @@
             const edgeElement = xmlDoc.createElement('edge');
             edgeElement.setAttribute('source', edge.source);
             edgeElement.setAttribute('target', edge.target);
-            edgeElement.setAttribute('label', edge.label || '');
+            edgeElement.setAttribute('label', (edge.label as any) || '');
             root.appendChild(edgeElement);
         });
 
