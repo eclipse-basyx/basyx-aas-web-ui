@@ -89,6 +89,7 @@ declare module 'vue' {
     RangeForm: typeof import('./components/EditorComponents/SubmodelElements/RangeForm.vue')['default']
     RangeInput: typeof import('./components/EditorComponents/InputTypes/RangeInput.vue')['default']
     ReferenceElement: typeof import('./components/SubmodelElements/ReferenceElement.vue')['default']
+    ReferenceElementForm: typeof import('./components/EditorComponents/SubmodelElements/ReferenceElementForm.vue')['default']
     ReferenceInput: typeof import('./components/EditorComponents/InputTypes/ReferenceInput.vue')['default']
     RelationshipElement: typeof import('./components/SubmodelElements/RelationshipElement.vue')['default']
     ResourceInput: typeof import('./components/EditorComponents/InputTypes/ResourceInput.vue')['default']

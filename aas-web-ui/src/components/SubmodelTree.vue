@@ -278,6 +278,13 @@
         :parent-element="elementToAddSME"
         :path="submodelElementPath"
         :entity="submodelElementToEdit"></EntityForm>
+    <!-- Dialog for creating/editing ReferenceElements -->
+    <ReferenceElementForm
+        v-model="referenceElementDialog"
+        :new-reference-element="newReferenceElement"
+        :parent-element="elementToAddSME"
+        :path="submodelElementPath"
+        :reference-element="submodelElementToEdit"></ReferenceElementForm>
     <!-- Dialog for creating/editing Submodel -->
     <SubmodelForm v-model="editDialog" :new-sm="newSubmodel" :submodel="submodelToEdit"></SubmodelForm>
     <!-- Dialog for inserting JSON -->
@@ -329,6 +336,7 @@
     const fileDialog = ref(false); // Variable to store if the FileForm Dialog should be shown
     const blobDialog = ref(false); // Variable to store if the BlobForm Dialog should be shown
     const entityDialog = ref(false); // Variable to store if the EntityForm Dialog should be shown
+    const referenceElementDialog = ref(false); // Variable to store if the ReferenceElementForm Dialog should be shown
     const smcDialog = ref(false); // Variable to store if the PropertyForm Dialog should be shown
     const smlDialog = ref(false); // Variable to store if the SubmodelElementListForm Dialog should be shown
     const editDialog = ref(false); // Variable to store if the Edit Dialog should be shown
@@ -340,6 +348,7 @@
     const newSMC = ref(false); // Variable to store if a new SubmodelElementCollection should be created
     const newSML = ref(false); // Variable to store if a new SubmodelElementList should be created
     const newEntity = ref(false); // Variable to store if a new Entity should be created
+    const newReferenceElement = ref(false); // Variable to store if a new ReferenceElement should be created
     const newSubmodel = ref(false); // Variable to store if a new Submodel should be created
     const submodelToEdit = ref<any | undefined>(undefined); // Variable to store the Submodel to be edited
     const deleteDialog = ref(false); // Variable to store if the Delete Dialog should be shown
@@ -725,6 +734,12 @@
             submodelElementPath.value = element.path;
             elementToAddSME.value = element.parent;
             submodelElementToEdit.value = element;
+        } else if (element.modelType === 'ReferenceElement') {
+            referenceElementDialog.value = true;
+            newReferenceElement.value = false;
+            submodelElementPath.value = element.path;
+            elementToAddSME.value = element.parent;
+            submodelElementToEdit.value = element;
         } else {
             console.error(`Specified invalid SubmodelElement Type "${element.modelType}"`);
         }
@@ -779,6 +794,12 @@
                 submodelElementPath.value = undefined;
                 submodelElementToEdit.value = undefined;
                 entityDialog.value = true;
+                break;
+            case 'ReferenceElement':
+                newReferenceElement.value = true;
+                submodelElementPath.value = undefined;
+                submodelElementToEdit.value = undefined;
+                referenceElementDialog.value = true;
                 break;
             default:
                 console.error(`Specified invalid SubmodelElement Type "${smeType}"`);
