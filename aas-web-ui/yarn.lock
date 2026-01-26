@@ -968,10 +968,10 @@
     "@thatopen/ui" "~3.1.0"
     lit "3.1.2"
 
-"@thatopen/ui@^3.3.1":
-  version "3.3.1"
-  resolved "https://registry.yarnpkg.com/@thatopen/ui/-/ui-3.3.1.tgz#0623be0bf97f27ce7aa8a6c3e0ac8b5b29666fd8"
-  integrity sha512-L4OktLn3/2Z1AjsHsCmdNc3pjBDB17JhdZzHr0XfvNmQb22GsgZ0nIO88qqtaJv1bmRQsgbGiQ+6XeGhHC2Uww==
+"@thatopen/ui@^3.3.2":
+  version "3.3.2"
+  resolved "https://registry.yarnpkg.com/@thatopen/ui/-/ui-3.3.2.tgz#d6012cdd56184d9ec7aeb3816ece2dce1cc777da"
+  integrity sha512-goRTe8+Ych4XxbMa7OBi45qmth3L54+J4UJI/evmrk2Jh5pqtcUD60d27JlD0fEsR+UfqyqNH5uDcFZ0cvYrew==
   dependencies:
     "@floating-ui/dom" "1.6.3"
     chart.js "^4.5.0"
