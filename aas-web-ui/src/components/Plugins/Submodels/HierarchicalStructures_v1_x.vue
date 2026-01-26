@@ -5,67 +5,87 @@
             default-title="Hierarchical Structures enabling Bills of Material" />
         <!-- BoM Graph -->
         <v-card>
-            <v-card-text>
-                <div ref="boMCard">
-                    <!-- Archetype -->
-                    <v-list-item class="px-2 pb-3">
-                        <v-list-item-title>
-                            <span class="text-subtitle-2 mr-2">Archetype:</span>
-                            <v-chip label size="x-small" border color="primary" style="margin-top: -3px">
-                                {{ archetype }}
-                            </v-chip>
-                        </v-list-item-title>
-                    </v-list-item>
-                    <!-- Export Button -->
-                    <v-list-item class="px-2 pb-3">
-                        <v-btn @click="exportToXML" color="primary" size="small">Export to XML</v-btn>
-                    </v-list-item>
-                    <div style="height: 600px; border: 1px solid rgba(0, 0, 0, 0.12)">
-                        <VueFlow
-                            v-model:nodes="nodes"
-                            v-model:edges="edges"
-                            :edge-types="edgeTypes"
-                            :min-zoom="0.1"
-                            :max-zoom="4"
-                            :fit-view-on-init="true"
-                            :fit-view-on-init-options="{ padding: 0.3, includeHiddenNodes: false, nodes: nodes }"
-                            @nodes-initialized="onNodesInitialized"
-                            @node-click="onNodeClick">
-                            <template #connection-line>
-                                <defs>
-                                    <marker
-                                        id="arrowhead"
-                                        markerWidth="10"
-                                        markerHeight="7"
-                                        refX="9"
-                                        refY="3.5"
-                                        orient="auto">
-                                        <polygon :points="'0 0, 10 3.5, 0 7'" :fill="primaryColor" />
-                                    </marker>
-                                </defs>
-                            </template>
-                            <Background pattern-color="#aaa" :gap="16" />
-                            <Controls />
-                        </VueFlow>
-                    </div>
+            <v-toolbar color="cardHeader" density="compact">
+                <!-- Archetype -->
+                <v-list-item>
+                    <v-list-item-title>
+                        <span class="text-subtitle-2 mr-2">Archetype:</span>
+                        <v-chip label size="x-small" border color="primary">
+                            {{ archetype }}
+                        </v-chip>
+                    </v-list-item-title>
+                </v-list-item>
+                <!-- <v-btn color="primary" size="small" @click="exportToXML">Export to XML</v-btn> -->
+                <v-spacer></v-spacer>
+                <v-tooltip :text="editorMode ? 'Exit edit mode' : 'Enter edit mode'" location="left">
+                    <template #activator="{ props: tooltipProps }">
+                        <v-btn
+                            size="small"
+                            v-bind="tooltipProps"
+                            :icon="editorMode ? 'mdi-pencil-off-outline' : 'mdi-pencil-outline'"
+                            :disabled="!envStore.getAllowEditing"
+                            @click="toggleMode"></v-btn>
+                    </template>
+                </v-tooltip>
+            </v-toolbar>
+            <v-divider />
+            <v-card-text class="pa-0">
+                <!-- Export Button -->
+                <div style="height: 600px" class="rounded-b">
+                    <VueFlow
+                        v-model:nodes="nodes"
+                        v-model:edges="edges"
+                        :edge-types="edgeTypes"
+                        :min-zoom="0.1"
+                        :max-zoom="4"
+                        :fit-view-on-init="true"
+                        :fit-view-on-init-options="{ padding: 0.3, includeHiddenNodes: false, nodes: nodes }"
+                        @nodes-initialized="onNodesInitialized"
+                        @node-click="onNodeClick">
+                        <template #connection-line>
+                            <defs>
+                                <marker
+                                    id="arrowhead"
+                                    markerWidth="10"
+                                    markerHeight="7"
+                                    refX="9"
+                                    refY="3.5"
+                                    orient="auto">
+                                    <polygon :points="'0 0, 10 3.5, 0 7'" :fill="primaryColor" />
+                                </marker>
+                            </defs>
+                        </template>
+                        <Background pattern-color="#aaa" :gap="16" />
+                        <Controls />
+                    </VueFlow>
                 </div>
             </v-card-text>
         </v-card>
+        <EntityForm
+            v-model="entityDialog"
+            :new-entity="newEntity"
+            :parent-element="elementToAddSME"
+            :path="submodelElementPath"
+            :entity="submodelElementToEdit"
+            @update:model-value="onEntityFormChangedStatus"></EntityForm>
     </v-container>
 </template>
 
 <script lang="ts" setup>
     import '@vue-flow/core/dist/style.css';
     import '@vue-flow/core/dist/theme-default.css';
+    import type { EdgeProps } from '@vue-flow/core';
     import { Background } from '@vue-flow/background';
     import { Controls } from '@vue-flow/controls';
     import { type Edge, type Node, useVueFlow, VueFlow } from '@vue-flow/core';
     import { computed, h, onMounted, ref, watch } from 'vue';
+    import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
     import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
     import { useJumpHandling } from '@/composables/JumpHandling';
+    import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { getSubmodelElementBySemanticId } from '@/utils/AAS/SemanticIdUtils';
 
@@ -78,14 +98,19 @@
         ],
     });
 
+    // Vue Router
+    const route = useRoute();
+    const router = useRouter();
+
     // Composables
-    const { setData } = useSMHandling();
+    const { setData, fetchAndDispatchSm } = useSMHandling();
     const { getAasId } = useAASDiscoveryClient();
     const { nameToDisplay } = useReferableUtils();
     const { jumpToAasById } = useJumpHandling();
 
     // Stores
     const navigationStore = useNavigationStore();
+    const envStore = useEnvStore();
 
     // Vuetify
     const theme = useTheme();
@@ -106,16 +131,29 @@
     const edges = ref<Edge[]>([]);
     const nodeMap = ref<Map<string, unknown>>(new Map());
     const hasSelfLoopEdges = ref(false);
+    const entryNode = ref<Record<string, unknown> | undefined>(undefined);
+
+    const entityDialog = ref(false);
+    const newEntity = ref(false);
+    const elementToAddSME = ref<Record<string, unknown> | null>(null);
+    const submodelElementToEdit = ref<Record<string, unknown> | null>(null);
+    const submodelElementPath = ref<string>('');
 
     // VueFlow instance
     const { fitView } = useVueFlow();
 
+    // Watchers
+    watch(
+        () => props.submodelElementData,
+        () => {
+            initializeVisualization();
+        }
+    );
+
     // Computed Properties
     const isDark = computed(() => theme.global.current.value.dark);
     const primaryColor = computed(() => theme.current.value.colors.primary);
-
-    import type { EdgeProps } from '@vue-flow/core';
-
+    const editorMode = computed(() => ['AASEditor', 'SMEditor'].includes(route.name as string));
     // Custom self-loop edge component
     const SelfLoopEdge: import('@vue-flow/core').EdgeComponent = (props: EdgeProps) => {
         const { sourceX, sourceY, label, style } = props;
@@ -164,9 +202,6 @@
         selfloop: SelfLoopEdge,
     };
 
-    // Refs for DOM elements
-    const boMCard = ref<HTMLElement | null>(null);
-
     // Watcher to update theme dynamically
     watch(isDark, () => {
         updateNodeStyles();
@@ -207,9 +242,9 @@
     }
 
     function buildFlowGraph(bomData: Record<string, unknown>): void {
-        const entryNode = findEntryNode(bomData);
+        entryNode.value = findEntryNode(bomData);
 
-        if (!canBuildGraph(entryNode)) {
+        if (!canBuildGraph(entryNode.value)) {
             resetVisualization();
             return;
         }
@@ -218,7 +253,7 @@
         const tempNodes: Node[] = [];
         const tempEdges: Edge[] = [];
 
-        addNodesToFlow(entryNode!, tempNodes, tempEdges, 0, 0);
+        addNodesToFlow(entryNode.value!, tempNodes, tempEdges, 0, 0);
         applyHierarchicalLayout(tempNodes, tempEdges);
 
         // Check if there are self-loop edges
@@ -267,7 +302,9 @@
     ): number {
         const children = extractChildEntities(parentNode);
         const parentFlowNode = addNodeIfNotExists(parentNode, tempNodes, level, positionInLevel, parentX, children);
-
+        if (parentNode === entryNode.value) {
+            parentFlowNode.data.parentModelElement = { ...props.submodelElementData };
+        }
         // Get this node's x position
         const thisNode = tempNodes.find((n) => n.id === parentNode.idShort);
         const thisX = thisNode ? thisNode.position.x : 250;
@@ -281,6 +318,7 @@
             const children = extractChildEntities(child);
             const childFlowNode = addNodeIfNotExists(child, tempNodes, level + 1, 0, thisX, children);
             childFlowNode.data.parent = parentFlowNode;
+            childFlowNode.data.parentModelElement = parentNode;
             addEdgeBetweenNodes(parentNode, child, tempEdges, relationshipLabel);
             processChildRecursively(child, tempNodes, tempEdges, level, 0);
         });
@@ -299,9 +337,9 @@
         if (!nodeMap.value.has(nodeId)) {
             const node = createFlowNode(nodeData, level, positionInLevel, parentX);
             node.data.children = children;
-            node.data.parent = nodeData;
-            if (node.data.parent.statements)
-                node.data.childrenCountOnCurrentLevel = node.data.parent.statements.filter(
+            node.data.modelElement = nodeData;
+            if (node.data.modelElement.statements)
+                node.data.childrenCountOnCurrentLevel = node.data.modelElement.statements.filter(
                     (s: any) => s.modelType === 'Entity'
                 ).length;
             tempNodes.push(node);
@@ -597,8 +635,13 @@
     function onNodeClick(event: { node: { data?: Record<string, unknown> } }): void {
         const globalAssetId = event.node.data?.globalAssetId as string | undefined;
 
-        if (globalAssetId) {
+        if (globalAssetId && !editorMode.value) {
             navigateToAasByGlobalAssetId(globalAssetId);
+        } else if (editorMode.value) {
+            elementToAddSME.value = event.node.data?.parentModelElement as Record<string, any>;
+            submodelElementToEdit.value = event.node.data?.modelElement as Record<string, any>;
+            submodelElementPath.value = submodelElementToEdit.value.path as string;
+            entityDialog.value = true;
         }
     }
 
@@ -634,41 +677,18 @@
         return archetypeElement ? archetypeElement.value : 'no archetype found';
     }
 
-    function exportToXML(): void {
-        const xmlDoc = document.implementation.createDocument(null, 'graph', null);
-        const root = xmlDoc.documentElement;
+    function toggleMode(): void {
+        if (editorMode.value) {
+            navigationStore.navigateToViewerMode(router);
+        } else {
+            navigationStore.navigateToEditorMode(router);
+        }
+    }
 
-        // Add nodes
-        nodes.value.forEach((node) => {
-            const nodeElement = xmlDoc.createElement('node');
-            nodeElement.setAttribute('id', node.id);
-            nodeElement.setAttribute('label', node.data.label || '');
-            nodeElement.setAttribute('x', node.position.x.toString());
-            nodeElement.setAttribute('y', node.position.y.toString());
-            root.appendChild(nodeElement);
-        });
-
-        // Add edges
-        edges.value.forEach((edge) => {
-            const edgeElement = xmlDoc.createElement('edge');
-            edgeElement.setAttribute('source', edge.source);
-            edgeElement.setAttribute('target', edge.target);
-            edgeElement.setAttribute('label', (edge.label as any) || '');
-            root.appendChild(edgeElement);
-        });
-
-        // Serialize to string
-        const serializer = new XMLSerializer();
-        const xmlString = serializer.serializeToString(xmlDoc);
-
-        // Download as file
-        const blob = new Blob([xmlString], { type: 'application/xml' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'graph.xml';
-        a.click();
-        URL.revokeObjectURL(url);
+    function onEntityFormChangedStatus(status: boolean): void {
+        if (!status) {
+            fetchAndDispatchSm(props.submodelElementData.path as string);
+        }
     }
 </script>
 

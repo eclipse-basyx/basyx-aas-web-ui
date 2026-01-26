@@ -1,7 +1,8 @@
 import type { AutoSyncType, PlatformType, PluginType, SnackbarType, StatusCheckType } from '@/types/Application';
-import type { LocationQuery, RouteRecordRaw } from 'vue-router';
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
+import { type LocationQuery, type Router, type RouteRecordRaw } from 'vue-router';
+import { useEnvStore } from './EnvironmentStore';
 
 export const useNavigationStore = defineStore('navigationStore', () => {
     // States
@@ -35,6 +36,8 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const getTriggerTreeviewReload = computed(() => triggerTreeviewReload.value);
     const getUrlQuery = computed(() => urlQuery.value);
     const getModuleRoutes = computed(() => moduleRoutes.value);
+
+    const envStore = useEnvStore();
 
     // Actions
     function dispatchDrawerState(dispatchedDrawerState: boolean): void {
@@ -103,6 +106,26 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         moduleRoutes.value = routes;
     }
 
+    // Navigates from Viewer (Either SMViewer of AASViewer) to the corresponding Editor Mode
+    function navigateToEditorMode(router: Router): void {
+        if (!envStore.getAllowEditing) {
+            return;
+        }
+        if (router.currentRoute.value.name === 'AASViewer') {
+            router.push({ path: '/aaseditor', query: router.currentRoute.value.query });
+        } else if (router.currentRoute.value.name === 'SMViewer') {
+            router.push({ path: '/smeditor', query: router.currentRoute.value.query });
+        }
+    }
+
+    function navigateToViewerMode(router: Router): void {
+        if (router.currentRoute.value.name === 'AASEditor') {
+            router.push({ path: '/', query: router.currentRoute.value.query });
+        } else if (router.currentRoute.value.name === 'SMEditor') {
+            router.push({ path: '/smviewer', query: router.currentRoute.value.query });
+        }
+    }
+
     return {
         // Getters
         getDrawerState,
@@ -135,5 +158,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         dispatchTriggerTreeviewReload,
         dispatchUrlQuery,
         dispatchModuleRoutes,
+        navigateToEditorMode,
+        navigateToViewerMode,
     };
 });
