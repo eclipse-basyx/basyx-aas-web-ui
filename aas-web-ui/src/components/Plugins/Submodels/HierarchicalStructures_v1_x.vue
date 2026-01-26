@@ -18,7 +18,7 @@
                     </v-list-item>
                     <!-- Export Button -->
                     <v-list-item class="px-2 pb-3">
-                        <v-btn @click="exportToXML" color="primary" size="small">Export to XML</v-btn>
+                        <v-btn color="primary" size="small" @click="exportToXML">Export to XML</v-btn>
                     </v-list-item>
                     <div style="height: 600px; border: 1px solid rgba(0, 0, 0, 0.12)">
                         <VueFlow
@@ -106,6 +106,8 @@
     const edges = ref<Edge[]>([]);
     const nodeMap = ref<Map<string, unknown>>(new Map());
     const hasSelfLoopEdges = ref(false);
+    // Map node id to DOM ref
+    const nodeRefs = ref<Record<string, HTMLElement | null>>({});
 
     // VueFlow instance
     const { fitView } = useVueFlow();
@@ -152,7 +154,7 @@
                               'dominant-baseline': 'middle',
                               style: 'font-size: 12px; fill: #000;',
                           },
-                          label
+                          String(label)
                       )
                   )
                 : null,
@@ -228,10 +230,43 @@
         edges.value = tempEdges;
     }
 
+    // Adjust y positions of child nodes based on parent node height
+    function adjustNodeVerticalPositions(): void {
+        // Build a map of node id to node object
+        const nodeObjMap: Record<string, Node> = {};
+        nodes.value.forEach((n) => {
+            nodeObjMap[n.id] = n;
+        });
+
+        // For each node, if it has children, adjust their y based on this node's height
+        nodes.value.forEach((parentNode) => {
+            const children = parentNode.data?.children as Record<string, unknown>[] | undefined;
+            if (!children || !Array.isArray(children)) return;
+            const parentEl = nodeRefs.value[parentNode.id];
+            const parentHeight = parentEl ? parentEl.offsetHeight : 60; // fallback height
+            children.forEach((child: Record<string, unknown>) => {
+                const childNode = nodeObjMap[child.idShort as string];
+                if (childNode) {
+                    // Place child below parent, add margin
+                    childNode.position.y = parentNode.position.y + parentHeight + 40;
+                }
+            });
+        });
+    }
+
     function onNodesInitialized(): void {
         // Use extra padding if there are self-loop edges to ensure they're visible
         const padding = hasSelfLoopEdges.value ? 0.4 : 0.2;
         fitView({ padding, includeHiddenNodes: false });
+
+        // Set refs for height measurement
+        nodes.value.forEach((node) => {
+            const el = document.querySelector(`.vue-flow__node[data-id="${node.id}"]`) as HTMLElement;
+            if (el) nodeRefs.value[node.id] = el;
+        });
+
+        // Adjust positions after refs are set
+        adjustNodeVerticalPositions();
     }
 
     function findEntryNode(bomData: Record<string, unknown>): Record<string, unknown> | undefined {
@@ -433,7 +468,7 @@
         centerNodesAtEachLevel(levelMap, tempNodes);
     }
 
-    function setNodeDataNodesWithSameParent(tempNodes : Node[]): void {
+    function setNodeDataNodesWithSameParent(tempNodes: Node[]): void {
         const parentMap = new Map<string, Node[]>();
 
         tempNodes.forEach((node) => {
@@ -470,7 +505,9 @@
             // Group nodes by their parent
             const parentGroups = new Map<string, Node[]>();
             nodesAtLevel.forEach((node) => {
-                const parentId = node.data.parent ? (node.data.parent as Record<string, unknown>).idShort as string : 'root';
+                const parentId = node.data.parent
+                    ? ((node.data.parent as Record<string, unknown>).idShort as string)
+                    : 'root';
                 if (!parentGroups.has(parentId)) {
                     parentGroups.set(parentId, []);
                 }
@@ -481,12 +518,12 @@
             parentGroups.forEach((children, parentId) => {
                 if (children.length === 1) {
                     // Single child: align directly under parent
-                    const parentNode = parentId === 'root' ? null : tempNodes.find(n => n.id === parentId);
+                    const parentNode = parentId === 'root' ? null : tempNodes.find((n) => n.id === parentId);
                     const parentX = parentNode ? parentNode.position.x : 250; // Default for root
                     children[0].position.x = parentX;
                 } else {
                     // Multiple children: center them around parent's x
-                    const parentNode = parentId === 'root' ? null : tempNodes.find(n => n.id === parentId);
+                    const parentNode = parentId === 'root' ? null : tempNodes.find((n) => n.id === parentId);
                     const parentX = parentNode ? parentNode.position.x : 250;
                     const spacing = 250;
                     const totalWidth = (children.length - 1) * spacing;
@@ -535,6 +572,7 @@
             edge.labelStyle = { fill: '#000', fontSize: '12px' };
             edge.labelBgStyle = { fill: '#fff' };
         });
+        setTimeout(adjustNodeVerticalPositions, 0);
     }
 
     function onNodeClick(event: { node: { data?: Record<string, unknown> } }): void {
@@ -585,7 +623,7 @@
         nodes.value.forEach((node) => {
             const nodeElement = xmlDoc.createElement('node');
             nodeElement.setAttribute('id', node.id);
-            nodeElement.setAttribute('label', node.label || '');
+            nodeElement.setAttribute('label', String(node.label || ''));
             nodeElement.setAttribute('x', node.position.x.toString());
             nodeElement.setAttribute('y', node.position.y.toString());
             root.appendChild(nodeElement);
@@ -596,7 +634,7 @@
             const edgeElement = xmlDoc.createElement('edge');
             edgeElement.setAttribute('source', edge.source);
             edgeElement.setAttribute('target', edge.target);
-            edgeElement.setAttribute('label', edge.label || '');
+            edgeElement.setAttribute('label', String(edge.label || ''));
             root.appendChild(edgeElement);
         });
 
