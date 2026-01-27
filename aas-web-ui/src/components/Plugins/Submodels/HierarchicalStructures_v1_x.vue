@@ -11,8 +11,15 @@
                 <v-list-item>
                     <v-list-item-title>
                         <span class="text-subtitle-2 mr-2">Archetype:</span>
-                        <v-chip label size="x-small" border color="primary">
+                        <v-chip
+                            label
+                            size="x-small"
+                            border
+                            color="primary"
+                            :class="{ 'cursor-pointer': editorMode }"
+                            @click="editorMode ? openArchetypeDialog() : null">
                             {{ archetype }}
+                            <v-icon v-if="editorMode" size="x-small" class="ml-1">mdi-pencil</v-icon>
                         </v-chip>
                     </v-list-item-title>
                 </v-list-item>
@@ -118,6 +125,39 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+        <!-- Dialog for editing Archetype -->
+        <v-dialog v-model="archetypeDialog" max-width="500" persistent>
+            <v-card>
+                <v-card-title class="text-subtitle-1">Edit Archetype</v-card-title>
+                <v-divider></v-divider>
+                <v-card-text>
+                    <p class="text-body-2 mb-4">Select the archetype for this hierarchical structure.</p>
+                    <v-select
+                        v-model="selectedArchetype"
+                        :items="archetypeTypes"
+                        item-title="label"
+                        item-value="value"
+                        label="Archetype"
+                        variant="outlined"
+                        density="compact"
+                        return-object>
+                        <template #item="{ item, props: itemProps }">
+                            <v-list-item v-bind="itemProps">
+                                <template #subtitle>
+                                    <span class="text-caption">{{ item.raw.description }}</span>
+                                </template>
+                            </v-list-item>
+                        </template>
+                    </v-select>
+                </v-card-text>
+                <v-divider></v-divider>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn @click="closeArchetypeDialog">Cancel</v-btn>
+                    <v-btn color="primary" :disabled="!selectedArchetype" @click="saveArchetype">Save</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
         <!-- Context Menu for Node Actions -->
         <v-menu
             v-model="contextMenu.show"
@@ -161,7 +201,7 @@
     import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { Background } from '@vue-flow/background';
     import { Controls } from '@vue-flow/controls';
-    import { type Edge, type Node, useVueFlow, VueFlow } from '@vue-flow/core';
+    import { type Edge, MarkerType, type Node, useVueFlow, VueFlow } from '@vue-flow/core';
     import { computed, h, onMounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
@@ -257,6 +297,29 @@
             description: 'Reference between two equivalent Entities in the same or across Submodels.',
         },
     ];
+
+    // Archetype types
+    const archetypeTypes = [
+        {
+            label: 'Full',
+            value: 'Full',
+            description: 'Complete hierarchical structure with all levels.',
+        },
+        {
+            label: 'OneUp',
+            value: 'OneUp',
+            description: 'Structure showing one level up in the hierarchy.',
+        },
+        {
+            label: 'OneDown',
+            value: 'OneDown',
+            description: 'Structure showing one level down in the hierarchy.',
+        },
+    ];
+
+    // Archetype dialog state
+    const archetypeDialog = ref(false);
+    const selectedArchetype = ref<{ label: string; value: string; description: string } | null>(null);
 
     // Context menu state
     const contextMenu = ref({
@@ -477,7 +540,6 @@
             // Check if any key in the second reference matches the child's idShort
             return second.keys.some((key) => key.type === 'Entity' && key.value === childIdShort);
         });
-        console.log('relationship', relationship);
 
         if (relationship) {
             const semanticId = getSemanticIdValue(relationship);
@@ -626,6 +688,9 @@
         style: Record<string, string>,
         isSelfLoop = false
     ): Edge {
+        // Use ArrowClosed for HasPart and SameAs, Arrow for IsPartOf
+        const markerType = label === 'IsPartOf' ? MarkerType.Arrow : MarkerType.ArrowClosed;
+
         return {
             id: `e-${source}-${target}`,
             source,
@@ -636,6 +701,12 @@
             style,
             labelStyle: { fill: '#000', fontSize: '12px' },
             labelBgStyle: { fill: '#fff' },
+            markerEnd: {
+                type: markerType,
+                color: style.stroke,
+                width: 30,
+                height: 30,
+            },
         };
     }
 
@@ -958,6 +1029,91 @@
         selectedEdge.value = null;
         existingRelationship.value = null;
         selectedRelationshipType.value = null;
+    }
+
+    function openArchetypeDialog(): void {
+        // Pre-select current archetype
+        const currentArchetype = archetypeTypes.find((at) => at.value === archetype.value);
+        selectedArchetype.value = currentArchetype || null;
+        archetypeDialog.value = true;
+    }
+
+    function closeArchetypeDialog(): void {
+        archetypeDialog.value = false;
+        selectedArchetype.value = null;
+    }
+
+    async function saveArchetype(): Promise<void> {
+        if (!selectedArchetype.value) return;
+
+        // Find the archetype element in bomData
+        const archetypeElement = getSubmodelElementBySemanticId(
+            'https://admin-shell.io/idta/HierarchicalStructures/ArcheType/1/0',
+            bomData.value
+        );
+
+        if (!archetypeElement) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 10000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Could not find archetype element to update',
+            });
+            closeArchetypeDialog();
+            return;
+        }
+
+        // Update the archetype value
+        const archetypeProperty = new aasTypes.Property(aasTypes.DataTypeDefXsd.String);
+        archetypeProperty.idShort = 'ArcheType';
+        archetypeProperty.value = selectedArchetype.value.value;
+        archetypeProperty.semanticId = new aasTypes.Reference(aasTypes.ReferenceTypes.ExternalReference, [
+            new aasTypes.Key(
+                aasTypes.KeyTypes.GlobalReference,
+                'https://admin-shell.io/idta/HierarchicalStructures/ArcheType/1/0'
+            ),
+        ]);
+
+        archetypeProperty.description = [
+            new aasTypes.LangStringTextType(
+                'en',
+                'ArcheType of the Submodel, there are three allowed enumeration entries: 1. “Full”, 2. “OneDown” and 3. “OneUp”.'
+            ),
+        ];
+
+        try {
+            const response = await putSubmodelElement(archetypeProperty, archetypeElement.path);
+            if (response) {
+                archetype.value = selectedArchetype.value.value;
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 3000,
+                    color: 'success',
+                    btnColor: 'buttonText',
+                    text: 'Archetype updated successfully',
+                });
+            } else {
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 10000,
+                    color: 'error',
+                    btnColor: 'buttonText',
+                    text: 'Failed to update archetype',
+                });
+            }
+        } catch (error) {
+            console.error('Error updating archetype:', error);
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 10000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Error updating archetype',
+            });
+        }
+
+        closeArchetypeDialog();
     }
 
     async function saveRelationship(): Promise<void> {
