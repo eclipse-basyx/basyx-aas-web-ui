@@ -75,12 +75,7 @@
                         <v-expansion-panel-text>
                             <v-row align="center">
                                 <v-col class="py-0">
-                                    <ReferenceInput
-                                        v-model="firstReference"
-                                        label="First"
-                                        :no-header="false"
-                                        :error="hasError('first')"
-                                        :error-messages="getError('first')" />
+                                    <ReferenceInput v-model="firstReference" label="First" :no-header="false" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
                                     <HelpInfoButton help-type="relationship-first" />
@@ -88,12 +83,7 @@
                             </v-row>
                             <v-row align="center">
                                 <v-col class="py-0">
-                                    <ReferenceInput
-                                        v-model="secondReference"
-                                        label="Second"
-                                        :no-header="false"
-                                        :error="hasError('second')"
-                                        :error-messages="getError('second')" />
+                                    <ReferenceInput v-model="secondReference" label="Second" :no-header="false" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
                                     <HelpInfoButton help-type="relationship-second" />
