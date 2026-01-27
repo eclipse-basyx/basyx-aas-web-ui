@@ -1,10 +1,11 @@
 <template>
     <v-container fluid class="pa-0">
         <VisualizationHeader
+            border
             :submodel-element-data="submodelElementData"
             default-title="Hierarchical Structures enabling Bills of Material" />
         <!-- BoM Graph -->
-        <v-card>
+        <v-card border>
             <v-toolbar color="cardHeader" density="compact">
                 <!-- Archetype -->
                 <v-list-item>
@@ -41,7 +42,9 @@
                         :fit-view-on-init="true"
                         :fit-view-on-init-options="{ padding: 0.3, includeHiddenNodes: false, nodes: nodes }"
                         @nodes-initialized="onNodesInitialized"
-                        @node-click="onNodeClick">
+                        @node-click="onNodeClick"
+                        @node-context-menu="onNodeContextMenu"
+                        @edge-click="onEdgeClick">
                         <template #connection-line>
                             <defs>
                                 <marker
@@ -67,7 +70,87 @@
             :parent-element="elementToAddSME"
             :path="submodelElementPath"
             :entity="submodelElementToEdit"
-            @update:model-value="onEntityFormChangedStatus"></EntityForm>
+            @update:model-value="onDialogClosed"></EntityForm>
+        <!-- Dialog for deleting SM/SME -->
+        <DeleteDialog
+            v-model="deleteDialog"
+            :element="elementToDelete"
+            @update:model-value="onDialogClosed"></DeleteDialog>
+        <!-- Dialog for creating RelationshipElement -->
+        <v-dialog v-model="relationshipDialog" max-width="500" persistent>
+            <v-card>
+                <v-card-title class="text-subtitle-1">{{
+                    existingRelationship ? 'Edit Relationship Element' : 'Add Relationship Element'
+                }}</v-card-title>
+                <v-divider></v-divider>
+                <v-card-text>
+                    <p class="text-body-2 mb-4">
+                        {{ existingRelationship ? 'Edit the' : 'Create a' }} relationship between
+                        <v-chip size="small" label class="mx-1">{{ selectedEdge?.sourceNode }}</v-chip>
+                        and
+                        <v-chip size="small" label class="mx-1">{{ selectedEdge?.targetNode }}</v-chip>
+                    </p>
+                    <v-select
+                        v-model="selectedRelationshipType"
+                        :items="relationshipTypes"
+                        item-title="label"
+                        item-value="semanticId"
+                        label="Relationship Type"
+                        variant="outlined"
+                        density="compact"
+                        return-object>
+                        <template #item="{ item, props: itemProps }">
+                            <v-list-item v-bind="itemProps">
+                                <template #subtitle>
+                                    <span class="text-caption">{{ item.raw.description }}</span>
+                                </template>
+                            </v-list-item>
+                        </template>
+                    </v-select>
+                </v-card-text>
+                <v-divider></v-divider>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn @click="closeRelationshipDialog">Cancel</v-btn>
+                    <v-btn color="primary" :disabled="!selectedRelationshipType" @click="saveRelationship">{{
+                        existingRelationship ? 'Save' : 'Create'
+                    }}</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+        <!-- Context Menu for Node Actions -->
+        <v-menu
+            v-model="contextMenu.show"
+            :style="{ position: 'absolute', left: contextMenu.x + 'px', top: contextMenu.y + 'px' }"
+            :close-on-content-click="true">
+            <v-sheet border>
+                <v-list density="compact" class="py-0">
+                    <v-list-item slim @click="addChildEntity">
+                        <v-list-item-title>Add Child Entity</v-list-item-title>
+                        <template #prepend>
+                            <v-icon size="small">mdi-plus</v-icon>
+                        </template>
+                    </v-list-item>
+                    <v-list-item slim @click="editEntity">
+                        <v-list-item-title>Edit Entity</v-list-item-title>
+                        <template #prepend>
+                            <v-icon size="small">mdi-pencil</v-icon>
+                        </template>
+                    </v-list-item>
+                    <v-list-item
+                        v-if="
+                            contextMenu.node && contextMenu.node.data && contextMenu.node.data.modelElement != entryNode
+                        "
+                        slim
+                        @click="deleteEntity">
+                        <v-list-item-title>Delete Entity</v-list-item-title>
+                        <template #prepend>
+                            <v-icon size="small">mdi-delete</v-icon>
+                        </template>
+                    </v-list-item>
+                </v-list>
+            </v-sheet>
+        </v-menu>
     </v-container>
 </template>
 
@@ -75,6 +158,7 @@
     import '@vue-flow/core/dist/style.css';
     import '@vue-flow/core/dist/theme-default.css';
     import type { EdgeProps } from '@vue-flow/core';
+    import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
     import { Background } from '@vue-flow/background';
     import { Controls } from '@vue-flow/controls';
     import { type Edge, type Node, useVueFlow, VueFlow } from '@vue-flow/core';
@@ -84,10 +168,13 @@
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
     import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
+    import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useJumpHandling } from '@/composables/JumpHandling';
+    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { getSubmodelElementBySemanticId } from '@/utils/AAS/SemanticIdUtils';
+    import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
     // Options
     defineOptions({
@@ -105,8 +192,10 @@
     // Composables
     const { setData, fetchAndDispatchSm } = useSMHandling();
     const { getAasId } = useAASDiscoveryClient();
+    const { postSubmodelElement, putSubmodelElement } = useSMRepositoryClient();
     const { nameToDisplay } = useReferableUtils();
     const { jumpToAasById } = useJumpHandling();
+    const { deleteRequest } = useRequestHandling();
 
     // Stores
     const navigationStore = useNavigationStore();
@@ -138,6 +227,44 @@
     const elementToAddSME = ref<Record<string, unknown> | null>(null);
     const submodelElementToEdit = ref<Record<string, unknown> | null>(null);
     const submodelElementPath = ref<string>('');
+
+    const deleteDialog = ref(false);
+    const elementToDelete = ref<Record<string, unknown> | null>(null);
+
+    // Relationship dialog state
+    const relationshipDialog = ref(false);
+    const selectedEdge = ref<{
+        sourceNode: string;
+        targetNode: string;
+        sourceEntity: Record<string, unknown>;
+    } | null>(null);
+    const existingRelationship = ref<Record<string, unknown> | null>(null);
+    const selectedRelationshipType = ref<{ label: string; semanticId: string; description: string } | null>(null);
+    const relationshipTypes = [
+        {
+            label: 'HasPart',
+            semanticId: 'https://admin-shell.io/idta/HierarchicalStructures/HasPart/1/0',
+            description: 'Modeling of logical connections between components and sub-components.',
+        },
+        {
+            label: 'IsPartOf',
+            semanticId: 'https://admin-shell.io/idta/HierarchicalStructures/IsPartOf/1/0',
+            description: 'Modeling of logical connections between asset and sub-asset (inverse of HasPart).',
+        },
+        {
+            label: 'SameAs',
+            semanticId: 'https://admin-shell.io/idta/HierarchicalStructures/SameAs/1/0',
+            description: 'Reference between two equivalent Entities in the same or across Submodels.',
+        },
+    ];
+
+    // Context menu state
+    const contextMenu = ref({
+        show: false,
+        x: 0,
+        y: 0,
+        node: null as { data?: Record<string, unknown> } | null,
+    });
 
     // VueFlow instance
     const { fitView } = useVueFlow();
@@ -284,7 +411,8 @@
     }
 
     function canBuildGraph(entryNode: Record<string, unknown> | undefined): boolean {
-        return !!entryNode && !!entryNode.statements && hasEntityChildren(entryNode);
+        // Allow building the graph even if entry node has no children - it should still be displayed
+        return !!entryNode;
     }
 
     function hasEntityChildren(node: Record<string, unknown>): boolean {
@@ -313,16 +441,50 @@
 
         validateRelationshipConsistency(relationships);
 
-        const relationshipLabel = getRelationshipLabel(relationships[0]);
         children.forEach((child: Record<string, unknown>) => {
-            const children = extractChildEntities(child);
-            const childFlowNode = addNodeIfNotExists(child, tempNodes, level + 1, 0, thisX, children);
+            const childEntities = extractChildEntities(child);
+            const childFlowNode = addNodeIfNotExists(child, tempNodes, level + 1, 0, thisX, childEntities);
             childFlowNode.data.parent = parentFlowNode;
             childFlowNode.data.parentModelElement = parentNode;
+            // Find the specific relationship for this child
+            const relationshipLabel = findRelationshipLabelForChild(parentNode, child);
             addEdgeBetweenNodes(parentNode, child, tempEdges, relationshipLabel);
             processChildRecursively(child, tempNodes, tempEdges, level, 0);
         });
         return positionInLevel + 1;
+    }
+
+    /**
+     * Find the RelationshipElement that connects the parent to a specific child entity.
+     * Returns the relationship label if found, empty string otherwise.
+     */
+    function findRelationshipLabelForChild(
+        parentNode: Record<string, unknown>,
+        childNode: Record<string, unknown>
+    ): string {
+        const statements = parentNode.statements as Record<string, unknown>[] | undefined;
+        if (!statements) return '';
+
+        const childIdShort = childNode.idShort as string;
+
+        // Find a RelationshipElement whose 'second' reference points to the child
+        const relationship = statements.find((stmt) => {
+            if (stmt.modelType !== 'RelationshipElement') return false;
+
+            const second = stmt.second as { keys?: Array<{ type: string; value: string }> } | undefined;
+            if (!second?.keys || second.keys.length === 0) return false;
+
+            // Check if any key in the second reference matches the child's idShort
+            return second.keys.some((key) => key.type === 'Entity' && key.value === childIdShort);
+        });
+        console.log('relationship', relationship);
+
+        if (relationship) {
+            const semanticId = getSemanticIdValue(relationship);
+            return getRelationshipLabel(semanticId);
+        }
+
+        return '';
     }
 
     function addNodeIfNotExists(
@@ -409,6 +571,33 @@
         };
 
         return semanticId ? (labelMap[semanticId] ?? '') : '';
+    }
+
+    /**
+     * Build a ModelReference to an Entity based on its path.
+     * The path format is: .../submodels/{base64SubmodelId}/submodel-elements/{idShortPath}
+     * We need to create a reference with keys for Submodel and each Entity in the path.
+     */
+    function buildEntityReference(entityElement: Record<string, unknown>): aasTypes.Reference {
+        const entityPath = entityElement.path as string;
+
+        // Extract the submodel ID and idShortPath from the path
+        const splitted = entityPath.split('/submodel-elements/');
+        const submodelId = base64Decode(splitted[0].split('/submodels/')[1]);
+        const idShortPath = splitted[1]; // e.g., "CompositeMachine.ElectricalEnclosure.PLC"
+
+        // Build keys array starting with Submodel
+        const keys: aasTypes.Key[] = [new aasTypes.Key(aasTypes.KeyTypes.Submodel, submodelId)];
+
+        // Split the idShortPath by '.' to get each entity in the hierarchy
+        const entityIdShorts = idShortPath.split('.');
+
+        // Add a key for each entity in the path
+        entityIdShorts.forEach((idShort) => {
+            keys.push(new aasTypes.Key(aasTypes.KeyTypes.Entity, idShort));
+        });
+
+        return new aasTypes.Reference(aasTypes.ReferenceTypes.ModelReference, keys);
     }
 
     function addEdgeBetweenNodes(
@@ -638,11 +827,235 @@
         if (globalAssetId && !editorMode.value) {
             navigateToAasByGlobalAssetId(globalAssetId);
         } else if (editorMode.value) {
-            elementToAddSME.value = event.node.data?.parentModelElement as Record<string, any>;
-            submodelElementToEdit.value = event.node.data?.modelElement as Record<string, any>;
-            submodelElementPath.value = submodelElementToEdit.value.path as string;
-            entityDialog.value = true;
+            // In editor mode, single click opens edit dialog
+            openEditDialog(event.node);
         }
+    }
+
+    function onNodeContextMenu(event: {
+        event: MouseEvent | TouchEvent;
+        node: { data?: Record<string, unknown> };
+    }): void {
+        if (!editorMode.value) return;
+
+        event.event.preventDefault();
+
+        // Get coordinates from mouse or touch event
+        let x = 0;
+        let y = 0;
+        if ('clientX' in event.event) {
+            x = event.event.clientX;
+            y = event.event.clientY;
+        } else if (event.event.touches && event.event.touches.length > 0) {
+            x = event.event.touches[0].clientX;
+            y = event.event.touches[0].clientY;
+        }
+
+        contextMenu.value = {
+            show: true,
+            x,
+            y,
+            node: event.node,
+        };
+    }
+
+    function addChildEntity(): void {
+        if (!contextMenu.value.node) return;
+
+        // The parent for the new entity is the clicked node's model element
+        const parentEntity = contextMenu.value.node.data?.modelElement as Record<string, unknown>;
+        if (!parentEntity) return;
+
+        newEntity.value = true;
+        elementToAddSME.value = parentEntity;
+        submodelElementToEdit.value = null;
+        submodelElementPath.value = (parentEntity.path as string) || '';
+        entityDialog.value = true;
+        contextMenu.value.show = false;
+    }
+
+    function editEntity(): void {
+        if (!contextMenu.value.node) return;
+        openEditDialog(contextMenu.value.node);
+        contextMenu.value.show = false;
+    }
+
+    function deleteEntity(): void {
+        if (!contextMenu.value.node) return;
+
+        const entityToDelete = contextMenu.value.node.data?.modelElement as Record<string, unknown>;
+        if (!entityToDelete) return;
+
+        elementToDelete.value = entityToDelete;
+        deleteDialog.value = true;
+
+        contextMenu.value.show = false;
+    }
+
+    function onEdgeClick(event: { edge: Edge }): void {
+        if (!editorMode.value) return;
+
+        const edge = event.edge;
+        const sourceNodeId = edge.source;
+        const targetNodeId = edge.target;
+
+        // Find the source and target nodes
+        const nodesArray = nodes.value as Node[];
+        const sourceNode = nodesArray.find((n) => n.id === sourceNodeId);
+        const targetNode = nodesArray.find((n) => n.id === targetNodeId);
+        if (!sourceNode || !sourceNode.data?.modelElement) return;
+        if (!targetNode || !targetNode.data?.modelElement) return;
+
+        const sourceEntity = sourceNode.data.modelElement as Record<string, unknown>;
+        const targetEntity = targetNode.data.modelElement as Record<string, unknown>;
+        const targetGlobalAssetId = targetEntity.globalAssetId as string | undefined;
+
+        // Find existing RelationshipElement for this edge in the source entity's statements
+        const statements = sourceEntity.statements as Record<string, unknown>[] | undefined;
+        const existingRel = statements?.find((stmt) => {
+            if (stmt.modelType !== 'RelationshipElement') return false;
+
+            const second = stmt.second as { keys?: Array<{ type: string; value: string }> } | undefined;
+            if (!second?.keys || second.keys.length === 0) return false;
+
+            // Check all keys in the second reference for a match
+            return second.keys.some((key) => {
+                // Match by Entity idShort (for ModelReference to Entity)
+                if (key.type === 'Entity' && key.value === targetNodeId) return true;
+                // Match by globalAssetId (for reference to AAS)
+                if (
+                    targetGlobalAssetId &&
+                    (key.type === 'AssetAdministrationShell' || key.type === 'GlobalReference') &&
+                    key.value === targetGlobalAssetId
+                )
+                    return true;
+                return false;
+            });
+        }) as Record<string, unknown> | undefined;
+
+        selectedEdge.value = {
+            sourceNode: sourceNodeId,
+            targetNode: targetNodeId,
+            sourceEntity: sourceEntity,
+        };
+
+        existingRelationship.value = existingRel || null;
+
+        // Pre-select the relationship type if editing
+        if (existingRel) {
+            const semanticIdValue = (existingRel.semanticId as { keys?: Array<{ value: string }> })?.keys?.[0]?.value;
+            const matchingType = relationshipTypes.find((rt) => rt.semanticId === semanticIdValue);
+            selectedRelationshipType.value = matchingType || null;
+        } else {
+            selectedRelationshipType.value = null;
+        }
+
+        relationshipDialog.value = true;
+    }
+
+    function closeRelationshipDialog(): void {
+        relationshipDialog.value = false;
+        selectedEdge.value = null;
+        existingRelationship.value = null;
+        selectedRelationshipType.value = null;
+    }
+
+    async function saveRelationship(): Promise<void> {
+        if (!selectedEdge.value || !selectedRelationshipType.value) return;
+
+        const sourceEntity = selectedEdge.value.sourceEntity;
+        const sourceNodeId = selectedEdge.value.sourceNode;
+        const targetNodeId = selectedEdge.value.targetNode;
+
+        // Find the target node to get its modelElement with path
+        const nodesArray = nodes.value as Node[];
+        const sourceNode = nodesArray.find((n) => n.id === sourceNodeId);
+        const targetNode = nodesArray.find((n) => n.id === targetNodeId);
+
+        if (!sourceNode?.data?.modelElement || !targetNode?.data?.modelElement) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 5000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Could not find source or target entity data',
+            });
+            return;
+        }
+
+        const sourceModelElement = sourceNode.data.modelElement as Record<string, unknown>;
+        const targetModelElement = targetNode.data.modelElement as Record<string, unknown>;
+
+        // Create the RelationshipElement
+        const relSemanticId = new aasTypes.Reference(aasTypes.ReferenceTypes.ExternalReference, [
+            new aasTypes.Key(aasTypes.KeyTypes.GlobalReference, selectedRelationshipType.value.semanticId),
+        ]);
+
+        // Build proper references using the entity paths
+        const firstReference = buildEntityReference(sourceModelElement);
+        const secondReference = buildEntityReference(targetModelElement);
+
+        const relationshipElement = new aasTypes.RelationshipElement(firstReference, secondReference);
+        relationshipElement.idShort = `${selectedRelationshipType.value.label}_${sourceModelElement.idShort}_${targetModelElement.idShort}`;
+        relationshipElement.semanticId = relSemanticId;
+
+        try {
+            let success = false;
+            const isEditing = existingRelationship.value !== null;
+
+            if (isEditing && existingRelationship.value) {
+                // Update existing relationship - use PUT
+                const existingPath = existingRelationship.value.path as string;
+                success = await putSubmodelElement(relationshipElement, existingPath);
+            } else {
+                // Create new relationship - use POST on the source entity
+                const sourcePath = sourceEntity.path as string;
+                const splitted = sourcePath.split('/submodel-elements/');
+                const submodelId = base64Decode(splitted[0].split('/submodels/')[1]);
+                const idShortPath = splitted[1];
+
+                success = await postSubmodelElement(relationshipElement, submodelId, idShortPath);
+            }
+
+            if (success) {
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 3000,
+                    color: 'success',
+                    btnColor: 'buttonText',
+                    text: `RelationshipElement '${selectedRelationshipType.value.label}' ${isEditing ? 'updated' : 'created'} successfully`,
+                });
+                // Refresh the visualization
+                fetchAndDispatchSm(props.submodelElementData.path as string);
+            } else {
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 5000,
+                    color: 'error',
+                    btnColor: 'buttonText',
+                    text: `Failed to ${isEditing ? 'update' : 'create'} RelationshipElement`,
+                });
+            }
+        } catch (error) {
+            console.error('Error saving RelationshipElement:', error);
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 5000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Error saving RelationshipElement',
+            });
+        }
+
+        closeRelationshipDialog();
+    }
+
+    function openEditDialog(node: { data?: Record<string, unknown> }): void {
+        newEntity.value = false;
+        elementToAddSME.value = node.data?.parentModelElement as Record<string, any>;
+        submodelElementToEdit.value = node.data?.modelElement as Record<string, any>;
+        submodelElementPath.value = submodelElementToEdit.value?.path as string;
+        entityDialog.value = true;
     }
 
     async function navigateToAasByGlobalAssetId(globalAssetId: string): Promise<void> {
@@ -685,10 +1098,114 @@
         }
     }
 
-    function onEntityFormChangedStatus(status: boolean): void {
+    async function onDialogClosed(status: boolean): Promise<void> {
         if (!status) {
+            // Check if in parent there is a RelationshipElement Referencing the deleted entity
+            if (elementToDelete.value) {
+                const parentEntity = findParentEntity(bomData.value, elementToDelete.value);
+                if (parentEntity) {
+                    const relationshipToDelete = findRelationshipToEntity(parentEntity, elementToDelete.value);
+                    if (relationshipToDelete) {
+                        // Delete the orphaned Relationship Element
+                        const relationshipPath = relationshipToDelete.path as string;
+                        if (relationshipPath) {
+                            try {
+                                await deleteRequest(relationshipPath, 'removing orphaned RelationshipElement', true);
+                            } catch (error) {
+                                console.error('Error deleting orphaned RelationshipElement:', error);
+                            }
+                        }
+                    }
+                }
+            }
+            // Clear the deleted element reference
+            elementToDelete.value = null;
+            // Refresh the visualization
             fetchAndDispatchSm(props.submodelElementData.path as string);
         }
+    }
+
+    /**
+     * Find the parent entity of a given entity in the BOM data structure.
+     * Traverses the hierarchy to find which entity contains the target entity in its statements.
+     */
+    function findParentEntity(
+        bomData: Record<string, unknown>,
+        targetEntity: Record<string, unknown>
+    ): Record<string, unknown> | null {
+        const targetIdShort = targetEntity.idShort as string;
+
+        // Search through all entities starting from the entry node
+        const entryNodeElement = findEntryNode(bomData);
+        if (!entryNodeElement) return null;
+
+        return findParentInTree(entryNodeElement, targetIdShort);
+    }
+
+    /**
+     * Recursively search through the entity tree to find the parent of the target entity.
+     */
+    function findParentInTree(
+        currentEntity: Record<string, unknown>,
+        targetIdShort: string
+    ): Record<string, unknown> | null {
+        const statements = currentEntity.statements as Record<string, unknown>[] | undefined;
+        if (!statements) return null;
+
+        // Check if any direct child entity matches the target
+        const childEntities = statements.filter((stmt) => stmt.modelType === 'Entity');
+        for (const child of childEntities) {
+            if ((child.idShort as string) === targetIdShort) {
+                return currentEntity;
+            }
+        }
+
+        // Recursively search in child entities
+        for (const child of childEntities) {
+            const found = findParentInTree(child, targetIdShort);
+            if (found) return found;
+        }
+
+        return null;
+    }
+
+    /**
+     * Find the RelationshipElement in the parent entity that references the target entity.
+     * This relationship becomes orphaned when the target entity is deleted.
+     */
+    function findRelationshipToEntity(
+        parentEntity: Record<string, unknown>,
+        targetEntity: Record<string, unknown>
+    ): Record<string, unknown> | null {
+        const statements = parentEntity.statements as Record<string, unknown>[] | undefined;
+        if (!statements) return null;
+
+        const targetIdShort = targetEntity.idShort as string;
+        const targetGlobalAssetId = targetEntity.globalAssetId as string | undefined;
+
+        // Find a RelationshipElement whose 'second' reference points to the target entity
+        const relationship = statements.find((stmt) => {
+            if (stmt.modelType !== 'RelationshipElement') return false;
+
+            const second = stmt.second as { keys?: Array<{ type: string; value: string }> } | undefined;
+            if (!second?.keys || second.keys.length === 0) return false;
+
+            // Check all keys in the second reference for a match
+            return second.keys.some((key) => {
+                // Match by Entity idShort (for ModelReference to Entity)
+                if (key.type === 'Entity' && key.value === targetIdShort) return true;
+                // Match by globalAssetId (for reference to AAS)
+                if (
+                    targetGlobalAssetId &&
+                    (key.type === 'AssetAdministrationShell' || key.type === 'GlobalReference') &&
+                    key.value === targetGlobalAssetId
+                )
+                    return true;
+                return false;
+            });
+        });
+
+        return relationship as Record<string, unknown> | null;
     }
 </script>
 

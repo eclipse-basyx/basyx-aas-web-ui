@@ -192,7 +192,7 @@
 
     // Composables
     const { generateUUID } = useIDUtils();
-    const { getAasEndpointById } = useAASHandling();
+    const { getAasEndpointById, fetchAndDispatchAasById } = useAASHandling();
 
     // Stores
     const aasStore = useAASStore();
@@ -203,7 +203,7 @@
     }>();
 
     const { fetchAasById, postAas, putAas, putThumbnail } = useAASRepositoryClient();
-    const { putAasDescriptor, createDescriptorFromAAS } = useAASRegistryClient();
+    const { fetchAasDescriptorById, putAasDescriptor, createDescriptorFromAAS } = useAASRegistryClient();
 
     const editAASDialog = ref(false);
     const AASObject = ref<aasTypes.AssetAdministrationShell | undefined>(undefined);
@@ -428,16 +428,19 @@
             await putAas(AASObject.value);
             // Update AAS Descriptor
             const jsonAAS = jsonization.toJsonable(AASObject.value);
-            const descriptor = createDescriptorFromAAS(jsonAAS, []);
+            // Fetch existing descriptor to preserve endpoints
+            const existingDescriptor = await fetchAasDescriptorById(AASObject.value.id);
+            const endpoints = existingDescriptor?.endpoints ?? [];
+            const descriptor = createDescriptorFromAAS(jsonAAS, endpoints);
             await putAasDescriptor(descriptor);
             // Upload default thumbnail
             if (fileThumbnail.value !== undefined) {
                 await putThumbnail(fileThumbnail.value, AASObject.value.id);
             }
             if (AASObject.value.id === selectedAAS.value.id) {
-                router.go(0); // Reload current route
-                navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
+                await fetchAndDispatchAasById(AASObject.value.id);
             }
+            navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
         }
         clearForm();
         editAASDialog.value = false;
