@@ -14,15 +14,16 @@
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest run --coverage",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "postinstall": "cp node_modules/@thatopen/fragments/dist/Worker/worker.mjs public/ && cp node_modules/web-ifc/*.wasm public/wasm/"
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
-    "@thatopen/components": "^3.1.2",
-    "@thatopen/components-front": "^3.1.6",
-    "@thatopen/fragments": "^3.1.6",
+    "@thatopen/components": "^3.3.0",
+    "@thatopen/components-front": "^3.3.0",
+    "@thatopen/fragments": "^3.3.1",
     "@thatopen/ui": "^3.3.2",
-    "@thatopen/ui-obc": "^3.1.2",
+    "@thatopen/ui-obc": "^3.3.1",
     "@vue-leaflet/vue-leaflet": "^0.10.1",
     "apexcharts": "^5.3.6",
     "i18n-iso-countries": "^7.14.0",
@@ -41,7 +42,7 @@
     "vue-router": "^4.6.4",
     "vue3-apexcharts": "^1.10.0",
     "vuetify": "^3.11.7",
-    "web-ifc": "^0.0.70",
+    "web-ifc": "^0.0.74",
     "webfontloader": "^1.0.0"
   },
   "devDependencies": {
