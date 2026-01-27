@@ -12,7 +12,8 @@
                         mandatory
                         density="compact"
                         class="pa-0 ma-0"
-                        style="height: 32px !important">
+                        style="height: 32px !important"
+                        @update:model-value="updateQueryParam">
                         <v-btn value="SMEView" class="ma-0">
                             <v-icon start>mdi-folder-edit-outline</v-icon>
                             <span class="hidden-sm-and-down">Element Details</span>
@@ -59,20 +60,45 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, ref } from 'vue';
-    import { useRoute } from 'vue-router';
+    import { computed, ref, watch } from 'vue';
+    import { useRoute, useRouter } from 'vue-router';
     import { useAASStore } from '@/store/AASDataStore';
 
     // Vue Router
     const route = useRoute();
+    const router = useRouter();
 
     //Stores
     const aasStore = useAASStore();
 
     // Data
-    const componentToShow = ref('SMEView');
+    const validViews = ['SMEView', 'Visualization', 'JSONView'];
+    const componentToShow = ref(
+        validViews.includes(route.query.view as string) ? (route.query.view as string) : 'SMEView'
+    );
+
+    // Watch for external query param changes (e.g., browser back/forward)
+    watch(
+        () => route.query.view,
+        (newView) => {
+            if (newView && validViews.includes(newView as string)) {
+                componentToShow.value = newView as string;
+            }
+        }
+    );
 
     // Computed Properties
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
     const selectedNode = computed(() => aasStore.getSelectedNode);
+
+    // Methods
+
+    function updateQueryParam(value: string): void {
+        router.replace({
+            query: {
+                ...route.query,
+                view: value,
+            },
+        });
+    }
 </script>

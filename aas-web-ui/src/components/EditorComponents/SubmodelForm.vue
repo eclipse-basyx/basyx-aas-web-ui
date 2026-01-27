@@ -188,7 +188,7 @@
 
     const { postSubmodel, putSubmodel } = useSMRepositoryClient();
     const { putSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient();
-    const { fetchSmById, fetchSmDescriptor } = useSMHandling();
+    const { fetchSmById, fetchSmDescriptor, fetchAndDispatchSm } = useSMHandling();
     const { putAas } = useAASRepositoryClient();
 
     const editSMDialog = ref(false);
@@ -373,7 +373,7 @@
             await addSubmodelReferenceToAas(submodelObject.value);
             // Fetch and dispatch Submodel
             const query = structuredClone(route.query);
-            query.path = submodelRepoUrl.value + '/' + base64Encode(submodelObject.value.id);
+            query.path = submodelRepoUrl.value + '/submodels/' + base64Encode(submodelObject.value.id);
             router.push({ query: query });
             navigationStore.dispatchTriggerTreeviewReload();
         } else {
@@ -386,7 +386,8 @@
             // Update AAS Descriptor
             await putSubmodelDescriptor(descriptor);
             if (submodelObject.value.id === selectedNode.value.id) {
-                router.go(0); // Reload current route
+                const path = submodelRepoUrl.value + '/submodels/' + base64Encode(submodelObject.value.id);
+                fetchAndDispatchSm(path);
             }
             navigationStore.dispatchTriggerTreeviewReload();
         }
