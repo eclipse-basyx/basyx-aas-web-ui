@@ -933,10 +933,10 @@
     "@testing-library/dom" "^9.3.3"
     "@vue/test-utils" "^2.4.1"
 
-"@thatopen/components-front@^3.3.0":
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/@thatopen/components-front/-/components-front-3.3.0.tgz#d72df90474ba9717f54c7ceed23f1175e495f715"
-  integrity sha512-f9wuNIkLIth5WsEn6Z/SyKTMUUQHN7WjsJrKgM2vfO4isj0iZmphBqyIysHShGSu4gmskn12ZMEWakYkuJIo0g==
+"@thatopen/components-front@^3.3.1":
+  version "3.3.1"
+  resolved "https://registry.yarnpkg.com/@thatopen/components-front/-/components-front-3.3.1.tgz#4b4480205682fa79773d528ffc43b12c5f1ccf16"
+  integrity sha512-Y5OhrtOLs6dLhT+ELGcxNDY0k0D/F4Rjv8+9FYF9SjNiB4k1ke3aC6Uy8gsx/tZtFmQ8Ad+bLrEtQYOGr9AZgw==
   dependencies:
     "@thatopen/components" "~3.3.0"
     earcut "^3.0.1"
