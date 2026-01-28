@@ -360,7 +360,21 @@
         editRelationshipElementDialog.value = false;
     }
 
+    function resetFormValues(): void {
+        relationshipElementIdShort.value = null;
+        displayName.value = null;
+        description.value = null;
+        relationshipElementCategory.value = null;
+        semanticId.value = null;
+        firstReference.value = null;
+        secondReference.value = null;
+        openPanels.value = [0, 1];
+    }
+
     async function initializeInputs(): Promise<void> {
+        // Always reset form values first to clear any stale data from previously opened elements
+        resetFormValues();
+
         if (!props.newRelationshipElement && props.relationshipElement) {
             const relationshipElementJSON = await fetchSme(props.relationshipElement.path);
 
@@ -371,35 +385,13 @@
             }
             relationshipElementObject.value = instanceOrError.mustValue();
 
-            relationshipElementIdShort.value = relationshipElementObject.value.idShort;
-            if (relationshipElementObject.value.displayName) {
-                displayName.value = relationshipElementObject.value.displayName;
-            }
-            if (relationshipElementObject.value.description) {
-                description.value = relationshipElementObject.value.description;
-            }
-            if (relationshipElementObject.value.category) {
-                relationshipElementCategory.value = relationshipElementObject.value.category;
-            }
-            if (relationshipElementObject.value.semanticId) {
-                semanticId.value = relationshipElementObject.value.semanticId;
-            }
-            if (relationshipElementObject.value.first) {
-                firstReference.value = relationshipElementObject.value.first;
-            }
-            if (relationshipElementObject.value.second) {
-                secondReference.value = relationshipElementObject.value.second;
-            }
-            openPanels.value = [0, 1];
-        } else {
-            relationshipElementIdShort.value = null;
-            displayName.value = null;
-            description.value = null;
-            relationshipElementCategory.value = null;
-            semanticId.value = null;
-            firstReference.value = null;
-            secondReference.value = null;
-            openPanels.value = [0, 1];
+            relationshipElementIdShort.value = relationshipElementObject.value.idShort ?? null;
+            displayName.value = relationshipElementObject.value.displayName ?? null;
+            description.value = relationshipElementObject.value.description ?? null;
+            relationshipElementCategory.value = relationshipElementObject.value.category ?? null;
+            semanticId.value = relationshipElementObject.value.semanticId ?? null;
+            firstReference.value = relationshipElementObject.value.first ?? null;
+            secondReference.value = relationshipElementObject.value.second ?? null;
         }
     }
 </script>

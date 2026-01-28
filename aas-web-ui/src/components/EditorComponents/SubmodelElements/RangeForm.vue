@@ -353,7 +353,22 @@
         editRangeDialog.value = false;
     }
 
+    function resetFormValues(): void {
+        rangeIdShort.value = null;
+        displayName.value = null;
+        description.value = null;
+        rangeCategory.value = null;
+        minValue.value = null;
+        maxValue.value = null;
+        valueType.value = aasTypes.DataTypeDefXsd.String;
+        semanticId.value = null;
+        openPanels.value = [0, 1];
+    }
+
     async function initializeInputs(): Promise<void> {
+        // Always reset form values first to clear any stale data from previously opened elements
+        resetFormValues();
+
         if (!props.newRange && props.range) {
             const rangeJSON = await fetchSme(props.range.path);
             const instanceOrError = jsonization.rangeFromJsonable(rangeJSON);
@@ -365,47 +380,14 @@
 
             rangeObject.value = instanceOrError.mustValue();
 
-            rangeIdShort.value = rangeObject.value.idShort;
-
-            if (rangeObject.value.displayName) {
-                displayName.value = rangeObject.value.displayName;
-            }
-
-            if (rangeObject.value.description) {
-                description.value = rangeObject.value.description;
-            }
-
-            if (rangeObject.value.category) {
-                rangeCategory.value = rangeObject.value.category;
-            }
-
-            if (rangeObject.value.min) {
-                minValue.value = rangeObject.value.min;
-            }
-
-            if (rangeObject.value.max) {
-                maxValue.value = rangeObject.value.max;
-            }
-
-            if (rangeObject.value.valueType) {
-                valueType.value = rangeObject.value.valueType;
-            }
-
-            if (rangeObject.value.semanticId) {
-                semanticId.value = rangeObject.value.semanticId;
-            }
-
-            openPanels.value = [0, 1];
-        } else {
-            rangeIdShort.value = null;
-            displayName.value = null;
-            description.value = null;
-            rangeCategory.value = null;
-            minValue.value = null;
-            maxValue.value = null;
-            valueType.value = aasTypes.DataTypeDefXsd.String;
-            semanticId.value = null;
-            openPanels.value = [0, 1];
+            rangeIdShort.value = rangeObject.value.idShort ?? null;
+            displayName.value = rangeObject.value.displayName ?? null;
+            description.value = rangeObject.value.description ?? null;
+            rangeCategory.value = rangeObject.value.category ?? null;
+            minValue.value = rangeObject.value.min ?? null;
+            maxValue.value = rangeObject.value.max ?? null;
+            valueType.value = rangeObject.value.valueType ?? aasTypes.DataTypeDefXsd.String;
+            semanticId.value = rangeObject.value.semanticId ?? null;
         }
     }
 </script>

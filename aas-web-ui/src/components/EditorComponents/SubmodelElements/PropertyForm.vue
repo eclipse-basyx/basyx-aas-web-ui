@@ -412,7 +412,21 @@
         editPropertyDialog.value = false;
     }
 
+    function resetFormValues(): void {
+        propertyIdShort.value = null;
+        displayName.value = null;
+        description.value = null;
+        propertyCategory.value = null;
+        propertyValue.value = '';
+        valueType.value = aasTypes.DataTypeDefXsd.String;
+        semanticId.value = null;
+        openPanels.value = [0, 1];
+    }
+
     async function initializeInputs(): Promise<void> {
+        // Always reset form values first to clear any stale data from previously opened elements
+        resetFormValues();
+
         if (!props.newProperty && props.property) {
             const propertyJSON = await fetchSme(props.property.path);
             const instanceOrError = jsonization.propertyFromJsonable(propertyJSON);
@@ -424,36 +438,13 @@
 
             propertyObject.value = instanceOrError.mustValue();
 
-            propertyIdShort.value = propertyObject.value.idShort;
-
-            if (propertyObject.value.displayName) {
-                displayName.value = propertyObject.value.displayName;
-            }
-            if (propertyObject.value.description) {
-                description.value = propertyObject.value.description;
-            }
-            if (propertyObject.value.category) {
-                propertyCategory.value = propertyObject.value.category;
-            }
-            if (propertyObject.value.value) {
-                propertyValue.value = propertyObject.value.value;
-            }
-            if (propertyObject.value.valueType) {
-                valueType.value = propertyObject.value.valueType;
-            }
-            if (propertyObject.value.semanticId) {
-                semanticId.value = propertyObject.value.semanticId;
-            }
-            openPanels.value = [0, 1];
-        } else {
-            propertyIdShort.value = null;
-            displayName.value = null;
-            description.value = null;
-            propertyCategory.value = null;
-            propertyValue.value = '';
-            valueType.value = aasTypes.DataTypeDefXsd.String;
-            semanticId.value = null;
-            openPanels.value = [0, 1];
+            propertyIdShort.value = propertyObject.value.idShort ?? null;
+            displayName.value = propertyObject.value.displayName ?? null;
+            description.value = propertyObject.value.description ?? null;
+            propertyCategory.value = propertyObject.value.category ?? null;
+            propertyValue.value = propertyObject.value.value ?? '';
+            valueType.value = propertyObject.value.valueType ?? aasTypes.DataTypeDefXsd.String;
+            semanticId.value = propertyObject.value.semanticId ?? null;
         }
     }
 </script>

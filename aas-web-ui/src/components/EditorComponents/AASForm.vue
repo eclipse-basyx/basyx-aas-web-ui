@@ -281,6 +281,9 @@
     );
 
     async function initializeInputs(): Promise<void> {
+        // Always reset form values first to clear any stale data from previously opened elements
+        clearForm();
+
         if (props.newShell === false && props.aas) {
             const aas = await fetchAasById(props.aas.id);
 
@@ -293,23 +296,23 @@
             AASObject.value = instanceOrError.mustValue();
             // console.log('AASObject: ', AASObject.value);
             // Set values of AAS
-            AASId.value = AASObject.value.id;
-            AASIdShort.value = AASObject.value.idShort;
-            displayName.value = AASObject.value.displayName;
-            description.value = AASObject.value.description;
-            AASCategory.value = AASObject.value.category;
+            AASId.value = AASObject.value.id ?? generateUUID();
+            AASIdShort.value = AASObject.value.idShort ?? null;
+            displayName.value = AASObject.value.displayName ?? null;
+            description.value = AASObject.value.description ?? null;
+            AASCategory.value = AASObject.value.category ?? null;
             if (AASObject.value.administration !== null && AASObject.value.administration !== undefined) {
-                version.value = AASObject.value.administration.version;
-                revision.value = AASObject.value.administration.revision;
-                creator.value = AASObject.value.administration.creator;
-                templateId.value = AASObject.value.administration.templateId;
+                version.value = AASObject.value.administration.version ?? null;
+                revision.value = AASObject.value.administration.revision ?? null;
+                creator.value = AASObject.value.administration.creator ?? null;
+                templateId.value = AASObject.value.administration.templateId ?? null;
             }
             if (AASObject.value.assetInformation !== null && AASObject.value.assetInformation !== undefined) {
-                assetKind.value = AASObject.value.assetInformation.assetKind;
-                globalAssetId.value = AASObject.value.assetInformation.globalAssetId;
-                specificAssetIds.value = AASObject.value.assetInformation.specificAssetIds;
-                assetType.value = AASObject.value.assetInformation.assetType;
-                defaultThumbnail.value = AASObject.value.assetInformation.defaultThumbnail;
+                assetKind.value = AASObject.value.assetInformation.assetKind ?? aasTypes.AssetKind.Instance;
+                globalAssetId.value = AASObject.value.assetInformation.globalAssetId ?? null;
+                specificAssetIds.value = AASObject.value.assetInformation.specificAssetIds ?? null;
+                assetType.value = AASObject.value.assetInformation.assetType ?? null;
+                defaultThumbnail.value = AASObject.value.assetInformation.defaultThumbnail ?? null;
             }
         }
     }

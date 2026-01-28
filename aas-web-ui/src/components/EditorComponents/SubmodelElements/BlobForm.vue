@@ -228,7 +228,21 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
         return border;
     });
 
+    function resetFormValues(): void {
+        blobIdShort.value = null;
+        displayName.value = null;
+        description.value = null;
+        blobCategory.value = null;
+        blobContent.value = null;
+        contentType.value = 'application/unknown';
+        semanticId.value = null;
+        openPanels.value = [0, 1];
+    }
+
     async function initializeInputs(): Promise<void> {
+        // Always reset form values first to clear any stale data from previously opened elements
+        resetFormValues();
+
         if (!props.newBlob && props.blob) {
             const blobJSON = await fetchSme(props.blob.path);
             const instanceOrError = jsonization.blobFromJsonable(blobJSON);
@@ -240,42 +254,13 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
 
             blobObject.value = instanceOrError.mustValue();
 
-            blobIdShort.value = blobObject.value.idShort;
-
-            if (blobObject.value.displayName) {
-                displayName.value = blobObject.value.displayName;
-            }
-
-            if (blobObject.value.description) {
-                description.value = blobObject.value.description;
-            }
-
-            if (blobObject.value.category) {
-                blobCategory.value = blobObject.value.category;
-            }
-
-            if (blobObject.value.value) {
-                blobContent.value = blobObject.value.value;
-            }
-
-            if (blobObject.value.contentType) {
-                contentType.value = blobObject.value.contentType;
-            }
-
-            if (blobObject.value.semanticId) {
-                semanticId.value = blobObject.value.semanticId;
-            }
-
-            openPanels.value = [0, 1];
-        } else {
-            blobIdShort.value = null;
-            displayName.value = null;
-            description.value = null;
-            blobCategory.value = null;
-            blobContent.value = null;
-            contentType.value = 'application/unknown';
-            semanticId.value = null;
-            openPanels.value = [0, 1];
+            blobIdShort.value = blobObject.value.idShort ?? null;
+            displayName.value = blobObject.value.displayName ?? null;
+            description.value = blobObject.value.description ?? null;
+            blobCategory.value = blobObject.value.category ?? null;
+            blobContent.value = blobObject.value.value ?? null;
+            contentType.value = blobObject.value.contentType ?? 'application/unknown';
+            semanticId.value = blobObject.value.semanticId ?? null;
         }
     }
 

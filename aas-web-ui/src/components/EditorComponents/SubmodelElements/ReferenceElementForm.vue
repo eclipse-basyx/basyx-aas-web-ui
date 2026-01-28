@@ -339,7 +339,20 @@
         editReferenceElementDialog.value = false;
     }
 
+    function resetFormValues(): void {
+        referenceElementIdShort.value = null;
+        displayName.value = null;
+        description.value = null;
+        referenceElementCategory.value = null;
+        semanticId.value = null;
+        referenceElementValue.value = null;
+        openPanels.value = [0, 1];
+    }
+
     async function initializeInputs(): Promise<void> {
+        // Always reset form values first to clear any stale data from previously opened elements
+        resetFormValues();
+
         if (!props.newReferenceElement && props.referenceElement) {
             const referenceElementJSON = await fetchSme(props.referenceElement.path);
 
@@ -350,31 +363,12 @@
             }
             referenceElementObject.value = instanceOrError.mustValue();
 
-            referenceElementIdShort.value = referenceElementObject.value.idShort;
-            if (referenceElementObject.value.displayName) {
-                displayName.value = referenceElementObject.value.displayName;
-            }
-            if (referenceElementObject.value.description) {
-                description.value = referenceElementObject.value.description;
-            }
-            if (referenceElementObject.value.category) {
-                referenceElementCategory.value = referenceElementObject.value.category;
-            }
-            if (referenceElementObject.value.semanticId) {
-                semanticId.value = referenceElementObject.value.semanticId;
-            }
-            if (referenceElementObject.value.value) {
-                referenceElementValue.value = referenceElementObject.value.value;
-            }
-            openPanels.value = [0, 1];
-        } else {
-            referenceElementIdShort.value = null;
-            displayName.value = null;
-            description.value = null;
-            referenceElementCategory.value = null;
-            semanticId.value = null;
-            referenceElementValue.value = null;
-            openPanels.value = [0, 1];
+            referenceElementIdShort.value = referenceElementObject.value.idShort ?? null;
+            displayName.value = referenceElementObject.value.displayName ?? null;
+            description.value = referenceElementObject.value.description ?? null;
+            referenceElementCategory.value = referenceElementObject.value.category ?? null;
+            semanticId.value = referenceElementObject.value.semanticId ?? null;
+            referenceElementValue.value = referenceElementObject.value.value ?? null;
         }
     }
 </script>
