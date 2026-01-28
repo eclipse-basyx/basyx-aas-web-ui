@@ -969,10 +969,10 @@
     "@thatopen/ui" "~3.3.0"
     lit "3.3.1"
 
-"@thatopen/ui@^3.3.2", "@thatopen/ui@~3.3.0":
-  version "3.3.2"
-  resolved "https://registry.yarnpkg.com/@thatopen/ui/-/ui-3.3.2.tgz#d6012cdd56184d9ec7aeb3816ece2dce1cc777da"
-  integrity sha512-goRTe8+Ych4XxbMa7OBi45qmth3L54+J4UJI/evmrk2Jh5pqtcUD60d27JlD0fEsR+UfqyqNH5uDcFZ0cvYrew==
+"@thatopen/ui@^3.3.3", "@thatopen/ui@~3.3.0":
+  version "3.3.3"
+  resolved "https://registry.yarnpkg.com/@thatopen/ui/-/ui-3.3.3.tgz#997a322128ed7737c826edc22b51778639ca1472"
+  integrity sha512-6mpHiRDl796tpHaPnQItHp0YqSjBENMogmy6De4NLEQ/Q+XzOPtAfIVuz5lnNmyigj5b3MfPn9+VW/le8gGxqg==
   dependencies:
     "@floating-ui/dom" "1.6.3"
     chart.js "^4.5.0"
