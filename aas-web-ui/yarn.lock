@@ -941,10 +941,10 @@
     "@thatopen/components" "~3.3.0"
     earcut "^3.0.1"
 
-"@thatopen/components@^3.3.0", "@thatopen/components@~3.3.0":
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/@thatopen/components/-/components-3.3.0.tgz#3bcfa4599799d6d1deddcebfd9c4ea4b5a552710"
-  integrity sha512-LIU4POgtmOl/AVzVlJ3h3OG0kyn5w4VwJEKb3habMwZ68kONINNlfq0TuyxMYQLV0qnskuzG+tVnBKX67sfkIQ==
+"@thatopen/components@^3.3.1", "@thatopen/components@~3.3.0":
+  version "3.3.1"
+  resolved "https://registry.yarnpkg.com/@thatopen/components/-/components-3.3.1.tgz#e86e9e14a84481d2b4108140f77fb0d7a716eae0"
+  integrity sha512-DkR7gHrjElFKHHZtgatF8f6Ry1fbbXMySsazaQ7zK0JTvExyPbcw5pQs03HOW0VjjJLf2IEOMycHTurvzOJesQ==
   dependencies:
     camera-controls "^2.9.0"
     fast-xml-parser "4.4.1"
