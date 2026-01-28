@@ -961,10 +961,10 @@
     lru-cache "11.1.0"
     pako "2.1.0"
 
-"@thatopen/ui-obc@^3.3.1":
-  version "3.3.1"
-  resolved "https://registry.yarnpkg.com/@thatopen/ui-obc/-/ui-obc-3.3.1.tgz#e90a368e9b0b92e32560c5203b2e23d426b9f29f"
-  integrity sha512-O+tGI28wtWF6dq2vwY8GF2/rpqjfvBR+06Sw+EynkT4hetQ2rEcWnITZKET05nN2EIExvS8RiL/eJ+n6q/ZFKw==
+"@thatopen/ui-obc@^3.3.3":
+  version "3.3.3"
+  resolved "https://registry.yarnpkg.com/@thatopen/ui-obc/-/ui-obc-3.3.3.tgz#03f20330cc9987d0ae112cd53a4c9673f3b965b7"
+  integrity sha512-P/Yo+5mVR8VReoi2MoxuLKaQNekDppA0ro5R5mnqn9PKoHKQhukZtfx4YUcyywMxvkmOOd+PiqUpOP1aqtTffg==
   dependencies:
     "@thatopen/ui" "~3.3.0"
     lit "3.3.1"
