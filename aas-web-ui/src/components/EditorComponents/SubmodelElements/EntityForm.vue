@@ -346,7 +346,22 @@
         editEntityDialog.value = false;
     }
 
+    function resetFormValues(): void {
+        entityIdShort.value = null;
+        displayName.value = null;
+        description.value = null;
+        entityCategory.value = null;
+        semanticId.value = null;
+        entityType.value = aasTypes.EntityType.SelfManagedEntity;
+        globalAssetId.value = null;
+        specificAssetIds.value = null;
+        openPanels.value = [0, 1];
+    }
+
     async function initializeInputs(): Promise<void> {
+        // Always reset form values first to clear any stale data from previously opened elements
+        resetFormValues();
+
         if (!props.newEntity && props.entity) {
             const entityJSON = await fetchSme(props.entity.path);
 
@@ -357,39 +372,14 @@
             }
             entityObject.value = instanceOrError.mustValue();
 
-            entityIdShort.value = entityObject.value.idShort;
-            if (entityObject.value.displayName) {
-                displayName.value = entityObject.value.displayName;
-            }
-            if (entityObject.value.description) {
-                description.value = entityObject.value.description;
-            }
-            if (entityObject.value.category) {
-                entityCategory.value = entityObject.value.category;
-            }
-            if (entityObject.value.semanticId) {
-                semanticId.value = entityObject.value.semanticId;
-            }
-            if (entityObject.value.entityType) {
-                entityType.value = entityObject.value.entityType;
-            }
-            if (entityObject.value.globalAssetId) {
-                globalAssetId.value = entityObject.value.globalAssetId;
-            }
-            if (entityObject.value.specificAssetIds) {
-                specificAssetIds.value = entityObject.value.specificAssetIds;
-            }
-            openPanels.value = [0, 1];
-        } else {
-            entityIdShort.value = null;
-            displayName.value = null;
-            description.value = null;
-            entityCategory.value = null;
-            semanticId.value = null;
-            entityType.value = aasTypes.EntityType.SelfManagedEntity;
-            globalAssetId.value = null;
-            specificAssetIds.value = null;
-            openPanels.value = [0, 1];
+            entityIdShort.value = entityObject.value.idShort ?? null;
+            displayName.value = entityObject.value.displayName ?? null;
+            description.value = entityObject.value.description ?? null;
+            entityCategory.value = entityObject.value.category ?? null;
+            semanticId.value = entityObject.value.semanticId ?? null;
+            entityType.value = entityObject.value.entityType ?? aasTypes.EntityType.SelfManagedEntity;
+            globalAssetId.value = entityObject.value.globalAssetId ?? null;
+            specificAssetIds.value = entityObject.value.specificAssetIds ?? null;
         }
     }
 </script>

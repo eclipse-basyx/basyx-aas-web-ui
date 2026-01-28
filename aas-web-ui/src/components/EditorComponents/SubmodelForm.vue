@@ -264,6 +264,9 @@
     );
 
     async function initializeInputs(): Promise<void> {
+        // Always reset form values first to clear any stale data from previously opened elements
+        clearForm();
+
         if (props.newSm === false && props.submodel) {
             const submodel = await fetchSmById(props.submodel.id);
 
@@ -276,19 +279,19 @@
             submodelObject.value = instanceOrError.mustValue();
             // console.log('AASObject: ', AASObject.value);
             // Set values of AAS
-            submodelId.value = submodelObject.value.id;
-            submodelIdShort.value = submodelObject.value.idShort;
-            submodelKind.value = submodelObject.value.kind;
-            displayName.value = submodelObject.value.displayName;
-            description.value = submodelObject.value.description;
-            submodelCategory.value = submodelObject.value.category;
+            submodelId.value = submodelObject.value.id ?? generateUUID();
+            submodelIdShort.value = submodelObject.value.idShort ?? null;
+            submodelKind.value = submodelObject.value.kind ?? aasTypes.ModellingKind.Instance;
+            displayName.value = submodelObject.value.displayName ?? null;
+            description.value = submodelObject.value.description ?? null;
+            submodelCategory.value = submodelObject.value.category ?? null;
             if (submodelObject.value.administration !== null && submodelObject.value.administration !== undefined) {
-                version.value = submodelObject.value.administration.version;
-                revision.value = submodelObject.value.administration.revision;
-                creator.value = submodelObject.value.administration.creator;
-                templateId.value = submodelObject.value.administration.templateId;
+                version.value = submodelObject.value.administration.version ?? null;
+                revision.value = submodelObject.value.administration.revision ?? null;
+                creator.value = submodelObject.value.administration.creator ?? null;
+                templateId.value = submodelObject.value.administration.templateId ?? null;
             }
-            semanticId.value = submodelObject.value.semanticId;
+            semanticId.value = submodelObject.value.semanticId ?? null;
         }
     }
 
@@ -431,6 +434,7 @@
         // Reset all values
         submodelId.value = generateUUID();
         submodelIdShort.value = null;
+        submodelKind.value = aasTypes.ModellingKind.Instance;
         displayName.value = null;
         description.value = null;
         submodelCategory.value = null;
@@ -438,6 +442,7 @@
         revision.value = null;
         creator.value = null;
         templateId.value = null;
+        semanticId.value = null;
         // Reset state of expansion panels
         openPanels.value = [0, 3];
     }

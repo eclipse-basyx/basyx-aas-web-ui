@@ -303,7 +303,19 @@
         editSMCDialog.value = false;
     }
 
+    function resetFormValues(): void {
+        smcIdShort.value = null;
+        displayName.value = null;
+        description.value = null;
+        smcCategory.value = null;
+        semanticId.value = null;
+        openPanels.value = [0];
+    }
+
     async function initializeInputs(): Promise<void> {
+        // Always reset form values first to clear any stale data from previously opened elements
+        resetFormValues();
+
         if (!props.newSmc && props.smc) {
             const smcJSON = await fetchSme(props.smc.path);
 
@@ -314,27 +326,11 @@
             }
             smcObject.value = instanceOrError.mustValue();
 
-            smcIdShort.value = smcObject.value.idShort;
-            if (smcObject.value.displayName) {
-                displayName.value = smcObject.value.displayName;
-            }
-            if (smcObject.value.description) {
-                description.value = smcObject.value.description;
-            }
-            if (smcObject.value.category) {
-                smcCategory.value = smcObject.value.category;
-            }
-            if (smcObject.value.semanticId) {
-                semanticId.value = smcObject.value.semanticId;
-            }
-            openPanels.value = [0];
-        } else {
-            smcIdShort.value = null;
-            displayName.value = null;
-            description.value = null;
-            smcCategory.value = null;
-            semanticId.value = null;
-            openPanels.value = [0];
+            smcIdShort.value = smcObject.value.idShort ?? null;
+            displayName.value = smcObject.value.displayName ?? null;
+            description.value = smcObject.value.description ?? null;
+            smcCategory.value = smcObject.value.category ?? null;
+            semanticId.value = smcObject.value.semanticId ?? null;
         }
     }
 </script>
