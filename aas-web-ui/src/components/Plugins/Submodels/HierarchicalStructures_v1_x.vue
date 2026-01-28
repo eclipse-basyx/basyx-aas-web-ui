@@ -1095,6 +1095,7 @@
                     text: `RelationshipElement '${selectedRelationshipType.value.label}' ${isEditing ? 'updated' : 'created'} successfully`,
                 });
                 // Refresh the visualization
+                navigationStore.dispatchTriggerTreeviewReload();
                 fetchAndDispatchSm(props.submodelElementData.path as string);
             } else {
                 navigationStore.dispatchSnackbar({
