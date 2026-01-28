@@ -933,15 +933,25 @@
     "@testing-library/dom" "^9.3.3"
     "@vue/test-utils" "^2.4.1"
 
-"@thatopen/components-front@^3.3.0":
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/@thatopen/components-front/-/components-front-3.3.0.tgz#d72df90474ba9717f54c7ceed23f1175e495f715"
-  integrity sha512-f9wuNIkLIth5WsEn6Z/SyKTMUUQHN7WjsJrKgM2vfO4isj0iZmphBqyIysHShGSu4gmskn12ZMEWakYkuJIo0g==
+"@thatopen/components-front@^3.3.1":
+  version "3.3.1"
+  resolved "https://registry.yarnpkg.com/@thatopen/components-front/-/components-front-3.3.1.tgz#4b4480205682fa79773d528ffc43b12c5f1ccf16"
+  integrity sha512-Y5OhrtOLs6dLhT+ELGcxNDY0k0D/F4Rjv8+9FYF9SjNiB4k1ke3aC6Uy8gsx/tZtFmQ8Ad+bLrEtQYOGr9AZgw==
   dependencies:
     "@thatopen/components" "~3.3.0"
     earcut "^3.0.1"
 
-"@thatopen/components@^3.3.0", "@thatopen/components@~3.3.0":
+"@thatopen/components@^3.3.1":
+  version "3.3.1"
+  resolved "https://registry.yarnpkg.com/@thatopen/components/-/components-3.3.1.tgz#e86e9e14a84481d2b4108140f77fb0d7a716eae0"
+  integrity sha512-DkR7gHrjElFKHHZtgatF8f6Ry1fbbXMySsazaQ7zK0JTvExyPbcw5pQs03HOW0VjjJLf2IEOMycHTurvzOJesQ==
+  dependencies:
+    camera-controls "^2.9.0"
+    fast-xml-parser "4.4.1"
+    jszip "3.10.1"
+    three-mesh-bvh "0.7.0"
+
+"@thatopen/components@~3.3.0":
   version "3.3.0"
   resolved "https://registry.yarnpkg.com/@thatopen/components/-/components-3.3.0.tgz#3bcfa4599799d6d1deddcebfd9c4ea4b5a552710"
   integrity sha512-LIU4POgtmOl/AVzVlJ3h3OG0kyn5w4VwJEKb3habMwZ68kONINNlfq0TuyxMYQLV0qnskuzG+tVnBKX67sfkIQ==
@@ -961,15 +971,26 @@
     lru-cache "11.1.0"
     pako "2.1.0"
 
-"@thatopen/ui-obc@^3.3.1":
-  version "3.3.1"
-  resolved "https://registry.yarnpkg.com/@thatopen/ui-obc/-/ui-obc-3.3.1.tgz#e90a368e9b0b92e32560c5203b2e23d426b9f29f"
-  integrity sha512-O+tGI28wtWF6dq2vwY8GF2/rpqjfvBR+06Sw+EynkT4hetQ2rEcWnITZKET05nN2EIExvS8RiL/eJ+n6q/ZFKw==
+"@thatopen/ui-obc@^3.3.3":
+  version "3.3.3"
+  resolved "https://registry.yarnpkg.com/@thatopen/ui-obc/-/ui-obc-3.3.3.tgz#03f20330cc9987d0ae112cd53a4c9673f3b965b7"
+  integrity sha512-P/Yo+5mVR8VReoi2MoxuLKaQNekDppA0ro5R5mnqn9PKoHKQhukZtfx4YUcyywMxvkmOOd+PiqUpOP1aqtTffg==
   dependencies:
     "@thatopen/ui" "~3.3.0"
     lit "3.3.1"
 
-"@thatopen/ui@^3.3.2", "@thatopen/ui@~3.3.0":
+"@thatopen/ui@^3.3.3":
+  version "3.3.3"
+  resolved "https://registry.yarnpkg.com/@thatopen/ui/-/ui-3.3.3.tgz#997a322128ed7737c826edc22b51778639ca1472"
+  integrity sha512-6mpHiRDl796tpHaPnQItHp0YqSjBENMogmy6De4NLEQ/Q+XzOPtAfIVuz5lnNmyigj5b3MfPn9+VW/le8gGxqg==
+  dependencies:
+    "@floating-ui/dom" "1.6.3"
+    chart.js "^4.5.0"
+    chartjs-plugin-datalabels "^2.2.0"
+    iconify-icon "3.0.1"
+    lit "3.3.1"
+
+"@thatopen/ui@~3.3.0":
   version "3.3.2"
   resolved "https://registry.yarnpkg.com/@thatopen/ui/-/ui-3.3.2.tgz#d6012cdd56184d9ec7aeb3816ece2dce1cc777da"
   integrity sha512-goRTe8+Ych4XxbMa7OBi45qmth3L54+J4UJI/evmrk2Jh5pqtcUD60d27JlD0fEsR+UfqyqNH5uDcFZ0cvYrew==
@@ -4857,10 +4878,10 @@ w3c-xmlserializer@^5.0.0:
   dependencies:
     xml-name-validator "^5.0.0"
 
-web-ifc@^0.0.74:
-  version "0.0.74"
-  resolved "https://registry.yarnpkg.com/web-ifc/-/web-ifc-0.0.74.tgz#82b79ee17ea544cdaf4a5dfc47c8f544737c7b75"
-  integrity sha512-WFVxKrt81koT0mA1I5gVChc9/xsnqGZ1KzVxLhy+h43cs6z2hy8tuTtXuA/BPVUkzEzWn+EwNOozF+HHo6G6RA==
+web-ifc@^0.0.75:
+  version "0.0.75"
+  resolved "https://registry.yarnpkg.com/web-ifc/-/web-ifc-0.0.75.tgz#a244082b72b0ad75a9d986f6a29bfc1870813ff7"
+  integrity sha512-d+xKbBkNgySlbZJF0zLG1zW6KOqT76/Ser7G2FrbO5w+y00WJy3yEPPoHbINF2WqMrhoGxSxw5d64jt4Om9WrQ==
 
 webfontloader@^1.0.0:
   version "1.6.28"
