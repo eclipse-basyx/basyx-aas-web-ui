@@ -890,10 +890,10 @@
     jszip "3.10.1"
     three-mesh-bvh "0.7.0"
 
-"@thatopen/fragments@^3.3.1":
-  version "3.3.1"
-  resolved "https://registry.yarnpkg.com/@thatopen/fragments/-/fragments-3.3.1.tgz#6382170dcec2eb652d02816b4a794e0c87b25aa8"
-  integrity sha512-6RQhp4ZHTXWoSIhM6LL3wZvwRVjcTCP8imuvYOeFP1offEiIAflW2KuCxXnzicoHUu2sy1clRm2hLlSMRWi8MQ==
+"@thatopen/fragments@^3.3.2":
+  version "3.3.2"
+  resolved "https://registry.yarnpkg.com/@thatopen/fragments/-/fragments-3.3.2.tgz#626531a8e450e744e8649c14b0f65ea509416a08"
+  integrity sha512-nuFCSEhF5Q8KHLjHtZR0E7pOTb+b6eOybGwmiPziE6sX4boMtr1oArKy334Uc0gM7xGxtA3jAAkfpjdokZTbbA==
   dependencies:
     earcut "^3.0.1"
     flatbuffers "25.2.10"
@@ -2967,12 +2967,7 @@ lru-cache@^10.2.0:
   resolved "https://registry.yarnpkg.com/lru-cache/-/lru-cache-10.4.3.tgz#410fc8a17b70e598013df257c2446b7f3383f119"
   integrity sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==
 
-lru-cache@^11.2.2:
-  version "11.2.2"
-  resolved "https://registry.yarnpkg.com/lru-cache/-/lru-cache-11.2.2.tgz#40fd37edffcfae4b2940379c0722dc6eeaa75f24"
-  integrity sha512-F9ODfyqML2coTIsQpSkRHnLSZMtkU8Q+mSfcaIyKwy58u+8k5nvAYeiNhsyMARvzNcXJ9QfWVrcPsC9e9rAxtg==
-
-lru-cache@^11.2.4:
+lru-cache@^11.2.2, lru-cache@^11.2.4:
   version "11.2.4"
   resolved "https://registry.yarnpkg.com/lru-cache/-/lru-cache-11.2.4.tgz#ecb523ebb0e6f4d837c807ad1abaea8e0619770d"
   integrity sha512-B5Y16Jr9LB9dHVkh6ZevG+vAbOsNOYCX+sXvFWFu7B3Iz5mijW3zdbMyhsh8ANd2mSWBYdJgnqi+mL7/LrOPYg==
