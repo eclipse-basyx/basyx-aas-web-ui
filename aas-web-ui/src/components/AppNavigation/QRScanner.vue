@@ -59,7 +59,6 @@
                     <v-btn
                         variant="outlined"
                         block
-                        :disabled="isScanning"
                         @click="triggerFileInput">
                         <v-icon start>mdi-upload</v-icon>
                         Upload QR Image
