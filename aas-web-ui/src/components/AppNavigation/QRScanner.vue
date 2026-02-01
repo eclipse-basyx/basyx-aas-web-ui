@@ -44,6 +44,18 @@
 
                 <!-- Action buttons -->
                 <div v-if="!isInitializing" class="mt-4">
+                    <!-- Flashlight toggle button (only show when torch is available) -->
+                    <v-btn
+                        v-if="isScanning && hasTorch"
+                        :variant="isTorchOn ? 'flat' : 'outlined'"
+                        :color="isTorchOn ? 'warning' : undefined"
+                        block
+                        class="mb-2"
+                        @click="toggleTorch">
+                        <v-icon start>{{ isTorchOn ? 'mdi-flashlight-off' : 'mdi-flashlight' }}</v-icon>
+                        {{ isTorchOn ? 'Turn Off Flashlight' : 'Turn On Flashlight' }}
+                    </v-btn>
+
                     <!-- Camera switch button (only show when camera is active) -->
                     <v-btn
                         v-if="isScanning && hasCameraToggle"
@@ -76,9 +88,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onUnmounted, nextTick } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { Html5Qrcode } from 'html5-qrcode';
+
+// Extend MediaTrackConstraintSet to include torch (not in default TypeScript types)
+interface TorchConstraints extends MediaTrackConstraintSet {
+    torch?: boolean;
+}
 
 const props = defineProps<{
     modelValue: boolean;
@@ -103,8 +120,11 @@ const errorMessage = ref('');
 const fileInput = ref<HTMLInputElement | null>(null);
 const currentFacingMode = ref<'environment' | 'user'>('environment'); // 'environment' = back camera
 const hasCameraToggle = ref(false);
+const hasTorch = ref(false);
+const isTorchOn = ref(false);
 
 let html5QrCode: Html5Qrcode | null = null;
+let currentVideoTrack: MediaStreamTrack | null = null;
 
 // Watch dialog open/close to start/stop scanner
 watch(dialogModel, async (isOpen) => {
@@ -162,6 +182,9 @@ async function startScanning(): Promise<void> {
         console.log('[QRScanner] Camera started successfully');
         isScanning.value = true;
         isInitializing.value = false;
+
+        // Check if torch/flashlight is available
+        await checkTorchCapability();
     } catch (err: any) {
         console.error('[QRScanner] Error starting QR scanner:', err);
 
@@ -196,6 +219,11 @@ async function startScanning(): Promise<void> {
 }
 
 async function stopScanning(): Promise<void> {
+    // Turn off torch before stopping
+    if (isTorchOn.value) {
+        await setTorch(false);
+    }
+
     if (html5QrCode && isScanning.value) {
         try {
             await html5QrCode.stop();
@@ -206,6 +234,9 @@ async function stopScanning(): Promise<void> {
     }
     isScanning.value = false;
     html5QrCode = null;
+    currentVideoTrack = null;
+    hasTorch.value = false;
+    isTorchOn.value = false;
 }
 
 async function switchCamera(): Promise<void> {
@@ -215,6 +246,67 @@ async function switchCamera(): Promise<void> {
     // Restart scanner with new camera
     await stopScanning();
     await startScanning();
+}
+
+async function checkTorchCapability(): Promise<void> {
+    try {
+        // Get the video element created by html5-qrcode
+        const videoElement = document.querySelector('#qr-reader video') as HTMLVideoElement;
+        if (!videoElement?.srcObject) {
+            console.log('[QRScanner] No video stream found for torch check');
+            hasTorch.value = false;
+            return;
+        }
+
+        const stream = videoElement.srcObject as MediaStream;
+        const track = stream.getVideoTracks()[0];
+
+        if (!track) {
+            console.log('[QRScanner] No video track found for torch check');
+            hasTorch.value = false;
+            return;
+        }
+
+        currentVideoTrack = track;
+
+        // Check if torch is supported
+        const capabilities = track.getCapabilities() as MediaTrackCapabilities & { torch?: boolean };
+        hasTorch.value = capabilities.torch === true;
+        console.log('[QRScanner] Torch capability:', hasTorch.value);
+    } catch (err) {
+        console.error('[QRScanner] Error checking torch capability:', err);
+        hasTorch.value = false;
+    }
+}
+
+async function setTorch(enabled: boolean): Promise<void> {
+    if (!currentVideoTrack) {
+        console.warn('[QRScanner] No video track available for torch control');
+        return;
+    }
+
+    try {
+        const constraints: TorchConstraints = { torch: enabled };
+        await currentVideoTrack.applyConstraints({ advanced: [constraints] });
+        isTorchOn.value = enabled;
+        console.log('[QRScanner] Torch set to:', enabled);
+    } catch (err) {
+        console.error('[QRScanner] Error setting torch:', err);
+        // Reset torch state if it fails
+        isTorchOn.value = false;
+    }
+}
+
+async function toggleTorch(): Promise<void> {
+    await setTorch(!isTorchOn.value);
+}
+
+// Handle visibility change (browser minimized or tab switched)
+function handleVisibilityChange(): void {
+    if (document.hidden && isTorchOn.value) {
+        console.log('[QRScanner] Browser hidden, turning off torch');
+        setTorch(false);
+    }
 }
 
 function onScanSuccess(decodedText: string): void {
@@ -282,8 +374,14 @@ function closeDialog(): void {
     dialogModel.value = false;
 }
 
+// Set up visibility change listener
+onMounted(() => {
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+});
+
 // Cleanup on component unmount
 onUnmounted(async () => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
     await stopScanning();
 });
 </script>
