@@ -1,3 +1,4 @@
+import basicSsl from '@vitejs/plugin-basic-ssl'
 import { execSync } from 'node:child_process'
 import { copyFileSync, existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -53,6 +54,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
+      basicSsl(),
       copyWebIfcWasmPlugin(),
       AutoImport({
         imports: ['vue'],
@@ -112,6 +114,7 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: 3000,
+      host: true,
       hmr: true,
     },
   }

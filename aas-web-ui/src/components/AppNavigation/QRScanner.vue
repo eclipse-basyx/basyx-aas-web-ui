@@ -162,9 +162,34 @@ async function startScanning(): Promise<void> {
         console.log('[QRScanner] Camera started successfully');
         isScanning.value = true;
         isInitializing.value = false;
-    } catch (err) {
+    } catch (err: any) {
         console.error('[QRScanner] Error starting QR scanner:', err);
-        errorMessage.value = `Failed to start camera: ${err instanceof Error ? err.message : 'Unknown error'}`;
+
+        // Provide more helpful error messages
+        let message = 'Unknown error';
+        if (err instanceof Error) {
+            message = err.message;
+        } else if (typeof err === 'string') {
+            message = err;
+        } else if (err?.message) {
+            message = err.message;
+        }
+
+        // Check for common issues
+        if (message.includes('NotAllowedError') || message.includes('Permission')) {
+            errorMessage.value = 'Camera permission denied. Please allow camera access and try again.';
+        } else if (message.includes('NotFoundError') || message.includes('not found')) {
+            errorMessage.value = 'No camera found on this device.';
+        } else if (message.includes('NotReadableError') || message.includes('in use')) {
+            errorMessage.value = 'Camera is in use by another app. Please close other apps using the camera.';
+        } else if (message.includes('secure context') || message.includes('HTTPS')) {
+            errorMessage.value = 'Camera requires HTTPS. Please access this page via HTTPS.';
+        } else {
+            // Show full error for debugging
+            errorMessage.value = `Failed to start camera: ${message}. Try using "Upload QR Image" instead.`;
+        }
+
+        console.error('[QRScanner] Full error object:', JSON.stringify(err, null, 2));
         isInitializing.value = false;
         isScanning.value = false;
     }
