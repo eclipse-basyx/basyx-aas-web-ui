@@ -103,6 +103,7 @@ declare module 'vue' {
     ProgressOverlay: typeof import('./components/Plugins/Submodels/FileSystem/components/ProgressOverlay.vue')['default']
     Property: typeof import('./components/SubmodelElements/Property.vue')['default']
     PropertyForm: typeof import('./components/EditorComponents/SubmodelElements/PropertyForm.vue')['default']
+    QRScanner: typeof import('./components/AppNavigation/QRScanner.vue')['default']
     QualifierElement: typeof import('./components/UIComponents/QualifierElement.vue')['default']
     QualifierInput: typeof import('./components/EditorComponents/InputTypes/QualifierInput.vue')['default']
     Range: typeof import('./components/SubmodelElements/Range.vue')['default']

@@ -22,15 +22,15 @@
                     {{ errorMessage }}
                 </v-alert>
 
-                <!-- Loading state -->
-                <div v-if="isInitializing" class="text-center py-8">
-                    <v-progress-circular indeterminate color="primary"></v-progress-circular>
-                    <p class="mt-4 text-caption">Initializing camera...</p>
-                </div>
-
-                <!-- Scanner area -->
-                <div v-show="!isInitializing && isScanning" class="scanner-container">
-                    <div id="qr-reader" style="width: 100%"></div>
+                <!-- Scanner area (always rendered for html5-qrcode to attach to) -->
+                <div class="scanner-container" style="position: relative; min-height: 300px;">
+                    <!-- Loading overlay -->
+                    <div v-if="isInitializing" class="text-center py-8" style="position: absolute; width: 100%; z-index: 10;">
+                        <v-progress-circular indeterminate color="primary"></v-progress-circular>
+                        <p class="mt-4 text-caption">Initializing camera...</p>
+                    </div>
+                    <!-- QR reader element -->
+                    <div id="qr-reader" style="width: 100%; min-height: 300px;"></div>
                 </div>
 
                 <!-- Success message -->
@@ -77,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onUnmounted } from 'vue';
+import { ref, computed, watch, onUnmounted, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { Html5Qrcode } from 'html5-qrcode';
 
@@ -110,6 +110,8 @@ let html5QrCode: Html5Qrcode | null = null;
 // Watch dialog open/close to start/stop scanner
 watch(dialogModel, async (isOpen) => {
     if (isOpen) {
+        // Small delay to ensure DOM is ready
+        await nextTick();
         await startScanning();
     } else {
         await stopScanning();
@@ -121,12 +123,17 @@ watch(dialogModel, async (isOpen) => {
 
 async function startScanning(): Promise<void> {
     try {
+        console.log('[QRScanner] Starting scanner initialization...');
         isInitializing.value = true;
         errorMessage.value = '';
 
         // Check if camera is available
+        console.log('[QRScanner] Checking for available cameras...');
         const cameras = await Html5Qrcode.getCameras();
+        console.log('[QRScanner] Found cameras:', cameras);
+
         if (!cameras || cameras.length === 0) {
+            console.warn('[QRScanner] No cameras found');
             errorMessage.value = 'No camera found. Please use the upload option.';
             isInitializing.value = false;
             hasCameraToggle.value = false;
@@ -135,11 +142,14 @@ async function startScanning(): Promise<void> {
 
         // Enable camera toggle if multiple cameras are available
         hasCameraToggle.value = cameras.length > 1;
+        console.log('[QRScanner] Camera toggle enabled:', hasCameraToggle.value);
 
         // Initialize scanner
+        console.log('[QRScanner] Initializing Html5Qrcode...');
         html5QrCode = new Html5Qrcode('qr-reader');
 
         // Start scanning
+        console.log('[QRScanner] Starting camera with facingMode:', currentFacingMode.value);
         await html5QrCode.start(
             { facingMode: currentFacingMode.value },
             {
@@ -150,10 +160,11 @@ async function startScanning(): Promise<void> {
             onScanError
         );
 
+        console.log('[QRScanner] Camera started successfully');
         isScanning.value = true;
         isInitializing.value = false;
     } catch (err) {
-        console.error('Error starting QR scanner:', err);
+        console.error('[QRScanner] Error starting QR scanner:', err);
         errorMessage.value = `Failed to start camera: ${err instanceof Error ? err.message : 'Unknown error'}`;
         isInitializing.value = false;
         isScanning.value = false;
