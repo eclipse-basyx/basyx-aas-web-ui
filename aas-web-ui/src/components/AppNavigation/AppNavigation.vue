@@ -336,9 +336,13 @@
         }
 
         if (isDark.value && envStore.getEnvLogoDarkPath.trim().length > 0) {
-            return logoFolder + envStore.getEnvLogoDarkPath;
+            return validURL(envStore.getEnvLogoDarkPath)
+                ? envStore.getEnvLogoDarkPath
+                : logoFolder + envStore.getEnvLogoDarkPath;
         } else {
-            return logoFolder + envStore.getEnvLogoLightPath;
+            return validURL(envStore.getEnvLogoLightPath)
+                ? envStore.getEnvLogoLightPath
+                : logoFolder + envStore.getEnvLogoLightPath;
         }
     });
     const showMobileMenu = computed(() => isMobile.value && !mainMenu.value);
@@ -415,5 +419,18 @@
     function openInfrastructureManagement(): void {
         infrastructureMenu.value = false;
         infrastructureManagementDialog.value = true;
+    }
+
+    function validURL(str: string) {
+        var pattern = new RegExp(
+            '^(https?:\\/\\/)?' + // protocol
+                '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
+                '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+                '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
+                '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+                '(\\#[-a-z\\d_]*)?$',
+            'i'
+        ); // fragment locator
+        return !!pattern.test(str);
     }
 </script>
