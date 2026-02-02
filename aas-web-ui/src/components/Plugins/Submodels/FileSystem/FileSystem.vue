@@ -1,19 +1,17 @@
 <template>
     <v-container class="pa-0" fluid>
-        <!-- Selection Bar (bottom) -->
-        <SelectionBar
-            v-if="selection.hasSelection.value"
-            :selected-count="selection.selectionCount.value"
-            @delete-selected="confirmDeleteSelected" />
-
         <!-- Main Content -->
         <v-container class="pa-0" fluid>
             <v-card>
                 <!-- Toolbar -->
                 <FileSystemToolbar
                     v-model:selected-view="selectedView"
+                    :has-selection="selection.hasSelection.value"
+                    :selected-count="selection.selectionCount.value"
                     @open-upload-dialog="uploadDialog = true"
-                    @create-folder="operations.createFolder" />
+                    @create-folder="operations.createFolder"
+                    @deselect-all="selection.clearSelection"
+                    @delete-selected="confirmDeleteSelected" />
 
                 <v-divider></v-divider>
 
@@ -133,19 +131,7 @@
     import { nextTick, onMounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { mimeToExtension } from '@/utils/FileHandling';
-    import {
-        DeleteConfirmDialog,
-        FileGridView,
-        FileListView,
-        FileSystemBreadcrumbs,
-        FileSystemToolbar,
-        FolderNamingDialog,
-        ProgressOverlay,
-        SelectionBar,
-        UploadDialog,
-    } from './components';
     import { useDragAndDrop, useFileSystemOperations, useSelection } from './composables';
-    import PreviewDialog from './PreviewDialog.vue';
 
     // Options
     defineOptions({
