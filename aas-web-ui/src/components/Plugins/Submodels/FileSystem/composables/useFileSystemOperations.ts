@@ -229,7 +229,7 @@ export function useFileSystemOperations(submodelElementData: () => SubmodelEleme
             idShort: 'FOLDER_' + Date.now(),
             modelType: 'SubmodelElementCollection',
             value: [],
-            displayName: [{ language: 'de', text: 'New Folder' }],
+            displayName: [{ language: 'en', text: 'New Folder' }],
             semanticId: {
                 keys: [{ type: 'GlobalReference', value: 'https://basyx.org/submodels/Folder' }],
                 type: 'ExternalReference',
@@ -251,19 +251,16 @@ export function useFileSystemOperations(submodelElementData: () => SubmodelEleme
      * Update folder name
      */
     const saveFolderName = async (folder: FolderElement, newName: string): Promise<void> => {
-        const nameEntry = folder.displayName?.find((name) => name.language === 'de');
+        const nameEntry = folder.displayName?.find((name) => name.language === 'en');
         if (nameEntry) {
             nameEntry.text = newName;
         } else {
             if (!folder.displayName) folder.displayName = [];
-            folder.displayName.push({ language: 'de', text: newName });
+            folder.displayName.push({ language: 'en', text: newName });
         }
 
-        const queryPath = getCurrentFilePath();
-        const path =
-            submodelElementData().path +
-            '/submodel-elements/' +
-            (queryPath.length === 0 ? folder.idShort : `.${folder.idShort}`);
+        const filePath = getCurrentFilePath();
+        const path = buildElementPath(filePath, folder.idShort);
 
         const body = JSON.stringify(folder);
         const headers = new Headers();
@@ -271,7 +268,7 @@ export function useFileSystemOperations(submodelElementData: () => SubmodelEleme
 
         const response = await putRequest(path, body, headers, 'Updating Folder Name', false);
         if (response.success) {
-            await fetchFiles(queryPath);
+            await fetchFiles(filePath);
         }
     };
 
@@ -286,7 +283,7 @@ export function useFileSystemOperations(submodelElementData: () => SubmodelEleme
         if (response.success) {
             const element = response.data;
             if (element.displayName) {
-                const nameEntry = element.displayName.find((name: { language: string }) => name.language === 'de');
+                const nameEntry = element.displayName.find((name: { language: string }) => name.language === 'en');
                 if (nameEntry) {
                     displayName = nameEntry.text;
                 }
@@ -489,7 +486,7 @@ export function useFileSystemOperations(submodelElementData: () => SubmodelEleme
      */
     const getFolderName = (element: FileSystemElement): string => {
         if (element.displayName) {
-            const nameEntry = element.displayName.find((name) => name.language === 'de');
+            const nameEntry = element.displayName.find((name) => name.language === 'en');
             if (nameEntry) return nameEntry.text;
         }
         return element.idShort;

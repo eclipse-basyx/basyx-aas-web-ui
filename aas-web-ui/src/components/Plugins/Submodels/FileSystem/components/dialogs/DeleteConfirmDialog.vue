@@ -1,13 +1,13 @@
 <template>
     <v-dialog v-model="internalDialog" persistent :width="600">
         <template #default="{ isActive }">
-            <v-card>
+            <v-sheet border rounded="lg">
                 <!-- Multi-delete title -->
-                <v-card-title v-if="isMultiDelete">
+                <v-card-title v-if="isMultiDelete" class="bg-cardHeader">
                     Are you sure you want to delete <b>{{ elementsToDelete.length }}</b> items?
                 </v-card-title>
                 <!-- Single delete title -->
-                <v-card-title v-else-if="singleElement">
+                <v-card-title v-else-if="singleElement" class="bg-cardHeader">
                     {{ singleElement.modelType === 'SubmodelElementCollection' ? 'Folder' : 'File' }}
                     <b>{{ displayName }}</b>
                     really delete?
@@ -60,11 +60,17 @@
 
                 <v-divider></v-divider>
                 <v-card-actions>
-                    <v-btn text="Cancel" @click="handleCancel"></v-btn>
                     <v-spacer></v-spacer>
-                    <v-btn color="error" variant="flat" @click="handleDelete(isActive)">Delete</v-btn>
+                    <v-btn text="Cancel" rounded="lg" @click="handleCancel" />
+                    <v-btn
+                        color="error"
+                        variant="flat"
+                        rounded="lg"
+                        class="text-buttonText"
+                        text="Delete"
+                        @click="handleDelete(isActive)" />
                 </v-card-actions>
-            </v-card>
+            </v-sheet>
         </template>
     </v-dialog>
 </template>

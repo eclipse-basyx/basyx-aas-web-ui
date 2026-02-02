@@ -1,5 +1,5 @@
 <template>
-    <v-toolbar color="cardHeader">
+    <v-toolbar color="cardHeader" class="pr-2">
         <v-toolbar-title>{{ selectedView === 0 ? 'Gallery' : 'File Explorer' }}</v-toolbar-title>
         <v-spacer></v-spacer>
 
@@ -17,37 +17,16 @@
         </v-btn-toggle>
 
         <!-- New File/Folder Menu -->
-        <v-menu>
-            <template #activator="{ props: menuProps }">
-                <v-btn
-                    prepend-icon="mdi-plus"
-                    text="New"
-                    variant="flat"
-                    color="primary"
-                    class="mr-3 text-buttonText"
-                    rounded="lg"
-                    v-bind="menuProps" />
-            </template>
-            <v-list>
-                <v-list-item @click="handleOpenUploadDialog">
-                    <v-list-item-title>
-                        <v-icon>mdi-file</v-icon>
-                        File
-                    </v-list-item-title>
-                </v-list-item>
-                <v-list-item @click="handleCreateFolder">
-                    <v-list-item-title>
-                        <v-icon>mdi-folder</v-icon>
-                        Folder
-                    </v-list-item-title>
-                </v-list-item>
-            </v-list>
-        </v-menu>
+        <FileSystemNewMenu
+            class="mr-3"
+            @open-upload-dialog="handleOpenUploadDialog"
+            @create-folder="handleCreateFolder" />
     </v-toolbar>
 </template>
 
 <script setup lang="ts">
     import { computed } from 'vue';
+    import FileSystemNewMenu from './FileSystemNewMenu.vue';
 
     interface Props {
         selectedView: number;

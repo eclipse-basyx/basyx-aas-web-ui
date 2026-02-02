@@ -28,11 +28,23 @@
             <template #append>
                 <v-btn icon variant="text" size="x-small">
                     <v-icon icon="mdi-dots-vertical" />
-                    <v-menu activator="parent" location="top end" origin="overlap" :close-on-content-click="false">
-                        <v-list slim>
-                            <v-list-subheader>Actions</v-list-subheader>
-                            <v-list-item link title="Delete" @click="handleDelete" />
-                        </v-list>
+                    <v-menu activator="parent">
+                        <v-sheet border>
+                            <v-list dense density="compact" class="py-0" slim>
+                                <v-list-item @click="handleEdit">
+                                    <template #prepend>
+                                        <v-icon size="x-small">mdi-folder-edit</v-icon>
+                                    </template>
+                                    <v-list-item-subtitle>Rename Folder</v-list-item-subtitle>
+                                </v-list-item>
+                                <v-list-item @click="handleDelete">
+                                    <template #prepend>
+                                        <v-icon size="x-small">mdi-delete</v-icon>
+                                    </template>
+                                    <v-list-item-subtitle>Delete Folder</v-list-item-subtitle>
+                                </v-list-item>
+                            </v-list>
+                        </v-sheet>
                     </v-menu>
                 </v-btn>
             </template>
@@ -54,6 +66,7 @@
 
     const emit = defineEmits<{
         (e: 'click'): void;
+        (e: 'edit'): void;
         (e: 'delete'): void;
         (e: 'toggle-selection'): void;
         (e: 'dragstart', event: DragEvent): void;
@@ -64,6 +77,7 @@
     }>();
 
     const handleClick = (): void => emit('click');
+    const handleEdit = (): void => emit('edit');
     const handleDelete = (): void => emit('delete');
     const handleToggleSelection = (): void => emit('toggle-selection');
     const handleDragStart = (event: DragEvent): void => emit('dragstart', event);

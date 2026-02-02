@@ -1,7 +1,14 @@
 <template>
     <div>
+        <!-- Empty State -->
+        <v-empty-state v-if="fileObjects.length === 0" icon="mdi-folder-open-outline" title="No files or folders">
+            <template #actions>
+                <FileSystemNewMenu @open-upload-dialog="handleOpenUploadDialog" @create-folder="handleCreateFolder" />
+            </template>
+        </v-empty-state>
+
         <!-- Folders and Navigation Elements -->
-        <v-row class="mt-2">
+        <v-row v-else class="mt-2">
             <v-col v-for="element in foldersAndNavigation" :key="element.idShort" cols="12" xl="2" lg="3" md="4" sm="6">
                 <!-- Navigation Element (go up) -->
                 <v-lazy v-if="element.modelType === 'NavigationElement'">
@@ -17,11 +24,12 @@
                 <!-- Folder -->
                 <v-lazy v-else-if="element.modelType === 'SubmodelElementCollection'">
                     <FolderCard
-                        :folder="element as FolderElement"
+                        :folder="element"
                         :display-name="getFolderName(element)"
                         :is-selected="isItemSelected(element)"
                         :is-drag-over="dragOverFolder === element.idShort"
                         @click="handleFolderClick(element)"
+                        @edit="handleEditFolder(element)"
                         @delete="handleDelete(element)"
                         @toggle-selection="handleToggleSelection(element)"
                         @dragstart="(e) => handleDragStart(e, element)"
@@ -34,11 +42,11 @@
         </v-row>
 
         <!-- Files -->
-        <v-row class="mt-2">
+        <v-row v-if="fileObjects.length > 0" class="mt-2">
             <v-col v-for="file in files" :key="file.idShort" cols="12" xl="2" lg="3" md="4" sm="6">
                 <v-lazy>
                     <FileCard
-                        :file="file as FileElement"
+                        :file="file"
                         :file-url="fileUrls[file.idShort]"
                         :is-selected="isItemSelected(file)"
                         :allow-startscreen="allowStartscreen"
@@ -57,11 +65,8 @@
 </template>
 
 <script setup lang="ts">
-    import type { FileElement, FileSystemElement, FileUrlsMap, FolderElement } from '../types';
+    import type { FileElement, FileSystemElement, FileUrlsMap } from '../types';
     import { computed } from 'vue';
-    import FileCard from './FileCard.vue';
-    import FolderCard from './FolderCard.vue';
-    import NavigationCard from './NavigationCard.vue';
 
     interface Props {
         fileObjects: FileSystemElement[];
@@ -81,10 +86,13 @@
         (e: 'folder-click', element: FileSystemElement): void;
         (e: 'preview', file: FileSystemElement): void;
         (e: 'download', file: FileSystemElement): void;
+        (e: 'edit-folder', element: FileSystemElement): void;
         (e: 'delete', element: FileSystemElement): void;
         (e: 'toggle-selection', element: FileSystemElement): void;
         (e: 'change-startscreen', state: boolean, file: FileSystemElement): void;
         (e: 'navigate-up'): void;
+        (e: 'open-upload-dialog'): void;
+        (e: 'create-folder'): void;
         (e: 'dragstart', event: DragEvent, element: FileSystemElement): void;
         (e: 'dragend'): void;
         (e: 'dragover', event: DragEvent, element: FileSystemElement): void;
@@ -96,10 +104,13 @@
     const handleFolderClick = (element: FileSystemElement): void => emit('folder-click', element);
     const handlePreview = (file: FileSystemElement): void => emit('preview', file);
     const handleDownload = (file: FileSystemElement): void => emit('download', file);
+    const handleEditFolder = (element: FileSystemElement): void => emit('edit-folder', element);
     const handleDelete = (element: FileSystemElement): void => emit('delete', element);
     const handleToggleSelection = (element: FileSystemElement): void => emit('toggle-selection', element);
     const handleChangeStartscreen = (state: boolean, file: FileSystemElement): void =>
         emit('change-startscreen', state, file);
+    const handleOpenUploadDialog = (): void => emit('open-upload-dialog');
+    const handleCreateFolder = (): void => emit('create-folder');
     const handleDragStart = (event: DragEvent, element: FileSystemElement): void => emit('dragstart', event, element);
     const handleDragEnd = (): void => emit('dragend');
     const handleDragOver = (event: DragEvent, element: FileSystemElement): void => emit('dragover', event, element);

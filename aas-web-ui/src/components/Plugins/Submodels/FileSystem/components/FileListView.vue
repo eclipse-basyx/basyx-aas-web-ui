@@ -196,7 +196,7 @@
 
     const getFolderDisplayName = (item: FileSystemElement): string => {
         if (item.displayName) {
-            const nameEntry = item.displayName.find((name) => name.language === 'de');
+            const nameEntry = item.displayName.find((name) => name.language === 'en');
             if (nameEntry) return nameEntry.text;
         }
         return item.idShort;
