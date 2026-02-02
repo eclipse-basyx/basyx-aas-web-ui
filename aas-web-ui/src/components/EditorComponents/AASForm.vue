@@ -119,7 +119,7 @@
                     <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
                         <v-expansion-panel-title>Asset</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <v-row align="center">
+                            <v-row align="center" class="mb-3">
                                 <v-col class="py-0">
                                     <SelectInput v-model="assetKind" label="Asset Kind" type="assetKind"></SelectInput>
                                 </v-col>
@@ -127,19 +127,13 @@
                                     <HelpInfoButton help-type="assetKind" />
                                 </v-col>
                             </v-row>
-                            <v-row align="center">
-                                <v-col class="py-0">
-                                    <TextInput
-                                        v-model="globalAssetId"
-                                        label="Global Asset ID"
-                                        :show-generate-iri-button="true"
-                                        type="Asset" />
-                                </v-col>
-                                <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="globalAssetId" />
-                                </v-col>
-                            </v-row>
-                            <v-row align="center">
+                            <AssetIdInput
+                                v-model:global-asset-id="globalAssetId"
+                                v-model:specific-asset-ids="specificAssetIds"
+                                :show-specific-asset-ids="true"
+                                :show-generate-iri-for-global="true"
+                                :show-generate-iri-for-specific="true" />
+                            <v-row align="center" class="mt-0">
                                 <v-col class="py-0">
                                     <TextInput v-model="assetType" label="Asset Type" />
                                 </v-col>
@@ -198,7 +192,7 @@
 
     // Composables
     const { generateUUID } = useIDUtils();
-    const { getAasEndpointById } = useAASHandling();
+    const { getAasEndpointById, fetchAndDispatchAasById } = useAASHandling();
 
     // Stores
     const aasStore = useAASStore();
@@ -209,7 +203,7 @@
     }>();
 
     const { fetchAasById, postAas, putAas, putThumbnail } = useAASRepositoryClient();
-    const { putAasDescriptor, createDescriptorFromAAS } = useAASRegistryClient();
+    const { fetchAasDescriptorById, putAasDescriptor, createDescriptorFromAAS } = useAASRegistryClient();
 
     const editAASDialog = ref(false);
     const AASObject = ref<aasTypes.AssetAdministrationShell | undefined>(undefined);
@@ -228,6 +222,7 @@
 
     const assetKind = ref<aasTypes.AssetKind>(aasTypes.AssetKind.Instance);
     const globalAssetId = ref<string | null>(null);
+    const specificAssetIds = ref<Array<aasTypes.SpecificAssetId> | null>(null);
     const assetType = ref<string | null>(null);
     const defaultThumbnail = ref<aasTypes.Resource | null>(null);
 
@@ -286,6 +281,9 @@
     );
 
     async function initializeInputs(): Promise<void> {
+        // Always reset form values first to clear any stale data from previously opened elements
+        clearForm();
+
         if (props.newShell === false && props.aas) {
             const aas = await fetchAasById(props.aas.id);
 
@@ -298,22 +296,23 @@
             AASObject.value = instanceOrError.mustValue();
             // console.log('AASObject: ', AASObject.value);
             // Set values of AAS
-            AASId.value = AASObject.value.id;
-            AASIdShort.value = AASObject.value.idShort;
-            displayName.value = AASObject.value.displayName;
-            description.value = AASObject.value.description;
-            AASCategory.value = AASObject.value.category;
+            AASId.value = AASObject.value.id ?? generateUUID();
+            AASIdShort.value = AASObject.value.idShort ?? null;
+            displayName.value = AASObject.value.displayName ?? null;
+            description.value = AASObject.value.description ?? null;
+            AASCategory.value = AASObject.value.category ?? null;
             if (AASObject.value.administration !== null && AASObject.value.administration !== undefined) {
-                version.value = AASObject.value.administration.version;
-                revision.value = AASObject.value.administration.revision;
-                creator.value = AASObject.value.administration.creator;
-                templateId.value = AASObject.value.administration.templateId;
+                version.value = AASObject.value.administration.version ?? null;
+                revision.value = AASObject.value.administration.revision ?? null;
+                creator.value = AASObject.value.administration.creator ?? null;
+                templateId.value = AASObject.value.administration.templateId ?? null;
             }
             if (AASObject.value.assetInformation !== null && AASObject.value.assetInformation !== undefined) {
-                assetKind.value = AASObject.value.assetInformation.assetKind;
-                globalAssetId.value = AASObject.value.assetInformation.globalAssetId;
-                assetType.value = AASObject.value.assetInformation.assetType;
-                defaultThumbnail.value = AASObject.value.assetInformation.defaultThumbnail;
+                assetKind.value = AASObject.value.assetInformation.assetKind ?? aasTypes.AssetKind.Instance;
+                globalAssetId.value = AASObject.value.assetInformation.globalAssetId ?? null;
+                specificAssetIds.value = AASObject.value.assetInformation.specificAssetIds ?? null;
+                assetType.value = AASObject.value.assetInformation.assetType ?? null;
+                defaultThumbnail.value = AASObject.value.assetInformation.defaultThumbnail ?? null;
             }
         }
     }
@@ -326,7 +325,10 @@
             assetInformation.globalAssetId = globalAssetId.value;
         }
 
-        // TODO: Add optional parameter specificAssetIds
+        // Add optional parameter specificAssetIds
+        if (specificAssetIds.value !== null && specificAssetIds.value.length > 0) {
+            assetInformation.specificAssetIds = specificAssetIds.value;
+        }
 
         // Add optional parameter assetType
         if (assetType.value !== null) {
@@ -429,16 +431,19 @@
             await putAas(AASObject.value);
             // Update AAS Descriptor
             const jsonAAS = jsonization.toJsonable(AASObject.value);
-            const descriptor = createDescriptorFromAAS(jsonAAS, []);
+            // Fetch existing descriptor to preserve endpoints
+            const existingDescriptor = await fetchAasDescriptorById(AASObject.value.id);
+            const endpoints = existingDescriptor?.endpoints ?? [];
+            const descriptor = createDescriptorFromAAS(jsonAAS, endpoints);
             await putAasDescriptor(descriptor);
             // Upload default thumbnail
             if (fileThumbnail.value !== undefined) {
                 await putThumbnail(fileThumbnail.value, AASObject.value.id);
             }
             if (AASObject.value.id === selectedAAS.value.id) {
-                router.go(0); // Reload current route
-                navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
+                await fetchAndDispatchAasById(AASObject.value.id);
             }
+            navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
         }
         clearForm();
         editAASDialog.value = false;
@@ -462,6 +467,7 @@
         templateId.value = null;
         assetKind.value = aasTypes.AssetKind.Instance;
         globalAssetId.value = null;
+        specificAssetIds.value = null;
         assetType.value = null;
         defaultThumbnail.value = null;
         // Reset state of expansion panels

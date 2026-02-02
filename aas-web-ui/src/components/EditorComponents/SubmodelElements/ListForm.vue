@@ -251,7 +251,22 @@
         return errors.value.get(field);
     }
 
+    function resetFormValues(): void {
+        smlIdShort.value = null;
+        displayName.value = null;
+        description.value = null;
+        smlCategory.value = null;
+        orderRelevant.value = false;
+        typeValueListElement.value = null;
+        valueTypeListElement.value = aasTypes.DataTypeDefXsd.String;
+        semanticId.value = null;
+        openPanels.value = [0, 1];
+    }
+
     async function initializeInputs(): Promise<void> {
+        // Always reset form values first to clear any stale data from previously opened elements
+        resetFormValues();
+
         if (!props.newSml && props.sml) {
             const smlJSON = await fetchSme(props.sml.path);
 
@@ -263,49 +278,14 @@
             }
             smlObject.value = instanceOrError.mustValue();
 
-            smlIdShort.value = smlObject.value.idShort;
-
-            if (smlObject.value.displayName) {
-                displayName.value = smlObject.value.displayName;
-            }
-
-            if (smlObject.value.description) {
-                description.value = smlObject.value.description;
-            }
-
-            if (smlObject.value.category) {
-                smlCategory.value = smlObject.value.category;
-            }
-
-            if (smlObject.value.orderRelevant !== null) {
-                orderRelevant.value = smlObject.value.orderRelevant;
-            } else {
-                orderRelevant.value = false;
-            }
-
-            if (smlObject.value.typeValueListElement) {
-                typeValueListElement.value = smlObject.value.typeValueListElement;
-            }
-
-            if (smlObject.value.valueTypeListElement) {
-                valueTypeListElement.value = smlObject.value.valueTypeListElement;
-            }
-
-            if (smlObject.value.semanticId) {
-                semanticId.value = smlObject.value.semanticId;
-            }
-
-            openPanels.value = [0, 1];
-        } else {
-            smlIdShort.value = null;
-            displayName.value = null;
-            description.value = null;
-            smlCategory.value = null;
-            orderRelevant.value = false;
-            typeValueListElement.value = null;
-            valueTypeListElement.value = aasTypes.DataTypeDefXsd.String;
-            semanticId.value = null;
-            openPanels.value = [0, 1];
+            smlIdShort.value = smlObject.value.idShort ?? null;
+            displayName.value = smlObject.value.displayName ?? null;
+            description.value = smlObject.value.description ?? null;
+            smlCategory.value = smlObject.value.category ?? null;
+            orderRelevant.value = smlObject.value.orderRelevant ?? false;
+            typeValueListElement.value = smlObject.value.typeValueListElement ?? null;
+            valueTypeListElement.value = smlObject.value.valueTypeListElement ?? aasTypes.DataTypeDefXsd.String;
+            semanticId.value = smlObject.value.semanticId ?? null;
         }
     }
 

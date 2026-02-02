@@ -7,21 +7,12 @@
                 <component :is="Component" />
             </router-view>
         </v-main>
-
-        <!-- Popup Overlay -->
-        <v-overlay v-model="isPopupOverlayVisible" persistent class="align-center justify-center">
-            <div class="text-center">
-                <v-progress-circular indeterminate size="64" color="primary"></v-progress-circular>
-                <div class="mt-4 text-h6">Please complete authentication in the popup window</div>
-            </div>
-        </v-overlay>
     </v-app>
 </template>
 
 <script lang="ts" setup>
     import { onBeforeUnmount, onMounted, ref } from 'vue';
     import { useRouter } from 'vue-router';
-    import { usePopupOverlay } from '@/composables/PopupOverlay';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
@@ -31,9 +22,6 @@
     // Stores
     const infrastructureStore = useInfrastructureStore();
     const navigationStore = useNavigationStore();
-
-    // Popup Overlay
-    const { isPopupOverlayVisible } = usePopupOverlay();
 
     // Data
     const mediaQueryList = window.matchMedia('(max-width: 600px)');

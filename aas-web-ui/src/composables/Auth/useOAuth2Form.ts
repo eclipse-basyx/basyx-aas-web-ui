@@ -168,27 +168,39 @@ export function useOAuth2Form(): {
             try {
                 // Fetch well-known configuration to get authorization endpoint
                 const wellKnownUrl = `${formData.value.host}/.well-known/openid-configuration`;
-                const wellKnownResponse = await fetch(wellKnownUrl);
+                let authorizationEndpoint;
 
-                if (!wellKnownResponse.ok) {
-                    throw new Error('Failed to fetch OpenID configuration');
+                try {
+                    const wellKnownResponse = await fetch(wellKnownUrl);
+
+                    if (wellKnownResponse.ok) {
+                        const wellKnownConfig = await wellKnownResponse.json();
+                        authorizationEndpoint = wellKnownConfig.authorization_endpoint;
+                    }
+                } catch (error) {
+                    console.warn('[useOAuth2Form] Failed to fetch .well-known configuration, using fallback', error);
                 }
 
-                const wellKnownConfig = await wellKnownResponse.json();
-                const authorizationEndpoint = wellKnownConfig.authorization_endpoint;
-
+                // Fallback to host + /authorize if well-known config is not available
                 if (!authorizationEndpoint) {
-                    throw new Error('Authorization endpoint not found in OpenID configuration');
+                    const normalizedHost = formData.value.host.endsWith('/')
+                        ? formData.value.host.slice(0, -1)
+                        : formData.value.host;
+                    authorizationEndpoint = `${normalizedHost}/authorize`;
                 }
 
                 // Use infrastructure ID as state parameter so router can find the infrastructure after callback
                 const state = infrastructureId;
 
+                // Normalize redirect URI (remove trailing slash for root path)
+                const pathname = window.location.pathname;
+                const redirectUri = `${window.location.origin}${pathname}`;
+
                 // Initiate authorization code flow (will redirect to OAuth2 provider)
                 await initiateOAuth2AuthorizationCodeFlow({
                     authorizationEndpoint,
                     clientId: formData.value.clientId,
-                    redirectUri: `${window.location.origin}${window.location.pathname}`,
+                    redirectUri,
                     scope: formData.value.scope || 'openid profile email',
                     state,
                 });

@@ -1,5 +1,4 @@
 import { type Router } from 'vue-router';
-import { usePopupOverlay } from '@/composables/PopupOverlay';
 import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import { useNavigationStore } from '@/store/NavigationStore';
 
@@ -10,7 +9,6 @@ import { useNavigationStore } from '@/store/NavigationStore';
 export function useAuth(router?: Router) {
     const infrastructureStore = useInfrastructureStore();
     const navStore = useNavigationStore();
-    const { showOverlay, hideOverlay } = usePopupOverlay();
 
     /**
      * Perform login for the current infrastructure
@@ -59,7 +57,6 @@ export function useAuth(router?: Router) {
                         return;
                     }
 
-                    showOverlay();
                     const { authenticateOAuth2ClientCredentials } = await import('@/composables/Auth/OAuth2Auth');
                     const result = await authenticateOAuth2ClientCredentials(config);
 
@@ -85,7 +82,6 @@ export function useAuth(router?: Router) {
                         btnColor: 'buttonText',
                         text: 'Successfully authenticated with OAuth2',
                     });
-                    hideOverlay();
                 } else {
                     // For authorization-code flow, use the form composable which handles the redirect flow
                     const { useOAuth2Form } = await import('@/composables/Auth/useOAuth2Form');
@@ -98,7 +94,6 @@ export function useAuth(router?: Router) {
                     await oauth2Form.authenticate(infra.id);
                 }
             } catch (error: unknown) {
-                hideOverlay();
                 navStore.dispatchSnackbar({
                     status: true,
                     timeout: 4000,
@@ -165,18 +160,23 @@ export function useAuth(router?: Router) {
             try {
                 // Fetch end_session_endpoint from well-known configuration
                 const wellKnownUrl = `${host}/.well-known/openid-configuration`;
-                const wellKnownResponse = await fetch(wellKnownUrl);
+                let endSessionEndpoint;
 
-                if (!wellKnownResponse.ok) {
-                    throw new Error('Failed to fetch OpenID configuration');
+                try {
+                    const wellKnownResponse = await fetch(wellKnownUrl);
+
+                    if (wellKnownResponse.ok) {
+                        const wellKnownConfig = await wellKnownResponse.json();
+                        endSessionEndpoint = wellKnownConfig.end_session_endpoint;
+                    }
+                } catch (error) {
+                    console.warn('[useAuth] Failed to fetch .well-known configuration for logout', error);
                 }
 
-                const wellKnownConfig = await wellKnownResponse.json();
-                const endSessionEndpoint = wellKnownConfig.end_session_endpoint;
                 if (!endSessionEndpoint) {
-                    // If no end_session_endpoint, just clear local token
-                    clearLocalToken();
-                    return;
+                    // Fallback to host + /logout if well-known config doesn't provide end_session_endpoint
+                    const normalizedHost = host.endsWith('/') ? host.slice(0, -1) : host;
+                    endSessionEndpoint = `${normalizedHost}/logout`;
                 }
 
                 logoutUrl = new URL(endSessionEndpoint);

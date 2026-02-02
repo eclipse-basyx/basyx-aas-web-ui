@@ -330,7 +330,20 @@
         editMLPDialog.value = false;
     }
 
+    function resetFormValues(): void {
+        mlpIdShort.value = null;
+        displayName.value = null;
+        description.value = null;
+        mlpCategory.value = null;
+        mlpValue.value = null;
+        semanticId.value = null;
+        openPanels.value = [0, 1];
+    }
+
     async function initializeInputs(): Promise<void> {
+        // Always reset form values first to clear any stale data from previously opened elements
+        resetFormValues();
+
         if (!props.newMlp && props.mlp) {
             const mlpJSON = await fetchSme(props.mlp.path);
 
@@ -341,31 +354,12 @@
             }
             mlpObject.value = instanceOrError.mustValue();
 
-            mlpIdShort.value = mlpObject.value.idShort;
-            if (mlpObject.value.displayName) {
-                displayName.value = mlpObject.value.displayName;
-            }
-            if (mlpObject.value.description) {
-                description.value = mlpObject.value.description;
-            }
-            if (mlpObject.value.category) {
-                mlpCategory.value = mlpObject.value.category;
-            }
-            if (mlpObject.value.value) {
-                mlpValue.value = mlpObject.value.value;
-            }
-            if (mlpObject.value.semanticId) {
-                semanticId.value = mlpObject.value.semanticId;
-            }
-            openPanels.value = [0, 1];
-        } else {
-            mlpIdShort.value = null;
-            displayName.value = null;
-            description.value = null;
-            mlpCategory.value = null;
-            mlpValue.value = null;
-            semanticId.value = null;
-            openPanels.value = [0, 1];
+            mlpIdShort.value = mlpObject.value.idShort ?? null;
+            displayName.value = mlpObject.value.displayName ?? null;
+            description.value = mlpObject.value.description ?? null;
+            mlpCategory.value = mlpObject.value.category ?? null;
+            mlpValue.value = mlpObject.value.value ?? null;
+            semanticId.value = mlpObject.value.semanticId ?? null;
         }
     }
 </script>

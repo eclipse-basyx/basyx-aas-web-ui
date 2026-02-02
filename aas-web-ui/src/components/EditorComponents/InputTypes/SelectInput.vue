@@ -20,6 +20,7 @@
         modellingKind: aasTypes.ModellingKind;
         dataType: aasTypes.DataTypeDefXsd;
         elementType: aasTypes.AasSubmodelElements;
+        entityType: aasTypes.EntityType;
     };
 
     type ValueType<T extends keyof ValueMap> = ValueMap[T];
@@ -88,6 +89,11 @@
                     { title: 'Capability', value: aasTypes.AasSubmodelElements.Capability },
                     { title: 'DataElement', value: aasTypes.AasSubmodelElements.DataElement },
                     { title: 'SubmodelElement', value: aasTypes.AasSubmodelElements.SubmodelElement },
+                ];
+            case 'entityType':
+                return [
+                    { title: 'Co-Managed Entity', value: aasTypes.EntityType.CoManagedEntity },
+                    { title: 'Self-Managed Entity', value: aasTypes.EntityType.SelfManagedEntity },
                 ];
             default:
                 return [];

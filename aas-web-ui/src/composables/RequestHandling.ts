@@ -20,7 +20,7 @@ export function useRequestHandling() {
     function handleRequestError(error: unknown, disableMessage: boolean): { success: false; status?: number } {
         const errorMessage = error instanceof Error ? error.message : String(error);
         const is401Error = errorMessage.includes('Error status: 401') || errorMessage.includes('401');
-        const isAuthFailure = is401Error || errorMessage.includes('Failed to fetch');
+        const isAuthFailure = is401Error;
 
         const currentInfra = infrastructureStore.getSelectedInfrastructure;
         const hasAuth = currentInfra?.auth && currentInfra.auth.securityType !== 'No Authentication';

@@ -2,6 +2,7 @@ import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescript
 import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
 import { useIDUtils } from '@/composables/IDUtils';
+import { useAASStore } from '@/store/AASDataStore';
 import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 import { formatDate } from '@/utils/DateUtils';
 
@@ -22,6 +23,24 @@ export function useSMHandling() {
     } = useSMRepositoryClient();
     const { fetchCds } = useConceptDescriptionHandling();
     const { generateUUID } = useIDUtils();
+    const aasStore = useAASStore();
+
+    /**
+     * Fetches a Submodel (SM) by the provided SM endpoint.
+     * @param smEndpoint the endpoint URL of the SM to fetch.
+     * @param withConceptDescriptions Flag to specify concept descriptions should be included
+     * @returns A promise that resolves to a SM.
+     */
+    async function fetchAndDispatchSm(smEndpoint: string, withConceptDescriptions: boolean = false): Promise<any> {
+        const failResponse = {};
+        if (!smEndpoint) return failResponse;
+        smEndpoint = smEndpoint.trim();
+        if (smEndpoint === '') return failResponse;
+        const sm = await fetchSm(smEndpoint, withConceptDescriptions);
+        if (!sm || Object.keys(sm).length === 0) return failResponse;
+        aasStore.dispatchSelectedNode(sm);
+        return sm;
+    }
 
     /**
      * Fetches a list of all available Submodel (SM) Descriptors.
@@ -463,6 +482,7 @@ export function useSMHandling() {
     return {
         getSmEndpointById,
         smIsAvailableById,
+        fetchAndDispatchSm,
         fetchSm,
         fetchSmById,
         fetchSmDescriptorList,

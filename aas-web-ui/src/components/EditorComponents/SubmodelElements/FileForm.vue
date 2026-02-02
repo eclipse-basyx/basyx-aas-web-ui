@@ -230,7 +230,21 @@
         return border;
     });
 
+    function resetFormValues(): void {
+        fileIdShort.value = null;
+        displayName.value = null;
+        description.value = null;
+        fileCategory.value = null;
+        filePath.value = null;
+        contentType.value = 'application/unknown';
+        semanticId.value = null;
+        openPanels.value = [0, 1];
+    }
+
     async function initializeInputs(): Promise<void> {
+        // Always reset form values first to clear any stale data from previously opened elements
+        resetFormValues();
+
         if (!props.newFile && props.file) {
             const fileJSON = await fetchSme(props.file.path);
             const instanceOrError = jsonization.fileFromJsonable(fileJSON);
@@ -242,42 +256,13 @@
 
             fileObject.value = instanceOrError.mustValue();
 
-            fileIdShort.value = fileObject.value.idShort;
-
-            if (fileObject.value.displayName) {
-                displayName.value = fileObject.value.displayName;
-            }
-
-            if (fileObject.value.description) {
-                description.value = fileObject.value.description;
-            }
-
-            if (fileObject.value.category) {
-                fileCategory.value = fileObject.value.category;
-            }
-
-            if (fileObject.value.value) {
-                filePath.value = fileObject.value.value;
-            }
-
-            if (fileObject.value.contentType) {
-                contentType.value = fileObject.value.contentType;
-            }
-
-            if (fileObject.value.semanticId) {
-                semanticId.value = fileObject.value.semanticId;
-            }
-
-            openPanels.value = [0, 1];
-        } else {
-            fileIdShort.value = null;
-            displayName.value = null;
-            description.value = null;
-            fileCategory.value = null;
-            filePath.value = null;
-            contentType.value = 'application/unknown';
-            semanticId.value = null;
-            openPanels.value = [0, 1];
+            fileIdShort.value = fileObject.value.idShort ?? null;
+            displayName.value = fileObject.value.displayName ?? null;
+            description.value = fileObject.value.description ?? null;
+            fileCategory.value = fileObject.value.category ?? null;
+            filePath.value = fileObject.value.value ?? null;
+            contentType.value = fileObject.value.contentType ?? 'application/unknown';
+            semanticId.value = fileObject.value.semanticId ?? null;
         }
     }
 

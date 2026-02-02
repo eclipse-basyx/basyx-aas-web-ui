@@ -5,6 +5,7 @@
             <v-divider />
             <v-card-text>
                 <v-text-field
+                    id="asset-id-input"
                     v-model="assetId"
                     density="compact"
                     variant="outlined"
@@ -344,4 +345,29 @@
         }
         return selectedInfrastructureId.value === selectedDestinationInfrastructureId.value;
     }
+</script>
+
+<script lang="ts">
+    import type { PageShortcutDefinitions } from '@/composables/Shortcuts/useRouteShortcuts';
+
+    // Module shortcuts definition - available when this module is active
+    export const shortcuts: PageShortcutDefinitions = () => [
+        {
+            id: 'aas-importer-clear-asset-id',
+            title: 'Clear Asset ID',
+            description: 'Clear the asset ID input field',
+            prependIcon: 'mdi-eraser',
+            category: 'AAS Importer Shortcuts',
+            keys: 'cmd+shift+backspace',
+            handler: (event: KeyboardEvent) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const assetIdInput = document.querySelector('#asset-id-input input') as HTMLInputElement;
+                if (assetIdInput) {
+                    assetIdInput.value = '';
+                    assetIdInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            },
+        },
+    ];
 </script>
