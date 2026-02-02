@@ -1,8 +1,8 @@
 <template>
     <v-dialog v-model="internalDialog" :width="600">
         <template #default>
-            <v-card>
-                <v-card-title>Upload Images/Videos</v-card-title>
+            <v-sheet border rounded="lg">
+                <v-card-title class="bg-cardHeader">Upload Images/Videos</v-card-title>
                 <v-divider></v-divider>
                 <v-progress-linear v-if="loading" color="primary" indeterminate></v-progress-linear>
                 <v-card-text>
@@ -11,6 +11,7 @@
                         label="Select Files"
                         :accept="acceptedFiles"
                         variant="outlined"
+                        density="compact"
                         prepend-icon=""
                         prepend-inner-icon="$file"
                         multiple></v-file-input>
@@ -18,10 +19,16 @@
                 <v-divider></v-divider>
                 <v-card-actions>
                     <v-spacer></v-spacer>
-                    <v-btn text="Cancel" @click="handleCancel"></v-btn>
-                    <v-btn color="primary" variant="flat" @click="handleUpload">Upload</v-btn>
+                    <v-btn text="Cancel" rounded="lg" @click="handleCancel" />
+                    <v-btn
+                        color="primary"
+                        variant="flat"
+                        rounded="lg"
+                        class="text-buttonText"
+                        text="Upload"
+                        @click="handleUpload" />
                 </v-card-actions>
-            </v-card>
+            </v-sheet>
         </template>
     </v-dialog>
 </template>
