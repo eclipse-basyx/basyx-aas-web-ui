@@ -3,7 +3,7 @@
         <v-card>
             <v-card-title> Confirm Delete </v-card-title>
             <v-divider></v-divider>
-            <v-card-text class="pb-0">
+            <v-card-text v-if="element" class="pb-0">
                 <span>Are you sure you want to delete the </span>
                 <span class="font-weight-bold">{{ element.modelType }}</span>
                 <span> with the</span>

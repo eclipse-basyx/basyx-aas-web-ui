@@ -42,6 +42,9 @@
         'Range',
         'File',
         'Blob',
+        'Entity',
+        'ReferenceElement',
+        'RelationshipElement',
     ]);
     const selectedSME = ref('Property');
     watch(

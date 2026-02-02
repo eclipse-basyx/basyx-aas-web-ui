@@ -1,6 +1,6 @@
 <template>
     <v-container fluid class="pa-0">
-        <v-card class="pa-2" border color="navigationMenu" :min-width="620">
+        <v-card class="pa-2" border rounded="lg" color="navigationMenu" :min-width="620">
             <v-container>
                 <v-sheet
                     class="overflow-hidden mx-auto mb-4"
@@ -34,7 +34,7 @@
                             :border="isActiveRoutePath('/')"
                             subtitle="View Asset Administration Shells"
                             title="AAS Viewer"
-                            :to="isActiveRoutePath('/') ? '' : '/'"
+                            :to="isActiveRoutePath('/') ? '' : { path: '/', query: route.query }"
                             @click="closeMenu">
                             <template #prepend>
                                 <v-avatar color="surface-light" icon="custom:aasIcon" rounded>
@@ -50,7 +50,7 @@
                             :border="isActiveRoutePath('/aaseditor')"
                             subtitle="Edit Asset Administration Shells"
                             title="AAS Editor"
-                            :to="isActiveRoutePath('/aaseditor') ? '' : '/aaseditor'"
+                            :to="isActiveRoutePath('/aaseditor') ? '' : { path: '/aaseditor', query: route.query }"
                             @click="closeMenu">
                             <template #prepend>
                                 <v-avatar color="surface-light" icon="mdi-pencil" rounded>
@@ -66,7 +66,7 @@
                             :border="isActiveRoutePath('/aassmviewer')"
                             subtitle="View Submodel Visualizations of Asset Administration Shells"
                             title="AAS SM Visualizations"
-                            :to="isActiveRoutePath('/aassmviewer') ? '' : '/aassmviewer'"
+                            :to="isActiveRoutePath('/aassmviewer') ? '' : { path: '/aassmviewer', query: route.query }"
                             @click="closeMenu">
                             <template #prepend>
                                 <v-avatar color="surface-light" icon="mdi-group" rounded>
@@ -82,7 +82,7 @@
                             :border="isActiveRoutePath('/smviewer')"
                             subtitle="View Submodels"
                             title="SM Viewer"
-                            :to="isActiveRoutePath('/smviewer') ? '' : '/smviewer'"
+                            :to="isActiveRoutePath('/smviewer') ? '' : { path: '/smviewer', query: route.query }"
                             @click="closeMenu">
                             <template #prepend>
                                 <v-avatar color="surface-light" icon="mdi-ungroup" rounded>
@@ -98,7 +98,7 @@
                             :border="isActiveRoutePath('/smeditor')"
                             subtitle="Edit Submodels"
                             title="SM Editor"
-                            :to="isActiveRoutePath('/smeditor') ? '' : '/smeditor'"
+                            :to="isActiveRoutePath('/smeditor') ? '' : { path: '/smeditor', query: route.query }"
                             @click="closeMenu">
                             <template #prepend>
                                 <v-avatar color="surface-light" icon="mdi-pencil" rounded>
@@ -114,7 +114,7 @@
                             :border="isActiveRoutePath('/visu')"
                             subtitle="Visualize Submodels/Submodel Elements"
                             title="Visualization"
-                            :to="isActiveRoutePath('/visu') ? '' : '/visu'"
+                            :to="isActiveRoutePath('/visu') ? '' : { path: '/visu', query: route.query }"
                             @click="closeMenu">
                             <template #prepend>
                                 <v-avatar color="surface-light" icon="mdi-chart-line" rounded>
