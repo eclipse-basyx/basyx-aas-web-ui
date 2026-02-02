@@ -79,9 +79,9 @@ async function initialize(): Promise<void> {
 
 async function getVisualizations(app: AppType): Promise<PluginType[]> {
     const pluginFileRecords = {
-        ...import.meta.glob('./components/Plugins/Submodels/*.vue'),
-        ...import.meta.glob('./components/Plugins/SubmodelElements/*.vue'),
-        ...import.meta.glob('./UserPlugins/*.vue'),
+        ...import.meta.glob('./components/Plugins/Submodels/**/*.vue'),
+        ...import.meta.glob('./components/Plugins/SubmodelElements/**/*.vue'),
+        ...import.meta.glob('./UserPlugins/**/*.vue'),
     };
 
     const plugins = [] as Array<PluginType>;
