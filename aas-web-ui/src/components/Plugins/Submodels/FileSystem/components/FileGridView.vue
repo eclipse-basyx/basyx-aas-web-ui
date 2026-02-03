@@ -8,8 +8,12 @@
         </v-empty-state>
 
         <!-- Folders and Navigation Elements -->
-        <v-row v-else class="mt-2">
-            <v-col v-for="element in foldersAndNavigation" :key="element.idShort" cols="12" xl="2" lg="3" md="4" sm="6">
+        <div v-else class="d-flex flex-wrap mt-5 ga-3">
+            <div
+                v-for="element in foldersAndNavigation"
+                :key="element.idShort"
+                class="flex-grow-0 flex-shrink-0"
+                style="width: 220px">
                 <!-- Navigation Element (go up) -->
                 <v-lazy v-if="element.modelType === 'NavigationElement'">
                     <NavigationCard
@@ -38,49 +42,42 @@
                         @dragleave="(e) => handleDragLeave(e, element)"
                         @drop="(e) => handleDrop(e, element)" />
                 </v-lazy>
-            </v-col>
-        </v-row>
+            </div>
+        </div>
 
         <!-- Files -->
-        <v-row v-if="fileObjects.length > 0" class="mt-2">
-            <v-col v-for="file in files" :key="file.idShort" cols="12" xl="2" lg="3" md="4" sm="6">
+        <div v-if="fileObjects.length > 0" class="d-flex flex-wrap mt-3 ga-3">
+            <div v-for="file in files" :key="file.idShort" class="flex-grow-0 flex-shrink-0" style="width: 220px">
                 <v-lazy>
                     <FileCard
                         :file="file"
                         :file-url="fileUrls[file.idShort]"
                         :is-selected="isItemSelected(file)"
-                        :allow-startscreen="allowStartscreen"
-                        :preview-state="getPreviewState(file as FileElement)"
                         @preview="handlePreview(file)"
                         @download="handleDownload(file)"
                         @delete="handleDelete(file)"
                         @toggle-selection="handleToggleSelection(file)"
-                        @change-startscreen="(state) => handleChangeStartscreen(state, file)"
                         @dragstart="(e) => handleDragStart(e, file)"
                         @dragend="handleDragEnd" />
                 </v-lazy>
-            </v-col>
-        </v-row>
+            </div>
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-    import type { FileElement, FileSystemElement, FileUrlsMap } from '../types';
+    import type { FileSystemElement, FileUrlsMap } from '../types';
     import { computed } from 'vue';
 
     interface Props {
         fileObjects: FileSystemElement[];
         fileUrls: FileUrlsMap;
         dragOverFolder: string | null;
-        allowStartscreen?: boolean;
         isItemSelected: (item: FileSystemElement) => boolean;
         getFolderName: (element: FileSystemElement) => string;
-        getPreviewState: (file: FileElement) => boolean;
     }
 
-    const props = withDefaults(defineProps<Props>(), {
-        allowStartscreen: false,
-    });
+    const props = withDefaults(defineProps<Props>(), {});
 
     const emit = defineEmits<{
         (e: 'folder-click', element: FileSystemElement): void;
@@ -107,8 +104,6 @@
     const handleEditFolder = (element: FileSystemElement): void => emit('edit-folder', element);
     const handleDelete = (element: FileSystemElement): void => emit('delete', element);
     const handleToggleSelection = (element: FileSystemElement): void => emit('toggle-selection', element);
-    const handleChangeStartscreen = (state: boolean, file: FileSystemElement): void =>
-        emit('change-startscreen', state, file);
     const handleOpenUploadDialog = (): void => emit('open-upload-dialog');
     const handleCreateFolder = (): void => emit('create-folder');
     const handleDragStart = (event: DragEvent, element: FileSystemElement): void => emit('dragstart', event, element);

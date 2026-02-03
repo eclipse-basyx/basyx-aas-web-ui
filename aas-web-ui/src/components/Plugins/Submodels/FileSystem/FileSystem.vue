@@ -17,12 +17,24 @@
 
                 <!-- Card Content -->
                 <v-card-text
-                    style="height: 600px"
+                    style="height: 600px; position: relative"
                     class="overflow-y-auto"
                     :class="{ 'external-drop-zone-active': dragDrop.isExternalDragOver.value }"
                     @dragover.prevent="dragDrop.handleExternalDragOver"
                     @dragleave="dragDrop.handleExternalDragLeave"
                     @drop.prevent="dragDrop.handleExternalDrop">
+                    <!-- External Drop Zone Overlay -->
+                    <v-overlay
+                        :model-value="dragDrop.isExternalDragOver.value"
+                        scrim="primary"
+                        :opacity="0.1"
+                        contained
+                        class="align-center justify-center">
+                        <v-sheet color="primary" rounded="lg" class="pa-5">
+                            <v-empty-state icon="mdi-upload" title="Drop files here to upload"></v-empty-state>
+                        </v-sheet>
+                    </v-overlay>
+
                     <!-- Upload Progress Overlay -->
                     <v-overlay
                         :model-value="operations.isUploading.value"
@@ -355,25 +367,7 @@
 
 <style scoped>
     .external-drop-zone-active {
-        background-color: rgba(76, 175, 80, 0.1);
-        border: 3px dashed #4caf50;
-        border-radius: 8px;
-        position: relative;
-    }
-
-    .external-drop-zone-active::after {
-        content: 'Dateien hier ablegen zum Hochladen';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 1.5rem;
-        color: #4caf50;
-        font-weight: 500;
-        pointer-events: none;
-        background-color: rgba(255, 255, 255, 0.9);
-        padding: 1rem 2rem;
-        border-radius: 8px;
-        z-index: 10;
+        outline: 2px dashed rgb(var(--v-theme-primary));
+        outline-offset: -2px;
     }
 </style>

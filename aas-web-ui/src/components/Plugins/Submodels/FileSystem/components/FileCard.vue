@@ -23,31 +23,29 @@
                 <v-btn icon variant="text" size="x-small">
                     <v-icon icon="mdi-dots-vertical" />
                     <v-menu activator="parent" location="top end" origin="overlap" :close-on-content-click="false">
-                        <v-list slim>
-                            <v-list-subheader>Aktionen</v-list-subheader>
-                            <v-list-item link title="Herunterladen" @click="handleDownload" />
-                            <v-list-item link title="Löschen" @click="handleDelete" />
-                            <v-checkbox
-                                v-if="allowStartscreen"
-                                label="Auf Hauptseite"
-                                hide-details
-                                class="mr-2"
-                                :model-value="previewState"
-                                @update:model-value="handleChangeStartscreen" />
-                        </v-list>
+                        <v-sheet border>
+                            <v-list dense density="compact" class="py-0" slim>
+                                <v-list-item @click="handleDownload">
+                                    <template #prepend>
+                                        <v-icon size="x-small">mdi-download</v-icon>
+                                    </template>
+                                    <v-list-item-subtitle>Download File</v-list-item-subtitle>
+                                </v-list-item>
+                                <v-list-item @click="handleDelete">
+                                    <template #prepend>
+                                        <v-icon size="x-small">mdi-delete</v-icon>
+                                    </template>
+                                    <v-list-item-subtitle>Delete File</v-list-item-subtitle>
+                                </v-list-item>
+                            </v-list>
+                        </v-sheet>
                     </v-menu>
                 </v-btn>
             </template>
         </v-toolbar>
-        <v-card-item class="px-2 pb-2 pt-0">
+        <v-card-item class="px-2 pb-2 pt-0 cursor-pointer" @click="handlePreview">
             <v-card flat rounded="lg" border class="media-card">
-                <v-img
-                    v-if="contentTypeCategory === 'image'"
-                    :src="fileUrl"
-                    block
-                    cover
-                    class="cursor-pointer"
-                    @click="handlePreview">
+                <v-img v-if="contentTypeCategory === 'image'" :src="fileUrl" block cover>
                     <template #placeholder>
                         <div class="d-flex align-center justify-center fill-height">
                             <v-progress-circular color="grey-lighten-4" indeterminate></v-progress-circular>
@@ -59,17 +57,10 @@
                     :src="fileUrl"
                     controls
                     class="video-element"></video>
-                <v-icon
-                    v-else-if="file.contentType === 'application/pdf'"
-                    color="red"
-                    size="x-large"
-                    class="cursor-pointer"
-                    @click="handlePreview"
+                <v-icon v-else-if="file.contentType === 'application/pdf'" color="red" size="x-large"
                     >mdi-file-pdf-box</v-icon
                 >
-                <v-icon v-else size="x-large" color="grey" class="cursor-pointer" @click="handlePreview"
-                    >mdi-file</v-icon
-                >
+                <v-icon v-else size="x-large" color="grey">mdi-file</v-icon>
             </v-card>
         </v-card-item>
     </v-card>
@@ -84,14 +75,10 @@
         file: FileElement;
         fileUrl?: string;
         isSelected: boolean;
-        allowStartscreen?: boolean;
-        previewState?: boolean;
     }
 
     const props = withDefaults(defineProps<Props>(), {
         fileUrl: '',
-        allowStartscreen: false,
-        previewState: false,
     });
 
     const emit = defineEmits<{
@@ -108,7 +95,6 @@
     const handleDownload = (): void => emit('download');
     const handleDelete = (): void => emit('delete');
     const handleToggleSelection = (): void => emit('toggle-selection');
-    const handleChangeStartscreen = (state: boolean | null): void => emit('change-startscreen', state ?? false);
     const handleDragStart = (event: DragEvent): void => emit('dragstart', event);
     const handleDragEnd = (): void => emit('dragend');
 
@@ -123,6 +109,15 @@
 </script>
 
 <style scoped>
+    .draggable-item {
+        width: 100%;
+        cursor: pointer;
+    }
+
+    .draggable-item:active {
+        opacity: 0.5;
+    }
+
     .media-card {
         display: flex;
         align-items: center;
@@ -149,16 +144,9 @@
         object-fit: cover;
     }
 
-    .draggable-item {
-        cursor: move;
-    }
-
-    .draggable-item:active {
-        opacity: 0.5;
-    }
-
     .selected-item {
-        background-color: rgba(33, 150, 243, 0.15);
-        border-color: #2196f3 !important;
+        background-color: rgba(var(--v-theme-primary), 0.15);
+        outline: 2px solid rgb(var(--v-theme-primary));
+        outline-offset: -2px;
     }
 </style>

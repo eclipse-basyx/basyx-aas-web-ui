@@ -89,6 +89,7 @@
 
 <style scoped>
     .draggable-item {
+        width: 100%;
         cursor: move;
     }
 
@@ -97,13 +98,13 @@
     }
 
     .drop-zone-active {
-        background-color: rgba(33, 150, 243, 0.1);
-        border: 2px dashed #2196f3;
-        border-radius: 8px;
+        outline: 2px dashed rgb(var(--v-theme-primary));
+        outline-offset: -2px;
     }
 
     .selected-item {
-        background-color: rgba(33, 150, 243, 0.15);
-        border-color: #2196f3 !important;
+        background-color: rgba(var(--v-theme-primary), 0.15);
+        outline: 2px solid rgb(var(--v-theme-primary));
+        outline-offset: -2px;
     }
 </style>

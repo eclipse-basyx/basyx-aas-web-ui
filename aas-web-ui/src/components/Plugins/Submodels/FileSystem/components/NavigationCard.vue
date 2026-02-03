@@ -39,9 +39,12 @@
 </script>
 
 <style scoped>
+    .v-card {
+        width: 100%;
+    }
+
     .drop-zone-active {
-        background-color: rgba(33, 150, 243, 0.1);
-        border: 2px dashed #2196f3;
-        border-radius: 8px;
+        outline: 2px dashed rgb(var(--v-theme-primary));
+        outline-offset: -2px;
     }
 </style>

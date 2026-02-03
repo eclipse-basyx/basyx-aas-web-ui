@@ -8,9 +8,9 @@
                 </v-card-title>
                 <!-- Single delete title -->
                 <v-card-title v-else-if="singleElement" class="bg-cardHeader">
+                    Really delete the
                     {{ singleElement.modelType === 'SubmodelElementCollection' ? 'Folder' : 'File' }}
-                    <b>{{ displayName }}</b>
-                    really delete?
+                    <b>{{ displayName }}?</b>
                 </v-card-title>
                 <v-divider></v-divider>
 
