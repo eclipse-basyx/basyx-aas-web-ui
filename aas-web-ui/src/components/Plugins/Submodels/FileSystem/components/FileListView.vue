@@ -35,7 +35,7 @@
                 v-if="item.modelType === 'File'"
                 lines="one"
                 :draggable="true"
-                class="draggable-item"
+                class="draggable-item pl-0"
                 @dragstart="(e: any) => handleDragStart(e, item)"
                 @dragend="handleDragEnd">
                 <template #prepend>
@@ -61,7 +61,7 @@
             <v-list-item
                 v-else-if="item.modelType === 'SubmodelElementCollection'"
                 :draggable="true"
-                class="draggable-item"
+                class="draggable-item pl-0"
                 @dragstart="(e: any) => handleDragStart(e, item)"
                 @dragend="handleDragEnd"
                 @dragover.prevent="(e: any) => handleDragOver(e, item)"
@@ -79,7 +79,7 @@
             <!-- Navigation item -->
             <v-list-item
                 v-else-if="item.modelType === 'NavigationElement'"
-                class="draggable-item"
+                class="draggable-item pl-0"
                 @dragover.prevent="(e: any) => handleDragOver(e, item)"
                 @dragleave="(e: any) => handleDragLeave(e, item)"
                 @drop="(e: any) => handleDrop(e, item)">
@@ -93,39 +93,41 @@
         <!-- Content type column -->
         <template #[`item.contentType`]="{ item }">
             <span v-if="item.modelType === 'File'">{{ `.${mimeToExtension((item as FileElement).contentType)}` }}</span>
-            <span v-else-if="item.modelType === 'SubmodelElementCollection'">Ordner</span>
+            <span v-else-if="item.modelType === 'SubmodelElementCollection'">Folder</span>
         </template>
 
         <!-- Actions column -->
         <template #[`item.actions`]="{ item }">
-            <v-btn
-                v-if="isOnSubpath && item.modelType !== 'NavigationElement'"
-                icon="mdi-arrow-up-bold"
-                variant="plain"
-                size="small"
-                :disabled="hasSelection"
-                @click.stop="handleMoveUp(item)" />
-            <v-btn
-                v-if="item.modelType === 'SubmodelElementCollection'"
-                icon="mdi-pencil"
-                variant="plain"
-                size="small"
-                :disabled="hasSelection"
-                @click.stop="handleEditFolder(item)" />
-            <v-btn
-                v-if="item.modelType === 'File'"
-                icon="mdi-tray-arrow-down"
-                variant="plain"
-                size="small"
-                :disabled="hasSelection"
-                @click.stop="handleDownload(item)" />
-            <v-btn
-                v-if="item.modelType !== 'NavigationElement'"
-                icon="mdi-delete"
-                variant="plain"
-                size="small"
-                :disabled="hasSelection"
-                @click.stop="handleDelete(item)" />
+            <div class="d-flex ga-2 justify-end">
+                <v-icon
+                    v-if="isOnSubpath && item.modelType !== 'NavigationElement'"
+                    icon="mdi-arrow-up-bold"
+                    size="small"
+                    color="medium-emphasis"
+                    :disabled="hasSelection"
+                    @click.stop="handleMoveUp(item)" />
+                <v-icon
+                    v-if="item.modelType === 'SubmodelElementCollection'"
+                    icon="mdi-pencil"
+                    size="small"
+                    color="medium-emphasis"
+                    :disabled="hasSelection"
+                    @click.stop="handleEditFolder(item)" />
+                <v-icon
+                    v-if="item.modelType === 'File'"
+                    icon="mdi-tray-arrow-down"
+                    size="small"
+                    color="medium-emphasis"
+                    :disabled="hasSelection"
+                    @click.stop="handleDownload(item)" />
+                <v-icon
+                    v-if="item.modelType !== 'NavigationElement'"
+                    icon="mdi-delete"
+                    size="small"
+                    color="medium-emphasis"
+                    :disabled="hasSelection"
+                    @click.stop="handleDelete(item)" />
+            </div>
         </template>
     </v-data-table>
 </template>
