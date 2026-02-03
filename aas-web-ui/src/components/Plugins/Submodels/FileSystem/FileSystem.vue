@@ -388,9 +388,16 @@
         setBreadcrumbItems();
     });
 
+    watch(selectedView, (newView) => {
+        localStorage.setItem('fileSystemViewMode', String(newView));
+    });
+
     // Lifecycle
     onMounted(() => {
-        selectedView.value = props.defaultView;
+        // Load view preference from local storage, fall back to defaultView
+        const savedView = localStorage.getItem('fileSystemViewMode');
+        selectedView.value = savedView !== null ? parseInt(savedView, 10) : props.defaultView;
+
         nextTick(() => {
             const filePath = route.query.filePath || '';
             operations.fetchFiles(filePath as string);
