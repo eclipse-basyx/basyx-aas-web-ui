@@ -257,15 +257,18 @@
     async function handleUpload(files: File[]): Promise<void> {
         await operations.uploadFiles(files);
         uploadDialog.value = false;
+        navigationStore.dispatchTriggerTreeviewReload();
     }
 
     async function handleExternalFileDrop(files: File[]): Promise<void> {
         await operations.uploadFiles(files);
+        navigationStore.dispatchTriggerTreeviewReload();
     }
 
     async function handleMoveItems(items: FileSystemElement[], targetFolder: FileSystemElement): Promise<void> {
         await operations.moveItems(items, targetFolder);
         selection.clearSelection();
+        navigationStore.dispatchTriggerTreeviewReload();
     }
 
     const handleChangeStartscreen = (state: boolean, file: FileSystemElement): void => {
@@ -305,6 +308,7 @@
             await operations.saveFolderName(editingFolder.value, newName);
             folderNamingDialog.value = false;
             editingFolder.value = null;
+            navigationStore.dispatchTriggerTreeviewReload();
         }
     };
 
@@ -327,6 +331,7 @@
         }
         selection.clearSelection();
         elementsToDelete.value = [];
+        navigationStore.dispatchTriggerTreeviewReload();
     };
 
     // Breadcrumbs
