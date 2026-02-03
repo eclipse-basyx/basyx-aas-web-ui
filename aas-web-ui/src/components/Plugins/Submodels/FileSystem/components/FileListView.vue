@@ -2,9 +2,11 @@
     <v-data-table
         :headers="tableHeaders"
         :items="fileObjects"
-        class="bg-transparent"
+        :row-props="getRowProps"
+        class="bg-transparent border rounded-lg mt-5"
         hide-default-footer
         hover
+        density="compact"
         @click:row="handleRowClick">
         <!-- Selection header -->
         <template #[`header.selection`]>
@@ -33,7 +35,7 @@
                 v-if="item.modelType === 'File'"
                 lines="one"
                 :draggable="true"
-                :class="['draggable-item', { 'selected-item': isItemSelected(item) }]"
+                class="draggable-item"
                 @dragstart="(e: any) => handleDragStart(e, item)"
                 @dragend="handleDragEnd">
                 <template #prepend>
@@ -59,13 +61,7 @@
             <v-list-item
                 v-else-if="item.modelType === 'SubmodelElementCollection'"
                 :draggable="true"
-                :class="[
-                    'draggable-item',
-                    {
-                        'drop-zone-active': dragOverFolder === item.idShort,
-                        'selected-item': isItemSelected(item),
-                    },
-                ]"
+                class="draggable-item"
                 @dragstart="(e: any) => handleDragStart(e, item)"
                 @dragend="handleDragEnd"
                 @dragover.prevent="(e: any) => handleDragOver(e, item)"
@@ -83,8 +79,7 @@
             <!-- Navigation item -->
             <v-list-item
                 v-else-if="item.modelType === 'NavigationElement'"
-                :class="['draggable-item', { 'drop-zone-active': dragOverFolder === item.idShort }]"
-                @click="handleNavigateUp"
+                class="draggable-item"
                 @dragover.prevent="(e: any) => handleDragOver(e, item)"
                 @dragleave="(e: any) => handleDragLeave(e, item)"
                 @drop="(e: any) => handleDrop(e, item)">
@@ -174,7 +169,6 @@
 
     const handleToggleSelectAll = (): void => emit('toggle-select-all');
     const handleToggleSelection = (item: FileSystemElement): void => emit('toggle-selection', item);
-    const handleNavigateUp = (): void => emit('navigate-up');
     const handleMoveUp = (item: FileSystemElement): void => emit('move-up', item);
     const handleEditFolder = (item: FileSystemElement): void => emit('edit-folder', item);
     const handleDownload = (item: FileSystemElement): void => emit('download', item);
@@ -203,27 +197,63 @@
     };
 
     const handleRowClick = (_event: Event, { item }: { item: FileSystemElement }): void => {
-        emit('row-click', item);
+        if (item.modelType === 'NavigationElement') {
+            emit('navigate-up');
+        } else {
+            emit('row-click', item);
+        }
+    };
+
+    const getRowProps = ({ item }: { item: FileSystemElement }): Record<string, any> => {
+        const classes: string[] = [];
+        if (props.isItemSelected(item)) {
+            classes.push('selected-item');
+        }
+        if (props.dragOverFolder === item.idShort) {
+            classes.push('drop-zone-active');
+        }
+        return { class: classes.join(' ') };
     };
 </script>
 
 <style scoped>
-    .draggable-item {
-        cursor: move;
-    }
-
     .draggable-item:active {
         opacity: 0.5;
     }
 
-    .drop-zone-active {
-        background-color: rgba(33, 150, 243, 0.1);
-        border: 2px dashed #2196f3;
-        border-radius: 8px;
+    /* Disable v-list-item hover background to use table row hover instead */
+    :deep(.v-list-item::before) {
+        display: none;
     }
 
-    .selected-item {
-        background-color: rgba(33, 150, 243, 0.15);
-        border-color: #2196f3 !important;
+    /* Use :deep() to target Vuetify's internally generated table rows */
+
+    /* Override default hover when selected or drop-zone-active */
+    :deep(tr.selected-item:hover),
+    :deep(tr.drop-zone-active:hover) {
+        background: unset;
+    }
+
+    /* Drop zone state */
+    :deep(tr.drop-zone-active) {
+        background-color: rgba(var(--v-theme-primary), 0.1) !important;
+        outline: 2px dashed rgb(var(--v-theme-primary));
+        outline-offset: -2px;
+    }
+
+    /* Selected state */
+    :deep(tr.selected-item) {
+        background-color: rgba(var(--v-theme-primary), 0.15);
+    }
+
+    :deep(tr.selected-item:hover) {
+        background-color: rgba(var(--v-theme-primary), 0.2) !important;
+    }
+
+    /* Combined: selected + drop zone (dropping into a selected folder) */
+    :deep(tr.selected-item.drop-zone-active) {
+        background-color: rgba(var(--v-theme-primary), 0.2) !important;
+        outline: 2px dashed rgb(var(--v-theme-primary));
+        outline-offset: -2px;
     }
 </style>

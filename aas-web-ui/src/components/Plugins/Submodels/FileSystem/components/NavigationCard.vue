@@ -42,15 +42,17 @@
     .v-card {
         width: 100%;
         cursor: pointer;
-        transition: background-color 0.2s ease;
     }
 
-    .v-card:hover {
+    .v-card:not(.drop-zone-active):hover {
         background-color: rgba(var(--v-theme-on-surface), 0.08);
     }
 
+    /* Drop zone state */
     .drop-zone-active {
+        background-color: rgba(var(--v-theme-primary), 0.1);
         outline: 2px dashed rgb(var(--v-theme-primary));
         outline-offset: -2px;
+        transition: none;
     }
 </style>

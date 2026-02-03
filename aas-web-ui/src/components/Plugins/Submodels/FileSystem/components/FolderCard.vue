@@ -91,10 +91,9 @@
     .draggable-item {
         width: 100%;
         cursor: move;
-        transition: background-color 0.2s ease;
     }
 
-    .draggable-item:not(.selected-item):hover {
+    .draggable-item:not(.selected-item):not(.drop-zone-active):hover {
         background-color: rgba(var(--v-theme-on-surface), 0.08);
     }
 
@@ -102,14 +101,30 @@
         opacity: 0.5;
     }
 
+    /* Drop zone state */
     .drop-zone-active {
+        background-color: rgba(var(--v-theme-primary), 0.1);
         outline: 2px dashed rgb(var(--v-theme-primary));
         outline-offset: -2px;
+        transition: none;
     }
 
+    /* Selected state */
     .selected-item {
         background-color: rgba(var(--v-theme-primary), 0.15);
         outline: 2px solid rgb(var(--v-theme-primary));
         outline-offset: -2px;
+    }
+
+    .selected-item:hover {
+        background-color: rgba(var(--v-theme-primary), 0.2);
+    }
+
+    /* Combined: selected + drop zone (dropping into a selected folder) */
+    .selected-item.drop-zone-active {
+        background-color: rgba(var(--v-theme-primary), 0.2);
+        outline: 2px dashed rgb(var(--v-theme-primary));
+        outline-offset: -2px;
+        transition: none;
     }
 </style>

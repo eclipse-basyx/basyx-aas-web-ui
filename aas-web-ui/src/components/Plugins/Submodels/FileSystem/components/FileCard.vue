@@ -112,7 +112,6 @@
     .draggable-item {
         width: 100%;
         cursor: pointer;
-        transition: background-color 0.2s ease;
     }
 
     .draggable-item:not(.selected-item):hover {
@@ -149,9 +148,14 @@
         object-fit: cover;
     }
 
+    /* Selected state */
     .selected-item {
         background-color: rgba(var(--v-theme-primary), 0.15);
         outline: 2px solid rgb(var(--v-theme-primary));
         outline-offset: -2px;
+    }
+
+    .selected-item:hover {
+        background-color: rgba(var(--v-theme-primary), 0.2);
     }
 </style>
