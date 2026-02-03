@@ -142,6 +142,7 @@
     import type { BreadcrumbItem, FileElement, FileSystemElement, FolderElement, TableHeader } from './types';
     import { nextTick, onMounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
+    import { useNavigationStore } from '@/store/NavigationStore';
     import { mimeToExtension } from '@/utils/FileHandling';
     import { useDragAndDrop, useFileSystemOperations, useSelection } from './composables';
 
@@ -174,6 +175,17 @@
     // Router
     const route = useRoute();
     const router = useRouter();
+
+    // Store
+    const navigationStore = useNavigationStore();
+
+    // Constants
+    const FILE_SYSTEM_SEMANTIC_ID = 'https://basyx.org/FileSystem/FileSystem/0/1';
+
+    // Register filePath as an allowed query param for this plugin
+    // This is done immediately (not in onMounted) so that the router can check it
+    // before the component mounts when navigating TO the FileSystem submodel
+    navigationStore.registerQueryParam('filePath', FILE_SYSTEM_SEMANTIC_ID);
 
     // Composables
     const operations = useFileSystemOperations(() => props.submodelElementData);
@@ -212,7 +224,14 @@
             const splitted = filePath.toString().split('.');
             splitted.pop();
             const newFilePath = splitted.join('.');
-            router.push({ query: { ...route.query, filePath: newFilePath } });
+            if (newFilePath) {
+                router.push({ query: { ...route.query, filePath: newFilePath } });
+            } else {
+                // Remove filePath param when navigating to root
+                const query = { ...route.query };
+                delete query.filePath;
+                router.push({ query });
+            }
         }
     };
 
@@ -315,10 +334,19 @@
         const filePath = route.query.filePath || '';
         breadCrumbs.value = [];
 
+        // For root breadcrumb, remove filePath from query instead of setting it to empty
+        // Convert LocationQuery to Record<string, string> for type compatibility
+        const rootQuery: Record<string, string> = {};
+        for (const [key, value] of Object.entries(route.query)) {
+            if (key !== 'filePath' && typeof value === 'string') {
+                rootQuery[key] = value;
+            }
+        }
+
         breadCrumbs.value.push({
             title: props.title ?? 'Root',
             disabled: !filePath,
-            to: { query: { ...route.query, filePath: '' } },
+            to: { query: rootQuery },
             index: 0,
         });
 

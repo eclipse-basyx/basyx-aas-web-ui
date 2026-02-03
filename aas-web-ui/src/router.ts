@@ -648,6 +648,8 @@ export async function createAppRouter(): Promise<Router> {
         }
 
         // Fetch and dispatch SM/SME
+        // Track the fetched SME to use for semanticId check (avoids timing issues with store reactivity)
+        let fetchedSme: any = null;
         if (
             Object.hasOwn(to.query, 'path') &&
             (to.query.path as string).trim() !== '' &&
@@ -657,8 +659,8 @@ export async function createAppRouter(): Promise<Router> {
                 (Object.hasOwn(from.query, 'path') &&
                     (from.query.path as string).trim() !== (to.query.path as string).trim()))
         ) {
-            const sme = await fetchAndDispatchSme(to.query.path as string, true);
-            if (!sme || Object.keys(sme).length === 0) {
+            fetchedSme = await fetchAndDispatchSme(to.query.path as string, true);
+            if (!fetchedSme || Object.keys(fetchedSme).length === 0) {
                 // Remove path query for not available SME path
                 const query = { ...to.query };
                 delete query.path;
@@ -668,6 +670,39 @@ export async function createAppRouter(): Promise<Router> {
             }
         } else if (!to.query.path || to.query.path === '') {
             aasStore.dispatchSelectedNode({});
+        }
+
+        // Clean up non-core query params when node/AAS changes
+        // This ensures plugin-specific params (like filePath) don't persist when switching context
+        // Note: We do NOT clean up on initial load because:
+        // 1. The user might have bookmarked or shared a URL with plugin-specific params
+        // 2. Plugin components haven't loaded yet to register their params
+        const pathChanged =
+            Object.hasOwn(from.query, 'path') &&
+            Object.hasOwn(to.query, 'path') &&
+            (from.query.path as string).trim() !== (to.query.path as string).trim();
+        const aasChanged =
+            Object.hasOwn(from.query, 'aas') &&
+            Object.hasOwn(to.query, 'aas') &&
+            (from.query.aas as string).trim() !== (to.query.aas as string).trim();
+
+        if (pathChanged || aasChanged) {
+            // Get the currently selected node
+            // Use the freshly fetched SME if available (avoids timing issues with Pinia store on initial load)
+            // Otherwise fall back to the store value
+            const selectedNode = fetchedSme || aasStore.getSelectedNode;
+
+            // Filter query params based on what's allowed for this node's semanticId
+            // Note: view=Visualization is handled by the filtering - if a plugin registered
+            // its params for its semanticId, they'll be allowed when that semanticId is selected
+            const { filteredQuery, removedParams } = navigationStore.filterQueryParams(to.query, selectedNode);
+
+            if (removedParams.length > 0) {
+                // Redirect with cleaned query params
+                const updatedRoute = { path: to.path, query: filteredQuery };
+                next(updatedRoute);
+                return;
+            }
         }
 
         next();

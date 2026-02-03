@@ -31,23 +31,11 @@
                 <!-- Content Container with click to close -->
                 <div v-else class="d-flex align-center justify-center fill-height" @click.self="closeDialog">
                     <!-- Image Preview -->
-                    <v-img
+                    <img
                         v-if="fileContentType === 'image'"
                         :src="previewFileUrl"
-                        class="preview-image"
-                        max-height="calc(100vh - 168px)"
-                        max-width="calc(100vw - 64px)">
-                        <template #placeholder>
-                            <div class="d-flex align-center justify-center fill-height">
-                                <v-progress-circular color="grey-lighten-4" indeterminate></v-progress-circular>
-                            </div>
-                        </template>
-                        <template #error>
-                            <v-sheet class="d-flex align-center justify-center fill-height" color="grey-darken-3">
-                                <v-icon size="64" color="grey">mdi-image-broken</v-icon>
-                            </v-sheet>
-                        </template>
-                    </v-img>
+                        :alt="fileName"
+                        class="preview-image" />
 
                     <!-- PDF Preview -->
                     <iframe
@@ -281,7 +269,10 @@
 
 <style scoped>
     .preview-image {
+        max-height: calc(100vh - 168px);
+        max-width: calc(100vw - 64px);
         width: auto;
+        height: auto;
         object-fit: contain;
     }
 

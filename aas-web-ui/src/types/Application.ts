@@ -40,3 +40,8 @@ export interface PluginType {
     name: string;
     semanticId: string;
 }
+
+export interface RegisteredQueryParamType {
+    paramName: string;
+    semanticId: string; // The semanticId of the plugin that registered this param
+}
