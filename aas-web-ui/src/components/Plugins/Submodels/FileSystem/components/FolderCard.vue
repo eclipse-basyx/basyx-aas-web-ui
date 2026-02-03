@@ -91,6 +91,11 @@
     .draggable-item {
         width: 100%;
         cursor: move;
+        transition: background-color 0.2s ease;
+    }
+
+    .draggable-item:not(.selected-item):hover {
+        background-color: rgba(var(--v-theme-on-surface), 0.08);
     }
 
     .draggable-item:active {

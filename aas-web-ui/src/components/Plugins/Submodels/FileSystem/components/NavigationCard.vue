@@ -41,6 +41,12 @@
 <style scoped>
     .v-card {
         width: 100%;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .v-card:hover {
+        background-color: rgba(var(--v-theme-on-surface), 0.08);
     }
 
     .drop-zone-active {

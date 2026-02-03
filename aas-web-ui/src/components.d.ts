@@ -93,7 +93,7 @@ declare module 'vue' {
     Operation: typeof import('./components/SubmodelElements/Operation.vue')['default']
     PDFPreview: typeof import('./components/Plugins/PDFPreview.vue')['default']
     PieChart: typeof import('./components/Widgets/PieChart.vue')['default']
-    PreviewDialog: typeof import('./components/Plugins/Submodels/FileSystem/PreviewDialog.vue')['default']
+    PreviewDialog: typeof import('./components/Plugins/Submodels/FileSystem/components/dialogs/PreviewDialog.vue')['default']
     ProgressOverlay: typeof import('./components/Plugins/Submodels/FileSystem/components/ProgressOverlay.vue')['default']
     Property: typeof import('./components/SubmodelElements/Property.vue')['default']
     PropertyForm: typeof import('./components/EditorComponents/SubmodelElements/PropertyForm.vue')['default']
