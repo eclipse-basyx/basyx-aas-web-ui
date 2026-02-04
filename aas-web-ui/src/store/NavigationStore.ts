@@ -1,7 +1,15 @@
-import type { AutoSyncType, PlatformType, PluginType, SnackbarType, StatusCheckType } from '@/types/Application';
+import type {
+    AutoSyncType,
+    PlatformType,
+    PluginType,
+    RegisteredQueryParamType,
+    SnackbarType,
+    StatusCheckType,
+} from '@/types/Application';
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import { type LocationQuery, type Router, type RouteRecordRaw } from 'vue-router';
+import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils';
 import { useEnvStore } from './EnvironmentStore';
 
 export const useNavigationStore = defineStore('navigationStore', () => {
@@ -21,6 +29,12 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const urlQuery = ref<LocationQuery>({} as LocationQuery);
     const moduleRoutes = ref<Array<RouteRecordRaw>>([]);
 
+    // Core query params that are always allowed (UI framework params)
+    const coreQueryParams = ['aas', 'path', 'view'];
+
+    // Query params registered by plugins (dynamic, based on active plugin)
+    const registeredQueryParams = ref<RegisteredQueryParamType[]>([]);
+
     // Getters
     const getDrawerState = computed(() => drawerState.value);
     const getSnackbar = computed(() => Snackbar.value);
@@ -36,6 +50,8 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const getTriggerTreeviewReload = computed(() => triggerTreeviewReload.value);
     const getUrlQuery = computed(() => urlQuery.value);
     const getModuleRoutes = computed(() => moduleRoutes.value);
+    const getCoreQueryParams = computed(() => coreQueryParams);
+    const getRegisteredQueryParams = computed(() => registeredQueryParams.value);
 
     const envStore = useEnvStore();
 
@@ -106,6 +122,100 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         moduleRoutes.value = routes;
     }
 
+    /**
+     * Registers a query parameter for a specific plugin (identified by semanticId).
+     * This allows the plugin to preserve its query params when active.
+     *
+     * @param paramName - The name of the query parameter to register
+     * @param semanticId - The semanticId of the plugin registering the param
+     */
+    function registerQueryParam(paramName: string, semanticId: string): void {
+        // Avoid duplicates
+        const exists = registeredQueryParams.value.some(
+            (p) => p.paramName === paramName && p.semanticId === semanticId
+        );
+        if (!exists) {
+            registeredQueryParams.value.push({ paramName, semanticId });
+        }
+    }
+
+    /**
+     * Unregisters a query parameter for a specific plugin.
+     *
+     * @param paramName - The name of the query parameter to unregister
+     * @param semanticId - The semanticId of the plugin unregistering the param
+     */
+    function unregisterQueryParam(paramName: string, semanticId: string): void {
+        registeredQueryParams.value = registeredQueryParams.value.filter(
+            (p) => !(p.paramName === paramName && p.semanticId === semanticId)
+        );
+    }
+
+    /**
+     * Unregisters all query parameters for a specific plugin.
+     *
+     * @param semanticId - The semanticId of the plugin to unregister all params for
+     */
+    function unregisterAllQueryParamsForPlugin(semanticId: string): void {
+        registeredQueryParams.value = registeredQueryParams.value.filter((p) => p.semanticId !== semanticId);
+    }
+
+    /**
+     * Gets all allowed query params for a given node/element.
+     * Returns core params plus any params registered by plugins whose semanticId matches the node's semanticId.
+     * Uses checkSemanticId for proper semanticId comparison (handles IRI variants, versions, etc.)
+     *
+     * @param node - The currently selected node/element (optional)
+     * @returns Array of allowed query param names
+     */
+    function getAllowedQueryParams(node?: any): string[] {
+        const allowed = [...coreQueryParams];
+        if (node) {
+            // Use checkSemanticId for proper comparison of semanticIds
+            // This handles IRI variants (with/without trailing slash), version matching, EClass IRDI, IEC CDD, etc.
+            const pluginParams = registeredQueryParams.value
+                .filter((p) => checkSemanticId(node, p.semanticId))
+                .map((p) => p.paramName);
+            allowed.push(...pluginParams);
+        }
+        return allowed;
+    }
+
+    /**
+     * Filters a query object to only include allowed params.
+     * Logs a warning for any params that are removed.
+     *
+     * @param query - The query object to filter
+     * @param node - The currently selected node/element (optional)
+     * @returns Object with filtered query and array of removed param names
+     */
+    function filterQueryParams(
+        query: LocationQuery,
+        node?: any
+    ): { filteredQuery: LocationQuery; removedParams: string[] } {
+        const allowedParams = getAllowedQueryParams(node);
+        const filteredQuery: LocationQuery = {};
+        const removedParams: string[] = [];
+
+        for (const key of Object.keys(query)) {
+            if (allowedParams.includes(key)) {
+                filteredQuery[key] = query[key];
+            } else {
+                removedParams.push(key);
+            }
+        }
+
+        if (removedParams.length > 0) {
+            console.warn(
+                `[NavigationStore] Removed non-core query params: ${removedParams.join(', ')}. ` +
+                    `If these params should be preserved, the plugin should register them using registerQueryParam(). ` +
+                    `Allowed params: ${allowedParams.join(', ')}`
+            );
+        }
+
+        return { filteredQuery, removedParams };
+    }
+
     // Navigates from Viewer (Either SMViewer of AASViewer) to the corresponding Editor Mode
     function navigateToEditorMode(router: Router): void {
         if (!envStore.getAllowEditing) {
@@ -142,6 +252,8 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         getTriggerTreeviewReload,
         getUrlQuery,
         getModuleRoutes,
+        getCoreQueryParams,
+        getRegisteredQueryParams,
 
         // Actions
         dispatchDrawerState,
@@ -160,5 +272,10 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         dispatchModuleRoutes,
         navigateToEditorMode,
         navigateToViewerMode,
+        registerQueryParam,
+        unregisterQueryParam,
+        unregisterAllQueryParamsForPlugin,
+        getAllowedQueryParams,
+        filterQueryParams,
     };
 });

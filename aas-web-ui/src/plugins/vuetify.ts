@@ -45,7 +45,7 @@ export function initializeVuetify(primaryLightColor: string, primaryDarkColor: s
                         appNavigation: '#FFFFFF',
                         card: '#FFFFFF',
                         cardDialog: '#F0F0F0',
-                        cardHeader: '#FFFFFF',
+                        cardHeader: '#F5F5F5',
                         elevatedCard: '#F1F1F1',
                         detailsCard: '#FBFBFB',
                         detailsHeader: '#F5F5F5',
