@@ -48,7 +48,7 @@
     "webfontloader": "^1.0.0"
   },
   "devDependencies": {
-    "@aas-core-works/aas-core3.0-typescript": "^1.0.4",
+    "@aas-core-works/aas-core3.0-typescript": "^1.0.5",
     "@eslint/js": "^9.39.0",
     "@testing-library/vue": "^8.1.0",
     "@types/js-yaml": "^4.0.9",

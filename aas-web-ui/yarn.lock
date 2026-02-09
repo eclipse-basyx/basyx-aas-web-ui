@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@aas-core-works/aas-core3.0-typescript@^1.0.4":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@aas-core-works/aas-core3.0-typescript/-/aas-core3.0-typescript-1.0.4.tgz#56972e92530944d7c4db4936b3fcd960e8a33c8a"
-  integrity sha512-tHCCi5HMDw1UBmYmgd7kRMLFPjUNsULsoex3Gg0bikC0CxJnT5X2N6z1j81sJOVmsTbdwCmlfMZXF2b+PCfdYA==
+"@aas-core-works/aas-core3.0-typescript@^1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@aas-core-works/aas-core3.0-typescript/-/aas-core3.0-typescript-1.0.5.tgz#5d1f251aa81164363f627fb936e481f9fbb4ada2"
+  integrity sha512-VdcnQ5p06tuKEr4zldUASu7vXGziLBDXnbHKh8sY0M6EvGOI2vFl1wHkgAH974iF2dD6JJBYz7Nv7o46FqOzrQ==
 
 "@acemir/cssom@^0.9.31":
   version "0.9.31"
