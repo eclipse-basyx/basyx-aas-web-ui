@@ -425,8 +425,8 @@
         try {
             const url = new URL(str);
             // Ensure we only accept web protocols (http/https)
-            return url.protocol === "http:" || url.protocol === "https:";
-        } catch (_) {
+            return url.protocol === 'http:' || url.protocol === 'https:';
+        } catch {
             return false;
         }
     }
