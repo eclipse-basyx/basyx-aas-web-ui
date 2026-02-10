@@ -52,22 +52,38 @@
     });
 
     /**
-     * Refresh tokens for all infrastructures and show notifications if any fail.
-     * This leverages the InfrastructureStore's centralized token refresh logic.
+     * Refresh tokens for all infrastructures and notify only for the selected one.
      */
     async function refreshTokens(): Promise<void> {
-        const failures = await infrastructureStore.refreshInfrastructureTokens();
+        const selectedInfraId = infrastructureStore.getSelectedInfrastructureId;
+        const infrastructures = infrastructureStore.getInfrastructures;
+        const refreshTargets = infrastructures.filter((infra) => Boolean(infra.token?.accessToken));
+
+        if (refreshTargets.length === 0) {
+            return;
+        }
+
+        const failureGroups = await Promise.all(
+            refreshTargets.map((infra) => infrastructureStore.refreshInfrastructureTokens(infra.id))
+        );
+        const failures = failureGroups.flat();
+
+        if (!selectedInfraId) {
+            return;
+        }
+
+        const selectedFailures = failures.filter((failure) => failure.infraId === selectedInfraId);
 
         // Handle refresh failures by notifying user
-        if (failures.length > 0) {
-            const failureMessages = failures.map((f) => `${f.infraName}: ${f.error}`).join('\n');
+        if (selectedFailures.length > 0) {
+            const failureMessages = selectedFailures.map((f) => `${f.infraName}: ${f.error}`).join('\n');
 
             navigationStore.dispatchSnackbar({
                 status: true,
                 timeout: 10000,
                 color: 'warning',
                 btnColor: 'buttonText',
-                text: `Token refresh failed for ${failures.length} component(s). Please re-authenticate.`,
+                text: `Token refresh failed. Please re-authenticate.`,
                 extendedError: failureMessages,
             });
         }

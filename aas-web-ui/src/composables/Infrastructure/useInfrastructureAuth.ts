@@ -8,7 +8,7 @@ export function useInfrastructureAuth(): {
     refreshInfrastructureTokens: (
         infrastructures: InfrastructureConfig[],
         infrastructureId?: string
-    ) => Promise<Array<{ infraName: string; error: string }>>;
+    ) => Promise<Array<{ infraId: string; infraName: string; error: string }>>;
     setAuthenticationStatusForInfrastructure: (
         infrastructures: InfrastructureConfig[],
         infrastructureId: string,
@@ -25,8 +25,8 @@ export function useInfrastructureAuth(): {
     async function refreshInfrastructureTokens(
         infrastructures: InfrastructureConfig[],
         infrastructureId?: string
-    ): Promise<Array<{ infraName: string; error: string }>> {
-        const failures: Array<{ infraName: string; error: string }> = [];
+    ): Promise<Array<{ infraId: string; infraName: string; error: string }>> {
+        const failures: Array<{ infraId: string; infraName: string; error: string }> = [];
         const TOKEN_REFRESH_BUFFER = 5 * 60 * 1000; // 5 minutes in milliseconds
         const now = Date.now();
 
@@ -75,6 +75,7 @@ export function useInfrastructureAuth(): {
                         continue;
                     }
                     failures.push({
+                        infraId: infrastructure.id,
                         infraName: infrastructure.name,
                         error: 'No refresh token available - re-authentication required',
                     });
@@ -85,6 +86,7 @@ export function useInfrastructureAuth(): {
                 else if (auth.securityType === 'OAuth2') {
                     if (!auth.oauth2) {
                         failures.push({
+                            infraId: infrastructure.id,
                             infraName: infrastructure.name,
                             error: 'Missing OAuth2 configuration',
                         });
@@ -139,6 +141,7 @@ export function useInfrastructureAuth(): {
                 }
             } catch (error) {
                 failures.push({
+                    infraId: infrastructure.id,
                     infraName: infrastructure.name,
                     error: error instanceof Error ? error.message : 'Unknown error',
                 });
