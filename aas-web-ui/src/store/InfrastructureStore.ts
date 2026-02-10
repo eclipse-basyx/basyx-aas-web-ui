@@ -463,7 +463,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     // Wrapper functions that delegate to auth composable
     async function refreshInfrastructureTokens(
         infrastructureId?: string
-    ): Promise<Array<{ infraName: string; error: string }>> {
+    ): Promise<Array<{ infraId: string; infraName: string; error: string }>> {
         const failures = await infrastructureAuth.refreshInfrastructureTokens(infrastructures.value, infrastructureId);
 
         // Save updated tokens to storage if any were refreshed
