@@ -105,9 +105,8 @@ export function createDigitalInterfacesSMC(form: any): aas.types.SubmodelElement
         dataExchangeChildren.push(list);
     }
 
-    let dataExchangeSMC: aas.types.SubmodelElementCollection | null = null;
     if (dataExchangeChildren.length) {
-        dataExchangeSMC = new aas.types.SubmodelElementCollection();
+        const dataExchangeSMC = new aas.types.SubmodelElementCollection();
         dataExchangeSMC.idShort = 'DataExchange';
         dataExchangeSMC.description = [
             new aas.types.LangStringTextType('en', 'The methods and formats used to transfer data between systems'),
@@ -290,10 +289,8 @@ export function createDigitalInterfacesSMC(form: any): aas.types.SubmodelElement
         companySystemsChildren.push(list);
     }
 
-    let companySystemsSMC: aas.types.SubmodelElementCollection | null = null;
-
     if (companySystemsChildren.length) {
-        companySystemsSMC = new aas.types.SubmodelElementCollection();
+        const companySystemsSMC = new aas.types.SubmodelElementCollection();
         companySystemsSMC.idShort = 'CompanySystems';
         companySystemsSMC.description = [
             new aas.types.LangStringTextType('en', 'The internal IT systems used by a company'),

@@ -247,7 +247,9 @@ export async function createAppRouter(): Promise<Router> {
                     }
                 } catch (error) {
                     if (error instanceof TypeError) {
-                        throw new Error(`Invalid issuer URL format: ${issuer}. Must be a valid HTTP(S) URL.`);
+                        throw new Error(`Invalid issuer URL format: ${issuer}. Must be a valid HTTP(S) URL.`, {
+                            cause: error,
+                        });
                     }
                     throw error;
                 }

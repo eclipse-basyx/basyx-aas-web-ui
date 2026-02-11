@@ -36,6 +36,7 @@ export function getUserFromToken(accessToken: string): UserData {
         } as UserData;
         return user;
     } catch (error) {
-        throw new Error('Failed to parse JWT token: ' + (error instanceof Error ? error.message : String(error)));
+        const message = 'Failed to parse JWT token: ' + (error instanceof Error ? error.message : String(error));
+        throw new Error(message, { cause: error });
     }
 }
