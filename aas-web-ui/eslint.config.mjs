@@ -58,8 +58,9 @@ export default [
 
     // Vue template-specific rules
     {
-        files: ['*.vue'],
+        files: ['**/*.vue'],
         rules: {
+            'no-useless-assignment': 'off',
             'no-console': [process.env.NODE_ENV === 'production' ? 'error' : 'warn', { allow: ['warn', 'error'] }],
         },
     },

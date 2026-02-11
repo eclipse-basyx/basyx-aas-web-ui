@@ -20,8 +20,8 @@ import { isEmptyString } from '@/utils/StringUtils';
 export function checkXsDataTypeValue(value: string, valueType: string): [valid: boolean, errorMessage: string] {
     if (isEmptyString(valueType)) return [false, 'Empty xs data value type'];
 
-    let regex = null;
-    let match = null;
+    let regex: RegExp | null;
+    let match: RegExpMatchArray | null;
 
     let errorMessage = '';
 

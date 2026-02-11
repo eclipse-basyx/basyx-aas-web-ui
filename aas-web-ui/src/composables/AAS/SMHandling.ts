@@ -139,7 +139,7 @@ export function useSMHandling() {
 
         if (smEndpoint === '') return failResponse;
 
-        let smOrSme = {} as any;
+        let smOrSme: any;
         if (smEndpoint.includes('/submodel-elements/')) {
             // smEndoint seems to be an SME endpoint
             smOrSme = await fetchSmeFromRepo(smEndpoint);
