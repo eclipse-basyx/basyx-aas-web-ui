@@ -31,10 +31,10 @@
                             class="py-2"
                             :active="false"
                             nav
-                            :border="isActiveRoutePath('/')"
+                            :border="isActiveRoutePath('/aasviewer')"
                             subtitle="View Asset Administration Shells"
                             title="AAS Viewer"
-                            :to="isActiveRoutePath('/') ? '' : { path: '/', query: route.query }"
+                            :to="isActiveRoutePath('/aasviewer') ? '' : { path: '/aasviewer', query: route.query }"
                             @click="closeMenu">
                             <template #prepend>
                                 <v-avatar color="surface-light" icon="custom:aasIcon" rounded>
@@ -284,7 +284,7 @@
     }
 
     function setTabByRoutePath(): void {
-        if (isActiveRoutePath('/') || isActiveRoutePath('/aaseditor') || isActiveRoutePath('/aassmviewer')) {
+        if (isActiveRoutePath('/aasviewer') || isActiveRoutePath('/aaseditor') || isActiveRoutePath('/aassmviewer')) {
             currentTab.value = 'aas';
         } else if (isActiveRoutePath('/smviewer') || isActiveRoutePath('/smeditor') || isActiveRoutePath('/visu')) {
             currentTab.value = 'submodel';

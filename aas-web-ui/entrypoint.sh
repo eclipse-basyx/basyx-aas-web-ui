@@ -38,6 +38,7 @@
 : "${EDITOR_ID_PREFIX:=https://example.com/}"
 : "${AUTHORIZATION_HEADER_PREFIX:=Bearer}"
 : "${AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION:=true}"
+: "${START_PAGE_ROUTE_NAME:=}"
 
 # Replace ${BASE_PATH} in the NGINX config template (without trailing slash)
 envsubst '${BASE_PATH}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
@@ -166,6 +167,7 @@ printf "%-38s %s\n" "Basic Auth password:" "$BASIC_AUTH_PASSWORD"
 printf "%-38s %s\n" "Editor ID prefix:" "$EDITOR_ID_PREFIX"
 printf "%-38s %s\n" "Authorization header prefix:" "$AUTHORIZATION_HEADER_PREFIX"
 printf "%-38s %s\n" "Authorization header description endpoint exemption:" "$AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION"
+printf "%-38s %s\n" "Start page route name:" "$START_PAGE_ROUTE_NAME"
 echo "-------------------------------------------------------------------------------------------------------------------------"
 
 # Replace the placeholders in all relevant files (.js, .html, .css)
@@ -207,6 +209,7 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__EDITOR_ID_PREFIX_PLACEHOLDER__/|$EDITOR_ID_PREFIX|g" \
     -e "s|/__AUTHORIZATION_HEADER_PREFIX_PLACEHOLDER__/|$AUTHORIZATION_HEADER_PREFIX|g" \
     -e "s|/__AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION_PLACEHOLDER__/|$AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION|g" \
+    -e "s|/__START_PAGE_ROUTE_NAME_PLACEHOLDER__/|$START_PAGE_ROUTE_NAME|g" \
     {} \;
 
 # Start Nginx

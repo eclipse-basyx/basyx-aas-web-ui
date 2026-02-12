@@ -22,10 +22,16 @@ import { useNavigationStore } from '@/store/NavigationStore';
 // Static routes
 const staticRoutes: Array<RouteRecordRaw> = [
     {
-        path: '/',
+        path: '/aasviewer',
         name: 'AASViewer',
         component: AASViewer,
         meta: { name: 'AAS Viewer', subtitle: 'Visualize Asset Administration Shells' },
+    },
+    {
+        path: '/',
+        name: 'Root',
+        component: Page404,
+        meta: { name: 'Page not found | 404' },
     },
     {
         path: '/aaseditor',
@@ -209,6 +215,44 @@ export async function createAppRouter(): Promise<Router> {
         routes,
     });
 
+    const tryResolveRouteByName = (name: string): RouteRecordRaw | undefined => {
+        const direct = routes.find((r) => r.name?.toString() === name);
+        if (direct) return direct;
+
+        const lower = name.toLowerCase();
+        return routes.find((r) => r.name?.toString().toLowerCase() === lower);
+    };
+
+    const resolveStartRouteName = (query?: Record<string, unknown>): string => {
+        const configured = envStore.getStartPageRouteName;
+        const desired = configured && configured.trim() !== '' ? configured.trim() : 'AASViewer';
+
+        // Prevent accidental loops
+        if (desired === 'Root') return 'AASViewer';
+
+        const record = tryResolveRouteByName(desired);
+        if (!record) return 'AASViewer';
+
+        // Feature flag gating
+        if (record.name === 'AASEditor' && !envStore.getAllowEditing) return 'AASViewer';
+        if ((record.name === 'SMViewer' || record.name === 'SMEditor') && !envStore.getSmViewerEditor)
+            return 'AASViewer';
+        if (record.name === 'SMEditor' && !envStore.getAllowEditing) return 'AASViewer';
+
+        // Module constraints / visibility
+        const meta: any = record.meta || {};
+        if (meta.isVisibleModule === false) return 'AASViewer';
+        if (meta.isOnlyVisibleWithSelectedAas && (!query || !Object.hasOwn(query, 'aas') || !String(query.aas).trim()))
+            return 'AASViewer';
+        if (
+            meta.isOnlyVisibleWithSelectedNode &&
+            (!query || !Object.hasOwn(query, 'path') || !String(query.path).trim())
+        )
+            return 'AASViewer';
+
+        return record.name?.toString() || 'AASViewer';
+    };
+
     router.beforeEach(async (to, from, next) => {
         // Handle OAuth2 callback (state + code in URL)
         if (to.query.state && to.query.code) {
@@ -311,7 +355,7 @@ export async function createAppRouter(): Promise<Router> {
                 });
 
                 // Clean up URL and redirect to home
-                next({ path: '/', replace: true });
+                next({ name: resolveStartRouteName(), replace: true });
                 return;
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : 'OAuth2 authentication failed';
@@ -327,7 +371,7 @@ export async function createAppRouter(): Promise<Router> {
                 });
 
                 // Clean up URL and redirect to home
-                next({ path: '/', replace: true });
+                next({ name: resolveStartRouteName(), replace: true });
                 return;
             }
         }
@@ -344,6 +388,15 @@ export async function createAppRouter(): Promise<Router> {
             )
         )
             return;
+
+        // Root ("/") must redirect on initial load, but must show 404 when navigated to within the SPA.
+        // - Initial load: from has no matches
+        // - In-app navigation: allow the Root route component (404) to render
+        if (to.path === '/' && from.matched.length === 0) {
+            const startRouteName = resolveStartRouteName(to.query as Record<string, unknown>);
+            next({ name: startRouteName, query: to.query, replace: true });
+            return;
+        }
 
         // Same route
         if (Object.hasOwn(from, 'name') && Object.hasOwn(to, 'name') && from.name === to.name) {
