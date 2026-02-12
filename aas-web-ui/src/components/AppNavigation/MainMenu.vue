@@ -235,7 +235,7 @@
                 (!selectedNode.value || Object.keys(selectedNode.value).length === 0)
             )
                 return false;
-            return moduleRoute?.meta?.isVisibleModule === true || moduleRoute.path === route.path;
+            return moduleRoute?.meta?.isVisibleModule === true || isActiveRoutePath(moduleRoute.path);
         });
 
         const filteredAndOrderedModuleRoutes = filteredModuleRoutes.sort(
@@ -259,7 +259,7 @@
     }
 
     function isActiveRoutePath(routePath: string): boolean {
-        return currentRoutePath.value === routePath;
+        return currentRoutePath.value === routePath || currentRoutePath.value.startsWith(`${routePath}/`);
     }
 
     // Function to scroll to the active module
