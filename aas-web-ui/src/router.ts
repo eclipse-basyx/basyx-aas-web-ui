@@ -134,6 +134,7 @@ export async function createAppRouter(): Promise<Router> {
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
     const envStore = useEnvStore();
+    const infrastructureStore = useInfrastructureStore();
 
     // Composables
     const { fetchAndDispatchAas, aasByEndpointHasSmeByPath } = useAASHandling();
@@ -215,6 +216,8 @@ export async function createAppRouter(): Promise<Router> {
         routes,
     });
 
+    let infrastructureInitializationEnsured = false;
+
     const tryResolveRouteByName = (name: string): RouteRecordRaw | undefined => {
         const direct = routes.find((r) => r.name?.toString() === name);
         if (direct) return direct;
@@ -254,6 +257,11 @@ export async function createAppRouter(): Promise<Router> {
     };
 
     router.beforeEach(async (to, from, next) => {
+        if (!infrastructureInitializationEnsured) {
+            await infrastructureStore.waitForInitialization();
+            infrastructureInitializationEnsured = true;
+        }
+
         // Handle OAuth2 callback (state + code in URL)
         if (to.query.state && to.query.code) {
             const state = to.query.state as string;
@@ -690,6 +698,7 @@ export async function createAppRouter(): Promise<Router> {
                     (from.query.aas as string).trim() !== (to.query.aas as string).trim()))
         ) {
             const aas = await fetchAndDispatchAas(to.query.aas as string);
+
             if (!aas || Object.keys(aas).length === 0) {
                 // Remove aas query for not available AAS endpoint
                 const query = { ...to.query };
