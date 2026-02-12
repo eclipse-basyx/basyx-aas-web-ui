@@ -230,7 +230,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
 
     function navigateToViewerMode(router: Router): void {
         if (router.currentRoute.value.name === 'AASEditor') {
-            router.push({ path: '/', query: router.currentRoute.value.query });
+            router.push({ name: 'AASViewer', query: router.currentRoute.value.query });
         } else if (router.currentRoute.value.name === 'SMEditor') {
             router.push({ path: '/smviewer', query: router.currentRoute.value.query });
         }
