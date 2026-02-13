@@ -7,8 +7,8 @@
 
 <script lang="ts" setup>
     import { ref } from 'vue';
-    import PcfMaterialComposition from '@/pages/modules/PcfProcess/PcfMaterialComposition.vue';
-    import PcfProductSelection from '@/pages/modules/PcfProcess/PcfProductSelection.vue';
+    import PcfMaterialComposition from './PcfMaterialComposition.vue';
+    import PcfProductSelection from './PcfProductSelection.vue';
 
     defineOptions({
         inheritAttrs: false,

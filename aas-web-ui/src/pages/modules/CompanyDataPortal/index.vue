@@ -105,11 +105,11 @@
 
 <script lang="ts" setup>
     import { ref, watch } from 'vue';
-    import BankAccounts from './CompanyDataPortal/BankAccounts.vue';
-    import BusinessReportFigures from './CompanyDataPortal/BusinessReportFigures.vue';
-    import CompanyGovernance from './CompanyDataPortal/CompanyGovernance.vue';
-    import CompanyIdentification from './CompanyDataPortal/CompanyIdentification.vue';
-    import DigitalInterfaces from './CompanyDataPortal/DigitalInterfaces.vue';
+    import BankAccounts from './BankAccounts.vue';
+    import BusinessReportFigures from './BusinessReportFigures.vue';
+    import CompanyGovernance from './CompanyGovernance.vue';
+    import CompanyIdentification from './CompanyIdentification.vue';
+    import DigitalInterfaces from './DigitalInterfaces.vue';
     defineOptions({
         inheritAttrs: false,
         isDesktopModule: true,
