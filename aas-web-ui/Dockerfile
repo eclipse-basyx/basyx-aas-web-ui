@@ -12,8 +12,9 @@ ENV VITE_APP_COMMIT_SHA=$VITE_APP_COMMIT_SHA
 ENV VITE_APP_BUILD_DATE=$VITE_APP_BUILD_DATE
 # Set working directory
 WORKDIR /app
-# Copy the package.json and yarn.lock files
+# Copy package manifests and install scripts
 COPY package.json yarn.lock ./
+COPY scripts ./scripts
 # Install dependencies
 RUN --mount=type=cache,target=/root/.cache/yarn \
     yarn install --frozen-lockfile --non-interactive --network-timeout 600000
