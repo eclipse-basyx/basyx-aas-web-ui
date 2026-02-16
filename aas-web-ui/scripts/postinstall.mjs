@@ -11,6 +11,7 @@ const workerTarget = join(projectRoot, 'public', 'worker.mjs');
 const wasmSourceDir = join(projectRoot, 'node_modules', 'web-ifc');
 const wasmTargetDir = join(projectRoot, 'public', 'wasm');
 
+await mkdir(dirname(workerTarget), { recursive: true });
 await mkdir(wasmTargetDir, { recursive: true });
 
 await copyFile(workerSource, workerTarget);
