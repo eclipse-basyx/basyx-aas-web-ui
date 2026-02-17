@@ -102,6 +102,33 @@ function buildSubmodelReferences(submodelIds: string[]): JsonRecord[] {
     }));
 }
 
+async function toBytes(payload: unknown): Promise<Uint8Array> {
+    if (payload instanceof Uint8Array) return payload;
+
+    if (payload instanceof ArrayBuffer) {
+        return new Uint8Array(payload);
+    }
+
+    if (ArrayBuffer.isView(payload)) {
+        const view = payload as ArrayBufferView;
+        return new Uint8Array(view.buffer, view.byteOffset, view.byteLength);
+    }
+
+    if (payload instanceof Blob) {
+        return new Uint8Array(await payload.arrayBuffer());
+    }
+
+    if (typeof payload === 'string') {
+        return new TextEncoder().encode(payload);
+    }
+
+    if (payload === null || payload === undefined) {
+        throw new TypeError('Attachment payload is empty.');
+    }
+
+    return new TextEncoder().encode(JSON.stringify(payload));
+}
+
 function cloneWithoutRuntimeFields(value: unknown): unknown {
     if (Array.isArray(value)) {
         return value.map((item) => cloneWithoutRuntimeFields(item));
@@ -347,16 +374,25 @@ export function useAASXPackaging(): {
                 continue;
             }
 
-            const attachmentBlob = await fetchAttachmentFile(filePath);
-            if (!attachmentBlob) {
+            const attachmentPayload = await fetchAttachmentFile(filePath);
+            if (!attachmentPayload) {
                 warnings.push(`Failed to fetch file attachment: ${asString(fileBinding.raw.idShort) || fileValue}`);
                 continue;
             }
 
-            const contentType = determineContentType(
-                fileBinding.raw,
-                attachmentBlob.type || 'application/octet-stream'
-            );
+            let attachmentBytes: Uint8Array;
+            try {
+                attachmentBytes = await toBytes(attachmentPayload);
+            } catch (error) {
+                warnings.push(
+                    `Failed to process file attachment bytes: ${asString(fileBinding.raw.idShort) || fileValue} (${stringifyUnknown(error)})`
+                );
+                continue;
+            }
+
+            const attachmentType = attachmentPayload instanceof Blob ? attachmentPayload.type : '';
+
+            const contentType = determineContentType(fileBinding.raw, attachmentType || 'application/octet-stream');
             const fileName = resolveAttachmentFilename(fileBinding.raw, index, contentType);
             const packagePath = `/aasx-suppl/${fileName}`;
             fileBinding.clean.value = packagePath;
@@ -364,7 +400,7 @@ export function useAASXPackaging(): {
             supplementaryParts.push({
                 uri: new URL(`https://package.local${packagePath}`),
                 contentType,
-                bytes: new Uint8Array(await attachmentBlob.arrayBuffer()),
+                bytes: attachmentBytes,
             });
         }
 
@@ -395,14 +431,23 @@ export function useAASXPackaging(): {
             return null;
         }
 
-        const thumbnailBlob = thumbnailResponse.data as Blob;
-        const contentType = asString(defaultThumbnail.contentType) || thumbnailBlob.type || 'application/octet-stream';
+        const thumbnailPayload = thumbnailResponse.data;
+        const thumbnailType = thumbnailPayload instanceof Blob ? thumbnailPayload.type : '';
+        const contentType = asString(defaultThumbnail.contentType) || thumbnailType || 'application/octet-stream';
         const extension = mime.getExtension(contentType) || 'bin';
+
+        let thumbnailBytes: Uint8Array;
+        try {
+            thumbnailBytes = await toBytes(thumbnailPayload);
+        } catch (error) {
+            warnings.push(`Failed to process AAS thumbnail bytes: ${stringifyUnknown(error)}`);
+            return null;
+        }
 
         return {
             uri: new URL(`https://package.local/thumbnail.${extension}`),
             contentType,
-            bytes: new Uint8Array(await thumbnailBlob.arrayBuffer()),
+            bytes: thumbnailBytes,
         };
     }
 
