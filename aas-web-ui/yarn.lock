@@ -905,10 +905,10 @@
     jszip "3.10.1"
     three-mesh-bvh "0.7.0"
 
-"@thatopen/fragments@^3.3.3":
-  version "3.3.3"
-  resolved "https://registry.yarnpkg.com/@thatopen/fragments/-/fragments-3.3.3.tgz#1d5d983d323e39753dc0996792d3402e027db7fc"
-  integrity sha512-3jTwDIHrXF6mAUR8KhwVhNhbyYPSCNoQT5wbCNkpfV78Yq2o91t9sFb0yKm7qx1iudJTx6k1CrynctG0Cv7riw==
+"@thatopen/fragments@^3.3.4":
+  version "3.3.4"
+  resolved "https://registry.yarnpkg.com/@thatopen/fragments/-/fragments-3.3.4.tgz#ce543edeb469bbe9f5de20170df6c99b7be7d9e7"
+  integrity sha512-KiVyLP5ijfpAAKPlQPAzsXxQws0jjy/ycxSE3viy9fGAS3IqwIrYDpJySL+Utn/ZT7ZueMu6n0ajvGcjuKyhug==
   dependencies:
     earcut "^3.0.1"
     flatbuffers "25.2.10"
