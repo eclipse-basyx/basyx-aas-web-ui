@@ -1502,6 +1502,14 @@
   resolved "https://registry.yarnpkg.com/@yr/monotone-cubic-spline/-/monotone-cubic-spline-1.0.3.tgz#7272d89f8e4f6fb7a1600c28c378cc18d3b577b9"
   integrity sha512-FQXkOta0XBSUPHndIKON2Y9JeQz5ZeMqLYZVVK93FliNBFm7LNMIZmY6FrMEB9XPcDbE2bekMbZD6kzDkxwYjA==
 
+aasx-package-ts@^0.1.2:
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/aasx-package-ts/-/aasx-package-ts-0.1.2.tgz#94159e93bf59f68e9ba666a481c1d47f75114e7a"
+  integrity sha512-Y3Lm3uIagiyRLCkl5lSb1cID9MBfQDDgBpJie4aq2TgqFuNt/4cypTwZTRsIWtqC8xiYRppynFHy36PZRqDb8Q==
+  dependencies:
+    fflate "^0.8.2"
+    xml-sax-ts "^0.3.0"
+
 abbrev@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-2.0.0.tgz#cf59829b8b4f03f89dda2771cb7f3653828c89bf"
@@ -4351,6 +4359,11 @@ xml-name-validator@^5.0.0:
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/xml-name-validator/-/xml-name-validator-5.0.0.tgz#82be9b957f7afdacf961e5980f1bf227c0bf7673"
   integrity sha512-EvGK8EJ3DhaHfbRlETOWAS5pO9MZITeauHKJyb8wyajUfQUenkIg2MvLDTZ4T/TgIcm3HU0TFBgWWboAZ30UHg==
+
+xml-sax-ts@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/xml-sax-ts/-/xml-sax-ts-0.3.0.tgz#ab5c94cd6744478c233990618122b8aef3494eb4"
+  integrity sha512-alzmBPfcZBQyfzlFPUlXxGpSyGP2iBHvQWiOZxzdQaYKPccqtZyFJ+aPBjruCstRnJj0Q/zlHYOuEMfNkUEU9g==
 
 xmlchars@^2.2.0:
   version "2.2.0"

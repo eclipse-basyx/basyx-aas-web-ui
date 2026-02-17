@@ -5,12 +5,21 @@
             <v-divider></v-divider>
             <v-card-text class="pb-0">
                 <div>You selected the AAS with the ID</div>
-                <span class="text-primary font-weight-bold">{{ aas.id }}</span>
+                <span class="text-primary font-weight-bold">{{ aas?.id }}</span>
                 <span> for download.</span><br />
                 <SubmodelSelection
                     :selected="selected"
                     :submodel-ids="submodelIds"
                     @update:selected="updateSelectedSubmodels" />
+                <v-select
+                    v-model="downloadMode"
+                    :items="downloadModes"
+                    item-title="title"
+                    item-value="value"
+                    label="Packaging Mode"
+                    density="compact"
+                    class="mt-4"
+                    hide-details></v-select>
                 <v-checkbox v-model="downloadCDs" label="Also download Concept Descriptions" hide-details></v-checkbox>
             </v-card-text>
             <v-divider></v-divider>
@@ -26,24 +35,34 @@
 <script lang="ts" setup>
     import { ref, watch } from 'vue';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
+    import { useAASXPackaging } from '@/composables/AAS/AASXPackaging';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
     import { useIDUtils } from '@/composables/IDUtils';
-    import { useRequestHandling } from '@/composables/RequestHandling';
     import { useNavigationStore } from '@/store/NavigationStore';
-    import { base64Encode } from '@/utils/EncodeDecodeUtils';
+    import { extractId as extractIdFromReference } from '@/utils/AAS/ReferenceUtil';
     import { downloadFile } from '@/utils/generalUtils';
+
+    type DownloadAASDescriptor = {
+        id?: string;
+        idShort?: string;
+    };
+
+    type SubmodelSelectionItem = {
+        smId: string;
+        smIdShort: string;
+        submodel: Record<string, unknown>;
+    };
 
     const navigationStore = useNavigationStore();
 
     const { fetchSmById } = useSMHandling();
+    const { createClientAASX, downloadViaBackendSerialization } = useAASXPackaging();
     const { generateUUIDFromString } = useIDUtils();
-    const { getAasEndpointById, getSubmodelRefsById } = useAASHandling();
-
-    const { getRequest } = useRequestHandling();
+    const { getSubmodelRefsById } = useAASHandling();
 
     const props = defineProps<{
         modelValue: boolean;
-        aas: any;
+        aas: DownloadAASDescriptor | null;
     }>();
 
     const emit = defineEmits<{
@@ -54,8 +73,12 @@
     const downloadLoading = ref(false);
 
     const selected = ref<string[]>([]);
-    const submodelIds = ref<any[]>([]);
-    const downloadEndpoint = ref<string>('');
+    const submodelIds = ref<SubmodelSelectionItem[]>([]);
+    const downloadMode = ref<'client' | 'backend'>('client');
+    const downloadModes = [
+        { title: 'Client Packaging', value: 'client' },
+        { title: 'Backend Serialization', value: 'backend' },
+    ];
     const downloadCDs = ref<boolean>(true);
 
     watch(
@@ -64,32 +87,23 @@
             downloadDialog.value = value;
             selected.value = [];
             submodelIds.value = [];
-            downloadEndpoint.value = '';
+            downloadMode.value = 'client';
             downloadCDs.value = true;
             downloadLoading.value = false;
 
-            if (!props.aas) return;
+            if (!props.aas?.id) return;
 
             const submodelRefs = await getSubmodelRefsById(props.aas.id);
 
-            const aasEndpoint = await getAasEndpointById(props.aas.id);
-            if (!aasEndpoint || aasEndpoint.trim() === '') {
-                navigationStore.dispatchSnackbar({
-                    status: true,
-                    timeout: 4000,
-                    color: 'error',
-                    btnColor: 'buttonText',
-                    text: 'Failed to retrieve AAS endpoint.',
-                });
-                return;
-            }
-            downloadEndpoint.value = aasEndpoint.split('/shells')[0];
-
             for (const submodelRef of submodelRefs) {
+                const submodelId = extractIdFromReference(submodelRef, 'Submodel');
+                if (!submodelId) continue;
+
                 // TODO: Optimize by only using the metadata endpoint once it is implemented in BaSyx Go
-                const submodel = await fetchSmById(submodelRef.keys[0].value);
-                submodelIds.value.push({ smId: submodelRef.keys[0].value, smIdShort: submodel.idShort, submodel });
-                selected.value.push(submodelRef.keys[0].value);
+                const submodel = await fetchSmById(submodelId);
+                const smIdShort = typeof submodel?.idShort === 'string' ? submodel.idShort : submodelId;
+                submodelIds.value.push({ smId: submodelId, smIdShort, submodel });
+                selected.value.push(submodelId);
             }
         }
     );
@@ -106,39 +120,54 @@
     }
 
     async function download(): Promise<void> {
+        if (!props.aas?.id) return;
+
         downloadLoading.value = true;
-        let aasSerializationPath = downloadEndpoint.value;
-        aasSerializationPath +=
-            '/serialization?aasIds=' +
-            base64Encode(props.aas.id) +
-            '&submodelIds=' +
-            selected.value.map((submodelId: string) => base64Encode(submodelId)).join('&submodelIds=') +
-            '&includeConceptDescriptions=' +
-            (downloadCDs.value || true);
+        try {
+            let aasxPackage: Blob;
+            let warnings: string[] = [];
 
-        const aasSerializationContext = 'retrieving AAS serialization';
-        const disableMessage = false;
-        const aasSerializationHeaders = new Headers();
-        aasSerializationHeaders.append('Accept', 'application/asset-administration-shell-package+xml');
-
-        const aasSerializationResponse = await getRequest(
-            aasSerializationPath,
-            aasSerializationContext,
-            disableMessage,
-            aasSerializationHeaders
-        );
-        if (aasSerializationResponse.success) {
-            const aasSerialization = aasSerializationResponse.data;
+            if (downloadMode.value === 'client') {
+                const clientAASXResult = await createClientAASX({
+                    aasId: props.aas.id,
+                    selectedSubmodelIds: selected.value,
+                    includeConceptDescriptions: downloadCDs.value,
+                });
+                aasxPackage = clientAASXResult.blob;
+                warnings = clientAASXResult.warnings;
+            } else {
+                aasxPackage = await downloadViaBackendSerialization(props.aas.id, selected.value, downloadCDs.value);
+            }
 
             const aasIdShort = props.aas.idShort;
-
             const filename =
                 (aasIdShort && aasIdShort.trim() !== '' ? aasIdShort.trim() : generateUUIDFromString(props.aas.id)) +
                 '.aasx';
 
-            downloadFile(filename, aasSerialization);
-            downloadLoading.value = false;
+            downloadFile(filename, aasxPackage);
+
+            if (warnings.length > 0) {
+                const warningPreview = warnings.slice(0, 3).join(' | ');
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 8000,
+                    color: 'warning',
+                    btnColor: 'buttonText',
+                    text: `AASX downloaded with ${warnings.length} warning(s): ${warningPreview}`,
+                });
+            }
+
             downloadDialog.value = false;
+        } catch (error) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 6000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: `AASX download failed: ${error}`,
+            });
+        } finally {
+            downloadLoading.value = false;
         }
     }
 </script>
