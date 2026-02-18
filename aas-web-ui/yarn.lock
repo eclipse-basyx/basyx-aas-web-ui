@@ -1572,10 +1572,10 @@ ansi-styles@^6.1.0:
   resolved "https://registry.yarnpkg.com/ansi-styles/-/ansi-styles-6.2.1.tgz#0e62320cf99c21afff3b3012192546aacbfb05c5"
   integrity sha512-bN798gFfQX+viw3R7yrGWRqnrN2oRkEkUjjl4JNn4E8GxxbjtG3FbrEIIY3l8/hrwUwIeCZvi4QuOTP4MErVug==
 
-apexcharts@^5.4.0:
-  version "5.4.0"
-  resolved "https://registry.yarnpkg.com/apexcharts/-/apexcharts-5.4.0.tgz#b9fdd6c62c0d057f27bb9164f490e3562025f178"
-  integrity sha512-qyEypKc1nixORUHdwO30izyyCqH9A4NsxQZ6Xrlq+ABEamOED1AoSg3eHaJMPRGT+wfE09wucLqwvk8oSr3tdA==
+apexcharts@^5.6.0:
+  version "5.6.0"
+  resolved "https://registry.yarnpkg.com/apexcharts/-/apexcharts-5.6.0.tgz#b23720264f206211246f88f014c9da6395523bce"
+  integrity sha512-BZua59yedRsaDfnxkzNrkyLCvluq2c3ZDBIz4joxSKtgr0xDQXQ5dzceMhf/TpTbAjaF+2NYIpLP3BEEIG2s/w==
   dependencies:
     "@yr/monotone-cubic-spline" "^1.0.3"
 
