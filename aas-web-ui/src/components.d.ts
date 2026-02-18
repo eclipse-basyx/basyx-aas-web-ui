@@ -135,6 +135,7 @@ declare module 'vue' {
     SubmodelTree: typeof import('./components/SubmodelTree.vue')['default']
     SupplementalSemanticID: typeof import('./components/UIComponents/SupplementalSemanticID.vue')['default']
     TechnicalData_v1_2: typeof import('./components/Plugins/Submodels/TechnicalData_v1_2.vue')['default']
+    TechnicalData_v2_0: typeof import('./components/Plugins/Submodels/TechnicalData_v2_0.vue')['default']
     TextInput: typeof import('./components/EditorComponents/InputTypes/TextInput.vue')['default']
     ThemeSwitch: typeof import('./components/AppNavigation/Settings/ThemeSwitch.vue')['default']
     TimeSeries_v1_1: typeof import('./components/Plugins/Submodels/TimeSeries_v1_1.vue')['default']
