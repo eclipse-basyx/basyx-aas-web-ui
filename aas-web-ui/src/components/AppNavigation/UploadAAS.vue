@@ -10,7 +10,7 @@
                     class="my-1"
                     density="default"
                     :multiple="true"
-                    :accept="['.aasx']"></v-file-upload>
+                    :accept="['.aasx', '.json', '.xml']"></v-file-upload>
                 <!-- Options -->
                 <v-label class="mt-5">Options</v-label>
                 <v-radio-group v-model="uploadMode" density="compact" class="mt-4" hide-details>
@@ -71,6 +71,7 @@
 <script lang="ts" setup>
     import { jsonization } from '@aas-core-works/aas-core3.1-typescript';
     import { computed, ref, watch, watchEffect } from 'vue';
+    import { detectImportFileKind } from '@/composables/AAS/SerializationFormats';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
     import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
@@ -92,7 +93,7 @@
     // Composables
     const { fetchAas, uploadAas } = useAASRepositoryClient();
     const { fetchSm } = useSMHandling();
-    const { importAasxFileClient } = useAASXImport();
+    const { importAasxFileClient, importEnvironmentFileClient } = useAASXImport();
     const { postAasDescriptor, putAasDescriptor, createDescriptorFromAAS } = useAASRegistryClient();
     const { postSubmodelDescriptor, putSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient();
 
@@ -114,7 +115,7 @@
     const uploadMode = ref<'client' | 'server'>('client');
 
     const uploadModes = [
-        { title: 'Client-side AASX Import', value: 'client' },
+        { title: 'Client-side Import', value: 'client' },
         { title: 'Server Upload Endpoint', value: 'server' },
     ];
 
@@ -185,7 +186,16 @@
                     }
                 } else {
                     try {
-                        const result = await importAasxFileClient(aasFile);
+                        const fileKind = detectImportFileKind(aasFile.name);
+                        if (fileKind === 'unknown') {
+                            summary.failed.push(`${aasFile.name}: unsupported file type.`);
+                            continue;
+                        }
+
+                        const result =
+                            fileKind === 'aasx'
+                                ? await importAasxFileClient(aasFile)
+                                : await importEnvironmentFileClient(aasFile);
 
                         if (result.importedAasIds.length === 0) {
                             summary.failed.push(`${aasFile.name}: no AAS imported.`);

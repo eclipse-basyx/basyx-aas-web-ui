@@ -1502,10 +1502,10 @@
   resolved "https://registry.yarnpkg.com/@yr/monotone-cubic-spline/-/monotone-cubic-spline-1.0.3.tgz#7272d89f8e4f6fb7a1600c28c378cc18d3b577b9"
   integrity sha512-FQXkOta0XBSUPHndIKON2Y9JeQz5ZeMqLYZVVK93FliNBFm7LNMIZmY6FrMEB9XPcDbE2bekMbZD6kzDkxwYjA==
 
-aasx-package-ts@^0.1.2:
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/aasx-package-ts/-/aasx-package-ts-0.1.2.tgz#94159e93bf59f68e9ba666a481c1d47f75114e7a"
-  integrity sha512-Y3Lm3uIagiyRLCkl5lSb1cID9MBfQDDgBpJie4aq2TgqFuNt/4cypTwZTRsIWtqC8xiYRppynFHy36PZRqDb8Q==
+aasx-package-ts@^0.1.3:
+  version "0.1.3"
+  resolved "https://registry.yarnpkg.com/aasx-package-ts/-/aasx-package-ts-0.1.3.tgz#4838fa40f54fafd7afd562265fffc860ab257d2d"
+  integrity sha512-zWswXi3MgWY1aVnGr0y/+c+wRj3vbemvwxj0lccSZdnUPvYTSn0aph9yzVspeEXc7VmY52Xq8dYP0IeqQ1hc2A==
   dependencies:
     fflate "^0.8.2"
     xml-sax-ts "^0.3.0"

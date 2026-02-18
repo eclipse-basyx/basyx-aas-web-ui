@@ -1,7 +1,7 @@
 <template>
     <v-dialog v-model="downloadDialog" :width="800">
         <v-sheet border rounded="lg">
-            <v-card-title class="bg-cardHeader">Download AASX File</v-card-title>
+            <v-card-title class="bg-cardHeader">Download AAS File</v-card-title>
             <v-divider></v-divider>
             <v-card-text class="pb-0">
                 <v-alert border="start" variant="tonal">
@@ -25,6 +25,17 @@
                         :value="mode.value"
                         class="ml-2" />
                 </v-radio-group>
+                <v-radio-group v-model="downloadFormat" density="compact" class="mt-4" hide-details>
+                    <v-radio
+                        v-for="format in downloadFormats"
+                        :key="format.value"
+                        :label="format.title"
+                        :value="format.value"
+                        class="ml-2" />
+                </v-radio-group>
+                <v-alert v-if="isPlainFormatSelected" border="start" variant="tonal" class="mt-2" color="warning">
+                    Plain downloads do not include attached files.
+                </v-alert>
                 <v-checkbox v-model="downloadCDs" label="Include Concept Descriptions" hide-details class="ml-0" />
             </v-card-text>
             <v-divider></v-divider>
@@ -45,9 +56,16 @@
 </template>
 
 <script lang="ts" setup>
-    import { ref, watch } from 'vue';
+    import { computed, ref, watch } from 'vue';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useAASXPackaging } from '@/composables/AAS/AASXPackaging';
+    import {
+        defaultSerializationFormat,
+        getSerializationFileExtension,
+        isPlainSerializationFormat,
+        type SerializationFormat,
+        serializationFormatOptions,
+    } from '@/composables/AAS/SerializationFormats';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
     import { useIDUtils } from '@/composables/IDUtils';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -68,7 +86,7 @@
     const navigationStore = useNavigationStore();
 
     const { fetchSmById } = useSMHandling();
-    const { createClientAASX, downloadViaBackendSerialization } = useAASXPackaging();
+    const { createClientSerialization, downloadViaBackendSerialization } = useAASXPackaging();
     const { generateUUIDFromString } = useIDUtils();
     const { getSubmodelRefsById } = useAASHandling();
 
@@ -91,6 +109,9 @@
         { title: 'Client Packaging', value: 'client' },
         { title: 'Backend Serialization', value: 'backend' },
     ];
+    const downloadFormats = serializationFormatOptions;
+    const downloadFormat = ref<SerializationFormat>(defaultSerializationFormat);
+    const isPlainFormatSelected = computed(() => isPlainSerializationFormat(downloadFormat.value));
     const downloadCDs = ref<boolean>(true);
 
     watch(
@@ -100,6 +121,7 @@
             selected.value = [];
             submodelIds.value = [];
             downloadMode.value = 'client';
+            downloadFormat.value = defaultSerializationFormat;
             downloadCDs.value = true;
             downloadLoading.value = false;
 
@@ -136,27 +158,37 @@
 
         downloadLoading.value = true;
         try {
-            let aasxPackage: Blob;
+            let serializedPayload: Blob;
             let warnings: string[] = [];
 
             if (downloadMode.value === 'client') {
-                const clientAASXResult = await createClientAASX({
+                const clientSerializationResult = await createClientSerialization({
                     aasId: props.aas.id,
                     selectedSubmodelIds: selected.value,
                     includeConceptDescriptions: downloadCDs.value,
+                    format: downloadFormat.value,
                 });
-                aasxPackage = clientAASXResult.blob;
-                warnings = clientAASXResult.warnings;
+                serializedPayload = clientSerializationResult.blob;
+                warnings = clientSerializationResult.warnings;
             } else {
-                aasxPackage = await downloadViaBackendSerialization(props.aas.id, selected.value, downloadCDs.value);
+                serializedPayload = await downloadViaBackendSerialization(
+                    props.aas.id,
+                    selected.value,
+                    downloadCDs.value,
+                    downloadFormat.value
+                );
+            }
+
+            if (isPlainSerializationFormat(downloadFormat.value)) {
+                warnings.push('Plain downloads do not include attached files.');
             }
 
             const aasIdShort = props.aas.idShort;
             const filename =
                 (aasIdShort && aasIdShort.trim() !== '' ? aasIdShort.trim() : generateUUIDFromString(props.aas.id)) +
-                '.aasx';
+                `.${getSerializationFileExtension(downloadFormat.value)}`;
 
-            downloadFile(filename, aasxPackage);
+            downloadFile(filename, serializedPayload);
 
             if (warnings.length > 0) {
                 const warningPreview = warnings.slice(0, 3).join(' | ');
@@ -165,7 +197,7 @@
                     timeout: 8000,
                     color: 'warning',
                     btnColor: 'buttonText',
-                    text: `AASX downloaded with ${warnings.length} warning(s): ${warningPreview}`,
+                    text: `Download completed with ${warnings.length} warning(s): ${warningPreview}`,
                 });
             }
 
@@ -176,7 +208,7 @@
                 timeout: 6000,
                 color: 'error',
                 btnColor: 'buttonText',
-                text: `AASX download failed: ${error}`,
+                text: `AAS download failed: ${error}`,
             });
         } finally {
             downloadLoading.value = false;

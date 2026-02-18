@@ -3,6 +3,7 @@ import { NewPackaging, type ReadWriteSeeker } from 'aasx-package-ts';
 import mime from 'mime';
 import { useAASHandling } from '@/composables/AAS/AASHandling';
 import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
+import { getSerializationFormatConfig, type SerializationFormat } from '@/composables/AAS/SerializationFormats';
 import { useSMHandling } from '@/composables/AAS/SMHandling';
 import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
@@ -10,6 +11,8 @@ import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { extractId as extractIdFromReference } from '@/utils/AAS/ReferenceUtil';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
+import { serializeXml } from '../../../node_modules/basyx-typescript-sdk/dist/lib/aas-dataformat-xml/xmlization.js';
+import { BaSyxEnvironment } from '../../../node_modules/basyx-typescript-sdk/dist/models/BaSyxEnvironment.js';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -28,6 +31,7 @@ type CreateClientAASXOptions = {
     aasId: string;
     selectedSubmodelIds: string[];
     includeConceptDescriptions: boolean;
+    format: SerializationFormat;
 };
 
 type CreateClientAASXResult = {
@@ -269,11 +273,12 @@ export function resolveAttachmentFetchPath(path: unknown): string {
 }
 
 export function useAASXPackaging(): {
-    createClientAASX: (options: CreateClientAASXOptions) => Promise<CreateClientAASXResult>;
+    createClientSerialization: (options: CreateClientAASXOptions) => Promise<CreateClientAASXResult>;
     downloadViaBackendSerialization: (
         aasId: string,
         selectedSubmodelIds: string[],
-        includeConceptDescriptions: boolean
+        includeConceptDescriptions: boolean,
+        format: SerializationFormat
     ) => Promise<Blob>;
 } {
     const { fetchAasById, getAasEndpointById } = useAASHandling();
@@ -283,6 +288,16 @@ export function useAASXPackaging(): {
     const { fetchAssetInformation } = useAASRepositoryClient();
     const { getRequest } = useRequestHandling();
     const { determineContentType } = useSMEFile();
+
+    function environmentToXml(environment: aasCore.types.Environment): string {
+        const xmlEnvironment = new BaSyxEnvironment(
+            environment.assetAdministrationShells ?? [],
+            environment.submodels ?? [],
+            environment.conceptDescriptions ?? []
+        );
+
+        return serializeXml(xmlEnvironment);
+    }
 
     function toCoreworksAAS(aasJson: JsonRecord): aasCore.types.AssetAdministrationShell {
         const aasOrError = aasCore.jsonization.assetAdministrationShellFromJsonable(
@@ -455,11 +470,13 @@ export function useAASXPackaging(): {
         };
     }
 
-    async function createClientAASX(options: CreateClientAASXOptions): Promise<CreateClientAASXResult> {
+    async function createClientSerialization(options: CreateClientAASXOptions): Promise<CreateClientAASXResult> {
         const aasId = normalizeId(options.aasId);
         if (aasId === '') {
             throw new Error('AAS ID is required for client-side AASX creation.');
         }
+
+        const formatConfig = getSerializationFormatConfig(options.format);
 
         const selectedSubmodelIds = options.selectedSubmodelIds
             .map((submodelId) => normalizeId(submodelId))
@@ -510,9 +527,6 @@ export function useAASXPackaging(): {
             ? await buildConceptDescriptions(Array.from(semanticIds))
             : [];
 
-        const supplementaryParts = await buildSupplementaryParts(fileBindings, warnings);
-        const thumbnailPart = await fetchThumbnailPart(aas, warnings);
-
         const coreworksAas = toCoreworksAAS(cleanAas as JsonRecord);
         const coreworksSubmodels = cleanSubmodels.map((submodel, index) => toCoreworksSubmodel(submodel, index));
         const coreworksConceptDescriptions = cleanConceptDescriptions.map((cd, index) =>
@@ -525,15 +539,40 @@ export function useAASXPackaging(): {
         environment.conceptDescriptions = coreworksConceptDescriptions;
 
         const environmentJson = aasCore.jsonization.toJsonable(environment);
-        const specBytes = new TextEncoder().encode(`${JSON.stringify(environmentJson, null, 2)}\n`);
+
+        if (formatConfig.isPlain) {
+            if (options.format === 'plain-json') {
+                const plainJson = `${JSON.stringify(environmentJson, null, 2)}\n`;
+                return {
+                    blob: new Blob([plainJson], { type: formatConfig.blobContentType }),
+                    warnings,
+                };
+            }
+
+            const plainXml = environmentToXml(environment);
+            return {
+                blob: new Blob([plainXml], { type: formatConfig.blobContentType }),
+                warnings,
+            };
+        }
+
+        const supplementaryParts = await buildSupplementaryParts(fileBindings, warnings);
+        const thumbnailPart = await fetchThumbnailPart(aas, warnings);
+
+        let specBytes: Uint8Array;
+        if (options.format === 'aasx-json') {
+            specBytes = new TextEncoder().encode(`${JSON.stringify(environmentJson, null, 2)}\n`);
+        } else {
+            specBytes = new TextEncoder().encode(environmentToXml(environment));
+        }
 
         const packaging = NewPackaging();
         const inMemoryStream = new InMemoryReadWriteSeeker();
         const pkg = await packaging.CreateInStream(inMemoryStream);
 
         const specPart = await pkg.PutPart(
-            new URL('https://package.local/aasx/environment.json'),
-            'application/json',
+            new URL(`https://package.local/aasx/${formatConfig.specFileName}`),
+            formatConfig.specContentType || 'application/octet-stream',
             specBytes
         );
         await pkg.MakeSpec(specPart);
@@ -557,7 +596,7 @@ export function useAASXPackaging(): {
 
         return {
             blob: new Blob([new Uint8Array(packageBytes)], {
-                type: 'application/asset-administration-shell-package+xml',
+                type: formatConfig.blobContentType,
             }),
             warnings,
         };
@@ -566,12 +605,15 @@ export function useAASXPackaging(): {
     async function downloadViaBackendSerialization(
         aasId: string,
         selectedSubmodelIds: string[],
-        includeConceptDescriptions: boolean
+        includeConceptDescriptions: boolean,
+        format: SerializationFormat
     ): Promise<Blob> {
         const normalizedAasId = normalizeId(aasId);
         if (normalizedAasId === '') {
             throw new Error('AAS ID is required for backend serialization download.');
         }
+
+        const formatConfig = getSerializationFormatConfig(format);
 
         const aasEndpoint = await getAasEndpointById(normalizedAasId);
         if (!aasEndpoint || aasEndpoint.trim() === '') {
@@ -592,18 +634,18 @@ export function useAASXPackaging(): {
 
         const serializationPath = `${environmentEndpoint}/serialization?${params.toString()}`;
         const headers = new Headers();
-        headers.append('Accept', 'application/asset-administration-shell-package+xml');
+        headers.append('Accept', formatConfig.acceptHeader);
 
         const response = await getRequest(serializationPath, 'retrieving AAS serialization', false, headers);
         if (!response?.success || !response?.data) {
-            throw new Error('Failed to retrieve serialized AASX package.');
+            throw new Error(`Failed to retrieve serialized AAS (${formatConfig.title}).`);
         }
 
         return response.data as Blob;
     }
 
     return {
-        createClientAASX,
+        createClientSerialization,
         downloadViaBackendSerialization,
     };
 }

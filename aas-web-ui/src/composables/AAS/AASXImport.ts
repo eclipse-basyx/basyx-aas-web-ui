@@ -5,6 +5,7 @@ import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
 import { useCDRepositoryClient } from '@/composables/Client/CDRepositoryClient';
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+import { deserializeXml } from '../../../node_modules/basyx-typescript-sdk/dist/lib/aas-dataformat-xml/xmlization.js';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -282,11 +283,82 @@ export function buildAttachmentSmePath(smEndpoint: string, idShortPath: string[]
 
 export function useAASXImport(): {
     importAasxFileClient: (file: File) => Promise<ClientAASXImportResult>;
+    importEnvironmentFileClient: (file: File) => Promise<ClientAASXImportResult>;
 } {
     const { postAas, putAas, putThumbnail, getAasEndpointById } = useAASRepositoryClient();
     const { postSubmodel, putSubmodel, putAttachmentFile, getSmEndpointById } = useSMRepositoryClient();
     const { postConceptDescription, putConceptDescription } = useCDRepositoryClient();
     const { determineContentType } = useSMEFile();
+
+    function parseEnvironmentText(environmentText: string, sourceLabel: string): JsonRecord {
+        const trimmedText = environmentText.trim();
+        if (trimmedText === '') {
+            throw new Error(`Environment content in '${sourceLabel}' is empty.`);
+        }
+
+        try {
+            const parsedJson = JSON.parse(trimmedText);
+            const environment = asRecord(parsedJson);
+            if (!environment) {
+                throw new Error(`Environment payload in '${sourceLabel}' is not an object.`);
+            }
+
+            return environment;
+        } catch {
+            try {
+                const xmlEnvironment = deserializeXml(trimmedText);
+                const environment = aasCore.jsonization.toJsonable(xmlEnvironment as unknown as aasCore.types.Class);
+                const environmentRecord = asRecord(environment);
+                if (!environmentRecord) {
+                    throw new Error(`Environment XML payload in '${sourceLabel}' is invalid.`);
+                }
+
+                return environmentRecord;
+            } catch (xmlError) {
+                throw new Error(
+                    `Failed to parse environment in '${sourceLabel}' as JSON or XML: ${stringifyUnknown(xmlError)}`,
+                    {
+                        cause: xmlError,
+                    }
+                );
+            }
+        }
+    }
+
+    function collectEnvironmentEntries(
+        environment: JsonRecord,
+        supplementaryMap: Map<string, Part> | null,
+        aasById: Map<string, { core: aasCore.types.AssetAdministrationShell; json: JsonRecord }>,
+        submodelById: Map<string, { core: aasCore.types.Submodel; json: JsonRecord }>,
+        cdById: Map<string, { core: aasCore.types.ConceptDescription; json: JsonRecord }>,
+        attachments: AttachmentUpload[],
+        warnings: string[]
+    ): void {
+        for (const aasEntry of asArray(environment.assetAdministrationShells)) {
+            const parsedAas = parseAas(aasEntry);
+            const aasId = asString(parsedAas.json.id).trim();
+            if (aasId !== '') aasById.set(aasId, parsedAas);
+        }
+
+        for (const submodelEntry of asArray(environment.submodels)) {
+            const parsedSubmodel = parseSubmodel(submodelEntry);
+            const submodelId = asString(parsedSubmodel.json.id).trim();
+            if (submodelId === '') continue;
+
+            submodelById.set(submodelId, parsedSubmodel);
+            if (!supplementaryMap) continue;
+
+            attachments.push(
+                ...collectAttachmentUploads(parsedSubmodel.json, supplementaryMap, determineContentType, warnings)
+            );
+        }
+
+        for (const cdEntry of asArray(environment.conceptDescriptions)) {
+            const parsedCd = parseConceptDescription(cdEntry);
+            const cdId = asString(parsedCd.json.id).trim();
+            if (cdId !== '') cdById.set(cdId, parsedCd);
+        }
+    }
 
     async function parsePackage(file: File, warnings: string[]): Promise<ParsedAASX> {
         const bytes = new Uint8Array(await file.arrayBuffer());
@@ -305,51 +377,20 @@ export function useAASXImport(): {
             const attachments: AttachmentUpload[] = [];
 
             for (const spec of specs) {
-                let environmentPayload: unknown;
-                try {
-                    environmentPayload = JSON.parse(spec.ReadAllText());
-                } catch (error) {
-                    throw new Error(`Failed to parse environment JSON in '${file.name}': ${stringifyUnknown(error)}`, {
-                        cause: error,
-                    });
-                }
-
-                const environment = asRecord(environmentPayload);
-                if (!environment) {
-                    warnings.push(`Skipped invalid environment payload in '${file.name}'.`);
-                    continue;
-                }
+                const environment = parseEnvironmentText(spec.ReadAllText(), `${file.name}:${spec.URI.pathname}`);
 
                 const supplementaryParts = await pkg.SupplementariesFor(spec);
                 const supplementaryMap = buildSupplementaryMap(supplementaryParts);
 
-                for (const aasEntry of asArray(environment.assetAdministrationShells)) {
-                    const parsedAas = parseAas(aasEntry);
-                    const aasId = asString(parsedAas.json.id).trim();
-                    if (aasId !== '') aasById.set(aasId, parsedAas);
-                }
-
-                for (const submodelEntry of asArray(environment.submodels)) {
-                    const parsedSubmodel = parseSubmodel(submodelEntry);
-                    const submodelId = asString(parsedSubmodel.json.id).trim();
-                    if (submodelId !== '') {
-                        submodelById.set(submodelId, parsedSubmodel);
-                        attachments.push(
-                            ...collectAttachmentUploads(
-                                parsedSubmodel.json,
-                                supplementaryMap,
-                                determineContentType,
-                                warnings
-                            )
-                        );
-                    }
-                }
-
-                for (const cdEntry of asArray(environment.conceptDescriptions)) {
-                    const parsedCd = parseConceptDescription(cdEntry);
-                    const cdId = asString(parsedCd.json.id).trim();
-                    if (cdId !== '') cdById.set(cdId, parsedCd);
-                }
+                collectEnvironmentEntries(
+                    environment,
+                    supplementaryMap,
+                    aasById,
+                    submodelById,
+                    cdById,
+                    attachments,
+                    warnings
+                );
             }
 
             const thumbnail = resolveThumbnail(await pkg.Thumbnail());
@@ -364,6 +405,27 @@ export function useAASXImport(): {
         } finally {
             pkg.Close();
         }
+    }
+
+    async function parsePlainEnvironmentFile(file: File): Promise<ParsedAASX> {
+        const environmentText = await file.text();
+        const environment = parseEnvironmentText(environmentText, file.name);
+
+        const aasById = new Map<string, { core: aasCore.types.AssetAdministrationShell; json: JsonRecord }>();
+        const submodelById = new Map<string, { core: aasCore.types.Submodel; json: JsonRecord }>();
+        const cdById = new Map<string, { core: aasCore.types.ConceptDescription; json: JsonRecord }>();
+        const attachments: AttachmentUpload[] = [];
+        const warnings: string[] = [];
+
+        collectEnvironmentEntries(environment, null, aasById, submodelById, cdById, attachments, warnings);
+
+        return {
+            aasById,
+            submodelById,
+            cdById,
+            attachments,
+            thumbnail: null,
+        };
     }
 
     async function upsertConceptDescription(conceptDescription: aasCore.types.ConceptDescription): Promise<boolean> {
@@ -384,10 +446,7 @@ export function useAASXImport(): {
         return await putAas(aas);
     }
 
-    async function importAasxFileClient(file: File): Promise<ClientAASXImportResult> {
-        const warnings: string[] = [];
-        const parsedPackage = await parsePackage(file, warnings);
-
+    async function importParsedPackage(parsedPackage: ParsedAASX, warnings: string[]): Promise<ClientAASXImportResult> {
         for (const { core: conceptDescription, json } of parsedPackage.cdById.values()) {
             const success = await upsertConceptDescription(conceptDescription);
             if (!success) {
@@ -478,7 +537,20 @@ export function useAASXImport(): {
         };
     }
 
+    async function importAasxFileClient(file: File): Promise<ClientAASXImportResult> {
+        const warnings: string[] = [];
+        const parsedPackage = await parsePackage(file, warnings);
+        return await importParsedPackage(parsedPackage, warnings);
+    }
+
+    async function importEnvironmentFileClient(file: File): Promise<ClientAASXImportResult> {
+        const warnings: string[] = [];
+        const parsedPackage = await parsePlainEnvironmentFile(file);
+        return await importParsedPackage(parsedPackage, warnings);
+    }
+
     return {
         importAasxFileClient,
+        importEnvironmentFileClient,
     };
 }
