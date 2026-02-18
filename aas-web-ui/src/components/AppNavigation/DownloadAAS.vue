@@ -153,6 +153,16 @@
         selected.value = value;
     }
 
+    function stringifyUnknown(value: unknown): string {
+        if (value instanceof Error) return value.message;
+        if (typeof value === 'string') return value;
+        try {
+            return JSON.stringify(value);
+        } catch {
+            return String(value);
+        }
+    }
+
     async function download(): Promise<void> {
         if (!props.aas?.id) return;
 
@@ -205,10 +215,11 @@
         } catch (error) {
             navigationStore.dispatchSnackbar({
                 status: true,
-                timeout: 6000,
+                timeout: 12000,
                 color: 'error',
                 btnColor: 'buttonText',
-                text: `AAS download failed: ${error}`,
+                baseError: 'AAS download failed.',
+                extendedError: stringifyUnknown(error),
             });
         } finally {
             downloadLoading.value = false;

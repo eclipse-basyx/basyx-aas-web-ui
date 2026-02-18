@@ -161,6 +161,20 @@
             failed: [] as string[],
         };
 
+        function buildUploadErrorDetails(summary: { failed: string[]; warnings: string[] }): string {
+            const sections: string[] = [];
+
+            if (summary.failed.length > 0) {
+                sections.push(['Failed files:', ...summary.failed.map((entry) => `- ${entry}`)].join('\n'));
+            }
+
+            if (summary.warnings.length > 0) {
+                sections.push(['Warnings:', ...summary.warnings.map((entry) => `- ${entry}`)].join('\n'));
+            }
+
+            return sections.join('\n\n');
+        }
+
         try {
             if (createDescriptors.value && !descriptorsAvailable.value) {
                 summary.warnings.push('Descriptor creation skipped because registries are not connected.');
@@ -229,7 +243,6 @@
             }
 
             const warningPreview = summary.warnings.slice(0, 3).join(' | ');
-            const failurePreview = summary.failed.slice(0, 3).join(' | ');
 
             if (summary.failed.length === 0) {
                 navigationStore.dispatchSnackbar({
@@ -248,8 +261,8 @@
                     timeout: 10000,
                     color: 'error',
                     btnColor: 'buttonText',
-                    text: `Uploaded ${summary.succeeded}/${summary.total} file(s). ${summary.failed.length} failed: ${failurePreview}`,
-                    extendedError: summary.warnings.length > 0 ? `Warnings: ${warningPreview}` : undefined,
+                    baseError: `Uploaded ${summary.succeeded}/${summary.total} file(s). ${summary.failed.length} failed.`,
+                    extendedError: buildUploadErrorDetails(summary),
                 });
             }
         } catch (error) {
@@ -259,7 +272,8 @@
                 timeout: 6000,
                 color: 'error',
                 btnColor: 'buttonText',
-                text: `AAS upload failed: ${stringifyUnknown(error)}`,
+                baseError: 'AAS upload failed.',
+                extendedError: stringifyUnknown(error),
             });
         } finally {
             resetUploadState();
