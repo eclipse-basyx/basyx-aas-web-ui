@@ -445,13 +445,10 @@
             '0173-1#02-ABK161#002/0173-1#01-AHX838#002',
             technicalData
         );
-        console.log('generalInformationSMC_local', generalInformationSMC_local);
 
         if (hasValue(generalInformationSMC_local)) {
             generalInformationSMC.value = generalInformationSMC_local;
             generalInformationProperties.value = generalInformationSMC_local.value;
-            console.log('generalInformationProperties has', generalInformationProperties.value);
-            console.log('generalInformationSMC has', generalInformationSMC.value);
         }
     }
     function extractFurtherInformation(technicalData: any): void {
@@ -461,8 +458,6 @@
             furtherInformationSMC.value = furtherInformationSMC_local;
             furtherInformation.value = furtherInformationSMC_local.value;
         }
-        console.log('furtherInformationSMC has', furtherInformationSMC.value);
-        console.log('furtherInformation has', furtherInformation.value);
     }
 
     function extractProductClassifications(technicalData: any): void {
@@ -472,8 +467,6 @@
             productClassificationsSML.value = productClassificationsSML_local;
             productClassifications.value = productClassificationsSML_local.value;
         }
-        console.log('productClassificationsSML has', productClassificationsSML.value);
-        console.log('productClassifications has', productClassifications.value);
     }
 
     function extractTechnicalProperties(technicalData: any): void {
@@ -483,8 +476,6 @@
             technicalPropertiesSML.value = technicalPropertiesSML_local;
             technicalProperties.value = technicalPropertiesSML_local.value;
         }
-        console.log('technicalPropertiesSML has', technicalPropertiesSML.value);
-        console.log('technicalProperties has', technicalProperties.value);
     }
 
     function extractSpecificDescription(technicalData: any): void {
@@ -494,8 +485,6 @@
             specificDescriptionSML.value = specificDescriptionSML_local;
             specificDescriptionelements.value = specificDescriptionSML_local.value;
         }
-        console.log('specificDescriptionSML has', specificDescriptionSML.value);
-        console.log('specificDescriptionelements has', specificDescriptionelements.value);
     }
 
     function getBlobUrl(property: any): string {
