@@ -1,12 +1,14 @@
 <template>
-    <v-dialog v-model="deleteDialog" max-width="500px">
-        <v-card>
-            <v-card-title>Confirm Delete</v-card-title>
+    <v-dialog v-model="deleteDialog" :width="800">
+        <v-sheet border rounded="lg">
+            <v-card-title class="bg-cardHeader">Confirm Delete</v-card-title>
             <v-divider></v-divider>
-            <v-card-text class="pb-0">
-                <div>Are you sure you want to delete the AAS with the id</div>
-                <span class="text-primary font-weight-bold">{{ aas.id }}</span>
-                <span>?</span>
+            <v-card-text class="overflow-y-auto" style="max-height: calc(100vh - 296px)">
+                <v-alert border="start" variant="tonal">
+                    <span>Are you sure you want to delete the AAS with the id </span>
+                    <span class="text-primary font-weight-bold">{{ aas?.id }}</span>
+                    <span>?</span>
+                </v-alert>
                 <v-checkbox v-model="deleteSubmodels" label="Also delete Submodels" hide-details></v-checkbox>
                 <v-alert v-if="deleteSubmodels" class="mb-2" variant="tonal" border color="warning">
                     Warning: If other shells refer to the same submodels, those references are not deleted!
@@ -17,12 +19,20 @@
                     :submodel-ids="submodelIds"
                     @update:selected="updateSelectedSubmodels" />
             </v-card-text>
+            <v-divider></v-divider>
             <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn @click="deleteDialog = false">Cancel</v-btn>
-                <v-btn variant="tonal" color="error" :loading="deleteLoading" @click="confirmDelete">Delete</v-btn>
+                <v-btn text="Cancel" rounded="lg" @click="deleteDialog = false" />
+                <v-btn
+                    color="error"
+                    variant="flat"
+                    rounded="lg"
+                    class="text-buttonText"
+                    text="Delete"
+                    :loading="deleteLoading"
+                    @click="confirmDelete" />
             </v-card-actions>
-        </v-card>
+        </v-sheet>
     </v-dialog>
 </template>
 

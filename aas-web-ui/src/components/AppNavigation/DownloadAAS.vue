@@ -1,34 +1,46 @@
 <template>
-    <v-dialog v-model="downloadDialog" max-width="500px">
-        <v-card>
-            <v-card-title>Configure AASX Package</v-card-title>
+    <v-dialog v-model="downloadDialog" :width="800">
+        <v-sheet border rounded="lg">
+            <v-card-title class="bg-cardHeader">Download AASX File</v-card-title>
             <v-divider></v-divider>
             <v-card-text class="pb-0">
-                <div>You selected the AAS with the ID</div>
-                <span class="text-primary font-weight-bold">{{ aas?.id }}</span>
-                <span> for download.</span><br />
+                <v-alert border="start" variant="tonal">
+                    <span>You selected the AAS with the ID </span>
+                    <span class="text-primary font-weight-bold">{{ aas?.id }}</span>
+                    <span> for download.</span>
+                </v-alert>
+                <!-- Submodel Selection -->
+                <v-label class="mt-5">Submodel Selection</v-label>
                 <SubmodelSelection
                     :selected="selected"
                     :submodel-ids="submodelIds"
                     @update:selected="updateSelectedSubmodels" />
-                <v-select
-                    v-model="downloadMode"
-                    :items="downloadModes"
-                    item-title="title"
-                    item-value="value"
-                    label="Packaging Mode"
-                    density="compact"
-                    class="mt-4"
-                    hide-details></v-select>
-                <v-checkbox v-model="downloadCDs" label="Also download Concept Descriptions" hide-details></v-checkbox>
+                <!-- Download Options -->
+                <v-label class="mt-5">Options</v-label>
+                <v-radio-group v-model="downloadMode" density="compact" class="mt-4" hide-details>
+                    <v-radio
+                        v-for="mode in downloadModes"
+                        :key="mode.value"
+                        :label="mode.title"
+                        :value="mode.value"
+                        class="ml-2" />
+                </v-radio-group>
+                <v-checkbox v-model="downloadCDs" label="Include Concept Descriptions" hide-details class="ml-0" />
             </v-card-text>
             <v-divider></v-divider>
             <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn @click="downloadDialog = false">Cancel</v-btn>
-                <v-btn variant="tonal" color="primary" :loading="downloadLoading" @click="download">Download</v-btn>
+                <v-btn text="Cancel" rounded="lg" @click="downloadDialog = false" />
+                <v-btn
+                    color="primary"
+                    variant="flat"
+                    rounded="lg"
+                    class="text-buttonText"
+                    text="Download"
+                    :loading="downloadLoading"
+                    @click="download" />
             </v-card-actions>
-        </v-card>
+        </v-sheet>
     </v-dialog>
 </template>
 
