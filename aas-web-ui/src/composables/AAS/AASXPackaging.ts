@@ -264,6 +264,10 @@ function resolveAttachmentFilename(file: JsonRecord, index: number, contentType:
     return `${safeSegment(idShort, 'file')}-${index + 1}.${extension}`;
 }
 
+export function resolveAttachmentFetchPath(path: unknown): string {
+    return asString(path).trim();
+}
+
 export function useAASXPackaging(): {
     createClientAASX: (options: CreateClientAASXOptions) => Promise<CreateClientAASXResult>;
     downloadViaBackendSerialization: (
@@ -366,7 +370,7 @@ export function useAASXPackaging(): {
                 continue;
             }
 
-            const filePath = asString(fileBinding.raw.path).trim();
+            const filePath = resolveAttachmentFetchPath(fileBinding.raw.path);
             if (filePath === '') {
                 warnings.push(
                     `Skipped file without attachment path: ${asString(fileBinding.raw.idShort) || fileValue}`

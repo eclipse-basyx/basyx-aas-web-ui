@@ -209,14 +209,24 @@ export function useCDRepositoryClient() {
         const jsonConceptDescription = jsonization.toJsonable(conceptDescription);
 
         const context = 'creating Concept Description';
-        const disableMessage = false;
+        const disableMessage = true;
         const path = cdRepoUrl;
         const headers = new Headers();
         headers.append('Content-Type', 'application/json');
         const body = JSON.stringify(jsonConceptDescription);
 
         const response = await postRequest(path, body, headers, context, disableMessage);
-        return response.success;
+        if (response.success) return true;
+
+        const conceptDescriptionId = conceptDescription.id?.trim();
+        if (conceptDescriptionId) {
+            const alreadyExists = await isAvailableByIdInRepo(conceptDescriptionId);
+            if (alreadyExists) {
+                return true;
+            }
+        }
+
+        return failResponse;
     }
 
     async function putConceptDescription(conceptDescription: aasTypes.ConceptDescription): Promise<boolean> {

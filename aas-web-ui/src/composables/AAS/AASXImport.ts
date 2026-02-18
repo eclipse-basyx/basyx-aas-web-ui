@@ -275,6 +275,11 @@ function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
     return normalizedBytes.buffer;
 }
 
+export function buildAttachmentSmePath(smEndpoint: string, idShortPath: string[]): string {
+    const encodedPath = idShortPath.map((segment) => encodeURIComponent(segment)).join('.');
+    return `${smEndpoint}/submodel-elements/${encodedPath}`;
+}
+
 export function useAASXImport(): {
     importAasxFileClient: (file: File) => Promise<ClientAASXImportResult>;
 } {
@@ -416,8 +421,7 @@ export function useAASXImport(): {
                 continue;
             }
 
-            const encodedPath = attachment.idShortPath.map((segment) => encodeURIComponent(segment)).join('/');
-            const smePath = `${smEndpoint}/submodel-elements/${encodedPath}`;
+            const smePath = buildAttachmentSmePath(smEndpoint, attachment.idShortPath);
             const attachmentFile = new File([toArrayBuffer(attachment.bytes)], attachment.fileName, {
                 type: attachment.contentType,
             });
