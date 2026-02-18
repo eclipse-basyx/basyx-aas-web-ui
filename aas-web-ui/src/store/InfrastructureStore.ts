@@ -538,7 +538,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             if (basyxComponentURL.endsWith('/')) basyxComponentURL = stripLastCharacter(basyxComponentURL);
 
             const context = `Connecting to ${basyxComponent.label}`;
-            let disableMessage = false;
+            let disableMessage = true;
 
             try {
                 // First attemp to connect to components via `/description` endpoint
@@ -550,8 +550,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
                 if (path.endsWith('/')) path = stripLastCharacter(path); // Strip ending slash
 
                 path += '/description';
-
-                disableMessage = true;
 
                 const response = await getRequest(path, context, disableMessage);
                 basyxComponent.loading = false;

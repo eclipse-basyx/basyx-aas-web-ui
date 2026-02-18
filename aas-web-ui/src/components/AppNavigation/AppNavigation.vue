@@ -39,7 +39,7 @@
                                 append-icon="mdi-menu-down"
                                 variant="tonal"
                                 size="small">
-                                {{ route.meta?.title ? route.meta.title.toString() : route.meta?.name?.toString() }}
+                                {{ menuToggleTitle }}
                             </v-btn>
                         </template>
                         <!-- Main Menu Component -->
@@ -170,13 +170,13 @@
                     <v-col cols="auto" class="pr-1">
                         <v-card
                             class="py-1 px-2 text-buttonText"
-                            :color="route.path === moduleRoute.path ? 'primarySurface' : 'primary'"
+                            :color="isActiveModuleRoute(moduleRoute.path) ? 'primarySurface' : 'primary'"
                             :to="
                                 moduleRoute?.meta?.preserveRouteQuery === true
                                     ? { path: moduleRoute.path, query: route.query }
                                     : { path: moduleRoute.path }
                             "
-                            :disabled="route.path === moduleRoute.path"
+                            :disabled="isActiveModuleRoute(moduleRoute.path)"
                             >{{ moduleRoute.name }}</v-card
                         >
                     </v-col>
@@ -188,8 +188,8 @@
                                     ? { path: moduleRoute.path, query: route.query }
                                     : { path: moduleRoute.path }
                             "
-                            :active="route.path === moduleRoute.path"
-                            :disabled="route.path === moduleRoute.path"
+                            :active="isActiveModuleRoute(moduleRoute.path)"
+                            :disabled="isActiveModuleRoute(moduleRoute.path)"
                             style="z-index: 9990"
                             size="small"
                             color="primary"
@@ -298,6 +298,19 @@
     const selectedNode = computed(() => aasStore.getSelectedNode); // get selected AAS from Store
     const moduleRoutes = computed(() => navigationStore.getModuleRoutes); // get the module routes
     const endpointConfigAvailable = computed(() => envStore.getEndpointConfigAvailable);
+    const menuToggleTitle = computed(() => {
+        if (route.path.startsWith('/modules/')) {
+            const parentModuleRoute = route.matched.find((record) => record.path.startsWith('/modules/'));
+            const parentTitle = parentModuleRoute?.meta?.title;
+            const parentName = parentModuleRoute?.meta?.name;
+
+            if (parentTitle) return parentTitle.toString();
+            if (parentName) return parentName.toString();
+        }
+
+        if (route.meta?.title) return route.meta.title.toString();
+        return route.meta?.name?.toString() || '';
+    });
 
     const filteredAndOrderedModuleRoutes = computed(() => {
         const filteredModuleRoutes = moduleRoutes.value.filter((moduleRoute: RouteRecordRaw) => {
@@ -313,7 +326,7 @@
                 (!selectedNode.value || Object.keys(selectedNode.value).length === 0)
             )
                 return false;
-            return moduleRoute?.meta?.isVisibleModule === true || moduleRoute.path === route.path;
+            return moduleRoute?.meta?.isVisibleModule === true || isActiveModuleRoute(moduleRoute.path);
         });
         const filteredAndOrderedModuleRoutes = filteredModuleRoutes.sort(
             (moduleRouteA: RouteRecordRaw, moduleRouteB: RouteRecordRaw) => {
@@ -421,7 +434,7 @@
         infrastructureManagementDialog.value = true;
     }
 
-    function validURL(str: string) {
+    function validURL(str: string): boolean {
         try {
             const url = new URL(str);
             // Ensure we only accept web protocols (http/https)
@@ -429,5 +442,9 @@
         } catch {
             return false;
         }
+    }
+
+    function isActiveModuleRoute(routePath: string): boolean {
+        return route.path === routePath || route.path.startsWith(`${routePath}/`);
     }
 </script>

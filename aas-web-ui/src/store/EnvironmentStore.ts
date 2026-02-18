@@ -126,6 +126,9 @@ export const useEnvStore = defineStore('envStore', () => {
         import.meta.env.VITE_AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION ||
             (isProduction ? '/__AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION_PLACEHOLDER__/' : '')
     );
+    const startPageRouteName = ref(
+        import.meta.env.VITE_START_PAGE_ROUTE_NAME || (isProduction ? '/__START_PAGE_ROUTE_NAME_PLACEHOLDER__/' : '')
+    );
 
     // Getters
     const getEnvBasePath = computed(() => basePath.value);
@@ -187,6 +190,12 @@ export const useEnvStore = defineStore('envStore', () => {
     const getAuthorizationDescriptionEndpointExemption = computed(() =>
         parseBooleanEnv(authorizationDescriptionEndpointExemption.value)
     );
+
+    const getStartPageRouteName = computed(() => {
+        const value = (startPageRouteName.value || '').trim();
+        if (value === '' || value.includes('PLACEHOLDER')) return '';
+        return value;
+    });
 
     // Actions
     function setSingleAas(singleAasValue: string): void {
@@ -252,6 +261,7 @@ export const useEnvStore = defineStore('envStore', () => {
         getEditorIdPrefix,
         getAuthorizationPrefix,
         getAuthorizationDescriptionEndpointExemption,
+        getStartPageRouteName,
 
         // Actions
         setSingleAas,

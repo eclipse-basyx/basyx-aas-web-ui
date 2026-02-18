@@ -1,5 +1,5 @@
 import type { InfrastructureConfig } from '@/types/Infrastructure';
-import type { Router, RouteRecordNameGeneric, RouteRecordRaw } from 'vue-router';
+import type { LocationQueryRaw, Router, RouteRecordNameGeneric, RouteRecordRaw } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
 import AASList from '@/components/AppNavigation/AASList.vue';
 import ComponentVisualization from '@/components/ComponentVisualization.vue';
@@ -18,14 +18,58 @@ import { useAASStore } from '@/store/AASDataStore';
 import { useEnvStore } from '@/store/EnvironmentStore';
 import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import { useNavigationStore } from '@/store/NavigationStore';
+import {
+    buildValidatedModuleChildRoutes,
+    type ModuleRouteManifest,
+    type ModuleRouteMeta,
+} from '@/utils/ModuleRouteUtils';
+
+type ModuleComponentExport = {
+    default?: ModuleRouteMeta;
+};
+
+type ModuleDefinition = {
+    moduleName: string;
+    moduleLoader: () => Promise<unknown>;
+    moduleManifest?: ModuleRouteManifest;
+};
+
+const findRouteByName = (records: Array<RouteRecordRaw>, name: string): RouteRecordRaw | undefined => {
+    for (const record of records) {
+        if (record.name?.toString() === name) return record;
+        if (record.children && record.children.length > 0) {
+            const nestedRecord = findRouteByName(record.children as Array<RouteRecordRaw>, name);
+            if (nestedRecord) return nestedRecord;
+        }
+    }
+    return undefined;
+};
+
+const findRouteByNameCaseInsensitive = (records: Array<RouteRecordRaw>, name: string): RouteRecordRaw | undefined => {
+    const lowerName = name.toLowerCase();
+    for (const record of records) {
+        if (record.name?.toString().toLowerCase() === lowerName) return record;
+        if (record.children && record.children.length > 0) {
+            const nestedRecord = findRouteByNameCaseInsensitive(record.children as Array<RouteRecordRaw>, name);
+            if (nestedRecord) return nestedRecord;
+        }
+    }
+    return undefined;
+};
 
 // Static routes
 const staticRoutes: Array<RouteRecordRaw> = [
     {
-        path: '/',
+        path: '/aasviewer',
         name: 'AASViewer',
         component: AASViewer,
         meta: { name: 'AAS Viewer', subtitle: 'Visualize Asset Administration Shells' },
+    },
+    {
+        path: '/',
+        name: 'Root',
+        component: Page404,
+        meta: { name: 'Page not found | 404' },
     },
     {
         path: '/aaseditor',
@@ -68,13 +112,41 @@ const staticRoutes: Array<RouteRecordRaw> = [
 // Function to generate routes from modules
 const generateModuleRoutes = async (): Promise<Array<RouteRecordRaw>> => {
     const moduleFileRecords = import.meta.glob('@/pages/modules/*.vue');
+    const moduleFolderIndexFileRecords = import.meta.glob('@/pages/modules/*/index.vue');
+    const moduleManifestFileRecords = import.meta.glob('@/pages/modules/*.routes.ts', { eager: true });
+    const moduleFolderManifestFileRecords = import.meta.glob('@/pages/modules/*/routes.ts', { eager: true });
 
     const moduleRoutes: Array<RouteRecordRaw> = [];
+    const moduleDefinitionsByName = new Map<string, ModuleDefinition>();
 
     for (const path in moduleFileRecords) {
-        // Extract the file name to use as the route name and path
         const moduleName = path.split('/').pop()?.replace('.vue', '') || 'UnnamedModule';
-        const moduleComponent: any = await moduleFileRecords[path]();
+        const manifestPath = path.replace(/\.vue$/, '.routes.ts');
+        const moduleManifestRecord = moduleManifestFileRecords[manifestPath] as { default?: ModuleRouteManifest };
+
+        moduleDefinitionsByName.set(moduleName, {
+            moduleName,
+            moduleLoader: moduleFileRecords[path] as () => Promise<unknown>,
+            moduleManifest: moduleManifestRecord?.default,
+        });
+    }
+
+    for (const path in moduleFolderIndexFileRecords) {
+        const moduleName = path.split('/').slice(-2, -1)[0] || 'UnnamedModule';
+        const manifestPath = path.replace(/\/index\.vue$/, '/routes.ts');
+        const moduleManifestRecord = moduleFolderManifestFileRecords[manifestPath] as { default?: ModuleRouteManifest };
+
+        moduleDefinitionsByName.set(moduleName, {
+            moduleName,
+            moduleLoader: moduleFolderIndexFileRecords[path] as () => Promise<unknown>,
+            moduleManifest: moduleManifestRecord?.default,
+        });
+    }
+
+    for (const moduleDefinition of moduleDefinitionsByName.values()) {
+        const moduleName = moduleDefinition.moduleName;
+        const moduleComponent = (await moduleDefinition.moduleLoader()) as ModuleComponentExport;
+        const moduleManifest = moduleDefinition.moduleManifest;
 
         // Define the route path, e.g., '/modules/module-a' if needed
         const routePath = `/modules/${moduleName.toLowerCase()}`;
@@ -94,22 +166,27 @@ const generateModuleRoutes = async (): Promise<Array<RouteRecordRaw>> => {
         // Overwrite preserveRouteQuery
         if (isOnlyVisibleWithSelectedAas || isOnlyVisibleWithSelectedNode) preserveRouteQuery = true;
 
+        const parentMeta: ModuleRouteMeta = {
+            name: moduleName,
+            title: moduleTitle,
+            subtitle: 'Module',
+            isDesktopModule: isDesktopModule,
+            isMobileModule: isMobileModule,
+            isVisibleModule: isVisibleModule,
+            isOnlyVisibleWithSelectedAas: isOnlyVisibleWithSelectedAas,
+            isOnlyVisibleWithSelectedNode: isOnlyVisibleWithSelectedNode,
+            preserveRouteQuery: preserveRouteQuery,
+        };
+
+        const moduleChildren = buildValidatedModuleChildRoutes(moduleName, routePath, parentMeta, moduleManifest);
+
         moduleRoutes.push({
             path: routePath,
             name: moduleName,
-            meta: {
-                name: moduleName,
-                title: moduleTitle,
-                subtitle: 'Module',
-                isDesktopModule: isDesktopModule,
-                isMobileModule: isMobileModule,
-                isVisibleModule: isVisibleModule,
-                isOnlyVisibleWithSelectedAas: isOnlyVisibleWithSelectedAas,
-                isOnlyVisibleWithSelectedNode: isOnlyVisibleWithSelectedNode,
-                preserveRouteQuery: preserveRouteQuery,
-            },
+            meta: parentMeta,
             // Lazy-load the component
-            component: moduleFileRecords[path] as () => Promise<unknown>,
+            component: moduleDefinition.moduleLoader,
+            children: moduleChildren,
         });
     }
 
@@ -128,6 +205,7 @@ export async function createAppRouter(): Promise<Router> {
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
     const envStore = useEnvStore();
+    const infrastructureStore = useInfrastructureStore();
 
     // Composables
     const { fetchAndDispatchAas, aasByEndpointHasSmeByPath } = useAASHandling();
@@ -209,7 +287,51 @@ export async function createAppRouter(): Promise<Router> {
         routes,
     });
 
+    let infrastructureInitializationEnsured = false;
+
+    const tryResolveRouteByName = (name: string): RouteRecordRaw | undefined => {
+        const direct = findRouteByName(routes, name);
+        if (direct) return direct;
+
+        return findRouteByNameCaseInsensitive(routes, name);
+    };
+
+    const resolveStartRouteName = (query?: Record<string, unknown>): string => {
+        const configured = envStore.getStartPageRouteName;
+        const desired = configured && configured.trim() !== '' ? configured.trim() : 'AASViewer';
+
+        // Prevent accidental loops
+        if (desired === 'Root') return 'AASViewer';
+
+        const record = tryResolveRouteByName(desired);
+        if (!record) return 'AASViewer';
+
+        // Feature flag gating
+        if (record.name === 'AASEditor' && !envStore.getAllowEditing) return 'AASViewer';
+        if ((record.name === 'SMViewer' || record.name === 'SMEditor') && !envStore.getSmViewerEditor)
+            return 'AASViewer';
+        if (record.name === 'SMEditor' && !envStore.getAllowEditing) return 'AASViewer';
+
+        // Module constraints / visibility
+        const meta = (record.meta || {}) as Record<string, unknown>;
+        if (meta.isVisibleModule === false) return 'AASViewer';
+        if (meta.isOnlyVisibleWithSelectedAas && (!query || !Object.hasOwn(query, 'aas') || !String(query.aas).trim()))
+            return 'AASViewer';
+        if (
+            meta.isOnlyVisibleWithSelectedNode &&
+            (!query || !Object.hasOwn(query, 'path') || !String(query.path).trim())
+        )
+            return 'AASViewer';
+
+        return record.name?.toString() || 'AASViewer';
+    };
+
     router.beforeEach(async (to, from, next) => {
+        if (!infrastructureInitializationEnsured) {
+            await infrastructureStore.waitForInitialization();
+            infrastructureInitializationEnsured = true;
+        }
+
         // Handle OAuth2 callback (state + code in URL)
         if (to.query.state && to.query.code) {
             const state = to.query.state as string;
@@ -247,7 +369,9 @@ export async function createAppRouter(): Promise<Router> {
                     }
                 } catch (error) {
                     if (error instanceof TypeError) {
-                        throw new Error(`Invalid issuer URL format: ${issuer}. Must be a valid HTTP(S) URL.`);
+                        throw new Error(`Invalid issuer URL format: ${issuer}. Must be a valid HTTP(S) URL.`, {
+                            cause: error,
+                        });
                     }
                     throw error;
                 }
@@ -309,7 +433,7 @@ export async function createAppRouter(): Promise<Router> {
                 });
 
                 // Clean up URL and redirect to home
-                next({ path: '/', replace: true });
+                next({ name: resolveStartRouteName(), replace: true });
                 return;
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : 'OAuth2 authentication failed';
@@ -325,7 +449,7 @@ export async function createAppRouter(): Promise<Router> {
                 });
 
                 // Clean up URL and redirect to home
-                next({ path: '/', replace: true });
+                next({ name: resolveStartRouteName(), replace: true });
                 return;
             }
         }
@@ -342,6 +466,15 @@ export async function createAppRouter(): Promise<Router> {
             )
         )
             return;
+
+        // Root ("/") must redirect on initial load, but must show 404 when navigated to within the SPA.
+        // - Initial load: from has no matches
+        // - In-app navigation: allow the Root route component (404) to render
+        if (to.path === '/' && from.matched.length === 0) {
+            const startRouteName = resolveStartRouteName(to.query as Record<string, unknown>);
+            next({ name: startRouteName, query: to.query, replace: true });
+            return;
+        }
 
         // Same route
         if (Object.hasOwn(from, 'name') && Object.hasOwn(to, 'name') && from.name === to.name) {
@@ -429,7 +562,7 @@ export async function createAppRouter(): Promise<Router> {
                 // --> Load url query parameter
 
                 const queryLoaded = navigationStore.getUrlQuery;
-                const updatedRoute = { path: to.path, name: to.name, query: {} as Record<string, any> };
+                const updatedRoute = { path: to.path, name: to.name, query: {} as LocationQueryRaw };
 
                 if (routesUsingAasOrPathUrlQuery.includes(to.name) || to.path.startsWith('/modules/')) {
                     // Just for switching TO a route using url query parameter
@@ -635,6 +768,7 @@ export async function createAppRouter(): Promise<Router> {
                     (from.query.aas as string).trim() !== (to.query.aas as string).trim()))
         ) {
             const aas = await fetchAndDispatchAas(to.query.aas as string);
+
             if (!aas || Object.keys(aas).length === 0) {
                 // Remove aas query for not available AAS endpoint
                 const query = { ...to.query };
@@ -649,7 +783,7 @@ export async function createAppRouter(): Promise<Router> {
 
         // Fetch and dispatch SM/SME
         // Track the fetched SME to use for semanticId check (avoids timing issues with store reactivity)
-        let fetchedSme: any = null;
+        let fetchedSme: Record<string, unknown> | null = null;
         if (
             Object.hasOwn(to.query, 'path') &&
             (to.query.path as string).trim() !== '' &&

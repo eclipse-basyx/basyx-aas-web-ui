@@ -82,9 +82,9 @@ export async function authenticateOAuth2ClientCredentials(config: OAuth2Connecti
         };
     } catch (error) {
         if (error instanceof Error) {
-            throw new Error(`OAuth2 authentication error: ${error.message}`);
+            throw new Error(`OAuth2 authentication error: ${error.message}`, { cause: error });
         }
-        throw new Error('OAuth2 authentication failed with unknown error');
+        throw new Error('OAuth2 authentication failed with unknown error', { cause: error });
     }
 }
 
@@ -233,9 +233,9 @@ export async function exchangeOAuth2AuthorizationCode(config: {
         };
     } catch (error) {
         if (error instanceof Error) {
-            throw new Error(`Token exchange error: ${error.message}`);
+            throw new Error(`Token exchange error: ${error.message}`, { cause: error });
         }
-        throw new Error('Token exchange failed with unknown error');
+        throw new Error('Token exchange failed with unknown error', { cause: error });
     }
 }
 
@@ -287,8 +287,8 @@ export async function refreshOAuth2Token(config: {
         };
     } catch (error) {
         if (error instanceof Error) {
-            throw new Error(`Token refresh error: ${error.message}`);
+            throw new Error(`Token refresh error: ${error.message}`, { cause: error });
         }
-        throw new Error('Token refresh failed with unknown error');
+        throw new Error('Token refresh failed with unknown error', { cause: error });
     }
 }
