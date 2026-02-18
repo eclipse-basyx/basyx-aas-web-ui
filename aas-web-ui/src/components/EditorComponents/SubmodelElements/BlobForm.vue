@@ -122,7 +122,7 @@ It saves the changes after pressing the 'Enter' Key. When creating additional Fo
 usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not execute when in such form fields.
 */
 
-    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
@@ -277,7 +277,7 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
 
     async function saveBlob(): Promise<void> {
         if (props.newBlob || blobObject.value === undefined) {
-            blobObject.value = new aasTypes.Blob('application/unknown');
+            blobObject.value = new aasTypes.Blob();
         }
 
         if (blobIdShort.value !== null) {

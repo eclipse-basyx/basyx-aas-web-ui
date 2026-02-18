@@ -1,5 +1,5 @@
-import type { JsonValue } from '@aas-core-works/aas-core3.0-typescript/jsonization';
-import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+import type { JsonValue } from '@aas-core-works/aas-core3.1-typescript/jsonization';
+import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
 import { useRoute, useRouter } from 'vue-router';
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';

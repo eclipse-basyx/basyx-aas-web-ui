@@ -18,6 +18,7 @@
     "postinstall": "node ./scripts/postinstall.mjs"
   },
   "dependencies": {
+    "@aas-core-works/aas-core3.1-typescript": "^1.0.0",
     "@mdi/font": "^7.4.47",
     "@thatopen/components": "^3.3.2",
     "@thatopen/components-front": "^3.3.1",
@@ -30,6 +31,7 @@
     "@vue-leaflet/vue-leaflet": "^0.10.1",
     "aasx-package-ts": "^0.1.2",
     "apexcharts": "^5.4.0",
+    "basyx-typescript-sdk": "^2.1.0",
     "i18n-iso-countries": "^7.14.0",
     "iso-639-1": "^3.1.5",
     "js-yaml": "^4.1.1",
@@ -49,7 +51,6 @@
     "webfontloader": "^1.0.0"
   },
   "devDependencies": {
-    "@aas-core-works/aas-core3.0-typescript": "^1.0.5",
     "@eslint/js": "^10.0.1",
     "@testing-library/vue": "^8.1.0",
     "@types/js-yaml": "^4.0.9",

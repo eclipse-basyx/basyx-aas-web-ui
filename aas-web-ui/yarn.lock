@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@aas-core-works/aas-core3.0-typescript@^1.0.5":
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/@aas-core-works/aas-core3.0-typescript/-/aas-core3.0-typescript-1.0.5.tgz#5d1f251aa81164363f627fb936e481f9fbb4ada2"
-  integrity sha512-VdcnQ5p06tuKEr4zldUASu7vXGziLBDXnbHKh8sY0M6EvGOI2vFl1wHkgAH974iF2dD6JJBYz7Nv7o46FqOzrQ==
+"@aas-core-works/aas-core3.1-typescript@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@aas-core-works/aas-core3.1-typescript/-/aas-core3.1-typescript-1.0.0.tgz#b91721ccd8ea025b98a07cb173fd1939868a320e"
+  integrity sha512-7Ou6nJg4jHXOyEbegQFsOmkKhp/v73hUZB8TTe50ZGtaWzFxURkWTU/sxWeyqgd4X19dNIZkLANzffDvp45OQg==
 
 "@acemir/cssom@^0.9.31":
   version "0.9.31"
@@ -1626,6 +1626,13 @@ balanced-match@^1.0.0:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.2.tgz#e83e3a7e3f300b34cb9d87f615fa0cbf357690ee"
   integrity sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==
+
+basyx-typescript-sdk@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/basyx-typescript-sdk/-/basyx-typescript-sdk-2.1.0.tgz#cbca7c3b1ef345255716da11a859f08968b0c11a"
+  integrity sha512-NYan82bIQjXtPRW8FkqJAv2YIXKQlHUaRwNAsDmZyfq5cC89s1mKap5mocY+olUlzuazcMNfgQfMSc0oWbVE7g==
+  dependencies:
+    xml-sax-ts "^0.3.0"
 
 bidi-js@^1.0.3:
   version "1.0.3"

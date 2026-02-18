@@ -1,4 +1,4 @@
-import * as aas from '@aas-core-works/aas-core3.0-typescript';
+import * as aas from '@aas-core-works/aas-core3.1-typescript';
 
 export function createCompanyIdentificationSMC(form: any): aas.types.SubmodelElementCollection {
     const elements: aas.types.ISubmodelElement[] = [];
@@ -23,7 +23,7 @@ export function createCompanyIdentificationSMC(form: any): aas.types.SubmodelEle
     }
 
     if (form.CompanyLogo) {
-        const file = new aas.types.File('image/png');
+        const file = new aas.types.File();
         file.idShort = 'CompanyLogo';
         file.semanticId = new aas.types.Reference(aas.types.ReferenceTypes.ExternalReference, [
             new aas.types.Key(aas.types.KeyTypes.GlobalReference, '0173-1#02-ABI776#002'),

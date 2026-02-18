@@ -33,8 +33,8 @@
 </template>
 
 <script lang="ts" setup>
-    import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
-    import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+    import { jsonization } from '@aas-core-works/aas-core3.1-typescript';
+    import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
     import { onMounted, ref, watch } from 'vue';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useSMHandling } from '@/composables/AAS/SMHandling';

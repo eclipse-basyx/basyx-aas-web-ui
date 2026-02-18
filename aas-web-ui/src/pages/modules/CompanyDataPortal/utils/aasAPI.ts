@@ -1,4 +1,4 @@
-import * as aas from '@aas-core-works/aas-core3.0-typescript';
+import * as aas from '@aas-core-works/aas-core3.1-typescript';
 import { useFormStore } from '../stores/formData';
 import { getSubmodel } from './mainSubmodel';
 

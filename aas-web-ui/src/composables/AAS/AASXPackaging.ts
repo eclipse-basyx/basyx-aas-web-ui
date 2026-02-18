@@ -1,4 +1,4 @@
-import * as aasCore from '@aas-core-works/aas-core3.0-typescript';
+import * as aasCore from '@aas-core-works/aas-core3.1-typescript';
 import { NewPackaging, type ReadWriteSeeker } from 'aasx-package-ts';
 import mime from 'mime';
 import { useAASHandling } from '@/composables/AAS/AASHandling';

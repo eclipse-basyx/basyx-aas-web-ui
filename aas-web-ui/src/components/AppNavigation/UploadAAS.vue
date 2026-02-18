@@ -69,7 +69,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
+    import { jsonization } from '@aas-core-works/aas-core3.1-typescript';
     import { computed, ref, watch, watchEffect } from 'vue';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
     import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
