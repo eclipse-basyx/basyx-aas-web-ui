@@ -86,4 +86,53 @@ describe('JumpHandling.ts', () => {
         expect(mockDeps.getEndpoints).not.toHaveBeenCalled();
         expect(mockDeps.routerPush).not.toHaveBeenCalled();
     });
+
+    it('uses smEndpoint as path when no SME path is available', async () => {
+        const { jumpToReference } = useJumpHandling();
+
+        mockDeps.getEndpoints.mockResolvedValue({
+            aasEndpoint: 'https://example.test/shells/aas-1',
+            smEndpoint: 'https://example.test/submodels/sm-1',
+            smePath: '',
+        });
+
+        await jumpToReference({ type: 'ModelReference', keys: [{ type: 'Submodel', value: 'sm-1' }] });
+
+        expect(mockDeps.routerPush).toHaveBeenCalledTimes(1);
+        expect(mockDeps.routerPush).toHaveBeenCalledWith({
+            query: {
+                aas: 'https://example.test/shells/aas-1',
+                path: 'https://example.test/submodels/sm-1',
+            },
+        });
+    });
+
+    it('resolves AAS and still navigates to submodel path when aasEndpoint is initially unknown', async () => {
+        const { jumpToReference } = useJumpHandling();
+
+        mockDeps.getEndpoints.mockResolvedValue({
+            aasEndpoint: '',
+            smEndpoint: 'https://example.test/submodels/sm-1',
+            smePath: '',
+        });
+        mockDeps.fetchSm.mockResolvedValue({ id: 'sm-1' });
+        mockDeps.fetchAasDescriptorList.mockResolvedValue([]);
+        mockDeps.fetchAasList.mockResolvedValue([
+            {
+                id: 'aas-1',
+                submodels: [{ type: 'ModelReference', keys: [{ type: 'Submodel', value: 'sm-1' }] }],
+            },
+        ]);
+        mockDeps.getAasEndpointById.mockResolvedValue('https://example.test/shells/aas-1');
+
+        await jumpToReference({ type: 'ModelReference', keys: [{ type: 'Submodel', value: 'sm-1' }] });
+
+        expect(mockDeps.routerPush).toHaveBeenCalledTimes(1);
+        expect(mockDeps.routerPush).toHaveBeenCalledWith({
+            query: {
+                aas: 'https://example.test/shells/aas-1',
+                path: 'https://example.test/submodels/sm-1',
+            },
+        });
+    });
 });

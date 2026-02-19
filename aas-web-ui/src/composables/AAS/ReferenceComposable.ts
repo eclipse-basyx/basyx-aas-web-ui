@@ -191,7 +191,7 @@ export function useReferenceComposable() {
                     referenceKeys = referenceKeys.slice(1);
                 }
 
-                if (smEndpoint && smEndpoint.trim() !== '') {
+                if (smEndpoint && smEndpoint.trim() !== '' && referenceKeys.length > 0) {
                     smePath = smEndpoint + '/submodel-elements/';
 
                     for (let i = 0; i < referenceKeys.length; i++) {

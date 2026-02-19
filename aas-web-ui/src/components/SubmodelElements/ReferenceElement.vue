@@ -6,11 +6,11 @@
                 (reference?.type ? reference.type : 'Reference') + ':'
             }}</v-list-item-title>
         </v-list-item>
-        <v-card v-if="reference" color="elevatedCard">
+        <v-card v-if="props.referenceElementObject" color="elevatedCard">
             <!-- Value of the ReferenceElement -->
             <v-list nav class="pt-0" :class="isOperationVariable ? '' : 'bg-elevatedCard'">
                 <!-- Reference Representation -->
-                <template v-if="reference">
+                <template v-if="hasReferenceKeys()">
                     <template v-for="(key, i) in reference?.keys" :key="i">
                         <v-list-item>
                             <!-- Tooltip with Reference ID -->
@@ -88,10 +88,36 @@
                         <v-divider v-if="(i as number) < reference?.keys.length - 1" class="mt-3"></v-divider>
                     </template>
                 </template>
+                <template v-else-if="hasReferenceObject()">
+                    <v-list-item class="px-1">
+                        <v-alert
+                            text="No reference keys set"
+                            density="compact"
+                            type="info"
+                            variant="outlined"
+                            class="mt-2">
+                        </v-alert>
+                    </v-list-item>
+                </template>
+                <template v-else>
+                    <v-list-item class="px-1">
+                        <v-alert
+                            text="No reference value set"
+                            density="compact"
+                            type="info"
+                            variant="outlined"
+                            class="mt-2">
+                        </v-alert>
+                    </v-list-item>
+                </template>
             </v-list>
-            <v-divider></v-divider>
+            <v-divider v-if="hasReferenceKeys()"></v-divider>
             <!-- Action Buttons -->
-            <v-list nav class="pa-0" :class="isOperationVariable ? '' : 'bg-elevatedCard'">
+            <v-list
+                v-if="hasReferenceKeys() || (isEditable && isOperationVariable && !isOutputVariable)"
+                nav
+                class="pa-0"
+                :class="isOperationVariable ? '' : 'bg-elevatedCard'">
                 <v-list-item>
                     <template #append>
                         <!-- Jump-Button -->
@@ -112,7 +138,6 @@
                             class="text-buttonText"
                             color="primary"
                             :loading="loading"
-                            :disabled="disabled"
                             @click="addReferenceKey()">
                             <div>Add Entry</div>
                             <v-icon class="ml-2">mdi-plus</v-icon>
@@ -125,7 +150,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { computed, onMounted, ref, watch } from 'vue';
+    import { computed, ref, watch } from 'vue';
     import { useReferenceComposable } from '@/composables/AAS/ReferenceComposable';
     import { useJumpHandling } from '@/composables/JumpHandling';
 
@@ -204,20 +229,29 @@
     });
 
     watch(
-        props.referenceElementObject,
+        () => props.referenceElementObject,
         () => {
-            reference.value = props.referenceElementObject?.value;
+            reference.value = props.referenceElementObject?.value ?? null;
             validateReference();
         },
-        { deep: true }
+        { deep: true, immediate: true }
     );
 
-    onMounted(() => {
-        reference.value = props.referenceElementObject?.value;
-        validateReference();
-    });
+    function hasReferenceObject(): boolean {
+        return !!reference.value && typeof reference.value.type === 'string' && Array.isArray(reference.value.keys);
+    }
+
+    function hasReferenceKeys(): boolean {
+        return hasReferenceObject() && (reference.value?.keys.length ?? 0) > 0;
+    }
 
     function validateReference(): void {
+        if (!hasReferenceKeys()) {
+            disabled.value = true;
+            loading.value = false;
+            return;
+        }
+
         loading.value = true;
 
         checkReference(reference.value)
@@ -240,7 +274,9 @@
     }
 
     function addReferenceKey(): void {
-        // console.log('addReferenceKey');
+        if (!hasReferenceObject()) {
+            reference.value = { type: 'ExternalReference', keys: [] };
+        }
         reference.value.keys.push({ type: '', value: '' });
         updateReferenceElementObject();
     }

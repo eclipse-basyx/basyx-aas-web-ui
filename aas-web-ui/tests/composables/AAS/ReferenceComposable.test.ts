@@ -89,6 +89,41 @@ describe('ReferenceComposable.ts', () => {
         expect(mockDeps.fetchSme).toHaveBeenCalledWith('https://example.test/submodels/sm-1/submodel-elements/Users');
     });
 
+    it('does not append submodel-elements path for a pure submodel reference', async () => {
+        const { getEndpoints } = useReferenceComposable();
+
+        const reference = {
+            type: 'ModelReference',
+            keys: [{ type: 'Submodel', value: 'sm-1' }],
+        };
+
+        const endpoints = await getEndpoints(reference);
+
+        expect(endpoints.aasEndpoint).toBe('');
+        expect(endpoints.smEndpoint).toBe('https://example.test/submodels/sm-1');
+        expect(endpoints.smePath).toBe('');
+        expect(mockDeps.fetchSme).not.toHaveBeenCalled();
+    });
+
+    it('does not append submodel-elements path for AAS + Submodel references without SME keys', async () => {
+        const { getEndpoints } = useReferenceComposable();
+
+        const reference = {
+            type: 'ModelReference',
+            keys: [
+                { type: 'AssetAdministrationShell', value: 'aas-1' },
+                { type: 'Submodel', value: 'sm-1' },
+            ],
+        };
+
+        const endpoints = await getEndpoints(reference);
+
+        expect(endpoints.aasEndpoint).toBe('https://example.test/shells/aas-1');
+        expect(endpoints.smEndpoint).toBe('https://example.test/submodels/sm-1');
+        expect(endpoints.smePath).toBe('');
+        expect(mockDeps.fetchSme).not.toHaveBeenCalled();
+    });
+
     it('resolves nested path after list index (List[index].Property)', async () => {
         const { getEndpoints } = useReferenceComposable();
 
