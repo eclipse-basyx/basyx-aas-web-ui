@@ -1,6 +1,5 @@
 import { computed } from 'vue';
 import { useAASHandling } from '@/composables/AAS/AASHandling';
-import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
 import { useSMEHandling } from '@/composables/AAS/SMEHandling';
 import { useSMHandling } from '@/composables/AAS/SMHandling';
 import { useAASStore } from '@/store/AASDataStore';
@@ -16,7 +15,6 @@ export function useReferenceComposable() {
     const { aasIsAvailableById, getAasEndpointById } = useAASHandling();
     const { smIsAvailableById, getSmEndpointById } = useSMHandling();
     const { fetchSme } = useSMEHandling();
-    const { checkIdShort } = useReferableUtils();
 
     // Computed Properties
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
@@ -66,7 +64,21 @@ export function useReferenceComposable() {
                 }
 
                 if (aasId && aasId.trim() !== '' && smId && smId.trim() !== '') {
-                    return (await aasIsAvailableById(aasId)) && (await smIsAvailableById(smId));
+                    const isReferenceAvailable = (await aasIsAvailableById(aasId)) && (await smIsAvailableById(smId));
+
+                    if (!isReferenceAvailable) return failResponse;
+
+                    if (Array.isArray(reference.keys) && reference.keys.length > 2) {
+                        const { smePath } = await getEndpoints(reference);
+
+                        if (!smePath || smePath.trim() === '') return failResponse;
+
+                        const sme = await fetchSme(smePath);
+
+                        return !!sme && Object.keys(sme).length > 0;
+                    }
+
+                    return isReferenceAvailable;
                 } else if (aasId && aasId.trim() !== '') {
                     return await aasIsAvailableById(aasId);
                 }
@@ -81,10 +93,38 @@ export function useReferenceComposable() {
                     const submodelIds = submodelRefs.map((submodelRef: any) => {
                         return extractId(submodelRef, 'Submodel');
                     });
-                    if (submodelIds.includes(smId)) return true;
+                    const isSubmodelInSelectedAAS = submodelIds.includes(smId);
+
+                    if (isSubmodelInSelectedAAS) {
+                        if (Array.isArray(reference.keys) && reference.keys.length > 1) {
+                            const { smePath } = await getEndpoints(reference);
+
+                            if (!smePath || smePath.trim() === '') return failResponse;
+
+                            const sme = await fetchSme(smePath);
+
+                            return !!sme && Object.keys(sme).length > 0;
+                        }
+
+                        return true;
+                    }
 
                     // Second check: (General) Availability of submodel
-                    return await smIsAvailableById(smId);
+                    const isSubmodelAvailable = await smIsAvailableById(smId);
+
+                    if (!isSubmodelAvailable) return failResponse;
+
+                    if (Array.isArray(reference.keys) && reference.keys.length > 1) {
+                        const { smePath } = await getEndpoints(reference);
+
+                        if (!smePath || smePath.trim() === '') return failResponse;
+
+                        const sme = await fetchSme(smePath);
+
+                        return !!sme && Object.keys(sme).length > 0;
+                    }
+
+                    return isSubmodelAvailable;
                 }
 
                 return failResponse;
@@ -128,51 +168,56 @@ export function useReferenceComposable() {
         if (!referenceTypes.includes(reference.type)) return failResponse;
 
         if (reference.type === 'ModelReference') {
-            let referenceKeys = reference.keys;
+            let referenceKeys = [...reference.keys];
 
             if (Array.isArray(referenceKeys) && referenceKeys.length > 0) {
                 let aasEndpoint = '';
                 let smEndpoint = '';
                 let smePath = '';
 
-                if (reference?.keys[0]?.type === 'AssetAdministrationShell') {
-                    const aasId = reference?.keys[0].value.trim();
+                if (referenceKeys[0]?.type === 'AssetAdministrationShell') {
+                    const aasId = referenceKeys[0].value.trim();
                     aasEndpoint = await getAasEndpointById(aasId);
-                    if (reference?.keys[1]?.type === 'Submodel') {
-                        const smId = reference?.keys[1].value.trim();
-                        smEndpoint = await getSmEndpointById(smId);
-                        referenceKeys = referenceKeys.slice(1);
-                    }
                     referenceKeys = referenceKeys.slice(1);
                 }
 
-                if (reference?.keys[0]?.type === 'Submodel') {
-                    const smId = reference?.keys[0].value.trim();
-                    smEndpoint = await getSmEndpointById(smId);
-                    // TODO Determine (first) AAS which includes the SM of the SM endpoint via SM ID, cf. jumpToReference() in JumpHandling.ts
-                    // NOTE: Not needed anymore if aas-gui allow for single SMs to be shown independently (https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/158)
+                if (referenceKeys[0]?.type === 'Submodel') {
+                    const smId = referenceKeys[0].value.trim();
+
+                    if (smId.trim() !== '') {
+                        smEndpoint = await getSmEndpointById(smId);
+                    }
+
                     referenceKeys = referenceKeys.slice(1);
                 }
 
                 if (smEndpoint && smEndpoint.trim() !== '') {
                     smePath = smEndpoint + '/submodel-elements/';
 
-                    referenceKeys.forEach(async (key: any, index: number) => {
-                        if (index > 0 && referenceKeys[index - 1].type == 'SubmodelElementList') {
-                            const sml = await fetchSme(smePath);
-                            const index = sml.value.findIndex((sme: any) => checkIdShort(sme, key.value, false, true));
+                    for (let i = 0; i < referenceKeys.length; i++) {
+                        const currentKey = referenceKeys[i];
+                        const previousKey = i > 0 ? referenceKeys[i - 1] : null;
 
-                            if (index !== -1) {
-                                smePath += encodeURIComponent('[') + index + encodeURIComponent(']');
+                        if (previousKey?.type === 'SubmodelElementList') {
+                            const listIndex = Number.parseInt(String(currentKey.value), 10);
+
+                            if (!Number.isInteger(listIndex) || String(listIndex) !== String(currentKey.value).trim()) {
+                                return failResponse;
                             }
-                        } else if (index > 0 && referenceKeys[index - 1].type == 'SubmodelElementCollection') {
-                            if (!smePath.endsWith('/submodel-elements/')) smePath += '.';
-                            smePath += key.value;
+
+                            const sml = await fetchSme(smePath);
+                            const listElements = sml?.value;
+
+                            if (!Array.isArray(listElements) || listIndex < 0 || listIndex >= listElements.length) {
+                                return failResponse;
+                            }
+
+                            smePath += encodeURIComponent('[') + listIndex + encodeURIComponent(']');
                         } else {
                             if (!smePath.endsWith('/submodel-elements/')) smePath += '.';
-                            smePath += key.value;
+                            smePath += currentKey.value;
                         }
-                    });
+                    }
                 }
 
                 return { aasEndpoint: aasEndpoint, smEndpoint: smEndpoint, smePath: smePath };
