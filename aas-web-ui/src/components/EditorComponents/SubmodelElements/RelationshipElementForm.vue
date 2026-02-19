@@ -243,17 +243,6 @@
         // Clear previous errors
         errors.value.clear();
 
-        // Validate required fields
-        if (firstReference.value === null) {
-            errors.value.set('first', 'First reference is required');
-            return;
-        }
-
-        if (secondReference.value === null) {
-            errors.value.set('second', 'Second reference is required');
-            return;
-        }
-
         if (props.newRelationshipElement || relationshipElementObject.value === undefined) {
             relationshipElementObject.value = new aasTypes.RelationshipElement();
         }

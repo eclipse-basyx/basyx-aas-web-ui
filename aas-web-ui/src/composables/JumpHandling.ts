@@ -24,8 +24,9 @@ export function useJumpHandling() {
 
             if (reference.type === 'ModelReference') {
                 const { aasEndpoint, smEndpoint, smePath } = await getEndpoints(reference);
+                const targetPath = smePath.trim() !== '' ? smePath : smEndpoint;
                 if (aasEndpoint.trim() !== '') {
-                    jumpToAas(aasEndpoint, smePath);
+                    jumpToAas(aasEndpoint, targetPath);
                     return;
                 } else if (aasEndpoint.trim() === '' && smEndpoint.trim() !== '') {
                     // Determine (first) AAS which includes the SM of the SM endpoint via SM ID
@@ -43,7 +44,7 @@ export function useJumpHandling() {
                                     for (const smDescriptor of smDescriptors) {
                                         if (smDescriptor && Object.keys(smDescriptor).length > 0) {
                                             if (smId === smDescriptor.id) {
-                                                jumpToAas(aasEndpoint, smePath);
+                                                jumpToAas(extractEndpointHref(aasDescriptor, 'AAS-3.0'), targetPath);
                                                 return;
                                             }
                                         }
@@ -66,7 +67,7 @@ export function useJumpHandling() {
                                 ) {
                                     for (const submodelRef of submodelRefs) {
                                         if (smId === extractIdFromReference(submodelRef, 'Submodel')) {
-                                            jumpToAas(aasEndpoint, smePath);
+                                            jumpToAas(aasEndpoint, targetPath);
                                             return;
                                         }
                                     }
@@ -90,7 +91,7 @@ export function useJumpHandling() {
                                 ) {
                                     for (const submodelRef of submodelRefs) {
                                         if (smId === extractIdFromReference(submodelRef, 'Submodel')) {
-                                            jumpToAas(aasEndpoint, smePath);
+                                            jumpToAas(aasEndpoint, targetPath);
                                             return;
                                         }
                                     }
