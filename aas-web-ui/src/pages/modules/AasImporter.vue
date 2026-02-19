@@ -99,7 +99,7 @@
 </template>
 
 <script setup lang="ts">
-    import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
+    import { jsonization } from '@aas-core-works/aas-core3.1-typescript';
     import { computed, onMounted, ref } from 'vue';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
     import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';

@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@aas-core-works/aas-core3.0-typescript@^1.0.5":
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/@aas-core-works/aas-core3.0-typescript/-/aas-core3.0-typescript-1.0.5.tgz#5d1f251aa81164363f627fb936e481f9fbb4ada2"
-  integrity sha512-VdcnQ5p06tuKEr4zldUASu7vXGziLBDXnbHKh8sY0M6EvGOI2vFl1wHkgAH974iF2dD6JJBYz7Nv7o46FqOzrQ==
+"@aas-core-works/aas-core3.1-typescript@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@aas-core-works/aas-core3.1-typescript/-/aas-core3.1-typescript-1.0.0.tgz#b91721ccd8ea025b98a07cb173fd1939868a320e"
+  integrity sha512-7Ou6nJg4jHXOyEbegQFsOmkKhp/v73hUZB8TTe50ZGtaWzFxURkWTU/sxWeyqgd4X19dNIZkLANzffDvp45OQg==
 
 "@acemir/cssom@^0.9.31":
   version "0.9.31"
@@ -1502,6 +1502,14 @@
   resolved "https://registry.yarnpkg.com/@yr/monotone-cubic-spline/-/monotone-cubic-spline-1.0.3.tgz#7272d89f8e4f6fb7a1600c28c378cc18d3b577b9"
   integrity sha512-FQXkOta0XBSUPHndIKON2Y9JeQz5ZeMqLYZVVK93FliNBFm7LNMIZmY6FrMEB9XPcDbE2bekMbZD6kzDkxwYjA==
 
+aasx-package-ts@^0.1.3:
+  version "0.1.3"
+  resolved "https://registry.yarnpkg.com/aasx-package-ts/-/aasx-package-ts-0.1.3.tgz#4838fa40f54fafd7afd562265fffc860ab257d2d"
+  integrity sha512-zWswXi3MgWY1aVnGr0y/+c+wRj3vbemvwxj0lccSZdnUPvYTSn0aph9yzVspeEXc7VmY52Xq8dYP0IeqQ1hc2A==
+  dependencies:
+    fflate "^0.8.2"
+    xml-sax-ts "^0.3.0"
+
 abbrev@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-2.0.0.tgz#cf59829b8b4f03f89dda2771cb7f3653828c89bf"
@@ -1618,6 +1626,13 @@ balanced-match@^1.0.0:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.2.tgz#e83e3a7e3f300b34cb9d87f615fa0cbf357690ee"
   integrity sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==
+
+basyx-typescript-sdk@^2.1.1:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/basyx-typescript-sdk/-/basyx-typescript-sdk-2.1.1.tgz#d2491d37721bc3576c44ef537e8548b7e8706971"
+  integrity sha512-i8cCEGWUNVieTlqv5dmb3+lec2cIxgoadDb2k8/hSLL57F8pJgQmHmr5FbT7d58vYFeXz74qwujV3wsImU91gg==
+  dependencies:
+    xml-sax-ts "^0.3.0"
 
 bidi-js@^1.0.3:
   version "1.0.3"
@@ -4351,6 +4366,11 @@ xml-name-validator@^5.0.0:
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/xml-name-validator/-/xml-name-validator-5.0.0.tgz#82be9b957f7afdacf961e5980f1bf227c0bf7673"
   integrity sha512-EvGK8EJ3DhaHfbRlETOWAS5pO9MZITeauHKJyb8wyajUfQUenkIg2MvLDTZ4T/TgIcm3HU0TFBgWWboAZ30UHg==
+
+xml-sax-ts@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/xml-sax-ts/-/xml-sax-ts-0.3.0.tgz#ab5c94cd6744478c233990618122b8aef3494eb4"
+  integrity sha512-alzmBPfcZBQyfzlFPUlXxGpSyGP2iBHvQWiOZxzdQaYKPccqtZyFJ+aPBjruCstRnJj0Q/zlHYOuEMfNkUEU9g==
 
 xmlchars@^2.2.0:
   version "2.2.0"

@@ -1,4 +1,4 @@
-import * as aas from '@aas-core-works/aas-core3.0-typescript';
+import * as aas from '@aas-core-works/aas-core3.1-typescript';
 
 export function createBankAccountsSMC(forms: any): aas.types.SubmodelElementCollection {
     const elements: aas.types.ISubmodelElement[] = [];

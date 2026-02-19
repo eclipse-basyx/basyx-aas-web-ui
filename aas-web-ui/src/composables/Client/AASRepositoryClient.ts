@@ -1,5 +1,5 @@
-import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
-import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
+import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
+import { jsonization } from '@aas-core-works/aas-core3.1-typescript';
 import { computed } from 'vue';
 import { useIDUtils } from '@/composables/IDUtils';
 import { useRequestHandling } from '@/composables/RequestHandling';

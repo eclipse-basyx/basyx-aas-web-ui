@@ -198,7 +198,7 @@
     import '@vue-flow/core/dist/style.css';
     import '@vue-flow/core/dist/theme-default.css';
     import type { EdgeProps } from '@vue-flow/core';
-    import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+    import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
     import { Background } from '@vue-flow/background';
     import { Controls } from '@vue-flow/controls';
     import { type Edge, MarkerType, type Node, useVueFlow, VueFlow } from '@vue-flow/core';
@@ -1064,7 +1064,9 @@
         const firstReference = buildEntityReference(sourceModelElement);
         const secondReference = buildEntityReference(targetModelElement);
 
-        const relationshipElement = new aasTypes.RelationshipElement(firstReference, secondReference);
+        const relationshipElement = new aasTypes.RelationshipElement();
+        relationshipElement.first = firstReference;
+        relationshipElement.second = secondReference;
         relationshipElement.idShort = `${selectedRelationshipType.value.label}_${sourceModelElement.idShort}_${targetModelElement.idShort}`;
         relationshipElement.semanticId = relSemanticId;
 

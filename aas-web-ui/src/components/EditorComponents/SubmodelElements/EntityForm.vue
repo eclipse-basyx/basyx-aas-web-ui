@@ -117,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
@@ -235,7 +235,7 @@
 
     async function saveEntity(): Promise<void> {
         if (props.newEntity || entityObject.value === undefined) {
-            entityObject.value = new aasTypes.Entity(entityType.value);
+            entityObject.value = new aasTypes.Entity();
         }
 
         if (entityIdShort.value !== null) {
