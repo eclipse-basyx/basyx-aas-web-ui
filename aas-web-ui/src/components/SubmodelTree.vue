@@ -380,6 +380,21 @@
     const clearTreeview = computed(() => navigationStore.getClearTreeview); // Clear the Treeview
     const clipboardElementContentType = computed(() => clipboardStore.getClipboardElementModelType()); // Get the Clipboard Element Content Type
     const isAuthenticating = computed(() => infrastructureStore.getIsAuthenticating); // Check if authentication is in progress
+    const activeTreePath = computed(() => {
+        if (
+            selectedNode.value &&
+            Object.keys(selectedNode.value).length > 0 &&
+            !isEmptyString(selectedNode.value.path)
+        ) {
+            return selectedNode.value.path as string;
+        }
+
+        if (typeof route.query.path === 'string' && !isEmptyString(route.query.path)) {
+            return route.query.path;
+        }
+
+        return '';
+    });
 
     // Watchers
     watch(
@@ -426,6 +441,14 @@
             submodelTreeUnfiltered.value = [];
         }
     );
+
+    watch([() => selectedNode.value?.path, () => route.query.path, () => submodelTree.value.length], () => {
+        if (!activeTreePath.value || isEmptyString(activeTreePath.value) || submodelTree.value.length === 0) {
+            return;
+        }
+
+        expandTree();
+    });
 
     onMounted(() => {
         if (!isAuthenticating.value) {
@@ -507,6 +530,10 @@
 
             submodelTree.value = processedList;
             submodelTreeUnfiltered.value = processedList;
+
+            if (activeTreePath.value && !isEmptyString(activeTreePath.value)) {
+                expandTree();
+            }
         } finally {
             treeLoading.value = false;
         }
@@ -527,6 +554,7 @@
                 newItem.submodelElements.length > 0
             ) {
                 newItem.submodelElements = deepMap(newItem.submodelElements, fn); // Recursively map SM Elements
+                newItem.children = newItem.submodelElements;
             } else if (
                 ['SubmodelElementCollection', 'SubmodelElementList'].includes(newItem.modelType) &&
                 newItem.value &&
@@ -534,6 +562,7 @@
                 newItem.value.length > 0
             ) {
                 newItem.value = deepMap(newItem.value, fn); // Recursively map SMC/SML elements
+                newItem.children = newItem.value;
             } else if (
                 newItem.modelType == 'Entity' &&
                 newItem.statements &&
@@ -541,6 +570,7 @@
                 newItem.statements.length > 0
             ) {
                 newItem.statements = deepMap(newItem.statements, fn); // Recursively map entity statements
+                newItem.children = newItem.statements;
             }
             return fn(newItem);
         });
@@ -595,27 +625,8 @@
         submodelElements.forEach((sme: any) => {
             sme.showChildren = false;
 
-            if (
-                sme.modelType === 'Submodel' &&
-                sme.submodelElements &&
-                Array.isArray(sme.submodelElements) &&
-                sme.submodelElements.length > 0
-            ) {
-                collapseTree(sme.submodelElements);
-            } else if (
-                ['SubmodelElementCollection', 'SubmodelElementList'].includes(sme.modelType) &&
-                sme.value &&
-                Array.isArray(sme.value) &&
-                sme.value.length > 0
-            ) {
-                collapseTree(sme.value);
-            } else if (
-                sme.modelType === 'Entity' &&
-                sme.statements &&
-                Array.isArray(sme.statements) &&
-                sme.statements.length > 0
-            ) {
-                collapseTree(sme.statements);
+            if (sme.children && Array.isArray(sme.children) && sme.children.length > 0) {
+                collapseTree(sme.children);
             }
         });
     }
@@ -625,27 +636,8 @@
         submodelElements.forEach((sme: any) => {
             sme.showChildren = shouldExpandNode(sme.path);
 
-            if (
-                sme.modelType === 'Submodel' &&
-                sme.submodelElements &&
-                Array.isArray(sme.submodelElements) &&
-                sme.submodelElements.length > 0
-            ) {
-                expandTree(sme.submodelElements);
-            } else if (
-                ['SubmodelElementCollection', 'SubmodelElementList'].includes(sme.modelType) &&
-                sme.value &&
-                Array.isArray(sme.value) &&
-                sme.value.length > 0
-            ) {
-                expandTree(sme.value);
-            } else if (
-                sme.modelType === 'Entity' &&
-                sme.statements &&
-                Array.isArray(sme.statements) &&
-                sme.statements.length > 0
-            ) {
-                expandTree(sme.statements);
+            if (sme.children && Array.isArray(sme.children) && sme.children.length > 0) {
+                expandTree(sme.children);
             }
         });
     }
@@ -681,11 +673,23 @@
     }
 
     function shouldExpandNode(nodePath: string): boolean {
+        const normalizePath = (path: string): string => {
+            if (!path || isEmptyString(path)) return '';
+
+            try {
+                return decodeURIComponent(path.trim());
+            } catch {
+                return path.trim();
+            }
+        };
+
+        const selectedPathNormalized = normalizePath(activeTreePath.value);
+        const nodePathNormalized = normalizePath(nodePath);
+
         return (
-            selectedNode.value &&
-            Object.keys(selectedNode.value).length > 0 &&
-            !isEmptyString(selectedNode.value.path) &&
-            selectedNode.value.path.startsWith(nodePath)
+            selectedPathNormalized !== '' &&
+            nodePathNormalized !== '' &&
+            selectedPathNormalized.startsWith(nodePathNormalized)
         );
     }
 
