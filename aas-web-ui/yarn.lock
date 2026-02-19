@@ -1627,10 +1627,10 @@ balanced-match@^1.0.0:
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.2.tgz#e83e3a7e3f300b34cb9d87f615fa0cbf357690ee"
   integrity sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==
 
-basyx-typescript-sdk@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/basyx-typescript-sdk/-/basyx-typescript-sdk-2.1.0.tgz#cbca7c3b1ef345255716da11a859f08968b0c11a"
-  integrity sha512-NYan82bIQjXtPRW8FkqJAv2YIXKQlHUaRwNAsDmZyfq5cC89s1mKap5mocY+olUlzuazcMNfgQfMSc0oWbVE7g==
+basyx-typescript-sdk@^2.1.1:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/basyx-typescript-sdk/-/basyx-typescript-sdk-2.1.1.tgz#d2491d37721bc3576c44ef537e8548b7e8706971"
+  integrity sha512-i8cCEGWUNVieTlqv5dmb3+lec2cIxgoadDb2k8/hSLL57F8pJgQmHmr5FbT7d58vYFeXz74qwujV3wsImU91gg==
   dependencies:
     xml-sax-ts "^0.3.0"
 
