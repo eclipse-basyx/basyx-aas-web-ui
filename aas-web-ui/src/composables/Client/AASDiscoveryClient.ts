@@ -27,7 +27,13 @@ export function useAASDiscoveryClient() {
      * @returns {Promise<string>} A promise that resolves to the AAS ID as a string if found; otherwise, an empty string.
      */
     async function getAasId(globalAssetId: string, endpoint?: string): Promise<string> {
-        const failResponse = '';
+        const aasIds = await getAasIds(globalAssetId, endpoint);
+        if (aasIds.length > 0) return aasIds[0];
+        return '';
+    }
+
+    async function getAasIds(globalAssetId: string, endpoint?: string): Promise<string[]> {
+        const failResponse: string[] = [];
 
         globalAssetId = globalAssetId.trim();
 
@@ -50,7 +56,9 @@ export function useAASDiscoveryClient() {
                 aasDiscoveryResponse.data.result.length > 0
             ) {
                 const aasIds = aasDiscoveryResponse.data.result;
-                if (Array.isArray(aasIds) && aasIds.length > 0) return aasIds[0];
+                if (Array.isArray(aasIds) && aasIds.length > 0) {
+                    return aasIds.filter((aasId) => typeof aasId === 'string' && aasId.trim() !== '');
+                }
             }
         } catch (e) {
             console.warn(e);
@@ -89,6 +97,7 @@ export function useAASDiscoveryClient() {
     return {
         endpointPath,
         getAasId,
+        getAasIds,
         isAvailableById,
     };
 }

@@ -326,7 +326,7 @@ export async function createAppRouter(): Promise<Router> {
         return record.name?.toString() || 'AASViewer';
     };
 
-    router.beforeEach(async (to, from, next) => {
+    router.beforeEach(async (to, from) => {
         if (!infrastructureInitializationEnsured) {
             await infrastructureStore.waitForInitialization();
             infrastructureInitializationEnsured = true;
@@ -433,8 +433,7 @@ export async function createAppRouter(): Promise<Router> {
                 });
 
                 // Clean up URL and redirect to home
-                next({ name: resolveStartRouteName(), replace: true });
-                return;
+                return { name: resolveStartRouteName(), replace: true };
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : 'OAuth2 authentication failed';
                 console.error('[OAuth2 Callback] Failed:', errorMessage, error);
@@ -449,31 +448,26 @@ export async function createAppRouter(): Promise<Router> {
                 });
 
                 // Clean up URL and redirect to home
-                next({ name: resolveStartRouteName(), replace: true });
-                return;
+                return { name: resolveStartRouteName(), replace: true };
             }
         }
 
         // Handle redirection of `globalAssetId`, `aasId` and `smId`
-        if (
-            await idRedirectHandled(
-                to,
-                next,
-                possibleIdQueryParameter,
-                possibleGloBalAssetIdQueryParameter,
-                possibleAasIdQueryParameter,
-                possibleSmIdQueryParameter
-            )
-        )
-            return;
+        const idRedirectRoute = await idRedirectHandled(
+            to,
+            possibleIdQueryParameter,
+            possibleGloBalAssetIdQueryParameter,
+            possibleAasIdQueryParameter,
+            possibleSmIdQueryParameter
+        );
+        if (idRedirectRoute) return idRedirectRoute;
 
         // Root ("/") must redirect on initial load, but must show 404 when navigated to within the SPA.
         // - Initial load: from has no matches
         // - In-app navigation: allow the Root route component (404) to render
         if (to.path === '/' && from.matched.length === 0) {
             const startRouteName = resolveStartRouteName(to.query as Record<string, unknown>);
-            next({ name: startRouteName, query: to.query, replace: true });
-            return;
+            return { name: startRouteName, query: to.query, replace: true };
         }
 
         // Same route
@@ -608,8 +602,7 @@ export async function createAppRouter(): Promise<Router> {
                     }
 
                     if (Object.keys(updatedRoute.query).length > 0) {
-                        next(updatedRoute);
-                        return;
+                        return updatedRoute;
                     }
                 } else if (Object.hasOwn(queryLoaded, 'ignorePreConfAuth')) {
                     // For all other routes
@@ -617,8 +610,7 @@ export async function createAppRouter(): Promise<Router> {
                     updatedRoute.query.ignorePreConfAuth = queryLoaded.ignorePreConfAuth;
 
                     if (Object.keys(updatedRoute.query).length > 0) {
-                        next(updatedRoute);
-                        return;
+                        return updatedRoute;
                     }
                 }
             }
@@ -634,8 +626,7 @@ export async function createAppRouter(): Promise<Router> {
             const query = { ...to.query };
             delete query.path;
             const updatedRoute = { path: to.path, query };
-            next(updatedRoute);
-            return;
+            return updatedRoute;
         }
 
         if (routesUsingOnlyAasUrlQuery.includes(to.name) && Object.hasOwn(to.query, 'path')) {
@@ -643,16 +634,14 @@ export async function createAppRouter(): Promise<Router> {
             const query = { ...to.query };
             delete query.path;
             const updatedRoute = { path: to.path, query };
-            next(updatedRoute);
-            return;
+            return updatedRoute;
         }
         if (routesUsingOnlyPathUrlQuery.includes(to.name) && Object.hasOwn(to.query, 'aas')) {
             // --> Delete aas url query parameter
             const query = { ...to.query };
             delete query.aas;
             const updatedRoute = { path: to.path, query };
-            next(updatedRoute);
-            return;
+            return updatedRoute;
         }
 
         // Check if single AAS mode is on and no aas query is set to either redirect or show 404
@@ -664,19 +653,17 @@ export async function createAppRouter(): Promise<Router> {
         ) {
             if (envStore.getSingleAasRedirect) {
                 window.location.replace(envStore.getSingleAasRedirect);
-                return;
+                return false;
             } else if (to.name !== 'NotFound404') {
                 const updatedRoute = { name: 'NotFound404' };
-                next(updatedRoute);
-                return;
+                return updatedRoute;
             }
         }
 
         if (routesToVisualization.includes(to.name)) {
             // General redirect to 'Visualization' with query
             const updatedRoute = { name: 'Visualization', query: to.query };
-            next(updatedRoute);
-            return;
+            return updatedRoute;
         }
 
         // Handle mobile/desktop views
@@ -694,8 +681,7 @@ export async function createAppRouter(): Promise<Router> {
             ) {
                 // Redirect to 'AASList' with query
                 const updatedRoute = { name: 'AASList', query: to.query };
-                next(updatedRoute);
-                return;
+                return updatedRoute;
             }
         } else {
             // Handle desktop views
@@ -708,21 +694,18 @@ export async function createAppRouter(): Promise<Router> {
                     if (smViewerEditor.value && to.name === 'SMEditor' && !allowEditing.value) {
                         // Redirect to 'SMViewer' with query
                         const updatedRoute = { name: 'SMViewer', query: to.query };
-                        next(updatedRoute);
-                        return;
+                        return updatedRoute;
                     }
                     if (!smViewerEditor.value) {
                         // Redirect to 'AASViewer' resp. 'AASEditor' with query
                         const updatedRoute = { name: (to.name as string).replace('SM', 'AAS'), query: to.query };
-                        next(updatedRoute);
-                        return;
+                        return updatedRoute;
                     }
                 }
                 if (to.name === 'AASEditor' && !allowEditing.value) {
                     // Redirect to 'AASViewer' with query
                     const updatedRoute = { name: 'AASViewer', query: to.query };
-                    next(updatedRoute);
-                    return;
+                    return updatedRoute;
                 }
                 // Do nothing
             } else if (
@@ -731,8 +714,7 @@ export async function createAppRouter(): Promise<Router> {
             ) {
                 // Redirect to 'AASViewer' with query
                 const updatedRoute = { name: 'AASViewer', query: to.query };
-                next(updatedRoute);
-                return;
+                return updatedRoute;
             }
         }
 
@@ -752,8 +734,7 @@ export async function createAppRouter(): Promise<Router> {
                 const query = { ...to.query };
                 delete query.path;
                 const updatedRoute = { path: to.path, query };
-                next(updatedRoute);
-                return;
+                return updatedRoute;
             }
         }
 
@@ -774,8 +755,7 @@ export async function createAppRouter(): Promise<Router> {
                 const query = { ...to.query };
                 delete query.aas;
                 const updatedRoute = { path: to.path, query };
-                next(updatedRoute);
-                return;
+                return updatedRoute;
             }
         } else if (!to.query.aas || to.query.aas === '') {
             aasStore.dispatchSelectedAAS({});
@@ -799,8 +779,7 @@ export async function createAppRouter(): Promise<Router> {
                 const query = { ...to.query };
                 delete query.path;
                 const updatedRoute = { path: to.path, query };
-                next(updatedRoute);
-                return;
+                return updatedRoute;
             }
         } else if (!to.query.path || to.query.path === '') {
             aasStore.dispatchSelectedNode({});
@@ -834,12 +813,11 @@ export async function createAppRouter(): Promise<Router> {
             if (removedParams.length > 0) {
                 // Redirect with cleaned query params
                 const updatedRoute = { path: to.path, query: filteredQuery };
-                next(updatedRoute);
-                return;
+                return updatedRoute;
             }
         }
 
-        next();
+        return true;
     });
 
     return router;
