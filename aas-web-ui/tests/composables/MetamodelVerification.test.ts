@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { applyFieldErrors, buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
 
 describe('MetamodelVerification.ts', () => {
-    it('maps invalid value to field error', () => {
+    it('reports invalid value error', () => {
         const property = new aasTypes.Property(aasTypes.DataTypeDefXsd.Int);
         property.idShort = 'property1';
         property.value = 'not-an-int';
