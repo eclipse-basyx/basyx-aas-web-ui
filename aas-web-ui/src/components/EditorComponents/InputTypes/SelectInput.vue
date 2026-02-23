@@ -55,6 +55,7 @@
                 return [
                     { title: 'Instance', value: aasTypes.AssetKind.Instance },
                     { title: 'Type', value: aasTypes.AssetKind.Type },
+                    { title: 'Role', value: aasTypes.AssetKind.Role },
                     { title: 'Not Applicable', value: aasTypes.AssetKind.NotApplicable },
                 ];
             case 'modellingKind':
