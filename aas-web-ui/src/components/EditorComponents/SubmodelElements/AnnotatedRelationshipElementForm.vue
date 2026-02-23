@@ -7,13 +7,11 @@
         @keyup="keyUp($event, saveAnnotatedRelationshipElement)">
         <v-card>
             <v-card-title>
-                <span class="text-subtitle-1">
-                    {{
-                        props.newAnnotatedRelationshipElement
-                            ? 'Create a new Annotated Relationship Element'
-                            : 'Edit Annotated Relationship Element'
-                    }}
-                </span>
+                {{
+                    props.newAnnotatedRelationshipElement
+                        ? 'Create a new Annotated Relationship Element'
+                        : 'Edit Annotated Relationship Element'
+                }}
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">

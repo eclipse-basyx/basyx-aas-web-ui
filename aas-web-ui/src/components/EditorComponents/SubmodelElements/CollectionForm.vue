@@ -2,9 +2,7 @@
     <v-dialog v-model="editSMCDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp($event, saveSMC)">
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{
-                    props.newSmc ? 'Create a new Submodel Element Collection' : 'Edit Submodel Element Collection'
-                }}</span>
+                {{ props.newSmc ? 'Create a new Submodel Element Collection' : 'Edit Submodel Element Collection' }}
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">

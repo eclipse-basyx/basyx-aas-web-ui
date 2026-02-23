@@ -7,9 +7,7 @@
         @keyup="keyUp($event, saveRelationshipElement)">
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{
-                    props.newRelationshipElement ? 'Create a new Relationship Element' : 'Edit Relationship Element'
-                }}</span>
+                {{ props.newRelationshipElement ? 'Create a new Relationship Element' : 'Edit Relationship Element' }}
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">

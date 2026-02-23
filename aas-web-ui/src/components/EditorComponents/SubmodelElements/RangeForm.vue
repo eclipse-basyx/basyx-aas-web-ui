@@ -7,9 +7,7 @@
         @keyup="keyUp($event, saveRangeElement)">
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{
-                    props.newRange ? 'Create a new Range Element' : 'Edit Range Element'
-                }}</span>
+                {{ props.newRange ? 'Create a new Range Element' : 'Edit Range Element' }}
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">

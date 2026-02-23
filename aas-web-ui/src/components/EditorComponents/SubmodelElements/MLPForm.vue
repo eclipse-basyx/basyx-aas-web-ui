@@ -2,9 +2,7 @@
     <v-dialog v-model="editMLPDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp($event, saveMLP)">
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{
-                    props.newMlp ? 'Create a new Multi Language Property' : 'Edit Multi Language Property'
-                }}</span>
+                {{ props.newMlp ? 'Create a new Multi Language Property' : 'Edit Multi Language Property' }}
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">

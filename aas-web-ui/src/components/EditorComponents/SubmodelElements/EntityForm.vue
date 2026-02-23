@@ -2,9 +2,7 @@
     <v-dialog v-model="editEntityDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp($event, saveEntity)">
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{
-                    props.newEntity ? 'Create a new Entity Element' : 'Edit Entity Element'
-                }}</span>
+                {{ props.newEntity ? 'Create a new Entity Element' : 'Edit Entity Element' }}
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">

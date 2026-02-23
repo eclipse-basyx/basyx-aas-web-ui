@@ -2,9 +2,7 @@
     <v-dialog v-model="editBlobDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp($event, saveBlob)">
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{
-                    props.newBlob ? 'Create a new Blob Element' : 'Edit Blob Element'
-                }}</span>
+                {{ props.newBlob ? 'Create a new Blob Element' : 'Edit Blob Element' }}
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
