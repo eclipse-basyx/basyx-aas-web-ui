@@ -141,6 +141,7 @@
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
@@ -301,10 +302,10 @@
                 // Create the Range Element on the parent element
                 await postSubmodelElement(rangeObject.value, submodelId, idShortPath);
 
-                // Navigate to the new Range Element
-                if (props.parentElement.modelType === 'SubmodelElementCollection') {
+                const createdPath = getCreatedSubmodelElementPath(props.parentElement, rangeObject.value.idShort);
+                if (createdPath) {
                     const query = structuredClone(route.query);
-                    query.path = props.parentElement.path + '.' + rangeObject.value.idShort;
+                    query.path = createdPath;
 
                     router.push({
                         query: query,

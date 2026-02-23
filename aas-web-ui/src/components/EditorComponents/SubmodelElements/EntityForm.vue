@@ -123,6 +123,7 @@
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
@@ -294,10 +295,10 @@
                 // Create the entity on the parent element
                 await postSubmodelElement(entityObject.value, submodelId, idShortPath);
 
-                // Navigate to the new entity
-                if (props.parentElement.modelType === 'SubmodelElementCollection') {
+                const createdPath = getCreatedSubmodelElementPath(props.parentElement, entityObject.value.idShort);
+                if (createdPath) {
                     const query = structuredClone(route.query);
-                    query.path = props.parentElement.path + '.' + entityObject.value.idShort;
+                    query.path = createdPath;
 
                     router.push({
                         query: query,
