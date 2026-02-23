@@ -53,7 +53,7 @@ describe('MetamodelVerification.ts', () => {
         expect(targetMap.get('idShort')).toBe('invalid value');
     });
 
-    it('does not throw when optional idShort is undefined', () => {
+    it('gracefully reports verifier failures when idShort is unexpectedly undefined', () => {
         const property = new aasTypes.Property(aasTypes.DataTypeDefXsd.String);
         property.idShort = 'temp';
         (property as unknown as Record<string, unknown>).idShort = undefined;
