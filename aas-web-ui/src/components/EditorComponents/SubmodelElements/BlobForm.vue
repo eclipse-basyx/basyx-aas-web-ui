@@ -2,9 +2,7 @@
     <v-dialog v-model="editBlobDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp($event, saveBlob)">
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{
-                    props.newBlob ? 'Create a new Blob Element' : 'Edit Blob Element'
-                }}</span>
+                {{ props.newBlob ? 'Create a new Blob Element' : 'Edit Blob Element' }}
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
@@ -128,6 +126,7 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
@@ -335,12 +334,10 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
                 // Create the Blob Element on the parent element
                 await postSubmodelElement(blobObject.value, submodelId, idShortPath);
 
-                const newElementPath = props.parentElement.path + '.' + blobObject.value.idShort;
-
-                // Navigate to the new Blob Element
-                if (props.parentElement.modelType === 'SubmodelElementCollection') {
+                const createdPath = getCreatedSubmodelElementPath(props.parentElement, blobObject.value.idShort);
+                if (createdPath) {
                     const query = structuredClone(route.query);
-                    query.path = newElementPath;
+                    query.path = createdPath;
 
                     router.push({
                         query: query,

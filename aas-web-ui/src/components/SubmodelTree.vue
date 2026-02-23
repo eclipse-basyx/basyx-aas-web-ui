@@ -220,7 +220,10 @@
         </v-card>
     </v-container>
     <!-- Dialog for creating SubmodelElements -->
-    <SubmodelElementForm v-model="selectSMETypeToAddDialog" @open-create-s-m-e-dialog="openSMEFormDialog">
+    <SubmodelElementForm
+        v-model="selectSMETypeToAddDialog"
+        :parent-element="elementToAddSME"
+        @open-create-s-m-e-dialog="openSMEFormDialog">
     </SubmodelElementForm>
     <!-- Dialog for creating/editing Properties -->
     <PropertyForm
@@ -292,6 +295,13 @@
         :parent-element="elementToAddSME"
         :path="submodelElementPath"
         :relationship-element="submodelElementToEdit"></RelationshipElementForm>
+    <!-- Dialog for creating/editing AnnotatedRelationshipElements -->
+    <AnnotatedRelationshipElementForm
+        v-model="annotatedRelationshipElementDialog"
+        :new-annotated-relationship-element="newAnnotatedRelationshipElement"
+        :parent-element="elementToAddSME"
+        :path="submodelElementPath"
+        :annotated-relationship-element="submodelElementToEdit"></AnnotatedRelationshipElementForm>
     <!-- Dialog for creating/editing Submodel -->
     <SubmodelForm v-model="editDialog" :new-sm="newSubmodel" :submodel="submodelToEdit"></SubmodelForm>
     <!-- Dialog for inserting JSON -->
@@ -345,6 +355,7 @@
     const entityDialog = ref(false); // Variable to store if the EntityForm Dialog should be shown
     const referenceElementDialog = ref(false); // Variable to store if the ReferenceElementForm Dialog should be shown
     const relationshipElementDialog = ref(false); // Variable to store if the RelationshipElementForm Dialog should be shown
+    const annotatedRelationshipElementDialog = ref(false); // Variable to store if the AnnotatedRelationshipElementForm Dialog should be shown
     const smcDialog = ref(false); // Variable to store if the PropertyForm Dialog should be shown
     const smlDialog = ref(false); // Variable to store if the SubmodelElementListForm Dialog should be shown
     const editDialog = ref(false); // Variable to store if the Edit Dialog should be shown
@@ -358,6 +369,7 @@
     const newEntity = ref(false); // Variable to store if a new Entity should be created
     const newReferenceElement = ref(false); // Variable to store if a new ReferenceElement should be created
     const newRelationshipElement = ref(false); // Variable to store if a new RelationshipElement should be created
+    const newAnnotatedRelationshipElement = ref(false); // Variable to store if a new AnnotatedRelationshipElement should be created
     const newSubmodel = ref(false); // Variable to store if a new Submodel should be created
     const submodelToEdit = ref<any | undefined>(undefined); // Variable to store the Submodel to be edited
     const deleteDialog = ref(false); // Variable to store if the Delete Dialog should be shown
@@ -564,6 +576,14 @@
                 newItem.value = deepMap(newItem.value, fn); // Recursively map SMC/SML elements
                 newItem.children = newItem.value;
             } else if (
+                newItem.modelType === 'AnnotatedRelationshipElement' &&
+                newItem.annotations &&
+                Array.isArray(newItem.annotations) &&
+                newItem.annotations.length > 0
+            ) {
+                newItem.annotations = deepMap(newItem.annotations, fn); // Recursively map annotated relationship annotations
+                newItem.children = newItem.annotations;
+            } else if (
                 newItem.modelType == 'Entity' &&
                 newItem.statements &&
                 Array.isArray(newItem.statements) &&
@@ -606,6 +626,14 @@
                 sme.value.length > 0
             ) {
                 sme.children = prepareForTree(sme.value, sme);
+                sme.showChildren = expand;
+            } else if (
+                sme.modelType === 'AnnotatedRelationshipElement' &&
+                sme.annotations &&
+                Array.isArray(sme.annotations) &&
+                sme.annotations.length > 0
+            ) {
+                sme.children = prepareForTree(sme.annotations, sme);
                 sme.showChildren = expand;
             } else if (
                 sme.modelType === 'Entity' &&
@@ -759,6 +787,12 @@
             submodelElementPath.value = element.path;
             elementToAddSME.value = element.parent;
             submodelElementToEdit.value = element;
+        } else if (element.modelType === 'AnnotatedRelationshipElement') {
+            annotatedRelationshipElementDialog.value = true;
+            newAnnotatedRelationshipElement.value = false;
+            submodelElementPath.value = element.path;
+            elementToAddSME.value = element.parent;
+            submodelElementToEdit.value = element;
         } else {
             console.error(`Specified invalid SubmodelElement Type "${element.modelType}"`);
         }
@@ -826,6 +860,12 @@
                 submodelElementToEdit.value = undefined;
                 relationshipElementDialog.value = true;
                 break;
+            case 'AnnotatedRelationshipElement':
+                newAnnotatedRelationshipElement.value = true;
+                submodelElementPath.value = undefined;
+                submodelElementToEdit.value = undefined;
+                annotatedRelationshipElementDialog.value = true;
+                break;
             default:
                 console.error(`Specified invalid SubmodelElement Type "${smeType}"`);
                 break;
@@ -866,6 +906,13 @@
                     item.value.length > 0
                 ) {
                     childrenKey = 'value';
+                } else if (
+                    item.modelType === 'AnnotatedRelationshipElement' &&
+                    item.annotations &&
+                    Array.isArray(item.annotations) &&
+                    item.annotations.length > 0
+                ) {
+                    childrenKey = 'annotations';
                 } else if (
                     item.modelType == 'Entity' &&
                     item.statements &&

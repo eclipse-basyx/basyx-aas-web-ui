@@ -7,9 +7,7 @@
         @keyup="keyUp($event, saveRelationshipElement)">
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{
-                    props.newRelationshipElement ? 'Create a new Relationship Element' : 'Edit Relationship Element'
-                }}</span>
+                {{ props.newRelationshipElement ? 'Create a new Relationship Element' : 'Edit Relationship Element' }}
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
@@ -131,6 +129,7 @@
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
@@ -292,10 +291,13 @@
                 // Create the relationship element on the parent element
                 await postSubmodelElement(relationshipElementObject.value, submodelId, idShortPath);
 
-                // Navigate to the new relationship element
-                if (props.parentElement.modelType === 'SubmodelElementCollection') {
+                const createdPath = getCreatedSubmodelElementPath(
+                    props.parentElement,
+                    relationshipElementObject.value.idShort
+                );
+                if (createdPath) {
                     const query = structuredClone(route.query);
-                    query.path = props.parentElement.path + '.' + relationshipElementObject.value.idShort;
+                    query.path = createdPath;
 
                     router.push({
                         query: query,

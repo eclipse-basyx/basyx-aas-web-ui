@@ -2,9 +2,7 @@
     <v-dialog v-model="editSMCDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp($event, saveSMC)">
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{
-                    props.newSmc ? 'Create a new Submodel Element Collection' : 'Edit Submodel Element Collection'
-                }}</span>
+                {{ props.newSmc ? 'Create a new Submodel Element Collection' : 'Edit Submodel Element Collection' }}
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
@@ -104,6 +102,7 @@
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
@@ -251,10 +250,10 @@
                 // Create the smc on the parent element
                 await postSubmodelElement(smcObject.value, submodelId, idShortPath);
 
-                // Navigate to the new smc
-                if (props.parentElement.modelType === 'SubmodelElementCollection') {
+                const createdPath = getCreatedSubmodelElementPath(props.parentElement, smcObject.value.idShort);
+                if (createdPath) {
                     const query = structuredClone(route.query);
-                    query.path = props.parentElement.path + '.' + smcObject.value.idShort;
+                    query.path = createdPath;
 
                     router.push({
                         query: query,

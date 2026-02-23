@@ -2,9 +2,7 @@
     <v-dialog v-model="editFileDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp($event, saveFile)">
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{
-                    props.newFile ? 'Create a new File Element' : 'Edit File Element'
-                }}</span>
+                {{ props.newFile ? 'Create a new File Element' : 'Edit File Element' }}
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
@@ -130,6 +128,7 @@
     import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
@@ -346,33 +345,35 @@
                 // Create the File Element on the parent element
                 await postSubmodelElement(fileObject.value, submodelId, idShortPath);
 
-                const newElementPath = props.parentElement.path + '.' + fileObject.value.idShort;
+                const createdPath = getCreatedSubmodelElementPath(props.parentElement, fileObject.value.idShort);
+                if (!createdPath) {
+                    closeDialog();
+                    navigationStore.dispatchTriggerTreeviewReload();
+                    return;
+                }
 
                 // Upload the file first if there is one
                 if (fileElement.value !== undefined) {
-                    await putAttachmentFile(fileElement.value, newElementPath);
+                    await putAttachmentFile(fileElement.value, createdPath);
 
                     // After file upload, fetch the updated SME and update only the contentType
-                    const updatedSmeData = await fetchSme(newElementPath);
+                    const updatedSmeData = await fetchSme(createdPath);
                     if (updatedSmeData) {
                         await parseAndUpdateSubmodelElement(
                             updatedSmeData,
                             fileElement.value,
                             contentType.value,
-                            newElementPath
+                            createdPath
                         );
                     }
                 }
 
-                // Navigate to the new File Element
-                if (props.parentElement.modelType === 'SubmodelElementCollection') {
-                    const query = structuredClone(route.query);
-                    query.path = newElementPath;
+                const query = structuredClone(route.query);
+                query.path = createdPath;
 
-                    router.push({
-                        query: query,
-                    });
-                }
+                router.push({
+                    query: query,
+                });
             }
         } else {
             if (props.path == undefined) {

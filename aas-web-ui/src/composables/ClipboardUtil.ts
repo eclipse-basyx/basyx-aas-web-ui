@@ -8,6 +8,7 @@ import { useAASStore } from '@/store/AASDataStore';
 import { useClipboardStore } from '@/store/ClipboardStore';
 import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import { useNavigationStore } from '@/store/NavigationStore';
+import { getCreatedSubmodelElementPath, isDataElementModelType } from '@/utils/AAS/SubmodelElementPathUtils';
 import { base64Decode, base64Encode } from '@/utils/EncodeDecodeUtils';
 
 export function useClipboardUtil() {
@@ -162,6 +163,20 @@ export function useClipboardUtil() {
         }
         const submodelElement = instanceOrError.mustValue();
 
+        if (
+            parentElement.modelType === 'AnnotatedRelationshipElement' &&
+            !isDataElementModelType(submodelElement.modelType)
+        ) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Only DataElement types are allowed as AnnotatedRelationshipElement annotations.',
+            });
+            return;
+        }
+
         // In case the SubmodelElement has an idShort, add "_copy" to the end
         if (submodelElement.idShort) {
             submodelElement.idShort += '_copy';
@@ -186,10 +201,10 @@ export function useClipboardUtil() {
             // Create the property on the parent element
             await postSubmodelElement(submodelElement, submodelId, idShortPath);
 
-            // Navigate to the new property
-            if (parentElement.modelType === 'SubmodelElementCollection') {
+            const createdPath = getCreatedSubmodelElementPath(parentElement, submodelElement.idShort);
+            if (createdPath) {
                 const query = structuredClone(route.query);
-                query.path = parentElement.path + '.' + submodelElement.idShort;
+                query.path = createdPath;
                 router.push({
                     query: query,
                 });

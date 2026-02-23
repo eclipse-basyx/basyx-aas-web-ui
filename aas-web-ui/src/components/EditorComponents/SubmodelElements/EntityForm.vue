@@ -2,9 +2,7 @@
     <v-dialog v-model="editEntityDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp($event, saveEntity)">
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{
-                    props.newEntity ? 'Create a new Entity Element' : 'Edit Entity Element'
-                }}</span>
+                {{ props.newEntity ? 'Create a new Entity Element' : 'Edit Entity Element' }}
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
@@ -123,6 +121,7 @@
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
@@ -294,10 +293,10 @@
                 // Create the entity on the parent element
                 await postSubmodelElement(entityObject.value, submodelId, idShortPath);
 
-                // Navigate to the new entity
-                if (props.parentElement.modelType === 'SubmodelElementCollection') {
+                const createdPath = getCreatedSubmodelElementPath(props.parentElement, entityObject.value.idShort);
+                if (createdPath) {
                     const query = structuredClone(route.query);
-                    query.path = props.parentElement.path + '.' + entityObject.value.idShort;
+                    query.path = createdPath;
 
                     router.push({
                         query: query,

@@ -1,8 +1,17 @@
 <template>
-    <v-dialog v-model="editMLPDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp($event, saveMLP)">
+    <v-dialog
+        v-model="editAnnotatedRelationshipElementDialog"
+        width="860"
+        persistent
+        @keydown="keyDown"
+        @keyup="keyUp($event, saveAnnotatedRelationshipElement)">
         <v-card>
             <v-card-title>
-                {{ props.newMlp ? 'Create a new Multi Language Property' : 'Edit Multi Language Property' }}
+                {{
+                    props.newAnnotatedRelationshipElement
+                        ? 'Create a new Annotated Relationship Element'
+                        : 'Edit Annotated Relationship Element'
+                }}
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
@@ -14,7 +23,7 @@
                             <v-row align="center">
                                 <v-col class="py-0">
                                     <TextInput
-                                        v-model="mlpIdShort"
+                                        v-model="annotatedRelationshipElementIdShort"
                                         label="IdShort"
                                         :error="hasError('idShort')"
                                         :rules="isParentSubmodelElementList ? [] : [rules.required]"
@@ -51,7 +60,7 @@
                             <v-row align="center">
                                 <v-col class="py-0">
                                     <SelectInput
-                                        v-model="mlpCategory"
+                                        v-model="annotatedRelationshipElementCategory"
                                         label="Category"
                                         type="category"
                                         :clearable="true" />
@@ -62,17 +71,24 @@
                             </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
-                    <!-- TODO: Value ID -->
-                    <!-- Property Value -->
+                    <!-- Value -->
                     <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(1)">
                         <v-expansion-panel-title>Value</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <v-row align="center">
                                 <v-col class="py-0">
-                                    <MultiLanguageTextInput v-model="mlpValue" :show-label="false" type="text" />
+                                    <ReferenceInput v-model="firstReference" label="First" :no-header="false" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="mlp-value" />
+                                    <HelpInfoButton help-type="relationship-first" />
+                                </v-col>
+                            </v-row>
+                            <v-row align="center">
+                                <v-col class="py-0">
+                                    <ReferenceInput v-model="secondReference" label="Second" :no-header="false" />
+                                </v-col>
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="relationship-second" />
                                 </v-col>
                             </v-row>
                         </v-expansion-panel-text>
@@ -104,7 +120,7 @@
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn @click="closeDialog">Cancel</v-btn>
-                <v-btn color="primary" @click="saveMLP">Save</v-btn>
+                <v-btn color="primary" @click="saveAnnotatedRelationshipElement">Save</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -123,10 +139,10 @@
 
     const props = defineProps<{
         modelValue: boolean;
-        newMlp: boolean;
+        newAnnotatedRelationshipElement: boolean;
         parentElement: any;
         path?: string;
-        mlp?: any;
+        annotatedRelationshipElement?: any;
     }>();
 
     // Stores
@@ -140,18 +156,18 @@
     const router = useRouter();
     const route = useRoute();
 
-    const editMLPDialog = ref(false);
-    const mlpObject = ref<aasTypes.MultiLanguageProperty | undefined>(undefined);
+    const editAnnotatedRelationshipElementDialog = ref(false);
+    const annotatedRelationshipElementObject = ref<aasTypes.AnnotatedRelationshipElement | undefined>(undefined);
     const openPanels = ref<number[]>([0]);
 
-    const mlpIdShort = ref<string | null>(null);
-
+    const annotatedRelationshipElementIdShort = ref<string | null>(null);
     const displayName = ref<Array<aasTypes.LangStringNameType> | null>(null);
     const description = ref<Array<aasTypes.LangStringTextType> | null>(null);
-    const mlpCategory = ref<string | null>(null);
+    const annotatedRelationshipElementCategory = ref<string | null>(null);
 
     const semanticId = ref<aasTypes.Reference | null>(null);
-    const mlpValue = ref<Array<aasTypes.LangStringTextType> | null>(null);
+    const firstReference = ref<aasTypes.Reference | null>(null);
+    const secondReference = ref<aasTypes.Reference | null>(null);
 
     const errors = ref<Map<string, string>>(new Map());
 
@@ -168,7 +184,7 @@
     watch(
         () => props.modelValue,
         (value) => {
-            editMLPDialog.value = value;
+            editAnnotatedRelationshipElementDialog.value = value;
             if (value) {
                 initializeInputs();
             }
@@ -176,7 +192,7 @@
     );
 
     watch(
-        () => editMLPDialog.value,
+        () => editAnnotatedRelationshipElementDialog.value,
         (value) => {
             emit('update:modelValue', value);
         }
@@ -208,7 +224,7 @@
                 break;
             case 3:
                 if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
-                    border += 'border-t-thin';
+                    border += ' border-t-thin';
                 }
                 break;
         }
@@ -226,98 +242,104 @@
         return errors.value.get(field);
     }
 
-    async function saveMLP(): Promise<void> {
-        if (props.newMlp || mlpObject.value === undefined) {
-            mlpObject.value = new aasTypes.MultiLanguageProperty();
+    async function saveAnnotatedRelationshipElement(): Promise<void> {
+        // Clear previous errors
+        errors.value.clear();
+
+        if (props.newAnnotatedRelationshipElement || annotatedRelationshipElementObject.value === undefined) {
+            annotatedRelationshipElementObject.value = new aasTypes.AnnotatedRelationshipElement();
         }
 
-        if (mlpIdShort.value !== null) {
-            mlpObject.value.idShort = mlpIdShort.value;
+        if (annotatedRelationshipElementIdShort.value !== null) {
+            annotatedRelationshipElementObject.value.idShort = annotatedRelationshipElementIdShort.value;
         } else if (!isParentSubmodelElementList.value) {
-            errors.value.set('idShort', 'MultiLanguageProperty IdShort is required');
+            errors.value.set('idShort', 'Annotated Relationship Element IdShort is required');
             return;
         }
 
+        annotatedRelationshipElementObject.value.first = firstReference.value;
+        annotatedRelationshipElementObject.value.second = secondReference.value;
+
         if (semanticId.value !== null) {
-            mlpObject.value.semanticId = semanticId.value;
+            annotatedRelationshipElementObject.value.semanticId = semanticId.value;
         }
 
         if (displayName.value !== null) {
-            mlpObject.value.displayName = displayName.value;
+            annotatedRelationshipElementObject.value.displayName = displayName.value;
         }
 
         if (description.value !== null) {
-            mlpObject.value.description = description.value;
+            annotatedRelationshipElementObject.value.description = description.value;
         }
 
-        mlpObject.value.category = mlpCategory.value;
+        annotatedRelationshipElementObject.value.category = annotatedRelationshipElementCategory.value;
 
-        if (mlpValue.value !== null) {
-            mlpObject.value.value = mlpValue.value;
-        }
-
-        if (props.newMlp) {
+        if (props.newAnnotatedRelationshipElement) {
             if (props.parentElement.modelType === 'Submodel') {
-                // Create the MLP on the parent Submodel
-                await postSubmodelElement(mlpObject.value, props.parentElement.id);
-
-                // Navigate to the new MLP
-                const query = structuredClone(route.query);
-                query.path = props.parentElement.path + '/submodel-elements/' + mlpObject.value.idShort;
-
-                router.push({
-                    query: query,
-                });
+                // Create the annotated relationship element on the parent Submodel
+                await postSubmodelElement(annotatedRelationshipElementObject.value, props.parentElement.id);
             } else {
                 // Extract the submodel ID and the idShortPath from the parentElement path
                 const splitted = props.parentElement.path.split('/submodel-elements/');
                 const submodelId = base64Decode(splitted[0].split('/submodels/')[1]);
                 const idShortPath = splitted[1];
 
-                // Create the MLP on the parent element
-                await postSubmodelElement(mlpObject.value, submodelId, idShortPath);
+                // Create the annotated relationship element on the parent element
+                await postSubmodelElement(annotatedRelationshipElementObject.value, submodelId, idShortPath);
+            }
 
-                const createdPath = getCreatedSubmodelElementPath(props.parentElement, mlpObject.value.idShort);
-                if (createdPath) {
-                    const query = structuredClone(route.query);
-                    query.path = createdPath;
+            const createdPath = getCreatedSubmodelElementPath(
+                props.parentElement,
+                annotatedRelationshipElementObject.value.idShort
+            );
 
-                    router.push({
-                        query: query,
-                    });
-                }
+            if (createdPath) {
+                const query = structuredClone(route.query);
+                query.path = createdPath;
+                router.push({
+                    query: query,
+                });
             }
         } else {
             if (props.path == undefined) {
-                console.error('MLP Path is missing');
+                console.error('Annotated Relationship Element Path is missing');
                 return;
             }
 
             const editedElementSelected = route.query.path === props.path;
 
-            // Update the MLP
+            // Update the annotated relationship element
             if (props.parentElement.modelType === 'Submodel') {
-                await putSubmodelElement(mlpObject.value, props.path);
+                await putSubmodelElement(annotatedRelationshipElementObject.value, props.path);
 
                 if (editedElementSelected) {
-                    fetchAndDispatchSme(props.parentElement.path + '/submodel-elements/' + mlpObject.value.idShort);
+                    fetchAndDispatchSme(
+                        props.parentElement.path +
+                            '/submodel-elements/' +
+                            annotatedRelationshipElementObject.value.idShort
+                    );
                 }
             } else if (props.parentElement.modelType === 'SubmodelElementList') {
                 const index = props.parentElement.value.indexOf(
-                    props.parentElement.value.find((el: any) => el.id === props.mlp.id)
+                    props.parentElement.value.find((el: any) => el.id === props.annotatedRelationshipElement.id)
                 );
                 const path = props.parentElement.path + `%5B${index}%5D`;
-                await putSubmodelElement(mlpObject.value, path);
+                await putSubmodelElement(annotatedRelationshipElementObject.value, path);
 
                 if (editedElementSelected) {
                     fetchAndDispatchSme(path);
                 }
             } else {
-                // Submodel Element Collection or Entity
-                await putSubmodelElement(mlpObject.value, props.mlp.path);
+                // Submodel Element Collection, Entity or AnnotatedRelationshipElement
+                await putSubmodelElement(
+                    annotatedRelationshipElementObject.value,
+                    props.annotatedRelationshipElement.path
+                );
 
                 if (editedElementSelected) {
-                    fetchAndDispatchSme(props.parentElement.path + '.' + mlpObject.value.idShort);
+                    fetchAndDispatchSme(
+                        props.parentElement.path + '.' + annotatedRelationshipElementObject.value.idShort
+                    );
                 }
             }
         }
@@ -326,16 +348,17 @@
     }
 
     function closeDialog(): void {
-        editMLPDialog.value = false;
+        editAnnotatedRelationshipElementDialog.value = false;
     }
 
     function resetFormValues(): void {
-        mlpIdShort.value = null;
+        annotatedRelationshipElementIdShort.value = null;
         displayName.value = null;
         description.value = null;
-        mlpCategory.value = null;
-        mlpValue.value = null;
+        annotatedRelationshipElementCategory.value = null;
         semanticId.value = null;
+        firstReference.value = null;
+        secondReference.value = null;
         openPanels.value = [0, 1];
     }
 
@@ -343,22 +366,25 @@
         // Always reset form values first to clear any stale data from previously opened elements
         resetFormValues();
 
-        if (!props.newMlp && props.mlp) {
-            const mlpJSON = await fetchSme(props.mlp.path);
+        if (!props.newAnnotatedRelationshipElement && props.annotatedRelationshipElement) {
+            const annotatedRelationshipElementJSON = await fetchSme(props.annotatedRelationshipElement.path);
 
-            const instanceOrError = jsonization.multiLanguagePropertyFromJsonable(mlpJSON);
+            const instanceOrError = jsonization.annotatedRelationshipElementFromJsonable(
+                annotatedRelationshipElementJSON
+            );
             if (instanceOrError.error !== null) {
-                console.error('Error parsing MultiLanguageProperty: ', instanceOrError.error);
+                console.error('Error parsing Annotated Relationship Element: ', instanceOrError.error);
                 return;
             }
-            mlpObject.value = instanceOrError.mustValue();
+            annotatedRelationshipElementObject.value = instanceOrError.mustValue();
 
-            mlpIdShort.value = mlpObject.value.idShort ?? null;
-            displayName.value = mlpObject.value.displayName ?? null;
-            description.value = mlpObject.value.description ?? null;
-            mlpCategory.value = mlpObject.value.category ?? null;
-            mlpValue.value = mlpObject.value.value ?? null;
-            semanticId.value = mlpObject.value.semanticId ?? null;
+            annotatedRelationshipElementIdShort.value = annotatedRelationshipElementObject.value.idShort ?? null;
+            displayName.value = annotatedRelationshipElementObject.value.displayName ?? null;
+            description.value = annotatedRelationshipElementObject.value.description ?? null;
+            annotatedRelationshipElementCategory.value = annotatedRelationshipElementObject.value.category ?? null;
+            semanticId.value = annotatedRelationshipElementObject.value.semanticId ?? null;
+            firstReference.value = annotatedRelationshipElementObject.value.first ?? null;
+            secondReference.value = annotatedRelationshipElementObject.value.second ?? null;
         }
     }
 </script>
