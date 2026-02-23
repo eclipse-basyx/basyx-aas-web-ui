@@ -178,7 +178,7 @@
     const { getSmEndpointById } = useSMRegistryClient();
     const { fetchAas, postAas } = useAASRepositoryClient();
     const { fetchSm, postSubmodel } = useSMRepositoryClient();
-    const { postRequest } = useRequestHandling();
+    const { putRequest } = useRequestHandling();
     const { fetchAllConceptDescriptions } = useSMHandling();
 
     const isAssetIdMode = computed(() => importMode.value === 'assetId');
@@ -530,13 +530,16 @@
                 let success = false;
 
                 if (destinationUseSuperpath.value) {
-                    const path = `${destinationAasEndpoint.endsWith('/') ? destinationAasEndpoint.slice(0, -1) : destinationAasEndpoint}/submodels`;
+                    const normalizedDestinationAasEndpoint = destinationAasEndpoint.endsWith('/')
+                        ? destinationAasEndpoint.slice(0, -1)
+                        : destinationAasEndpoint;
+                    const path = `${normalizedDestinationAasEndpoint}/submodels/${base64Encode(coreworksSubmodel.id)}`;
                     const headers = new Headers();
                     headers.append('Content-Type', 'application/json');
                     const body = JSON.stringify(jsonization.toJsonable(coreworksSubmodel));
-                    const context = 'creating Submodel via AAS superpath';
+                    const context = 'creating/updating Submodel via AAS superpath';
                     const disableMessage = false;
-                    const response = await postRequest(path, body, headers, context, disableMessage);
+                    const response = await putRequest(path, body, headers, context, disableMessage);
                     success = response?.success === true;
                 } else {
                     success = await postSubmodel(coreworksSubmodel);
