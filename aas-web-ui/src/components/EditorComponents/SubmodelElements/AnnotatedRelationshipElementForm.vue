@@ -251,11 +251,14 @@
             annotatedRelationshipElementObject.value = new aasTypes.AnnotatedRelationshipElement();
         }
 
-        if (annotatedRelationshipElementIdShort.value !== null) {
-            annotatedRelationshipElementObject.value.idShort = annotatedRelationshipElementIdShort.value;
+        const normalizedIdShort = annotatedRelationshipElementIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            annotatedRelationshipElementObject.value.idShort = normalizedIdShort;
         } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'Annotated Relationship Element IdShort is required');
             return;
+        } else {
+            (annotatedRelationshipElementObject.value as Record<string, unknown>).idShort = null;
         }
 
         annotatedRelationshipElementObject.value.first = firstReference.value;

@@ -240,11 +240,14 @@
             entityObject.value = new aasTypes.Entity();
         }
 
-        if (entityIdShort.value !== null) {
-            entityObject.value.idShort = entityIdShort.value;
+        const normalizedIdShort = entityIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            entityObject.value.idShort = normalizedIdShort;
         } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'Entity IdShort is required');
             return;
+        } else {
+            (entityObject.value as Record<string, unknown>).idShort = null;
         }
 
         entityObject.value.entityType = entityType.value;

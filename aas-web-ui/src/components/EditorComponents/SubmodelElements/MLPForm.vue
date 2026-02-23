@@ -234,11 +234,14 @@
             mlpObject.value = new aasTypes.MultiLanguageProperty();
         }
 
-        if (mlpIdShort.value !== null) {
-            mlpObject.value.idShort = mlpIdShort.value;
+        const normalizedIdShort = mlpIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            mlpObject.value.idShort = normalizedIdShort;
         } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'MultiLanguageProperty IdShort is required');
             return;
+        } else {
+            (mlpObject.value as Record<string, unknown>).idShort = null;
         }
 
         if (semanticId.value !== null) {

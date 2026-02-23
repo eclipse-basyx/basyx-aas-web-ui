@@ -258,11 +258,14 @@
             rangeObject.value = new aasTypes.Range(valueType.value);
         }
 
-        if (rangeIdShort.value !== null) {
-            rangeObject.value.idShort = rangeIdShort.value;
+        const normalizedIdShort = rangeIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            rangeObject.value.idShort = normalizedIdShort;
         } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'Range IdShort is required');
             return;
+        } else {
+            (rangeObject.value as Record<string, unknown>).idShort = null;
         }
 
         rangeObject.value.min = minValue.value;

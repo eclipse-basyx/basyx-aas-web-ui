@@ -241,11 +241,14 @@
             referenceElementObject.value = new aasTypes.ReferenceElement();
         }
 
-        if (referenceElementIdShort.value !== null) {
-            referenceElementObject.value.idShort = referenceElementIdShort.value;
+        const normalizedIdShort = referenceElementIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            referenceElementObject.value.idShort = normalizedIdShort;
         } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'Reference Element IdShort is required');
             return;
+        } else {
+            (referenceElementObject.value as Record<string, unknown>).idShort = null;
         }
 
         referenceElementObject.value.value = referenceElementValue.value;

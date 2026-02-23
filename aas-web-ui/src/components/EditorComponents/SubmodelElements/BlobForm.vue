@@ -282,11 +282,14 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
             blobObject.value = new aasTypes.Blob();
         }
 
-        if (blobIdShort.value !== null) {
-            blobObject.value.idShort = blobIdShort.value;
+        const normalizedIdShort = blobIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            blobObject.value.idShort = normalizedIdShort;
         } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'Blob Element IdShort is required');
             return;
+        } else {
+            (blobObject.value as Record<string, unknown>).idShort = null;
         }
 
         blobObject.value.value = blobContent.value;

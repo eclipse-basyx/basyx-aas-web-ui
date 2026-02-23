@@ -247,11 +247,14 @@
             relationshipElementObject.value = new aasTypes.RelationshipElement();
         }
 
-        if (relationshipElementIdShort.value !== null) {
-            relationshipElementObject.value.idShort = relationshipElementIdShort.value;
+        const normalizedIdShort = relationshipElementIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            relationshipElementObject.value.idShort = normalizedIdShort;
         } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'Relationship Element IdShort is required');
             return;
+        } else {
+            (relationshipElementObject.value as Record<string, unknown>).idShort = null;
         }
 
         relationshipElementObject.value.first = firstReference.value;

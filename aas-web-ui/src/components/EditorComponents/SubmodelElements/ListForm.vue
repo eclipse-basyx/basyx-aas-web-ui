@@ -17,7 +17,7 @@
                                         v-model="smlIdShort"
                                         label="IdShort"
                                         :error="hasError('idShort')"
-                                        :rules="[rules.required]"
+                                        :rules="isParentSubmodelElementList ? [] : [rules.required]"
                                         :error-messages="getError('idShort')" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
@@ -182,6 +182,8 @@
 
     const errors = ref<Map<string, string>>(new Map());
 
+    const isParentSubmodelElementList = computed(() => props.parentElement?.modelType === 'SubmodelElementList');
+
     const rules = {
         required: (value: any) => !!value || 'Required.',
     };
@@ -296,11 +298,14 @@
             smlObject.value = new aasTypes.SubmodelElementList(aasTypes.AasSubmodelElements.SubmodelElement);
         }
 
-        if (smlIdShort.value !== null) {
-            smlObject.value.idShort = smlIdShort.value;
-        } else {
+        const normalizedIdShort = smlIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            smlObject.value.idShort = normalizedIdShort;
+        } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'SubmodelElementList IdShort is required');
             return;
+        } else {
+            (smlObject.value as Record<string, unknown>).idShort = null;
         }
 
         if (semanticId.value !== null) {

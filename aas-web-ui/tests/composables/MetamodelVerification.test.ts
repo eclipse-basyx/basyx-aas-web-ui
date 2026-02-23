@@ -52,4 +52,15 @@ describe('MetamodelVerification.ts', () => {
 
         expect(targetMap.get('idShort')).toBe('invalid value');
     });
+
+    it('does not throw when optional idShort is undefined', () => {
+        const property = new aasTypes.Property(aasTypes.DataTypeDefXsd.String);
+        property.idShort = 'temp';
+        (property as unknown as Record<string, unknown>).idShort = undefined;
+
+        const result = verifyForEditor(property, { maxErrors: 10 });
+
+        expect(result.isValid).toBe(false);
+        expect(result.globalErrors.some((message) => message.includes('Verification failed unexpectedly'))).toBe(true);
+    });
 });

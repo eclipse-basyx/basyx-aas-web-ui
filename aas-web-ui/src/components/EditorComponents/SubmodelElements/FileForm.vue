@@ -284,11 +284,14 @@
             fileObject.value = new aasTypes.File();
         }
 
-        if (fileIdShort.value !== null) {
-            fileObject.value.idShort = fileIdShort.value;
+        const normalizedIdShort = fileIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            fileObject.value.idShort = normalizedIdShort;
         } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'File Element IdShort is required');
             return;
+        } else {
+            (fileObject.value as Record<string, unknown>).idShort = null;
         }
 
         fileObject.value.value = filePath.value;

@@ -211,11 +211,14 @@
             smcObject.value = new aasTypes.SubmodelElementCollection();
         }
 
-        if (smcIdShort.value !== null) {
-            smcObject.value.idShort = smcIdShort.value;
+        const normalizedIdShort = smcIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            smcObject.value.idShort = normalizedIdShort;
         } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'SubmodelElementCollection IdShort is required');
             return;
+        } else {
+            (smcObject.value as Record<string, unknown>).idShort = null;
         }
 
         if (semanticId.value !== null) {

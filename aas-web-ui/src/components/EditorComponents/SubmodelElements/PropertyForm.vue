@@ -289,11 +289,14 @@
             propertyObject.value = new aasTypes.Property(valueType.value);
         }
 
-        if (propertyIdShort.value !== null) {
-            propertyObject.value.idShort = propertyIdShort.value;
+        const normalizedIdShort = propertyIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            propertyObject.value.idShort = normalizedIdShort;
         } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'Property IdShort is required');
             return;
+        } else {
+            (propertyObject.value as Record<string, unknown>).idShort = null;
         }
 
         propertyObject.value.value = propertyValue.value;
