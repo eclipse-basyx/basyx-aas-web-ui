@@ -17,7 +17,7 @@
                                         v-model="smlIdShort"
                                         label="IdShort"
                                         :error="hasError('idShort')"
-                                        :rules="[rules.required]"
+                                        :rules="isParentSubmodelElementList ? [] : [rules.required]"
                                         :error-messages="getError('idShort')" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
@@ -141,6 +141,7 @@
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { applyFieldErrors, buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { clearOptionalIdShort } from '@/utils/AAS/OptionalPropertyUtils';
     import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
@@ -181,6 +182,8 @@
     const semanticId = ref<aasTypes.Reference | null>(null);
 
     const errors = ref<Map<string, string>>(new Map());
+
+    const isParentSubmodelElementList = computed(() => props.parentElement?.modelType === 'SubmodelElementList');
 
     const rules = {
         required: (value: any) => !!value || 'Required.',
@@ -296,11 +299,14 @@
             smlObject.value = new aasTypes.SubmodelElementList(aasTypes.AasSubmodelElements.SubmodelElement);
         }
 
-        if (smlIdShort.value !== null) {
-            smlObject.value.idShort = smlIdShort.value;
-        } else {
+        const normalizedIdShort = smlIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            smlObject.value.idShort = normalizedIdShort;
+        } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'SubmodelElementList IdShort is required');
             return;
+        } else {
+            clearOptionalIdShort(smlObject.value);
         }
 
         if (semanticId.value !== null) {

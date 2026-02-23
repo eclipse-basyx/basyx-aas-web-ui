@@ -118,6 +118,7 @@
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { applyFieldErrors, buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { clearOptionalIdShort } from '@/utils/AAS/OptionalPropertyUtils';
     import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
@@ -234,11 +235,14 @@
             mlpObject.value = new aasTypes.MultiLanguageProperty();
         }
 
-        if (mlpIdShort.value !== null) {
-            mlpObject.value.idShort = mlpIdShort.value;
+        const normalizedIdShort = mlpIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            mlpObject.value.idShort = normalizedIdShort;
         } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'MultiLanguageProperty IdShort is required');
             return;
+        } else {
+            clearOptionalIdShort(mlpObject.value);
         }
 
         if (semanticId.value !== null) {

@@ -1,4 +1,4 @@
-import { verification } from '@aas-core-works/aas-core3.1-typescript';
+import { types as aasTypes, verification } from '@aas-core-works/aas-core3.1-typescript';
 
 export interface VerificationOptions {
     maxErrors?: number;
@@ -64,7 +64,7 @@ function tryMapField(path: string, fieldAliases: Record<string, string>): string
     return fieldAliases[normalizedLastPart] ?? null;
 }
 
-export function verifyForEditor(element: object, options?: VerificationOptions): VerificationResult {
+export function verifyForEditor(element: aasTypes.Class, options?: VerificationOptions): VerificationResult {
     const maxErrors = options?.maxErrors ?? 10;
     const fieldAliases = { ...defaultFieldAliases, ...(options?.fieldAliases ?? {}) };
 
@@ -74,26 +74,33 @@ export function verifyForEditor(element: object, options?: VerificationOptions):
     let totalErrors = 0;
     let reportedErrors = 0;
 
-    for (const error of verification.verify(element as any)) {
-        totalErrors += 1;
+    try {
+        for (const error of verification.verify(element)) {
+            totalErrors += 1;
 
-        // Only record up to maxErrors, but keep counting totalErrors
-        if (reportedErrors >= maxErrors) {
-            continue;
+            // Only record up to maxErrors, but keep counting totalErrors
+            if (reportedErrors >= maxErrors) {
+                continue;
+            }
+
+            reportedErrors += 1;
+
+            const normalizedPath = normalizePath(String(error.path));
+            const mappedField = tryMapField(normalizedPath, fieldAliases);
+
+            if (mappedField && !fieldErrors.has(mappedField)) {
+                fieldErrors.set(mappedField, error.message);
+                continue;
+            }
+
+            const prefix = normalizedPath ? `${normalizedPath}: ` : '';
+            globalErrors.push(`${prefix}${error.message}`);
         }
-
-        reportedErrors += 1;
-
-        const normalizedPath = normalizePath(String(error.path));
-        const mappedField = tryMapField(normalizedPath, fieldAliases);
-
-        if (mappedField && !fieldErrors.has(mappedField)) {
-            fieldErrors.set(mappedField, error.message);
-            continue;
-        }
-
-        const prefix = normalizedPath ? `${normalizedPath}: ` : '';
-        globalErrors.push(`${prefix}${error.message}`);
+    } catch (error) {
+        totalErrors = Math.max(totalErrors, 1);
+        reportedErrors = Math.max(reportedErrors, 1);
+        const message = error instanceof Error ? error.message : String(error);
+        globalErrors.push(`Verification failed unexpectedly: ${message}`);
     }
 
     return {

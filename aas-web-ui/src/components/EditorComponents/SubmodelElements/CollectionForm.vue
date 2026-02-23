@@ -103,6 +103,7 @@
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { applyFieldErrors, buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { clearOptionalIdShort } from '@/utils/AAS/OptionalPropertyUtils';
     import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
@@ -211,11 +212,14 @@
             smcObject.value = new aasTypes.SubmodelElementCollection();
         }
 
-        if (smcIdShort.value !== null) {
-            smcObject.value.idShort = smcIdShort.value;
+        const normalizedIdShort = smcIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            smcObject.value.idShort = normalizedIdShort;
         } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'SubmodelElementCollection IdShort is required');
             return;
+        } else {
+            clearOptionalIdShort(smcObject.value);
         }
 
         if (semanticId.value !== null) {

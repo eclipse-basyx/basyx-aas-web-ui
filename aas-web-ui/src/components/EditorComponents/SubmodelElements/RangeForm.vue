@@ -140,6 +140,7 @@
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { applyFieldErrors, buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { clearOptionalIdShort } from '@/utils/AAS/OptionalPropertyUtils';
     import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
@@ -258,11 +259,14 @@
             rangeObject.value = new aasTypes.Range(valueType.value);
         }
 
-        if (rangeIdShort.value !== null) {
-            rangeObject.value.idShort = rangeIdShort.value;
+        const normalizedIdShort = rangeIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            rangeObject.value.idShort = normalizedIdShort;
         } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'Range IdShort is required');
             return;
+        } else {
+            clearOptionalIdShort(rangeObject.value);
         }
 
         rangeObject.value.min = minValue.value;

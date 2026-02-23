@@ -127,6 +127,7 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { applyFieldErrors, buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { clearOptionalIdShort } from '@/utils/AAS/OptionalPropertyUtils';
     import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
@@ -282,11 +283,14 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
             blobObject.value = new aasTypes.Blob();
         }
 
-        if (blobIdShort.value !== null) {
-            blobObject.value.idShort = blobIdShort.value;
+        const normalizedIdShort = blobIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            blobObject.value.idShort = normalizedIdShort;
         } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'Blob Element IdShort is required');
             return;
+        } else {
+            clearOptionalIdShort(blobObject.value);
         }
 
         blobObject.value.value = blobContent.value;

@@ -130,6 +130,7 @@
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { applyFieldErrors, buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { clearOptionalIdShort } from '@/utils/AAS/OptionalPropertyUtils';
     import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
@@ -247,11 +248,14 @@
             relationshipElementObject.value = new aasTypes.RelationshipElement();
         }
 
-        if (relationshipElementIdShort.value !== null) {
-            relationshipElementObject.value.idShort = relationshipElementIdShort.value;
+        const normalizedIdShort = relationshipElementIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            relationshipElementObject.value.idShort = normalizedIdShort;
         } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'Relationship Element IdShort is required');
             return;
+        } else {
+            clearOptionalIdShort(relationshipElementObject.value);
         }
 
         relationshipElementObject.value.first = firstReference.value;

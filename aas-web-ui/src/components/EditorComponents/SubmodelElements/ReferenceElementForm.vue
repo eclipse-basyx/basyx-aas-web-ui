@@ -125,6 +125,7 @@
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { applyFieldErrors, buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { clearOptionalIdShort } from '@/utils/AAS/OptionalPropertyUtils';
     import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
@@ -241,11 +242,14 @@
             referenceElementObject.value = new aasTypes.ReferenceElement();
         }
 
-        if (referenceElementIdShort.value !== null) {
-            referenceElementObject.value.idShort = referenceElementIdShort.value;
+        const normalizedIdShort = referenceElementIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            referenceElementObject.value.idShort = normalizedIdShort;
         } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'Reference Element IdShort is required');
             return;
+        } else {
+            clearOptionalIdShort(referenceElementObject.value);
         }
 
         referenceElementObject.value.value = referenceElementValue.value;
