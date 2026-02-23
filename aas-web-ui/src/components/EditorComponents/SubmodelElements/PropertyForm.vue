@@ -148,12 +148,11 @@
     import { useRoute, useRouter } from 'vue-router';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+    import { applyFieldErrors, buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
-    import { isEmptyString } from '@/utils/StringUtils';
-    import { checkXsDataTypeValue } from '@/utils/XmlUtils';
 
     const props = defineProps<{
         modelValue: boolean;
@@ -218,20 +217,6 @@
         }
     );
 
-    watch(
-        () => valueType.value,
-        () => {
-            validateAndCorrectInput();
-        }
-    );
-
-    watch(
-        () => propertyValue.value,
-        () => {
-            validateAndCorrectInput();
-        }
-    );
-
     const valueTypeString = computed(() => aasTypes.DataTypeDefXsd[valueType.value]);
 
     const bordersToShow = computed(() => (panel: number) => {
@@ -278,7 +263,7 @@
         return errors.value.get(field);
     }
 
-    function validateAndCorrectInput(): boolean {
+    function normalizePropertyInputValue(): void {
         if (valueTypeString.value === 'Boolean' && typeof propertyValue.value === 'boolean') {
             // Always use string representative of boolean value
             propertyValue.value = propertyValue.value ? 'true' : 'false';
@@ -292,20 +277,13 @@
             // Always use string representative of boolean value
             propertyValue.value = propertyValue.value.trim() === '1' ? 'true' : 'false';
         }
-
-        const [valid, errorMessage] = checkXsDataTypeValue(propertyValue.value, valueTypeString.value);
-
-        propertyValueErrorMessage.value = null;
-
-        if (errorMessage && !isEmptyString(errorMessage)) propertyValueErrorMessage.value = errorMessage;
-
-        return valid;
     }
 
     async function saveProperty(): Promise<void> {
-        if (!validateAndCorrectInput()) {
-            return;
-        }
+        errors.value.clear();
+        propertyValueErrorMessage.value = null;
+
+        normalizePropertyInputValue();
 
         if (props.newProperty || propertyObject.value === undefined) {
             propertyObject.value = new aasTypes.Property(valueType.value);
@@ -335,6 +313,31 @@
         }
 
         propertyObject.value.category = propertyCategory.value;
+
+        const verificationResult = verifyForEditor(propertyObject.value, { maxErrors: 10 });
+        if (!verificationResult.isValid) {
+            applyFieldErrors(errors.value, verificationResult.fieldErrors);
+            const mappedValueError = verificationResult.fieldErrors.get('value');
+            const mappedValueTypeError = verificationResult.fieldErrors.get('valueType');
+            const globalValueError = verificationResult.globalErrors.find((message) => {
+                const lowerMessage = message.toLowerCase();
+                return lowerMessage.includes('value') || lowerMessage.includes('datatype');
+            });
+
+            propertyValueErrorMessage.value = mappedValueError ?? mappedValueTypeError ?? globalValueError ?? null;
+
+            const summary = buildVerificationSummary(verificationResult);
+            const firstError = verificationResult.globalErrors[0];
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 10000,
+                color: 'error',
+                btnColor: 'buttonText',
+                baseError: 'Property validation failed',
+                extendedError: firstError ? `${summary} ${firstError}` : summary,
+            });
+            return;
+        }
 
         if (props.newProperty) {
             if (props.parentElement.modelType === 'Submodel') {
@@ -419,6 +422,7 @@
         description.value = null;
         propertyCategory.value = null;
         propertyValue.value = '';
+        propertyValueErrorMessage.value = null;
         valueType.value = aasTypes.DataTypeDefXsd.String;
         semanticId.value = null;
         openPanels.value = [0, 1];

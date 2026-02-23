@@ -159,6 +159,7 @@
     import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useIDUtils } from '@/composables/IDUtils';
+    import { buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useAASStore } from '@/store/AASDataStore';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -368,6 +369,21 @@
         // extensions are out of scope
         // SupplementalSemanticIds are out of scope
         // SubmodelElements are added when they are created
+
+        const verificationResult = verifyForEditor(submodelObject.value, { maxErrors: 10 });
+        if (!verificationResult.isValid) {
+            const summary = buildVerificationSummary(verificationResult);
+            const firstError = verificationResult.globalErrors[0];
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 10000,
+                color: 'error',
+                btnColor: 'buttonText',
+                baseError: 'Submodel validation failed',
+                extendedError: firstError ? `${summary} ${firstError}` : summary,
+            });
+            return;
+        }
 
         if (props.newSm) {
             // Create new Submodel

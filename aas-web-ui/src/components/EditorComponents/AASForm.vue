@@ -177,6 +177,7 @@
     import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useIDUtils } from '@/composables/IDUtils';
+    import { buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
@@ -411,6 +412,21 @@
         // embeddedDataSpecifications are out of scope
         // extensions are out of scope
         // TODO Add Submodels
+
+        const verificationResult = verifyForEditor(AASObject.value, { maxErrors: 10 });
+        if (!verificationResult.isValid) {
+            const summary = buildVerificationSummary(verificationResult);
+            const firstError = verificationResult.globalErrors[0];
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 10000,
+                color: 'error',
+                btnColor: 'buttonText',
+                baseError: 'AAS validation failed',
+                extendedError: firstError ? `${summary} ${firstError}` : summary,
+            });
+            return;
+        }
 
         if (props.newShell) {
             // Create new AAS
