@@ -7,7 +7,7 @@
         @keyup="keyUp($event, saveAnnotatedRelationshipElement)">
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">
+                <span class="text-subtitle-1">
                     {{
                         props.newAnnotatedRelationshipElement
                             ? 'Create a new Annotated Relationship Element'
