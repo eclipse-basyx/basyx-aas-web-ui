@@ -130,6 +130,7 @@
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { applyFieldErrors, buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { clearOptionalIdShort } from '@/utils/AAS/OptionalPropertyUtils';
     import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
@@ -254,7 +255,7 @@
             errors.value.set('idShort', 'Relationship Element IdShort is required');
             return;
         } else {
-            (relationshipElementObject.value as Record<string, unknown>).idShort = null;
+            clearOptionalIdShort(relationshipElementObject.value);
         }
 
         relationshipElementObject.value.first = firstReference.value;
