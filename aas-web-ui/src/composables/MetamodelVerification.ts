@@ -77,8 +77,9 @@ export function verifyForEditor(element: object, options?: VerificationOptions):
     for (const error of verification.verify(element as any)) {
         totalErrors += 1;
 
-        if (totalErrors > maxErrors) {
-            break;
+        // Only record up to maxErrors, but keep counting totalErrors
+        if (reportedErrors >= maxErrors) {
+            continue;
         }
 
         reportedErrors += 1;

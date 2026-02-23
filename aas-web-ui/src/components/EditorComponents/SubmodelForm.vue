@@ -373,7 +373,11 @@
         const verificationResult = verifyForEditor(submodelObject.value, { maxErrors: 10 });
         if (!verificationResult.isValid) {
             const summary = buildVerificationSummary(verificationResult);
-            const firstError = verificationResult.globalErrors[0];
+            const firstFieldErrorEntry = Array.from(verificationResult.fieldErrors.entries())[0];
+            const firstFieldError = firstFieldErrorEntry
+                ? `${firstFieldErrorEntry[0]}: ${firstFieldErrorEntry[1]}`
+                : undefined;
+            const firstError = verificationResult.globalErrors[0] ?? firstFieldError;
             navigationStore.dispatchSnackbar({
                 status: true,
                 timeout: 10000,
