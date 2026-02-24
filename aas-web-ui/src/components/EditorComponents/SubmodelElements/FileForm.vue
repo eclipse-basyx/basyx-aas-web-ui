@@ -106,7 +106,7 @@
                     <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -174,6 +174,7 @@
 
     const semanticId = ref<aasTypes.Reference | null>(null);
     const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
     const filePath = ref<string | null>(null);
     const contentType = ref<string>('application/unknown');
 
@@ -256,6 +257,7 @@
         contentType.value = 'application/unknown';
         semanticId.value = null;
         qualifiers.value = null;
+        embeddedDataSpecifications.value = null;
         openPanels.value = [0, 1];
     }
 
@@ -282,6 +284,7 @@
             contentType.value = fileObject.value.contentType ?? 'application/unknown';
             semanticId.value = fileObject.value.semanticId ?? null;
             qualifiers.value = fileObject.value.qualifiers ?? null;
+            embeddedDataSpecifications.value = fileObject.value.embeddedDataSpecifications ?? null;
         }
     }
 
@@ -331,6 +334,7 @@
 
         fileObject.value.category = fileCategory.value;
         fileObject.value.qualifiers = qualifiers.value;
+        fileObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
 
         const verificationResult = verifyForEditor(fileObject.value, { maxErrors: 10 });
         if (!verificationResult.isValid) {

@@ -105,7 +105,7 @@
                     <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -174,6 +174,7 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
 
     const semanticId = ref<aasTypes.Reference | null>(null);
     const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
 
     const errors = ref<Map<string, string>>(new Map());
 
@@ -254,6 +255,7 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
         contentType.value = 'application/unknown';
         semanticId.value = null;
         qualifiers.value = null;
+        embeddedDataSpecifications.value = null;
         openPanels.value = [0, 1];
     }
 
@@ -280,6 +282,7 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
             contentType.value = blobObject.value.contentType ?? 'application/unknown';
             semanticId.value = blobObject.value.semanticId ?? null;
             qualifiers.value = blobObject.value.qualifiers ?? null;
+            embeddedDataSpecifications.value = blobObject.value.embeddedDataSpecifications ?? null;
         }
     }
 
@@ -336,6 +339,7 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
 
         blobObject.value.category = blobCategory.value;
         blobObject.value.qualifiers = qualifiers.value;
+        blobObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
 
         const verificationResult = verifyForEditor(blobObject.value, { maxErrors: 10 });
         if (!verificationResult.isValid) {

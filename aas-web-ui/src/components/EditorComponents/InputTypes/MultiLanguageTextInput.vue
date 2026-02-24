@@ -24,8 +24,8 @@
                 <template #selection="{ item }">
                     <span>{{ item.value }}</span>
                 </template>
-                <template #item="{ props, item }">
-                    <v-list-item v-bind="props">
+                <template #item="{ props: itemProps, item }">
+                    <v-list-item v-bind="itemProps">
                         <template #append>
                             <span class="ml-2">{{ item.value }}</span>
                         </template>
@@ -59,6 +59,9 @@
         displayName: Array<aasTypes.LangStringNameType>;
         description: Array<aasTypes.LangStringTextType>;
         text: Array<aasTypes.LangStringTextType>;
+        preferredNameIec61360: Array<aasTypes.LangStringPreferredNameTypeIec61360>;
+        shortNameIec61360: Array<aasTypes.LangStringShortNameTypeIec61360>;
+        definitionIec61360: Array<aasTypes.LangStringDefinitionTypeIec61360>;
     };
 
     type ValueType<T extends keyof ValueMap> = ValueMap[T];
@@ -100,7 +103,7 @@
         }
     );
 
-    function addLangStringName() {
+    function addLangStringName(): void {
         // check if null and create new array
         if (langStringValue.value === null) {
             langStringValue.value = [];
@@ -111,10 +114,23 @@
             langStringValue.value.push(new aasTypes.LangStringTextType('', ''));
         } else if (props.type === 'text') {
             langStringValue.value.push(new aasTypes.LangStringTextType('', ''));
+        } else if (props.type === 'preferredNameIec61360') {
+            langStringValue.value.push(new aasTypes.LangStringPreferredNameTypeIec61360('', ''));
+        } else if (props.type === 'shortNameIec61360') {
+            langStringValue.value.push(new aasTypes.LangStringShortNameTypeIec61360('', ''));
+        } else if (props.type === 'definitionIec61360') {
+            langStringValue.value.push(new aasTypes.LangStringDefinitionTypeIec61360('', ''));
         }
     }
 
-    function deleteLangStringElement(langStringElement: aasTypes.LangStringNameType | aasTypes.LangStringTextType) {
+    function deleteLangStringElement(
+        langStringElement:
+            | aasTypes.LangStringNameType
+            | aasTypes.LangStringTextType
+            | aasTypes.LangStringPreferredNameTypeIec61360
+            | aasTypes.LangStringShortNameTypeIec61360
+            | aasTypes.LangStringDefinitionTypeIec61360
+    ): void {
         const index = langStringValue.value?.indexOf(langStringElement);
         if (index !== undefined && index !== null) {
             langStringValue.value?.splice(index, 1);

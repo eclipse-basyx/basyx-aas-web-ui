@@ -109,7 +109,7 @@
                     <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -167,6 +167,7 @@
 
     const semanticId = ref<aasTypes.Reference | null>(null);
     const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
     const referenceElementValue = ref<aasTypes.Reference | null>(null);
 
     const errors = ref<Map<string, string>>(new Map());
@@ -284,6 +285,7 @@
 
         referenceElementObject.value.category = referenceElementCategory.value;
         referenceElementObject.value.qualifiers = qualifiers.value;
+        referenceElementObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
 
         const verificationResult = verifyForEditor(referenceElementObject.value, { maxErrors: 10 });
         if (!verificationResult.isValid) {
@@ -386,6 +388,7 @@
         referenceElementCategory.value = null;
         semanticId.value = null;
         qualifiers.value = null;
+        embeddedDataSpecifications.value = null;
         referenceElementValue.value = null;
         openPanels.value = [0, 1];
     }
@@ -410,6 +413,7 @@
             referenceElementCategory.value = referenceElementObject.value.category ?? null;
             semanticId.value = referenceElementObject.value.semanticId ?? null;
             qualifiers.value = referenceElementObject.value.qualifiers ?? null;
+            embeddedDataSpecifications.value = referenceElementObject.value.embeddedDataSpecifications ?? null;
             referenceElementValue.value = referenceElementObject.value.value ?? null;
         }
     }

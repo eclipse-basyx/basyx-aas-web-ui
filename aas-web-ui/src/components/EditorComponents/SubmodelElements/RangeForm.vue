@@ -118,7 +118,7 @@
                     <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -183,6 +183,7 @@
 
     const semanticId = ref<aasTypes.Reference | null>(null);
     const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
     const minValue = ref<string | null>(null);
     const maxValue = ref<string | null>(null);
     const valueType = ref<aasTypes.DataTypeDefXsd>(aasTypes.DataTypeDefXsd.String);
@@ -302,6 +303,7 @@
 
         rangeObject.value.category = rangeCategory.value;
         rangeObject.value.qualifiers = qualifiers.value;
+        rangeObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
 
         const verificationResult = verifyForEditor(rangeObject.value, { maxErrors: 10 });
         if (!verificationResult.isValid) {
@@ -402,6 +404,7 @@
         valueType.value = aasTypes.DataTypeDefXsd.String;
         semanticId.value = null;
         qualifiers.value = null;
+        embeddedDataSpecifications.value = null;
         openPanels.value = [0, 1];
     }
 
@@ -429,6 +432,7 @@
             valueType.value = rangeObject.value.valueType ?? aasTypes.DataTypeDefXsd.String;
             semanticId.value = rangeObject.value.semanticId ?? null;
             qualifiers.value = rangeObject.value.qualifiers ?? null;
+            embeddedDataSpecifications.value = rangeObject.value.embeddedDataSpecifications ?? null;
         }
     }
 </script>

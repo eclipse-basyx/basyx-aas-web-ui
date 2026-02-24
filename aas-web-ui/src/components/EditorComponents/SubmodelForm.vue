@@ -141,7 +141,7 @@
                     <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -217,6 +217,7 @@
 
     const semanticId = ref<aasTypes.Reference | null>(null);
     const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
 
     // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode); // Get the selected AAS from Store
@@ -310,6 +311,7 @@
             }
             semanticId.value = submodelObject.value.semanticId ?? null;
             qualifiers.value = submodelObject.value.qualifiers ?? null;
+            embeddedDataSpecifications.value = submodelObject.value.embeddedDataSpecifications ?? null;
         }
     }
 
@@ -343,8 +345,6 @@
         if (submodelId.value === null) return;
 
         const administrativeInformation = createAdministrativeInformation();
-
-        // TODO: Add embeddedDataSpecifications
 
         if (props.newSm || submodelObject.value === undefined) {
             submodelObject.value = new aasTypes.Submodel(submodelId.value);
@@ -384,6 +384,7 @@
         }
 
         submodelObject.value.qualifiers = qualifiers.value;
+        submodelObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
 
         // extensions are out of scope
         // SupplementalSemanticIds are out of scope
@@ -483,7 +484,8 @@
         templateId.value = null;
         semanticId.value = null;
         qualifiers.value = null;
+        embeddedDataSpecifications.value = null;
         // Reset state of expansion panels
-        openPanels.value = [0, 4];
+        openPanels.value = [0];
     }
 </script>

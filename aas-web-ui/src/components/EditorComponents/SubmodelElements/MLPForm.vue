@@ -102,7 +102,7 @@
                     <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -161,6 +161,7 @@
 
     const semanticId = ref<aasTypes.Reference | null>(null);
     const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
     const mlpValue = ref<Array<aasTypes.LangStringTextType> | null>(null);
 
     const errors = ref<Map<string, string>>(new Map());
@@ -280,6 +281,7 @@
         }
 
         mlpObject.value.qualifiers = qualifiers.value;
+        mlpObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
 
         const verificationResult = verifyForEditor(mlpObject.value, { maxErrors: 10 });
         if (!verificationResult.isValid) {
@@ -378,6 +380,7 @@
         mlpValue.value = null;
         semanticId.value = null;
         qualifiers.value = null;
+        embeddedDataSpecifications.value = null;
         openPanels.value = [0, 1];
     }
 
@@ -402,6 +405,7 @@
             mlpValue.value = mlpObject.value.value ?? null;
             semanticId.value = mlpObject.value.semanticId ?? null;
             qualifiers.value = mlpObject.value.qualifiers ?? null;
+            embeddedDataSpecifications.value = mlpObject.value.embeddedDataSpecifications ?? null;
         }
     }
 </script>

@@ -48,6 +48,7 @@ declare module 'vue' {
     DisplayField: typeof import('./components/Widgets/DisplayField.vue')['default']
     DisplayNameElement: typeof import('./components/UIComponents/DisplayNameElement.vue')['default']
     DownloadAAS: typeof import('./components/AppNavigation/DownloadAAS.vue')['default']
+    EmbeddedDataSpecificationInput: typeof import('./components/EditorComponents/InputTypes/EmbeddedDataSpecificationInput.vue')['default']
     Entity: typeof import('./components/SubmodelElements/Entity.vue')['default']
     EntityForm: typeof import('./components/EditorComponents/SubmodelElements/EntityForm.vue')['default']
     File: typeof import('./components/SubmodelElements/File.vue')['default']

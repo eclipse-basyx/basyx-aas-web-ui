@@ -126,7 +126,7 @@
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Asset -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
                         <v-expansion-panel-title>Asset</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <v-row align="center" class="mb-3">
@@ -164,6 +164,13 @@
                                     <HelpInfoButton help-type="defaultThumbnail" />
                                 </v-col>
                             </v-row>
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
+                    <!-- Data Specification -->
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
+                        <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -237,6 +244,7 @@
     const specificAssetIds = ref<Array<aasTypes.SpecificAssetId> | null>(null);
     const assetType = ref<string | null>(null);
     const defaultThumbnail = ref<aasTypes.Resource | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
 
     const fileThumbnail = ref<File | undefined>(undefined);
 
@@ -268,6 +276,14 @@
                 break;
             case 3:
                 if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+                    border += ' border-t-thin';
+                }
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 4:
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
                     border = 'border-t-thin';
                 }
                 break;
@@ -327,6 +343,7 @@
                 assetType.value = AASObject.value.assetInformation.assetType ?? null;
                 defaultThumbnail.value = AASObject.value.assetInformation.defaultThumbnail ?? null;
             }
+            embeddedDataSpecifications.value = AASObject.value.embeddedDataSpecifications ?? null;
         }
     }
 
@@ -420,8 +437,7 @@
         }
 
         AASObject.value.derivedFrom = derivedFrom.value;
-
-        // embeddedDataSpecifications are out of scope
+        AASObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
         // extensions are out of scope
         // TODO Add Submodels
 
@@ -503,6 +519,7 @@
         specificAssetIds.value = null;
         assetType.value = null;
         defaultThumbnail.value = null;
+        embeddedDataSpecifications.value = null;
         // Reset state of expansion panels
         openPanels.value = [0, 3];
     }
