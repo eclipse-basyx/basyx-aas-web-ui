@@ -91,8 +91,15 @@
                             </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
+                    <!-- Qualifiers -->
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
+                        <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <QualifierInput v-model="qualifiers" />
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
                     <!-- Data Specification -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
@@ -153,6 +160,7 @@
     const mlpCategory = ref<string | null>(null);
 
     const semanticId = ref<aasTypes.Reference | null>(null);
+    const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
     const mlpValue = ref<Array<aasTypes.LangStringTextType> | null>(null);
 
     const errors = ref<Map<string, string>>(new Map());
@@ -210,6 +218,14 @@
                 break;
             case 3:
                 if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+                    border += ' border-t-thin';
+                }
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 4:
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
                     border += 'border-t-thin';
                 }
                 break;
@@ -262,6 +278,8 @@
         if (mlpValue.value !== null) {
             mlpObject.value.value = mlpValue.value;
         }
+
+        mlpObject.value.qualifiers = qualifiers.value;
 
         const verificationResult = verifyForEditor(mlpObject.value, { maxErrors: 10 });
         if (!verificationResult.isValid) {
@@ -359,6 +377,7 @@
         mlpCategory.value = null;
         mlpValue.value = null;
         semanticId.value = null;
+        qualifiers.value = null;
         openPanels.value = [0, 1];
     }
 
@@ -382,6 +401,7 @@
             mlpCategory.value = mlpObject.value.category ?? null;
             mlpValue.value = mlpObject.value.value ?? null;
             semanticId.value = mlpObject.value.semanticId ?? null;
+            qualifiers.value = mlpObject.value.qualifiers ?? null;
         }
     }
 </script>

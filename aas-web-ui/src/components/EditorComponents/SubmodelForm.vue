@@ -130,8 +130,15 @@
                             </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
+                    <!-- Qualifiers -->
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
+                        <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <QualifierInput v-model="qualifiers" />
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
                     <!-- Data Specification -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
@@ -209,6 +216,7 @@
     const templateId = ref<string | null>(null);
 
     const semanticId = ref<aasTypes.Reference | null>(null);
+    const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
 
     // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode); // Get the selected AAS from Store
@@ -240,6 +248,14 @@
                 break;
             case 3:
                 if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+                    border += ' border-t-thin';
+                }
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 4:
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
                     border = 'border-t-thin';
                 }
                 break;
@@ -293,6 +309,7 @@
                 templateId.value = submodelObject.value.administration.templateId ?? null;
             }
             semanticId.value = submodelObject.value.semanticId ?? null;
+            qualifiers.value = submodelObject.value.qualifiers ?? null;
         }
     }
 
@@ -365,6 +382,8 @@
         if (semanticId.value !== null) {
             submodelObject.value.semanticId = semanticId.value;
         }
+
+        submodelObject.value.qualifiers = qualifiers.value;
 
         // extensions are out of scope
         // SupplementalSemanticIds are out of scope
@@ -463,7 +482,8 @@
         creator.value = null;
         templateId.value = null;
         semanticId.value = null;
+        qualifiers.value = null;
         // Reset state of expansion panels
-        openPanels.value = [0, 3];
+        openPanels.value = [0, 4];
     }
 </script>

@@ -114,8 +114,15 @@
                             </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
+                    <!-- Qualifiers -->
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
+                        <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <QualifierInput v-model="qualifiers" />
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
                     <!-- Data Specification -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
@@ -180,6 +187,7 @@
     const typeValueListElement = ref<aasTypes.AasSubmodelElements | null>(null);
 
     const semanticId = ref<aasTypes.Reference | null>(null);
+    const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
 
     const errors = ref<Map<string, string>>(new Map());
 
@@ -238,6 +246,14 @@
                 if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
                     border += ' border-t-thin';
                 }
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 4:
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-t-thin';
+                }
                 break;
         }
         return border;
@@ -263,6 +279,7 @@
         typeValueListElement.value = null;
         valueTypeListElement.value = aasTypes.DataTypeDefXsd.String;
         semanticId.value = null;
+        qualifiers.value = null;
         openPanels.value = [0, 1];
     }
 
@@ -289,6 +306,7 @@
             typeValueListElement.value = smlObject.value.typeValueListElement ?? null;
             valueTypeListElement.value = smlObject.value.valueTypeListElement ?? aasTypes.DataTypeDefXsd.String;
             semanticId.value = smlObject.value.semanticId ?? null;
+            qualifiers.value = smlObject.value.qualifiers ?? null;
         }
     }
 
@@ -332,6 +350,8 @@
         if (valueTypeListElement.value !== null) {
             smlObject.value.valueTypeListElement = valueTypeListElement.value;
         }
+
+        smlObject.value.qualifiers = qualifiers.value;
 
         const verificationResult = verifyForEditor(smlObject.value, { maxErrors: 10 });
         if (!verificationResult.isValid) {

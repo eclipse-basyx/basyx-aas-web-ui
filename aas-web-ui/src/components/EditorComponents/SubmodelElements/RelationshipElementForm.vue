@@ -103,8 +103,15 @@
                             </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
+                    <!-- Qualifiers -->
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
+                        <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <QualifierInput v-model="qualifiers" />
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
                     <!-- Data Specification -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
@@ -164,6 +171,7 @@
     const relationshipElementCategory = ref<string | null>(null);
 
     const semanticId = ref<aasTypes.Reference | null>(null);
+    const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
     const firstReference = ref<aasTypes.Reference | null>(null);
     const secondReference = ref<aasTypes.Reference | null>(null);
 
@@ -224,6 +232,14 @@
                 if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
                     border += ' border-t-thin';
                 }
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 4:
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-t-thin';
+                }
                 break;
         }
         return border;
@@ -274,6 +290,7 @@
         }
 
         relationshipElementObject.value.category = relationshipElementCategory.value;
+        relationshipElementObject.value.qualifiers = qualifiers.value;
 
         const verificationResult = verifyForEditor(relationshipElementObject.value, { maxErrors: 10 });
         if (!verificationResult.isValid) {
@@ -375,6 +392,7 @@
         description.value = null;
         relationshipElementCategory.value = null;
         semanticId.value = null;
+        qualifiers.value = null;
         firstReference.value = null;
         secondReference.value = null;
         openPanels.value = [0, 1];
@@ -399,6 +417,7 @@
             description.value = relationshipElementObject.value.description ?? null;
             relationshipElementCategory.value = relationshipElementObject.value.category ?? null;
             semanticId.value = relationshipElementObject.value.semanticId ?? null;
+            qualifiers.value = relationshipElementObject.value.qualifiers ?? null;
             firstReference.value = relationshipElementObject.value.first ?? null;
             secondReference.value = relationshipElementObject.value.second ?? null;
         }

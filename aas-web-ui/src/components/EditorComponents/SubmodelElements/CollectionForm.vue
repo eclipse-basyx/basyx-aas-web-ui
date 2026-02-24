@@ -76,8 +76,15 @@
                             </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
+                    <!-- Qualifiers -->
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(2)">
+                        <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <QualifierInput v-model="qualifiers" />
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
                     <!-- Data Specification -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(2)">
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
@@ -138,6 +145,7 @@
     const smcCategory = ref<string | null>(null);
 
     const semanticId = ref<aasTypes.Reference | null>(null);
+    const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
     //const smcValue = ref<string | null>(null);
 
     const errors = ref<Map<string, string>>(new Map());
@@ -189,6 +197,14 @@
                 if (openPanels.value.includes(1) || openPanels.value.includes(2)) {
                     border += ' border-t-thin';
                 }
+                if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 3:
+                if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+                    border += ' border-t-thin';
+                }
                 break;
         }
         return border;
@@ -235,6 +251,7 @@
         }
 
         smcObject.value.category = smcCategory.value;
+        smcObject.value.qualifiers = qualifiers.value;
 
         const verificationResult = verifyForEditor(smcObject.value, { maxErrors: 10 });
         if (!verificationResult.isValid) {
@@ -331,6 +348,7 @@
         description.value = null;
         smcCategory.value = null;
         semanticId.value = null;
+        qualifiers.value = null;
         openPanels.value = [0];
     }
 
@@ -353,6 +371,7 @@
             description.value = smcObject.value.description ?? null;
             smcCategory.value = smcObject.value.category ?? null;
             semanticId.value = smcObject.value.semanticId ?? null;
+            qualifiers.value = smcObject.value.qualifiers ?? null;
         }
     }
 </script>
