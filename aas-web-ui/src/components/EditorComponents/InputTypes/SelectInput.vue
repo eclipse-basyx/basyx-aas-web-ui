@@ -21,6 +21,7 @@
         dataType: aasTypes.DataTypeDefXsd;
         elementType: aasTypes.AasSubmodelElements;
         entityType: aasTypes.EntityType;
+        qualifierKind: aasTypes.QualifierKind;
     };
 
     type ValueType<T extends keyof ValueMap> = ValueMap[T];
@@ -95,6 +96,12 @@
                 return [
                     { title: 'Co-Managed Entity', value: aasTypes.EntityType.CoManagedEntity },
                     { title: 'Self-Managed Entity', value: aasTypes.EntityType.SelfManagedEntity },
+                ];
+            case 'qualifierKind':
+                return [
+                    { title: 'ValueQualifier', value: aasTypes.QualifierKind.ValueQualifier },
+                    { title: 'ConceptQualifier', value: aasTypes.QualifierKind.ConceptQualifier },
+                    { title: 'TemplateQualifier', value: aasTypes.QualifierKind.TemplateQualifier },
                 ];
             default:
                 return [];

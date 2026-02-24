@@ -98,8 +98,15 @@
                             </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
+                    <!-- Qualifiers -->
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
+                        <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <QualifierInput v-model="qualifiers" />
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
                     <!-- Data Specification -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
@@ -159,6 +166,7 @@
     const referenceElementCategory = ref<string | null>(null);
 
     const semanticId = ref<aasTypes.Reference | null>(null);
+    const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
     const referenceElementValue = ref<aasTypes.Reference | null>(null);
 
     const errors = ref<Map<string, string>>(new Map());
@@ -218,6 +226,14 @@
                 if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
                     border += ' border-t-thin';
                 }
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 4:
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-t-thin';
+                }
                 break;
         }
         return border;
@@ -267,6 +283,7 @@
         }
 
         referenceElementObject.value.category = referenceElementCategory.value;
+        referenceElementObject.value.qualifiers = qualifiers.value;
 
         const verificationResult = verifyForEditor(referenceElementObject.value, { maxErrors: 10 });
         if (!verificationResult.isValid) {
@@ -368,6 +385,7 @@
         description.value = null;
         referenceElementCategory.value = null;
         semanticId.value = null;
+        qualifiers.value = null;
         referenceElementValue.value = null;
         openPanels.value = [0, 1];
     }
@@ -391,6 +409,7 @@
             description.value = referenceElementObject.value.description ?? null;
             referenceElementCategory.value = referenceElementObject.value.category ?? null;
             semanticId.value = referenceElementObject.value.semanticId ?? null;
+            qualifiers.value = referenceElementObject.value.qualifiers ?? null;
             referenceElementValue.value = referenceElementObject.value.value ?? null;
         }
     }

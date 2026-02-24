@@ -117,8 +117,15 @@
                             </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
+                    <!-- Qualifiers -->
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
+                        <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <QualifierInput v-model="qualifiers" />
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
                     <!-- Data Specification -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
@@ -185,6 +192,7 @@
     const propertyCategory = ref<string | null>(null);
 
     const semanticId = ref<aasTypes.Reference | null>(null);
+    const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
     const propertyValue = ref<string>('');
     const propertyValueErrorMessage = ref<string | null>(null);
     const valueType = ref<aasTypes.DataTypeDefXsd>(aasTypes.DataTypeDefXsd.String);
@@ -246,6 +254,14 @@
                 break;
             case 3:
                 if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+                    border += ' border-t-thin';
+                }
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 4:
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
                     border += 'border-t-thin';
                 }
                 break;
@@ -317,6 +333,7 @@
         }
 
         propertyObject.value.category = propertyCategory.value;
+        propertyObject.value.qualifiers = qualifiers.value;
 
         const verificationResult = verifyForEditor(propertyObject.value, { maxErrors: 10 });
         if (!verificationResult.isValid) {
@@ -429,6 +446,7 @@
         propertyValueErrorMessage.value = null;
         valueType.value = aasTypes.DataTypeDefXsd.String;
         semanticId.value = null;
+        qualifiers.value = null;
         openPanels.value = [0, 1];
     }
 
@@ -454,6 +472,7 @@
             propertyValue.value = propertyObject.value.value ?? '';
             valueType.value = propertyObject.value.valueType ?? aasTypes.DataTypeDefXsd.String;
             semanticId.value = propertyObject.value.semanticId ?? null;
+            qualifiers.value = propertyObject.value.qualifiers ?? null;
         }
     }
 </script>
