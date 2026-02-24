@@ -111,8 +111,18 @@
                     <!-- Derivation -->
                     <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(2)">
                         <v-expansion-panel-title>Derivation</v-expansion-panel-title>
-                        <v-expansion-panel-text class="pt-2">
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                        <v-expansion-panel-text>
+                            <v-row align="center">
+                                <v-col class="py-0">
+                                    <ReferenceInput
+                                        v-model="derivedFrom"
+                                        label="Derived From"
+                                        :default-key-type="aasTypes.KeyTypes.AssetAdministrationShell" />
+                                </v-col>
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="derivedFrom" />
+                                </v-col>
+                            </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Asset -->
@@ -220,6 +230,7 @@
     const revision = ref<string | null>(null);
     const creator = ref<aasTypes.Reference | null>(null);
     const templateId = ref<string | null>(null);
+    const derivedFrom = ref<aasTypes.Reference | null>(null);
 
     const assetKind = ref<aasTypes.AssetKind>(aasTypes.AssetKind.Instance);
     const globalAssetId = ref<string | null>(null);
@@ -302,6 +313,7 @@
             displayName.value = AASObject.value.displayName ?? null;
             description.value = AASObject.value.description ?? null;
             AASCategory.value = AASObject.value.category ?? null;
+            derivedFrom.value = AASObject.value.derivedFrom ?? null;
             if (AASObject.value.administration !== null && AASObject.value.administration !== undefined) {
                 version.value = AASObject.value.administration.version ?? null;
                 revision.value = AASObject.value.administration.revision ?? null;
@@ -407,7 +419,7 @@
             AASObject.value.administration = administrativeInformation;
         }
 
-        // TODO: Add optional parameter derivedFrom
+        AASObject.value.derivedFrom = derivedFrom.value;
 
         // embeddedDataSpecifications are out of scope
         // extensions are out of scope
@@ -485,6 +497,7 @@
         revision.value = null;
         creator.value = null;
         templateId.value = null;
+        derivedFrom.value = null;
         assetKind.value = aasTypes.AssetKind.Instance;
         globalAssetId.value = null;
         specificAssetIds.value = null;
