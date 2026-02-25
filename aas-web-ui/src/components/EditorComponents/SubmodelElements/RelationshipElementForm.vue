@@ -114,7 +114,7 @@
                     <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -172,6 +172,7 @@
 
     const semanticId = ref<aasTypes.Reference | null>(null);
     const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
     const firstReference = ref<aasTypes.Reference | null>(null);
     const secondReference = ref<aasTypes.Reference | null>(null);
 
@@ -291,6 +292,7 @@
 
         relationshipElementObject.value.category = relationshipElementCategory.value;
         relationshipElementObject.value.qualifiers = qualifiers.value;
+        relationshipElementObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
 
         const verificationResult = verifyForEditor(relationshipElementObject.value, { maxErrors: 10 });
         if (!verificationResult.isValid) {
@@ -393,6 +395,7 @@
         relationshipElementCategory.value = null;
         semanticId.value = null;
         qualifiers.value = null;
+        embeddedDataSpecifications.value = null;
         firstReference.value = null;
         secondReference.value = null;
         openPanels.value = [0, 1];
@@ -418,6 +421,7 @@
             relationshipElementCategory.value = relationshipElementObject.value.category ?? null;
             semanticId.value = relationshipElementObject.value.semanticId ?? null;
             qualifiers.value = relationshipElementObject.value.qualifiers ?? null;
+            embeddedDataSpecifications.value = relationshipElementObject.value.embeddedDataSpecifications ?? null;
             firstReference.value = relationshipElementObject.value.first ?? null;
             secondReference.value = relationshipElementObject.value.second ?? null;
         }

@@ -118,7 +118,7 @@
                     <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -176,6 +176,7 @@
 
     const semanticId = ref<aasTypes.Reference | null>(null);
     const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
     const firstReference = ref<aasTypes.Reference | null>(null);
     const secondReference = ref<aasTypes.Reference | null>(null);
 
@@ -295,6 +296,7 @@
 
         annotatedRelationshipElementObject.value.category = annotatedRelationshipElementCategory.value;
         annotatedRelationshipElementObject.value.qualifiers = qualifiers.value;
+        annotatedRelationshipElementObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
 
         const verificationResult = verifyForEditor(annotatedRelationshipElementObject.value, { maxErrors: 10 });
         if (!verificationResult.isValid) {
@@ -396,6 +398,7 @@
         annotatedRelationshipElementCategory.value = null;
         semanticId.value = null;
         qualifiers.value = null;
+        embeddedDataSpecifications.value = null;
         firstReference.value = null;
         secondReference.value = null;
         openPanels.value = [0, 1];
@@ -423,6 +426,8 @@
             annotatedRelationshipElementCategory.value = annotatedRelationshipElementObject.value.category ?? null;
             semanticId.value = annotatedRelationshipElementObject.value.semanticId ?? null;
             qualifiers.value = annotatedRelationshipElementObject.value.qualifiers ?? null;
+            embeddedDataSpecifications.value =
+                annotatedRelationshipElementObject.value.embeddedDataSpecifications ?? null;
             firstReference.value = annotatedRelationshipElementObject.value.first ?? null;
             secondReference.value = annotatedRelationshipElementObject.value.second ?? null;
         }

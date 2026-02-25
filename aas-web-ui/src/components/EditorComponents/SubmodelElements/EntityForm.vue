@@ -106,7 +106,7 @@
                     <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -164,6 +164,7 @@
 
     const semanticId = ref<aasTypes.Reference | null>(null);
     const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
 
     const entityType = ref<aasTypes.EntityType>(aasTypes.EntityType.SelfManagedEntity);
     const globalAssetId = ref<string | null>(null);
@@ -283,6 +284,7 @@
 
         entityObject.value.category = entityCategory.value;
         entityObject.value.qualifiers = qualifiers.value;
+        entityObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
 
         if (globalAssetId.value !== null && globalAssetId.value !== '') {
             entityObject.value.globalAssetId = globalAssetId.value;
@@ -395,6 +397,7 @@
         globalAssetId.value = null;
         specificAssetIds.value = null;
         qualifiers.value = null;
+        embeddedDataSpecifications.value = null;
         openPanels.value = [0, 1];
     }
 
@@ -421,6 +424,7 @@
             globalAssetId.value = entityObject.value.globalAssetId ?? null;
             specificAssetIds.value = entityObject.value.specificAssetIds ?? null;
             qualifiers.value = entityObject.value.qualifiers ?? null;
+            embeddedDataSpecifications.value = entityObject.value.embeddedDataSpecifications ?? null;
         }
     }
 </script>

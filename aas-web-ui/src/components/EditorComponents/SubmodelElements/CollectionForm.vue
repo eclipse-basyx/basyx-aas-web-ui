@@ -87,7 +87,7 @@
                     <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -146,6 +146,7 @@
 
     const semanticId = ref<aasTypes.Reference | null>(null);
     const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
     //const smcValue = ref<string | null>(null);
 
     const errors = ref<Map<string, string>>(new Map());
@@ -252,6 +253,7 @@
 
         smcObject.value.category = smcCategory.value;
         smcObject.value.qualifiers = qualifiers.value;
+        smcObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
 
         const verificationResult = verifyForEditor(smcObject.value, { maxErrors: 10 });
         if (!verificationResult.isValid) {
@@ -349,6 +351,7 @@
         smcCategory.value = null;
         semanticId.value = null;
         qualifiers.value = null;
+        embeddedDataSpecifications.value = null;
         openPanels.value = [0];
     }
 
@@ -372,6 +375,7 @@
             smcCategory.value = smcObject.value.category ?? null;
             semanticId.value = smcObject.value.semanticId ?? null;
             qualifiers.value = smcObject.value.qualifiers ?? null;
+            embeddedDataSpecifications.value = smcObject.value.embeddedDataSpecifications ?? null;
         }
     }
 </script>
