@@ -877,10 +877,10 @@
     "@testing-library/dom" "^9.3.3"
     "@vue/test-utils" "^2.4.1"
 
-"@thatopen/components-front@^3.3.1":
-  version "3.3.1"
-  resolved "https://registry.yarnpkg.com/@thatopen/components-front/-/components-front-3.3.1.tgz#4b4480205682fa79773d528ffc43b12c5f1ccf16"
-  integrity sha512-Y5OhrtOLs6dLhT+ELGcxNDY0k0D/F4Rjv8+9FYF9SjNiB4k1ke3aC6Uy8gsx/tZtFmQ8Ad+bLrEtQYOGr9AZgw==
+"@thatopen/components-front@^3.3.3":
+  version "3.3.3"
+  resolved "https://registry.yarnpkg.com/@thatopen/components-front/-/components-front-3.3.3.tgz#b37c4b91808e04aed6f6efe1f6a4c7b32aa8c63e"
+  integrity sha512-a6temY0agP+0+EQGdBTk3CQdDVm9psXiv21bkMm6wDYXjnqtxdWFLLG00t+Ng3cS5fZIFuakieY455RP2AlWxw==
   dependencies:
     "@thatopen/components" "~3.3.0"
     earcut "^3.0.1"
