@@ -78,7 +78,7 @@ jobs:
           syft ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -o json > ${{ env.SBOM_FILE }}
 
       - name: Upload SBOM
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: sbom
           path: ${{ env.SBOM_FILE }}
