@@ -4286,10 +4286,10 @@ w3c-xmlserializer@^5.0.0:
   dependencies:
     xml-name-validator "^5.0.0"
 
-web-ifc@^0.0.75:
-  version "0.0.75"
-  resolved "https://registry.yarnpkg.com/web-ifc/-/web-ifc-0.0.75.tgz#a244082b72b0ad75a9d986f6a29bfc1870813ff7"
-  integrity sha512-d+xKbBkNgySlbZJF0zLG1zW6KOqT76/Ser7G2FrbO5w+y00WJy3yEPPoHbINF2WqMrhoGxSxw5d64jt4Om9WrQ==
+web-ifc@^0.0.76:
+  version "0.0.76"
+  resolved "https://registry.yarnpkg.com/web-ifc/-/web-ifc-0.0.76.tgz#3f0e8442d31dc90238f163969b6f6c224a8d0886"
+  integrity sha512-RMLMAvbKWVguWsNX5i952fA7wMNmvc9X8jR8nZ7b6dnpg3eKclcYrDlE2LBhkFuPdBvbz4LKPIks+GY9dQapzg==
 
 webfontloader@^1.0.0:
   version "1.6.28"
