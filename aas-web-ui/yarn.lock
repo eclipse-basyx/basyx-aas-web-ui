@@ -1527,13 +1527,13 @@
   resolved "https://registry.yarnpkg.com/@yr/monotone-cubic-spline/-/monotone-cubic-spline-1.0.3.tgz#7272d89f8e4f6fb7a1600c28c378cc18d3b577b9"
   integrity sha512-FQXkOta0XBSUPHndIKON2Y9JeQz5ZeMqLYZVVK93FliNBFm7LNMIZmY6FrMEB9XPcDbE2bekMbZD6kzDkxwYjA==
 
-aasx-package-ts@^0.1.3:
-  version "0.1.3"
-  resolved "https://registry.yarnpkg.com/aasx-package-ts/-/aasx-package-ts-0.1.3.tgz#4838fa40f54fafd7afd562265fffc860ab257d2d"
-  integrity sha512-zWswXi3MgWY1aVnGr0y/+c+wRj3vbemvwxj0lccSZdnUPvYTSn0aph9yzVspeEXc7VmY52Xq8dYP0IeqQ1hc2A==
+aasx-package-ts@^0.1.4:
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/aasx-package-ts/-/aasx-package-ts-0.1.4.tgz#20e5c3fd6db084c14563e4cb972938f765ae34f5"
+  integrity sha512-cMQBZpacOb2ZuTVnK5VCWlt0rNo+5emljGdV6qVUg9LTufWwuu7KN4WdemHhjJtBYAj0nbry3N+5UpxahRpuSA==
   dependencies:
     fflate "^0.8.2"
-    xml-sax-ts "^0.3.0"
+    xml-sax-ts "^0.4.0"
 
 abbrev@^2.0.0:
   version "2.0.0"
@@ -1657,12 +1657,12 @@ balanced-match@^4.0.2:
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-4.0.4.tgz#bfb10662feed8196a2c62e7c68e17720c274179a"
   integrity sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==
 
-basyx-typescript-sdk@^2.1.1:
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/basyx-typescript-sdk/-/basyx-typescript-sdk-2.1.1.tgz#d2491d37721bc3576c44ef537e8548b7e8706971"
-  integrity sha512-i8cCEGWUNVieTlqv5dmb3+lec2cIxgoadDb2k8/hSLL57F8pJgQmHmr5FbT7d58vYFeXz74qwujV3wsImU91gg==
+basyx-typescript-sdk@^2.1.2:
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/basyx-typescript-sdk/-/basyx-typescript-sdk-2.1.2.tgz#b090abadd4e3a075475acd8e69e30503342e8984"
+  integrity sha512-b5z4AwD62EiAqerf/DMKzIHb9nn6JMRxbVDkw4lPWk7baIgii+4aCExRjL7ZoPrW3bL+wUW7q6uiBywjlrk9uQ==
   dependencies:
-    xml-sax-ts "^0.3.0"
+    xml-sax-ts "^0.4.0"
 
 bidi-js@^1.0.3:
   version "1.0.3"
@@ -4416,10 +4416,10 @@ xml-name-validator@^5.0.0:
   resolved "https://registry.yarnpkg.com/xml-name-validator/-/xml-name-validator-5.0.0.tgz#82be9b957f7afdacf961e5980f1bf227c0bf7673"
   integrity sha512-EvGK8EJ3DhaHfbRlETOWAS5pO9MZITeauHKJyb8wyajUfQUenkIg2MvLDTZ4T/TgIcm3HU0TFBgWWboAZ30UHg==
 
-xml-sax-ts@^0.3.0:
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/xml-sax-ts/-/xml-sax-ts-0.3.0.tgz#ab5c94cd6744478c233990618122b8aef3494eb4"
-  integrity sha512-alzmBPfcZBQyfzlFPUlXxGpSyGP2iBHvQWiOZxzdQaYKPccqtZyFJ+aPBjruCstRnJj0Q/zlHYOuEMfNkUEU9g==
+xml-sax-ts@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/xml-sax-ts/-/xml-sax-ts-0.4.0.tgz#0902df2e7d3cc0facc8cf0c976d2c425e283c29e"
+  integrity sha512-u40hxAXZTwVGIyo/Lbx09PzIO/d2JkOUG004wSSpQxv++faMjZiV7EhB6Ev8kr82vJUiUXmmvIoa++K7lgJOjQ==
 
 xmlchars@^2.2.0:
   version "2.2.0"
