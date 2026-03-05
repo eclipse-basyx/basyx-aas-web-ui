@@ -60,7 +60,6 @@
 <script lang="ts" setup>
     import { computed, onMounted, ref, watch } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
-    import { useSMHandling } from '@/composables/AAS/SMHandling';
     import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
     import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement';
     import { useContactInformation_v1_0Utils } from '@/composables/AAS/SubmodelTemplates/ContactInformation_v1_0Utils';
@@ -86,7 +85,6 @@
     const aasStore = useAASStore();
     const { resolveSubmodelBySemanticId } = useDppSubmodelResolver();
     const { getSubmodelElementByIdShort, checkIdShort, nameToDisplay } = useReferableUtils();
-    const { setData } = useSMHandling();
     const { hasValue, valueToDisplay } = useSME();
     const { valueBlob } = useSMEFile();
     const { determineAddress, getTypeOfEmailAddress, getTypeOfFaxNumber, getTypeOfTelephone } =
@@ -140,7 +138,7 @@
             return;
         }
 
-        nameplateSubmodel.value = await setData({ ...resolvedNameplate }, resolvedNameplate.path);
+        nameplateSubmodel.value = resolvedNameplate as NameplateSubmodel;
 
         extractRows();
         await extractLogo();
