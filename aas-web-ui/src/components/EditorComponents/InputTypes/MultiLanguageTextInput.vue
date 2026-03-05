@@ -22,12 +22,12 @@
                 :custom-filter="langFilter"
                 class="mr-3">
                 <template #selection="{ item }">
-                    <span>{{ item.value }}</span>
+                    <span>{{ item.code }}</span>
                 </template>
                 <template #item="{ props: itemProps, item }">
                     <v-list-item v-bind="itemProps">
                         <template #append>
-                            <span class="ml-2">{{ item.value }}</span>
+                            <span class="ml-2">{{ item.code }}</span>
                         </template>
                     </v-list-item>
                 </template>

@@ -1246,7 +1246,10 @@
     const clearStates = ref(['Aborted']); // List of states that can be cleared
 
     const isDark = computed(() => theme.global.current.value.dark);
-    const primaryColor = computed(() => theme.current.value.colors.primary || '#1976d2');
+    const primaryColor = computed<string>(() => {
+        const color = theme.current.value.colors.primary;
+        return typeof color === 'string' ? color : '#1976d2';
+    });
     const primaryColorLighten2 = computed(() => lightenDarkenColor(primaryColor.value, 20));
 
     watch(

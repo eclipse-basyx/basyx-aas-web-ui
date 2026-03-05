@@ -37,7 +37,7 @@
                     <template #item="{ props, item }">
                         <v-list-item v-bind="props">
                             <template #subtitle>
-                                <span class="text-caption">{{ item.raw.sourceUrl }}</span>
+                                <span class="text-caption">{{ item.sourceUrl }}</span>
                             </template>
                         </v-list-item>
                     </template>
@@ -84,7 +84,7 @@
                     <template #item="{ props, item }">
                         <v-list-item v-bind="props">
                             <template #subtitle>
-                                <span class="text-caption">{{ item.raw.aasRepoUrl }}</span>
+                                <span class="text-caption">{{ item.aasRepoUrl }}</span>
                             </template>
                         </v-list-item>
                     </template>
