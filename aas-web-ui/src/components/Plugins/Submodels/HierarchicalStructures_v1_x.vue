@@ -109,7 +109,7 @@
                         <template #item="{ item, props: itemProps }">
                             <v-list-item v-bind="itemProps">
                                 <template #subtitle>
-                                    <span class="text-caption">{{ item.raw.description }}</span>
+                                    <span class="text-caption">{{ item.description }}</span>
                                 </template>
                             </v-list-item>
                         </template>
@@ -144,7 +144,7 @@
                         <template #item="{ item, props: itemProps }">
                             <v-list-item v-bind="itemProps">
                                 <template #subtitle>
-                                    <span class="text-caption">{{ item.raw.description }}</span>
+                                    <span class="text-caption">{{ item.description }}</span>
                                 </template>
                             </v-list-item>
                         </template>
@@ -352,7 +352,10 @@
 
     // Computed Properties
     const isDark = computed(() => theme.global.current.value.dark);
-    const primaryColor = computed(() => theme.current.value.colors.primary);
+    const primaryColor = computed<string>(() => {
+        const color = theme.current.value.colors.primary;
+        return typeof color === 'string' ? color : '#1976d2';
+    });
     const editorMode = computed(() => ['AASEditor', 'SMEditor'].includes(route.name as string));
     // Custom self-loop edge component
     const SelfLoopEdge: import('@vue-flow/core').EdgeComponent = (props: EdgeProps) => {

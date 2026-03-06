@@ -115,7 +115,6 @@ declare module 'vue' {
     ScatterChart: typeof import('./components/Widgets/ScatterChart.vue')['default']
     SecurityConfigPanel: typeof import('./components/AppNavigation/Settings/SecurityConfigPanel.vue')['default']
     SelectInput: typeof import('./components/EditorComponents/InputTypes/SelectInput.vue')['default']
-    SelectionBar: typeof import('./components/Plugins/Submodels/FileSystem/components/SelectionBar.vue')['default']
     SemanticID: typeof import('./components/UIComponents/SemanticID.vue')['default']
     Settings: typeof import('./components/AppNavigation/Settings.vue')['default']
     Snackbar: typeof import('./components/AppNavigation/Snackbar.vue')['default']
