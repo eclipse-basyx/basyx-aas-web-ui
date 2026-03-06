@@ -157,9 +157,12 @@
                                                                         <v-table>
                                                                             <tbody>
                                                                                 <tr
-                                                                                    v-for="(
-                                                                                        child, c
-                                                                                    ) in versionSmc.value ?? []"
+                                                                                    v-for="(child, c) in (
+                                                                                        versionSmc.value ?? []
+                                                                                    ).filter(
+                                                                                        (x: any) =>
+                                                                                            !isAttachmentChild(x)
+                                                                                    )"
                                                                                     :key="
                                                                                         child.idShort ??
                                                                                         child.id ??
@@ -318,6 +321,282 @@
                                                                             </tbody>
                                                                         </v-table>
                                                                     </v-card>
+                                                                    <!-- Tabs for File and Digital Files -->
+                                                                    <!-- <v-sheet
+                                                                        v-if="
+                                                                            versionSmc.value?.some(
+                                                                                (sme: any) =>
+                                                                                    sme.modelType === 'File' ||
+                                                                                    (sme.modelType ===
+                                                                                        'SubmodelElementList' &&
+                                                                                        sme.value?.some(
+                                                                                            (entry: any) =>
+                                                                                                entry.modelType ===
+                                                                                                'File'
+                                                                                        ))
+                                                                            )
+                                                                        "
+                                                                        class="mt-4"
+                                                                        variant="outlined">
+                                                                        <v-tabs v-model="tab" color="primary">
+                                                                            <v-tab value="one">Preview File</v-tab>
+                                                                            <v-tab value="two">Digital Files</v-tab>
+                                                                            <v-tab value="three">Item Three</v-tab>
+                                                                        </v-tabs>
+
+                                                                        <v-divider></v-divider>
+
+                                                                        <v-tabs-window v-model="tab">
+                                                                            <v-tabs-window-item value="one">
+                                                                                <v-sheet class="pa-5" color="purple">
+                                                                                    >One
+                                                                                </v-sheet>
+                                                                            </v-tabs-window-item>
+                                                                            <v-tabs-window-item value="two">
+                                                                                <v-sheet class="pa-5" color="orange"
+                                                                                    >Two</v-sheet
+                                                                                >
+                                                                            </v-tabs-window-item>
+                                                                            <v-tabs-window-item value="three">
+                                                                                <v-sheet class="pa-5" color="brown"
+                                                                                    >Three</v-sheet
+                                                                                >
+                                                                            </v-tabs-window-item>
+                                                                        </v-tabs-window>
+                                                                    </v-sheet> -->
+                                                                    <!-- Attachments and Files -->
+                                                                    <!-- Attachments -->
+                                                                    <div v-if="hasAttachments(versionSmc)" class="mt-4">
+                                                                        <div class="text-subtitle-2 mb-2">
+                                                                            Attachments
+                                                                        </div>
+
+                                                                        <v-tabs
+                                                                            :model-value="getFileTab(versionSmc)"
+                                                                            @update:model-value="
+                                                                                (val) => setFileTab(versionSmc, val)
+                                                                            "
+                                                                            density="compact"
+                                                                            color="primary">
+                                                                            <v-tab value="preview">Preview File</v-tab>
+                                                                            <v-tab value="digital">Digital Files</v-tab>
+                                                                        </v-tabs>
+
+                                                                        <v-divider class="mt-2" />
+
+                                                                        <v-window
+                                                                            :model-value="getFileTab(versionSmc)"
+                                                                            class="mt-3">
+                                                                            <!-- Preview -->
+                                                                            <v-window-item value="preview">
+                                                                                <template
+                                                                                    v-if="getPreviewFile(versionSmc)">
+                                                                                    <template
+                                                                                        v-for="pf in [
+                                                                                            getPreviewFile(versionSmc),
+                                                                                        ]"
+                                                                                        :key="
+                                                                                            pf?.id ?? pf?.path ?? 'pf'
+                                                                                        ">
+                                                                                        <!-- Render preview based on contentType -->
+                                                                                        <ImagePreview
+                                                                                            v-if="
+                                                                                                pf?.contentType?.includes(
+                                                                                                    'image'
+                                                                                                )
+                                                                                            "
+                                                                                            :submodel-element-data="
+                                                                                                pf
+                                                                                            " />
+                                                                                        <PDFPreview
+                                                                                            v-else-if="
+                                                                                                pf?.contentType?.includes(
+                                                                                                    'pdf'
+                                                                                                )
+                                                                                            "
+                                                                                            :submodel-element-data="
+                                                                                                pf
+                                                                                            " />
+                                                                                        <CADPreview
+                                                                                            v-else-if="
+                                                                                                pf?.contentType &&
+                                                                                                (pf.contentType.includes(
+                                                                                                    'sla'
+                                                                                                ) ||
+                                                                                                    pf.contentType.includes(
+                                                                                                        'stl'
+                                                                                                    ) ||
+                                                                                                    pf.contentType.includes(
+                                                                                                        'model'
+                                                                                                    ) ||
+                                                                                                    pf.contentType.includes(
+                                                                                                        'obj'
+                                                                                                    ) ||
+                                                                                                    pf.contentType.includes(
+                                                                                                        'gltf'
+                                                                                                    ))
+                                                                                            "
+                                                                                            :submodel-element-data="
+                                                                                                pf
+                                                                                            " />
+                                                                                        <v-alert
+                                                                                            v-else
+                                                                                            text="No preview available for this file type"
+                                                                                            density="compact"
+                                                                                            type="warning"
+                                                                                            variant="outlined"
+                                                                                            class="mt-3" />
+
+                                                                                        <v-card-actions
+                                                                                            class="pt-4 pb-0 pr-0">
+                                                                                            <v-spacer />
+                                                                                            <v-btn
+                                                                                                size="small"
+                                                                                                color="primary"
+                                                                                                variant="elevated"
+                                                                                                prepend-icon="mdi-download"
+                                                                                                class="text-buttonText"
+                                                                                                @click="
+                                                                                                    downloadFile(pf)
+                                                                                                ">
+                                                                                                Download Preview File
+                                                                                            </v-btn>
+                                                                                        </v-card-actions>
+                                                                                    </template>
+                                                                                </template>
+
+                                                                                <v-alert
+                                                                                    v-else
+                                                                                    text="No available preview file"
+                                                                                    density="compact"
+                                                                                    type="warning"
+                                                                                    variant="outlined" />
+                                                                            </v-window-item>
+
+                                                                            <!-- Digital -->
+                                                                            <v-window-item value="digital">
+                                                                                <template
+                                                                                    v-if="
+                                                                                        getDigitalFiles(versionSmc)
+                                                                                            .length > 0
+                                                                                    ">
+                                                                                    <v-expansion-panels
+                                                                                        variant="accordion">
+                                                                                        <v-expansion-panel
+                                                                                            v-for="(
+                                                                                                fileEl, f
+                                                                                            ) in getDigitalFiles(
+                                                                                                versionSmc
+                                                                                            )"
+                                                                                            :key="
+                                                                                                fileEl.id ??
+                                                                                                fileEl.path ??
+                                                                                                fileEl.idShort ??
+                                                                                                `digital-${f}`
+                                                                                            ">
+                                                                                            <v-expansion-panel-title>
+                                                                                                <v-list-item
+                                                                                                    class="pa-0">
+                                                                                                    <template #prepend>
+                                                                                                        <v-icon
+                                                                                                            size="small"
+                                                                                                            >mdi-paperclip</v-icon
+                                                                                                        >
+                                                                                                    </template>
+                                                                                                    <v-list-item-title>
+                                                                                                        {{
+                                                                                                            nameToDisplay(
+                                                                                                                fileEl
+                                                                                                            ) ||
+                                                                                                            fileEl.idShort ||
+                                                                                                            `Digital file ${f + 1}`
+                                                                                                        }}
+                                                                                                    </v-list-item-title>
+                                                                                                </v-list-item>
+                                                                                            </v-expansion-panel-title>
+
+                                                                                            <v-expansion-panel-text
+                                                                                                class="pt-4">
+                                                                                                <ImagePreview
+                                                                                                    v-if="
+                                                                                                        fileEl?.contentType?.includes(
+                                                                                                            'image'
+                                                                                                        )
+                                                                                                    "
+                                                                                                    :submodel-element-data="
+                                                                                                        fileEl
+                                                                                                    " />
+                                                                                                <PDFPreview
+                                                                                                    v-else-if="
+                                                                                                        fileEl?.contentType?.includes(
+                                                                                                            'pdf'
+                                                                                                        )
+                                                                                                    "
+                                                                                                    :submodel-element-data="
+                                                                                                        fileEl
+                                                                                                    " />
+                                                                                                <CADPreview
+                                                                                                    v-else-if="
+                                                                                                        fileEl?.contentType &&
+                                                                                                        (fileEl.contentType.includes(
+                                                                                                            'sla'
+                                                                                                        ) ||
+                                                                                                            fileEl.contentType.includes(
+                                                                                                                'stl'
+                                                                                                            ) ||
+                                                                                                            fileEl.contentType.includes(
+                                                                                                                'model'
+                                                                                                            ) ||
+                                                                                                            fileEl.contentType.includes(
+                                                                                                                'obj'
+                                                                                                            ) ||
+                                                                                                            fileEl.contentType.includes(
+                                                                                                                'gltf'
+                                                                                                            ))
+                                                                                                    "
+                                                                                                    :submodel-element-data="
+                                                                                                        fileEl
+                                                                                                    " />
+                                                                                                <v-alert
+                                                                                                    v-else
+                                                                                                    text="No preview available for this file type"
+                                                                                                    density="compact"
+                                                                                                    type="warning"
+                                                                                                    variant="outlined"
+                                                                                                    class="mt-3" />
+
+                                                                                                <v-card-actions
+                                                                                                    class="pt-4 pb-0 pr-0">
+                                                                                                    <v-spacer />
+                                                                                                    <v-btn
+                                                                                                        size="small"
+                                                                                                        color="primary"
+                                                                                                        variant="elevated"
+                                                                                                        prepend-icon="mdi-download"
+                                                                                                        class="text-buttonText"
+                                                                                                        @click="
+                                                                                                            downloadFile(
+                                                                                                                fileEl
+                                                                                                            )
+                                                                                                        ">
+                                                                                                        Download Digital
+                                                                                                        File
+                                                                                                    </v-btn>
+                                                                                                </v-card-actions>
+                                                                                            </v-expansion-panel-text>
+                                                                                        </v-expansion-panel>
+                                                                                    </v-expansion-panels>
+                                                                                </template>
+
+                                                                                <v-alert
+                                                                                    v-else
+                                                                                    text="No available digital files"
+                                                                                    density="compact"
+                                                                                    type="warning"
+                                                                                    variant="outlined" />
+                                                                            </v-window-item>
+                                                                        </v-window>
+                                                                    </div>
                                                                 </v-expansion-panel-text>
                                                             </div>
                                                         </v-expansion-panel-text>
@@ -380,7 +659,7 @@
     import { onMounted, ref } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
-    // import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
+    import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
     import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement';
     import { getSubmodelElementBySemanticId, getSubmodelElementsBySemanticId } from '@/utils/AAS/SemanticIdUtils';
     // import { getLanguageName } from '@/utils/LocaleUtils';
@@ -393,7 +672,7 @@
     const { setData } = useSMHandling();
     const { nameToDisplay } = useReferableUtils();
     const { hasValue, valueToDisplay } = useSME();
-    //const { downloadFile } = useSMEFile();
+    const { downloadFile } = useSMEFile();
 
     // Properties
     const props = defineProps({
@@ -411,6 +690,9 @@
     const documents = ref([] as any);
     // const documentIds = ref([] as any);
     const documentsSml = ref<any>(null);
+    // const tab = ref('one');
+    type FileTab = 'preview' | 'digital';
+    const versionFileTab = ref<Record<string, FileTab>>({});
 
     onMounted(() => {
         initializeVisualization();
@@ -508,5 +790,37 @@
 
         doc.documentVersionInfo = documentVersionInfoSmcs;
         return;
+    }
+    function versionKey(versionSmc: any): string {
+        // use a stable key if available
+        return versionSmc?.id ?? versionSmc?.path ?? versionSmc?.idShort ?? 'unknown';
+    }
+
+    function getFileTab(versionSmc: any): FileTab {
+        const key = versionKey(versionSmc);
+        return versionFileTab.value[key] ?? 'preview';
+    }
+
+    function setFileTab(versionSmc: any, tab: FileTab) {
+        const key = versionKey(versionSmc);
+        versionFileTab.value[key] = tab;
+    }
+    function getPreviewFile(versionSmc: any): any | null {
+        const children = versionSmc?.value ?? [];
+        return children.find((c: any) => c?.modelType === 'File' && c?.idShort === 'PreviewFile') ?? null;
+    }
+
+    function getDigitalFiles(versionSmc: any): any[] {
+        const children = versionSmc?.value ?? [];
+        const digitalFilesSml = children.find(
+            (c: any) => c?.modelType === 'SubmodelElementList' && c?.idShort === 'DigitalFiles'
+        );
+        return Array.isArray(digitalFilesSml?.value) ? digitalFilesSml.value : [];
+    }
+    function hasAttachments(versionSmc: any): boolean {
+        return !!getPreviewFile(versionSmc) || getDigitalFiles(versionSmc).length > 0;
+    }
+    function isAttachmentChild(child: any): boolean {
+        return child?.idShort === 'PreviewFile' || child?.idShort === 'DigitalFiles';
     }
 </script>
