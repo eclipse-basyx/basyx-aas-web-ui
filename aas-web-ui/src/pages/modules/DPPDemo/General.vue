@@ -173,7 +173,8 @@
         for (const sme of nameplateSubmodel.value.submodelElements) {
             for (const idShort of productPropertyIdShorts) {
                 if (checkIdShort(sme, idShort) && hasValue(sme)) {
-                    let value = valueToDisplay(sme, '');
+                    const fallbackValue = firstLangStringSetText(sme);
+                    let value = valueToDisplay(sme, 'en', fallbackValue);
 
                     if (checkIdShort(sme, 'CountryOfOrigin')) {
                         value = getCountryName(value, value) || value;
@@ -190,10 +191,11 @@
 
             for (const idShort of manufacturerPropertyIdShorts) {
                 if (checkIdShort(sme, idShort) && hasValue(sme)) {
+                    const fallbackValue = firstLangStringSetText(sme);
                     generalRows.value.push({
                         idShort: idShort,
                         label: nameToDisplay(sme, 'en', idShort),
-                        value: idShort === 'CompanyLogo' ? 'Logo' : valueToDisplay(sme, ''),
+                        value: idShort === 'CompanyLogo' ? 'Logo' : valueToDisplay(sme, 'en', fallbackValue),
                         type: idShort === 'CompanyLogo' ? 'logo' : 'text',
                     });
                 }

@@ -15,8 +15,15 @@
                                     :aspect-ratio="productImageAspectRatio"
                                     class="w-100 mx-auto border rounded-lg"
                                     style="max-width: 300px"
-                                    cover />
-                                <v-icon v-else size="48" color="medium-emphasis">mdi-image-off-outline</v-icon>
+                                    cover
+                                    @error="onProductImageError" />
+                                <v-sheet
+                                    v-else
+                                    class="w-100 mx-auto border rounded-lg d-flex justify-center align-center"
+                                    style="max-width: 300px"
+                                    min-height="140">
+                                    <v-icon size="48" color="medium-emphasis">mdi-image-off-outline</v-icon>
+                                </v-sheet>
                             </v-sheet>
                         </v-col>
                         <v-col cols="12" md="6" class="pa-2">
@@ -148,17 +155,32 @@
                 String(defaultThumbnail.isExternal).toLowerCase() === 'true' ||
                 urlRegex.test(thumbnailPath);
 
-            productImageSrc.value = await getBlobUrl(thumbnailPath, isExternalThumbnail);
-            updateProductImageAspectRatio(productImageSrc.value);
+            try {
+                productImageSrc.value = await getBlobUrl(thumbnailPath, isExternalThumbnail);
+                updateProductImageAspectRatio(productImageSrc.value);
+            } catch {
+                productImageSrc.value = '';
+                productImageAspectRatio.value = 1;
+            }
             return;
         }
 
         const imageUrl = await getProductImageUrlByAasId(selectedAas.value.id);
 
         if (imageUrl && imageUrl.url && imageUrl.url.trim() !== '') {
-            productImageSrc.value = await getBlobUrl(imageUrl.url.trim(), imageUrl.isExternal);
-            updateProductImageAspectRatio(productImageSrc.value);
+            try {
+                productImageSrc.value = await getBlobUrl(imageUrl.url.trim(), imageUrl.isExternal);
+                updateProductImageAspectRatio(productImageSrc.value);
+            } catch {
+                productImageSrc.value = '';
+                productImageAspectRatio.value = 1;
+            }
         }
+    }
+
+    function onProductImageError(): void {
+        productImageSrc.value = '';
+        productImageAspectRatio.value = 1;
     }
 
     function updateProductImageAspectRatio(src: string): void {
