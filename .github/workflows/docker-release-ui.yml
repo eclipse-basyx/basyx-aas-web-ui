@@ -60,7 +60,7 @@ jobs:
 
       # Step 5: Build and Push Docker Images
       - name: Build and Push Docker Images
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./aas-web-ui
           file: ./aas-web-ui/Dockerfile
