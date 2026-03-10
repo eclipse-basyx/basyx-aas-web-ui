@@ -46,6 +46,7 @@ declare module 'vue' {
     DescriptionTooltip: typeof import('./components/UIComponents/DescriptionTooltip.vue')['default']
     DisplayField: typeof import('./components/Widgets/DisplayField.vue')['default']
     DisplayNameElement: typeof import('./components/UIComponents/DisplayNameElement.vue')['default']
+    DocumentIdsTable: typeof import('./components/Plugins/Submodels/HandoverDocumentation_v2_0/components/DocumentIdsTable.vue')['default']
     DownloadAAS: typeof import('./components/AppNavigation/DownloadAAS.vue')['default']
     Entity: typeof import('./components/SubmodelElements/Entity.vue')['default']
     EntityForm: typeof import('./components/EditorComponents/SubmodelElements/EntityForm.vue')['default']
