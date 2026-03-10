@@ -35,6 +35,7 @@ services:
       VIRTUAL_PORT: "3000"
       # Allow users to edit/add custom infrastructures
       ENDPOINT_CONFIG_AVAILABLE: true
+      INFLUXDB_TOKEN: "S18VeAlq042B4naMX31oqIaSGmUmOLAC-DV3VIdkxDJuAhTXLTVFEchyTSmCcUAmB7Wu94KgExzV8gJaDjzR3Q=="
     restart: unless-stopped
     networks:
       - multiple-infrastructures

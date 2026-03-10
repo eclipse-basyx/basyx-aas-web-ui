@@ -231,3 +231,66 @@ services:
         condition: service_healthy
     networks:
       - multiple-infrastructures
+
+  # Time Series Database
+  influxdb-infra1:
+    image: influxdb:2
+    container_name: influxdb-infra1
+    ports:
+      - '8086:8086'
+      - '9999:9999'
+    volumes:
+      - ./influxdb/data:/var/lib/influxdb2
+      - ./influxdb/config:/etc/influxdb2
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=influxpassword
+      - DOCKER_INFLUXDB_INIT_ORG=basyx
+      - DOCKER_INFLUXDB_INIT_BUCKET=basyx
+      - >-
+        DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=S18VeAlq042B4naMX31oqIaSGmUmOLAC-DV3VIdkxDJuAhTXLTVFEchyTSmCcUAmB7Wu94KgExzV8gJaDjzR3Q==
+    restart: unless-stopped
+    networks:
+      - multiple-infrastructures
+
+  # Metrics Collector
+  telegraf-infra1:
+    image: telegraf:1.29.1
+    container_name: telegraf-infra1
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    hostname: basyx_host
+    restart: unless-stopped
+    depends_on:
+      - influxdb-infra1
+    networks:
+      - multiple-infrastructures
+
+  # MQTT Broker
+  mosquitto-infra1:
+    image: eclipse-mosquitto:2.0.15
+    container_name: mosquitto-infra1
+    ports:
+      - '1884:1883'
+    volumes:
+      - ./mosquitto:/mosquitto
+    healthcheck:
+      test: ["CMD-SHELL", mosquitto_sub -p 1883 -t 'topic' -C 1 -E -i probe -W 3]
+      interval: 5s
+      timeout: 10s
+      start_period: 1s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - multiple-infrastructures
+
+  # MQTT Publisher (for testing)
+  mqtt-publisher-infra1:
+    build: ./mqtt-publisher
+    container_name: mqtt-publisher-infra1
+    depends_on:
+      - mosquitto-infra1
+    restart: unless-stopped
+    networks:
+      - multiple-infrastructures
