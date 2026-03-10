@@ -121,7 +121,6 @@
         const digitalFilesSml = children.find(
             (c: any) => c?.modelType === 'SubmodelElementList' && c?.idShort === 'DigitalFiles'
         );
-        console.log('Extracted DigitalFiles SML:', Array.isArray(digitalFilesSml?.value) ? digitalFilesSml.value : []);
         return Array.isArray(digitalFilesSml?.value) ? digitalFilesSml.value : [];
     }
     function versionKey(versionSmc: any, index?: number): string {
