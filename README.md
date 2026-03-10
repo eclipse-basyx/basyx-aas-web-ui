@@ -70,6 +70,7 @@ The [`examples/`](./examples/) directory contains ready-to-use configurations:
 - **[MultiInfrastructure](./examples/MultiInfrastructure/)** - Connect to multiple BaSyx environments with different authentication methods
 - **[TimeSeriesData](./examples/TimeSeriesData/)** - Real-time time-series data visualization with InfluxDB
 - **[PcfCalculation](./examples/PcfCalculation/)** - Product Carbon Footprint calculation example
+- **[CombinedExample](./examples/CombinedExample/)** - Combined example showcasing multiple features in one setup
 
 ## 🤝 Contributing
 
