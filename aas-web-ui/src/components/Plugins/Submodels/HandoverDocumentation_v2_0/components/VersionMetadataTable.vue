@@ -6,10 +6,10 @@
                     v-for="(child, c) in metadataChildren"
                     :key="child.idShort ?? child.id ?? `child-${c}`"
                     :class="Number(c) % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
-                    <td style="width: 35%">
+                    <td class="w-50">
                         <div class="text-caption">
                             {{ nameToDisplay(child) }}
-                            <DescriptionTooltip :description-array="child?.description" />
+                            <DescriptionTooltip :description-array="getDescriptionArray(child)" />
                         </div>
                     </td>
 
@@ -30,11 +30,13 @@
                         </template>
 
                         <template v-else-if="child.modelType === 'SubmodelElementList'">
-                            <div v-if="(child.value ?? []).length === 0" class="text-caption text-subtitleText">—</div>
+                            <div v-if="getChildEntries(child).length === 0" class="text-caption text-subtitleText">
+                                —
+                            </div>
 
                             <div v-else>
                                 <div
-                                    v-for="(entry, e) in child.value ?? []"
+                                    v-for="(entry, e) in getChildEntries(child)"
                                     :key="entry.idShort ?? entry.id ?? `entry-${e}`"
                                     class="text-caption text-subtitleText">
                                     <!-- entry can be Property, ReferenceElement, File etc -->
@@ -71,9 +73,11 @@
 </template>
 
 <script lang="ts" setup>
+    import type { SubmodelElementLike } from '../types';
     import { computed } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement';
+    import { asSubmodelElementArray, getDescriptionArray, getLangSets } from '../utils/submodelElementUtils';
 
     defineOptions({
         name: 'VersionMetadataTable',
@@ -82,22 +86,25 @@
     const { nameToDisplay } = useReferableUtils();
     const { valueToDisplay } = useSME();
 
+    const props = defineProps<{
+        versionSmc?: SubmodelElementLike | null;
+    }>();
+
     const metadataChildren = computed(() => {
-        const children = props.versionSmc?.value ?? [];
-        return children.filter((child: any) => !isAttachmentChild(child));
+        const children = asSubmodelElementArray(props.versionSmc?.value);
+        return children.filter((child) => !isAttachmentChild(child));
     });
 
-    const props = defineProps({
-        versionSmc: {
-            type: Object as any,
-            default: null,
-        },
-    });
-    function isAttachmentChild(child: any): boolean {
-        return child?.idShort === 'PreviewFile' || child?.idShort === 'DigitalFiles';
+    function isAttachmentChild(child: unknown): boolean {
+        if (!child || typeof child !== 'object') {
+            return false;
+        }
+
+        const entry = child as SubmodelElementLike;
+        return entry.idShort === 'PreviewFile' || entry.idShort === 'DigitalFiles';
     }
-    // return only entries that have text
-    function getLangSets(idProperty: any): any[] {
-        return (idProperty?.value ?? []).filter((ls: any) => ls?.text?.length > 0);
+
+    function getChildEntries(child: SubmodelElementLike): SubmodelElementLike[] {
+        return asSubmodelElementArray(child.value);
     }
 </script>

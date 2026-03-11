@@ -4,10 +4,10 @@
             <v-table>
                 <thead>
                     <tr>
-                        <th v-for="idProperty in props.documentIds?.[0]?.value ?? []" :key="idProperty.idShort">
+                        <th v-for="idProperty in getHeaderProperties()" :key="idProperty.idShort">
                             <div class="text-caption">
                                 <span>{{ nameToDisplay(idProperty) }}</span>
-                                <DescriptionTooltip :description-array="idProperty?.description" />
+                                <DescriptionTooltip :description-array="getDescriptionArray(idProperty)" />
                             </div>
                         </th>
                     </tr>
@@ -15,11 +15,10 @@
 
                 <tbody>
                     <tr
-                        v-for="(documentIdSMC, j) in getDocumentIds(props.documentIds)"
-                        v-show="hasValue(documentIdSMC)"
+                        v-for="(documentIdSMC, j) in visibleDocumentIds"
                         :key="documentIdSMC.idShort ?? String(j)"
                         :class="Number(j) % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
-                        <td v-for="idProperty in documentIdSMC.value ?? []" :key="idProperty.idShort">
+                        <td v-for="idProperty in getRowProperties(documentIdSMC)" :key="idProperty.idShort">
                             <!-- MultiLanguageProperty -->
                             <template v-if="idProperty.modelType === 'MultiLanguageProperty'">
                                 <!-- Show english value, if available -->
@@ -54,8 +53,11 @@
     <v-alert v-else class="mt-3" density="compact" type="warning" variant="outlined" text="No Document IDs available" />
 </template>
 <script lang="ts" setup>
+    import type { SubmodelElementLike } from '../types';
+    import { computed } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement';
+    import { asSubmodelElementArray, getDescriptionArray, getLangSets } from '../utils/submodelElementUtils';
 
     const { nameToDisplay } = useReferableUtils();
     const { hasValue, valueToDisplay } = useSME();
@@ -64,18 +66,27 @@
         name: 'DocumentIdsTable',
     });
 
-    const props = defineProps({
-        documentIds: {
-            type: Array as any,
-            default: () => [],
-        },
-    });
+    const props = withDefaults(
+        defineProps<{
+            documentIds?: SubmodelElementLike[];
+        }>(),
+        {
+            documentIds: () => [],
+        }
+    );
 
-    // return only entries that have text
-    function getLangSets(idProperty: any): any[] {
-        return (idProperty?.value ?? []).filter((ls: any) => ls?.text?.length > 0);
+    const visibleDocumentIds = computed(() => props.documentIds.filter((entry) => hasValue(entry)));
+
+    function getHeaderProperties(): SubmodelElementLike[] {
+        if (props.documentIds.length === 0) {
+            return [];
+        }
+
+        const firstEntry = props.documentIds[0];
+        return asSubmodelElementArray(firstEntry.value);
     }
-    function getDocumentIds(documentIds: any): any[] {
-        return Array.isArray(documentIds) ? documentIds : [];
+
+    function getRowProperties(documentIdSMC: SubmodelElementLike): SubmodelElementLike[] {
+        return asSubmodelElementArray(documentIdSMC.value);
     }
 </script>
