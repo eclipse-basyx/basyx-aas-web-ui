@@ -78,13 +78,43 @@
         </v-card-text>
     </v-sheet>
 
-    <v-btn
-        color="primary"
-        prepend-icon="mdi-plus"
-        variant="outlined"
-        text="Add Qualifier"
-        class="text-none mt-1 mb-4"
-        @click="addQualifier"></v-btn>
+    <v-row align="center" class="mt-1 mb-4">
+        <v-col cols="auto" class="py-0">
+            <v-btn
+                color="primary"
+                prepend-icon="mdi-plus"
+                variant="outlined"
+                text="Add Qualifier"
+                class="text-none"
+                @click="addQualifier" />
+        </v-col>
+
+        <v-spacer />
+        <v-divider vertical />
+        <v-spacer />
+
+        <v-col cols="auto" class="py-0">
+            <v-select
+                v-model="predefinedQualifierSelected"
+                :items="predefinedQualifier"
+                item-title="title"
+                item-value="qualifier"
+                label="Default Qualifier"
+                variant="outlined"
+                density="comfortable"
+                hide-details />
+        </v-col>
+
+        <v-col class="py-0" cols="auto">
+            <v-btn
+                color="primary"
+                prepend-icon="mdi-plus"
+                variant="outlined"
+                text="Add selected Qualifier"
+                class="text-none"
+                @click="addPredefinedQualifier" />
+        </v-col>
+    </v-row>
 </template>
 
 <script setup lang="ts">
@@ -100,6 +130,94 @@
     }>();
 
     const qualifiersValue = ref<Array<aasTypes.Qualifier> | null>(props.modelValue);
+    const predefinedQualifierSelected = ref<aasTypes.Qualifier | null>(null);
+
+    const predefinedQualifier = [
+        {
+            title: 'SMT/Cardinality One',
+            qualifier: new aasTypes.Qualifier(
+                'SMT/Cardinality',
+                aasTypes.DataTypeDefXsd.String,
+                new aasTypes.Reference(
+                    aasTypes.ReferenceTypes.ExternalReference,
+                    [
+                        new aasTypes.Key(
+                            aasTypes.KeyTypes.GlobalReference,
+                            'https://adminshell.io/SubmodelTemplates/Cardinality/1/0'
+                        ),
+                    ],
+                    null
+                ),
+                null,
+                aasTypes.QualifierKind.TemplateQualifier,
+                'One',
+                null
+            ),
+        },
+        {
+            title: 'SMT/Cardinality ZeroToOne',
+            qualifier: new aasTypes.Qualifier(
+                'SMT/Cardinality',
+                aasTypes.DataTypeDefXsd.String,
+                new aasTypes.Reference(
+                    aasTypes.ReferenceTypes.ExternalReference,
+                    [
+                        new aasTypes.Key(
+                            aasTypes.KeyTypes.GlobalReference,
+                            'https://adminshell.io/SubmodelTemplates/Cardinality/1/0'
+                        ),
+                    ],
+                    null
+                ),
+                null,
+                aasTypes.QualifierKind.TemplateQualifier,
+                'ZeroToOne',
+                null
+            ),
+        },
+        {
+            title: 'SMT/Cardinality ZeroToMany',
+            qualifier: new aasTypes.Qualifier(
+                'SMT/Cardinality',
+                aasTypes.DataTypeDefXsd.String,
+                new aasTypes.Reference(
+                    aasTypes.ReferenceTypes.ExternalReference,
+                    [
+                        new aasTypes.Key(
+                            aasTypes.KeyTypes.GlobalReference,
+                            'https://adminshell.io/SubmodelTemplates/Cardinality/1/0'
+                        ),
+                    ],
+                    null
+                ),
+                null,
+                aasTypes.QualifierKind.TemplateQualifier,
+                'ZeroToMany',
+                null
+            ),
+        },
+        {
+            title: 'SMT/Cardinality OneToMany',
+            qualifier: new aasTypes.Qualifier(
+                'SMT/Cardinality',
+                aasTypes.DataTypeDefXsd.String,
+                new aasTypes.Reference(
+                    aasTypes.ReferenceTypes.ExternalReference,
+                    [
+                        new aasTypes.Key(
+                            aasTypes.KeyTypes.GlobalReference,
+                            'https://adminshell.io/SubmodelTemplates/Cardinality/1/0'
+                        ),
+                    ],
+                    null
+                ),
+                null,
+                aasTypes.QualifierKind.TemplateQualifier,
+                'OneToMany',
+                null
+            ),
+        },
+    ];
 
     watch(
         qualifiersValue,
@@ -121,6 +239,15 @@
             qualifiersValue.value = [];
         }
         qualifiersValue.value.push(new aasTypes.Qualifier('', aasTypes.DataTypeDefXsd.String));
+    }
+
+    function addPredefinedQualifier(): void {
+        if (qualifiersValue.value === null) {
+            qualifiersValue.value = [];
+        }
+
+        if (predefinedQualifierSelected.value !== null)
+            qualifiersValue.value.push(predefinedQualifierSelected.value as aasTypes.Qualifier);
     }
 
     function removeQualifier(index: number): void {
