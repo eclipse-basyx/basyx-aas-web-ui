@@ -2,9 +2,7 @@
     <v-dialog v-model="editEntityDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp($event, saveEntity)">
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{
-                    props.newEntity ? 'Create a new Entity Element' : 'Edit Entity Element'
-                }}</span>
+                {{ props.newEntity ? 'Create a new Entity Element' : 'Edit Entity Element' }}
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
@@ -97,11 +95,18 @@
                             </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
+                    <!-- Qualifiers -->
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
+                        <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <QualifierInput v-model="qualifiers" />
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
                     <!-- Data Specification -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -117,12 +122,15 @@
 </template>
 
 <script setup lang="ts">
-    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+    import { applyFieldErrors, buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { clearOptionalIdShort } from '@/utils/AAS/OptionalPropertyUtils';
+    import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
@@ -155,6 +163,8 @@
     const entityCategory = ref<string | null>(null);
 
     const semanticId = ref<aasTypes.Reference | null>(null);
+    const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
 
     const entityType = ref<aasTypes.EntityType>(aasTypes.EntityType.SelfManagedEntity);
     const globalAssetId = ref<string | null>(null);
@@ -217,6 +227,14 @@
                 if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
                     border += ' border-t-thin';
                 }
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 4:
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-t-thin';
+                }
                 break;
         }
         return border;
@@ -234,15 +252,20 @@
     }
 
     async function saveEntity(): Promise<void> {
+        errors.value.clear();
+
         if (props.newEntity || entityObject.value === undefined) {
-            entityObject.value = new aasTypes.Entity(entityType.value);
+            entityObject.value = new aasTypes.Entity();
         }
 
-        if (entityIdShort.value !== null) {
-            entityObject.value.idShort = entityIdShort.value;
+        const normalizedIdShort = entityIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            entityObject.value.idShort = normalizedIdShort;
         } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'Entity IdShort is required');
             return;
+        } else {
+            clearOptionalIdShort(entityObject.value);
         }
 
         entityObject.value.entityType = entityType.value;
@@ -260,6 +283,8 @@
         }
 
         entityObject.value.category = entityCategory.value;
+        entityObject.value.qualifiers = qualifiers.value;
+        entityObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
 
         if (globalAssetId.value !== null && globalAssetId.value !== '') {
             entityObject.value.globalAssetId = globalAssetId.value;
@@ -271,6 +296,22 @@
             entityObject.value.specificAssetIds = specificAssetIds.value;
         } else {
             entityObject.value.specificAssetIds = null;
+        }
+
+        const verificationResult = verifyForEditor(entityObject.value, { maxErrors: 10 });
+        if (!verificationResult.isValid) {
+            applyFieldErrors(errors.value, verificationResult.fieldErrors);
+            const summary = buildVerificationSummary(verificationResult);
+            const firstError = verificationResult.globalErrors[0];
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 10000,
+                color: 'error',
+                btnColor: 'buttonText',
+                baseError: 'Entity validation failed',
+                extendedError: firstError ? `${summary} ${firstError}` : summary,
+            });
+            return;
         }
 
         if (props.newEntity) {
@@ -294,10 +335,10 @@
                 // Create the entity on the parent element
                 await postSubmodelElement(entityObject.value, submodelId, idShortPath);
 
-                // Navigate to the new entity
-                if (props.parentElement.modelType === 'SubmodelElementCollection') {
+                const createdPath = getCreatedSubmodelElementPath(props.parentElement, entityObject.value.idShort);
+                if (createdPath) {
                     const query = structuredClone(route.query);
-                    query.path = props.parentElement.path + '.' + entityObject.value.idShort;
+                    query.path = createdPath;
 
                     router.push({
                         query: query,
@@ -355,6 +396,8 @@
         entityType.value = aasTypes.EntityType.SelfManagedEntity;
         globalAssetId.value = null;
         specificAssetIds.value = null;
+        qualifiers.value = null;
+        embeddedDataSpecifications.value = null;
         openPanels.value = [0, 1];
     }
 
@@ -380,6 +423,8 @@
             entityType.value = entityObject.value.entityType ?? aasTypes.EntityType.SelfManagedEntity;
             globalAssetId.value = entityObject.value.globalAssetId ?? null;
             specificAssetIds.value = entityObject.value.specificAssetIds ?? null;
+            qualifiers.value = entityObject.value.qualifiers ?? null;
+            embeddedDataSpecifications.value = entityObject.value.embeddedDataSpecifications ?? null;
         }
     }
 </script>

@@ -9,7 +9,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+    import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
     import { computed, ref, watch } from 'vue';
     import { getDataTypes } from '@/composables/AAS/DataTypeHandling';
 
@@ -21,6 +21,7 @@
         dataType: aasTypes.DataTypeDefXsd;
         elementType: aasTypes.AasSubmodelElements;
         entityType: aasTypes.EntityType;
+        qualifierKind: aasTypes.QualifierKind;
     };
 
     type ValueType<T extends keyof ValueMap> = ValueMap[T];
@@ -55,6 +56,7 @@
                 return [
                     { title: 'Instance', value: aasTypes.AssetKind.Instance },
                     { title: 'Type', value: aasTypes.AssetKind.Type },
+                    { title: 'Role', value: aasTypes.AssetKind.Role },
                     { title: 'Not Applicable', value: aasTypes.AssetKind.NotApplicable },
                 ];
             case 'modellingKind':
@@ -94,6 +96,12 @@
                 return [
                     { title: 'Co-Managed Entity', value: aasTypes.EntityType.CoManagedEntity },
                     { title: 'Self-Managed Entity', value: aasTypes.EntityType.SelfManagedEntity },
+                ];
+            case 'qualifierKind':
+                return [
+                    { title: 'ValueQualifier', value: aasTypes.QualifierKind.ValueQualifier },
+                    { title: 'ConceptQualifier', value: aasTypes.QualifierKind.ConceptQualifier },
+                    { title: 'TemplateQualifier', value: aasTypes.QualifierKind.TemplateQualifier },
                 ];
             default:
                 return [];

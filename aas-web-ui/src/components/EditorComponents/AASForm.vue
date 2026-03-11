@@ -111,12 +111,22 @@
                     <!-- Derivation -->
                     <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(2)">
                         <v-expansion-panel-title>Derivation</v-expansion-panel-title>
-                        <v-expansion-panel-text class="pt-2">
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                        <v-expansion-panel-text>
+                            <v-row align="center">
+                                <v-col class="py-0">
+                                    <ReferenceInput
+                                        v-model="derivedFrom"
+                                        label="Derived From"
+                                        :default-key-type="aasTypes.KeyTypes.AssetAdministrationShell" />
+                                </v-col>
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="derivedFrom" />
+                                </v-col>
+                            </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Asset -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
                         <v-expansion-panel-title>Asset</v-expansion-panel-title>
                         <v-expansion-panel-text>
                             <v-row align="center" class="mb-3">
@@ -156,6 +166,13 @@
                             </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
+                    <!-- Data Specification -->
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
+                        <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
                 </v-expansion-panels>
             </v-card-text>
             <v-divider></v-divider>
@@ -169,14 +186,15 @@
 </template>
 
 <script lang="ts" setup>
-    import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
-    import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
+    import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
+    import { jsonization } from '@aas-core-works/aas-core3.1-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useIDUtils } from '@/composables/IDUtils';
+    import { buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useAASStore } from '@/store/AASDataStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
@@ -219,12 +237,14 @@
     const revision = ref<string | null>(null);
     const creator = ref<aasTypes.Reference | null>(null);
     const templateId = ref<string | null>(null);
+    const derivedFrom = ref<aasTypes.Reference | null>(null);
 
     const assetKind = ref<aasTypes.AssetKind>(aasTypes.AssetKind.Instance);
     const globalAssetId = ref<string | null>(null);
     const specificAssetIds = ref<Array<aasTypes.SpecificAssetId> | null>(null);
     const assetType = ref<string | null>(null);
     const defaultThumbnail = ref<aasTypes.Resource | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
 
     const fileThumbnail = ref<File | undefined>(undefined);
 
@@ -256,6 +276,14 @@
                 break;
             case 3:
                 if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+                    border += ' border-t-thin';
+                }
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 4:
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
                     border = 'border-t-thin';
                 }
                 break;
@@ -301,6 +329,7 @@
             displayName.value = AASObject.value.displayName ?? null;
             description.value = AASObject.value.description ?? null;
             AASCategory.value = AASObject.value.category ?? null;
+            derivedFrom.value = AASObject.value.derivedFrom ?? null;
             if (AASObject.value.administration !== null && AASObject.value.administration !== undefined) {
                 version.value = AASObject.value.administration.version ?? null;
                 revision.value = AASObject.value.administration.revision ?? null;
@@ -314,6 +343,7 @@
                 assetType.value = AASObject.value.assetInformation.assetType ?? null;
                 defaultThumbnail.value = AASObject.value.assetInformation.defaultThumbnail ?? null;
             }
+            embeddedDataSpecifications.value = AASObject.value.embeddedDataSpecifications ?? null;
         }
     }
 
@@ -406,11 +436,29 @@
             AASObject.value.administration = administrativeInformation;
         }
 
-        // TODO: Add optional parameter derivedFrom
-
-        // embeddedDataSpecifications are out of scope
+        AASObject.value.derivedFrom = derivedFrom.value;
+        AASObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
         // extensions are out of scope
         // TODO Add Submodels
+
+        const verificationResult = verifyForEditor(AASObject.value, { maxErrors: 10 });
+        if (!verificationResult.isValid) {
+            const summary = buildVerificationSummary(verificationResult);
+            const firstFieldErrorEntry = Array.from(verificationResult.fieldErrors.entries())[0];
+            const firstFieldError = firstFieldErrorEntry
+                ? `${firstFieldErrorEntry[0]}: ${firstFieldErrorEntry[1]}`
+                : undefined;
+            const firstError = verificationResult.globalErrors[0] ?? firstFieldError;
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 10000,
+                color: 'error',
+                btnColor: 'buttonText',
+                baseError: 'AAS validation failed',
+                extendedError: firstError ? `${summary} ${firstError}` : summary,
+            });
+            return;
+        }
 
         if (props.newShell) {
             // Create new AAS
@@ -465,11 +513,13 @@
         revision.value = null;
         creator.value = null;
         templateId.value = null;
+        derivedFrom.value = null;
         assetKind.value = aasTypes.AssetKind.Instance;
         globalAssetId.value = null;
         specificAssetIds.value = null;
         assetType.value = null;
         defaultThumbnail.value = null;
+        embeddedDataSpecifications.value = null;
         // Reset state of expansion panels
         openPanels.value = [0, 3];
     }

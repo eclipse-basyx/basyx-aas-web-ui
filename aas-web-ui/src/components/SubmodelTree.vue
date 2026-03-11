@@ -220,7 +220,10 @@
         </v-card>
     </v-container>
     <!-- Dialog for creating SubmodelElements -->
-    <SubmodelElementForm v-model="selectSMETypeToAddDialog" @open-create-s-m-e-dialog="openSMEFormDialog">
+    <SubmodelElementForm
+        v-model="selectSMETypeToAddDialog"
+        :parent-element="elementToAddSME"
+        @open-create-s-m-e-dialog="openSMEFormDialog">
     </SubmodelElementForm>
     <!-- Dialog for creating/editing Properties -->
     <PropertyForm
@@ -292,6 +295,13 @@
         :parent-element="elementToAddSME"
         :path="submodelElementPath"
         :relationship-element="submodelElementToEdit"></RelationshipElementForm>
+    <!-- Dialog for creating/editing AnnotatedRelationshipElements -->
+    <AnnotatedRelationshipElementForm
+        v-model="annotatedRelationshipElementDialog"
+        :new-annotated-relationship-element="newAnnotatedRelationshipElement"
+        :parent-element="elementToAddSME"
+        :path="submodelElementPath"
+        :annotated-relationship-element="submodelElementToEdit"></AnnotatedRelationshipElementForm>
     <!-- Dialog for creating/editing Submodel -->
     <SubmodelForm v-model="editDialog" :new-sm="newSubmodel" :submodel="submodelToEdit"></SubmodelForm>
     <!-- Dialog for inserting JSON -->
@@ -345,6 +355,7 @@
     const entityDialog = ref(false); // Variable to store if the EntityForm Dialog should be shown
     const referenceElementDialog = ref(false); // Variable to store if the ReferenceElementForm Dialog should be shown
     const relationshipElementDialog = ref(false); // Variable to store if the RelationshipElementForm Dialog should be shown
+    const annotatedRelationshipElementDialog = ref(false); // Variable to store if the AnnotatedRelationshipElementForm Dialog should be shown
     const smcDialog = ref(false); // Variable to store if the PropertyForm Dialog should be shown
     const smlDialog = ref(false); // Variable to store if the SubmodelElementListForm Dialog should be shown
     const editDialog = ref(false); // Variable to store if the Edit Dialog should be shown
@@ -358,6 +369,7 @@
     const newEntity = ref(false); // Variable to store if a new Entity should be created
     const newReferenceElement = ref(false); // Variable to store if a new ReferenceElement should be created
     const newRelationshipElement = ref(false); // Variable to store if a new RelationshipElement should be created
+    const newAnnotatedRelationshipElement = ref(false); // Variable to store if a new AnnotatedRelationshipElement should be created
     const newSubmodel = ref(false); // Variable to store if a new Submodel should be created
     const submodelToEdit = ref<any | undefined>(undefined); // Variable to store the Submodel to be edited
     const deleteDialog = ref(false); // Variable to store if the Delete Dialog should be shown
@@ -380,6 +392,21 @@
     const clearTreeview = computed(() => navigationStore.getClearTreeview); // Clear the Treeview
     const clipboardElementContentType = computed(() => clipboardStore.getClipboardElementModelType()); // Get the Clipboard Element Content Type
     const isAuthenticating = computed(() => infrastructureStore.getIsAuthenticating); // Check if authentication is in progress
+    const activeTreePath = computed(() => {
+        if (
+            selectedNode.value &&
+            Object.keys(selectedNode.value).length > 0 &&
+            !isEmptyString(selectedNode.value.path)
+        ) {
+            return selectedNode.value.path as string;
+        }
+
+        if (typeof route.query.path === 'string' && !isEmptyString(route.query.path)) {
+            return route.query.path;
+        }
+
+        return '';
+    });
 
     // Watchers
     watch(
@@ -426,6 +453,14 @@
             submodelTreeUnfiltered.value = [];
         }
     );
+
+    watch([() => selectedNode.value?.path, () => route.query.path, () => submodelTree.value.length], () => {
+        if (!activeTreePath.value || isEmptyString(activeTreePath.value) || submodelTree.value.length === 0) {
+            return;
+        }
+
+        expandTree();
+    });
 
     onMounted(() => {
         if (!isAuthenticating.value) {
@@ -507,6 +542,10 @@
 
             submodelTree.value = processedList;
             submodelTreeUnfiltered.value = processedList;
+
+            if (activeTreePath.value && !isEmptyString(activeTreePath.value)) {
+                expandTree();
+            }
         } finally {
             treeLoading.value = false;
         }
@@ -527,6 +566,7 @@
                 newItem.submodelElements.length > 0
             ) {
                 newItem.submodelElements = deepMap(newItem.submodelElements, fn); // Recursively map SM Elements
+                newItem.children = newItem.submodelElements;
             } else if (
                 ['SubmodelElementCollection', 'SubmodelElementList'].includes(newItem.modelType) &&
                 newItem.value &&
@@ -534,6 +574,15 @@
                 newItem.value.length > 0
             ) {
                 newItem.value = deepMap(newItem.value, fn); // Recursively map SMC/SML elements
+                newItem.children = newItem.value;
+            } else if (
+                newItem.modelType === 'AnnotatedRelationshipElement' &&
+                newItem.annotations &&
+                Array.isArray(newItem.annotations) &&
+                newItem.annotations.length > 0
+            ) {
+                newItem.annotations = deepMap(newItem.annotations, fn); // Recursively map annotated relationship annotations
+                newItem.children = newItem.annotations;
             } else if (
                 newItem.modelType == 'Entity' &&
                 newItem.statements &&
@@ -541,6 +590,7 @@
                 newItem.statements.length > 0
             ) {
                 newItem.statements = deepMap(newItem.statements, fn); // Recursively map entity statements
+                newItem.children = newItem.statements;
             }
             return fn(newItem);
         });
@@ -578,6 +628,14 @@
                 sme.children = prepareForTree(sme.value, sme);
                 sme.showChildren = expand;
             } else if (
+                sme.modelType === 'AnnotatedRelationshipElement' &&
+                sme.annotations &&
+                Array.isArray(sme.annotations) &&
+                sme.annotations.length > 0
+            ) {
+                sme.children = prepareForTree(sme.annotations, sme);
+                sme.showChildren = expand;
+            } else if (
                 sme.modelType === 'Entity' &&
                 sme.statements &&
                 Array.isArray(sme.statements) &&
@@ -595,27 +653,8 @@
         submodelElements.forEach((sme: any) => {
             sme.showChildren = false;
 
-            if (
-                sme.modelType === 'Submodel' &&
-                sme.submodelElements &&
-                Array.isArray(sme.submodelElements) &&
-                sme.submodelElements.length > 0
-            ) {
-                collapseTree(sme.submodelElements);
-            } else if (
-                ['SubmodelElementCollection', 'SubmodelElementList'].includes(sme.modelType) &&
-                sme.value &&
-                Array.isArray(sme.value) &&
-                sme.value.length > 0
-            ) {
-                collapseTree(sme.value);
-            } else if (
-                sme.modelType === 'Entity' &&
-                sme.statements &&
-                Array.isArray(sme.statements) &&
-                sme.statements.length > 0
-            ) {
-                collapseTree(sme.statements);
+            if (sme.children && Array.isArray(sme.children) && sme.children.length > 0) {
+                collapseTree(sme.children);
             }
         });
     }
@@ -625,27 +664,8 @@
         submodelElements.forEach((sme: any) => {
             sme.showChildren = shouldExpandNode(sme.path);
 
-            if (
-                sme.modelType === 'Submodel' &&
-                sme.submodelElements &&
-                Array.isArray(sme.submodelElements) &&
-                sme.submodelElements.length > 0
-            ) {
-                expandTree(sme.submodelElements);
-            } else if (
-                ['SubmodelElementCollection', 'SubmodelElementList'].includes(sme.modelType) &&
-                sme.value &&
-                Array.isArray(sme.value) &&
-                sme.value.length > 0
-            ) {
-                expandTree(sme.value);
-            } else if (
-                sme.modelType === 'Entity' &&
-                sme.statements &&
-                Array.isArray(sme.statements) &&
-                sme.statements.length > 0
-            ) {
-                expandTree(sme.statements);
+            if (sme.children && Array.isArray(sme.children) && sme.children.length > 0) {
+                expandTree(sme.children);
             }
         });
     }
@@ -681,11 +701,23 @@
     }
 
     function shouldExpandNode(nodePath: string): boolean {
+        const normalizePath = (path: string): string => {
+            if (!path || isEmptyString(path)) return '';
+
+            try {
+                return decodeURIComponent(path.trim());
+            } catch {
+                return path.trim();
+            }
+        };
+
+        const selectedPathNormalized = normalizePath(activeTreePath.value);
+        const nodePathNormalized = normalizePath(nodePath);
+
         return (
-            selectedNode.value &&
-            Object.keys(selectedNode.value).length > 0 &&
-            !isEmptyString(selectedNode.value.path) &&
-            selectedNode.value.path.startsWith(nodePath)
+            selectedPathNormalized !== '' &&
+            nodePathNormalized !== '' &&
+            selectedPathNormalized.startsWith(nodePathNormalized)
         );
     }
 
@@ -752,6 +784,12 @@
         } else if (element.modelType === 'RelationshipElement') {
             relationshipElementDialog.value = true;
             newRelationshipElement.value = false;
+            submodelElementPath.value = element.path;
+            elementToAddSME.value = element.parent;
+            submodelElementToEdit.value = element;
+        } else if (element.modelType === 'AnnotatedRelationshipElement') {
+            annotatedRelationshipElementDialog.value = true;
+            newAnnotatedRelationshipElement.value = false;
             submodelElementPath.value = element.path;
             elementToAddSME.value = element.parent;
             submodelElementToEdit.value = element;
@@ -822,6 +860,12 @@
                 submodelElementToEdit.value = undefined;
                 relationshipElementDialog.value = true;
                 break;
+            case 'AnnotatedRelationshipElement':
+                newAnnotatedRelationshipElement.value = true;
+                submodelElementPath.value = undefined;
+                submodelElementToEdit.value = undefined;
+                annotatedRelationshipElementDialog.value = true;
+                break;
             default:
                 console.error(`Specified invalid SubmodelElement Type "${smeType}"`);
                 break;
@@ -862,6 +906,13 @@
                     item.value.length > 0
                 ) {
                     childrenKey = 'value';
+                } else if (
+                    item.modelType === 'AnnotatedRelationshipElement' &&
+                    item.annotations &&
+                    Array.isArray(item.annotations) &&
+                    item.annotations.length > 0
+                ) {
+                    childrenKey = 'annotations';
                 } else if (
                     item.modelType == 'Entity' &&
                     item.statements &&

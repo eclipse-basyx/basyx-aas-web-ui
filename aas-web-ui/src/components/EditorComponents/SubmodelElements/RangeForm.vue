@@ -7,9 +7,7 @@
         @keyup="keyUp($event, saveRangeElement)">
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{
-                    props.newRange ? 'Create a new Range Element' : 'Edit Range Element'
-                }}</span>
+                {{ props.newRange ? 'Create a new Range Element' : 'Edit Range Element' }}
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
@@ -109,11 +107,18 @@
                             </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
+                    <!-- Qualifiers -->
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
+                        <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <QualifierInput v-model="qualifiers" />
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
                     <!-- Data Specification -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -135,12 +140,15 @@
     usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not execute when in such form fields.
 */
 
-    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+    import { applyFieldErrors, buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { clearOptionalIdShort } from '@/utils/AAS/OptionalPropertyUtils';
+    import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
@@ -174,6 +182,8 @@
     const rangeCategory = ref<string | null>(null);
 
     const semanticId = ref<aasTypes.Reference | null>(null);
+    const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
     const minValue = ref<string | null>(null);
     const maxValue = ref<string | null>(null);
     const valueType = ref<aasTypes.DataTypeDefXsd>(aasTypes.DataTypeDefXsd.String);
@@ -233,6 +243,14 @@
                 break;
             case 3:
                 if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+                    border += ' border-t-thin';
+                }
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 4:
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
                     border += 'border-t-thin';
                 }
                 break;
@@ -252,15 +270,20 @@
     }
 
     async function saveRangeElement(): Promise<void> {
+        errors.value.clear();
+
         if (props.newRange || rangeObject.value === undefined) {
             rangeObject.value = new aasTypes.Range(valueType.value);
         }
 
-        if (rangeIdShort.value !== null) {
-            rangeObject.value.idShort = rangeIdShort.value;
+        const normalizedIdShort = rangeIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            rangeObject.value.idShort = normalizedIdShort;
         } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'Range IdShort is required');
             return;
+        } else {
+            clearOptionalIdShort(rangeObject.value);
         }
 
         rangeObject.value.min = minValue.value;
@@ -279,6 +302,24 @@
         }
 
         rangeObject.value.category = rangeCategory.value;
+        rangeObject.value.qualifiers = qualifiers.value;
+        rangeObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
+
+        const verificationResult = verifyForEditor(rangeObject.value, { maxErrors: 10 });
+        if (!verificationResult.isValid) {
+            applyFieldErrors(errors.value, verificationResult.fieldErrors);
+            const summary = buildVerificationSummary(verificationResult);
+            const firstError = verificationResult.globalErrors[0];
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 10000,
+                color: 'error',
+                btnColor: 'buttonText',
+                baseError: 'Range validation failed',
+                extendedError: firstError ? `${summary} ${firstError}` : summary,
+            });
+            return;
+        }
 
         if (props.newRange) {
             if (props.parentElement.modelType === 'Submodel') {
@@ -301,10 +342,10 @@
                 // Create the Range Element on the parent element
                 await postSubmodelElement(rangeObject.value, submodelId, idShortPath);
 
-                // Navigate to the new Range Element
-                if (props.parentElement.modelType === 'SubmodelElementCollection') {
+                const createdPath = getCreatedSubmodelElementPath(props.parentElement, rangeObject.value.idShort);
+                if (createdPath) {
                     const query = structuredClone(route.query);
-                    query.path = props.parentElement.path + '.' + rangeObject.value.idShort;
+                    query.path = createdPath;
 
                     router.push({
                         query: query,
@@ -362,6 +403,8 @@
         maxValue.value = null;
         valueType.value = aasTypes.DataTypeDefXsd.String;
         semanticId.value = null;
+        qualifiers.value = null;
+        embeddedDataSpecifications.value = null;
         openPanels.value = [0, 1];
     }
 
@@ -388,6 +431,8 @@
             maxValue.value = rangeObject.value.max ?? null;
             valueType.value = rangeObject.value.valueType ?? aasTypes.DataTypeDefXsd.String;
             semanticId.value = rangeObject.value.semanticId ?? null;
+            qualifiers.value = rangeObject.value.qualifiers ?? null;
+            embeddedDataSpecifications.value = rangeObject.value.embeddedDataSpecifications ?? null;
         }
     }
 </script>

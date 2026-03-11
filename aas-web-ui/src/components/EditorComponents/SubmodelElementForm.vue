@@ -25,16 +25,22 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, watch } from 'vue';
+    import { computed, ref, watch } from 'vue';
+    import { getDataElementModelTypes } from '@/utils/AAS/SubmodelElementPathUtils';
+
     const addSMEDialog = ref(false);
+
     const props = defineProps<{
         modelValue: boolean;
+        parentElement?: any;
     }>();
+
     const emit = defineEmits<{
         (event: 'update:modelValue', value: boolean): void;
         (event: 'openCreateSMEDialog', value: string): void;
     }>();
-    const availableSMEs = ref([
+
+    const allSMEs = [
         'Property',
         'SubmodelElementCollection',
         'SubmodelElementList',
@@ -45,23 +51,47 @@
         'Entity',
         'ReferenceElement',
         'RelationshipElement',
-    ]);
-    const selectedSME = ref('Property');
+        'AnnotatedRelationshipElement',
+    ];
+
+    const availableSMEs = computed(() => {
+        if (props.parentElement?.modelType === 'AnnotatedRelationshipElement') {
+            return getDataElementModelTypes();
+        }
+
+        return allSMEs;
+    });
+
+    const selectedSME = ref(availableSMEs.value[0] ?? '');
+
     watch(
         () => props.modelValue,
         (value) => {
             addSMEDialog.value = value;
         }
     );
+
+    watch(
+        () => availableSMEs.value,
+        (value) => {
+            if (!value.includes(selectedSME.value)) {
+                selectedSME.value = value[0] ?? '';
+            }
+        },
+        { immediate: true }
+    );
+
     watch(
         () => addSMEDialog.value,
         (value) => {
             emit('update:modelValue', value);
         }
     );
+
     function closeDialog(): void {
         addSMEDialog.value = false;
     }
+
     function openCreateSMEDialog(): void {
         if (selectedSME.value == '') return;
         closeDialog();

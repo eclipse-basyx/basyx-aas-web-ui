@@ -51,6 +51,7 @@
         revision: 'Revision of the element.',
         creator: 'The subject ID of the subject\nresponsible for making the element.',
         templateId: 'Identifier of the template that guided\nthe creation of the element.',
+        derivedFrom: 'The reference to the AAS the element is derived from.',
         semanticId:
             'Identifier of the semantic definition of the element called semantic ID\n' +
             'or also main semantic ID of the element.',

@@ -45,37 +45,10 @@
                             icon-color="background">
                             <template #opposite>
                                 <div
-                                    v-for="pcfLifeCyclePhase in pcfSMC.value
-                                        .find(
-                                            (sme: any) =>
-                                                checkIdShort(sme, 'LifeCyclePhases') ||
-                                                checkSemanticId(
-                                                    sme,
-                                                    'https://admin-shell.io/idta/CarbonFootprint/LifeCyclePhases/1/0'
-                                                )
-                                        )
-                                        .value.filter(
-                                            (sme: any) =>
-                                                checkIdShort(sme, 'LifeCyclePhase') ||
-                                                checkSemanticId(sme, '0173-1#02-ABG858#003')
-                                        )"
+                                    v-for="pcfLifeCyclePhase in getLifeCyclePhases(pcfSMC)"
                                     :key="pcfLifeCyclePhase.idShort"
                                     class="pr-6">
-                                    <p
-                                        v-if="
-                                            pcfLifeCyclePhase?.valueId?.keys &&
-                                            Array.isArray(pcfLifeCyclePhase?.valueId?.keys) &&
-                                            pcfLifeCyclePhase?.valueId?.keys.length > 0
-                                        ">
-                                        {{
-                                            getPcfLifeCyclePhaseFromId(
-                                                pcfLifeCyclePhase?.valueId?.keys[0]?.value
-                                            )?.value.replaceAll(', ', '\n')
-                                        }}
-                                    </p>
-                                    <p v-else>
-                                        {{ valueToDisplay(pcfLifeCyclePhase).replaceAll(', ', '\n') }}
-                                    </p>
+                                    <p>{{ formatLifeCyclePhaseLabel(pcfLifeCyclePhase) }}</p>
                                 </div>
                             </template>
                             <div class="pl-6">
@@ -456,5 +429,36 @@
         });
 
         showPieChart.value = pieChartData.value.length > 0;
+    }
+
+    function getLifeCyclePhases(pcfSMC: any): Array<any> {
+        if (!pcfSMC?.value || !Array.isArray(pcfSMC.value)) return [];
+
+        const lifeCyclePhasesSml = pcfSMC.value.find(
+            (sme: any) =>
+                checkIdShort(sme, 'LifeCyclePhases') ||
+                checkSemanticId(sme, 'https://admin-shell.io/idta/CarbonFootprint/LifeCyclePhases/1/0')
+        );
+
+        if (!lifeCyclePhasesSml?.value || !Array.isArray(lifeCyclePhasesSml.value)) return [];
+
+        return lifeCyclePhasesSml.value.filter(
+            (sme: any) => checkIdShort(sme, 'LifeCyclePhase') || checkSemanticId(sme, '0173-1#02-ABG858#003')
+        );
+    }
+
+    function formatLifeCyclePhaseLabel(pcfLifeCyclePhase: any): string {
+        const lifeCyclePhaseIdRaw = pcfLifeCyclePhase?.valueId?.keys?.[0]?.value;
+
+        if (typeof lifeCyclePhaseIdRaw === 'string' && lifeCyclePhaseIdRaw.trim() !== '') {
+            const normalizedLifeCyclePhaseId = lifeCyclePhaseIdRaw.trim();
+            const phaseInfo = getPcfLifeCyclePhaseFromId(normalizedLifeCyclePhaseId);
+            if (phaseInfo?.value && typeof phaseInfo.value === 'string' && phaseInfo.value.trim() !== '') {
+                return phaseInfo.value.replaceAll(', ', '\n');
+            }
+        }
+
+        const fallbackLabel = valueToDisplay(pcfLifeCyclePhase);
+        return typeof fallbackLabel === 'string' ? fallbackLabel.replaceAll(', ', '\n') : '';
     }
 </script>

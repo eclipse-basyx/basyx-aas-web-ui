@@ -1,3 +1,4 @@
+import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
 import { computed } from 'vue';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { useInfrastructureStore } from '@/store/InfrastructureStore';
@@ -9,7 +10,7 @@ export function useCDRepositoryClient() {
     const infrastructureStore = useInfrastructureStore();
 
     // Composables
-    const { getRequest } = useRequestHandling();
+    const { getRequest, postRequest, putRequest } = useRequestHandling();
 
     const endpointPath = '/concept-descriptions';
 
@@ -197,6 +198,58 @@ export function useCDRepositoryClient() {
         return cdEndpoint || failResponse;
     }
 
+    async function postConceptDescription(conceptDescription: aasTypes.ConceptDescription): Promise<boolean> {
+        const failResponse = false;
+
+        let cdRepoUrl = conceptDescriptionRepoUrl.value.trim();
+        if (cdRepoUrl === '') return failResponse;
+        if (cdRepoUrl.endsWith('/')) cdRepoUrl = stripLastCharacter(cdRepoUrl);
+        if (!cdRepoUrl.endsWith(endpointPath)) cdRepoUrl += endpointPath;
+
+        const jsonConceptDescription = jsonization.toJsonable(conceptDescription);
+
+        const context = 'creating Concept Description';
+        const disableMessage = true;
+        const path = cdRepoUrl;
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const body = JSON.stringify(jsonConceptDescription);
+
+        const response = await postRequest(path, body, headers, context, disableMessage);
+        if (response.success) return true;
+
+        const conceptDescriptionId = conceptDescription.id?.trim();
+        if (conceptDescriptionId) {
+            const alreadyExists = await isAvailableByIdInRepo(conceptDescriptionId);
+            if (alreadyExists) {
+                return true;
+            }
+        }
+
+        return failResponse;
+    }
+
+    async function putConceptDescription(conceptDescription: aasTypes.ConceptDescription): Promise<boolean> {
+        const failResponse = false;
+
+        let cdRepoUrl = conceptDescriptionRepoUrl.value.trim();
+        if (cdRepoUrl === '') return failResponse;
+        if (cdRepoUrl.endsWith('/')) cdRepoUrl = stripLastCharacter(cdRepoUrl);
+        if (!cdRepoUrl.endsWith(endpointPath)) cdRepoUrl += endpointPath;
+
+        const jsonConceptDescription = jsonization.toJsonable(conceptDescription);
+
+        const context = 'updating Concept Description';
+        const disableMessage = false;
+        const path = cdRepoUrl + '/' + base64Encode(conceptDescription.id);
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const body = JSON.stringify(jsonConceptDescription);
+
+        const response = await putRequest(path, body, headers, context, disableMessage);
+        return response.success;
+    }
+
     return {
         endpointPath,
         fetchCdList,
@@ -205,5 +258,7 @@ export function useCDRepositoryClient() {
         isAvailableByIdInRepo,
         isAvailable,
         getCdEndpointById,
+        postConceptDescription,
+        putConceptDescription,
     };
 }

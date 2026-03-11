@@ -1,4 +1,4 @@
-import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
 import { getSemanticIdValue } from '@/utils/AAS/SemanticIdUtils';
 import { base64Decode } from '@/utils/EncodeDecodeUtils';
 

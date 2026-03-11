@@ -2,9 +2,7 @@
     <v-dialog v-model="editFileDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp($event, saveFile)">
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{
-                    props.newFile ? 'Create a new File Element' : 'Edit File Element'
-                }}</span>
+                {{ props.newFile ? 'Create a new File Element' : 'Edit File Element' }}
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
@@ -97,11 +95,18 @@
                             </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
+                    <!-- Qualifiers -->
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
+                        <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <QualifierInput v-model="qualifiers" />
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
                     <!-- Data Specification -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -123,13 +128,16 @@
     usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not execute when in such form fields.
 */
 
-    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+    import { applyFieldErrors, buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { clearOptionalIdShort } from '@/utils/AAS/OptionalPropertyUtils';
+    import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
@@ -165,6 +173,8 @@
     const fileCategory = ref<string | null>(null);
 
     const semanticId = ref<aasTypes.Reference | null>(null);
+    const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
     const filePath = ref<string | null>(null);
     const contentType = ref<string>('application/unknown');
 
@@ -223,6 +233,14 @@
                 break;
             case 3:
                 if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+                    border += ' border-t-thin';
+                }
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 4:
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
                     border += 'border-t-thin';
                 }
                 break;
@@ -238,6 +256,8 @@
         filePath.value = null;
         contentType.value = 'application/unknown';
         semanticId.value = null;
+        qualifiers.value = null;
+        embeddedDataSpecifications.value = null;
         openPanels.value = [0, 1];
     }
 
@@ -263,6 +283,8 @@
             filePath.value = fileObject.value.value ?? null;
             contentType.value = fileObject.value.contentType ?? 'application/unknown';
             semanticId.value = fileObject.value.semanticId ?? null;
+            qualifiers.value = fileObject.value.qualifiers ?? null;
+            embeddedDataSpecifications.value = fileObject.value.embeddedDataSpecifications ?? null;
         }
     }
 
@@ -278,15 +300,20 @@
     }
 
     async function saveFile(): Promise<void> {
+        errors.value.clear();
+
         if (props.newFile || fileObject.value === undefined) {
-            fileObject.value = new aasTypes.File('application/unknown');
+            fileObject.value = new aasTypes.File();
         }
 
-        if (fileIdShort.value !== null) {
-            fileObject.value.idShort = fileIdShort.value;
+        const normalizedIdShort = fileIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            fileObject.value.idShort = normalizedIdShort;
         } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'File Element IdShort is required');
             return;
+        } else {
+            clearOptionalIdShort(fileObject.value);
         }
 
         fileObject.value.value = filePath.value;
@@ -306,6 +333,24 @@
         }
 
         fileObject.value.category = fileCategory.value;
+        fileObject.value.qualifiers = qualifiers.value;
+        fileObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
+
+        const verificationResult = verifyForEditor(fileObject.value, { maxErrors: 10 });
+        if (!verificationResult.isValid) {
+            applyFieldErrors(errors.value, verificationResult.fieldErrors);
+            const summary = buildVerificationSummary(verificationResult);
+            const firstError = verificationResult.globalErrors[0];
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 10000,
+                color: 'error',
+                btnColor: 'buttonText',
+                baseError: 'File validation failed',
+                extendedError: firstError ? `${summary} ${firstError}` : summary,
+            });
+            return;
+        }
 
         if (props.newFile) {
             if (props.parentElement.modelType === 'Submodel') {
@@ -346,33 +391,35 @@
                 // Create the File Element on the parent element
                 await postSubmodelElement(fileObject.value, submodelId, idShortPath);
 
-                const newElementPath = props.parentElement.path + '.' + fileObject.value.idShort;
+                const createdPath = getCreatedSubmodelElementPath(props.parentElement, fileObject.value.idShort);
+                if (!createdPath) {
+                    closeDialog();
+                    navigationStore.dispatchTriggerTreeviewReload();
+                    return;
+                }
 
                 // Upload the file first if there is one
                 if (fileElement.value !== undefined) {
-                    await putAttachmentFile(fileElement.value, newElementPath);
+                    await putAttachmentFile(fileElement.value, createdPath);
 
                     // After file upload, fetch the updated SME and update only the contentType
-                    const updatedSmeData = await fetchSme(newElementPath);
+                    const updatedSmeData = await fetchSme(createdPath);
                     if (updatedSmeData) {
                         await parseAndUpdateSubmodelElement(
                             updatedSmeData,
                             fileElement.value,
                             contentType.value,
-                            newElementPath
+                            createdPath
                         );
                     }
                 }
 
-                // Navigate to the new File Element
-                if (props.parentElement.modelType === 'SubmodelElementCollection') {
-                    const query = structuredClone(route.query);
-                    query.path = newElementPath;
+                const query = structuredClone(route.query);
+                query.path = createdPath;
 
-                    router.push({
-                        query: query,
-                    });
-                }
+                router.push({
+                    query: query,
+                });
             }
         } else {
             if (props.path == undefined) {

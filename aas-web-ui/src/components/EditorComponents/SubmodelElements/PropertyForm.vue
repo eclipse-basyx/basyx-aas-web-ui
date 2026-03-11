@@ -7,7 +7,7 @@
         @keyup="keyUp($event, saveProperty)">
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{ props.newProperty ? 'Create a new Property' : 'Edit Property' }}</span>
+                {{ props.newProperty ? 'Create a new Property' : 'Edit Property' }}
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
@@ -117,11 +117,18 @@
                             </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
+                    <!-- Qualifiers -->
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
+                        <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <QualifierInput v-model="qualifiers" />
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
                     <!-- Data Specification -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -143,16 +150,17 @@
         usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not execute when in such form fields.
     */
 
-    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+    import { applyFieldErrors, buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { clearOptionalIdShort } from '@/utils/AAS/OptionalPropertyUtils';
+    import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
-    import { isEmptyString } from '@/utils/StringUtils';
-    import { checkXsDataTypeValue } from '@/utils/XmlUtils';
 
     const props = defineProps<{
         modelValue: boolean;
@@ -184,6 +192,8 @@
     const propertyCategory = ref<string | null>(null);
 
     const semanticId = ref<aasTypes.Reference | null>(null);
+    const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
     const propertyValue = ref<string>('');
     const propertyValueErrorMessage = ref<string | null>(null);
     const valueType = ref<aasTypes.DataTypeDefXsd>(aasTypes.DataTypeDefXsd.String);
@@ -217,20 +227,6 @@
         }
     );
 
-    watch(
-        () => valueType.value,
-        () => {
-            validateAndCorrectInput();
-        }
-    );
-
-    watch(
-        () => propertyValue.value,
-        () => {
-            validateAndCorrectInput();
-        }
-    );
-
     const valueTypeString = computed(() => aasTypes.DataTypeDefXsd[valueType.value]);
 
     const bordersToShow = computed(() => (panel: number) => {
@@ -259,6 +255,14 @@
                 break;
             case 3:
                 if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+                    border += ' border-t-thin';
+                }
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 4:
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
                     border += 'border-t-thin';
                 }
                 break;
@@ -277,7 +281,7 @@
         return errors.value.get(field);
     }
 
-    function validateAndCorrectInput(): boolean {
+    function normalizePropertyInputValue(): void {
         if (valueTypeString.value === 'Boolean' && typeof propertyValue.value === 'boolean') {
             // Always use string representative of boolean value
             propertyValue.value = propertyValue.value ? 'true' : 'false';
@@ -291,30 +295,26 @@
             // Always use string representative of boolean value
             propertyValue.value = propertyValue.value.trim() === '1' ? 'true' : 'false';
         }
-
-        const [valid, errorMessage] = checkXsDataTypeValue(propertyValue.value, valueTypeString.value);
-
-        propertyValueErrorMessage.value = null;
-
-        if (errorMessage && !isEmptyString(errorMessage)) propertyValueErrorMessage.value = errorMessage;
-
-        return valid;
     }
 
     async function saveProperty(): Promise<void> {
-        if (!validateAndCorrectInput()) {
-            return;
-        }
+        errors.value.clear();
+        propertyValueErrorMessage.value = null;
+
+        normalizePropertyInputValue();
 
         if (props.newProperty || propertyObject.value === undefined) {
             propertyObject.value = new aasTypes.Property(valueType.value);
         }
 
-        if (propertyIdShort.value !== null) {
-            propertyObject.value.idShort = propertyIdShort.value;
+        const normalizedIdShort = propertyIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            propertyObject.value.idShort = normalizedIdShort;
         } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'Property IdShort is required');
             return;
+        } else {
+            clearOptionalIdShort(propertyObject.value);
         }
 
         propertyObject.value.value = propertyValue.value;
@@ -334,6 +334,33 @@
         }
 
         propertyObject.value.category = propertyCategory.value;
+        propertyObject.value.qualifiers = qualifiers.value;
+        propertyObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
+
+        const verificationResult = verifyForEditor(propertyObject.value, { maxErrors: 10 });
+        if (!verificationResult.isValid) {
+            applyFieldErrors(errors.value, verificationResult.fieldErrors);
+            const mappedValueError = verificationResult.fieldErrors.get('value');
+            const mappedValueTypeError = verificationResult.fieldErrors.get('valueType');
+            const globalValueError = verificationResult.globalErrors.find((message) => {
+                const lowerMessage = message.toLowerCase();
+                return lowerMessage.includes('value') || lowerMessage.includes('datatype');
+            });
+
+            propertyValueErrorMessage.value = mappedValueError ?? mappedValueTypeError ?? globalValueError ?? null;
+
+            const summary = buildVerificationSummary(verificationResult);
+            const firstError = verificationResult.globalErrors[0];
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 10000,
+                color: 'error',
+                btnColor: 'buttonText',
+                baseError: 'Property validation failed',
+                extendedError: firstError ? `${summary} ${firstError}` : summary,
+            });
+            return;
+        }
 
         if (props.newProperty) {
             if (props.parentElement.modelType === 'Submodel') {
@@ -356,10 +383,10 @@
                 // Create the property on the parent element
                 await postSubmodelElement(propertyObject.value, submodelId, idShortPath);
 
-                // Navigate to the new property
-                if (props.parentElement.modelType === 'SubmodelElementCollection') {
+                const createdPath = getCreatedSubmodelElementPath(props.parentElement, propertyObject.value.idShort);
+                if (createdPath) {
                     const query = structuredClone(route.query);
-                    query.path = props.parentElement.path + '.' + propertyObject.value.idShort;
+                    query.path = createdPath;
 
                     router.push({
                         query: query,
@@ -418,8 +445,11 @@
         description.value = null;
         propertyCategory.value = null;
         propertyValue.value = '';
+        propertyValueErrorMessage.value = null;
         valueType.value = aasTypes.DataTypeDefXsd.String;
         semanticId.value = null;
+        qualifiers.value = null;
+        embeddedDataSpecifications.value = null;
         openPanels.value = [0, 1];
     }
 
@@ -445,6 +475,8 @@
             propertyValue.value = propertyObject.value.value ?? '';
             valueType.value = propertyObject.value.valueType ?? aasTypes.DataTypeDefXsd.String;
             semanticId.value = propertyObject.value.semanticId ?? null;
+            qualifiers.value = propertyObject.value.qualifiers ?? null;
+            embeddedDataSpecifications.value = propertyObject.value.embeddedDataSpecifications ?? null;
         }
     }
 </script>

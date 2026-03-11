@@ -130,11 +130,18 @@
                             </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
+                    <!-- Qualifiers -->
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
+                        <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <QualifierInput v-model="qualifiers" />
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
                     <!-- Data Specification -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -150,8 +157,8 @@
 </template>
 
 <script lang="ts" setup>
-    import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
-    import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
+    import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
+    import { jsonization } from '@aas-core-works/aas-core3.1-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
@@ -159,6 +166,7 @@
     import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useIDUtils } from '@/composables/IDUtils';
+    import { buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useAASStore } from '@/store/AASDataStore';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -208,6 +216,8 @@
     const templateId = ref<string | null>(null);
 
     const semanticId = ref<aasTypes.Reference | null>(null);
+    const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
 
     // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode); // Get the selected AAS from Store
@@ -239,6 +249,14 @@
                 break;
             case 3:
                 if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+                    border += ' border-t-thin';
+                }
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 4:
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
                     border = 'border-t-thin';
                 }
                 break;
@@ -292,6 +310,8 @@
                 templateId.value = submodelObject.value.administration.templateId ?? null;
             }
             semanticId.value = submodelObject.value.semanticId ?? null;
+            qualifiers.value = submodelObject.value.qualifiers ?? null;
+            embeddedDataSpecifications.value = submodelObject.value.embeddedDataSpecifications ?? null;
         }
     }
 
@@ -325,8 +345,6 @@
         if (submodelId.value === null) return;
 
         const administrativeInformation = createAdministrativeInformation();
-
-        // TODO: Add embeddedDataSpecifications
 
         if (props.newSm || submodelObject.value === undefined) {
             submodelObject.value = new aasTypes.Submodel(submodelId.value);
@@ -365,9 +383,31 @@
             submodelObject.value.semanticId = semanticId.value;
         }
 
+        submodelObject.value.qualifiers = qualifiers.value;
+        submodelObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
+
         // extensions are out of scope
         // SupplementalSemanticIds are out of scope
         // SubmodelElements are added when they are created
+
+        const verificationResult = verifyForEditor(submodelObject.value, { maxErrors: 10 });
+        if (!verificationResult.isValid) {
+            const summary = buildVerificationSummary(verificationResult);
+            const firstFieldErrorEntry = Array.from(verificationResult.fieldErrors.entries())[0];
+            const firstFieldError = firstFieldErrorEntry
+                ? `${firstFieldErrorEntry[0]}: ${firstFieldErrorEntry[1]}`
+                : undefined;
+            const firstError = verificationResult.globalErrors[0] ?? firstFieldError;
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 10000,
+                color: 'error',
+                btnColor: 'buttonText',
+                baseError: 'Submodel validation failed',
+                extendedError: firstError ? `${summary} ${firstError}` : summary,
+            });
+            return;
+        }
 
         if (props.newSm) {
             // Create new Submodel
@@ -408,7 +448,7 @@
         }
         const aas = instanceOrError.mustValue();
         // Create new SubmodelReference
-        const submodelReference = new aasTypes.Reference(aasTypes.ReferenceTypes.ExternalReference, [
+        const submodelReference = new aasTypes.Reference(aasTypes.ReferenceTypes.ModelReference, [
             new aasTypes.Key(aasTypes.KeyTypes.Submodel, submodel.id),
         ]);
         // Check if Submodels are null
@@ -443,7 +483,9 @@
         creator.value = null;
         templateId.value = null;
         semanticId.value = null;
+        qualifiers.value = null;
+        embeddedDataSpecifications.value = null;
         // Reset state of expansion panels
-        openPanels.value = [0, 3];
+        openPanels.value = [0];
     }
 </script>

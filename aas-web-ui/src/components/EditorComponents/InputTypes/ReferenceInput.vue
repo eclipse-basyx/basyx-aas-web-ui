@@ -47,17 +47,21 @@
 </template>
 
 <script lang="ts" setup>
-    import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+    import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
     import { computed, ref, watch } from 'vue';
 
     type Props = {
         label: string;
         noHeader?: boolean;
         modelValue: aasTypes.Reference | null;
+        defaultReferenceType?: aasTypes.ReferenceTypes;
+        defaultKeyType?: aasTypes.KeyTypes;
     };
 
     const props = withDefaults(defineProps<Props>(), {
         noHeader: false,
+        defaultReferenceType: aasTypes.ReferenceTypes.ModelReference,
+        defaultKeyType: aasTypes.KeyTypes.GlobalReference,
     });
 
     const emit = defineEmits<{
@@ -117,13 +121,13 @@
 
     function addReferenceKey(): void {
         if (referenceValue.value === null) {
-            referenceValue.value = new aasTypes.Reference(aasTypes.ReferenceTypes.ExternalReference, [
-                new aasTypes.Key(aasTypes.KeyTypes.GlobalReference, ''),
+            referenceValue.value = new aasTypes.Reference(props.defaultReferenceType, [
+                new aasTypes.Key(props.defaultKeyType, ''),
             ]);
         } else if (referenceValue.value.keys === undefined) {
-            referenceValue.value.keys = [new aasTypes.Key(aasTypes.KeyTypes.GlobalReference, '')];
+            referenceValue.value.keys = [new aasTypes.Key(props.defaultKeyType, '')];
         } else {
-            referenceValue.value.keys.push(new aasTypes.Key(aasTypes.KeyTypes.GlobalReference, ''));
+            referenceValue.value.keys.push(new aasTypes.Key(props.defaultKeyType, ''));
         }
     }
 

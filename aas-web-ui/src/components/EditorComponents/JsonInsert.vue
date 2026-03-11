@@ -25,8 +25,8 @@
 </template>
 
 <script lang="ts" setup>
-    import type { JsonValue } from '@aas-core-works/aas-core3.0-typescript/jsonization';
-    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+    import type { JsonValue } from '@aas-core-works/aas-core3.1-typescript/jsonization';
+    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
@@ -34,6 +34,7 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { getCreatedSubmodelElementPath, isDataElementModelType } from '@/utils/AAS/SubmodelElementPathUtils';
     import { base64Decode, base64Encode } from '@/utils/EncodeDecodeUtils';
 
     const props = defineProps<{
@@ -141,6 +142,20 @@
         }
         const submodelElement = instanceOrError.mustValue();
 
+        if (
+            props.parentElement.modelType === 'AnnotatedRelationshipElement' &&
+            !isDataElementModelType(submodelElement.modelType)
+        ) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Only DataElement types are allowed as AnnotatedRelationshipElement annotations.',
+            });
+            return;
+        }
+
         if (props.parentElement.modelType === 'Submodel') {
             // Create the property on the parent Submodel
             await postSubmodelElement(submodelElement, props.parentElement.id);
@@ -161,10 +176,10 @@
             // Create the property on the parent element
             await postSubmodelElement(submodelElement, submodelId, idShortPath);
 
-            // Navigate to the new property
-            if (props.parentElement.modelType === 'SubmodelElementCollection') {
+            const createdPath = getCreatedSubmodelElementPath(props.parentElement, submodelElement.idShort);
+            if (createdPath) {
                 const query = structuredClone(route.query);
-                query.path = props.parentElement.path + '.' + submodelElement.idShort;
+                query.path = createdPath;
 
                 router.push({
                     query: query,
@@ -186,7 +201,7 @@
         }
         const aas = instanceOrError.mustValue();
         // Create new SubmodelReference
-        const submodelReference = new aasTypes.Reference(aasTypes.ReferenceTypes.ExternalReference, [
+        const submodelReference = new aasTypes.Reference(aasTypes.ReferenceTypes.ModelReference, [
             new aasTypes.Key(aasTypes.KeyTypes.Submodel, submodel.id),
         ]);
         // Check if Submodels are null

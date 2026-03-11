@@ -2,9 +2,7 @@
     <v-dialog v-model="editMLPDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp($event, saveMLP)">
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{
-                    props.newMlp ? 'Create a new Multi Language Property' : 'Edit Multi Language Property'
-                }}</span>
+                {{ props.newMlp ? 'Create a new Multi Language Property' : 'Edit Multi Language Property' }}
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
@@ -93,11 +91,18 @@
                             </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
+                    <!-- Qualifiers -->
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
+                        <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <QualifierInput v-model="qualifiers" />
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
                     <!-- Data Specification -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -113,12 +118,15 @@
 </template>
 
 <script setup lang="ts">
-    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+    import { applyFieldErrors, buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { clearOptionalIdShort } from '@/utils/AAS/OptionalPropertyUtils';
+    import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
@@ -152,6 +160,8 @@
     const mlpCategory = ref<string | null>(null);
 
     const semanticId = ref<aasTypes.Reference | null>(null);
+    const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
     const mlpValue = ref<Array<aasTypes.LangStringTextType> | null>(null);
 
     const errors = ref<Map<string, string>>(new Map());
@@ -209,6 +219,14 @@
                 break;
             case 3:
                 if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+                    border += ' border-t-thin';
+                }
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 4:
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
                     border += 'border-t-thin';
                 }
                 break;
@@ -228,15 +246,20 @@
     }
 
     async function saveMLP(): Promise<void> {
+        errors.value.clear();
+
         if (props.newMlp || mlpObject.value === undefined) {
             mlpObject.value = new aasTypes.MultiLanguageProperty();
         }
 
-        if (mlpIdShort.value !== null) {
-            mlpObject.value.idShort = mlpIdShort.value;
+        const normalizedIdShort = mlpIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            mlpObject.value.idShort = normalizedIdShort;
         } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'MultiLanguageProperty IdShort is required');
             return;
+        } else {
+            clearOptionalIdShort(mlpObject.value);
         }
 
         if (semanticId.value !== null) {
@@ -255,6 +278,25 @@
 
         if (mlpValue.value !== null) {
             mlpObject.value.value = mlpValue.value;
+        }
+
+        mlpObject.value.qualifiers = qualifiers.value;
+        mlpObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
+
+        const verificationResult = verifyForEditor(mlpObject.value, { maxErrors: 10 });
+        if (!verificationResult.isValid) {
+            applyFieldErrors(errors.value, verificationResult.fieldErrors);
+            const summary = buildVerificationSummary(verificationResult);
+            const firstError = verificationResult.globalErrors[0];
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 10000,
+                color: 'error',
+                btnColor: 'buttonText',
+                baseError: 'Multi-language property validation failed',
+                extendedError: firstError ? `${summary} ${firstError}` : summary,
+            });
+            return;
         }
 
         if (props.newMlp) {
@@ -278,10 +320,10 @@
                 // Create the MLP on the parent element
                 await postSubmodelElement(mlpObject.value, submodelId, idShortPath);
 
-                // Navigate to the new MLP
-                if (props.parentElement.modelType === 'SubmodelElementCollection') {
+                const createdPath = getCreatedSubmodelElementPath(props.parentElement, mlpObject.value.idShort);
+                if (createdPath) {
                     const query = structuredClone(route.query);
-                    query.path = props.parentElement.path + '.' + mlpObject.value.idShort;
+                    query.path = createdPath;
 
                     router.push({
                         query: query,
@@ -337,6 +379,8 @@
         mlpCategory.value = null;
         mlpValue.value = null;
         semanticId.value = null;
+        qualifiers.value = null;
+        embeddedDataSpecifications.value = null;
         openPanels.value = [0, 1];
     }
 
@@ -360,6 +404,8 @@
             mlpCategory.value = mlpObject.value.category ?? null;
             mlpValue.value = mlpObject.value.value ?? null;
             semanticId.value = mlpObject.value.semanticId ?? null;
+            qualifiers.value = mlpObject.value.qualifiers ?? null;
+            embeddedDataSpecifications.value = mlpObject.value.embeddedDataSpecifications ?? null;
         }
     }
 </script>

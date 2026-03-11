@@ -5,7 +5,9 @@
         variant="outlined"
         density="comfortable"
         bg-color="surface"
-        :error-messages="errorMessages">
+        :error-messages="errorMessages"
+        :append-icon="showDeleteButton ? 'mdi-delete' : undefined"
+        @click:append="handleAppendClick">
         <template #append-inner>
             <v-btn
                 v-if="showGenerateIriButton"
@@ -32,12 +34,14 @@
         label: string;
         modelValue: string | null;
         errorMessages?: string | string[] | null;
+        showDeleteButton?: boolean;
     } & ({ showGenerateIriButton: true; type: string } | { showGenerateIriButton?: false; type?: never });
 
     const props = defineProps<Props>();
 
     const emit = defineEmits<{
         (event: 'update:modelValue', value: string | null): void;
+        (event: 'click:delete'): void;
     }>();
 
     const textValue = ref<string | null>(props.modelValue);
@@ -57,4 +61,10 @@
             textValue.value = newValue;
         }
     );
+
+    function handleAppendClick(): void {
+        if (props.showDeleteButton) {
+            emit('click:delete');
+        }
+    }
 </script>
