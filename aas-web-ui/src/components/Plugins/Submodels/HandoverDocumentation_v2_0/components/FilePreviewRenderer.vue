@@ -29,40 +29,44 @@
     </div>
 </template>
 <script lang="ts" setup>
+    import type { SubmodelElementLike } from '../types';
     import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
 
     defineOptions({
         name: 'FilePreviewRenderer',
     });
+
     const { downloadFile } = useSMEFile();
 
-    const props = defineProps({
-        file: {
-            type: Object as any,
-            default: null,
-        },
-        downloadLabel: {
-            type: String,
-            default: 'Download File',
-        },
-    });
-    function isImageFile(file: any): boolean {
-        return !!file?.contentType && file.contentType.includes('image');
+    const props = withDefaults(
+        defineProps<{
+            file?: SubmodelElementLike | null;
+            downloadLabel?: string;
+        }>(),
+        {
+            file: null,
+            downloadLabel: 'Download File',
+        }
+    );
+
+    function getContentType(file: SubmodelElementLike | null | undefined): string {
+        return file?.contentType?.toLowerCase() ?? '';
     }
-    function isPdfFile(file: any): boolean {
-        return !!file?.contentType && file.contentType.includes('pdf');
+
+    function isImageFile(file: SubmodelElementLike | null | undefined): boolean {
+        return getContentType(file).includes('image');
     }
-    function isCADFile(file: any): boolean {
-        return (
-            !!file?.contentType &&
-            (file.contentType.includes('sla') ||
-                file.contentType.includes('stl') ||
-                file.contentType.includes('model') ||
-                file.contentType.includes('obj') ||
-                file.contentType.includes('gltf'))
-        );
+
+    function isPdfFile(file: SubmodelElementLike | null | undefined): boolean {
+        return getContentType(file).includes('pdf');
     }
-    function showDownloadButton(file: any): boolean {
+
+    function isCADFile(file: SubmodelElementLike | null | undefined): boolean {
+        const contentType = getContentType(file);
+        return ['sla', 'stl', 'model', 'obj', 'gltf'].some((type) => contentType.includes(type));
+    }
+
+    function showDownloadButton(file: SubmodelElementLike | null | undefined): boolean {
         return !!file?.value;
     }
 </script>

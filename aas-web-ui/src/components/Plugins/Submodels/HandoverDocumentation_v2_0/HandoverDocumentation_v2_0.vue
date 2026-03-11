@@ -15,8 +15,8 @@
                             </template>
 
                             <v-list-item-title>
-                                {{ nameToDisplay(document) }}
-                                <DescriptionTooltip :description-array="document?.description" />
+                                {{ getDocumentTitle(document, i) }}
+                                <DescriptionTooltip :description-array="getDescriptionArray(document)" />
                             </v-list-item-title>
                         </v-list-item>
                     </v-expansion-panel-title>
@@ -30,39 +30,35 @@
                         <!-- Document Versions -->
                         <template v-if="(document.documentVersionInfo ?? []).length > 0">
                             <div class="text-caption text-subtitleText">
-                                <template v-if="(document.documentVersionInfo ?? []).length > 0">
-                                    <!-- Tabs for document versions-  -->
-                                    <v-tabs
-                                        :model-value="getVersionTab(document)"
-                                        density="comfortable"
-                                        color="primary"
-                                        class="mt-2"
-                                        @update:model-value="(val) => setVersionTab(document, val)">
-                                        <v-tab
-                                            v-for="(versionSmc, v) in document.documentVersionInfo ?? []"
-                                            :key="versionSmc.id ?? versionSmc.idShort ?? `version-${v}`"
-                                            :value="v">
-                                            {{ nameToDisplay(versionSmc) }}
-                                        </v-tab>
-                                    </v-tabs>
-                                    <v-divider class="mt-2" />
-                                    <v-window :model-value="getVersionTab(document)" class="mt-3">
-                                        <v-window-item
-                                            v-for="(versionSmc, v) in document.documentVersionInfo ?? []"
-                                            :key="versionSmc.id ?? versionSmc.idShort ?? `version-${v}`"
-                                            :value="v">
-                                            <div class="pt-4">
-                                                <!-- Table for Version Metadata -->
-                                                <VersionMetadataTable :version-smc="versionSmc" />
+                                <!-- Tabs for document versions -->
+                                <v-tabs
+                                    :model-value="getVersionTab(document)"
+                                    density="comfortable"
+                                    color="primary"
+                                    class="mt-2"
+                                    @update:model-value="(val) => onVersionTabUpdate(document, val)">
+                                    <v-tab
+                                        v-for="(versionSmc, v) in document.documentVersionInfo ?? []"
+                                        :key="versionSmc.id ?? versionSmc.idShort ?? `version-${v}`"
+                                        :value="v">
+                                        {{ nameToDisplay(versionSmc) }}
+                                    </v-tab>
+                                </v-tabs>
+                                <v-divider class="mt-2" />
+                                <v-window :model-value="getVersionTab(document)" class="mt-3">
+                                    <v-window-item
+                                        v-for="(versionSmc, v) in document.documentVersionInfo ?? []"
+                                        :key="versionSmc.id ?? versionSmc.idShort ?? `version-${v}`"
+                                        :value="v">
+                                        <div class="pt-4">
+                                            <!-- Table for Version Metadata -->
+                                            <VersionMetadataTable :version-smc="versionSmc" />
 
-                                                <!-- Tabs for File and Digital Files -->
-                                                <VersionAttachments
-                                                    :version-smc="versionSmc"
-                                                    :version-index="Number(v)" />
-                                            </div>
-                                        </v-window-item>
-                                    </v-window>
-                                </template>
+                                            <!-- Tabs for File and Digital Files -->
+                                            <VersionAttachments :version-smc="versionSmc" />
+                                        </div>
+                                    </v-window-item>
+                                </v-window>
                             </div>
                         </template>
 
@@ -91,11 +87,13 @@
 </template>
 
 <script lang="ts" setup>
+    import type { DocumentLike, SubmodelElementLike } from './types';
     import { onMounted, ref } from 'vue';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
     import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement';
     import { getSubmodelElementBySemanticId, getSubmodelElementsBySemanticId } from '@/utils/AAS/SemanticIdUtils';
+    import { getDescriptionArray, getDisplayTitleOrFallback } from './utils/submodelElementUtils';
 
     defineOptions({
         name: 'HandoverDocumentation',
@@ -106,20 +104,17 @@
     const { nameToDisplay } = useReferableUtils();
     const { hasValue } = useSME();
 
-    // Properties
-    const props = defineProps({
-        submodelElementData: {
-            type: Object as any,
-            default: {} as any,
-        },
-    });
+    // Props
+    const props = defineProps<{
+        submodelElementData?: SubmodelElementLike;
+    }>();
 
     // Data
     const isLoading = ref(false);
-    const handoverDocumentationData = ref({} as any);
+    const handoverDocumentationData = ref<SubmodelElementLike>({});
     const panel = ref(null as number | null);
-    const documents = ref([] as any);
-    const documentsSml = ref<any>(null);
+    const documents = ref<DocumentLike[]>([]);
+    const documentsSml = ref<SubmodelElementLike | null>(null);
     const versionTab = ref<Record<string, number>>({});
 
     onMounted(() => {
@@ -137,7 +132,7 @@
 
         handoverDocumentationData.value = await setData(
             { ...props.submodelElementData },
-            props.submodelElementData.path
+            props.submodelElementData.path ?? ''
         );
 
         //  Get Documents SML
@@ -155,11 +150,11 @@
         const documentSmcs = getSubmodelElementsBySemanticId(
             '0173-1#02-ABI500#003/0173-1#01-AHF579#003',
             documentsSml.value
-        );
+        ) as SubmodelElementLike[];
         documents.value = documentSmcs;
 
         //  For each Document → get Document data
-        documents.value.forEach((doc: any) => {
+        documents.value.forEach((doc: DocumentLike) => {
             //function for Document Versions
             extractDocumentVersionInfo(doc);
 
@@ -175,14 +170,14 @@
             const documentIdSmcs = getSubmodelElementsBySemanticId(
                 '0173-1#02-ABI501#003/0173-1#01-AHF580#003',
                 documentIdsSml
-            );
+            ) as SubmodelElementLike[];
 
             doc.documentIds = documentIdSmcs;
         });
         isLoading.value = false;
     }
 
-    function extractDocumentVersionInfo(doc: any): void {
+    function extractDocumentVersionInfo(doc: DocumentLike): void {
         // Get Document Version Info SML (container, one per document)
         const documentVersionInfoSml = getSubmodelElementBySemanticId('0173-1#02-ABI503#003', doc);
 
@@ -198,17 +193,24 @@
         const documentVersionInfoSmcs = getSubmodelElementsBySemanticId(
             '0173-1#02-ABI503#003/0173-1#01-AHF582#003',
             documentVersionInfoSml
-        ).filter((sme: any) => hasValue(sme));
+        ).filter((sme: unknown) => hasValue(sme)) as SubmodelElementLike[];
 
         doc.documentVersionInfo = documentVersionInfoSmcs;
-        return;
     }
-    function getVersionTab(document: any): number {
+    function getVersionTab(document: DocumentLike): number {
         const key = document?.id ?? document?.idShort ?? 'doc';
         return versionTab.value[key] ?? 0;
     }
-    function setVersionTab(document: any, index: number): void {
+    function setVersionTab(document: DocumentLike, index: number): void {
         const key = document?.id ?? document?.idShort ?? 'doc';
         versionTab.value[key] = index;
+    }
+    function onVersionTabUpdate(document: DocumentLike, value: unknown): void {
+        setVersionTab(document, typeof value === 'number' ? value : 0);
+    }
+
+    function getDocumentTitle(document: DocumentLike, index: number): string {
+        const documentName = String(nameToDisplay(document) ?? '');
+        return getDisplayTitleOrFallback(documentName, 'Document', index);
     }
 </script>
