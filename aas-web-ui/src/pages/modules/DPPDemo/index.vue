@@ -189,10 +189,11 @@
         aasId: string
     ): { url: string; isExternal: boolean } {
         const thumbnailPath = String(defaultThumbnail.path).trim();
-        const isExternalThumbnail =
-            defaultThumbnail.isExternal === true ||
-            String(defaultThumbnail.isExternal).toLowerCase() === 'true' ||
-            urlRegex.test(thumbnailPath);
+        const hasExplicitExternalFlag =
+            defaultThumbnail.isExternal !== undefined && defaultThumbnail.isExternal !== null;
+        const isExternalThumbnail = hasExplicitExternalFlag
+            ? String(defaultThumbnail.isExternal).toLowerCase() === 'true'
+            : urlRegex.test(thumbnailPath);
 
         if (isExternalThumbnail) {
             return { url: thumbnailPath, isExternal: true };
