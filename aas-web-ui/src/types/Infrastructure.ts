@@ -58,6 +58,8 @@ export interface TokenData {
  */
 export interface ComponentConfig {
     url: string;
+    hasRegistryIntegration?: boolean;
+    hasDiscoveryIntegration?: boolean;
 }
 
 /**
@@ -152,6 +154,8 @@ export type ComponentTestingLoading = Record<BaSyxComponentKey, boolean>;
  */
 export interface YamlComponentConfig {
     baseUrl: string;
+    hasRegistryIntegration?: boolean;
+    hasDiscoveryIntegration?: boolean;
 }
 
 /**

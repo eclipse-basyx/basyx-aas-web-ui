@@ -168,15 +168,18 @@ export function useInfrastructureStorage(): {
                 },
                 AASRegistry: {
                     url: '',
+                    hasDiscoveryIntegration: true,
                 },
                 SubmodelRegistry: {
                     url: '',
                 },
                 AASRepo: {
                     url: '',
+                    hasRegistryIntegration: true,
                 },
                 SubmodelRepo: {
                     url: '',
+                    hasRegistryIntegration: true,
                 },
                 ConceptDescriptionRepo: {
                     url: '',

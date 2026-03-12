@@ -68,6 +68,12 @@ export function useRequestHandling() {
         return { success: false };
     }
 
+    async function parseJsonIfPresent(response: Response): Promise<any> {
+        const bodyText = await response.text();
+        if (bodyText.trim() === '') return undefined;
+        return JSON.parse(bodyText);
+    }
+
     function getRequest(path: string, context: string, disableMessage: boolean, headers: Headers = new Headers()): any {
         if (shouldAddAuthorizationHeader(path)) {
             // No Authorization needed for the /description endpoint.
@@ -80,7 +86,7 @@ export function useRequestHandling() {
                     response.headers.get('Content-Type')?.split(';')[0] === 'application/json' &&
                     response.headers.get('Content-Length') !== '0'
                 ) {
-                    return { response: response, data: await response.json() }; // Return the response as JSON
+                    return { response: response, data: await parseJsonIfPresent(response) }; // Return the response as JSON
                 } else if (
                     response.headers.get('Content-Type')?.split(';')[0] ===
                         'application/asset-administration-shell-package+xml' &&
@@ -126,6 +132,9 @@ export function useRequestHandling() {
                 } else if (data) {
                     // Successful response from the server
                     return { success: true, data: data, status: response.status, raw: response };
+                } else if (response.ok && response.status >= 200 && response.status < 300) {
+                    // Empty successful response
+                    return { success: true, data: {}, status: response.status, raw: response };
                 } else {
                     // Unexpected response format
                     throw new Error('Unexpected response format');
@@ -152,7 +161,7 @@ export function useRequestHandling() {
                     response.headers.get('Content-Type')?.split(';')[0] === 'application/json' &&
                     response.headers.get('Content-Length') !== '0'
                 ) {
-                    return response.json(); // Return the response as JSON
+                    return parseJsonIfPresent(response); // Return the response as JSON
                 } else if (
                     response.headers.get('Content-Type')?.split(';')[0] === 'text/csv' &&
                     response.headers.get('Content-Length') !== '0'
@@ -200,7 +209,7 @@ export function useRequestHandling() {
                     response.headers.get('Content-Type')?.split(';')[0] === 'application/json' &&
                     response.headers.get('Content-Length') !== '0'
                 ) {
-                    return response.json(); // Return the response as JSON
+                    return parseJsonIfPresent(response); // Return the response as JSON
                 } else if (!response.ok) {
                     // No content but received an HTTP error status
                     throw new Error('Error status: ' + response.status);
@@ -237,7 +246,7 @@ export function useRequestHandling() {
                     response.headers.get('Content-Type')?.split(';')[0] === 'application/json' &&
                     response.headers.get('Content-Length') !== '0'
                 ) {
-                    return response.json(); // Return the response as JSON
+                    return parseJsonIfPresent(response); // Return the response as JSON
                 } else if (!response.ok) {
                     // No content but received an HTTP error status
                     throw new Error('Error status: ' + response.status);
@@ -273,7 +282,7 @@ export function useRequestHandling() {
                     response.headers.get('Content-Type')?.split(';')[0] === 'application/json' &&
                     response.headers.get('Content-Length') !== '0'
                 ) {
-                    return response.json(); // Return the response as JSON
+                    return parseJsonIfPresent(response); // Return the response as JSON
                 } else if (!response.ok) {
                     // No content but received an HTTP error status
                     throw new Error('Error status: ' + response.status);

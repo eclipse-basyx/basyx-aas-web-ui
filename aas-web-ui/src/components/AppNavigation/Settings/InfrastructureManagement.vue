@@ -60,7 +60,9 @@
                             :component-testing-loading="componentTestingLoading"
                             @test-connection="testComponentConnection"
                             @update:component-url="handleComponentUrlUpdate"
-                            @update:connection-status="handleConnectionStatusUpdate" />
+                            @update:connection-status="handleConnectionStatusUpdate"
+                            @update:registry-integration="handleRegistryIntegrationUpdate"
+                            @update:discovery-integration="handleDiscoveryIntegrationUpdate" />
                         <!-- Security Configuration -->
                         <v-divider></v-divider>
                         <v-list-subheader class="mb-3">Security Configuration</v-list-subheader>
@@ -367,5 +369,13 @@
     // Connection status update handler
     function handleConnectionStatusUpdate(componentKey: BaSyxComponentKey, status: boolean | null): void {
         componentConnectionStatus.value[componentKey] = status;
+    }
+
+    function handleRegistryIntegrationUpdate(componentKey: BaSyxComponentKey, enabled: boolean): void {
+        editingInfrastructure.value.components[componentKey].hasRegistryIntegration = enabled;
+    }
+
+    function handleDiscoveryIntegrationUpdate(componentKey: BaSyxComponentKey, enabled: boolean): void {
+        editingInfrastructure.value.components[componentKey].hasDiscoveryIntegration = enabled;
     }
 </script>

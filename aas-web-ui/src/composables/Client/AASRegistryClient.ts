@@ -13,7 +13,7 @@ export function useAASRegistryClient() {
     const infrastructureStore = useInfrastructureStore();
 
     //Composables
-    const { getRequest, postRequest, putRequest } = useRequestHandling();
+    const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
 
     const endpointPath = '/shell-descriptors';
 
@@ -181,6 +181,28 @@ export function useAASRegistryClient() {
         return response.success;
     }
 
+    async function deleteAasDescriptor(aasId: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!aasId) return failResponse;
+
+        aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
+
+        let aasRegUrl = aasRegistryUrl.value.trim();
+        if (aasRegUrl === '') return failResponse;
+        if (aasRegUrl.endsWith('/')) aasRegUrl = stripLastCharacter(aasRegUrl);
+        if (!aasRegUrl.endsWith(endpointPath)) aasRegUrl += endpointPath;
+
+        const context = 'deleting AAS Descriptor';
+        const disableMessage = false;
+        const path = aasRegUrl + '/' + base64Encode(aasId);
+        const response = await deleteRequest(path, context, disableMessage);
+
+        return response.success;
+    }
+
     function createDescriptorFromAAS(
         aas: jsonization.JsonObject,
         endpoints: Array<descriptorTypes.Endpoint>
@@ -212,6 +234,7 @@ export function useAASRegistryClient() {
         aasDescriptorIsAvailableById,
         putAasDescriptor,
         postAasDescriptor,
+        deleteAasDescriptor,
         createDescriptorFromAAS,
     };
 }

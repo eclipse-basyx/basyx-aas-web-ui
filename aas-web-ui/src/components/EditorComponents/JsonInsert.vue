@@ -30,10 +30,12 @@
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
+    import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useAASStore } from '@/store/AASDataStore';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { Endpoint, ProtocolInformation } from '@/types/Descriptors';
     import { getCreatedSubmodelElementPath, isDataElementModelType } from '@/utils/AAS/SubmodelElementPathUtils';
     import { base64Decode, base64Encode } from '@/utils/EncodeDecodeUtils';
 
@@ -58,6 +60,7 @@
 
     // Composables
     const { postSubmodel, postSubmodelElement } = useSMRepositoryClient();
+    const { postSubmodelDescriptor, putSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient();
     const { putAas } = useAASRepositoryClient();
 
     // Data
@@ -67,7 +70,11 @@
 
     // Computed Properties
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
+    const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure);
     const submodelRepoUrl = computed(() => infrastructureStore.getSubmodelRepoURL);
+    const submodelRepoHasRegistryIntegration = computed(
+        () => selectedInfrastructure.value?.components?.SubmodelRepo?.hasRegistryIntegration ?? true
+    );
 
     watch(
         () => props.modelValue,
@@ -117,6 +124,7 @@
         await postSubmodel(submodel);
         // Add Submodel Reference to AAS
         await addSubmodelReferenceToAas(submodel);
+        await syncSubmodelDescriptor(submodel);
         // Fetch and dispatch Submodel
         const query = structuredClone(route.query);
         query.path = submodelRepoUrl.value + '/' + base64Encode(submodel.id);
@@ -216,6 +224,43 @@
 
         // Update AAS in Store
         aasStore.dispatchSelectedAAS(localAAS);
+    }
+
+    async function syncSubmodelDescriptor(submodel: aasTypes.Submodel): Promise<void> {
+        if (submodelRepoHasRegistryIntegration.value) {
+            return;
+        }
+
+        const submodelHref = `${submodelRepoUrl.value}/submodels/${base64Encode(submodel.id)}`;
+        const descriptor = createDescriptorFromSubmodel(
+            jsonization.toJsonable(submodel),
+            createEndpoints(submodelHref, 'SUBMODEL-3.0')
+        );
+
+        const success = (await putSubmodelDescriptor(descriptor)) || (await postSubmodelDescriptor(descriptor));
+        if (!success) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 8000,
+                color: 'warning',
+                btnColor: 'buttonText',
+                baseError: 'Submodel inserted with synchronization warning.',
+                extendedError: `Failed to synchronize Submodel descriptor for '${submodel.id}'.`,
+            });
+        }
+    }
+
+    function createEndpoints(href: string, type: string): Array<Endpoint> {
+        let protocol: string | null = null;
+        try {
+            const url = new URL(href);
+            protocol = url.protocol.replace(/:$/, '');
+        } catch {
+            // If href is not a valid absolute URL, keep protocol null.
+        }
+
+        const protocolInformation = new ProtocolInformation(href, null, protocol);
+        return [new Endpoint(type, protocolInformation)];
     }
 
     function isValidJson(jsonString: string): boolean {

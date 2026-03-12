@@ -37,11 +37,15 @@
 </template>
 
 <script lang="ts" setup>
-    import { ref, watch } from 'vue';
+    import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
+    import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
+    import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
+    import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     // Vue Router
@@ -50,11 +54,15 @@
 
     // Stores
     const aasStore = useAASStore();
+    const infrastructureStore = useInfrastructureStore();
     const navigationStore = useNavigationStore();
 
     // Composables
     const { deleteAasById, getSubmodelRefsById } = useAASHandling();
     const { deleteSmById, fetchSmById } = useSMHandling();
+    const { deleteAasDescriptor } = useAASRegistryClient();
+    const { deleteSubmodelDescriptor } = useSMRegistryClient();
+    const { deleteAssetLinksForAas } = useAASDiscoveryClient();
 
     const props = defineProps<{
         modelValue: boolean;
@@ -71,6 +79,17 @@
     const deleteSubmodels = ref(false); // Variable to store if the Submodels should be deleted
     const submodelIds = ref<any[]>([]); // Variable to store the Submodel Ids of the AAS
     const selected = ref<string[]>([]); // Variable to store the selected Submodel Ids
+
+    const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure);
+    const aasRepoHasRegistryIntegration = computed(
+        () => selectedInfrastructure.value?.components?.AASRepo?.hasRegistryIntegration ?? true
+    );
+    const submodelRepoHasRegistryIntegration = computed(
+        () => selectedInfrastructure.value?.components?.SubmodelRepo?.hasRegistryIntegration ?? true
+    );
+    const aasRegistryHasDiscoveryIntegration = computed(
+        () => selectedInfrastructure.value?.components?.AASRegistry?.hasDiscoveryIntegration ?? true
+    );
 
     watch(
         () => props.modelValue,
@@ -107,6 +126,7 @@
     async function confirmDelete(): Promise<void> {
         deleteLoading.value = true;
         let error = false;
+        const warnings: string[] = [];
         try {
             if (deleteSubmodels.value) {
                 // Extract all references in an array called submodelIds from each keys[0].value
@@ -114,10 +134,30 @@
                 // Remove each submodel
                 for (const submodelId of submodelIds) {
                     error = error || !(await deleteSmById(submodelId));
+                    if (!error && !submodelRepoHasRegistryIntegration.value) {
+                        const descriptorDeleted = await deleteSubmodelDescriptor(submodelId);
+                        if (!descriptorDeleted) {
+                            warnings.push(`Failed to delete Submodel descriptor '${submodelId}'.`);
+                        }
+                    }
                 }
             }
 
             error = error || !(await removeAAS(props.aas));
+
+            if (!error && !aasRepoHasRegistryIntegration.value) {
+                const descriptorDeleted = await deleteAasDescriptor(props.aas.id);
+                if (!descriptorDeleted) {
+                    warnings.push(`Failed to delete AAS descriptor '${props.aas.id}'.`);
+                }
+            }
+
+            if (!error && !aasRegistryHasDiscoveryIntegration.value) {
+                const assetLinksDeleted = await deleteAssetLinksForAas(props.aas.id);
+                if (!assetLinksDeleted) {
+                    warnings.push(`Failed to delete discovery asset links for '${props.aas.id}'.`);
+                }
+            }
         } finally {
             deleteDialog.value = false;
             deleteSubmodels.value = false;
@@ -133,6 +173,17 @@
                     aasStore.dispatchSelectedAAS({});
                 }
                 navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
+            }
+
+            if (warnings.length > 0) {
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 9000,
+                    color: 'warning',
+                    btnColor: 'buttonText',
+                    baseError: 'Delete completed with synchronization warnings.',
+                    extendedError: warnings.join('\n'),
+                });
             }
             deleteLoading.value = false;
         }

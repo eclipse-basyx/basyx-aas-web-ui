@@ -155,6 +155,14 @@ export function useInfrastructureYamlParser(): {
             const yamlComponent = yamlConfig.components[yamlKey as keyof typeof yamlConfig.components];
             if (yamlComponent?.baseUrl) {
                 infrastructure.components[internalKey].url = yamlComponent.baseUrl;
+                if (yamlComponent.hasRegistryIntegration !== undefined) {
+                    infrastructure.components[internalKey].hasRegistryIntegration =
+                        yamlComponent.hasRegistryIntegration;
+                }
+                if (yamlComponent.hasDiscoveryIntegration !== undefined) {
+                    infrastructure.components[internalKey].hasDiscoveryIntegration =
+                        yamlComponent.hasDiscoveryIntegration;
+                }
             }
         }
 
