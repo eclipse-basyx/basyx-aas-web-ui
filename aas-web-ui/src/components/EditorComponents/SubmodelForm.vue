@@ -170,6 +170,7 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { Endpoint, ProtocolInformation } from '@/types/Descriptors';
     import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
     const props = defineProps<{
@@ -195,7 +196,7 @@
     }>();
 
     const { postSubmodel, putSubmodel } = useSMRepositoryClient();
-    const { putSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient();
+    const { postSubmodelDescriptor, putSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient();
     const { fetchSmById, fetchSmDescriptor, fetchAndDispatchSm } = useSMHandling();
     const { putAas } = useAASRepositoryClient();
 
@@ -222,7 +223,11 @@
     // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode); // Get the selected AAS from Store
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
+    const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure);
     const submodelRepoUrl = computed(() => infrastructureStore.getSubmodelRepoURL);
+    const submodelRepoHasRegistryIntegration = computed(
+        () => selectedInfrastructure.value?.components?.SubmodelRepo?.hasRegistryIntegration ?? true
+    );
     const bordersToShow = computed(() => (panel: number) => {
         let border = '';
         switch (panel) {
@@ -414,6 +419,7 @@
             await postSubmodel(submodelObject.value);
             // Add Submodel Reference to AAS
             await addSubmodelReferenceToAas(submodelObject.value);
+            await syncSubmodelDescriptor(submodelObject.value);
             // Fetch and dispatch Submodel
             const query = structuredClone(route.query);
             query.path = submodelRepoUrl.value + '/submodels/' + base64Encode(submodelObject.value.id);
@@ -422,12 +428,7 @@
         } else {
             // Update existing Submodel
             await putSubmodel(submodelObject.value);
-            const jsonSubmodel = jsonization.toJsonable(submodelObject.value);
-            // Fetch the current desciptor from the registry
-            const fetchedDescriptor = await fetchSmDescriptor(submodelObject.value.id);
-            const descriptor = createDescriptorFromSubmodel(jsonSubmodel, fetchedDescriptor.endpoints);
-            // Update AAS Descriptor
-            await putSubmodelDescriptor(descriptor);
+            await syncSubmodelDescriptor(submodelObject.value);
             if (submodelObject.value.id === selectedNode.value.id) {
                 const path = submodelRepoUrl.value + '/submodels/' + base64Encode(submodelObject.value.id);
                 fetchAndDispatchSm(path);
@@ -436,6 +437,44 @@
         }
         clearForm();
         editSMDialog.value = false;
+    }
+
+    async function syncSubmodelDescriptor(submodel: aasTypes.Submodel): Promise<void> {
+        if (submodelRepoHasRegistryIntegration.value) {
+            return;
+        }
+
+        const jsonSubmodel = jsonization.toJsonable(submodel);
+        let descriptorSuccess = false;
+
+        try {
+            const fetchedDescriptor = await fetchSmDescriptor(submodel.id);
+            const fallbackEndpoint = `${submodelRepoUrl.value}/submodels/${base64Encode(submodel.id)}`;
+            const endpoints =
+                Array.isArray(fetchedDescriptor?.endpoints) && fetchedDescriptor.endpoints.length > 0
+                    ? fetchedDescriptor.endpoints
+                    : createEndpoints(fallbackEndpoint, 'SUBMODEL-3.0');
+            const descriptor = createDescriptorFromSubmodel(jsonSubmodel, endpoints);
+            descriptorSuccess = (await putSubmodelDescriptor(descriptor)) || (await postSubmodelDescriptor(descriptor));
+        } catch (error) {
+            console.error('Failed to synchronize Submodel descriptor:', error);
+        }
+
+        if (!descriptorSuccess) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 8000,
+                color: 'warning',
+                btnColor: 'buttonText',
+                baseError: 'Submodel saved with synchronization warning.',
+                extendedError: `Failed to synchronize Submodel descriptor for '${submodel.id}'.`,
+            });
+        }
+    }
+
+    function createEndpoints(href: string, type: string): Array<Endpoint> {
+        const protocolInformation = new ProtocolInformation(href, null, 'http');
+        return [new Endpoint(type, protocolInformation)];
     }
 
     async function addSubmodelReferenceToAas(submodel: aasTypes.Submodel): Promise<void> {

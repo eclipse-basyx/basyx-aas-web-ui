@@ -15,7 +15,7 @@
                                     :aspect-ratio="productImageAspectRatio"
                                     class="w-100 mx-auto border rounded-lg"
                                     style="max-width: 300px"
-                                    cover
+                                    contain
                                     @error="onProductImageError" />
                                 <v-sheet
                                     v-else
@@ -63,6 +63,7 @@
     import { computed, onMounted, ref, watch } from 'vue';
     import { type LocationQueryRaw, useRoute, useRouter } from 'vue-router';
     import { useTechnicalData_v1_2Utils } from '@/composables/AAS/SubmodelTemplates/TechnicalData_v1_2Utils';
+    import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { urlRegex, useUrlUtils } from '@/composables/UrlUtils';
     import General from '@/pages/modules/DPPDemo/General.vue';
     import { useAASStore } from '@/store/AASDataStore';
@@ -79,6 +80,7 @@
     const router = useRouter();
     const aasStore = useAASStore();
     const { getProductImageUrlByAasId } = useTechnicalData_v1_2Utils();
+    const { getAasEndpointById } = useAASRepositoryClient();
     const { getBlobUrl } = useUrlUtils();
 
     const qrCodeSrc = ref('');
@@ -149,11 +151,10 @@
             defaultThumbnail.path &&
             String(defaultThumbnail.path).trim() !== ''
         ) {
-            const thumbnailPath = String(defaultThumbnail.path).trim();
-            const isExternalThumbnail =
-                defaultThumbnail.isExternal === true ||
-                String(defaultThumbnail.isExternal).toLowerCase() === 'true' ||
-                urlRegex.test(thumbnailPath);
+            const { url: thumbnailPath, isExternal: isExternalThumbnail } = resolveDefaultThumbnailRequest(
+                defaultThumbnail,
+                selectedAas.value.id
+            );
 
             try {
                 productImageSrc.value = await getBlobUrl(thumbnailPath, isExternalThumbnail);
@@ -181,6 +182,29 @@
     function onProductImageError(): void {
         productImageSrc.value = '';
         productImageAspectRatio.value = 1;
+    }
+
+    function resolveDefaultThumbnailRequest(
+        defaultThumbnail: { path: string; isExternal?: boolean | string },
+        aasId: string
+    ): { url: string; isExternal: boolean } {
+        const thumbnailPath = String(defaultThumbnail.path).trim();
+        const isExternalThumbnail =
+            defaultThumbnail.isExternal === true ||
+            String(defaultThumbnail.isExternal).toLowerCase() === 'true' ||
+            urlRegex.test(thumbnailPath);
+
+        if (isExternalThumbnail) {
+            return { url: thumbnailPath, isExternal: true };
+        }
+
+        // A non-external defaultThumbnail path is repository-internal and should be fetched via the thumbnail endpoint.
+        const aasEndpoint = getAasEndpointById(aasId);
+        if (aasEndpoint && aasEndpoint.trim() !== '') {
+            return { url: `${aasEndpoint.trim()}/asset-information/thumbnail`, isExternal: false };
+        }
+
+        return { url: thumbnailPath, isExternal: false };
     }
 
     function updateProductImageAspectRatio(src: string): void {

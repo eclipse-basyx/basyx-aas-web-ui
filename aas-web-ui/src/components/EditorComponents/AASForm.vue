@@ -191,12 +191,15 @@
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
+    import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
     import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useIDUtils } from '@/composables/IDUtils';
     import { buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { Endpoint, ProtocolInformation } from '@/types/Descriptors';
 
     const props = defineProps<{
         modelValue: boolean;
@@ -214,14 +217,23 @@
 
     // Stores
     const aasStore = useAASStore();
+    const infrastructureStore = useInfrastructureStore();
     const navigationStore = useNavigationStore();
 
     const emit = defineEmits<{
         (event: 'update:modelValue', value: boolean): void;
     }>();
 
-    const { fetchAasById, postAas, putAas, putThumbnail } = useAASRepositoryClient();
-    const { fetchAasDescriptorById, putAasDescriptor, createDescriptorFromAAS } = useAASRegistryClient();
+    const {
+        fetchAasById,
+        postAas,
+        putAas,
+        putThumbnail,
+        getAasEndpointById: getAasRepoEndpointById,
+    } = useAASRepositoryClient();
+    const { fetchAasDescriptorById, postAasDescriptor, putAasDescriptor, createDescriptorFromAAS } =
+        useAASRegistryClient();
+    const { createAssetLinksFromAssetInformation, upsertAssetLinksForAas } = useAASDiscoveryClient();
 
     const editAASDialog = ref(false);
     const AASObject = ref<aasTypes.AssetAdministrationShell | undefined>(undefined);
@@ -247,9 +259,17 @@
     const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
 
     const fileThumbnail = ref<File | undefined>(undefined);
+    const initialDiscoveryAssetLinks = ref<Array<{ name: string; value: string }>>([]);
 
     // Computed Properties
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
+    const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure);
+    const aasRepoHasRegistryIntegration = computed(
+        () => selectedInfrastructure.value?.components?.AASRepo?.hasRegistryIntegration ?? true
+    );
+    const aasRegistryHasDiscoveryIntegration = computed(
+        () => selectedInfrastructure.value?.components?.AASRegistry?.hasDiscoveryIntegration ?? true
+    );
     const bordersToShow = computed(() => (panel: number) => {
         let border = '';
         switch (panel) {
@@ -344,6 +364,12 @@
                 defaultThumbnail.value = AASObject.value.assetInformation.defaultThumbnail ?? null;
             }
             embeddedDataSpecifications.value = AASObject.value.embeddedDataSpecifications ?? null;
+
+            // Keep a stable snapshot from initial load so update detection is not affected by in-place form mutations.
+            initialDiscoveryAssetLinks.value = createAssetLinksFromAssetInformation(
+                AASObject.value.assetInformation?.globalAssetId,
+                AASObject.value.assetInformation?.specificAssetIds
+            );
         }
     }
 
@@ -400,6 +426,8 @@
 
     async function saveAAS(): Promise<void> {
         if (AASId.value === null) return;
+
+        const previousAssetLinks = props.newShell ? [] : [...initialDiscoveryAssetLinks.value];
 
         const assetInformation = createAssetInformation();
 
@@ -463,6 +491,7 @@
         if (props.newShell) {
             // Create new AAS
             await postAas(AASObject.value);
+            await syncAasDescriptorAndDiscovery(AASObject.value, true, previousAssetLinks);
             // Upload default thumbnail
             if (fileThumbnail.value !== undefined) {
                 await putThumbnail(fileThumbnail.value, AASObject.value.id);
@@ -472,18 +501,12 @@
             query.aas = await getAasEndpointById(AASObject.value.id);
             if (Object.hasOwn(query, 'path')) delete query.path;
 
-            router.push({ query: query });
+            await router.push({ query: query });
             navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
         } else {
             // Update existing AAS
             await putAas(AASObject.value);
-            // Update AAS Descriptor
-            const jsonAAS = jsonization.toJsonable(AASObject.value);
-            // Fetch existing descriptor to preserve endpoints
-            const existingDescriptor = await fetchAasDescriptorById(AASObject.value.id);
-            const endpoints = existingDescriptor?.endpoints ?? [];
-            const descriptor = createDescriptorFromAAS(jsonAAS, endpoints);
-            await putAasDescriptor(descriptor);
+            await syncAasDescriptorAndDiscovery(AASObject.value, false, previousAssetLinks);
             // Upload default thumbnail
             if (fileThumbnail.value !== undefined) {
                 await putThumbnail(fileThumbnail.value, AASObject.value.id);
@@ -495,6 +518,100 @@
         }
         clearForm();
         editAASDialog.value = false;
+    }
+
+    async function syncAasDescriptorAndDiscovery(
+        aas: aasTypes.AssetAdministrationShell,
+        isCreate: boolean,
+        previousAssetLinks: Array<{ name: string; value: string }>
+    ): Promise<void> {
+        const warnings: string[] = [];
+
+        if (!aasRepoHasRegistryIntegration.value) {
+            try {
+                const jsonAAS = jsonization.toJsonable(aas);
+                const existingDescriptor = await fetchAasDescriptorById(aas.id);
+                const fallbackAasEndpoint = getAasRepoEndpointById(aas.id);
+                const endpoints =
+                    Array.isArray(existingDescriptor?.endpoints) && existingDescriptor.endpoints.length > 0
+                        ? existingDescriptor.endpoints
+                        : createEndpoints(fallbackAasEndpoint, 'AAS-3.0');
+                const descriptor = createDescriptorFromAAS(jsonAAS, endpoints);
+                const success = isCreate
+                    ? (await postAasDescriptor(descriptor)) || (await putAasDescriptor(descriptor))
+                    : (await putAasDescriptor(descriptor)) || (await postAasDescriptor(descriptor));
+
+                if (!success) {
+                    warnings.push(`Failed to synchronize AAS descriptor for '${aas.id}'.`);
+                }
+            } catch (error) {
+                warnings.push(
+                    `Failed to synchronize AAS descriptor for '${aas.id}': ${error instanceof Error ? error.message : String(error)}`
+                );
+            }
+        }
+
+        if (!aasRegistryHasDiscoveryIntegration.value) {
+            try {
+                const assetLinks = createAssetLinksFromAssetInformation(
+                    aas.assetInformation?.globalAssetId,
+                    aas.assetInformation?.specificAssetIds
+                );
+
+                if (isCreate) {
+                    if (assetLinks.length > 0) {
+                        const success = await upsertAssetLinksForAas(aas.id, assetLinks);
+                        if (!success) {
+                            warnings.push(`Failed to synchronize discovery asset links for '${aas.id}'.`);
+                        }
+                    }
+                } else {
+                    const linksChanged = !areAssetLinksEqual(previousAssetLinks, assetLinks);
+
+                    if (linksChanged) {
+                        const upsertSuccess = await upsertAssetLinksForAas(aas.id, assetLinks);
+                        if (!upsertSuccess) {
+                            warnings.push(`Failed to synchronize discovery asset links for '${aas.id}'.`);
+                        }
+                    }
+                }
+            } catch (error) {
+                warnings.push(
+                    `Failed to synchronize discovery asset links for '${aas.id}': ${error instanceof Error ? error.message : String(error)}`
+                );
+            }
+        }
+
+        if (warnings.length > 0) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 10000,
+                color: 'warning',
+                btnColor: 'buttonText',
+                baseError: 'AAS saved with synchronization warnings.',
+                extendedError: warnings.join('\n'),
+            });
+        }
+    }
+
+    function areAssetLinksEqual(
+        left: Array<{ name: string; value: string }>,
+        right: Array<{ name: string; value: string }>
+    ): boolean {
+        if (left.length !== right.length) return false;
+
+        const normalize = (links: Array<{ name: string; value: string }>): Array<string> =>
+            links.map((link) => `${link.name}\u0000${link.value}`).sort((a, b) => a.localeCompare(b));
+
+        const leftNormalized = normalize(left);
+        const rightNormalized = normalize(right);
+
+        return leftNormalized.every((entry, index) => entry === rightNormalized[index]);
+    }
+
+    function createEndpoints(href: string, type: string): Array<Endpoint> {
+        const protocolInformation = new ProtocolInformation(href, null, 'http');
+        return [new Endpoint(type, protocolInformation)];
     }
 
     function closeDialog(): void {
@@ -520,6 +637,7 @@
         assetType.value = null;
         defaultThumbnail.value = null;
         embeddedDataSpecifications.value = null;
+        initialDiscoveryAssetLinks.value = [];
         // Reset state of expansion panels
         openPanels.value = [0, 3];
     }

@@ -9,7 +9,7 @@ export function useAASDiscoveryClient() {
     const infrastructureStore = useInfrastructureStore();
 
     // Composables
-    const { getRequest } = useRequestHandling();
+    const { getRequest, postRequest, deleteRequest } = useRequestHandling();
 
     const endpointPath = '/lookup/shells';
 
@@ -68,6 +68,85 @@ export function useAASDiscoveryClient() {
         return failResponse;
     }
 
+    function resolveDiscoveryBaseUrl(endpoint?: string): string {
+        let aasDiscUrl = endpoint ? endpoint.trim() : aasDiscoveryUrl.value.trim();
+        if (aasDiscUrl === '') return '';
+        if (aasDiscUrl.endsWith('/')) aasDiscUrl = stripLastCharacter(aasDiscUrl);
+        if (!aasDiscUrl.endsWith(endpointPath)) aasDiscUrl += endpointPath;
+
+        return aasDiscUrl;
+    }
+
+    function createAssetLinksFromAssetInformation(
+        globalAssetId?: string | null,
+        specificAssetIds?: Array<{ name?: string; value?: string }> | null
+    ): Array<{ name: string; value: string }> {
+        const links: Array<{ name: string; value: string }> = [];
+
+        if (typeof globalAssetId === 'string' && globalAssetId.trim() !== '') {
+            links.push({ name: 'globalAssetId', value: globalAssetId.trim() });
+        }
+
+        if (Array.isArray(specificAssetIds)) {
+            for (const specificAssetId of specificAssetIds) {
+                const name = typeof specificAssetId?.name === 'string' ? specificAssetId.name.trim() : '';
+                const value = typeof specificAssetId?.value === 'string' ? specificAssetId.value.trim() : '';
+                if (name !== '' && value !== '') {
+                    links.push({ name, value });
+                }
+            }
+        }
+
+        return links;
+    }
+
+    async function upsertAssetLinksForAas(
+        aasId: string,
+        assetLinks: Array<{ name: string; value: string }>,
+        endpoint?: string
+    ): Promise<boolean> {
+        const failResponse = false;
+
+        if (!aasId) return failResponse;
+
+        aasId = aasId.trim();
+
+        if (aasId === '' || !Array.isArray(assetLinks)) return failResponse;
+
+        const discoveryBaseUrl = resolveDiscoveryBaseUrl(endpoint);
+        if (discoveryBaseUrl === '') return failResponse;
+
+        const path = `${discoveryBaseUrl}/${base64Encode(aasId)}`;
+        const context = 'updating AAS discovery asset links';
+        const disableMessage = false;
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const body = JSON.stringify(assetLinks);
+
+        const response = await postRequest(path, body, headers, context, disableMessage);
+        return response.success;
+    }
+
+    async function deleteAssetLinksForAas(aasId: string, endpoint?: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!aasId) return failResponse;
+
+        aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
+
+        const discoveryBaseUrl = resolveDiscoveryBaseUrl(endpoint);
+        if (discoveryBaseUrl === '') return failResponse;
+
+        const path = `${discoveryBaseUrl}/${base64Encode(aasId)}`;
+        const context = 'deleting AAS discovery asset links';
+        const disableMessage = false;
+        const response = await deleteRequest(path, context, disableMessage);
+
+        return response.success;
+    }
+
     /**
      * Checks the availability of a global asset by its ID.
      *
@@ -98,6 +177,9 @@ export function useAASDiscoveryClient() {
         endpointPath,
         getAasId,
         getAasIds,
+        createAssetLinksFromAssetInformation,
+        upsertAssetLinksForAas,
+        deleteAssetLinksForAas,
         isAvailableById,
     };
 }
