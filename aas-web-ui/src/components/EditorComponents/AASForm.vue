@@ -233,7 +233,8 @@
     } = useAASRepositoryClient();
     const { fetchAasDescriptorById, postAasDescriptor, putAasDescriptor, createDescriptorFromAAS } =
         useAASRegistryClient();
-    const { createAssetLinksFromAssetInformation, upsertAssetLinksForAas } = useAASDiscoveryClient();
+    const { createAssetLinksFromAssetInformation, upsertAssetLinksForAas, deleteAssetLinksForAas } =
+        useAASDiscoveryClient();
 
     const editAASDialog = ref(false);
     const AASObject = ref<aasTypes.AssetAdministrationShell | undefined>(undefined);
@@ -569,9 +570,16 @@
                     const linksChanged = !areAssetLinksEqual(previousAssetLinks, assetLinks);
 
                     if (linksChanged) {
-                        const upsertSuccess = await upsertAssetLinksForAas(aas.id, assetLinks);
-                        if (!upsertSuccess) {
-                            warnings.push(`Failed to synchronize discovery asset links for '${aas.id}'.`);
+                        if (assetLinks.length === 0) {
+                            const deleteSuccess = await deleteAssetLinksForAas(aas.id);
+                            if (!deleteSuccess) {
+                                warnings.push(`Failed to remove discovery asset links for '${aas.id}'.`);
+                            }
+                        } else {
+                            const upsertSuccess = await upsertAssetLinksForAas(aas.id, assetLinks);
+                            if (!upsertSuccess) {
+                                warnings.push(`Failed to synchronize discovery asset links for '${aas.id}'.`);
+                            }
                         }
                     }
                 }
@@ -610,7 +618,15 @@
     }
 
     function createEndpoints(href: string, type: string): Array<Endpoint> {
-        const protocolInformation = new ProtocolInformation(href, null, 'http');
+        let protocol: string | null = null;
+        try {
+            const url = new URL(href);
+            protocol = url.protocol.replace(/:$/, '');
+        } catch {
+            // If href is not a valid absolute URL, keep protocol null.
+        }
+
+        const protocolInformation = new ProtocolInformation(href, null, protocol);
         return [new Endpoint(type, protocolInformation)];
     }
 

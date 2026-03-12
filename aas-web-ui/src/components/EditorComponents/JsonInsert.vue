@@ -251,7 +251,15 @@
     }
 
     function createEndpoints(href: string, type: string): Array<Endpoint> {
-        const protocolInformation = new ProtocolInformation(href, null, 'http');
+        let protocol: string | null = null;
+        try {
+            const url = new URL(href);
+            protocol = url.protocol.replace(/:$/, '');
+        } catch {
+            // If href is not a valid absolute URL, keep protocol null.
+        }
+
+        const protocolInformation = new ProtocolInformation(href, null, protocol);
         return [new Endpoint(type, protocolInformation)];
     }
 
