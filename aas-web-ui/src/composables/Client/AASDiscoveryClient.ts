@@ -111,7 +111,7 @@ export function useAASDiscoveryClient() {
 
         aasId = aasId.trim();
 
-        if (aasId === '' || !Array.isArray(assetLinks)) return failResponse;
+        if (aasId === '' || !Array.isArray(assetLinks) || assetLinks.length === 0) return failResponse;
 
         const discoveryBaseUrl = resolveDiscoveryBaseUrl(endpoint);
         if (discoveryBaseUrl === '') return failResponse;

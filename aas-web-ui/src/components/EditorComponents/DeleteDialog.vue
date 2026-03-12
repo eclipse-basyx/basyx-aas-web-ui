@@ -94,6 +94,9 @@
             if (submodelRepoHasRegistryIntegration.value) {
                 const smDescriptor = await fetchSmDescriptor(props.element.id);
                 smEndpoint = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0');
+                if (!smEndpoint) {
+                    smEndpoint = getSmEndpointById(props.element.id);
+                }
             } else {
                 smEndpoint = getSmEndpointById(props.element.id);
             }
