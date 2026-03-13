@@ -111,15 +111,25 @@
                     <!-- Derivation -->
                     <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(2)">
                         <v-expansion-panel-title>Derivation</v-expansion-panel-title>
-                        <v-expansion-panel-text class="pt-2">
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                        <v-expansion-panel-text>
+                            <v-row align="center">
+                                <v-col class="py-0">
+                                    <ReferenceInput
+                                        v-model="derivedFrom"
+                                        label="Derived From"
+                                        :default-key-type="aasTypes.KeyTypes.AssetAdministrationShell" />
+                                </v-col>
+                                <v-col cols="auto" class="px-0">
+                                    <HelpInfoButton help-type="derivedFrom" />
+                                </v-col>
+                            </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Asset -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
                         <v-expansion-panel-title>Asset</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <v-row align="center">
+                            <v-row align="center" class="mb-3">
                                 <v-col class="py-0">
                                     <SelectInput v-model="assetKind" label="Asset Kind" type="assetKind"></SelectInput>
                                 </v-col>
@@ -127,19 +137,13 @@
                                     <HelpInfoButton help-type="assetKind" />
                                 </v-col>
                             </v-row>
-                            <v-row align="center">
-                                <v-col class="py-0">
-                                    <TextInput
-                                        v-model="globalAssetId"
-                                        label="Global Asset ID"
-                                        :show-generate-iri-button="true"
-                                        type="Asset" />
-                                </v-col>
-                                <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="globalAssetId" />
-                                </v-col>
-                            </v-row>
-                            <v-row align="center">
+                            <AssetIdInput
+                                v-model:global-asset-id="globalAssetId"
+                                v-model:specific-asset-ids="specificAssetIds"
+                                :show-specific-asset-ids="true"
+                                :show-generate-iri-for-global="true"
+                                :show-generate-iri-for-specific="true" />
+                            <v-row align="center" class="mt-0">
                                 <v-col class="py-0">
                                     <TextInput v-model="assetType" label="Asset Type" />
                                 </v-col>
@@ -162,6 +166,13 @@
                             </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
+                    <!-- Data Specification -->
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
+                        <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
                 </v-expansion-panels>
             </v-card-text>
             <v-divider></v-divider>
@@ -175,17 +186,20 @@
 </template>
 
 <script lang="ts" setup>
-    import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
-    import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
-    import _ from 'lodash';
+    import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
+    import { jsonization } from '@aas-core-works/aas-core3.1-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
+    import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
     import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
     import { useIDUtils } from '@/composables/IDUtils';
+    import { buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { Endpoint, ProtocolInformation } from '@/types/Descriptors';
 
     const props = defineProps<{
         modelValue: boolean;
@@ -199,18 +213,28 @@
 
     // Composables
     const { generateUUID } = useIDUtils();
-    const { getAasEndpointById } = useAASHandling();
+    const { getAasEndpointById, fetchAndDispatchAasById } = useAASHandling();
 
     // Stores
     const aasStore = useAASStore();
+    const infrastructureStore = useInfrastructureStore();
     const navigationStore = useNavigationStore();
 
     const emit = defineEmits<{
         (event: 'update:modelValue', value: boolean): void;
     }>();
 
-    const { fetchAasById, postAas, putAas, putThumbnail } = useAASRepositoryClient();
-    const { putAasDescriptor, createDescriptorFromAAS } = useAASRegistryClient();
+    const {
+        fetchAasById,
+        postAas,
+        putAas,
+        putThumbnail,
+        getAasEndpointById: getAasRepoEndpointById,
+    } = useAASRepositoryClient();
+    const { fetchAasDescriptorById, postAasDescriptor, putAasDescriptor, createDescriptorFromAAS } =
+        useAASRegistryClient();
+    const { createAssetLinksFromAssetInformation, upsertAssetLinksForAas, deleteAssetLinksForAas } =
+        useAASDiscoveryClient();
 
     const editAASDialog = ref(false);
     const AASObject = ref<aasTypes.AssetAdministrationShell | undefined>(undefined);
@@ -226,16 +250,27 @@
     const revision = ref<string | null>(null);
     const creator = ref<aasTypes.Reference | null>(null);
     const templateId = ref<string | null>(null);
+    const derivedFrom = ref<aasTypes.Reference | null>(null);
 
     const assetKind = ref<aasTypes.AssetKind>(aasTypes.AssetKind.Instance);
     const globalAssetId = ref<string | null>(null);
+    const specificAssetIds = ref<Array<aasTypes.SpecificAssetId> | null>(null);
     const assetType = ref<string | null>(null);
     const defaultThumbnail = ref<aasTypes.Resource | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
 
     const fileThumbnail = ref<File | undefined>(undefined);
+    const initialDiscoveryAssetLinks = ref<Array<{ name: string; value: string }>>([]);
 
     // Computed Properties
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
+    const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure);
+    const aasRepoHasRegistryIntegration = computed(
+        () => selectedInfrastructure.value?.components?.AASRepo?.hasRegistryIntegration ?? true
+    );
+    const aasRegistryHasDiscoveryIntegration = computed(
+        () => selectedInfrastructure.value?.components?.AASRegistry?.hasDiscoveryIntegration ?? true
+    );
     const bordersToShow = computed(() => (panel: number) => {
         let border = '';
         switch (panel) {
@@ -262,6 +297,14 @@
                 break;
             case 3:
                 if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+                    border += ' border-t-thin';
+                }
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 4:
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
                     border = 'border-t-thin';
                 }
                 break;
@@ -287,6 +330,9 @@
     );
 
     async function initializeInputs(): Promise<void> {
+        // Always reset form values first to clear any stale data from previously opened elements
+        clearForm();
+
         if (props.newShell === false && props.aas) {
             const aas = await fetchAasById(props.aas.id);
 
@@ -299,23 +345,32 @@
             AASObject.value = instanceOrError.mustValue();
             // console.log('AASObject: ', AASObject.value);
             // Set values of AAS
-            AASId.value = AASObject.value.id;
-            AASIdShort.value = AASObject.value.idShort;
-            displayName.value = AASObject.value.displayName;
-            description.value = AASObject.value.description;
-            AASCategory.value = AASObject.value.category;
+            AASId.value = AASObject.value.id ?? generateUUID();
+            AASIdShort.value = AASObject.value.idShort ?? null;
+            displayName.value = AASObject.value.displayName ?? null;
+            description.value = AASObject.value.description ?? null;
+            AASCategory.value = AASObject.value.category ?? null;
+            derivedFrom.value = AASObject.value.derivedFrom ?? null;
             if (AASObject.value.administration !== null && AASObject.value.administration !== undefined) {
-                version.value = AASObject.value.administration.version;
-                revision.value = AASObject.value.administration.revision;
-                creator.value = AASObject.value.administration.creator;
-                templateId.value = AASObject.value.administration.templateId;
+                version.value = AASObject.value.administration.version ?? null;
+                revision.value = AASObject.value.administration.revision ?? null;
+                creator.value = AASObject.value.administration.creator ?? null;
+                templateId.value = AASObject.value.administration.templateId ?? null;
             }
             if (AASObject.value.assetInformation !== null && AASObject.value.assetInformation !== undefined) {
-                assetKind.value = AASObject.value.assetInformation.assetKind;
-                globalAssetId.value = AASObject.value.assetInformation.globalAssetId;
-                assetType.value = AASObject.value.assetInformation.assetType;
-                defaultThumbnail.value = AASObject.value.assetInformation.defaultThumbnail;
+                assetKind.value = AASObject.value.assetInformation.assetKind ?? aasTypes.AssetKind.Instance;
+                globalAssetId.value = AASObject.value.assetInformation.globalAssetId ?? null;
+                specificAssetIds.value = AASObject.value.assetInformation.specificAssetIds ?? null;
+                assetType.value = AASObject.value.assetInformation.assetType ?? null;
+                defaultThumbnail.value = AASObject.value.assetInformation.defaultThumbnail ?? null;
             }
+            embeddedDataSpecifications.value = AASObject.value.embeddedDataSpecifications ?? null;
+
+            // Keep a stable snapshot from initial load so update detection is not affected by in-place form mutations.
+            initialDiscoveryAssetLinks.value = createAssetLinksFromAssetInformation(
+                AASObject.value.assetInformation?.globalAssetId,
+                AASObject.value.assetInformation?.specificAssetIds
+            );
         }
     }
 
@@ -327,7 +382,10 @@
             assetInformation.globalAssetId = globalAssetId.value;
         }
 
-        // TODO: Add optional parameter specificAssetIds
+        // Add optional parameter specificAssetIds
+        if (specificAssetIds.value !== null && specificAssetIds.value.length > 0) {
+            assetInformation.specificAssetIds = specificAssetIds.value;
+        }
 
         // Add optional parameter assetType
         if (assetType.value !== null) {
@@ -370,6 +428,8 @@
     async function saveAAS(): Promise<void> {
         if (AASId.value === null) return;
 
+        const previousAssetLinks = props.newShell ? [] : [...initialDiscoveryAssetLinks.value];
+
         const assetInformation = createAssetInformation();
 
         const administrativeInformation = createAdministrativeInformation();
@@ -405,44 +465,169 @@
             AASObject.value.administration = administrativeInformation;
         }
 
-        // TODO: Add optional parameter derivedFrom
-
-        // embeddedDataSpecifications are out of scope
+        AASObject.value.derivedFrom = derivedFrom.value;
+        AASObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
         // extensions are out of scope
         // TODO Add Submodels
+
+        const verificationResult = verifyForEditor(AASObject.value, { maxErrors: 10 });
+        if (!verificationResult.isValid) {
+            const summary = buildVerificationSummary(verificationResult);
+            const firstFieldErrorEntry = Array.from(verificationResult.fieldErrors.entries())[0];
+            const firstFieldError = firstFieldErrorEntry
+                ? `${firstFieldErrorEntry[0]}: ${firstFieldErrorEntry[1]}`
+                : undefined;
+            const firstError = verificationResult.globalErrors[0] ?? firstFieldError;
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 10000,
+                color: 'error',
+                btnColor: 'buttonText',
+                baseError: 'AAS validation failed',
+                extendedError: firstError ? `${summary} ${firstError}` : summary,
+            });
+            return;
+        }
 
         if (props.newShell) {
             // Create new AAS
             await postAas(AASObject.value);
+            await syncAasDescriptorAndDiscovery(AASObject.value, true, previousAssetLinks);
             // Upload default thumbnail
             if (fileThumbnail.value !== undefined) {
                 await putThumbnail(fileThumbnail.value, AASObject.value.id);
             }
 
-            const query = _.cloneDeep(route.query);
+            const query = structuredClone(route.query);
             query.aas = await getAasEndpointById(AASObject.value.id);
             if (Object.hasOwn(query, 'path')) delete query.path;
 
-            router.push({ query: query });
+            await router.push({ query: query });
             navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
         } else {
             // Update existing AAS
             await putAas(AASObject.value);
-            // Update AAS Descriptor
-            const jsonAAS = jsonization.toJsonable(AASObject.value);
-            const descriptor = createDescriptorFromAAS(jsonAAS, []);
-            await putAasDescriptor(descriptor);
+            await syncAasDescriptorAndDiscovery(AASObject.value, false, previousAssetLinks);
             // Upload default thumbnail
             if (fileThumbnail.value !== undefined) {
                 await putThumbnail(fileThumbnail.value, AASObject.value.id);
             }
             if (AASObject.value.id === selectedAAS.value.id) {
-                router.go(0); // Reload current route
-                navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
+                await fetchAndDispatchAasById(AASObject.value.id);
             }
+            navigationStore.dispatchTriggerAASListReload(); // Reload AAS List
         }
         clearForm();
         editAASDialog.value = false;
+    }
+
+    async function syncAasDescriptorAndDiscovery(
+        aas: aasTypes.AssetAdministrationShell,
+        isCreate: boolean,
+        previousAssetLinks: Array<{ name: string; value: string }>
+    ): Promise<void> {
+        const warnings: string[] = [];
+
+        if (!aasRepoHasRegistryIntegration.value) {
+            try {
+                const jsonAAS = jsonization.toJsonable(aas);
+                const existingDescriptor = await fetchAasDescriptorById(aas.id);
+                const fallbackAasEndpoint = getAasRepoEndpointById(aas.id);
+                const endpoints =
+                    Array.isArray(existingDescriptor?.endpoints) && existingDescriptor.endpoints.length > 0
+                        ? existingDescriptor.endpoints
+                        : createEndpoints(fallbackAasEndpoint, 'AAS-3.0');
+                const descriptor = createDescriptorFromAAS(jsonAAS, endpoints);
+                const success = isCreate
+                    ? (await postAasDescriptor(descriptor)) || (await putAasDescriptor(descriptor))
+                    : (await putAasDescriptor(descriptor)) || (await postAasDescriptor(descriptor));
+
+                if (!success) {
+                    warnings.push(`Failed to synchronize AAS descriptor for '${aas.id}'.`);
+                }
+            } catch (error) {
+                warnings.push(
+                    `Failed to synchronize AAS descriptor for '${aas.id}': ${error instanceof Error ? error.message : String(error)}`
+                );
+            }
+        }
+
+        if (!aasRegistryHasDiscoveryIntegration.value) {
+            try {
+                const assetLinks = createAssetLinksFromAssetInformation(
+                    aas.assetInformation?.globalAssetId,
+                    aas.assetInformation?.specificAssetIds
+                );
+
+                if (isCreate) {
+                    if (assetLinks.length > 0) {
+                        const success = await upsertAssetLinksForAas(aas.id, assetLinks);
+                        if (!success) {
+                            warnings.push(`Failed to synchronize discovery asset links for '${aas.id}'.`);
+                        }
+                    }
+                } else {
+                    const linksChanged = !areAssetLinksEqual(previousAssetLinks, assetLinks);
+
+                    if (linksChanged) {
+                        if (assetLinks.length === 0) {
+                            const deleteSuccess = await deleteAssetLinksForAas(aas.id);
+                            if (!deleteSuccess) {
+                                warnings.push(`Failed to remove discovery asset links for '${aas.id}'.`);
+                            }
+                        } else {
+                            const upsertSuccess = await upsertAssetLinksForAas(aas.id, assetLinks);
+                            if (!upsertSuccess) {
+                                warnings.push(`Failed to synchronize discovery asset links for '${aas.id}'.`);
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                warnings.push(
+                    `Failed to synchronize discovery asset links for '${aas.id}': ${error instanceof Error ? error.message : String(error)}`
+                );
+            }
+        }
+
+        if (warnings.length > 0) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 10000,
+                color: 'warning',
+                btnColor: 'buttonText',
+                baseError: 'AAS saved with synchronization warnings.',
+                extendedError: warnings.join('\n'),
+            });
+        }
+    }
+
+    function areAssetLinksEqual(
+        left: Array<{ name: string; value: string }>,
+        right: Array<{ name: string; value: string }>
+    ): boolean {
+        if (left.length !== right.length) return false;
+
+        const normalize = (links: Array<{ name: string; value: string }>): Array<string> =>
+            links.map((link) => `${link.name}\u0000${link.value}`).sort((a, b) => a.localeCompare(b));
+
+        const leftNormalized = normalize(left);
+        const rightNormalized = normalize(right);
+
+        return leftNormalized.every((entry, index) => entry === rightNormalized[index]);
+    }
+
+    function createEndpoints(href: string, type: string): Array<Endpoint> {
+        let protocol: string | null = null;
+        try {
+            const url = new URL(href);
+            protocol = url.protocol.replace(/:$/, '');
+        } catch {
+            // If href is not a valid absolute URL, keep protocol null.
+        }
+
+        const protocolInformation = new ProtocolInformation(href, null, protocol);
+        return [new Endpoint(type, protocolInformation)];
     }
 
     function closeDialog(): void {
@@ -461,10 +646,14 @@
         revision.value = null;
         creator.value = null;
         templateId.value = null;
+        derivedFrom.value = null;
         assetKind.value = aasTypes.AssetKind.Instance;
         globalAssetId.value = null;
+        specificAssetIds.value = null;
         assetType.value = null;
         defaultThumbnail.value = null;
+        embeddedDataSpecifications.value = null;
+        initialDiscoveryAssetLinks.value = [];
         // Reset state of expansion panels
         openPanels.value = [0, 3];
     }

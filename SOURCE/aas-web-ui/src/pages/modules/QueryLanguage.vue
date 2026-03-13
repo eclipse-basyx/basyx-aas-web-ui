@@ -59,9 +59,9 @@
 <script lang="ts" setup>
     import { computed, ref, watch } from 'vue';
     import { useRequestHandling } from '@/composables/RequestHandling';
-    import { useNavigationStore } from '@/store/NavigationStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
 
-    const navigationStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
 
     const { postRequest } = useRequestHandling();
 
@@ -158,27 +158,27 @@
             {
                 title: 'AAS Registry',
                 value: 'aas-registry',
-                url: transformUrlForQuery(navigationStore.getAASRegistryURL, 'aas-registry'),
+                url: transformUrlForQuery(infrastructureStore.getAASRegistryURL, 'aas-registry'),
             },
             {
                 title: 'Submodel Registry',
                 value: 'submodel-registry',
-                url: transformUrlForQuery(navigationStore.getSubmodelRegistryURL, 'submodel-registry'),
+                url: transformUrlForQuery(infrastructureStore.getSubmodelRegistryURL, 'submodel-registry'),
             },
             {
                 title: 'AAS Repository',
                 value: 'aas-repo',
-                url: transformUrlForQuery(navigationStore.getAASRepoURL, 'aas-repo'),
+                url: transformUrlForQuery(infrastructureStore.getAASRepoURL, 'aas-repo'),
             },
             {
                 title: 'Submodel Repository',
                 value: 'submodel-repo',
-                url: transformUrlForQuery(navigationStore.getSubmodelRepoURL, 'submodel-repo'),
+                url: transformUrlForQuery(infrastructureStore.getSubmodelRepoURL, 'submodel-repo'),
             },
             {
                 title: 'Concept Description Repository',
                 value: 'cd-repo',
-                url: transformUrlForQuery(navigationStore.getConceptDescriptionRepoURL, 'cd-repo'),
+                url: transformUrlForQuery(infrastructureStore.getConceptDescriptionRepoURL, 'cd-repo'),
             },
         ];
 

@@ -2,9 +2,7 @@
     <v-dialog v-model="editBlobDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp($event, saveBlob)">
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{
-                    props.newBlob ? 'Create a new Blob Element' : 'Edit Blob Element'
-                }}</span>
+                {{ props.newBlob ? 'Create a new Blob Element' : 'Edit Blob Element' }}
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
@@ -19,7 +17,7 @@
                                         v-model="blobIdShort"
                                         label="IdShort"
                                         :error="hasError('idShort')"
-                                        :rules="[rules.required]"
+                                        :rules="isParentSubmodelElementList ? [] : [rules.required]"
                                         :error-messages="getError('idShort')" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
@@ -96,11 +94,18 @@
                             </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
+                    <!-- Qualifiers -->
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
+                        <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <QualifierInput v-model="qualifiers" />
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
                     <!-- Data Specification -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -122,13 +127,15 @@ It saves the changes after pressing the 'Enter' Key. When creating additional Fo
 usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not execute when in such form fields.
 */
 
-    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
-    import _ from 'lodash';
+    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+    import { applyFieldErrors, buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { clearOptionalIdShort } from '@/utils/AAS/OptionalPropertyUtils';
+    import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
@@ -166,8 +173,12 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
     const contentType = ref<string>('application/unknown');
 
     const semanticId = ref<aasTypes.Reference | null>(null);
+    const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
 
     const errors = ref<Map<string, string>>(new Map());
+
+    const isParentSubmodelElementList = computed(() => props.parentElement?.modelType === 'SubmodelElementList');
 
     const rules = {
         required: (value: any) => !!value || 'Required.',
@@ -220,6 +231,14 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
                 break;
             case 3:
                 if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+                    border += ' border-t-thin';
+                }
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 4:
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
                     border += 'border-t-thin';
                 }
                 break;
@@ -227,7 +246,23 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
         return border;
     });
 
+    function resetFormValues(): void {
+        blobIdShort.value = null;
+        displayName.value = null;
+        description.value = null;
+        blobCategory.value = null;
+        blobContent.value = null;
+        contentType.value = 'application/unknown';
+        semanticId.value = null;
+        qualifiers.value = null;
+        embeddedDataSpecifications.value = null;
+        openPanels.value = [0, 1];
+    }
+
     async function initializeInputs(): Promise<void> {
+        // Always reset form values first to clear any stale data from previously opened elements
+        resetFormValues();
+
         if (!props.newBlob && props.blob) {
             const blobJSON = await fetchSme(props.blob.path);
             const instanceOrError = jsonization.blobFromJsonable(blobJSON);
@@ -239,42 +274,15 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
 
             blobObject.value = instanceOrError.mustValue();
 
-            blobIdShort.value = blobObject.value.idShort;
-
-            if (blobObject.value.displayName) {
-                displayName.value = blobObject.value.displayName;
-            }
-
-            if (blobObject.value.description) {
-                description.value = blobObject.value.description;
-            }
-
-            if (blobObject.value.category) {
-                blobCategory.value = blobObject.value.category;
-            }
-
-            if (blobObject.value.value) {
-                blobContent.value = blobObject.value.value;
-            }
-
-            if (blobObject.value.contentType) {
-                contentType.value = blobObject.value.contentType;
-            }
-
-            if (blobObject.value.semanticId) {
-                semanticId.value = blobObject.value.semanticId;
-            }
-
-            openPanels.value = [0, 1];
-        } else {
-            blobIdShort.value = null;
-            displayName.value = null;
-            description.value = null;
-            blobCategory.value = null;
-            blobContent.value = null;
-            contentType.value = 'application/unknown';
-            semanticId.value = null;
-            openPanels.value = [0, 1];
+            blobIdShort.value = blobObject.value.idShort ?? null;
+            displayName.value = blobObject.value.displayName ?? null;
+            description.value = blobObject.value.description ?? null;
+            blobCategory.value = blobObject.value.category ?? null;
+            blobContent.value = blobObject.value.value ?? null;
+            contentType.value = blobObject.value.contentType ?? 'application/unknown';
+            semanticId.value = blobObject.value.semanticId ?? null;
+            qualifiers.value = blobObject.value.qualifiers ?? null;
+            embeddedDataSpecifications.value = blobObject.value.embeddedDataSpecifications ?? null;
         }
     }
 
@@ -290,15 +298,20 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
     }
 
     async function saveBlob(): Promise<void> {
+        errors.value.clear();
+
         if (props.newBlob || blobObject.value === undefined) {
-            blobObject.value = new aasTypes.Blob('application/unknown');
+            blobObject.value = new aasTypes.Blob();
         }
 
-        if (blobIdShort.value !== null) {
-            blobObject.value.idShort = blobIdShort.value;
-        } else {
+        const normalizedIdShort = blobIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            blobObject.value.idShort = normalizedIdShort;
+        } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'Blob Element IdShort is required');
             return;
+        } else {
+            clearOptionalIdShort(blobObject.value);
         }
 
         blobObject.value.value = blobContent.value;
@@ -325,6 +338,24 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
         }
 
         blobObject.value.category = blobCategory.value;
+        blobObject.value.qualifiers = qualifiers.value;
+        blobObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
+
+        const verificationResult = verifyForEditor(blobObject.value, { maxErrors: 10 });
+        if (!verificationResult.isValid) {
+            applyFieldErrors(errors.value, verificationResult.fieldErrors);
+            const summary = buildVerificationSummary(verificationResult);
+            const firstError = verificationResult.globalErrors[0];
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 10000,
+                color: 'error',
+                btnColor: 'buttonText',
+                baseError: 'Blob validation failed',
+                extendedError: firstError ? `${summary} ${firstError}` : summary,
+            });
+            return;
+        }
 
         if (props.newBlob) {
             if (props.parentElement.modelType === 'Submodel') {
@@ -334,7 +365,7 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
                 const newElementPath = props.parentElement.path + '/submodel-elements/' + blobObject.value.idShort;
 
                 // Navigate to the new Blob Element
-                const query = _.cloneDeep(route.query);
+                const query = structuredClone(route.query);
                 query.path = newElementPath;
 
                 router.push({
@@ -349,12 +380,10 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
                 // Create the Blob Element on the parent element
                 await postSubmodelElement(blobObject.value, submodelId, idShortPath);
 
-                const newElementPath = props.parentElement.path + '.' + blobObject.value.idShort;
-
-                // Navigate to the new Blob Element
-                if (props.parentElement.modelType === 'SubmodelElementCollection') {
-                    const query = _.cloneDeep(route.query);
-                    query.path = newElementPath;
+                const createdPath = getCreatedSubmodelElementPath(props.parentElement, blobObject.value.idShort);
+                if (createdPath) {
+                    const query = structuredClone(route.query);
+                    query.path = createdPath;
 
                     router.push({
                         query: query,

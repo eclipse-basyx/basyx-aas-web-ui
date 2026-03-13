@@ -179,6 +179,7 @@
     import { computed, onMounted, ref, watch } from 'vue';
     import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
+    import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -214,6 +215,7 @@
 
     // Composables
     const { fetchCds } = useConceptDescriptionHandling();
+    const { valueUrl } = useSMEFile();
     const { checkIdShort, descriptionToDisplay, nameToDisplay } = useReferableUtils();
     const { getRequest, postRequest } = useRequestHandling();
 
@@ -398,28 +400,124 @@
         // get the Data File/Blob submodel element
         const dataFile = selectedSegment.value.value.find((smc: any) => checkIdShort(smc, 'Data'));
         // determine the path to the file
-        let path = dataFile.value;
-        if (path.startsWith('/')) {
-            path =
-                props.submodelElementData.path +
-                '/submodel-elements/Segments.' +
-                selectedSegment.value.idShort +
-                '.Data/attachment';
+        let path = '';
+        if (dataFile?.modelType === 'File') {
+            path = valueUrl(dataFile).url;
+        }
+
+        if (!path || path.trim() === '') {
+            path = dataFile?.value || '';
+            if (path.startsWith('/')) {
+                path =
+                    props.submodelElementData.path +
+                    '/submodel-elements/Segments.' +
+                    selectedSegment.value.idShort +
+                    '.Data/attachment';
+            }
+        }
+
+        if (!path || path.trim() === '') {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 6000,
+                color: 'warning',
+                btnColor: 'buttonText',
+                text: 'No valid file path available for ExternalSegment Data.',
+            });
+            return;
         }
         // console.log('Path: ', path);
         // get the file contents
         let context = 'retrieving File Contents';
-        let disableMessage = true;
-        getRequest(path, context, disableMessage).then((response: any) => {
+        let disableMessage = false;
+        getRequest(path, context, disableMessage).then(async (response: any) => {
             if (response.success) {
+                const contentType = response?.raw?.headers?.get('Content-Type') || '';
+                const contentLength = response?.raw?.headers?.get('Content-Length');
+                const isRedirected = Boolean(response?.raw?.redirected);
+
+                if (contentType.includes('text/html')) {
+                    navigationStore.dispatchSnackbar({
+                        status: true,
+                        timeout: 6000,
+                        color: 'warning',
+                        btnColor: 'buttonText',
+                        text: 'Received HTML instead of CSV. Check whether this request is redirected to a login page.',
+                    });
+                    return;
+                }
+
+                if (isRedirected && !contentType.includes('text/csv') && !contentType.includes('text/plain')) {
+                    navigationStore.dispatchSnackbar({
+                        status: true,
+                        timeout: 6000,
+                        color: 'warning',
+                        btnColor: 'buttonText',
+                        text: 'Request was redirected and did not return CSV/Text payload. Check auth for the final URL.',
+                    });
+                    return;
+                }
+
+                if (contentLength === '0') {
+                    navigationStore.dispatchSnackbar({
+                        status: true,
+                        timeout: 6000,
+                        color: 'warning',
+                        btnColor: 'buttonText',
+                        text: 'Attachment endpoint returned empty response body (Content-Length: 0).',
+                    });
+                    return;
+                }
+
                 // console.log('File Contents: ', response.data);
-                convertPlainCSVtoArray(response.data);
+                await convertPlainCSVtoArray(response.data);
+            } else {
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 6000,
+                    color: 'warning',
+                    btnColor: 'buttonText',
+                    text: 'Fetching ExternalSegment data failed. Check authentication and attachment endpoint permissions.',
+                });
             }
         });
     }
 
-    function convertPlainCSVtoArray(csvData: any): void {
-        const { headers, data } = parseCSV(csvData);
+    async function convertPlainCSVtoArray(csvData: any): Promise<void> {
+        let csvString = '';
+        if (typeof csvData === 'string') {
+            csvString = csvData;
+        } else if (csvData instanceof Blob) {
+            csvString = await csvData.text();
+        } else if (csvData !== null && csvData !== undefined) {
+            csvString = String(csvData);
+        }
+
+        if (!csvString || csvString.trim() === '') {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'warning',
+                btnColor: 'buttonText',
+                text: 'No CSV data available in ExternalSegment response!',
+            });
+            return;
+        }
+
+        const normalizedCsv = csvString.trim();
+
+        if (/^<!doctype html|^<html/i.test(normalizedCsv)) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 6000,
+                color: 'warning',
+                btnColor: 'buttonText',
+                text: 'Received HTML response instead of CSV. This usually indicates auth redirect or missing permissions.',
+            });
+            return;
+        }
+
+        const { headers, data } = parseCSV(normalizedCsv);
         const timeIndex = headers.indexOf(timeVariable.value.idShort);
         // handle the case where timeIndex is -1
         if (timeIndex === -1) {

@@ -54,7 +54,7 @@ export function useConceptDescriptionHandling() {
      * @param {string} cdId - The ID of the CD to fetch.
      * @returns {Promise<any>} A promise that resolves to a CD.
      */
-    async function fetchCdById(cdId: string): Promise<any> {
+    async function fetchCdById(cdId: string, endpoint?: string): Promise<any> {
         const failResponse = {};
 
         if (!cdId) return failResponse;
@@ -63,7 +63,7 @@ export function useConceptDescriptionHandling() {
 
         if (cdId === '') return failResponse;
 
-        const cd = await fetchCdByIdFromRepo(cdId);
+        const cd = await fetchCdByIdFromRepo(cdId, endpoint);
 
         if (!cd || Object.keys(cd).length === 0) {
             console.warn("Fetching CD (id = '" + cdId + "') failed!");
@@ -113,7 +113,7 @@ export function useConceptDescriptionHandling() {
      * @param {object} sme - The SME object to fetch all CDs
      * @returns {Promise<Array<any>>} A promise that resolves to an array of CDs.
      */
-    async function fetchCds(sme: any): Promise<Array<any>> {
+    async function fetchCds(sme: any, endpoint?: string): Promise<Array<any>> {
         const failResponse = [] as Array<any>;
 
         if (
@@ -162,7 +162,7 @@ export function useConceptDescriptionHandling() {
         const semanticIdsUniqueToFetch = Array.from(new Set(combinedSemanticIdsToFetch));
 
         const cdPromises = semanticIdsUniqueToFetch.map(async (semanticId: string) => {
-            return await fetchCdById(semanticId);
+            return await fetchCdById(semanticId, endpoint);
         });
 
         let conceptDescriptions = await Promise.all(cdPromises);

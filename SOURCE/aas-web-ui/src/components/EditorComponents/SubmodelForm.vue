@@ -130,11 +130,18 @@
                             </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
+                    <!-- Qualifiers -->
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
+                        <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <QualifierInput v-model="qualifiers" />
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
                     <!-- Data Specification -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -150,9 +157,8 @@
 </template>
 
 <script lang="ts" setup>
-    import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
-    import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
-    import _ from 'lodash';
+    import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
+    import { jsonization } from '@aas-core-works/aas-core3.1-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
@@ -160,8 +166,11 @@
     import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useIDUtils } from '@/composables/IDUtils';
+    import { buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { Endpoint, ProtocolInformation } from '@/types/Descriptors';
     import { base64Encode } from '@/utils/EncodeDecodeUtils';
 
     const props = defineProps<{
@@ -180,14 +189,15 @@
     // Stores
     const aasStore = useAASStore();
     const navigationStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
 
     const emit = defineEmits<{
         (event: 'update:modelValue', value: boolean): void;
     }>();
 
     const { postSubmodel, putSubmodel } = useSMRepositoryClient();
-    const { putSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient();
-    const { fetchSmById, fetchSmDescriptor } = useSMHandling();
+    const { postSubmodelDescriptor, putSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient();
+    const { fetchSmById, fetchSmDescriptor, fetchAndDispatchSm } = useSMHandling();
     const { putAas } = useAASRepositoryClient();
 
     const editSMDialog = ref(false);
@@ -207,11 +217,17 @@
     const templateId = ref<string | null>(null);
 
     const semanticId = ref<aasTypes.Reference | null>(null);
+    const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
 
     // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode); // Get the selected AAS from Store
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
-    const submodelRepoUrl = computed(() => navigationStore.getSubmodelRepoURL);
+    const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure);
+    const submodelRepoUrl = computed(() => infrastructureStore.getSubmodelRepoURL);
+    const submodelRepoHasRegistryIntegration = computed(
+        () => selectedInfrastructure.value?.components?.SubmodelRepo?.hasRegistryIntegration ?? true
+    );
     const bordersToShow = computed(() => (panel: number) => {
         let border = '';
         switch (panel) {
@@ -238,6 +254,14 @@
                 break;
             case 3:
                 if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+                    border += ' border-t-thin';
+                }
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 4:
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
                     border = 'border-t-thin';
                 }
                 break;
@@ -263,6 +287,9 @@
     );
 
     async function initializeInputs(): Promise<void> {
+        // Always reset form values first to clear any stale data from previously opened elements
+        clearForm();
+
         if (props.newSm === false && props.submodel) {
             const submodel = await fetchSmById(props.submodel.id);
 
@@ -275,19 +302,21 @@
             submodelObject.value = instanceOrError.mustValue();
             // console.log('AASObject: ', AASObject.value);
             // Set values of AAS
-            submodelId.value = submodelObject.value.id;
-            submodelIdShort.value = submodelObject.value.idShort;
-            submodelKind.value = submodelObject.value.kind;
-            displayName.value = submodelObject.value.displayName;
-            description.value = submodelObject.value.description;
-            submodelCategory.value = submodelObject.value.category;
+            submodelId.value = submodelObject.value.id ?? generateUUID();
+            submodelIdShort.value = submodelObject.value.idShort ?? null;
+            submodelKind.value = submodelObject.value.kind ?? aasTypes.ModellingKind.Instance;
+            displayName.value = submodelObject.value.displayName ?? null;
+            description.value = submodelObject.value.description ?? null;
+            submodelCategory.value = submodelObject.value.category ?? null;
             if (submodelObject.value.administration !== null && submodelObject.value.administration !== undefined) {
-                version.value = submodelObject.value.administration.version;
-                revision.value = submodelObject.value.administration.revision;
-                creator.value = submodelObject.value.administration.creator;
-                templateId.value = submodelObject.value.administration.templateId;
+                version.value = submodelObject.value.administration.version ?? null;
+                revision.value = submodelObject.value.administration.revision ?? null;
+                creator.value = submodelObject.value.administration.creator ?? null;
+                templateId.value = submodelObject.value.administration.templateId ?? null;
             }
-            semanticId.value = submodelObject.value.semanticId;
+            semanticId.value = submodelObject.value.semanticId ?? null;
+            qualifiers.value = submodelObject.value.qualifiers ?? null;
+            embeddedDataSpecifications.value = submodelObject.value.embeddedDataSpecifications ?? null;
         }
     }
 
@@ -321,8 +350,6 @@
         if (submodelId.value === null) return;
 
         const administrativeInformation = createAdministrativeInformation();
-
-        // TODO: Add embeddedDataSpecifications
 
         if (props.newSm || submodelObject.value === undefined) {
             submodelObject.value = new aasTypes.Submodel(submodelId.value);
@@ -361,36 +388,101 @@
             submodelObject.value.semanticId = semanticId.value;
         }
 
+        submodelObject.value.qualifiers = qualifiers.value;
+        submodelObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
+
         // extensions are out of scope
         // SupplementalSemanticIds are out of scope
         // SubmodelElements are added when they are created
+
+        const verificationResult = verifyForEditor(submodelObject.value, { maxErrors: 10 });
+        if (!verificationResult.isValid) {
+            const summary = buildVerificationSummary(verificationResult);
+            const firstFieldErrorEntry = Array.from(verificationResult.fieldErrors.entries())[0];
+            const firstFieldError = firstFieldErrorEntry
+                ? `${firstFieldErrorEntry[0]}: ${firstFieldErrorEntry[1]}`
+                : undefined;
+            const firstError = verificationResult.globalErrors[0] ?? firstFieldError;
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 10000,
+                color: 'error',
+                btnColor: 'buttonText',
+                baseError: 'Submodel validation failed',
+                extendedError: firstError ? `${summary} ${firstError}` : summary,
+            });
+            return;
+        }
 
         if (props.newSm) {
             // Create new Submodel
             await postSubmodel(submodelObject.value);
             // Add Submodel Reference to AAS
             await addSubmodelReferenceToAas(submodelObject.value);
+            await syncSubmodelDescriptor(submodelObject.value);
             // Fetch and dispatch Submodel
-            const query = _.cloneDeep(route.query);
-            query.path = submodelRepoUrl.value + '/' + base64Encode(submodelObject.value.id);
+            const query = structuredClone(route.query);
+            query.path = submodelRepoUrl.value + '/submodels/' + base64Encode(submodelObject.value.id);
             router.push({ query: query });
             navigationStore.dispatchTriggerTreeviewReload();
         } else {
             // Update existing Submodel
             await putSubmodel(submodelObject.value);
-            const jsonSubmodel = jsonization.toJsonable(submodelObject.value);
-            // Fetch the current desciptor from the registry
-            const fetchedDescriptor = await fetchSmDescriptor(submodelObject.value.id);
-            const descriptor = createDescriptorFromSubmodel(jsonSubmodel, fetchedDescriptor.endpoints);
-            // Update AAS Descriptor
-            await putSubmodelDescriptor(descriptor);
+            await syncSubmodelDescriptor(submodelObject.value);
             if (submodelObject.value.id === selectedNode.value.id) {
-                router.go(0); // Reload current route
+                const path = submodelRepoUrl.value + '/submodels/' + base64Encode(submodelObject.value.id);
+                fetchAndDispatchSm(path);
             }
             navigationStore.dispatchTriggerTreeviewReload();
         }
         clearForm();
         editSMDialog.value = false;
+    }
+
+    async function syncSubmodelDescriptor(submodel: aasTypes.Submodel): Promise<void> {
+        if (submodelRepoHasRegistryIntegration.value) {
+            return;
+        }
+
+        const jsonSubmodel = jsonization.toJsonable(submodel);
+        let descriptorSuccess = false;
+
+        try {
+            const fetchedDescriptor = await fetchSmDescriptor(submodel.id);
+            const fallbackEndpoint = `${submodelRepoUrl.value}/submodels/${base64Encode(submodel.id)}`;
+            const endpoints =
+                Array.isArray(fetchedDescriptor?.endpoints) && fetchedDescriptor.endpoints.length > 0
+                    ? fetchedDescriptor.endpoints
+                    : createEndpoints(fallbackEndpoint, 'SUBMODEL-3.0');
+            const descriptor = createDescriptorFromSubmodel(jsonSubmodel, endpoints);
+            descriptorSuccess = (await putSubmodelDescriptor(descriptor)) || (await postSubmodelDescriptor(descriptor));
+        } catch (error) {
+            console.error('Failed to synchronize Submodel descriptor:', error);
+        }
+
+        if (!descriptorSuccess) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 8000,
+                color: 'warning',
+                btnColor: 'buttonText',
+                baseError: 'Submodel saved with synchronization warning.',
+                extendedError: `Failed to synchronize Submodel descriptor for '${submodel.id}'.`,
+            });
+        }
+    }
+
+    function createEndpoints(href: string, type: string): Array<Endpoint> {
+        let protocol: string | null = null;
+        try {
+            const url = new URL(href);
+            protocol = url.protocol.replace(/:$/, '');
+        } catch {
+            // If href is not a valid absolute URL, keep protocol null.
+        }
+
+        const protocolInformation = new ProtocolInformation(href, null, protocol);
+        return [new Endpoint(type, protocolInformation)];
     }
 
     async function addSubmodelReferenceToAas(submodel: aasTypes.Submodel): Promise<void> {
@@ -403,7 +495,7 @@
         }
         const aas = instanceOrError.mustValue();
         // Create new SubmodelReference
-        const submodelReference = new aasTypes.Reference(aasTypes.ReferenceTypes.ExternalReference, [
+        const submodelReference = new aasTypes.Reference(aasTypes.ReferenceTypes.ModelReference, [
             new aasTypes.Key(aasTypes.KeyTypes.Submodel, submodel.id),
         ]);
         // Check if Submodels are null
@@ -429,6 +521,7 @@
         // Reset all values
         submodelId.value = generateUUID();
         submodelIdShort.value = null;
+        submodelKind.value = aasTypes.ModellingKind.Instance;
         displayName.value = null;
         description.value = null;
         submodelCategory.value = null;
@@ -436,7 +529,10 @@
         revision.value = null;
         creator.value = null;
         templateId.value = null;
+        semanticId.value = null;
+        qualifiers.value = null;
+        embeddedDataSpecifications.value = null;
         // Reset state of expansion panels
-        openPanels.value = [0, 3];
+        openPanels.value = [0];
     }
 </script>

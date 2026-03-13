@@ -2,9 +2,7 @@
     <v-dialog v-model="editSMLDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp($event, saveSML)">
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{
-                    props.newSml ? 'Create a new Submodel Element List' : 'Edit Submodel Element List'
-                }}</span>
+                {{ props.newSml ? 'Create a new Submodel Element List' : 'Edit Submodel Element List' }}
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
@@ -19,7 +17,7 @@
                                         v-model="smlIdShort"
                                         label="IdShort"
                                         :error="hasError('idShort')"
-                                        :rules="[rules.required]"
+                                        :rules="isParentSubmodelElementList ? [] : [rules.required]"
                                         :error-messages="getError('idShort')" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
@@ -116,11 +114,18 @@
                             </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
+                    <!-- Qualifiers -->
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
+                        <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <QualifierInput v-model="qualifiers" />
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
                     <!-- Data Specification -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -136,13 +141,15 @@
 </template>
 
 <script setup lang="ts">
-    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
-    import _ from 'lodash';
+    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+    import { applyFieldErrors, buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { clearOptionalIdShort } from '@/utils/AAS/OptionalPropertyUtils';
+    import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
@@ -180,8 +187,12 @@
     const typeValueListElement = ref<aasTypes.AasSubmodelElements | null>(null);
 
     const semanticId = ref<aasTypes.Reference | null>(null);
+    const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
 
     const errors = ref<Map<string, string>>(new Map());
+
+    const isParentSubmodelElementList = computed(() => props.parentElement?.modelType === 'SubmodelElementList');
 
     const rules = {
         required: (value: any) => !!value || 'Required.',
@@ -236,6 +247,14 @@
                 if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
                     border += ' border-t-thin';
                 }
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 4:
+                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+                    border += ' border-t-thin';
+                }
                 break;
         }
         return border;
@@ -252,7 +271,24 @@
         return errors.value.get(field);
     }
 
+    function resetFormValues(): void {
+        smlIdShort.value = null;
+        displayName.value = null;
+        description.value = null;
+        smlCategory.value = null;
+        orderRelevant.value = false;
+        typeValueListElement.value = null;
+        valueTypeListElement.value = aasTypes.DataTypeDefXsd.String;
+        semanticId.value = null;
+        qualifiers.value = null;
+        embeddedDataSpecifications.value = null;
+        openPanels.value = [0, 1];
+    }
+
     async function initializeInputs(): Promise<void> {
+        // Always reset form values first to clear any stale data from previously opened elements
+        resetFormValues();
+
         if (!props.newSml && props.sml) {
             const smlJSON = await fetchSme(props.sml.path);
 
@@ -264,62 +300,34 @@
             }
             smlObject.value = instanceOrError.mustValue();
 
-            smlIdShort.value = smlObject.value.idShort;
-
-            if (smlObject.value.displayName) {
-                displayName.value = smlObject.value.displayName;
-            }
-
-            if (smlObject.value.description) {
-                description.value = smlObject.value.description;
-            }
-
-            if (smlObject.value.category) {
-                smlCategory.value = smlObject.value.category;
-            }
-
-            if (smlObject.value.orderRelevant !== null) {
-                orderRelevant.value = smlObject.value.orderRelevant;
-            } else {
-                orderRelevant.value = false;
-            }
-
-            if (smlObject.value.typeValueListElement) {
-                typeValueListElement.value = smlObject.value.typeValueListElement;
-            }
-
-            if (smlObject.value.valueTypeListElement) {
-                valueTypeListElement.value = smlObject.value.valueTypeListElement;
-            }
-
-            if (smlObject.value.semanticId) {
-                semanticId.value = smlObject.value.semanticId;
-            }
-
-            openPanels.value = [0, 1];
-        } else {
-            smlIdShort.value = null;
-            displayName.value = null;
-            description.value = null;
-            smlCategory.value = null;
-            orderRelevant.value = false;
-            typeValueListElement.value = null;
-            valueTypeListElement.value = aasTypes.DataTypeDefXsd.String;
-            semanticId.value = null;
-            openPanels.value = [0, 1];
+            smlIdShort.value = smlObject.value.idShort ?? null;
+            displayName.value = smlObject.value.displayName ?? null;
+            description.value = smlObject.value.description ?? null;
+            smlCategory.value = smlObject.value.category ?? null;
+            orderRelevant.value = smlObject.value.orderRelevant ?? false;
+            typeValueListElement.value = smlObject.value.typeValueListElement ?? null;
+            valueTypeListElement.value = smlObject.value.valueTypeListElement ?? aasTypes.DataTypeDefXsd.String;
+            semanticId.value = smlObject.value.semanticId ?? null;
+            qualifiers.value = smlObject.value.qualifiers ?? null;
+            embeddedDataSpecifications.value = smlObject.value.embeddedDataSpecifications ?? null;
         }
     }
 
     async function saveSML(): Promise<void> {
+        errors.value.clear();
+
         if (props.newSml || smlObject.value === undefined) {
             smlObject.value = new aasTypes.SubmodelElementList(aasTypes.AasSubmodelElements.SubmodelElement);
         }
 
-        if (smlIdShort.value !== null) {
-            smlObject.value.idShort = smlIdShort.value;
-        } else {
+        const normalizedIdShort = smlIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            smlObject.value.idShort = normalizedIdShort;
+        } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'SubmodelElementList IdShort is required');
             return;
+        } else {
+            clearOptionalIdShort(smlObject.value);
         }
 
         if (semanticId.value !== null) {
@@ -346,13 +354,32 @@
             smlObject.value.valueTypeListElement = valueTypeListElement.value;
         }
 
+        smlObject.value.qualifiers = qualifiers.value;
+        smlObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
+
+        const verificationResult = verifyForEditor(smlObject.value, { maxErrors: 10 });
+        if (!verificationResult.isValid) {
+            applyFieldErrors(errors.value, verificationResult.fieldErrors);
+            const summary = buildVerificationSummary(verificationResult);
+            const firstError = verificationResult.globalErrors[0];
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 10000,
+                color: 'error',
+                btnColor: 'buttonText',
+                baseError: 'List validation failed',
+                extendedError: firstError ? `${summary} ${firstError}` : summary,
+            });
+            return;
+        }
+
         if (props.newSml) {
             if (props.parentElement.modelType === 'Submodel') {
                 // Create the SML on the parent Submodel
                 await postSubmodelElement(smlObject.value, props.parentElement.id);
 
                 // Navigate to the new SML
-                const query = _.cloneDeep(route.query);
+                const query = structuredClone(route.query);
                 query.path = props.parentElement.path + '/submodel-elements/' + smlObject.value.idShort;
 
                 router.push({
@@ -367,10 +394,10 @@
                 // Create the SML on the parent element
                 await postSubmodelElement(smlObject.value, submodelId, idShortPath);
 
-                // Navigate to the new SML
-                if (props.parentElement.modelType === 'SubmodelElementCollection') {
-                    const query = _.cloneDeep(route.query);
-                    query.path = props.parentElement.path + '.' + smlObject.value.idShort;
+                const createdPath = getCreatedSubmodelElementPath(props.parentElement, smlObject.value.idShort);
+                if (createdPath) {
+                    const query = structuredClone(route.query);
+                    query.path = createdPath;
 
                     router.push({
                         query: query,

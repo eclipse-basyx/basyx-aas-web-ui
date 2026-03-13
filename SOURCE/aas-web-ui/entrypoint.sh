@@ -20,8 +20,12 @@
 : "${KEYCLOAK_URL:=}"
 : "${KEYCLOAK_REALM:=}"
 : "${KEYCLOAK_CLIENT_ID:=}"
-: "${PRECONFIGURED_AUTH_USERNAME:=}"
-: "${PRECONFIGURED_AUTH_PASSWORD:=}"
+: "${KEYCLOAK_FEATURE_CONTROL:=false}"
+: "${KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX:=basyx-aas-web-ui-feature-}"
+: "${OIDC_URL:=}"
+: "${OIDC_SCOPE:=}"
+: "${OIDC_CLIENT_ID:=}"
+: "${PRECONFIGURED_AUTH_CLIENT_SECRET:=}"
 : "${ENDPOINT_CONFIG_AVAILABLE:=true}"
 : "${SINGLE_AAS:=false}"
 : "${SINGLE_AAS_REDIRECT:=}"
@@ -32,12 +36,45 @@
 : "${BASIC_AUTH_USERNAME:=}"
 : "${BASIC_AUTH_PASSWORD:=}"
 : "${EDITOR_ID_PREFIX:=https://example.com/}"
+: "${AUTHORIZATION_HEADER_PREFIX:=Bearer}"
+: "${AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION:=true}"
+: "${START_PAGE_ROUTE_NAME:=}"
 
 # Replace ${BASE_PATH} in the NGINX config template (without trailing slash)
 envsubst '${BASE_PATH}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 
 # Add a trailing slash to BASE_PATH for the replacement in files
 BASE_PATH_WITH_SLASH=$(echo "$BASE_PATH" | sed 's|/*$|/|')
+
+# Process YAML infrastructure configuration if present
+YAML_CONFIG_PATH="/basyx-infra.yml"
+CONFIG_OUTPUT_DIR="/usr/src/app/dist/config"
+YAML_OUTPUT_PATH="$CONFIG_OUTPUT_DIR/basyx-infra.yml"
+
+if [ -f "$YAML_CONFIG_PATH" ]; then
+    echo "========================================="
+    echo "Processing infrastructure configuration"
+    echo "========================================="
+    echo "YAML config found at: $YAML_CONFIG_PATH"
+    
+    # Create config directory if it doesn't exist
+    mkdir -p "$CONFIG_OUTPUT_DIR"
+    
+    # Copy YAML file to config directory (will be parsed by the application)
+    if cp "$YAML_CONFIG_PATH" "$YAML_OUTPUT_PATH"; then
+        echo "Successfully copied YAML configuration"
+        echo "Output written to: $YAML_OUTPUT_PATH"
+        echo "Configuration will be parsed by the application"
+    else
+        echo "ERROR: Failed to copy YAML configuration"
+        echo "Infrastructure configuration will not be available"
+    fi
+    echo
+else
+    echo "No infrastructure configuration file found at $YAML_CONFIG_PATH"
+    echo "Skipping infrastructure configuration processing"
+    echo
+fi
 
 # Set LOGO_LIGHT_PATH and LOGO_DARK_PATH based on LOGO_PATH
 if [ -n "$LOGO_PATH" ]; then
@@ -56,6 +93,13 @@ if [ -n "$KEYCLOAK_URL" ] && [ -n "$KEYCLOAK_REALM" ] && [ -n "$KEYCLOAK_CLIENT_
     KEYCLOAK_ACTIVE=true
 else
     KEYCLOAK_ACTIVE=false
+fi
+
+# Automatically set OIDC_ACTIVE if URL and CLIENT_ID are set
+if [ -n "$OIDC_URL" ] && [ -n "$OIDC_CLIENT_ID" ]; then
+    OIDC_ACTIVE=true
+else
+    OIDC_ACTIVE=false
 fi
 
 # Automatically set BASIC_AUTH_ACTIVE if BASIC_AUTH_USERNAME and BASIC_AUTH_PASSWORD are set
@@ -101,9 +145,14 @@ printf "%-38s %s\n" "Keycloak active:" "$KEYCLOAK_ACTIVE"
 printf "%-38s %s\n" "Keycloak URL:" "$KEYCLOAK_URL"
 printf "%-38s %s\n" "Keycloak realm:" "$KEYCLOAK_REALM"
 printf "%-38s %s\n" "Keycloak client ID:" "$KEYCLOAK_CLIENT_ID"
+printf "%-38s %s\n" "Keycloak feature control:" "$KEYCLOAK_FEATURE_CONTROL"
+printf "%-38s %s\n" "Keycloak feature control, role prefix:" "$KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX"
+printf "%-38s %s\n" "OIDC active:" "$OIDC_ACTIVE"
+printf "%-38s %s\n" "OIDC URL:" "$OIDC_URL"
+printf "%-38s %s\n" "OIDC scope:" "$OIDC_SCOPE"
+printf "%-38s %s\n" "OIDC client ID:" "$OIDC_CLIENT_ID"
 printf "%-38s %s\n" "Preconfigured auth:" "$PRECONFIGURED_AUTH"
-printf "%-38s %s\n" "Preconfigured auth username:" "$PRECONFIGURED_AUTH_USERNAME"
-printf "%-38s %s\n" "Preconfigured auth password:" "$PRECONFIGURED_AUTH_PASSWORD"
+printf "%-38s %s\n" "Preconfigured auth client secret:" "*********"
 printf "%-38s %s\n" "InfluxDB token:" "$INFLUXDB_TOKEN"
 printf "%-38s %s\n" "Endpoint config available:" "$ENDPOINT_CONFIG_AVAILABLE"
 printf "%-38s %s\n" "Single AAS:" "$SINGLE_AAS"
@@ -116,6 +165,9 @@ printf "%-38s %s\n" "Basic Auth active:" "$BASIC_AUTH_ACTIVE"
 printf "%-38s %s\n" "Basic Auth username:" "$BASIC_AUTH_USERNAME"
 printf "%-38s %s\n" "Basic Auth password:" "$BASIC_AUTH_PASSWORD"
 printf "%-38s %s\n" "Editor ID prefix:" "$EDITOR_ID_PREFIX"
+printf "%-38s %s\n" "Authorization header prefix:" "$AUTHORIZATION_HEADER_PREFIX"
+printf "%-38s %s\n" "Authorization header description endpoint exemption:" "$AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION"
+printf "%-38s %s\n" "Start page route name:" "$START_PAGE_ROUTE_NAME"
 echo "-------------------------------------------------------------------------------------------------------------------------"
 
 # Replace the placeholders in all relevant files (.js, .html, .css)
@@ -136,9 +188,14 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__KEYCLOAK_URL_PLACEHOLDER__/|$KEYCLOAK_URL|g" \
     -e "s|/__KEYCLOAK_REALM_PLACEHOLDER__/|$KEYCLOAK_REALM|g" \
     -e "s|/__KEYCLOAK_CLIENT_ID_PLACEHOLDER__/|$KEYCLOAK_CLIENT_ID|g" \
+    -e "s|/__KEYCLOAK_FEATURE_CONTROL_PLACEHOLDER__/|$KEYCLOAK_FEATURE_CONTROL|g" \
+    -e "s|/__KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX_PLACEHOLDER__/|$KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX|g" \
+    -e "s|/__OIDC_ACTIVE_PLACEHOLDER__/|$OIDC_ACTIVE|g" \
+    -e "s|/__OIDC_URL_PLACEHOLDER__/|$OIDC_URL|g" \
+    -e "s|/__OIDC_SCOPE_PLACEHOLDER__/|$OIDC_SCOPE|g" \
+    -e "s|/__OIDC_CLIENT_ID_PLACEHOLDER__/|$OIDC_CLIENT_ID|g" \
     -e "s|/__PRECONFIGURED_AUTH_PLACEHOLDER__/|$PRECONFIGURED_AUTH|g" \
-    -e "s|/__PRECONFIGURED_AUTH_USERNAME_PLACEHOLDER__/|$PRECONFIGURED_AUTH_USERNAME|g" \
-    -e "s|/__PRECONFIGURED_AUTH_PASSWORD_PLACEHOLDER__/|$PRECONFIGURED_AUTH_PASSWORD|g" \
+    -e "s|/__PRECONFIGURED_AUTH_CLIENT_SECRET_PLACEHOLDER__/|$PRECONFIGURED_AUTH_CLIENT_SECRET|g" \
     -e "s|/__ENDPOINT_CONFIG_AVAILABLE_PLACEHOLDER__/|$ENDPOINT_CONFIG_AVAILABLE|g" \
     -e "s|/__SINGLE_AAS_PLACEHOLDER__/|$SINGLE_AAS|g" \
     -e "s|/__SINGLE_AAS_REDIRECT_PLACEHOLDER__/|$SINGLE_AAS_REDIRECT|g" \
@@ -150,6 +207,9 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__BASIC_AUTH_USERNAME_PLACEHOLDER__/|$BASIC_AUTH_USERNAME|g" \
     -e "s|/__BASIC_AUTH_PASSWORD_PLACEHOLDER__/|$BASIC_AUTH_PASSWORD|g" \
     -e "s|/__EDITOR_ID_PREFIX_PLACEHOLDER__/|$EDITOR_ID_PREFIX|g" \
+    -e "s|/__AUTHORIZATION_HEADER_PREFIX_PLACEHOLDER__/|$AUTHORIZATION_HEADER_PREFIX|g" \
+    -e "s|/__AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION_PLACEHOLDER__/|$AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION|g" \
+    -e "s|/__START_PAGE_ROUTE_NAME_PLACEHOLDER__/|$START_PAGE_ROUTE_NAME|g" \
     {} \;
 
 # Start Nginx

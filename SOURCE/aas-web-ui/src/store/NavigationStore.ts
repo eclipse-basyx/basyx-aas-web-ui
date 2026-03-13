@@ -1,47 +1,20 @@
-import type { AutoSyncType, PlatformType, PluginType, SnackbarType, StatusCheckType } from '@/types/Application';
-import type { BaSyxComponent, BaSyxComponentKey } from '@/types/BaSyx';
-import type { LocationQuery, RouteRecordRaw } from 'vue-router';
+import type {
+    AutoSyncType,
+    PlatformType,
+    PluginType,
+    RegisteredQueryParamType,
+    SnackbarType,
+    StatusCheckType,
+} from '@/types/Application';
 import { defineStore } from 'pinia';
-import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
-import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient';
-import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
-import { useCDRepositoryClient } from '@/composables/Client/CDRepositoryClient';
-import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
-import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
-import { useRequestHandling } from '@/composables/RequestHandling';
-import { useEnvStore } from '@/store/EnvironmentStore';
-import { stripLastCharacter } from '@/utils/StringUtils';
+import { computed, ref } from 'vue';
+import { type LocationQuery, type Router, type RouteRecordRaw } from 'vue-router';
+import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils';
+import { useEnvStore } from './EnvironmentStore';
 
 export const useNavigationStore = defineStore('navigationStore', () => {
-    // Stores
-    const envStore = useEnvStore();
-
-    // Composables
-    const { getRequest } = useRequestHandling();
-    const { endpointPath: aasDiscoveryEndpointPath } = useAASDiscoveryClient();
-    const { endpointPath: aasRegistryEndpointPath } = useAASRegistryClient();
-    const { endpointPath: smRegistryEndpointPath } = useSMRegistryClient();
-    const { endpointPath: aasRepoEndpointPath } = useAASRepositoryClient();
-    const { endpointPath: smRepoEndpointPath } = useSMRepositoryClient();
-    const { endpointPath: cdRepoEndpointPath } = useCDRepositoryClient();
-
-    // Computed Properties
-    const endpointConfigAvailable = computed(() => envStore.getEndpointConfigAvailable);
-    const EnvAASDiscoveryPath = computed(() => envStore.getEnvAASDiscoveryPath);
-    const EnvAASRegistryPath = computed(() => envStore.getEnvAASRegistryPath);
-    const EnvSubmodelRegistryPath = computed(() => envStore.getEnvSubmodelRegistryPath);
-    const EnvAASRepoPath = computed(() => envStore.getEnvAASRepoPath);
-    const EnvSubmodelRepoPath = computed(() => envStore.getEnvSubmodelRepoPath);
-    const EnvConceptDescriptionRepoPath = computed(() => envStore.getEnvConceptDescriptionRepoPath);
-
     // States
     const drawerState = ref(true);
-    const AASDiscoveryURL = ref('');
-    const AASRegistryURL = ref('');
-    const SubmodelRegistryURL = ref('');
-    const AASRepoURL = ref('');
-    const SubmodelRepoURL = ref('');
-    const ConceptDescriptionRepoURL = ref('');
     const Snackbar = ref<SnackbarType>({} as SnackbarType);
     const autoSync = ref<AutoSyncType>({ state: false, interval: 3000 } as AutoSyncType);
     const statusCheck = ref<StatusCheckType>({ state: false, interval: 10000 } as StatusCheckType);
@@ -49,77 +22,21 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const platform = ref<PlatformType>({} as PlatformType);
     const plugins = ref<PluginType[]>([]);
     const triggerAASListReload = ref(false);
+    const clearAASList = ref(false);
+    const clearTreeview = ref(false);
     const triggerAASListScroll = ref(false);
     const triggerTreeviewReload = ref(false);
     const urlQuery = ref<LocationQuery>({} as LocationQuery);
     const moduleRoutes = ref<Array<RouteRecordRaw>>([]);
 
-    // Reactive BaSyx Components Configurations
-    const basyxComponents = reactive<Record<BaSyxComponentKey, BaSyxComponent>>({
-        AASDiscovery: {
-            url: AASDiscoveryURL,
-            loading: ref(false),
-            connected: ref(null),
-            connect: () => connectComponent('AASDiscovery'),
-            label: 'AAS Discovery URL',
-            pathCheck: aasDiscoveryEndpointPath,
-            additionalParams: '?limit=1',
-        },
-        AASRegistry: {
-            url: AASRegistryURL,
-            loading: ref(false),
-            connected: ref(null),
-            connect: () => connectComponent('AASRegistry'),
-            label: 'AAS Registry URL',
-            pathCheck: aasRegistryEndpointPath,
-            additionalParams: '?limit=1',
-        },
-        SubmodelRegistry: {
-            url: SubmodelRegistryURL,
-            loading: ref(false),
-            connected: ref(null),
-            connect: () => connectComponent('SubmodelRegistry'),
-            label: 'Submodel Registry URL',
-            pathCheck: smRegistryEndpointPath,
-            additionalParams: '?limit=1',
-        },
-        AASRepo: {
-            url: AASRepoURL,
-            loading: ref(false),
-            connected: ref(null),
-            connect: () => connectComponent('AASRepo'),
-            label: 'AAS Repository URL',
-            pathCheck: aasRepoEndpointPath,
-            additionalParams: '?limit=1',
-        },
-        SubmodelRepo: {
-            url: SubmodelRepoURL,
-            loading: ref(false),
-            connected: ref(null),
-            connect: () => connectComponent('SubmodelRepo'),
-            label: 'Submodel Repository URL',
-            pathCheck: smRepoEndpointPath,
-            additionalParams: '?limit=1&level=core',
-        },
-        ConceptDescriptionRepo: {
-            url: ConceptDescriptionRepoURL,
-            loading: ref(false),
-            connected: ref(null),
-            connect: () => connectComponent('ConceptDescriptionRepo'),
-            label: 'Concept Description Repository URL',
-            pathCheck: cdRepoEndpointPath,
-            additionalParams: '?limit=1',
-        },
-    });
+    // Core query params that are always allowed (UI framework params)
+    const coreQueryParams = ['aas', 'path', 'view'];
+
+    // Query params registered by plugins (dynamic, based on active plugin)
+    const registeredQueryParams = ref<RegisteredQueryParamType[]>([]);
 
     // Getters
     const getDrawerState = computed(() => drawerState.value);
-    const getAASDiscoveryURL = computed(() => AASDiscoveryURL.value);
-    const getAASRegistryURL = computed(() => AASRegistryURL.value);
-    const getSubmodelRegistryURL = computed(() => SubmodelRegistryURL.value);
-    const getAASRepoURL = computed(() => AASRepoURL.value);
-    const getSubmodelRepoURL = computed(() => SubmodelRepoURL.value);
-    const getConceptDescriptionRepoURL = computed(() => ConceptDescriptionRepoURL.value);
     const getSnackbar = computed(() => Snackbar.value);
     const getAutoSync = computed(() => autoSync.value);
     const getStatusCheck = computed(() => statusCheck.value);
@@ -127,11 +44,16 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     const getPlatform = computed(() => platform.value);
     const getPlugins = computed(() => plugins.value);
     const getTriggerAASListReload = computed(() => triggerAASListReload.value);
+    const getClearAASList = computed(() => clearAASList.value);
+    const getClearTreeview = computed(() => clearTreeview.value);
     const getTriggerAASListScroll = computed(() => triggerAASListScroll.value);
     const getTriggerTreeviewReload = computed(() => triggerTreeviewReload.value);
     const getUrlQuery = computed(() => urlQuery.value);
     const getModuleRoutes = computed(() => moduleRoutes.value);
-    const getBasyxComponents = computed(() => basyxComponents);
+    const getCoreQueryParams = computed(() => coreQueryParams);
+    const getRegisteredQueryParams = computed(() => registeredQueryParams.value);
+
+    const envStore = useEnvStore();
 
     // Actions
     function dispatchDrawerState(dispatchedDrawerState: boolean): void {
@@ -171,6 +93,14 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         }, 100);
     }
 
+    function dispatchClearAASList(): void {
+        clearAASList.value = !clearAASList.value;
+    }
+
+    function dispatchClearTreeview(): void {
+        clearTreeview.value = !clearTreeview.value;
+    }
+
     function dispatchTriggerAASListScroll(): void {
         triggerAASListScroll.value = !triggerAASListScroll.value;
     }
@@ -192,198 +122,123 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         moduleRoutes.value = routes;
     }
 
-    function dispatchComponentURL(componentKey: BaSyxComponentKey, url: string): void {
-        switch (componentKey) {
-            case 'AASDiscovery':
-                AASDiscoveryURL.value = url;
-                break;
-            case 'AASRegistry':
-                AASRegistryURL.value = url;
-                // if (clearSelectedNode) aasStore.dispatchSelectedNode({});
-                break;
-            case 'SubmodelRegistry':
-                SubmodelRegistryURL.value = url;
-                // if (clearSelectedNode) aasStore.dispatchSelectedNode({});
-                break;
-            case 'AASRepo':
-                AASRepoURL.value = url;
-                break;
-            case 'SubmodelRepo':
-                SubmodelRepoURL.value = url;
-                break;
-            case 'ConceptDescriptionRepo':
-                ConceptDescriptionRepoURL.value = url;
-                break;
-            default:
-                console.warn(`Unknown component key: ${componentKey}`);
-                break;
+    /**
+     * Registers a query parameter for a specific plugin (identified by semanticId).
+     * This allows the plugin to preserve its query params when active.
+     *
+     * @param paramName - The name of the query parameter to register
+     * @param semanticId - The semanticId of the plugin registering the param
+     */
+    function registerQueryParam(paramName: string, semanticId: string): void {
+        // Avoid duplicates
+        const exists = registeredQueryParams.value.some(
+            (p) => p.paramName === paramName && p.semanticId === semanticId
+        );
+        if (!exists) {
+            registeredQueryParams.value.push({ paramName, semanticId });
         }
     }
 
-    function connectComponents(): void {
-        // Ensure that Object.keys returns RepositoryKey[]
-        const keys = Object.keys(basyxComponents) as BaSyxComponentKey[];
-
-        keys.forEach((repoKey) => {
-            const storedURL = window.localStorage.getItem(repoKey + 'URL');
-
-            if (endpointConfigAvailable.value && storedURL) {
-                basyxComponents[repoKey].url = storedURL;
-                basyxComponents[repoKey].connect();
-            } else {
-                // Check environment path
-                let envPath = '';
-                switch (repoKey) {
-                    case 'AASDiscovery':
-                        envPath = EnvAASDiscoveryPath.value;
-                        break;
-                    case 'AASRegistry':
-                        envPath = EnvAASRegistryPath.value;
-                        break;
-                    case 'SubmodelRegistry':
-                        envPath = EnvSubmodelRegistryPath.value;
-                        break;
-                    case 'AASRepo':
-                        envPath = EnvAASRepoPath.value;
-                        break;
-                    case 'SubmodelRepo':
-                        envPath = EnvSubmodelRepoPath.value;
-                        break;
-                    case 'ConceptDescriptionRepo':
-                        envPath = EnvConceptDescriptionRepoPath.value;
-                        break;
-                    default:
-                        break;
-                }
-
-                if (!basyxComponents[repoKey].url && envPath.trim() !== '') {
-                    basyxComponents[repoKey].url = envPath;
-                    basyxComponents[repoKey].connect();
-                }
-            }
-        });
+    /**
+     * Unregisters a query parameter for a specific plugin.
+     *
+     * @param paramName - The name of the query parameter to unregister
+     * @param semanticId - The semanticId of the plugin unregistering the param
+     */
+    function unregisterQueryParam(paramName: string, semanticId: string): void {
+        registeredQueryParams.value = registeredQueryParams.value.filter(
+            (p) => !(p.paramName === paramName && p.semanticId === semanticId)
+        );
     }
 
-    async function connectComponent(componentKey: keyof typeof basyxComponents): Promise<void> {
-        const basyxComponent = basyxComponents[componentKey];
-        if (basyxComponent.url && basyxComponent.url.trim() !== '') {
-            basyxComponent.loading = true;
-            let basyxComponentURL = basyxComponent.url;
-            if (basyxComponentURL.endsWith('/')) basyxComponentURL = stripLastCharacter(basyxComponentURL);
+    /**
+     * Unregisters all query parameters for a specific plugin.
+     *
+     * @param semanticId - The semanticId of the plugin to unregister all params for
+     */
+    function unregisterAllQueryParamsForPlugin(semanticId: string): void {
+        registeredQueryParams.value = registeredQueryParams.value.filter((p) => p.semanticId !== semanticId);
+    }
 
-            const context = `Connecting to ${basyxComponent.label}`;
-            let disableMessage = false;
+    /**
+     * Gets all allowed query params for a given node/element.
+     * Returns core params plus any params registered by plugins whose semanticId matches the node's semanticId.
+     * Uses checkSemanticId for proper semanticId comparison (handles IRI variants, versions, etc.)
+     *
+     * @param node - The currently selected node/element (optional)
+     * @returns Array of allowed query param names
+     */
+    function getAllowedQueryParams(node?: any): string[] {
+        const allowed = [...coreQueryParams];
+        if (node) {
+            // Use checkSemanticId for proper comparison of semanticIds
+            // This handles IRI variants (with/without trailing slash), version matching, EClass IRDI, IEC CDD, etc.
+            const pluginParams = registeredQueryParams.value
+                .filter((p) => checkSemanticId(node, p.semanticId))
+                .map((p) => p.paramName);
+            allowed.push(...pluginParams);
+        }
+        return allowed;
+    }
 
-            try {
-                // First attemp to connect to components via `/description` endpoint
-                let path = basyxComponentURL;
-                if (path.endsWith('/')) path = stripLastCharacter(path); // Strip ending slash
+    /**
+     * Filters a query object to only include allowed params.
+     * Logs a warning for any params that are removed.
+     *
+     * @param query - The query object to filter
+     * @param node - The currently selected node/element (optional)
+     * @returns Object with filtered query and array of removed param names
+     */
+    function filterQueryParams(
+        query: LocationQuery,
+        node?: any
+    ): { filteredQuery: LocationQuery; removedParams: string[] } {
+        const allowedParams = getAllowedQueryParams(node);
+        const filteredQuery: LocationQuery = {};
+        const removedParams: string[] = [];
 
-                if (basyxComponent.pathCheck) path = path.replace(basyxComponent.pathCheck, ''); // Remove path check term if it exists in the URL
-
-                if (path.endsWith('/')) path = stripLastCharacter(path); // Strip ending slash
-
-                path += '/description';
-
-                disableMessage = true;
-
-                const response = await getRequest(path, context, disableMessage);
-                basyxComponent.loading = false;
-
-                if (response.success) {
-                    // Dispatch to the navigation store
-                    dispatchComponentURL(componentKey, basyxComponent.url);
-
-                    // Save to localStorage if endpoint config is available
-                    if (endpointConfigAvailable.value) {
-                        // console.log(`Saving ${repoKey} URL to localStorage:`, repo.url);
-                        window.localStorage.setItem(componentKey + 'URL', basyxComponent.url);
-                    }
-
-                    // Update the connected status
-                    basyxComponent.connected = true;
-                } else {
-                    // If connect to components via `/description`fails, second attempt to connect via main endpoints
-                    const lastPath = path;
-                    path = basyxComponentURL;
-                    console.warn(
-                        context + ' (' + lastPath + ') failed!',
-                        'Try to connect to main endpoint (' + path + ')'
-                    );
-                    if (path.endsWith('/')) path = stripLastCharacter(path); // Strip ending slash
-
-                    // Append path check term if it exists and not already appended
-                    if (basyxComponent.pathCheck && !path.endsWith(basyxComponent.pathCheck))
-                        path += basyxComponent.pathCheck;
-
-                    // Append additional parameters if any
-                    if (basyxComponent.additionalParams) {
-                        path += basyxComponent.additionalParams;
-                    }
-
-                    disableMessage = false;
-                    const response = await getRequest(path, context, disableMessage);
-                    basyxComponent.loading = false;
-
-                    if (response.success) {
-                        // Dispatch to the navigation store
-                        dispatchComponentURL(componentKey, basyxComponent.url);
-
-                        // Save to localStorage if endpoint config is available
-                        if (endpointConfigAvailable.value) {
-                            // console.log(`Saving ${repoKey} URL to localStorage:`, repo.url);
-                            window.localStorage.setItem(componentKey + 'URL', basyxComponent.url);
-                        }
-
-                        // Update the connected status
-                        basyxComponent.connected = true;
-                    } else {
-                        console.warn(context + ' (' + path + ') failed!');
-
-                        // Clear the URL in the navigation store
-                        dispatchComponentURL(componentKey, '');
-
-                        // Remove from localStorage if endpoint config is available
-                        if (endpointConfigAvailable.value) {
-                            // console.log(`Removing ${repoKey} URL from localStorage:`, repo.url);
-                            window.localStorage.removeItem(componentKey + 'URL');
-                        }
-
-                        // Update the connected status
-                        basyxComponent.connected = false;
-                    }
-                }
-            } catch (error) {
-                basyxComponent.loading = false;
-                console.error(`Error connecting to ${basyxComponent.label}:`, error);
-
-                // Clear the URL in the navigation store
-                dispatchComponentURL(componentKey, '');
-
-                // Remove from localStorage if endpoint config is available
-                if (endpointConfigAvailable.value) {
-                    // console.log(`Removing ${repoKey} URL from localStorage:`, repo.url);
-                    window.localStorage.removeItem(componentKey + 'URL');
-                }
-
-                // Update the connected status
-                basyxComponent.connected = false;
+        for (const key of Object.keys(query)) {
+            if (allowedParams.includes(key)) {
+                filteredQuery[key] = query[key];
+            } else {
+                removedParams.push(key);
             }
-        } else {
-            basyxComponent.connected = false;
-            console.warn(`Repository URL for ${componentKey} is not defined or empty.`);
+        }
+
+        if (removedParams.length > 0) {
+            console.warn(
+                `[NavigationStore] Removed non-core query params: ${removedParams.join(', ')}. ` +
+                    `If these params should be preserved, the plugin should register them using registerQueryParam(). ` +
+                    `Allowed params: ${allowedParams.join(', ')}`
+            );
+        }
+
+        return { filteredQuery, removedParams };
+    }
+
+    // Navigates from Viewer (Either SMViewer of AASViewer) to the corresponding Editor Mode
+    function navigateToEditorMode(router: Router): void {
+        if (!envStore.getAllowEditing) {
+            return;
+        }
+        if (router.currentRoute.value.name === 'AASViewer') {
+            router.push({ path: '/aaseditor', query: router.currentRoute.value.query });
+        } else if (router.currentRoute.value.name === 'SMViewer') {
+            router.push({ path: '/smeditor', query: router.currentRoute.value.query });
+        }
+    }
+
+    function navigateToViewerMode(router: Router): void {
+        if (router.currentRoute.value.name === 'AASEditor') {
+            router.push({ name: 'AASViewer', query: router.currentRoute.value.query });
+        } else if (router.currentRoute.value.name === 'SMEditor') {
+            router.push({ path: '/smviewer', query: router.currentRoute.value.query });
         }
     }
 
     return {
         // Getters
         getDrawerState,
-        getAASDiscoveryURL,
-        getAASRegistryURL,
-        getSubmodelRegistryURL,
-        getAASRepoURL,
-        getSubmodelRepoURL,
-        getConceptDescriptionRepoURL,
         getSnackbar,
         getAutoSync,
         getStatusCheck,
@@ -391,14 +246,16 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         getPlatform,
         getPlugins,
         getTriggerAASListReload,
+        getClearAASList,
+        getClearTreeview,
         getTriggerAASListScroll,
         getTriggerTreeviewReload,
         getUrlQuery,
         getModuleRoutes,
-        getBasyxComponents,
+        getCoreQueryParams,
+        getRegisteredQueryParams,
 
         // Actions
-        dispatchComponentURL,
         dispatchDrawerState,
         dispatchSnackbar,
         dispatchAutoSync,
@@ -407,10 +264,18 @@ export const useNavigationStore = defineStore('navigationStore', () => {
         dispatchPlatform,
         dispatchPlugins,
         dispatchTriggerAASListReload,
+        dispatchClearAASList,
+        dispatchClearTreeview,
         dispatchTriggerAASListScroll,
         dispatchTriggerTreeviewReload,
         dispatchUrlQuery,
         dispatchModuleRoutes,
-        connectComponents,
+        navigateToEditorMode,
+        navigateToViewerMode,
+        registerQueryParam,
+        unregisterQueryParam,
+        unregisterAllQueryParamsForPlugin,
+        getAllowedQueryParams,
+        filterQueryParams,
     };
 });

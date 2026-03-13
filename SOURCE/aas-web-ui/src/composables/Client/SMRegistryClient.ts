@@ -1,7 +1,7 @@
-import { jsonization } from '@aas-core-works/aas-core3.0-typescript';
+import { jsonization } from '@aas-core-works/aas-core3.1-typescript';
 import { computed } from 'vue';
 import { useRequestHandling } from '@/composables/RequestHandling';
-import { useNavigationStore } from '@/store/NavigationStore';
+import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import * as descriptorTypes from '@/types/Descriptors';
 import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
@@ -10,15 +10,15 @@ import { stripLastCharacter } from '@/utils/StringUtils';
 
 export function useSMRegistryClient() {
     // Stores
-    const navigationStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
 
     // Composables
-    const { getRequest, postRequest, putRequest } = useRequestHandling();
+    const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling();
 
     const endpointPath = '/submodel-descriptors';
 
     // Computed Properties
-    const submodelRegistryUrl = computed(() => navigationStore.getSubmodelRegistryURL);
+    const submodelRegistryUrl = computed(() => infrastructureStore.getSubmodelRegistryURL);
 
     /**
      * Fetches a list of all available Submodel (SM) Descriptors.
@@ -61,7 +61,7 @@ export function useSMRegistryClient() {
      * @param {string} smId - The ID of the SM Descriptor to fetch.
      * @returns {Promise<any>} A promise that resolves to a SM Descriptor.
      */
-    async function fetchSmDescriptorById(smId: string): Promise<any> {
+    async function fetchSmDescriptorById(smId: string, endpoint?: string): Promise<any> {
         const failResponse = {} as any;
 
         if (!smId) return failResponse;
@@ -70,7 +70,7 @@ export function useSMRegistryClient() {
 
         if (smId === '') return failResponse;
 
-        let smRegistryUrl = submodelRegistryUrl.value.trim();
+        let smRegistryUrl = endpoint ? endpoint : submodelRegistryUrl.value.trim();
         if (smRegistryUrl === '') return failResponse;
         if (smRegistryUrl.endsWith('/')) smRegistryUrl = stripLastCharacter(smRegistryUrl);
         if (!smRegistryUrl.endsWith(endpointPath)) smRegistryUrl += endpointPath;
@@ -101,7 +101,7 @@ export function useSMRegistryClient() {
      * @param {string} smId - The ID of the SM to retrieve the endpoint for.
      * @returns {Promise<string>} A promise that resolves to an SM endpoint.
      */
-    async function getSmEndpointById(smId: string): Promise<string> {
+    async function getSmEndpointById(smId: string, endpoint?: string): Promise<string> {
         const failResponse = '';
 
         if (!smId) return failResponse;
@@ -110,7 +110,7 @@ export function useSMRegistryClient() {
 
         if (smId === '') return failResponse;
 
-        const smDescriptor = await fetchSmDescriptorById(smId);
+        const smDescriptor = await fetchSmDescriptorById(smId, endpoint);
         const smEndpoint = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0');
 
         return smEndpoint || failResponse;
@@ -181,6 +181,28 @@ export function useSMRegistryClient() {
         return response.success;
     }
 
+    async function deleteSubmodelDescriptor(smId: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!smId) return failResponse;
+
+        smId = smId.trim();
+
+        if (smId === '') return failResponse;
+
+        let smRegistryUrl = submodelRegistryUrl.value.trim();
+        if (smRegistryUrl === '') return failResponse;
+        if (smRegistryUrl.endsWith('/')) smRegistryUrl = stripLastCharacter(smRegistryUrl);
+        if (!smRegistryUrl.endsWith(endpointPath)) smRegistryUrl += endpointPath;
+
+        const context = 'deleting Submodel Descriptor';
+        const disableMessage = false;
+        const path = smRegistryUrl + '/' + base64Encode(smId);
+        const response = await deleteRequest(path, context, disableMessage);
+
+        return response.success;
+    }
+
     function createDescriptorFromSubmodel(
         submodel: jsonization.JsonObject,
         endpoints: Array<descriptorTypes.Endpoint>
@@ -194,7 +216,9 @@ export function useSMRegistryClient() {
             parsedSubmodel.description,
             parsedSubmodel.displayName,
             parsedSubmodel.extensions,
-            parsedSubmodel.idShort
+            parsedSubmodel.idShort,
+            parsedSubmodel.semanticId,
+            parsedSubmodel.supplementalSemanticIds
         );
         descriptor = removeNullValues(descriptor);
         return descriptor;
@@ -208,6 +232,7 @@ export function useSMRegistryClient() {
         isAvailableById,
         postSubmodelDescriptor,
         putSubmodelDescriptor,
+        deleteSubmodelDescriptor,
         createDescriptorFromSubmodel,
     };
 }

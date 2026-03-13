@@ -3,7 +3,7 @@
         <v-card>
             <v-card-title> Confirm Delete </v-card-title>
             <v-divider></v-divider>
-            <v-card-text class="pb-0">
+            <v-card-text v-if="element" class="pb-0">
                 <span>Are you sure you want to delete the </span>
                 <span class="font-weight-bold">{{ element.modelType }}</span>
                 <span> with the</span>
@@ -30,17 +30,20 @@
 </template>
 
 <script lang="ts" setup>
-    import _ from 'lodash';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useSMHandling } from '@/composables/AAS/SMHandling';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
+    import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
+    import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
     import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils';
 
     const aasStore = useAASStore();
+    const infrastructureStore = useInfrastructureStore();
     const navigationStore = useNavigationStore();
 
     const router = useRouter();
@@ -48,7 +51,9 @@
 
     const { deleteRequest } = useRequestHandling();
     const { fetchSmDescriptor } = useSMHandling();
-    const { deleteSubmodelRef } = useAASRepositoryClient();
+    const { deleteSubmodelDescriptor } = useSMRegistryClient();
+    const { deleteSubmodelRef, getAasEndpointById } = useAASRepositoryClient();
+    const { getSmEndpointById } = useSMRepositoryClient();
 
     const props = defineProps<{
         modelValue: boolean;
@@ -63,6 +68,10 @@
     const deleteLoading = ref(false); // Variable to store if the AAS is being deleted
 
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // get selected AAS from Store
+    const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure);
+    const submodelRepoHasRegistryIntegration = computed(
+        () => selectedInfrastructure.value?.components?.SubmodelRepo?.hasRegistryIntegration ?? true
+    );
 
     watch(
         () => props.modelValue,
@@ -81,19 +90,53 @@
     async function confirmDelete(): Promise<void> {
         deleteLoading.value = true;
         if (props.element.modelType === 'Submodel') {
-            // Fetch the submodel from the submodel registry
-            const smDescriptor = await fetchSmDescriptor(props.element.id);
-            // extract the submodel endpoint
-            const smEndpoint = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0');
+            let smEndpoint = '';
+            if (submodelRepoHasRegistryIntegration.value) {
+                const smDescriptor = await fetchSmDescriptor(props.element.id);
+                smEndpoint = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0');
+                if (!smEndpoint) {
+                    smEndpoint = getSmEndpointById(props.element.id);
+                }
+            } else {
+                smEndpoint = getSmEndpointById(props.element.id);
+            }
+
+            if (!smEndpoint) {
+                navigationStore.dispatchSnackbar({
+                    status: true,
+                    timeout: 6000,
+                    color: 'error',
+                    btnColor: 'buttonText',
+                    text: 'Unable to resolve Submodel endpoint for deletion.',
+                });
+                deleteLoading.value = false;
+                return;
+            }
+
             try {
                 // delete the submodel
                 await deleteRequest(smEndpoint, 'removing Submodel', false);
 
                 // extract the AAS endpoint
-                const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0');
+                const aasEndpoint =
+                    extractEndpointHref(selectedAAS.value, 'AAS-3.0') || getAasEndpointById(selectedAAS.value.id);
 
                 // delete the submodel reference from the AAS
                 await deleteSubmodelRef(aasEndpoint, props.element.id);
+
+                if (!submodelRepoHasRegistryIntegration.value) {
+                    const descriptorDeleted = await deleteSubmodelDescriptor(props.element.id);
+                    if (!descriptorDeleted) {
+                        navigationStore.dispatchSnackbar({
+                            status: true,
+                            timeout: 6000,
+                            color: 'warning',
+                            btnColor: 'buttonText',
+                            baseError: 'Submodel deleted with synchronization warning.',
+                            extendedError: `Failed to delete Submodel descriptor '${props.element.id}'.`,
+                        });
+                    }
+                }
 
                 // delete the submodel reference from the local AAS
                 const localAAS = { ...selectedAAS.value };
@@ -110,7 +153,7 @@
 
                 // Check if the selected Submodel is the deleted one
                 if (props.element.path === route.query.path) {
-                    const query = _.cloneDeep(route.query);
+                    const query = structuredClone(route.query);
                     if (Object.hasOwn(query, 'path')) delete query.path;
 
                     router.push({ query: query });
@@ -128,7 +171,7 @@
 
                 // Check if the selected Submodel Element is the deleted one
                 if (props.element.path === route.query.path) {
-                    const query = _.cloneDeep(route.query);
+                    const query = structuredClone(route.query);
                     query.path = props.element.parent.path;
 
                     router.push({ query: query });

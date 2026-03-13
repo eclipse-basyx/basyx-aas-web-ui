@@ -380,3 +380,13 @@ export function extractVersionRevision(semanticId: string): { version: string; r
 
     return failResponse;
 }
+
+/**
+ * Retrieves the value of the first key in the `semanticId` of a given element.
+ *
+ * @param {Record<string, unknown>} element - The element containing the `semanticId`.
+ * @returns {string | undefined} The value of the first key in the `semanticId`, or `undefined` if not found.
+ */
+export function getSemanticIdValue(element: Record<string, unknown>): string | undefined {
+    return (element.semanticId as unknown as { keys: Array<{ value: string }> })?.keys?.[0]?.value;
+}

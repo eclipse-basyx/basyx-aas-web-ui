@@ -8,7 +8,24 @@ on:
       - 'aas-web-ui/**'
 
 jobs:
+  guard:
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.check.outputs.should-run }}
+    steps:
+      - id: check
+        run: |
+          if [[ "${GITHUB_REPOSITORY}" == "eclipse-basyx/basyx-aas-web-ui" && "${GITHUB_EVENT_REPOSITORY_FORK}" != "true" ]]; then
+            echo "✅ Running in upstream repository"
+            echo "should-run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "⏭️ Skipping build — fork detected (${GITHUB_REPOSITORY})"
+            echo "should-run=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build-and-push-prerelease:
+    needs: guard
+    if: ${{ needs.guard.outputs.should-run == 'true' }}
     runs-on: ubuntu-latest
 
     env:
@@ -18,18 +35,18 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
         with:
           platforms: linux/amd64,linux/arm64,linux/arm/v7
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKER_HUB_USER }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
@@ -38,12 +55,16 @@ jobs:
         run: echo "SHORT_SHA=${GITHUB_SHA:0:7}" >> $GITHUB_ENV
 
       - name: Build and Push Docker Image (Pre-release)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./aas-web-ui
           file: ./aas-web-ui/Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64,linux/arm/v7
+          build-args: |
+            VITE_APP_VERSION=snapshot
+            VITE_APP_COMMIT_SHA=${{ github.sha }}
+            VITE_APP_BUILD_DATE=${{ github.run_started_at }}
           tags: |
             ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
             ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}-${{ env.SHORT_SHA }}
@@ -57,7 +78,7 @@ jobs:
           syft ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -o json > ${{ env.SBOM_FILE }}
 
       - name: Upload SBOM
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sbom
           path: ${{ env.SBOM_FILE }}
