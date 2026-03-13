@@ -35,3 +35,13 @@ The following new features are already planned:
 - UI improvements through boolean labeling
 
 Further details on planning and coordination can be found on our [Notion](https://shore-ambert-85d.notion.site/SWE-Hub-2e4958e5f3554007b4deb97139e785b3?pvs=74) page.
+
+
+# Build
+requirements:
+- Yarn
+- Node.js: version 20 LTS or newer
+- Docker
+- Git
+
+To build the backend and frontend simultaneously, use the `Team2-BaSyx-Viewer-Plugin-Erweiterung/SOURCE/bootstrap.sh`. This starts a Docker image. To stop it again, use `docker-compose down`.
