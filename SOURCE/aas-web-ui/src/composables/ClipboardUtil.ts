@@ -1,13 +1,14 @@
-import type { JsonValue } from '@aas-core-works/aas-core3.0-typescript/jsonization';
-import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
-import _ from 'lodash';
+import type { JsonValue } from '@aas-core-works/aas-core3.1-typescript/jsonization';
+import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
 import { useRoute, useRouter } from 'vue-router';
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
 import { useIDUtils } from '@/composables/IDUtils';
 import { useAASStore } from '@/store/AASDataStore';
 import { useClipboardStore } from '@/store/ClipboardStore';
+import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import { useNavigationStore } from '@/store/NavigationStore';
+import { getCreatedSubmodelElementPath, isDataElementModelType } from '@/utils/AAS/SubmodelElementPathUtils';
 import { base64Decode, base64Encode } from '@/utils/EncodeDecodeUtils';
 
 export function useClipboardUtil() {
@@ -19,6 +20,7 @@ export function useClipboardUtil() {
     const aasStore = useAASStore();
     const clipboardStore = useClipboardStore();
     const navigationStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
 
     // composables
     const { postSubmodel, postSubmodelElement } = useSMRepositoryClient();
@@ -27,7 +29,7 @@ export function useClipboardUtil() {
 
     // Computed properties
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
-    const submodelRepoUrl = computed(() => navigationStore.getSubmodelRepoURL);
+    const submodelRepoUrl = computed(() => infrastructureStore.getSubmodelRepoURL);
 
     function copyToClipboard(value: string, valueName: string, iconReference: { value: string }): void {
         if (!value) return;
@@ -138,7 +140,7 @@ export function useClipboardUtil() {
         // Add Submodel Reference to AAS
         await addSubmodelReferenceToAas(submodel);
         // Fetch and dispatch Submodel
-        const query = _.cloneDeep(route.query);
+        const query = structuredClone(route.query);
         query.path = submodelRepoUrl.value + '/' + base64Encode(submodel.id);
         router.push({ query: query });
 
@@ -161,6 +163,20 @@ export function useClipboardUtil() {
         }
         const submodelElement = instanceOrError.mustValue();
 
+        if (
+            parentElement.modelType === 'AnnotatedRelationshipElement' &&
+            !isDataElementModelType(submodelElement.modelType)
+        ) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Only DataElement types are allowed as AnnotatedRelationshipElement annotations.',
+            });
+            return;
+        }
+
         // In case the SubmodelElement has an idShort, add "_copy" to the end
         if (submodelElement.idShort) {
             submodelElement.idShort += '_copy';
@@ -171,7 +187,7 @@ export function useClipboardUtil() {
             await postSubmodelElement(submodelElement, parentElement.id);
 
             // Navigate to the new property
-            const query = _.cloneDeep(route.query);
+            const query = structuredClone(route.query);
             query.path = parentElement.path + '/submodel-elements/' + submodelElement.idShort;
             router.push({
                 query: query,
@@ -185,10 +201,10 @@ export function useClipboardUtil() {
             // Create the property on the parent element
             await postSubmodelElement(submodelElement, submodelId, idShortPath);
 
-            // Navigate to the new property
-            if (parentElement.modelType === 'SubmodelElementCollection') {
-                const query = _.cloneDeep(route.query);
-                query.path = parentElement.path + '.' + submodelElement.idShort;
+            const createdPath = getCreatedSubmodelElementPath(parentElement, submodelElement.idShort);
+            if (createdPath) {
+                const query = structuredClone(route.query);
+                query.path = createdPath;
                 router.push({
                     query: query,
                 });
@@ -208,7 +224,7 @@ export function useClipboardUtil() {
         }
         const aas = instanceOrError.mustValue();
         // Create new SubmodelReference
-        const submodelReference = new aasTypes.Reference(aasTypes.ReferenceTypes.ExternalReference, [
+        const submodelReference = new aasTypes.Reference(aasTypes.ReferenceTypes.ModelReference, [
             new aasTypes.Key(aasTypes.KeyTypes.Submodel, submodel.id),
         ]);
         // Check if Submodels are null
@@ -244,6 +260,7 @@ export function useClipboardUtil() {
             delete cleaned.parent;
             delete cleaned.path;
             delete cleaned.timestamp;
+            delete cleaned.listIndex;
             delete cleaned.conceptDescriptions;
             delete cleaned.idLower;
             delete cleaned.idShortLower;

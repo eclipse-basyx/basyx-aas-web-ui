@@ -122,3 +122,24 @@
         return div;
     }
 </script>
+
+<script lang="ts">
+    import type { PageShortcutDefinitions } from '@/composables/Shortcuts/useRouteShortcuts';
+
+    // Page shortcuts - available when this page is active
+    export const shortcuts: PageShortcutDefinitions = ({ navigationStore }) => [
+        {
+            id: 'aas-viewer-refresh',
+            title: 'Refresh AAS List',
+            description: 'Reload the AAS list',
+            prependIcon: 'mdi-refresh',
+            category: 'AAS Viewer Shortcuts',
+            keys: 'cmd+shift+r',
+            handler: (event: KeyboardEvent) => {
+                event.preventDefault();
+                event.stopPropagation();
+                navigationStore.dispatchTriggerAASListReload();
+            },
+        },
+    ];
+</script>

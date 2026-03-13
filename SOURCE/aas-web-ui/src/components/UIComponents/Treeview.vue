@@ -17,7 +17,7 @@
                             selectSmOrSme(item);
                             openTree(item);
                         ">
-                        <v-list-item-title>{{ nameToDisplay(item) }}</v-list-item-title>
+                        <v-list-item-title>{{ displayNameWithIndex(item) }}</v-list-item-title>
                         <template #prepend>
                             <!-- Button to show/hide children -->
                             <v-btn
@@ -77,6 +77,16 @@
                             <!-- Icon for Entities -->
                             <v-icon v-else-if="item.modelType === 'Entity'" color="primary"
                                 >mdi-format-list-group</v-icon
+                            >
+                            <!-- Icon for empty AnnotatedRelationshipElement -->
+                            <v-icon
+                                v-else-if="item.modelType === 'AnnotatedRelationshipElement' && !item.children"
+                                color="primary">
+                                mdi-file-alert
+                            </v-icon>
+                            <!-- Icon for AnnotatedRelationshipElement -->
+                            <v-icon v-else-if="item.modelType === 'AnnotatedRelationshipElement'" color="primary"
+                                >mdi-vector-link</v-icon
                             >
                             <!-- Icon for every other SubmodelElement (like Property) -->
                             <v-icon v-else color="primary">mdi-file-code</v-icon>
@@ -251,7 +261,8 @@
                                                 v-if="
                                                     item.modelType === 'SubmodelElementCollection' ||
                                                     item.modelType === 'SubmodelElementList' ||
-                                                    item.modelType === 'Entity'
+                                                    item.modelType === 'Entity' ||
+                                                    item.modelType === 'AnnotatedRelationshipElement'
                                                 "
                                                 @click="openAddSubmodelElementDialog(item, isActive)">
                                                 <template #prepend>
@@ -264,7 +275,8 @@
                                                 v-if="
                                                     item.modelType === 'SubmodelElementCollection' ||
                                                     item.modelType === 'SubmodelElementList' ||
-                                                    item.modelType === 'Entity'
+                                                    item.modelType === 'Entity' ||
+                                                    item.modelType === 'AnnotatedRelationshipElement'
                                                 "
                                                 @click="openJsonInsertDialog(item, isActive)">
                                                 <template #prepend>
@@ -276,7 +288,8 @@
                                                 v-if="
                                                     item.modelType === 'SubmodelElementCollection' ||
                                                     item.modelType === 'SubmodelElementList' ||
-                                                    item.modelType === 'Entity'
+                                                    item.modelType === 'Entity' ||
+                                                    item.modelType === 'AnnotatedRelationshipElement'
                                                 "></v-divider>
                                             <!-- Open Submodel Element edit dialog -->
                                             <v-list-item @click="openSubmodelElementEditDialog(item, isActive)">
@@ -326,19 +339,18 @@
                                                 v-if="
                                                     item.modelType === 'SubmodelElementCollection' ||
                                                     item.modelType === 'SubmodelElementList' ||
-                                                    item.modelType === 'Entity'
+                                                    item.modelType === 'Entity' ||
+                                                    item.modelType === 'AnnotatedRelationshipElement'
                                                 "></v-divider>
                                             <!-- Paste SubmodelElement from internal clipboard -->
                                             <v-list-item
                                                 v-if="
                                                     item.modelType === 'SubmodelElementCollection' ||
                                                     item.modelType === 'SubmodelElementList' ||
-                                                    item.modelType === 'Entity'
+                                                    item.modelType === 'Entity' ||
+                                                    item.modelType === 'AnnotatedRelationshipElement'
                                                 "
-                                                :disabled="
-                                                    !clipboardElementContentType ||
-                                                    clipboardElementContentType === 'Submodel'
-                                                "
+                                                :disabled="!canPasteElement(item)"
                                                 @click="pasteElement(item)">
                                                 <template #prepend>
                                                     <v-icon size="x-small">{{ pasteIcon }} </v-icon>
@@ -375,7 +387,6 @@
 </template>
 
 <script lang="ts" setup>
-    import _ from 'lodash';
     import { computed, Ref, ref } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
@@ -383,6 +394,7 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { useClipboardStore } from '@/store/ClipboardStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { isDataElementModelType } from '@/utils/AAS/SubmodelElementPathUtils';
 
     // Vue Router
     const route = useRoute();
@@ -443,6 +455,10 @@
                 smOrSme.value &&
                 Array.isArray(smOrSme.value) &&
                 smOrSme.value.length > 0) ||
+            (smOrSme.modelType === 'AnnotatedRelationshipElement' &&
+                smOrSme.annotations &&
+                Array.isArray(smOrSme.annotations) &&
+                smOrSme.annotations.length > 0) ||
             (smOrSme.modelType === 'Entity' &&
                 smOrSme.statements &&
                 Array.isArray(smOrSme.statements) &&
@@ -460,7 +476,7 @@
     function selectSmOrSme(smOrSme: any): void {
         if (isSelected(smOrSme)) {
             // Deselect submodel: remove the path query
-            const query = _.cloneDeep(route.query);
+            const query = structuredClone(route.query);
             delete query.path;
             router.push({ query: query });
         } else {
@@ -500,8 +516,30 @@
             item.modelType === 'Submodel' ||
             item.modelType === 'SubmodelElementCollection' ||
             item.modelType === 'SubmodelElementList' ||
-            item.modelType === 'Entity'
+            item.modelType === 'Entity' ||
+            item.modelType === 'AnnotatedRelationshipElement'
         );
+    }
+
+    function canPasteElement(item: any): boolean {
+        if (!clipboardElementContentType.value || clipboardElementContentType.value === 'Submodel') {
+            return false;
+        }
+
+        if (item?.modelType === 'AnnotatedRelationshipElement') {
+            return isDataElementModelType(clipboardElementContentType.value);
+        }
+
+        return true;
+    }
+
+    function displayNameWithIndex(item: any): string {
+        const baseName = nameToDisplay(item);
+        // Prepend index for direct children of SubmodelElementList
+        if (item?.parent?.modelType === 'SubmodelElementList' && item?.listIndex !== undefined) {
+            return `[${item.listIndex}] ${baseName}`;
+        }
+        return baseName;
     }
 
     function copyElement(item: any, valueName: string, iconRef: any): void {

@@ -28,6 +28,9 @@
     const additionalHelp: Record<string, string> = {
         aas: 'Standardized digital representation of an asset.',
         globalAssetId: 'Identifier of the asset, the Asset Administration Shell is representing.',
+        specificAssetIds:
+            'Additional domain-specific, typically proprietary identifier for the asset like serial number,\n' +
+            'manufacturer part ID, customer part IDs, etc.',
         assetType:
             'In case AssetInformation/assetKind is not NotApplicable the AssetInformation/assetType is the asset ID\n' +
             'of the type asset of the asset under consideration as identified by AssetInformation/globalAssetId.',
@@ -48,6 +51,7 @@
         revision: 'Revision of the element.',
         creator: 'The subject ID of the subject\nresponsible for making the element.',
         templateId: 'Identifier of the template that guided\nthe creation of the element.',
+        derivedFrom: 'The reference to the AAS the element is derived from.',
         semanticId:
             'Identifier of the semantic definition of the element called semantic ID\n' +
             'or also main semantic ID of the element.',
@@ -65,6 +69,7 @@
             'Defines whether order in list is relevant.\nIf orderRelevant = false, the list represents a set or a bag.',
         'sml-typeValueListElement': 'The submodel element type of the submodel elements contained in the list.',
         'sml-valueTypeListElement': 'The value type of the submodel element contained in the list.',
+        entityType: 'Enumeration for denoting whether an entity is a self-managed entity or a co-managed entity.',
     };
 
     const helpLinksData = helpLinks as Record<string, string>;

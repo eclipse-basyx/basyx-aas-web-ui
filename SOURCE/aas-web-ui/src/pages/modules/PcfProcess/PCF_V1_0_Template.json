@@ -1,0 +1,1166 @@
+{
+    "modelType": "Submodel",
+    "kind": "Template",
+    "semanticId": {
+        "keys": [
+            {
+                "type": "GlobalReference",
+                "value": "https://admin-shell.io/idta/CarbonFootprint/CarbonFootprint/1/0"
+            }
+        ],
+        "type": "ExternalReference"
+    },
+    "administration": {
+        "revision": "0",
+        "templateId": "https://admin-shell.io/IDTA 02023-1-0",
+        "version": "1"
+    },
+    "id": "https://admin-shell.io/idta/SubmodelTemplate/CarbonFootprint/1/0",
+    "description": [
+        {
+            "language": "en",
+            "text": "The Submodel provides the means to access the Carbon Footprint of the asset."
+        }
+    ],
+    "displayName": [
+        {
+            "language": "de",
+            "text": "CO2 Footprint"
+        },
+        {
+            "language": "en",
+            "text": "Carbon Footprint"
+        }
+    ],
+    "idShort": "CarbonFootprint",
+    "submodelElements": [
+        {
+            "modelType": "SubmodelElementList",
+            "semanticId": {
+                "keys": [
+                    {
+                        "type": "GlobalReference",
+                        "value": "https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprints/1/0"
+                    }
+                ],
+                "type": "ExternalReference"
+            },
+            "qualifiers": [
+                {
+                    "kind": "ConceptQualifier",
+                    "type": "SMT/Cardinality",
+                    "value": "One",
+                    "valueType": "xs:string"
+                }
+            ],
+            "description": [
+                {
+                    "language": "en",
+                    "text": "Balance of greenhouse gas emissions along the entire life cycle of a product in a defined application and in relation to a defined unit of use."
+                }
+            ],
+            "displayName": [
+                {
+                    "language": "de",
+                    "text": "Produkt CO2-Fußabdruck"
+                },
+                {
+                    "language": "en",
+                    "text": "Product carbon footprint"
+                }
+            ],
+            "idShort": "ProductCarbonFootprints",
+            "orderRelevant": true,
+            "semanticIdListElement": {
+                "keys": [
+                    {
+                        "type": "GlobalReference",
+                        "value": "https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/1/0"
+                    }
+                ],
+                "type": "ExternalReference"
+            },
+            "typeValueListElement": "SubmodelElementCollection",
+            "value": [
+                {
+                    "modelType": "SubmodelElementCollection",
+                    "semanticId": {
+                        "keys": [
+                            {
+                                "type": "GlobalReference",
+                                "value": "https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/1/0"
+                            }
+                        ],
+                        "type": "ExternalReference"
+                    },
+                    "description": [
+                        {
+                            "language": "en",
+                            "text": "Balance of greenhouse gas emissions along the entire life cycle of a product in a defined application and in relation to a defined unit of use."
+                        }
+                    ],
+                    "displayName": [
+                        {
+                            "language": "de",
+                            "text": "Produkt CO2-Fußabdruck"
+                        },
+                        {
+                            "language": "en",
+                            "text": "Product carbon footprint"
+                        }
+                    ],
+                    "value": [
+                        {
+                            "modelType": "SubmodelElementList",
+                            "semanticId": {
+                                "keys": [
+                                    {
+                                        "type": "GlobalReference",
+                                        "value": "https://admin-shell.io/idta/CarbonFootprint/PcfCalculationMethods/1/0"
+                                    }
+                                ],
+                                "type": "ExternalReference"
+                            },
+                            "qualifiers": [
+                                {
+                                    "kind": "ConceptQualifier",
+                                    "type": "SMT/Cardinality",
+                                    "value": "One",
+                                    "valueType": "xs:string"
+                                }
+                            ],
+                            "description": [
+                                {
+                                    "language": "de",
+                                    "text": "Normen, Standards, Verfahren zur Ermittlung der Treibhausgas-Emissionen eines Produkts"
+                                },
+                                {
+                                    "language": "en",
+                                    "text": "Standards, methods for determining the greenhouse gas emissions of a product."
+                                }
+                            ],
+                            "displayName": [
+                                {
+                                    "language": "de",
+                                    "text": "Folgenabschätzungsmethoden"
+                                },
+                                {
+                                    "language": "en",
+                                    "text": "impact assessment methods"
+                                }
+                            ],
+                            "idShort": "PcfCalculationMethods",
+                            "orderRelevant": true,
+                            "semanticIdListElement": {
+                                "keys": [
+                                    {
+                                        "type": "GlobalReference",
+                                        "value": "0173-1#02-ABG854#003"
+                                    }
+                                ],
+                                "type": "ExternalReference"
+                            },
+                            "typeValueListElement": "Property",
+                            "value": [
+                                {
+                                    "modelType": "Property",
+                                    "semanticId": {
+                                        "keys": [
+                                            {
+                                                "type": "GlobalReference",
+                                                "value": "0173-1#02-ABG854#003"
+                                            }
+                                        ],
+                                        "type": "ExternalReference"
+                                    },
+                                    "valueType": "xs:string",
+                                    "qualifiers": [
+                                        {
+                                            "kind": "ConceptQualifier",
+                                            "type": "SMT/Cardinality",
+                                            "value": "One",
+                                            "valueType": "xs:string"
+                                        }
+                                    ],
+                                    "category": "PARAMETER",
+                                    "description": [
+                                        {
+                                            "language": "en",
+                                            "text": "Standard, method for determining the greenhouse gas emissions of a product."
+                                        },
+                                        {
+                                            "language": "de",
+                                            "text": "Norm, Standard, Verfahren zur Ermittlung der Treibhausgas-Emissionen eines Produkts"
+                                        }
+                                    ],
+                                    "displayName": [
+                                        {
+                                            "language": "de",
+                                            "text": "Folgenabschätzungsmethode / Berechnungsmethode"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "impact assessment method / calculation method"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "valueTypeListElement": "xs:string"
+                        },
+                        {
+                            "modelType": "Property",
+                            "semanticId": {
+                                "keys": [
+                                    {
+                                        "type": "GlobalReference",
+                                        "value": "0173-1#02-ABG855#003"
+                                    }
+                                ],
+                                "type": "ExternalReference"
+                            },
+                            "valueType": "xs:decimal",
+                            "qualifiers": [
+                                {
+                                    "kind": "ConceptQualifier",
+                                    "type": "SMT/Cardinality",
+                                    "value": "One",
+                                    "valueType": "xs:string"
+                                }
+                            ],
+                            "category": "PARAMETER",
+                            "description": [
+                                {
+                                    "language": "en",
+                                    "text": "Sum of all greenhouse gas emissions of a product according to the quantification requirements of the standard."
+                                }
+                            ],
+                            "displayName": [
+                                {
+                                    "language": "de",
+                                    "text": "CO2-Äquivalent"
+                                },
+                                {
+                                    "language": "en",
+                                    "text": "CO2 equivalent"
+                                }
+                            ],
+                            "idShort": "PcfCO2eq"
+                        },
+                        {
+                            "modelType": "Property",
+                            "semanticId": {
+                                "keys": [
+                                    {
+                                        "type": "GlobalReference",
+                                        "value": "0173-1#02-ABG856#003"
+                                    }
+                                ],
+                                "type": "ExternalReference"
+                            },
+                            "valueType": "xs:string",
+                            "qualifiers": [
+                                {
+                                    "kind": "ConceptQualifier",
+                                    "type": "SMT/Cardinality",
+                                    "value": "One",
+                                    "valueType": "xs:string"
+                                }
+                            ],
+                            "category": "PARAMETER",
+                            "description": [
+                                {
+                                    "language": "en",
+                                    "text": "Quantity unit of the product to which the PCF information on the CO2 footprint refers."
+                                }
+                            ],
+                            "displayName": [
+                                {
+                                    "language": "de",
+                                    "text": "Referenzeinheit für die Berechnung"
+                                },
+                                {
+                                    "language": "en",
+                                    "text": "Reference value for calculation"
+                                }
+                            ],
+                            "idShort": "ReferenceImpactUnitForCalculation"
+                        },
+                        {
+                            "modelType": "Property",
+                            "semanticId": {
+                                "keys": [
+                                    {
+                                        "type": "GlobalReference",
+                                        "value": "0173-1#02-ABG857#003"
+                                    }
+                                ],
+                                "type": "ExternalReference"
+                            },
+                            "valueType": "xs:double",
+                            "qualifiers": [
+                                {
+                                    "kind": "ConceptQualifier",
+                                    "type": "SMT/Cardinality",
+                                    "value": "One",
+                                    "valueType": "xs:string"
+                                }
+                            ],
+                            "category": "PARAMETER",
+                            "description": [
+                                {
+                                    "language": "en",
+                                    "text": "provides the quantity number of pieces or mass or volume to compute the impact of climate change or product carbon footprint."
+                                }
+                            ],
+                            "displayName": [
+                                {
+                                    "language": "de",
+                                    "text": "Mengenangabe für die Berechnung"
+                                },
+                                {
+                                    "language": "en",
+                                    "text": "quantity of measure for calculation"
+                                }
+                            ],
+                            "idShort": "QuantityOfMeasureForCalculation"
+                        },
+                        {
+                            "modelType": "SubmodelElementList",
+                            "semanticId": {
+                                "keys": [
+                                    {
+                                        "type": "GlobalReference",
+                                        "value": "https://admin-shell.io/idta/CarbonFootprint/LifeCyclePhases/1/0"
+                                    }
+                                ],
+                                "type": "ExternalReference"
+                            },
+                            "qualifiers": [
+                                {
+                                    "kind": "ConceptQualifier",
+                                    "type": "SMT/Cardinality",
+                                    "value": "One",
+                                    "valueType": "xs:string"
+                                }
+                            ],
+                            "description": [
+                                {
+                                    "language": "en",
+                                    "text": "List of life cycle stages of the product according to the quantification requirements of the standard to which the PCF carbon footprint statement refers"
+                                }
+                            ],
+                            "displayName": [
+                                {
+                                    "language": "de",
+                                    "text": "Lebenszyklusphasen"
+                                },
+                                {
+                                    "language": "en",
+                                    "text": "life cycle phases"
+                                }
+                            ],
+                            "idShort": "LifeCyclePhases",
+                            "orderRelevant": true,
+                            "semanticIdListElement": {
+                                "keys": [
+                                    {
+                                        "type": "GlobalReference",
+                                        "value": "0173-1#02-ABG858#003"
+                                    }
+                                ],
+                                "type": "ExternalReference"
+                            },
+                            "typeValueListElement": "Property",
+                            "value": [
+                                {
+                                    "modelType": "Property",
+                                    "semanticId": {
+                                        "keys": [
+                                            {
+                                                "type": "GlobalReference",
+                                                "value": "0173-1#02-ABG858#003"
+                                            }
+                                        ],
+                                        "type": "ExternalReference"
+                                    },
+                                    "valueType": "xs:string",
+                                    "qualifiers": [
+                                        {
+                                            "kind": "ConceptQualifier",
+                                            "type": "SMT/Cardinality",
+                                            "value": "One",
+                                            "valueType": "xs:string"
+                                        }
+                                    ],
+                                    "category": "PARAMETER",
+                                    "description": [
+                                        {
+                                            "language": "en",
+                                            "text": "Life cycle stages of the product according to the quantification requirements of the standard to which the PCF carbon footprint statement refers"
+                                        }
+                                    ],
+                                    "displayName": [
+                                        {
+                                            "language": "de",
+                                            "text": "Lebenszyklusphase"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "life cycle phase"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "valueTypeListElement": "xs:string"
+                        },
+                        {
+                            "modelType": "File",
+                            "contentType": "application/pdf",
+                            "semanticId": {
+                                "keys": [
+                                    {
+                                        "type": "GlobalReference",
+                                        "value": "https://admin-shell.io/idta/CarbonFootprint/ExplanatoryStatement/1/0"
+                                    }
+                                ],
+                                "type": "ExternalReference"
+                            },
+                            "qualifiers": [
+                                {
+                                    "kind": "ConceptQualifier",
+                                    "type": "SMT/Cardinality",
+                                    "value": "ZeroToOne",
+                                    "valueType": "xs:string"
+                                }
+                            ],
+                            "category": "PARAMETER",
+                            "description": [
+                                {
+                                    "language": "en",
+                                    "text": "Explanation required or provided to ensure that a footprint communication can be properly understood by a purchaser, potential purchaser, or user of the product."
+                                }
+                            ],
+                            "displayName": [
+                                {
+                                    "language": "de",
+                                    "text": "Erklärung"
+                                },
+                                {
+                                    "language": "en",
+                                    "text": "Explanatory statement"
+                                }
+                            ],
+                            "idShort": "ExplanatoryStatement"
+                        },
+                        {
+                            "modelType": "SubmodelElementCollection",
+                            "semanticId": {
+                                "keys": [
+                                    {
+                                        "type": "GlobalReference",
+                                        "value": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/AddressInformation"
+                                    }
+                                ],
+                                "type": "ExternalReference"
+                            },
+                            "supplementalSemanticIds": [
+                                {
+                                    "keys": [
+                                        {
+                                            "type": "GlobalReference",
+                                            "value": "https://admin-shell.io/smt-dropin/smt-dropin-use/1/0"
+                                        }
+                                    ],
+                                    "type": "ExternalReference"
+                                },
+                                {
+                                    "keys": [
+                                        {
+                                            "type": "GlobalReference",
+                                            "value": "0112/2///61360_7#AAS002#001"
+                                        }
+                                    ],
+                                    "type": "ExternalReference"
+                                },
+                                {
+                                    "keys": [
+                                        {
+                                            "type": "GlobalReference",
+                                            "value": "0173-1#02-AAQ837#008"
+                                        }
+                                    ],
+                                    "type": "ExternalReference"
+                                }
+                            ],
+                            "qualifiers": [
+                                {
+                                    "kind": "ConceptQualifier",
+                                    "type": "SMT/Cardinality",
+                                    "value": "ZeroToOne",
+                                    "valueType": "xs:string"
+                                }
+                            ],
+                            "description": [
+                                {
+                                    "language": "en",
+                                    "text": "Indicates the hand-over address of the goods transport"
+                                }
+                            ],
+                            "displayName": [
+                                {
+                                    "language": "de",
+                                    "text": "Warenübergabeadresse"
+                                },
+                                {
+                                    "language": "en",
+                                    "text": "goods address hand-over"
+                                }
+                            ],
+                            "idShort": "GoodsHandoverAddress"
+                        },
+                        {
+                            "modelType": "Property",
+                            "semanticId": {
+                                "keys": [
+                                    {
+                                        "type": "GlobalReference",
+                                        "value": "https://admin-shell.io/idta/CarbonFootprint/PublicationDate/1/0"
+                                    }
+                                ],
+                                "type": "ExternalReference"
+                            },
+                            "valueType": "xs:dateTime",
+                            "qualifiers": [
+                                {
+                                    "kind": "ConceptQualifier",
+                                    "type": "SMT/Cardinality",
+                                    "value": "One",
+                                    "valueType": "xs:string"
+                                }
+                            ],
+                            "category": "PARAMETER",
+                            "description": [
+                                {
+                                    "language": "en",
+                                    "text": "The UTC timestamp on which a Product Carbon Footprint (PCF) - a calculation of a product's total greenhouse gas emissions - was created and published"
+                                }
+                            ],
+                            "displayName": [
+                                {
+                                    "language": "de",
+                                    "text": "Veröffentlichungsdatum"
+                                },
+                                {
+                                    "language": "en",
+                                    "text": "Publication date"
+                                }
+                            ],
+                            "idShort": "PublicationDate"
+                        },
+                        {
+                            "modelType": "Property",
+                            "semanticId": {
+                                "keys": [
+                                    {
+                                        "type": "GlobalReference",
+                                        "value": "https://admin-shell.io/idta/CarbonFootprint/ExpirationDate/1/0"
+                                    }
+                                ],
+                                "type": "ExternalReference"
+                            },
+                            "valueType": "xs:dateTime",
+                            "qualifiers": [
+                                {
+                                    "kind": "ConceptQualifier",
+                                    "type": "SMT/Cardinality",
+                                    "value": "ZeroToOne",
+                                    "valueType": "xs:string"
+                                }
+                            ],
+                            "category": "PARAMETER",
+                            "description": [
+                                {
+                                    "language": "en",
+                                    "text": "End date up to which a study or data collection for calculating an ecological footprint is considered current and valid before an update or new calculation is required."
+                                }
+                            ],
+                            "displayName": [
+                                {
+                                    "language": "de",
+                                    "text": "Ablaufdatum"
+                                },
+                                {
+                                    "language": "en",
+                                    "text": "Expiration date"
+                                }
+                            ],
+                            "idShort": "ExpirationDate"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "modelType": "SubmodelElementList",
+            "semanticId": {
+                "keys": [
+                    {
+                        "type": "GlobalReference",
+                        "value": "https://admin-shell.io/idta/CarbonFootprint/ProductOrSectorSpecificCarbonFootprints/1/0"
+                    }
+                ],
+                "type": "ExternalReference"
+            },
+            "qualifiers": [
+                {
+                    "kind": "ConceptQualifier",
+                    "type": "SMT/Cardinality",
+                    "value": "ZeroToOne",
+                    "valueType": "xs:string"
+                }
+            ],
+            "description": [
+                {
+                    "language": "en",
+                    "text": "Product Carbon Footprints, which is determined in accordance with sector or product group-specific rules or guidelines and covers the life cycle or parts of a product life cycle."
+                }
+            ],
+            "displayName": [
+                {
+                    "language": "en",
+                    "text": "Product Or Sector Specific Carbon Footprints"
+                }
+            ],
+            "idShort": "ProductOrSectorSpecificCarbonFootprints",
+            "orderRelevant": true,
+            "semanticIdListElement": {
+                "keys": [
+                    {
+                        "type": "GlobalReference",
+                        "value": "https://admin-shell.io/idta/CarbonFootprint/ProductOrSectorSpecificCarbonFootprint/1/0"
+                    }
+                ],
+                "type": "ExternalReference"
+            },
+            "typeValueListElement": "SubmodelElementCollection",
+            "value": [
+                {
+                    "modelType": "SubmodelElementCollection",
+                    "semanticId": {
+                        "keys": [
+                            {
+                                "type": "GlobalReference",
+                                "value": "https://admin-shell.io/idta/CarbonFootprint/ProductOrSectorSpecificCarbonFootprint/1/0"
+                            }
+                        ],
+                        "type": "ExternalReference"
+                    },
+                    "description": [
+                        {
+                            "language": "en",
+                            "text": "Product Carbon Footprint, which is determined in accordance with sector or product group-specific rules or guidelines and covers the life cycle or parts of a product life cycle."
+                        }
+                    ],
+                    "value": [
+                        {
+                            "modelType": "SubmodelElementList",
+                            "semanticId": {
+                                "keys": [
+                                    {
+                                        "type": "GlobalReference",
+                                        "value": "https://admin-shell.io/idta/CarbonFootprint/PcfCalculationMethods/1/0"
+                                    }
+                                ],
+                                "type": "ExternalReference"
+                            },
+                            "qualifiers": [
+                                {
+                                    "kind": "ConceptQualifier",
+                                    "type": "SMT/Cardinality",
+                                    "value": "One",
+                                    "valueType": "xs:string"
+                                }
+                            ],
+                            "description": [
+                                {
+                                    "language": "de",
+                                    "text": "Normen, Standards, Verfahren zur Ermittlung der Treibhausgas-Emissionen eines Produkts"
+                                },
+                                {
+                                    "language": "en",
+                                    "text": "Standards, methods for determining the greenhouse gas emissions of a product."
+                                }
+                            ],
+                            "displayName": [
+                                {
+                                    "language": "de",
+                                    "text": "Folgenabschätzungsmethoden"
+                                },
+                                {
+                                    "language": "en",
+                                    "text": "impact assessment methods"
+                                }
+                            ],
+                            "idShort": "PcfCalculationMethods",
+                            "orderRelevant": true,
+                            "semanticIdListElement": {
+                                "keys": [
+                                    {
+                                        "type": "GlobalReference",
+                                        "value": "0173-1#02-ABG854#003"
+                                    }
+                                ],
+                                "type": "ExternalReference"
+                            },
+                            "typeValueListElement": "Property",
+                            "value": [
+                                {
+                                    "modelType": "Property",
+                                    "semanticId": {
+                                        "keys": [
+                                            {
+                                                "type": "GlobalReference",
+                                                "value": "0173-1#02-ABG854#003"
+                                            }
+                                        ],
+                                        "type": "ExternalReference"
+                                    },
+                                    "valueType": "xs:string",
+                                    "qualifiers": [
+                                        {
+                                            "kind": "ConceptQualifier",
+                                            "type": "SMT/Cardinality",
+                                            "value": "One",
+                                            "valueType": "xs:string"
+                                        }
+                                    ],
+                                    "category": "PARAMETER",
+                                    "description": [
+                                        {
+                                            "language": "en",
+                                            "text": "Standard, method for determining the greenhouse gas emissions of a product."
+                                        },
+                                        {
+                                            "language": "de",
+                                            "text": "Norm, Standard, Verfahren zur Ermittlung der Treibhausgas-Emissionen eines Produkts"
+                                        }
+                                    ],
+                                    "displayName": [
+                                        {
+                                            "language": "de",
+                                            "text": "Folgenabschätzungsmethode / Berechnungsmethode"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "impact assessment method / calculation method"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "valueTypeListElement": "xs:string"
+                        },
+                        {
+                            "modelType": "SubmodelElementCollection",
+                            "semanticId": {
+                                "keys": [
+                                    {
+                                        "type": "GlobalReference",
+                                        "value": "https://admin-shell.io/idta/CarbonFootprint/ProductOrSectorSpecificRule/1/0"
+                                    }
+                                ],
+                                "type": "ExternalReference"
+                            },
+                            "qualifiers": [
+                                {
+                                    "kind": "ConceptQualifier",
+                                    "type": "SMT/Cardinality",
+                                    "value": "One",
+                                    "valueType": "xs:string"
+                                }
+                            ],
+                            "description": [
+                                {
+                                    "language": "de",
+                                    "text": "Beinhaltet weiterführende Informationen zur produktspezifischen oder sektorspezifischen Regel, welche zur Berechnung des CO2-Fußabdrucks eingesetzt wird. "
+                                },
+                                {
+                                    "language": "en",
+                                    "text": "Contains further information on the product-specific or sector-specific rule used to calculate the carbon footprint."
+                                }
+                            ],
+                            "displayName": [
+                                {
+                                    "language": "de",
+                                    "text": "Produktspezifische oder sektorspezifische Regel"
+                                },
+                                {
+                                    "language": "en",
+                                    "text": "Product or Sector Specific Rule"
+                                }
+                            ],
+                            "idShort": "ProductOrSectorSpecificRule",
+                            "value": [
+                                {
+                                    "modelType": "Property",
+                                    "semanticId": {
+                                        "keys": [
+                                            {
+                                                "type": "GlobalReference",
+                                                "value": "https://admin-shell.io/idta/CarbonFootprint/ProductOrSectorSpecificRule/Operator/1/0"
+                                            }
+                                        ],
+                                        "type": "ExternalReference"
+                                    },
+                                    "valueType": "xs:string",
+                                    "qualifiers": [
+                                        {
+                                            "kind": "ConceptQualifier",
+                                            "type": "SMT/Cardinality",
+                                            "value": "One",
+                                            "valueType": "xs:string"
+                                        }
+                                    ],
+                                    "description": [
+                                        {
+                                            "language": "de",
+                                            "text": "Einrichtung, welche spezifische Anweisungen und Methoden zur Berechnung und Überwachung des CO2-Fußabdrucks eines Produkts oder Sektors definiert und umsetzt."
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "Organization that defines and implements specific instructions and methods for calculating and monitoring the carbon footprint of a product or sector."
+                                        }
+                                    ],
+                                    "displayName": [
+                                        {
+                                            "language": "de",
+                                            "text": "Herausgeber der PCF Berechnungsmethode"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "Operator of the PCF calculation method"
+                                        }
+                                    ],
+                                    "idShort": "PcfRuleOperator"
+                                },
+                                {
+                                    "modelType": "Property",
+                                    "semanticId": {
+                                        "keys": [
+                                            {
+                                                "type": "GlobalReference",
+                                                "value": "https://admin-shell.io/idta/CarbonFootprint/ProductOrSectorSpecificRule/Name/1/0"
+                                            }
+                                        ],
+                                        "type": "ExternalReference"
+                                    },
+                                    "valueType": "xs:string",
+                                    "qualifiers": [
+                                        {
+                                            "kind": "ConceptQualifier",
+                                            "type": "SMT/Cardinality",
+                                            "value": "One",
+                                            "valueType": "xs:string"
+                                        }
+                                    ],
+                                    "description": [
+                                        {
+                                            "language": "de",
+                                            "text": "Folgenabschätzungsmethode / Berechnungsmethode"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "Standard, method for determining the greenhouse gas emissions of a product"
+                                        }
+                                    ],
+                                    "displayName": [
+                                        {
+                                            "language": "de",
+                                            "text": "Name der PCF Berechnungsmethode"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "Name of the PCF calculation method"
+                                        }
+                                    ],
+                                    "idShort": "PcfRuleName"
+                                },
+                                {
+                                    "modelType": "Property",
+                                    "semanticId": {
+                                        "keys": [
+                                            {
+                                                "type": "GlobalReference",
+                                                "value": "https://admin-shell.io/idta/CarbonFootprint/ProductOrSectorSpecificRule/Version/1/0"
+                                            }
+                                        ],
+                                        "type": "ExternalReference"
+                                    },
+                                    "valueType": "xs:string",
+                                    "qualifiers": [
+                                        {
+                                            "kind": "ConceptQualifier",
+                                            "type": "SMT/Cardinality",
+                                            "value": "ZeroToOne",
+                                            "valueType": "xs:string"
+                                        }
+                                    ],
+                                    "description": [
+                                        {
+                                            "language": "de",
+                                            "text": "Spezifische Ausgabe oder Revision der Regel, die zur Berechnung des CO2-Fußabdrucks eines Produkts verwendet wird."
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "Specific version or revision of the rule used to calculate the carbon footprint of a product."
+                                        }
+                                    ],
+                                    "displayName": [
+                                        {
+                                            "language": "de",
+                                            "text": "Version der PCF Berechnungsmethode"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "Version of the PCF calculation method"
+                                        }
+                                    ],
+                                    "idShort": "PcfRuleVersion"
+                                },
+                                {
+                                    "modelType": "File",
+                                    "contentType": "application/pdf",
+                                    "semanticId": {
+                                        "keys": [
+                                            {
+                                                "type": "GlobalReference",
+                                                "value": "https://admin-shell.io/idta/CarbonFootprint/ProductOrSectorSpecificRule/OnlineReference/1/0"
+                                            }
+                                        ],
+                                        "type": "ExternalReference"
+                                    },
+                                    "qualifiers": [
+                                        {
+                                            "kind": "ConceptQualifier",
+                                            "type": "SMT/Cardinality",
+                                            "value": "ZeroToOne",
+                                            "valueType": "xs:string"
+                                        }
+                                    ],
+                                    "description": [
+                                        {
+                                            "language": "de",
+                                            "text": "Online-Referenz zur PCF-Berechnungsmethodik, die detaillierte Anweisungen und Richtlinien zur Berechnung des CO2-Fußabdrucks eines Produkts bereitstellt."
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "Online PCF calculation methodology reference that provides detailed instructions and guidelines for calculating a product's carbon footprint."
+                                        }
+                                    ],
+                                    "displayName": [
+                                        {
+                                            "language": "de",
+                                            "text": "Online Referenz zur PCF Berechnungsmethode"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "Online reference to the PCF calculation method"
+                                        }
+                                    ],
+                                    "idShort": "PcfRuleOnlineReference"
+                                }
+                            ]
+                        },
+                        {
+                            "modelType": "SubmodelElementCollection",
+                            "semanticId": {
+                                "keys": [
+                                    {
+                                        "type": "GlobalReference",
+                                        "value": "https://admin-shell.io/idta/CarbonFootprint/ExternalPcfApi/1/0"
+                                    }
+                                ],
+                                "type": "ExternalReference"
+                            },
+                            "qualifiers": [
+                                {
+                                    "kind": "ConceptQualifier",
+                                    "type": "SMT/Cardinality",
+                                    "value": "ZeroToOne",
+                                    "valueType": "xs:string"
+                                }
+                            ],
+                            "description": [
+                                {
+                                    "language": "de",
+                                    "text": "Ein externer Dienst, der über eine Schnittstelle Informationen zum CO2-Fußabdruck bereitstellt und den Abruf dieser Daten auf Abruf ermöglicht."
+                                },
+                                {
+                                    "language": "en",
+                                    "text": "An external service that provides carbon footprint information via an interface, allowing on-demand retrieval of this data when required."
+                                }
+                            ],
+                            "displayName": [
+                                {
+                                    "language": "de",
+                                    "text": "Externe API für PCF Informationen"
+                                },
+                                {
+                                    "language": "en",
+                                    "text": "External API for PCF information"
+                                }
+                            ],
+                            "idShort": "ExternalPcfApi",
+                            "value": [
+                                {
+                                    "modelType": "Property",
+                                    "semanticId": {
+                                        "keys": [
+                                            {
+                                                "type": "GlobalReference",
+                                                "value": "https://admin-shell.io/idta/CarbonFootprint/ExternalPcfApi/Endpoint/1/0"
+                                            }
+                                        ],
+                                        "type": "ExternalReference"
+                                    },
+                                    "valueType": "xs:anyURI",
+                                    "qualifiers": [
+                                        {
+                                            "kind": "ConceptQualifier",
+                                            "type": "SMT/Cardinality",
+                                            "value": "One",
+                                            "valueType": "xs:string"
+                                        }
+                                    ],
+                                    "description": [
+                                        {
+                                            "language": "de",
+                                            "text": "Spezifische URL oder Adresse, über die Daten zur Berechnung des CO2-Fußabdrucks eines Produkts von externen Quellen abgerufen werden können."
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "Specific URL or address that can be used to retrieve data from external sources to calculate the carbon footprint of a product."
+                                        }
+                                    ],
+                                    "displayName": [
+                                        {
+                                            "language": "de",
+                                            "text": "Endpunkt"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "Endpoint"
+                                        }
+                                    ],
+                                    "idShort": "PcfApiEndpoint"
+                                },
+                                {
+                                    "modelType": "Property",
+                                    "semanticId": {
+                                        "keys": [
+                                            {
+                                                "type": "GlobalReference",
+                                                "value": "https://admin-shell.io/idta/CarbonFootprint/ExternalPcfApi/Query/1/0"
+                                            }
+                                        ],
+                                        "type": "ExternalReference"
+                                    },
+                                    "valueType": "xs:string",
+                                    "qualifiers": [
+                                        {
+                                            "kind": "ConceptQualifier",
+                                            "type": "SMT/Cardinality",
+                                            "value": "One",
+                                            "valueType": "xs:string"
+                                        }
+                                    ],
+                                    "description": [
+                                        {
+                                            "language": "de",
+                                            "text": "Spezifische Abfrage, über die Daten zur Berechnung des CO2-Fußabdrucks eines Produkts von externen Quellen abgerufen werden können."
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "Specific query that can be used to retrieve data from external sources to calculate the carbon footprint of a product."
+                                        }
+                                    ],
+                                    "displayName": [
+                                        {
+                                            "language": "de",
+                                            "text": "Abfrage"
+                                        },
+                                        {
+                                            "language": "en",
+                                            "text": "Query"
+                                        }
+                                    ],
+                                    "idShort": "PcfApiQuery"
+                                }
+                            ]
+                        },
+                        {
+                            "modelType": "SubmodelElementCollection",
+                            "semanticId": {
+                                "keys": [
+                                    {
+                                        "type": "GlobalReference",
+                                        "value": "https://admin-shell.io/idta/CarbonFootprint/PcfInformation/1/0"
+                                    }
+                                ],
+                                "type": "ExternalReference"
+                            },
+                            "qualifiers": [
+                                {
+                                    "kind": "ConceptQualifier",
+                                    "type": "SMT/Cardinality",
+                                    "value": "One",
+                                    "valueType": "xs:string"
+                                }
+                            ],
+                            "description": [
+                                {
+                                    "language": "de",
+                                    "text": "Ein Abschnitt, in dem weitere Inhalte entsprechend der Berechnungsmethode zum Product Carbon Footprint aufgeführt werden."
+                                },
+                                {
+                                    "language": "en",
+                                    "text": "A section in which further content is listed according to the calculation method for the Product Carbon Footprint."
+                                }
+                            ],
+                            "idShort": "PcfInformation",
+                            "value": [
+                                {
+                                    "modelType": "Property",
+                                    "semanticId": {
+                                        "keys": [
+                                            {
+                                                "type": "GlobalReference",
+                                                "value": "https://admin-shell.io/SMT/General/Arbitrary"
+                                            }
+                                        ],
+                                        "type": "ExternalReference"
+                                    },
+                                    "valueType": "xs:string",
+                                    "qualifiers": [
+                                        {
+                                            "kind": "ConceptQualifier",
+                                            "type": "SMT/Cardinality",
+                                            "value": "ZeroToMany",
+                                            "valueType": "xs:string"
+                                        }
+                                    ],
+                                    "description": [
+                                        {
+                                            "language": "en",
+                                            "text": "Free area for structured collection of specific items of a specific PCF."
+                                        }
+                                    ],
+                                    "idShort": "ArbitraryContent"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

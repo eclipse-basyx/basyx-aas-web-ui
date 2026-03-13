@@ -179,6 +179,7 @@
     import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
 
     // Vue Router
@@ -187,6 +188,7 @@
     // Stores
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
+    const infrastructureStore = useInfrastructureStore();
 
     // Composables
     const { fetchCds } = useConceptDescriptionHandling();
@@ -200,8 +202,8 @@
     const expandedCdIndex = ref(0);
 
     // Computed Properties
-    const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL);
-    const submodelRegistryURL = computed(() => navigationStore.getSubmodelRegistryURL);
+    const aasRegistryURL = computed(() => infrastructureStore.getAASRegistryURL);
+    const submodelRegistryURL = computed(() => infrastructureStore.getSubmodelRegistryURL);
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
     const selectedNode = computed(() => aasStore.getSelectedNode);
     const autoSync = computed(() => navigationStore.getAutoSync);

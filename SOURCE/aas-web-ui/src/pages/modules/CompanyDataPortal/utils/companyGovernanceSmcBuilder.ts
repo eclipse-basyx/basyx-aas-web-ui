@@ -1,4 +1,4 @@
-import * as aas from '@aas-core-works/aas-core3.0-typescript';
+import * as aas from '@aas-core-works/aas-core3.1-typescript';
 
 export function createCompanyGovernanceSMC(form: any): aas.types.SubmodelElementCollection {
     const elements: aas.types.ISubmodelElement[] = [];

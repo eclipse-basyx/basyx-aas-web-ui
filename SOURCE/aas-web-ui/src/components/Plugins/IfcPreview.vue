@@ -41,8 +41,9 @@
     import * as BUI from '@thatopen/ui';
     import * as BUIC from '@thatopen/ui-obc';
     import * as THREE from 'three';
-    import { nextTick, onMounted, onUnmounted, ref } from 'vue';
+    import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+    import { useEnvStore } from '@/store/EnvironmentStore';
 
     const props = defineProps({
         submodelElementData: {
@@ -52,6 +53,16 @@
     });
 
     const { fetchAttachmentFile } = useSMRepositoryClient();
+    const envStore = useEnvStore();
+
+    // Compute base path for static assets (WASM files, worker)
+    const staticBasePath = computed(() => {
+        const basePath = import.meta.env.MODE === 'production' ? envStore.getEnvBasePath : import.meta.env.BASE_URL;
+        if (basePath && basePath.trim() !== '' && !basePath.includes('PLACEHOLDER')) {
+            return basePath.endsWith('/') ? basePath : basePath + '/';
+        }
+        return '/';
+    });
 
     const ifcContainer = ref<HTMLDivElement | null>(null);
     const propertiesTableContainer = ref<HTMLDivElement | null>(null);
@@ -135,18 +146,20 @@
             }
 
             // Set up IFC loader with proper WASM configuration
+            // Use base path to ensure WASM files are found regardless of deployment configuration
             const ifcLoader = components.get(OBC.IfcLoader);
             await ifcLoader.setup({
                 autoSetWasm: false,
                 wasm: {
-                    path: './wasm/',
+                    path: `${staticBasePath.value}wasm/`,
                     absolute: true,
                 },
             });
 
             // Use the local worker file bundled with the app
+            // Use base path to ensure worker is found regardless of deployment configuration
             const fragments = components.get(OBC.FragmentsManager);
-            await fragments.init('./worker.mjs');
+            await fragments.init(`${staticBasePath.value}worker.mjs`);
 
             if (world.camera.controls) {
                 world.camera.controls.addEventListener('rest', () => fragments.core.update(true));

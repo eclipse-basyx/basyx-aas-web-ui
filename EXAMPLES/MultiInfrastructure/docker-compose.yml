@@ -1,0 +1,45 @@
+include:
+  - ./Infrastructure1/docker-compose-infra1.yml
+  - ./Infrastructure2/docker-compose-infra2.yml
+
+services:
+  # Common MongoDB service for multiple infrastructures
+  mongo:
+    image: mongo:5.0
+    container_name: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongoAdmin
+      MONGO_INITDB_ROOT_PASSWORD: mongoPassword
+    restart: unless-stopped
+    healthcheck:
+      test: mongo
+      interval: 10s
+      start_period: 5s
+      retries: 5
+    networks:
+      - multiple-infrastructures
+
+  # Common AAS Web UI service for multiple infrastructures
+  aas-web-ui:
+    image: eclipsebasyx/aas-gui:SNAPSHOT
+    container_name: aas-web-ui
+    extra_hosts:
+      - "keycloak.basyx.localhost:host-gateway"
+    ports:
+      - '3000:3000'
+    volumes:
+      # Mount infrastructure configuration file
+      - ./basyx-infra.yml:/basyx-infra.yml:ro
+    environment:
+      VIRTUAL_HOST: aasgui.basyx.localhost
+      VIRTUAL_PORT: "3000"
+      # Allow users to edit/add custom infrastructures
+      ENDPOINT_CONFIG_AVAILABLE: true
+    restart: unless-stopped
+    networks:
+      - multiple-infrastructures
+
+networks:
+  multiple-infrastructures:
+    name: basyx-multi-infrastructures
+    driver: bridge

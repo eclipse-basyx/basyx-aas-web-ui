@@ -10,22 +10,11 @@
         <v-btn icon="mdi-autorenew"></v-btn>
     </v-badge>
     <!-- Desktop Autosync Menu -->
-    <v-btn v-else class="multiline-button mr-6" variant="outlined">
-        <div class="text-left">
-            <p>
-                <span class="mr-1" :style="statusCheck.state ? 'font-size: 0.75em' : ''">{{ 'Auto Sync:' }}</span>
-                <span class="text-primary" :style="statusCheck.state ? 'font-size: 0.75em' : ''">{{
-                    autoSync.state ? 'On' : 'Off'
-                }}</span>
-            </p>
-            <p v-if="statusCheck.state" class="mt-n1">
-                <span class="mr-1" style="font-size: 0.75em">{{ 'Status Check:' }}</span>
-                <span class="text-primary" style="font-size: 0.75em">{{ statusCheck.state ? 'On' : 'Off' }}</span>
-            </p>
-        </div>
-        <v-icon :style="{ 'margin-left': autoSync.state ? '12.5px' : '6px' }">mdi-chevron-down</v-icon>
+    <v-btn v-else variant="tonal" icon size="small" style="padding-right: 28px; padding-left: 28px">
+        <v-icon>mdi-autorenew</v-icon>
+        <v-icon>mdi-menu-down</v-icon>
         <v-menu activator="parent" :close-on-content-click="false" width="300px">
-            <v-list nav class="py-0 bg-navigationMenu" style="border-style: solid; border-width: 1px">
+            <v-list nav class="py-0 bg-navigationMenu" border rounded="lg">
                 <!-- Switch to activate/deactive auto-sync -->
                 <v-list-item class="py-0">
                     <v-switch
@@ -81,6 +70,7 @@
                 <StatusSwitch></StatusSwitch>
             </v-list>
         </v-menu>
+        <v-badge dot :color="autoSync.state ? 'success' : 'rgba(0,0,0,0)'" :offset-x="16" :offset-y="-10" />
     </v-btn>
 </template>
 
@@ -94,7 +84,6 @@
     // Computed properties
     const isMobile = computed(() => navigationStore.getIsMobile);
     const autoSync = computed(() => navigationStore.getAutoSync);
-    const statusCheck = computed(() => navigationStore.getStatusCheck);
 
     // Checks if the input is smaller than 100ms and sets it to 100ms if it is
     function checkMin(e: boolean) {

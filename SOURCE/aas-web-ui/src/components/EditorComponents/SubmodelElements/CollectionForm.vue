@@ -2,9 +2,7 @@
     <v-dialog v-model="editSMCDialog" width="860" persistent @keydown="keyDown" @keyup="keyUp($event, saveSMC)">
         <v-card>
             <v-card-title>
-                <span class="text-subtile-1">{{
-                    props.newSmc ? 'Create a new Submodel Element Collection' : 'Edit Submodel Element Collection'
-                }}</span>
+                {{ props.newSmc ? 'Create a new Submodel Element Collection' : 'Edit Submodel Element Collection' }}
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
@@ -19,7 +17,7 @@
                                         v-model="smcIdShort"
                                         label="IdShort"
                                         :error="hasError('idShort')"
-                                        :rules="[rules.required]"
+                                        :rules="isParentSubmodelElementList ? [] : [rules.required]"
                                         :error-messages="getError('idShort')" />
                                 </v-col>
                                 <v-col cols="auto" class="px-0">
@@ -78,11 +76,18 @@
                             </v-row>
                         </v-expansion-panel-text>
                     </v-expansion-panel>
+                    <!-- Qualifiers -->
+                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(2)">
+                        <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
+                        <v-expansion-panel-text>
+                            <QualifierInput v-model="qualifiers" />
+                        </v-expansion-panel-text>
+                    </v-expansion-panel>
                     <!-- Data Specification -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(2)">
+                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(3)">
                         <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
                         <v-expansion-panel-text>
-                            <span class="text-subtitleText text-subtitle-2">Coming soon!</span>
+                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
                         </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
@@ -98,13 +103,15 @@
 </template>
 
 <script setup lang="ts">
-    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
-    import _ from 'lodash';
+    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useSMEHandling } from '@/composables/AAS/SMEHandling';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+    import { applyFieldErrors, buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { clearOptionalIdShort } from '@/utils/AAS/OptionalPropertyUtils';
+    import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
     import { keyDown, keyUp } from '@/utils/EditorUtils';
     import { base64Decode } from '@/utils/EncodeDecodeUtils';
 
@@ -138,9 +145,13 @@
     const smcCategory = ref<string | null>(null);
 
     const semanticId = ref<aasTypes.Reference | null>(null);
+    const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
+    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
     //const smcValue = ref<string | null>(null);
 
     const errors = ref<Map<string, string>>(new Map());
+
+    const isParentSubmodelElementList = computed(() => props.parentElement?.modelType === 'SubmodelElementList');
 
     const rules = {
         required: (value: any) => !!value || 'Required.',
@@ -187,6 +198,14 @@
                 if (openPanels.value.includes(1) || openPanels.value.includes(2)) {
                     border += ' border-t-thin';
                 }
+                if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+                    border += ' border-b-thin';
+                }
+                break;
+            case 3:
+                if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+                    border += ' border-t-thin';
+                }
                 break;
         }
         return border;
@@ -204,15 +223,20 @@
     }
 
     async function saveSMC(): Promise<void> {
+        errors.value.clear();
+
         if (props.newSmc || smcObject.value === undefined) {
             smcObject.value = new aasTypes.SubmodelElementCollection();
         }
 
-        if (smcIdShort.value !== null) {
-            smcObject.value.idShort = smcIdShort.value;
-        } else {
+        const normalizedIdShort = smcIdShort.value?.trim() ?? null;
+        if (normalizedIdShort) {
+            smcObject.value.idShort = normalizedIdShort;
+        } else if (!isParentSubmodelElementList.value) {
             errors.value.set('idShort', 'SubmodelElementCollection IdShort is required');
             return;
+        } else {
+            clearOptionalIdShort(smcObject.value);
         }
 
         if (semanticId.value !== null) {
@@ -228,6 +252,24 @@
         }
 
         smcObject.value.category = smcCategory.value;
+        smcObject.value.qualifiers = qualifiers.value;
+        smcObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
+
+        const verificationResult = verifyForEditor(smcObject.value, { maxErrors: 10 });
+        if (!verificationResult.isValid) {
+            applyFieldErrors(errors.value, verificationResult.fieldErrors);
+            const summary = buildVerificationSummary(verificationResult);
+            const firstError = verificationResult.globalErrors[0];
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 10000,
+                color: 'error',
+                btnColor: 'buttonText',
+                baseError: 'Collection validation failed',
+                extendedError: firstError ? `${summary} ${firstError}` : summary,
+            });
+            return;
+        }
 
         if (props.newSmc) {
             if (props.parentElement.modelType === 'Submodel') {
@@ -235,7 +277,7 @@
                 await postSubmodelElement(smcObject.value, props.parentElement.id);
 
                 // Navigate to the new smc
-                const query = _.cloneDeep(route.query);
+                const query = structuredClone(route.query);
                 query.path = props.parentElement.path + '/submodel-elements/' + smcObject.value.idShort;
 
                 router.push({
@@ -250,10 +292,10 @@
                 // Create the smc on the parent element
                 await postSubmodelElement(smcObject.value, submodelId, idShortPath);
 
-                // Navigate to the new smc
-                if (props.parentElement.modelType === 'SubmodelElementCollection') {
-                    const query = _.cloneDeep(route.query);
-                    query.path = props.parentElement.path + '.' + smcObject.value.idShort;
+                const createdPath = getCreatedSubmodelElementPath(props.parentElement, smcObject.value.idShort);
+                if (createdPath) {
+                    const query = structuredClone(route.query);
+                    query.path = createdPath;
 
                     router.push({
                         query: query,
@@ -302,7 +344,21 @@
         editSMCDialog.value = false;
     }
 
+    function resetFormValues(): void {
+        smcIdShort.value = null;
+        displayName.value = null;
+        description.value = null;
+        smcCategory.value = null;
+        semanticId.value = null;
+        qualifiers.value = null;
+        embeddedDataSpecifications.value = null;
+        openPanels.value = [0];
+    }
+
     async function initializeInputs(): Promise<void> {
+        // Always reset form values first to clear any stale data from previously opened elements
+        resetFormValues();
+
         if (!props.newSmc && props.smc) {
             const smcJSON = await fetchSme(props.smc.path);
 
@@ -313,27 +369,13 @@
             }
             smcObject.value = instanceOrError.mustValue();
 
-            smcIdShort.value = smcObject.value.idShort;
-            if (smcObject.value.displayName) {
-                displayName.value = smcObject.value.displayName;
-            }
-            if (smcObject.value.description) {
-                description.value = smcObject.value.description;
-            }
-            if (smcObject.value.category) {
-                smcCategory.value = smcObject.value.category;
-            }
-            if (smcObject.value.semanticId) {
-                semanticId.value = smcObject.value.semanticId;
-            }
-            openPanels.value = [0];
-        } else {
-            smcIdShort.value = null;
-            displayName.value = null;
-            description.value = null;
-            smcCategory.value = null;
-            semanticId.value = null;
-            openPanels.value = [0];
+            smcIdShort.value = smcObject.value.idShort ?? null;
+            displayName.value = smcObject.value.displayName ?? null;
+            description.value = smcObject.value.description ?? null;
+            smcCategory.value = smcObject.value.category ?? null;
+            semanticId.value = smcObject.value.semanticId ?? null;
+            qualifiers.value = smcObject.value.qualifiers ?? null;
+            embeddedDataSpecifications.value = smcObject.value.embeddedDataSpecifications ?? null;
         }
     }
 </script>

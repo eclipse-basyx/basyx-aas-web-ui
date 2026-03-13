@@ -1,4 +1,4 @@
-import type { LocationQuery, NavigationGuardNext, RouteLocationNormalizedGeneric } from 'vue-router';
+import type { LocationQuery, RouteLocationNormalizedGeneric, RouteLocationRaw } from 'vue-router';
 import { useAASHandling } from '@/composables/AAS/AASHandling';
 import { useSMHandling } from '@/composables/AAS/SMHandling';
 import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient';
@@ -16,28 +16,32 @@ export function useRouteHandling() {
      * @async
      * @function idRedirectHandled
      * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
-     * @param {NavigationGuardNext} next - A function that must be called to resolve the hook. The action depends on the arguments provided to `next`.
      * @param {string[]} possibleIdQueryParameter - The possible query parameter names for the `globalAssetId`.
      * @param {string[]} possibleGloBalAssetIdQueryParameter - The possible query parameter names for the `globalAssetId`.
      * @param {string[]} possibleAasIdQueryParameter - The possible query parameter names for the `aasId`.
      * @param {string[]} possibleSmIdQueryParameter - The possible query parameter names for the `smId`.
-     * @returns {Promise<boolean>} Returns a promise that resolves to true if a redirection was performed, otherwise false.
+     * @returns {Promise<RouteLocationRaw | null>} Returns a redirect location if a redirection is needed, otherwise null.
      */
     async function idRedirectHandled(
         to: RouteLocationNormalizedGeneric,
-        next: NavigationGuardNext,
         possibleIdQueryParameter: string[],
         possibleGloBalAssetIdQueryParameter: string[],
         possibleAasIdQueryParameter: string[],
         possibleSmIdQueryParameter: string[]
-    ): Promise<boolean> {
+    ): Promise<RouteLocationRaw | null> {
         // Note: Query parameter are handled case sensitive!
         if (possibleIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater))) {
-            if (await globalAssetIdRedirectHandled(to, next, possibleGloBalAssetIdQueryParameter)) return true;
-            if (await aasIdSmIdRedirectHandled(to, next, possibleAasIdQueryParameter, possibleSmIdQueryParameter))
-                return true;
+            const globalAssetRedirect = await globalAssetIdRedirectHandled(to, possibleGloBalAssetIdQueryParameter);
+            if (globalAssetRedirect) return globalAssetRedirect;
+
+            const aasOrSmRedirect = await aasIdSmIdRedirectHandled(
+                to,
+                possibleAasIdQueryParameter,
+                possibleSmIdQueryParameter
+            );
+            if (aasOrSmRedirect) return aasOrSmRedirect;
         }
-        return false;
+        return null;
     }
 
     /**
@@ -47,15 +51,13 @@ export function useRouteHandling() {
      * @async
      * @function globalAssetIdRedirectHandled
      * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
-     * @param {NavigationGuardNext} next - A function that must be called to resolve the hook. The action depends on the arguments provided to `next`.
      * @param {string[]} possibleGloBalAssetIdQueryParameter - The possible query parameter names for the `globalAssetId`.
-     * @returns {Promise<boolean>} Returns a promise that resolves to true if a redirection was performed, otherwise false.
+     * @returns {Promise<RouteLocationRaw | null>} Returns a redirect location if a redirection is needed, otherwise null.
      */
     async function globalAssetIdRedirectHandled(
         to: RouteLocationNormalizedGeneric,
-        next: NavigationGuardNext,
         possibleGloBalAssetIdQueryParameter: string[]
-    ): Promise<boolean> {
+    ): Promise<RouteLocationRaw | null> {
         if (possibleGloBalAssetIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater))) {
             const globalAssetIdBase64Encoded = to.query[possibleGloBalAssetIdQueryParameter[0]]
                 ? (to.query[possibleGloBalAssetIdQueryParameter[0]] as string)
@@ -67,14 +69,10 @@ export function useRouteHandling() {
 
             if (aasEndpoint.trim() !== '') {
                 query.aas = aasEndpoint.trim();
-                const updatedRoute = Object.assign({}, to, {
-                    query: query,
-                });
-                next(updatedRoute);
-                return true;
+                return { path: to.path, query };
             }
         }
-        return false;
+        return null;
     }
 
     /**
@@ -84,17 +82,15 @@ export function useRouteHandling() {
      * @async
      * @function aasIdSmIdRedirectHandled
      * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
-     * @param {NavigationGuardNext} next - A function that must be called to resolve the hook. The action depends on the arguments provided to `next`.
      * @param {string[]} possibleAasIdQueryParameter - The possible query parameter names for the `aasId`.
      * @param {string[]} possibleSmIdQueryParameter - The possible query parameter names for the `smId`.
-     * @returns {Promise<boolean>} Returns a promise that resolves to true if a redirection was performed, otherwise false.
+     * @returns {Promise<RouteLocationRaw | null>} Returns a redirect location if a redirection is needed, otherwise null.
      */
     async function aasIdSmIdRedirectHandled(
         to: RouteLocationNormalizedGeneric,
-        next: NavigationGuardNext,
         possibleAasIdQueryParameter: string[],
         possibleSmIdQueryParameter: string[]
-    ): Promise<boolean> {
+    ): Promise<RouteLocationRaw | null> {
         if (
             possibleAasIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater)) ||
             possibleSmIdQueryParameter.some((queryParamater) => Object.hasOwn(to.query, queryParamater))
@@ -126,15 +122,10 @@ export function useRouteHandling() {
                 if (aasEndpoint !== '') query.aas = aasEndpoint.trim();
                 if (smEndpoint !== '') query.path = smEndpoint.trim();
 
-                const updatedRoute = Object.assign({}, to, {
-                    query: query,
-                });
-
-                next(updatedRoute);
-                return true;
+                return { path: to.path, query };
             }
         }
-        return false;
+        return null;
     }
 
     return { idRedirectHandled };
