@@ -63,6 +63,7 @@ declare module 'vue' {
     FileSystemBreadcrumbs: typeof import('./components/Plugins/Submodels/FileSystem/components/FileSystemBreadcrumbs.vue')['default']
     FileSystemNewMenu: typeof import('./components/Plugins/Submodels/FileSystem/components/FileSystemNewMenu.vue')['default']
     FileSystemToolbar: typeof import('./components/Plugins/Submodels/FileSystem/components/FileSystemToolbar.vue')['default']
+    FilterAAS: typeof import('./components/AppNavigation/FilterAAS.vue')['default']
     FolderCard: typeof import('./components/Plugins/Submodels/FileSystem/components/FolderCard.vue')['default']
     FolderNamingDialog: typeof import('./components/Plugins/Submodels/FileSystem/components/dialogs/FolderNamingDialog.vue')['default']
     Gauge: typeof import('./components/Widgets/Gauge.vue')['default']
