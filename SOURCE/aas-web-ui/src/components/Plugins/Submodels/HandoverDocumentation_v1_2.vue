@@ -33,7 +33,7 @@
                                         :key="metaProperty.idShort">
                                         <tr
                                             v-if="hasValue(metaProperty)"
-                                            :class="j % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
+                                            :class="(j as number) % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
                                             <td>
                                                 <div class="text-subtitleText text-caption">
                                                     <span>{{ nameToDisplay(metaProperty) }}</span>
@@ -247,7 +247,7 @@
                                         :key="documentClassificationSMC.idShort">
                                         <tr
                                             v-if="hasValue(documentClassificationSMC)"
-                                            :class="j % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
+                                            :class="(j as number) % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
                                             <td
                                                 v-for="classificationProperty in documentClassificationSMC.value"
                                                 :key="classificationProperty.idShort">
@@ -306,7 +306,7 @@
                                         :key="documentIdSMC.idShort">
                                         <tr
                                             v-if="hasValue(documentIdSMC)"
-                                            :class="j % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
+                                            :class="(j as number) % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
                                             <td v-for="idProperty in documentIdSMC.value" :key="idProperty.idShort">
                                                 <!-- MultiLanguageProperties -->
                                                 <template v-if="idProperty.modelType == 'MultiLanguageProperty'">

@@ -6,6 +6,8 @@ export interface SnackbarType {
     text?: string;
     baseError?: string;
     extendedError?: string;
+    actionText?: string;
+    actionCallback?: () => void | Promise<void>;
 }
 
 export interface AutoSyncType {
@@ -37,4 +39,9 @@ export interface PlatformType {
 export interface PluginType {
     name: string;
     semanticId: string;
+}
+
+export interface RegisteredQueryParamType {
+    paramName: string;
+    semanticId: string; // The semanticId of the plugin that registered this param
 }

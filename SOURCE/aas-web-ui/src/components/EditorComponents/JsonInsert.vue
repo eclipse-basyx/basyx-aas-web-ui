@@ -25,15 +25,18 @@
 </template>
 
 <script lang="ts" setup>
-    import type { JsonValue } from '@aas-core-works/aas-core3.0-typescript/jsonization';
-    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
-    import _ from 'lodash';
+    import type { JsonValue } from '@aas-core-works/aas-core3.1-typescript/jsonization';
+    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
     import { computed, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
+    import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
     import { useAASStore } from '@/store/AASDataStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { Endpoint, ProtocolInformation } from '@/types/Descriptors';
+    import { getCreatedSubmodelElementPath, isDataElementModelType } from '@/utils/AAS/SubmodelElementPathUtils';
     import { base64Decode, base64Encode } from '@/utils/EncodeDecodeUtils';
 
     const props = defineProps<{
@@ -53,9 +56,11 @@
     // Stores
     const aasStore = useAASStore();
     const navigationStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
 
     // Composables
     const { postSubmodel, postSubmodelElement } = useSMRepositoryClient();
+    const { postSubmodelDescriptor, putSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient();
     const { putAas } = useAASRepositoryClient();
 
     // Data
@@ -65,7 +70,11 @@
 
     // Computed Properties
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
-    const submodelRepoUrl = computed(() => navigationStore.getSubmodelRepoURL);
+    const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure);
+    const submodelRepoUrl = computed(() => infrastructureStore.getSubmodelRepoURL);
+    const submodelRepoHasRegistryIntegration = computed(
+        () => selectedInfrastructure.value?.components?.SubmodelRepo?.hasRegistryIntegration ?? true
+    );
 
     watch(
         () => props.modelValue,
@@ -101,10 +110,11 @@
         if (instanceOrError.error !== null) {
             navigationStore.dispatchSnackbar({
                 status: true,
-                timeout: 4000,
+                timeout: 20000,
                 color: 'error',
                 btnColor: 'buttonText',
-                text: 'Error parsing Submodel: ' + instanceOrError.error,
+                baseError: instanceOrError.error?.message || String(instanceOrError.error),
+                extendedError: instanceOrError.error.path ? JSON.stringify(instanceOrError.error.path, null, 2) : '',
             });
             return;
         }
@@ -114,8 +124,9 @@
         await postSubmodel(submodel);
         // Add Submodel Reference to AAS
         await addSubmodelReferenceToAas(submodel);
+        await syncSubmodelDescriptor(submodel);
         // Fetch and dispatch Submodel
-        const query = _.cloneDeep(route.query);
+        const query = structuredClone(route.query);
         query.path = submodelRepoUrl.value + '/' + base64Encode(submodel.id);
 
         router.push({ query: query });
@@ -129,21 +140,36 @@
         if (instanceOrError.error !== null) {
             navigationStore.dispatchSnackbar({
                 status: true,
-                timeout: 4000,
+                timeout: 20000,
                 color: 'error',
                 btnColor: 'buttonText',
-                text: 'Error parsing SubmodelElement: ' + instanceOrError.error,
+                baseError: instanceOrError.error?.message || String(instanceOrError.error),
+                extendedError: instanceOrError.error.path ? JSON.stringify(instanceOrError.error.path, null, 2) : '',
             });
             return;
         }
         const submodelElement = instanceOrError.mustValue();
+
+        if (
+            props.parentElement.modelType === 'AnnotatedRelationshipElement' &&
+            !isDataElementModelType(submodelElement.modelType)
+        ) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 4000,
+                color: 'error',
+                btnColor: 'buttonText',
+                text: 'Only DataElement types are allowed as AnnotatedRelationshipElement annotations.',
+            });
+            return;
+        }
 
         if (props.parentElement.modelType === 'Submodel') {
             // Create the property on the parent Submodel
             await postSubmodelElement(submodelElement, props.parentElement.id);
 
             // Navigate to the new property
-            const query = _.cloneDeep(route.query);
+            const query = structuredClone(route.query);
             query.path = props.parentElement.path + '/submodel-elements/' + submodelElement.idShort;
 
             router.push({
@@ -158,10 +184,10 @@
             // Create the property on the parent element
             await postSubmodelElement(submodelElement, submodelId, idShortPath);
 
-            // Navigate to the new property
-            if (props.parentElement.modelType === 'SubmodelElementCollection') {
-                const query = _.cloneDeep(route.query);
-                query.path = props.parentElement.path + '.' + submodelElement.idShort;
+            const createdPath = getCreatedSubmodelElementPath(props.parentElement, submodelElement.idShort);
+            if (createdPath) {
+                const query = structuredClone(route.query);
+                query.path = createdPath;
 
                 router.push({
                     query: query,
@@ -183,7 +209,7 @@
         }
         const aas = instanceOrError.mustValue();
         // Create new SubmodelReference
-        const submodelReference = new aasTypes.Reference(aasTypes.ReferenceTypes.ExternalReference, [
+        const submodelReference = new aasTypes.Reference(aasTypes.ReferenceTypes.ModelReference, [
             new aasTypes.Key(aasTypes.KeyTypes.Submodel, submodel.id),
         ]);
         // Check if Submodels are null
@@ -198,6 +224,43 @@
 
         // Update AAS in Store
         aasStore.dispatchSelectedAAS(localAAS);
+    }
+
+    async function syncSubmodelDescriptor(submodel: aasTypes.Submodel): Promise<void> {
+        if (submodelRepoHasRegistryIntegration.value) {
+            return;
+        }
+
+        const submodelHref = `${submodelRepoUrl.value}/submodels/${base64Encode(submodel.id)}`;
+        const descriptor = createDescriptorFromSubmodel(
+            jsonization.toJsonable(submodel),
+            createEndpoints(submodelHref, 'SUBMODEL-3.0')
+        );
+
+        const success = (await putSubmodelDescriptor(descriptor)) || (await postSubmodelDescriptor(descriptor));
+        if (!success) {
+            navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 8000,
+                color: 'warning',
+                btnColor: 'buttonText',
+                baseError: 'Submodel inserted with synchronization warning.',
+                extendedError: `Failed to synchronize Submodel descriptor for '${submodel.id}'.`,
+            });
+        }
+    }
+
+    function createEndpoints(href: string, type: string): Array<Endpoint> {
+        let protocol: string | null = null;
+        try {
+            const url = new URL(href);
+            protocol = url.protocol.replace(/:$/, '');
+        } catch {
+            // If href is not a valid absolute URL, keep protocol null.
+        }
+
+        const protocolInformation = new ProtocolInformation(href, null, protocol);
+        return [new Endpoint(type, protocolInformation)];
     }
 
     function isValidJson(jsonString: string): boolean {

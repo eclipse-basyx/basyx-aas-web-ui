@@ -224,6 +224,25 @@
                                                     </template>
                                                     <v-list-item-subtitle>Delete AAS</v-list-item-subtitle>
                                                 </v-list-item>
+                                                <v-divider
+                                                    v-if="
+                                                        item.assetKind === 'Type' ||
+                                                        item.assetInformation?.assetKind === 'Type'
+                                                    "></v-divider>
+                                                <!-- Create Instance from Type -->
+                                                <v-list-item
+                                                    v-if="
+                                                        item.assetKind === 'Type' ||
+                                                        item.assetInformation?.assetKind === 'Type'
+                                                    "
+                                                    @click="createInstanceFromType(item)">
+                                                    <template #prepend>
+                                                        <v-icon size="x-small">mdi-file-plus</v-icon>
+                                                    </template>
+                                                    <v-list-item-subtitle
+                                                        >Create Instance from Type</v-list-item-subtitle
+                                                    >
+                                                </v-list-item>
                                                 <v-divider></v-divider>
                                                 <!-- Copy AAS Endpoint to clipboard -->
                                                 <v-list-item
@@ -288,12 +307,12 @@
     <DeleteAAS v-model="deleteDialog" :aas="aasToDelete" :list-loading-state="listLoading"></DeleteAAS>
     <!-- Dialog for downloading AAS -->
     <DownloadAAS v-model="downloadAASDialog" :aas="aasToDownload"></DownloadAAS>
+    <!-- Dialog for Instance Creation from Type -->
+    <AASToInstance v-model="instanceDialog" :aas="aasToInstantiate"></AASToInstance>
 </template>
 
 <script lang="ts" setup>
     import type { ComponentPublicInstance } from 'vue';
-    import _ from 'lodash';
-    import debounce from 'lodash/debounce';
     import { computed, onActivated, onBeforeUnmount, onMounted, Ref, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
@@ -302,7 +321,9 @@
     import { useClipboardUtil } from '@/composables/ClipboardUtil';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
+    import { useInfrastructureStore } from '@/store/InfrastructureStore';
     import { useNavigationStore } from '@/store/NavigationStore';
+    import { debounce } from '@/utils/generalUtils';
 
     // Extend the ComponentPublicInstance type to include scrollToIndex
     interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -322,6 +343,7 @@
     const navigationStore = useNavigationStore();
     const aasStore = useAASStore();
     const envStore = useEnvStore();
+    const infrastructureStore = useInfrastructureStore();
 
     // Vuetify
     const theme = useTheme();
@@ -342,15 +364,18 @@
     const aasToEdit = ref<any | undefined>(undefined); // Variable to store the AAS to be edited
     const statusCheckInterval = ref<number | undefined>(undefined);
     const copyIcon = ref<string>('mdi-clipboard-file-outline');
+    const instanceDialog = ref(false); // Variable to store if the Instance Creation Dialog should be shown
+    const aasToInstantiate = ref({}); // Variable to store the AAS to be instantiated
 
     // Computed Properties
     const isMobile = computed(() => navigationStore.getIsMobile); // Check if the current Device is a Mobile Device
     const isDark = computed(() => theme.global.current.value.dark); // Check if the current Theme is dark
-    const aasRepoURL = computed(() => navigationStore.getAASRepoURL); // Get the AAS Repository URL from the Store
-    const aasRegistryURL = computed(() => navigationStore.getAASRegistryURL); // Get AAS Registry URL from Store
+    const aasRepoURL = computed(() => infrastructureStore.getAASRepoURL); // Get the AAS Repository URL from the Store
+    const aasRegistryURL = computed(() => infrastructureStore.getAASRegistryURL); // Get AAS Registry URL from Store
     const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
     const primaryColor = computed(() => theme.current.value.colors.primary); // returns the primary color of the current theme
     const triggerAASListReload = computed(() => navigationStore.getTriggerAASListReload); // Get the trigger signal for AAS List reload from store
+    const clearAASList = computed(() => navigationStore.getClearAASList); // Get the clear AAS List signal from store
     const singleAas = computed(() => envStore.getSingleAas); // Get the single AAS state from the Store
     const listHeight = computed(() => {
         if (isMobile.value) {
@@ -371,13 +396,27 @@
     const allowUploading = computed(() => envStore.getAllowUploading); // Check if the current environment config allows uploading shells
     const statusCheck = computed(() => navigationStore.getStatusCheck);
     const copyIconAsRef = computed(() => copyIcon);
+    const isAuthenticating = computed(() => infrastructureStore.getIsAuthenticating); // Check if authentication is in progress
+    const isTestingConnections = computed(() => infrastructureStore.getIsTestingConnections); // Check if testing connections
+    const selectedInfrastructureId = computed(() => infrastructureStore.getSelectedInfrastructureId); // Get selected infrastructure ID
 
     // Watchers
+    // Reload when AAS Registry URL or selected infrastructure changes
     watch(
-        () => aasRegistryURL.value,
-        () => {
-            initialize();
-        }
+        [() => aasRegistryURL.value, () => selectedInfrastructureId.value],
+        ([newUrl, newId], [oldUrl, oldId]) => {
+            // Only reload when URL is valid and not authenticating and not testing connections
+            if (
+                newUrl &&
+                newUrl.trim() !== '' &&
+                !isAuthenticating.value &&
+                !isTestingConnections.value &&
+                (newUrl !== oldUrl || newId !== oldId)
+            ) {
+                initialize();
+            }
+        },
+        { immediate: true }
     );
 
     watch(
@@ -424,6 +463,14 @@
         }
     );
 
+    watch(
+        () => clearAASList.value,
+        () => {
+            aasList.value = [];
+            aasListUnfiltered.value = [];
+        }
+    );
+
     onMounted(() => {
         if (statusCheck.value.state === true) {
             window.clearInterval(statusCheckInterval.value); // clear old interval
@@ -433,8 +480,6 @@
                 updateStatus();
             }, statusCheck.value.interval);
         }
-
-        initialize();
     });
 
     onBeforeUnmount(() => {
@@ -534,7 +579,7 @@
         }
         if (isSelected(aas)) {
             // Deselect AAS: remove aas and path url query parameter
-            const query = _.cloneDeep(route.query);
+            const query = structuredClone(route.query);
             if (Object.hasOwn(query, 'aas')) delete query.aas;
             if (Object.hasOwn(query, 'path')) delete query.path;
 
@@ -546,7 +591,7 @@
             //     scrollToAas = true;
             // }
 
-            const query = _.cloneDeep(route.query);
+            const query = structuredClone(route.query);
             query.aas = aas.path;
             if (Object.hasOwn(query, 'path')) delete query.path;
 
@@ -605,6 +650,11 @@
         if (createNew === false && aasOrAasDescriptor) {
             aasToEdit.value = aasOrAasDescriptor;
         }
+    }
+
+    function createInstanceFromType(aasDescriptor: any): void {
+        instanceDialog.value = true;
+        aasToInstantiate.value = aasDescriptor;
     }
 </script>
 

@@ -1,4 +1,4 @@
-import * as aas from '@aas-core-works/aas-core3.0-typescript';
+import * as aas from '@aas-core-works/aas-core3.1-typescript';
 
 export function createBusinessReportFiguresSMC(forms: any): aas.types.SubmodelElementCollection {
     const elements: aas.types.ISubmodelElement[] = [];
@@ -267,7 +267,7 @@ export function createBusinessReportFiguresSMC(forms: any): aas.types.SubmodelEl
         }
         //TODO this is not being created eventhough code is 100% correct. Something is wrong with the structure of the code not matching the pdf document, pay attention to who is the child of who!
         if (report.dataFile) {
-            const file = new aas.types.File('application/pdf');
+            const file = new aas.types.File();
             file.idShort = 'ConsolidatedDataFile';
             file.semanticId = new aas.types.Reference(aas.types.ReferenceTypes.ExternalReference, [
                 new aas.types.Key(

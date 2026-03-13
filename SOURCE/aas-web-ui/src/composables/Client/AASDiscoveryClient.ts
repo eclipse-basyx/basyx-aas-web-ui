@@ -1,20 +1,20 @@
 import { computed } from 'vue';
 import { useRequestHandling } from '@/composables/RequestHandling';
-import { useNavigationStore } from '@/store/NavigationStore';
+import { useInfrastructureStore } from '@/store/InfrastructureStore';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
 import { stripLastCharacter } from '@/utils/StringUtils';
 
 export function useAASDiscoveryClient() {
     // Stores
-    const navigationStore = useNavigationStore();
+    const infrastructureStore = useInfrastructureStore();
 
     // Composables
-    const { getRequest } = useRequestHandling();
+    const { getRequest, postRequest, deleteRequest } = useRequestHandling();
 
     const endpointPath = '/lookup/shells';
 
     // Computed Properties
-    const aasDiscoveryUrl = computed(() => navigationStore.getAASDiscoveryURL);
+    const aasDiscoveryUrl = computed(() => infrastructureStore.getAASDiscoveryURL);
 
     /**
      * Retrieves the Asset Administration Shell (AAS) ID corresponding to a given global asset ID.
@@ -26,14 +26,20 @@ export function useAASDiscoveryClient() {
      * @param {string} globalAssetId - The global asset ID for which to retrieve the AAS ID.
      * @returns {Promise<string>} A promise that resolves to the AAS ID as a string if found; otherwise, an empty string.
      */
-    async function getAasId(globalAssetId: string): Promise<string> {
-        const failResponse = '';
+    async function getAasId(globalAssetId: string, endpoint?: string): Promise<string> {
+        const aasIds = await getAasIds(globalAssetId, endpoint);
+        if (aasIds.length > 0) return aasIds[0];
+        return '';
+    }
+
+    async function getAasIds(globalAssetId: string, endpoint?: string): Promise<string[]> {
+        const failResponse: string[] = [];
 
         globalAssetId = globalAssetId.trim();
 
         if (globalAssetId === '') return failResponse;
 
-        let aasDiscUrl = aasDiscoveryUrl.value.trim();
+        let aasDiscUrl = endpoint ? endpoint : aasDiscoveryUrl.value.trim();
         if (aasDiscUrl === '') return failResponse;
         if (aasDiscUrl.endsWith('/')) aasDiscUrl = stripLastCharacter(aasDiscUrl);
         if (!aasDiscUrl.endsWith(endpointPath)) aasDiscUrl += endpointPath;
@@ -50,7 +56,9 @@ export function useAASDiscoveryClient() {
                 aasDiscoveryResponse.data.result.length > 0
             ) {
                 const aasIds = aasDiscoveryResponse.data.result;
-                if (Array.isArray(aasIds) && aasIds.length > 0) return aasIds[0];
+                if (Array.isArray(aasIds) && aasIds.length > 0) {
+                    return aasIds.filter((aasId) => typeof aasId === 'string' && aasId.trim() !== '');
+                }
             }
         } catch (e) {
             console.warn(e);
@@ -58,6 +66,85 @@ export function useAASDiscoveryClient() {
         }
 
         return failResponse;
+    }
+
+    function resolveDiscoveryBaseUrl(endpoint?: string): string {
+        let aasDiscUrl = endpoint ? endpoint.trim() : aasDiscoveryUrl.value.trim();
+        if (aasDiscUrl === '') return '';
+        if (aasDiscUrl.endsWith('/')) aasDiscUrl = stripLastCharacter(aasDiscUrl);
+        if (!aasDiscUrl.endsWith(endpointPath)) aasDiscUrl += endpointPath;
+
+        return aasDiscUrl;
+    }
+
+    function createAssetLinksFromAssetInformation(
+        globalAssetId?: string | null,
+        specificAssetIds?: Array<{ name?: string; value?: string }> | null
+    ): Array<{ name: string; value: string }> {
+        const links: Array<{ name: string; value: string }> = [];
+
+        if (typeof globalAssetId === 'string' && globalAssetId.trim() !== '') {
+            links.push({ name: 'globalAssetId', value: globalAssetId.trim() });
+        }
+
+        if (Array.isArray(specificAssetIds)) {
+            for (const specificAssetId of specificAssetIds) {
+                const name = typeof specificAssetId?.name === 'string' ? specificAssetId.name.trim() : '';
+                const value = typeof specificAssetId?.value === 'string' ? specificAssetId.value.trim() : '';
+                if (name !== '' && value !== '') {
+                    links.push({ name, value });
+                }
+            }
+        }
+
+        return links;
+    }
+
+    async function upsertAssetLinksForAas(
+        aasId: string,
+        assetLinks: Array<{ name: string; value: string }>,
+        endpoint?: string
+    ): Promise<boolean> {
+        const failResponse = false;
+
+        if (!aasId) return failResponse;
+
+        aasId = aasId.trim();
+
+        if (aasId === '' || !Array.isArray(assetLinks) || assetLinks.length === 0) return failResponse;
+
+        const discoveryBaseUrl = resolveDiscoveryBaseUrl(endpoint);
+        if (discoveryBaseUrl === '') return failResponse;
+
+        const path = `${discoveryBaseUrl}/${base64Encode(aasId)}`;
+        const context = 'updating AAS discovery asset links';
+        const disableMessage = false;
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const body = JSON.stringify(assetLinks);
+
+        const response = await postRequest(path, body, headers, context, disableMessage);
+        return response.success;
+    }
+
+    async function deleteAssetLinksForAas(aasId: string, endpoint?: string): Promise<boolean> {
+        const failResponse = false;
+
+        if (!aasId) return failResponse;
+
+        aasId = aasId.trim();
+
+        if (aasId === '') return failResponse;
+
+        const discoveryBaseUrl = resolveDiscoveryBaseUrl(endpoint);
+        if (discoveryBaseUrl === '') return failResponse;
+
+        const path = `${discoveryBaseUrl}/${base64Encode(aasId)}`;
+        const context = 'deleting AAS discovery asset links';
+        const disableMessage = false;
+        const response = await deleteRequest(path, context, disableMessage);
+
+        return response.success;
     }
 
     /**
@@ -89,6 +176,10 @@ export function useAASDiscoveryClient() {
     return {
         endpointPath,
         getAasId,
+        getAasIds,
+        createAssetLinksFromAssetInformation,
+        upsertAssetLinksForAas,
+        deleteAssetLinksForAas,
         isAvailableById,
     };
 }

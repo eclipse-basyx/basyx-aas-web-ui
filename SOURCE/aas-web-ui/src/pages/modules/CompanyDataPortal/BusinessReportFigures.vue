@@ -104,7 +104,9 @@
 
                         <v-expansion-panels variant="accordion" class="mb-2">
                             <v-expansion-panel v-for="(customer, i) in form.customers" :key="i">
-                                <v-expansion-panel-title>Reference Customer {{ i + 1 }}</v-expansion-panel-title>
+                                <v-expansion-panel-title
+                                    >Reference Customer {{ (i as number) + 1 }}</v-expansion-panel-title
+                                >
                                 <v-expansion-panel-text>
                                     <FormField label="Customer Website" tip="Customer’s website">
                                         <v-text-field

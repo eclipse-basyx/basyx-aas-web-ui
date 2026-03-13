@@ -3,11 +3,18 @@ FROM --platform=$BUILDPLATFORM node:lts-slim AS build-stage
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
 ARG NODE_OPTIONS=--max-old-space-size=8192
+ARG VITE_APP_VERSION
+ARG VITE_APP_COMMIT_SHA
+ARG VITE_APP_BUILD_DATE
 ENV NODE_OPTIONS=$NODE_OPTIONS
+ENV VITE_APP_VERSION=$VITE_APP_VERSION
+ENV VITE_APP_COMMIT_SHA=$VITE_APP_COMMIT_SHA
+ENV VITE_APP_BUILD_DATE=$VITE_APP_BUILD_DATE
 # Set working directory
 WORKDIR /app
-# Copy the package.json and yarn.lock files
+# Copy package manifests and install scripts
 COPY package.json yarn.lock ./
+COPY scripts ./scripts
 # Install dependencies
 RUN --mount=type=cache,target=/root/.cache/yarn \
     yarn install --frozen-lockfile --non-interactive --network-timeout 600000

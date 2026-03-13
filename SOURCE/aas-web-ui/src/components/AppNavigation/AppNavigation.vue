@@ -7,41 +7,74 @@
                     <!-- Logo in the App Bar -->
                     <img :src="LogoPath" style="min-height: 42px; max-height: 42px" alt="Logo" />
                 </v-card>
-                <v-divider v-if="!isMobile" vertical inset class="ml-6" :class="!isMobile ? '' : ''"></v-divider>
                 <!-- Home button -->
-                <v-tooltip v-if="!isMobile" open-delay="600" location="bottom">
-                    <template #activator="{ props }">
-                        <v-btn
-                            icon="mdi-home-outline"
-                            variant="plain"
-                            v-bind="props"
-                            :to="{ name: currentRoute, query: {} }"
-                            class="ml-2">
-                        </v-btn>
-                    </template>
-                    <span>Home</span>
-                </v-tooltip>
-                <!-- Menu Toggle (Desktop) -->
-                <v-menu v-if="!isMobile" v-model="mainMenu" :close-on-content-click="false" :offset="8">
-                    <template #activator="{ props }">
-                        <v-btn class="text-none" v-bind="props" append-icon="mdi-chevron-down" variant="text">
-                            {{ route.meta?.title ? route.meta.title.toString() : route.meta?.name?.toString() }}
-                        </v-btn>
-                    </template>
-                    <!-- Main Menu Component -->
-                    <MainMenu @close-menu="mainMenu = false"></MainMenu>
-                </v-menu>
+                <v-btn-group v-if="!isMobile" class="ml-7" density="compact" border>
+                    <v-tooltip open-delay="600" location="bottom">
+                        <template #activator="{ props }">
+                            <v-btn
+                                variant="tonal"
+                                style="padding-right: 20px; padding-left: 20px"
+                                icon
+                                :active="false"
+                                v-bind="props"
+                                :to="{ name: currentRoute, query: {} }">
+                                <v-icon size="small">mdi-home-outline</v-icon>
+                            </v-btn>
+                        </template>
+                        <div class="d-flex flex-column align-center">
+                            <div class="d-flex align-center mb-1">
+                                <v-hotkey :keys="homeCombo" variant="elevated" class="mr-2" />
+                                <span>Home</span>
+                            </div>
+                            <span>Clears the current query parameters</span>
+                        </div>
+                    </v-tooltip>
+                    <v-divider vertical inset></v-divider>
+                    <!-- Menu Toggle (Desktop) -->
+                    <v-menu v-model="mainMenu" :close-on-content-click="false" :offset="8">
+                        <template #activator="{ props: menuProps }">
+                            <v-btn
+                                class="text-none"
+                                v-bind="menuProps"
+                                append-icon="mdi-menu-down"
+                                variant="tonal"
+                                size="small">
+                                {{ menuToggleTitle }}
+                            </v-btn>
+                        </template>
+                        <!-- Main Menu Component -->
+                        <MainMenu @close-menu="mainMenu = false"></MainMenu>
+                    </v-menu>
+                    <v-divider vertical inset></v-divider>
+                    <v-tooltip open-delay="600" location="bottom">
+                        <template #activator="{ props }">
+                            <v-btn
+                                variant="tonal"
+                                style="padding-right: 20px; padding-left: 20px"
+                                icon
+                                v-bind="props"
+                                @click="commandPaletteDialog = true">
+                                <v-icon size="small">mdi-console-line</v-icon>
+                            </v-btn>
+                        </template>
+                        <span>
+                            <v-hotkey :keys="commandPaletteCombo" variant="elevated" class="mr-2" />
+                            Command Palette
+                        </span>
+                    </v-tooltip>
+                </v-btn-group>
                 <v-spacer></v-spacer>
-                <!-- Settings-Menu for Auto-Sync and Sync-Interval -->
-                <AutoSync v-if="showAutoSync"></AutoSync>
-                <!-- Platform I 4.0 Logo -->
-                <v-img
-                    v-if="!isMobile"
-                    src="@/assets/I40.png"
-                    max-width="260px"
-                    :style="{ filter: isDark ? 'invert(1)' : 'invert(0)' }">
-                </v-img>
-                <!-- Menu Toggle (Mobile) -->
+                <!-- Settings (Desktop) -->
+                <v-btn-group v-if="!isMobile" density="compact" class="mr-3" border>
+                    <!-- Auto Sync Toggle -->
+                    <AutoSync v-if="showAutoSync"></AutoSync>
+                    <v-divider v-if="showAutoSync" vertical inset></v-divider>
+                    <!-- Settings Menu -->
+                    <Settings></Settings>
+                </v-btn-group>
+                <!-- Auto Sync Toggle (Mobile) -->
+                <AutoSync v-else></AutoSync>
+                <!-- Settings Dialog (Mobile) -->
                 <v-dialog v-if="isMobile" v-model="mainMenu" fullscreen :z-index="9993" :transition="false">
                     <template #activator="{ props }">
                         <v-btn icon="mdi-cog" v-bind="props" variant="text"></v-btn>
@@ -58,52 +91,43 @@
                         <v-row justify="center" align="start" style="max-height: calc(100vh - 64px); overflow-y: auto">
                             <v-col cols="12" class="text-center px-5">
                                 <ThemeSwitch></ThemeSwitch>
+                                <v-divider class="mt-2"></v-divider>
+                                <InfrastructureSelector
+                                    v-if="endpointConfigAvailable"
+                                    @open-manage="openInfrastructureManagement"></InfrastructureSelector>
                                 <v-divider v-if="endpointConfigAvailable" class="mt-2"></v-divider>
-                                <!-- Backend Configuration -->
-                                <BackendConfig v-if="endpointConfigAvailable"></BackendConfig>
                             </v-col>
                             <v-col cols="12" class="text-center">
-                                <!-- Platform I 4.0 Logo -->
-                                <v-img
-                                    src="@/assets/I40.png"
-                                    max-width="260px"
-                                    class="mx-auto"
-                                    :style="{ filter: isDark ? 'invert(1)' : 'invert(0)' }" />
+                                <!-- IDTA Logo -->
+                                <v-img src="@/assets/IDTA_Logo_Blue_Web_S.svg" max-width="120px" class="mx-auto" />
                             </v-col>
                         </v-row>
                     </v-card>
                 </v-dialog>
-                <!-- Settings Menu -->
-                <Settings v-if="!isMobile"></Settings>
                 <!-- Auth Status with user Menu -->
                 <User v-if="!isMobile" />
             </v-row>
         </v-app-bar>
 
         <!-- global Snackbar -->
-        <v-snackbar v-model="Snackbar.status" :color="Snackbar.color" :timeout="Snackbar.timeout" location="top">
-            <v-card v-if="Snackbar.status === true && Snackbar.color == 'error' && Snackbar.baseError">
-                <v-card-title class="text-subtitle-2">{{ Snackbar.baseError }}</v-card-title>
-                <v-divider></v-divider>
-                <v-card-text style="max-height: 200px; overflow-y: auto; max-width: 590px">
-                    <pre class="text-subtitleText text-caption">{{ Snackbar.extendedError }}</pre>
-                </v-card-text>
-            </v-card>
-            <span v-else class="text-buttonText">{{ Snackbar.text }}</span>
-            <template #actions>
-                <v-btn :color="Snackbar.btnColor" variant="plain" @click="closeSnackbar()">
-                    <v-icon>mdi-close</v-icon>
-                </v-btn>
-            </template>
-        </v-snackbar>
+        <Snackbar />
+
+        <!-- Command Palette -->
+        <CommandPalette v-model="commandPaletteDialog" />
 
         <!-- App Footer -->
-        <v-footer app class="bg-appBar text-center d-flex flex-column py-0">
+        <v-footer app class="bg-appBar text-center d-flex py-0">
+            <v-spacer></v-spacer>
             <v-list-item class="px-1">
                 <v-list-item-title>
                     <div>{{ new Date().getFullYear() }} — <strong>Eclipse BaSyx™ ©</strong></div>
                 </v-list-item-title>
             </v-list-item>
+            <v-spacer></v-spacer>
+            <!-- IDTA Logo -->
+            <a href="https://industrialdigitaltwin.org/" target="_blank" rel="noopener">
+                <v-img v-if="!isMobile" src="@/assets/IDTA_Logo_Blue_Web_S.svg" width="80px" class="cursor-pointer" />
+            </a>
         </v-footer>
 
         <!-- left Side Menu with the AAS List -->
@@ -146,13 +170,13 @@
                     <v-col cols="auto" class="pr-1">
                         <v-card
                             class="py-1 px-2 text-buttonText"
-                            :color="route.path === moduleRoute.path ? 'primarySurface' : 'primary'"
+                            :color="isActiveModuleRoute(moduleRoute.path) ? 'primarySurface' : 'primary'"
                             :to="
                                 moduleRoute?.meta?.preserveRouteQuery === true
                                     ? { path: moduleRoute.path, query: route.query }
                                     : { path: moduleRoute.path }
                             "
-                            :disabled="route.path === moduleRoute.path"
+                            :disabled="isActiveModuleRoute(moduleRoute.path)"
                             >{{ moduleRoute.name }}</v-card
                         >
                     </v-col>
@@ -164,8 +188,8 @@
                                     ? { path: moduleRoute.path, query: route.query }
                                     : { path: moduleRoute.path }
                             "
-                            :active="route.path === moduleRoute.path"
-                            :disabled="route.path === moduleRoute.path"
+                            :active="isActiveModuleRoute(moduleRoute.path)"
+                            :disabled="isActiveModuleRoute(moduleRoute.path)"
                             style="z-index: 9990"
                             size="small"
                             color="primary"
@@ -228,6 +252,8 @@
     import { computed, onMounted, ref, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTheme } from 'vuetify';
+    import Snackbar from '@/components/AppNavigation/Snackbar.vue';
+    import { useGlobalShortcuts } from '@/composables/Shortcuts/useGlobalShortcuts';
     import { useAASStore } from '@/store/AASDataStore';
     import { useEnvStore } from '@/store/EnvironmentStore';
     import { useNavigationStore } from '@/store/NavigationStore';
@@ -244,20 +270,48 @@
     // Vuetify
     const theme = useTheme();
 
+    // Platform detection for hotkey
+    const isMac = computed(() => typeof navigator !== 'undefined' && /macintosh|mac os x/i.test(navigator.userAgent));
+    const commandPaletteCombo = computed(() => (isMac.value ? 'cmd+k' : 'ctrl+k'));
+    const homeCombo = computed(() => (isMac.value ? 'cmd+shift+h' : 'ctrl+shift+h'));
+
+    // Register global shortcuts with command palette callback
+    useGlobalShortcuts(() => {
+        commandPaletteDialog.value = true;
+    });
+
     // Data
     const mainMenu = ref(false); // Variable to show the Main Menu
+    const commandPaletteDialog = ref(false); // Variable to show the Command Palette Dialog
+
     const mobileMenu = ref(false); // Variable to show the Mobile Menu
-    const endpointConfigAvailable = ref(envStore.getEndpointConfigAvailable);
     const drawerVisibility = ref(true); // Variable to show the AAS List Drawer
+
+    const infrastructureMenu = ref(false); // Variable to show the Infrastructure Menu
+    const infrastructureManagementDialog = ref(false); // Variable to show the Infrastructure Management Dialog
 
     // Computed Properties
     const currentRoute = computed(() => route.name); // get the current route name
     const isMobile = computed(() => navigationStore.getIsMobile);
     const isDark = computed(() => theme.global.current.value.dark);
-    const Snackbar = computed(() => navigationStore.getSnackbar);
     const selectedAas = computed(() => aasStore.getSelectedAAS); // get selected AAS from Store
     const selectedNode = computed(() => aasStore.getSelectedNode); // get selected AAS from Store
     const moduleRoutes = computed(() => navigationStore.getModuleRoutes); // get the module routes
+    const endpointConfigAvailable = computed(() => envStore.getEndpointConfigAvailable);
+    const menuToggleTitle = computed(() => {
+        if (route.path.startsWith('/modules/')) {
+            const parentModuleRoute = route.matched.find((record) => record.path.startsWith('/modules/'));
+            const parentTitle = parentModuleRoute?.meta?.title;
+            const parentName = parentModuleRoute?.meta?.name;
+
+            if (parentTitle) return parentTitle.toString();
+            if (parentName) return parentName.toString();
+        }
+
+        if (route.meta?.title) return route.meta.title.toString();
+        return route.meta?.name?.toString() || '';
+    });
+
     const filteredAndOrderedModuleRoutes = computed(() => {
         const filteredModuleRoutes = moduleRoutes.value.filter((moduleRoute: RouteRecordRaw) => {
             if (isMobile.value && !moduleRoute?.meta?.isMobileModule) return false;
@@ -272,7 +326,7 @@
                 (!selectedNode.value || Object.keys(selectedNode.value).length === 0)
             )
                 return false;
-            return moduleRoute?.meta?.isVisibleModule === true || moduleRoute.path === route.path;
+            return moduleRoute?.meta?.isVisibleModule === true || isActiveModuleRoute(moduleRoute.path);
         });
         const filteredAndOrderedModuleRoutes = filteredModuleRoutes.sort(
             (moduleRouteA: RouteRecordRaw, moduleRouteB: RouteRecordRaw) => {
@@ -295,9 +349,13 @@
         }
 
         if (isDark.value && envStore.getEnvLogoDarkPath.trim().length > 0) {
-            return logoFolder + envStore.getEnvLogoDarkPath;
+            return validURL(envStore.getEnvLogoDarkPath)
+                ? envStore.getEnvLogoDarkPath
+                : logoFolder + envStore.getEnvLogoDarkPath;
         } else {
-            return logoFolder + envStore.getEnvLogoLightPath;
+            return validURL(envStore.getEnvLogoLightPath)
+                ? envStore.getEnvLogoLightPath
+                : logoFolder + envStore.getEnvLogoLightPath;
         }
     });
     const showMobileMenu = computed(() => isMobile.value && !mainMenu.value);
@@ -310,18 +368,9 @@
             'Visualization',
             'AASEditor',
             'AASSubmodelViewer',
+            'AASCommander',
         ].includes(route.name as string);
     });
-
-    // Watch for changes in the Snackbar Object and close it after the Timeout
-    watch(
-        () => Snackbar.value,
-        () => {
-            if (Snackbar.value.status) {
-                setTimeout(() => closeSnackbar(), Snackbar.value.timeout);
-            }
-        }
-    );
 
     watch(
         () => drawerState.value,
@@ -346,11 +395,7 @@
         }
     });
 
-    function closeSnackbar() {
-        navigationStore.dispatchSnackbar({ status: false });
-    }
-
-    function applyTheme() {
+    function applyTheme(): void {
         // check the local storage for a saved theme preference
         const storedTheme = localStorage.getItem('theme');
         if (storedTheme) {
@@ -374,13 +419,32 @@
         }
     }
 
-    function extendSidebar() {
+    function extendSidebar(): void {
         drawerVisibility.value = true;
         navigationStore.dispatchDrawerState(true);
     }
 
-    function updateDrawerState(value: boolean) {
+    function updateDrawerState(value: boolean): void {
         // console.log('updateDrawerState: ', value);
         navigationStore.dispatchDrawerState(value);
+    }
+
+    function openInfrastructureManagement(): void {
+        infrastructureMenu.value = false;
+        infrastructureManagementDialog.value = true;
+    }
+
+    function validURL(str: string): boolean {
+        try {
+            const url = new URL(str);
+            // Ensure we only accept web protocols (http/https)
+            return url.protocol === 'http:' || url.protocol === 'https:';
+        } catch {
+            return false;
+        }
+    }
+
+    function isActiveModuleRoute(routePath: string): boolean {
+        return route.path === routePath || route.path.startsWith(`${routePath}/`);
     }
 </script>

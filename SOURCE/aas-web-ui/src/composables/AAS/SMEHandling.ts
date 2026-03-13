@@ -56,7 +56,7 @@ export function useSMEHandling() {
 
         if (smePath === '') return failResponse;
 
-        let smOrSme = {} as any;
+        let smOrSme: any;
         if (smePath.includes('/submodel-elements/')) {
             smOrSme = await fetchSmeFromRepo(smePath);
         } else {

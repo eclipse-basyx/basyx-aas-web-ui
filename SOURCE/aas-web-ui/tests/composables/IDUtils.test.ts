@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { createPinia, setActivePinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
 import { useIDUtils } from '@/composables/IDUtils';
@@ -39,7 +38,9 @@ describe("IDUtils.ts; Tests for 'generateIri()'", () => {
         const type = generateIriTestDataset.type;
         // Expected data/output
         const expectedOutputPrefix = generateIriTestDataset.outputPrefix;
-        const expectedRegex = new RegExp('^' + _.escapeRegExp(expectedOutputPrefix) + '\\d{4}_\\d{4}_\\d{4}_\\d{4}$');
+        const expectedRegex = new RegExp(
+            '^' + expectedOutputPrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\d{4}_\\d{4}_\\d{4}_\\d{4}$'
+        );
         // Actual output
         const output = generateIri(type);
         it(`${testId}: generateIri(${("'" + type + "'").padEnd(26, ' ')})`, () => {

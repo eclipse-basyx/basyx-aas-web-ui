@@ -1,4 +1,4 @@
-import { types as aasTypes } from '@aas-core-works/aas-core3.0-typescript';
+import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
 
 export class AASDescriptor {
     // Required fields
@@ -13,7 +13,7 @@ export class AASDescriptor {
     extensions?: Array<aasTypes.Extension> | null;
     globalAssetId?: string | null;
     idShort?: string | null;
-    specificAssetId?: Array<aasTypes.SpecificAssetId> | null;
+    specificAssetIds?: Array<aasTypes.SpecificAssetId> | null;
     submodelDescriptors?: Array<SubmodelDescriptor> | null;
 
     constructor(
@@ -27,7 +27,7 @@ export class AASDescriptor {
         extensions?: Array<aasTypes.Extension> | null,
         globalAssetId?: string | null,
         idShort?: string | null,
-        specificAssetId?: Array<aasTypes.SpecificAssetId> | null,
+        specificAssetIds?: Array<aasTypes.SpecificAssetId> | null,
         submodelDescriptors?: Array<SubmodelDescriptor> | null
     ) {
         this.id = id;
@@ -40,7 +40,7 @@ export class AASDescriptor {
         this.extensions = extensions;
         this.globalAssetId = globalAssetId;
         this.idShort = idShort;
-        this.specificAssetId = specificAssetId;
+        this.specificAssetIds = specificAssetIds;
         this.submodelDescriptors = submodelDescriptors;
     }
 }
