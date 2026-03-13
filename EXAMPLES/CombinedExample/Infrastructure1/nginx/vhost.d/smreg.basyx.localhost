@@ -1,0 +1,2 @@
+# Server-level config - headers here won't apply to location blocks
+# The _location file handles the actual CORS headers
