@@ -163,10 +163,10 @@ The system provides:
 
 | ID      | Title           | Description                                                 | Fit Criterion                                                  |
 | ------- | --------------- | ----------------------------------------------------------- | -------------------------------------------------------------- |
-| NFR.001 | Usability       | UI improvements must reduce average task time.              | Experienced users locate functions <10 min; new users <20 min. |
-| NFR.002 | Performance     | No significant delay from enhancements.                     | API calls ≤ 0.2s slower than current baseline.                 |
+| NFR.001 | Usability       | UI improvements must reduce average task time.              | Loose Guideline: Experienced users locate functions <10 min; new users <20 min. |
+| NFR.002 | Performance     | No significant delay from enhancements.                     | Loose Guideline: API calls ≤ 0.2s slower than current baseline.                 |
 | NFR.003 | Stability       | Application should not crash under standard or rapid usage. | 0 critical failures in 10 test runs.                           |
-| NFR.004 | Maintainability | Clear documentation and readable code.                      | New dev understands within 1 hour.                             |
+| NFR.004 | Maintainability | Clear documentation and readable code.                      | Loose Guideline: New dev understands within 1 hour.                             |
 | NFR.005 | Licensing       | Maintain current open-source license.                       | License remains unchanged.                                     |
 
 ---
