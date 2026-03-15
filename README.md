@@ -44,4 +44,4 @@ requirements:
 - Docker
 - Git
 
-To build the backend and frontend simultaneously, use the `Team2-BaSyx-Viewer-Plugin-Erweiterung/SOURCE/bootstrap.sh`. This starts a Docker image. To stop it again, use `docker-compose down`.
+To build the backend and frontend simultaneously, use the `Team2-BaSyx-Viewer-Plugin-Erweiterung/SOURCE/start.sh` (for Linux/macOS) or `Team2-BaSyx-Viewer-Plugin-Erweiterung/SOURCE/start.bat` (for Windows). This starts a Docker image. To stop it again, use `docker-compose down`.
