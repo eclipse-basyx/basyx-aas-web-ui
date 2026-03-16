@@ -118,7 +118,7 @@
     }>();
 
     const qualifiersValue = ref<Array<aasTypes.Qualifier> | null>(props.modelValue);
-    const predefinedQualifier = predefinedQualifierJson.map((predefinedQualifier: any) => ({
+    const predefinedQualifier = predefinedQualifierJson.map((predefinedQualifier) => ({
         id: predefinedQualifier.id,
         title: predefinedQualifier.title,
         description: predefinedQualifier.description,
@@ -130,7 +130,7 @@
                     predefinedQualifier.qualifier.reference.referenceType as keyof typeof aasTypes.ReferenceTypes
                 ],
                 predefinedQualifier.qualifier.reference.keys.map(
-                    (key: any) =>
+                    (key) =>
                         new aasTypes.Key(aasTypes.KeyTypes[key.keyType as keyof typeof aasTypes.KeyTypes], key.value)
                 ),
                 null
