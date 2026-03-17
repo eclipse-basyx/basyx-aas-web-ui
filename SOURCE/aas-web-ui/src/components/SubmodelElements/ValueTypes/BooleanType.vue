@@ -1,22 +1,34 @@
 <template>
-    <v-list-item class="pt-0">
-        <template #title>
-            <v-switch
-                v-model="newBooleanValue"
-                inset
-                density="compact"
-                :readonly="IsOutputVariable || !isEditable"
-                color="primary"
-                :messages="isOperationVariable ? '' : 'greyed out text on the right shows the current value in the AAS'"
-                :hide-details="IsOperationVariable ? true : false"
-                @update:model-value="changeState">
-                <template #label>
-                    <span style="display: inline; white-space: nowrap" class="text-subtitleText">
-                        {{ booleanValue.value }}
-                    </span>
-                </template>
-            </v-switch>
-        </template>
+    <v-list-item class="pt-0" :class="isOperationVariable ? '' : 'pb-2'">
+        <v-list-item-title :class="isOperationVariable ? 'pt-2' : ''">
+            <div class="d-flex align-center gap-2">
+                <!-- Property label for non-operation variables -->
+                <span v-if="!isOperationVariable" class="text-caption font-weight-bold" style="min-width: 100px">
+                    {{ displayLabel }}:
+                </span>
+                <!-- Switch control -->
+                <v-switch
+                    v-model="newBooleanValue"
+                    inset
+                    density="compact"
+                    :readonly="IsOutputVariable || !isEditable"
+                    color="primary"
+                    :label="isOperationVariable ? (displayName || booleanValue.idShort) : ''"
+                    :messages="isOperationVariable ? '' : 'greyed out text on the right shows the current value in the AAS'"
+                    :hide-details="IsOperationVariable ? true : false"
+                    @update:model-value="changeState">
+                    <template #label>
+                        <span v-if="isOperationVariable" style="display: inline; white-space: nowrap" class="text-subtitleText">
+                            {{ displayName || booleanValue.idShort }}
+                        </span>
+                    </template>
+                </v-switch>
+                <!-- Current value indicator for non-operation variables -->
+                <span v-if="!isOperationVariable" class="text-caption" :class="newBooleanValue ? 'text-success' : 'text-warning'">
+                    [{{ newBooleanValue ? 'true' : 'false' }}]
+                </span>
+            </div>
+        </v-list-item-title>
         <!-- Update Value Button -->
         <template #append>
             <v-btn
@@ -79,6 +91,17 @@
     });
     const IsOutputVariable = computed(() => {
         return props.isOperationVariable != undefined ? props.variableType == 'outputVariables' : false;
+    });
+    const displayName = computed(() => {
+        // Display the displayName if available (for multi-language support)
+        if (props.booleanValue.displayName && props.booleanValue.displayName.length > 0) {
+            return props.booleanValue.displayName[0]?.text || props.booleanValue.idShort;
+        }
+        return null;
+    });
+    const displayLabel = computed(() => {
+        // Show displayName (if available) or idShort as the property label
+        return displayName.value || props.booleanValue.idShort || 'Value';
     });
 
     // Watchers
