@@ -9,7 +9,7 @@
 </template>
 
 <script lang="ts" setup>
-    import ApexCharts from 'apexcharts';
+    import ApexCharts, { type ApexOptions } from 'apexcharts';
     import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
     import { useTheme } from 'vuetify';
 
@@ -130,7 +130,7 @@
             };
 
             // Create and render the chart
-            chartInstance = new ApexCharts(jsonChart.value, chartOptions);
+            chartInstance = new ApexCharts(jsonChart.value, chartOptions as ApexOptions);
             chartInstance.render();
         }
     }

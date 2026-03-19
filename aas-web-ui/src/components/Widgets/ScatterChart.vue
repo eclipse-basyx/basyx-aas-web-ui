@@ -29,7 +29,7 @@
 </template>
 
 <script lang="ts" setup>
-    import ApexCharts from 'apexcharts';
+    import ApexCharts, { type ApexOptions } from 'apexcharts';
     import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
     import { useTheme } from 'vuetify';
     import { useChartHandling } from '@/composables/ChartHandling';
@@ -184,7 +184,7 @@
             }
 
             // Create and render the chart
-            chartInstance = new ApexCharts(scatterChart.value, chartOptions);
+            chartInstance = new ApexCharts(scatterChart.value, chartOptions as ApexOptions);
             chartInstance.render();
 
             // Store the chart options

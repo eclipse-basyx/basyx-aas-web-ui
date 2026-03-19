@@ -39,7 +39,7 @@
 </template>
 
 <script lang="ts" setup>
-    import ApexCharts from 'apexcharts';
+    import ApexCharts, { type ApexOptions } from 'apexcharts';
     import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
     import { useTheme } from 'vuetify';
     import { useChartHandling } from '@/composables/ChartHandling';
@@ -64,8 +64,9 @@
 
     const localChartOptions = ref({} as any);
     const range = ref(60000); // Default range in milliseconds
-    const interpolationOptions = ['smooth', 'straight', 'stepline'];
-    const interpolation = ref('smooth'); // Default interpolation type
+    type InterpolationCurve = 'smooth' | 'straight' | 'stepline' | 'linestep' | 'monotoneCubic';
+    const interpolationOptions: InterpolationCurve[] = ['smooth', 'straight', 'stepline'];
+    const interpolation = ref<InterpolationCurve>('smooth'); // Default interpolation type
 
     // Computed properties
     const currentTheme = computed(() => {
@@ -193,11 +194,12 @@
 
                 // Save the range and interpolation from external options
                 range.value = chartOptions.xaxis.range || 60000;
-                interpolation.value = chartOptions.stroke.curve || 'smooth';
+                const curve = chartOptions?.stroke?.curve;
+                interpolation.value = typeof curve === 'string' ? (curve as InterpolationCurve) : 'smooth';
             }
 
             // Create and render the chart
-            chartInstance = new ApexCharts(areaChart.value, chartOptions);
+            chartInstance = new ApexCharts(areaChart.value, chartOptions as ApexOptions);
             chartInstance.render();
 
             // Store the chart options
@@ -251,13 +253,14 @@
 
     function changeInterpolation(): void {
         if (chartInstance) {
+            const curve = interpolation.value as InterpolationCurve;
             chartInstance.updateOptions({
                 stroke: {
-                    curve: interpolation.value,
+                    curve: curve,
                 },
             });
 
-            localChartOptions.value = { ...localChartOptions.value, stroke: { curve: interpolation.value } };
+            localChartOptions.value = { ...localChartOptions.value, stroke: { curve: curve } };
 
             // Emit the updated options
             emit('chartOptions', localChartOptions.value);

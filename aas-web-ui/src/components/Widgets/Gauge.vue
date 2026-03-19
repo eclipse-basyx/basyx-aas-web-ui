@@ -7,7 +7,7 @@
 </template>
 
 <script lang="ts" setup>
-    import ApexCharts from 'apexcharts';
+    import ApexCharts, { type ApexOptions } from 'apexcharts';
     import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
     import { useTheme } from 'vuetify';
     import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling';
@@ -202,7 +202,7 @@
             }
 
             // Create and render the chart
-            chartInstance = new ApexCharts(gaugeChart.value, chartOptions);
+            chartInstance = new ApexCharts(gaugeChart.value, chartOptions as ApexOptions);
             chartInstance.render();
 
             // Store the chart options
