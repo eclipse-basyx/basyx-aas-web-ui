@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { resolveAttachmentFetchPath, resolveAttachmentFilename } from '@/composables/AAS/AASXPackaging';
+import {
+    isCrossOriginHttpUrl,
+    resolveAttachmentFetchPath,
+    resolveAttachmentFilename,
+} from '@/composables/AAS/AASXPackaging';
 
 describe('AASXPackaging.ts; pure helper tests', () => {
     it('preserves repository attachment fetch path for download packaging', () => {
@@ -43,5 +47,38 @@ describe('AASXPackaging.ts; pure helper tests', () => {
         const fileName = resolveAttachmentFilename(file, 2, 'image/png');
 
         expect(fileName).toBe('file-3-3.png');
+    });
+
+    it('treats same-origin absolute thumbnail URLs as internal', () => {
+        const result = isCrossOriginHttpUrl(
+            'http://localhost:9081/shells/encoded/asset-information/thumbnail',
+            'http://localhost:9081/shells/encoded'
+        );
+
+        expect(result).toBe(false);
+    });
+
+    it('treats cross-origin absolute thumbnail URLs as external', () => {
+        const result = isCrossOriginHttpUrl(
+            'https://evil.example/thumbnail.png',
+            'http://localhost:9081/shells/encoded'
+        );
+
+        expect(result).toBe(true);
+    });
+
+    it('treats relative thumbnail URLs as internal when resolved against same backend origin', () => {
+        const result = isCrossOriginHttpUrl(
+            '/shells/encoded/asset-information/thumbnail',
+            'http://localhost:9081/shells/encoded'
+        );
+
+        expect(result).toBe(false);
+    });
+
+    it('treats http(s) thumbnails as external if reference origin cannot be determined', () => {
+        const result = isCrossOriginHttpUrl('https://example.com/thumbnail.png', 'not-a-valid-reference-url');
+
+        expect(result).toBe(true);
     });
 });

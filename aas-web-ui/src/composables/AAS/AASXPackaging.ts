@@ -167,6 +167,29 @@ function isExternalHttpUrl(path: string): boolean {
     }
 }
 
+function resolveHttpOrigin(url: string, baseUrl?: string): string | null {
+    if (!url || url.trim() === '') return null;
+
+    try {
+        const parsed = baseUrl ? new URL(url, baseUrl) : new URL(url);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
+        return parsed.origin;
+    } catch {
+        return null;
+    }
+}
+
+export function isCrossOriginHttpUrl(url: string, referenceUrl: string): boolean {
+    const absoluteTargetOrigin = resolveHttpOrigin(url);
+    const targetOrigin = absoluteTargetOrigin || resolveHttpOrigin(url, referenceUrl);
+    if (!targetOrigin) return false;
+
+    const referenceOrigin = resolveHttpOrigin(referenceUrl);
+    if (!referenceOrigin) return absoluteTargetOrigin !== null;
+
+    return targetOrigin !== referenceOrigin;
+}
+
 function traverseObjects(root: unknown, visitor: (node: unknown) => void): void {
     if (!root || typeof root !== 'object') return;
 
@@ -434,7 +457,8 @@ export function useAASXPackaging(): {
 
         const isExternalThumbnail =
             defaultThumbnail.isExternal === true ||
-            (defaultThumbnail.isExternal === undefined && isExternalHttpUrl(thumbnailPath));
+            (defaultThumbnail.isExternal === undefined && isExternalHttpUrl(thumbnailPath)) ||
+            isCrossOriginHttpUrl(thumbnailPath, aasPath);
 
         if (isExternalThumbnail) {
             warnings.push(`Skipped external thumbnail URL: ${thumbnailPath}`);
