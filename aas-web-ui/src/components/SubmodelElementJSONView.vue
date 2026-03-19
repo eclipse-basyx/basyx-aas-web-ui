@@ -120,6 +120,7 @@
     import { computed, nextTick, onMounted, ref, watch } from 'vue';
     import { useAASStore } from '@/store/AASDataStore';
     import { useClipboardUtil } from '@/composables/ClipboardUtil';
+    import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage';
 
     // Stores
     const aasStore = useAASStore();
@@ -142,32 +143,7 @@
     const highlightedLineNumbers = ref<number[]>([]);
     const lineNumbersContainer = ref<HTMLElement | null>(null);
 
-    const jsonLanguage =
-        Prism.languages.json ||
-        ({
-            property: {
-                pattern: /(^|[^\\])"(?:\\.|[^\\"\r\n])*"(?=\s*:)/,
-                lookbehind: true,
-                greedy: true,
-            },
-            string: {
-                pattern: /(^|[^\\])"(?:\\.|[^\\"\r\n])*"(?!\s*:)/,
-                lookbehind: true,
-                greedy: true,
-            },
-            comment: {
-                pattern: /\/\/.*|\/\*[\s\S]*?(?:\*\/|$)/,
-                greedy: true,
-            },
-            number: /-?\b\d+(?:\.\d+)?(?:e[+-]?\d+)?\b/i,
-            punctuation: /[{}[\],]/,
-            operator: /:/,
-            boolean: /\b(?:false|true)\b/,
-            null: {
-                pattern: /\bnull\b/,
-                alias: 'keyword',
-            },
-        } as Prism.Grammar);
+    const jsonLanguage = getPrismJsonLanguage();
 
     // Computed Properties
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
