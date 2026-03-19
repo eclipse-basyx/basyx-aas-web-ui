@@ -5,6 +5,7 @@ import { useSMEFile } from '@/composables/AAS/SubmodelElements/File';
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
 import { useCDRepositoryClient } from '@/composables/Client/CDRepositoryClient';
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+import { safeSegment } from '@/utils/StringUtils';
 import { deserializeXml } from '../../../node_modules/basyx-typescript-sdk/dist/lib/aas-dataformat-xml/xmlization.js';
 
 type JsonRecord = Record<string, unknown>;
@@ -79,7 +80,7 @@ function isExternalHttpUrl(path: string): boolean {
     }
 }
 
-function normalizePackagePath(path: string): string {
+export function normalizePackagePath(path: string): string {
     if (!path) return '';
 
     let normalized = path.trim();
@@ -95,15 +96,7 @@ function normalizePackagePath(path: string): string {
     return normalized;
 }
 
-function safeSegment(value: string, fallback: string): string {
-    const cleaned = value
-        ?.trim()
-        .replace(/[^a-zA-Z0-9._-]/g, '-')
-        .replace(/-+/g, '-');
-    return cleaned && cleaned !== '' ? cleaned : fallback;
-}
-
-function packagePathCandidates(path: string): string[] {
+export function packagePathCandidates(path: string): string[] {
     const candidates = new Set<string>();
     const normalized = normalizePackagePath(path);
     if (normalized) candidates.add(normalized);
@@ -134,7 +127,7 @@ function buildSupplementaryMap(parts: Part[]): Map<string, Part> {
     return map;
 }
 
-function pickSupplementaryPart(path: string, supplementaryMap: Map<string, Part>): Part | null {
+export function pickSupplementaryPart(path: string, supplementaryMap: Map<string, Part>): Part | null {
     for (const candidate of packagePathCandidates(path)) {
         const part = supplementaryMap.get(candidate);
         if (part) return part;

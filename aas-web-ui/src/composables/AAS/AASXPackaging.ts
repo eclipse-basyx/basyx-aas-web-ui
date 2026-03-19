@@ -11,6 +11,7 @@ import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { extractId as extractIdFromReference } from '@/utils/AAS/ReferenceUtil';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
+import { safeSegment } from '@/utils/StringUtils';
 import { serializeXml } from '../../../node_modules/basyx-typescript-sdk/dist/lib/aas-dataformat-xml/xmlization.js';
 import { BaSyxEnvironment } from '../../../node_modules/basyx-typescript-sdk/dist/models/BaSyxEnvironment.js';
 
@@ -155,14 +156,6 @@ function normalizeId(id: string): string {
     return id?.trim() || '';
 }
 
-function safeSegment(value: string, fallback: string): string {
-    const cleaned = value
-        ?.trim()
-        .replace(/[^a-zA-Z0-9._-]/g, '-')
-        .replace(/-+/g, '-');
-    return cleaned && cleaned !== '' ? cleaned : fallback;
-}
-
 function isExternalHttpUrl(path: string): boolean {
     if (!path || path.trim() === '') return false;
 
@@ -255,7 +248,7 @@ function collectFileBindings(raw: unknown, clean: unknown, bindings: FileBinding
     }
 }
 
-function resolveAttachmentFilename(file: JsonRecord, index: number, contentType: string): string {
+export function resolveAttachmentFilename(file: JsonRecord, index: number, contentType: string): string {
     const value = asString(file.value);
     const idShort = asString(file.idShort) || `file-${index + 1}`;
 

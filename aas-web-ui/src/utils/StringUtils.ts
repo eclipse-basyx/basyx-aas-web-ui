@@ -46,3 +46,19 @@ export function stripLastCharacter(string: string): string {
 export function isEmptyString(val: string): boolean {
     return !val || val.trim() === '';
 }
+
+/**
+ * Sanitizes a string to be safe for path/file segments by replacing unsupported characters.
+ *
+ * @param {string} value - The value to sanitize.
+ * @param {string} fallback - The value to return if sanitization results in an empty string.
+ * @returns {string} A sanitized segment or the fallback.
+ */
+export function safeSegment(value: string, fallback: string): string {
+    const cleaned = value
+        ?.trim()
+        .replace(/[^a-zA-Z0-9._-]/g, '-')
+        .replace(/-+/g, '-');
+
+    return cleaned && cleaned !== '' ? cleaned : fallback;
+}
