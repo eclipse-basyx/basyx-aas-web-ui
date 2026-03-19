@@ -156,7 +156,11 @@ export function pickSupplementaryPart(path: string, supplementaryMap: Map<string
     const fileNameCandidates = new Set<string>([fileName, decodedFileName]);
     if (sanitizedFileName !== '') fileNameCandidates.add(sanitizedFileName);
 
-    const matchingParts = Array.from(supplementaryMap.values()).filter((part) => {
+    const uniqueParts = Array.from(
+        new Map(Array.from(supplementaryMap.values()).map((part) => [part.URI.pathname, part])).values()
+    );
+
+    const matchingParts = uniqueParts.filter((part) => {
         const partFileName = part.URI.pathname.split('/').pop() || '';
         if (fileNameCandidates.has(partFileName)) return true;
 

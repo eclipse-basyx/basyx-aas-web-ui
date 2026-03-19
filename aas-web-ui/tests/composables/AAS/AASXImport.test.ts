@@ -55,6 +55,19 @@ describe('AASXImport.ts; pure helper tests', () => {
         expect(foundPart).toBe(packagedPart as Part);
     });
 
+    it('does not report ambiguity when one underlying part is indexed by multiple path candidates', () => {
+        const supplementaryMap = new Map<string, Part>();
+        const packagedPart = partWithPath('/aasx-suppl/folder/shared.png');
+
+        // Simulate buildSupplementaryMap behavior where the same Part is stored under multiple candidate keys.
+        supplementaryMap.set('/aasx-suppl/folder/shared.png', packagedPart as Part);
+        supplementaryMap.set('aasx-suppl/folder/shared.png', packagedPart as Part);
+
+        const foundPart = pickSupplementaryPart('shared.png', supplementaryMap);
+
+        expect(foundPart).toBe(packagedPart as Part);
+    });
+
     it('returns null when filename-only matching would be ambiguous', () => {
         const supplementaryMap = new Map<string, Part>();
         const firstPart = partWithPath('/aasx-suppl/folderA/shared.png');
