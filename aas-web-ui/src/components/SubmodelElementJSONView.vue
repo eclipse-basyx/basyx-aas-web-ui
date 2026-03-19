@@ -116,7 +116,6 @@
     /* eslint-disable simple-import-sort/imports */
     import Prism from 'prismjs';
     import 'prismjs/themes/prism.css';
-    import 'prismjs/components/prism-json';
     /* eslint-enable simple-import-sort/imports */
     import { computed, nextTick, onMounted, ref, watch } from 'vue';
     import { useAASStore } from '@/store/AASDataStore';
@@ -142,6 +141,33 @@
     const currentSearchIndex = ref<number>(0);
     const highlightedLineNumbers = ref<number[]>([]);
     const lineNumbersContainer = ref<HTMLElement | null>(null);
+
+    const jsonLanguage =
+        Prism.languages.json ||
+        ({
+            property: {
+                pattern: /(^|[^\\])"(?:\\.|[^\\"\r\n])*"(?=\s*:)/,
+                lookbehind: true,
+                greedy: true,
+            },
+            string: {
+                pattern: /(^|[^\\])"(?:\\.|[^\\"\r\n])*"(?!\s*:)/,
+                lookbehind: true,
+                greedy: true,
+            },
+            comment: {
+                pattern: /\/\/.*|\/\*[\s\S]*?(?:\*\/|$)/,
+                greedy: true,
+            },
+            number: /-?\b\d+(?:\.\d+)?(?:e[+-]?\d+)?\b/i,
+            punctuation: /[{}[\],]/,
+            operator: /:/,
+            boolean: /\b(?:false|true)\b/,
+            null: {
+                pattern: /\bnull\b/,
+                alias: 'keyword',
+            },
+        } as Prism.Grammar);
 
     // Computed Properties
     const selectedAAS = computed(() => aasStore.getSelectedAAS);
@@ -297,11 +323,15 @@
                 typeof window !== 'undefined' &&
                 window.Prism &&
                 window.Prism.highlight &&
-                window.Prism.languages.json
+                (window.Prism.languages.json || jsonLanguage)
             ) {
-                formattedJson.value = window.Prism.highlight(jsonContent.value, window.Prism.languages.json, 'json');
-            } else if (Prism && Prism.highlight && Prism.languages.json) {
-                formattedJson.value = Prism.highlight(jsonContent.value, Prism.languages.json, 'json');
+                formattedJson.value = window.Prism.highlight(
+                    jsonContent.value,
+                    window.Prism.languages.json || jsonLanguage,
+                    'json'
+                );
+            } else if (Prism && Prism.highlight) {
+                formattedJson.value = Prism.highlight(jsonContent.value, jsonLanguage, 'json');
             } else {
                 // Fallback to unformatted JSON if Prism is not available
                 formattedJson.value = jsonContent.value;

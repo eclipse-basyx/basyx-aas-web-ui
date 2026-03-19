@@ -104,7 +104,6 @@
     /* eslint-disable simple-import-sort/imports */
     import Prism from 'prismjs';
     import 'prismjs/themes/prism.css';
-    import 'prismjs/components/prism-json';
     /* eslint-enable simple-import-sort/imports */
     import { computed, nextTick, onMounted, ref, watch } from 'vue';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
@@ -130,6 +129,33 @@
     const currentSearchIndex = ref<number>(0);
     const highlightedLineNumbers = ref<number[]>([]);
     const lineNumbersContainer = ref<HTMLElement | null>(null);
+
+    const jsonLanguage =
+        Prism.languages.json ||
+        ({
+            property: {
+                pattern: /(^|[^\\])"(?:\\.|[^\\"\r\n])*"(?=\s*:)/,
+                lookbehind: true,
+                greedy: true,
+            },
+            string: {
+                pattern: /(^|[^\\])"(?:\\.|[^\\"\r\n])*"(?!\s*:)/,
+                lookbehind: true,
+                greedy: true,
+            },
+            comment: {
+                pattern: /\/\/.*|\/\*[\s\S]*?(?:\*\/|$)/,
+                greedy: true,
+            },
+            number: /-?\b\d+(?:\.\d+)?(?:e[+-]?\d+)?\b/i,
+            punctuation: /[{}[\],]/,
+            operator: /:/,
+            boolean: /\b(?:false|true)\b/,
+            null: {
+                pattern: /\bnull\b/,
+                alias: 'keyword',
+            },
+        } as Prism.Grammar);
 
     // Computed properties
     const lineCount = computed(() => {
@@ -268,7 +294,7 @@
 
             // Apply syntax highlighting using Prism
             if (Prism && Prism.highlight) {
-                formattedJson.value = Prism.highlight(formatted, Prism.languages.json || {}, 'json');
+                formattedJson.value = Prism.highlight(formatted, jsonLanguage, 'json');
             } else {
                 formattedJson.value = formatted;
                 console.warn('Prism highlighting not available');
