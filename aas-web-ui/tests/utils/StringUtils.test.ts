@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { capitalizeFirstLetter, firstLetterToLowerCase, stripLastCharacter } from '@/utils/StringUtils';
+import { capitalizeFirstLetter, firstLetterToLowerCase, safeSegment, stripLastCharacter } from '@/utils/StringUtils';
 
 describe("StringUtils.ts; Tests for 'capitalizeFirstLetter()'", () => {
     // Define test data for capitalizeFirstLetter()
@@ -121,6 +121,63 @@ describe("StringUtils.ts; Tests for 'stripLastCharacter()'", () => {
         it(`${stripLastCharacterTestCombination.testId}: stripLastCharacter('${input}') should be '${output}'`, () => {
             // Perform the assertion
             expect(stripLastCharacter(input)).toBe(output);
+        });
+    });
+});
+
+describe("StringUtils.ts; Tests for 'safeSegment()'", () => {
+    const safeSegmentTestCombinations = [
+        {
+            testId: '6d3661d9-37ea-4f56-a480-2ea74dc2f120',
+            input: 'Markings[0].MarkingFile',
+            fallback: 'fallback',
+            output: 'Markings-0-.MarkingFile',
+        },
+        {
+            testId: 'f58cc267-4e6e-495c-bf49-2c0d5e59041a',
+            input: '  a///b  ',
+            fallback: 'fallback',
+            output: 'a-b',
+        },
+        {
+            testId: '01b5ed09-3ba3-4cb3-adf4-7f322f91fca2',
+            input: '   ',
+            fallback: 'fallback',
+            output: 'fallback',
+        },
+        {
+            testId: 'b2d1fa9d-6cc8-4f1e-9823-9ec8ec4aa770',
+            input: '.',
+            fallback: 'fallback',
+            output: 'fallback',
+        },
+        {
+            testId: '3bbcbfef-78e9-4d11-b721-c90911bb3a4d',
+            input: '..',
+            fallback: 'fallback',
+            output: 'fallback',
+        },
+        {
+            testId: '445fb8a0-b5f2-4329-908d-e5d8d521d9b0',
+            input: '.Markings[0].MarkingFile.png.',
+            fallback: 'fallback',
+            output: 'Markings-0-.MarkingFile.png',
+        },
+        {
+            testId: '09a80f9c-622f-4526-8c03-c84f5f4e46c9',
+            input: 'COM1.txt',
+            fallback: 'fallback',
+            output: 'fallback',
+        },
+    ];
+
+    safeSegmentTestCombinations.forEach(function (safeSegmentTestCombination) {
+        const input = safeSegmentTestCombination.input;
+        const fallback = safeSegmentTestCombination.fallback;
+        const output = safeSegmentTestCombination.output;
+
+        it(`${safeSegmentTestCombination.testId}: safeSegment('${input}', '${fallback}') should be '${output}'`, () => {
+            expect(safeSegment(input, fallback)).toBe(output);
         });
     });
 });

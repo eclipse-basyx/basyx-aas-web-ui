@@ -11,6 +11,7 @@ import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
 import { useRequestHandling } from '@/composables/RequestHandling';
 import { extractId as extractIdFromReference } from '@/utils/AAS/ReferenceUtil';
 import { base64Encode } from '@/utils/EncodeDecodeUtils';
+import { safeSegment } from '@/utils/StringUtils';
 import { serializeXml } from '../../../node_modules/basyx-typescript-sdk/dist/lib/aas-dataformat-xml/xmlization.js';
 import { BaSyxEnvironment } from '../../../node_modules/basyx-typescript-sdk/dist/models/BaSyxEnvironment.js';
 
@@ -155,14 +156,6 @@ function normalizeId(id: string): string {
     return id?.trim() || '';
 }
 
-function safeSegment(value: string, fallback: string): string {
-    const cleaned = value
-        ?.trim()
-        .replace(/[^a-zA-Z0-9._-]/g, '-')
-        .replace(/-+/g, '-');
-    return cleaned && cleaned !== '' ? cleaned : fallback;
-}
-
 function isExternalHttpUrl(path: string): boolean {
     if (!path || path.trim() === '') return false;
 
@@ -172,6 +165,29 @@ function isExternalHttpUrl(path: string): boolean {
     } catch {
         return false;
     }
+}
+
+function resolveHttpOrigin(url: string, baseUrl?: string): string | null {
+    if (!url || url.trim() === '') return null;
+
+    try {
+        const parsed = baseUrl ? new URL(url, baseUrl) : new URL(url);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
+        return parsed.origin;
+    } catch {
+        return null;
+    }
+}
+
+export function isCrossOriginHttpUrl(url: string, referenceUrl: string): boolean {
+    const absoluteTargetOrigin = resolveHttpOrigin(url);
+    const targetOrigin = absoluteTargetOrigin || resolveHttpOrigin(url, referenceUrl);
+    if (!targetOrigin) return false;
+
+    const referenceOrigin = resolveHttpOrigin(referenceUrl);
+    if (!referenceOrigin) return absoluteTargetOrigin !== null;
+
+    return targetOrigin !== referenceOrigin;
 }
 
 function traverseObjects(root: unknown, visitor: (node: unknown) => void): void {
@@ -255,7 +271,7 @@ function collectFileBindings(raw: unknown, clean: unknown, bindings: FileBinding
     }
 }
 
-function resolveAttachmentFilename(file: JsonRecord, index: number, contentType: string): string {
+export function resolveAttachmentFilename(file: JsonRecord, index: number, contentType: string): string {
     const value = asString(file.value);
     const idShort = asString(file.idShort) || `file-${index + 1}`;
 
@@ -439,7 +455,12 @@ export function useAASXPackaging(): {
         const thumbnailPath = asString(defaultThumbnail.path).trim();
         if (thumbnailPath === '') return null;
 
-        if (isExternalHttpUrl(thumbnailPath)) {
+        const isExternalThumbnail =
+            defaultThumbnail.isExternal === true ||
+            (defaultThumbnail.isExternal === undefined && isExternalHttpUrl(thumbnailPath)) ||
+            isCrossOriginHttpUrl(thumbnailPath, aasPath);
+
+        if (isExternalThumbnail) {
             warnings.push(`Skipped external thumbnail URL: ${thumbnailPath}`);
             return null;
         }
