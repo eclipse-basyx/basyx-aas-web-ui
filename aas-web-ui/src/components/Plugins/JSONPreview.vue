@@ -104,10 +104,10 @@
     /* eslint-disable simple-import-sort/imports */
     import Prism from 'prismjs';
     import 'prismjs/themes/prism.css';
-    import 'prismjs/components/prism-json';
     /* eslint-enable simple-import-sort/imports */
     import { computed, nextTick, onMounted, ref, watch } from 'vue';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+    import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage';
 
     const props = defineProps({
         submodelElementData: {
@@ -130,6 +130,8 @@
     const currentSearchIndex = ref<number>(0);
     const highlightedLineNumbers = ref<number[]>([]);
     const lineNumbersContainer = ref<HTMLElement | null>(null);
+
+    const jsonLanguage = getPrismJsonLanguage();
 
     // Computed properties
     const lineCount = computed(() => {
@@ -268,7 +270,7 @@
 
             // Apply syntax highlighting using Prism
             if (Prism && Prism.highlight) {
-                formattedJson.value = Prism.highlight(formatted, Prism.languages.json || {}, 'json');
+                formattedJson.value = Prism.highlight(formatted, jsonLanguage, 'json');
             } else {
                 formattedJson.value = formatted;
                 console.warn('Prism highlighting not available');

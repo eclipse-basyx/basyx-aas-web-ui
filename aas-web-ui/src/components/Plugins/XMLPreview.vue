@@ -104,7 +104,6 @@
     /* eslint-disable simple-import-sort/imports */
     import Prism from 'prismjs';
     import 'prismjs/themes/prism.css';
-    import 'prismjs/components/prism-markup';
     /* eslint-enable simple-import-sort/imports */
     import { computed, nextTick, onMounted, ref, watch } from 'vue';
     import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
