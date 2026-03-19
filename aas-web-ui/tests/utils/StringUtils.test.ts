@@ -145,6 +145,30 @@ describe("StringUtils.ts; Tests for 'safeSegment()'", () => {
             fallback: 'fallback',
             output: 'fallback',
         },
+        {
+            testId: 'b2d1fa9d-6cc8-4f1e-9823-9ec8ec4aa770',
+            input: '.',
+            fallback: 'fallback',
+            output: 'fallback',
+        },
+        {
+            testId: '3bbcbfef-78e9-4d11-b721-c90911bb3a4d',
+            input: '..',
+            fallback: 'fallback',
+            output: 'fallback',
+        },
+        {
+            testId: '445fb8a0-b5f2-4329-908d-e5d8d521d9b0',
+            input: '.Markings[0].MarkingFile.png.',
+            fallback: 'fallback',
+            output: 'Markings-0-.MarkingFile.png',
+        },
+        {
+            testId: '09a80f9c-622f-4526-8c03-c84f5f4e46c9',
+            input: 'COM1.txt',
+            fallback: 'fallback',
+            output: 'fallback',
+        },
     ];
 
     safeSegmentTestCombinations.forEach(function (safeSegmentTestCombination) {

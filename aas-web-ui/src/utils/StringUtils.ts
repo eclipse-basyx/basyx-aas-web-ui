@@ -49,6 +49,7 @@ export function isEmptyString(val: string): boolean {
 
 /**
  * Sanitizes a string to be safe for path/file segments by replacing unsupported characters.
+ * Rejects dot-only segments and reserved Windows device names.
  *
  * @param {string} value - The value to sanitize.
  * @param {string} fallback - The value to return if sanitization results in an empty string.
@@ -60,5 +61,21 @@ export function safeSegment(value: string, fallback: string): string {
         .replace(/[^a-zA-Z0-9._-]/g, '-')
         .replace(/-+/g, '-');
 
-    return cleaned && cleaned !== '' ? cleaned : fallback;
+    if (!cleaned) {
+        return fallback;
+    }
+
+    // Strip leading and trailing dots to avoid dot-only or hidden path segments.
+    const dotStripped = cleaned.replace(/^\.+/, '').replace(/\.+$/, '');
+    if (!dotStripped || dotStripped === '.' || dotStripped === '..') {
+        return fallback;
+    }
+
+    // Reject reserved Windows device names.
+    const windowsReservedPattern = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i;
+    if (windowsReservedPattern.test(dotStripped)) {
+        return fallback;
+    }
+
+    return dotStripped;
 }
