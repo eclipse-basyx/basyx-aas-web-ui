@@ -95,6 +95,14 @@ function normalizePackagePath(path: string): string {
     return normalized;
 }
 
+function safeSegment(value: string, fallback: string): string {
+    const cleaned = value
+        ?.trim()
+        .replace(/[^a-zA-Z0-9._-]/g, '-')
+        .replace(/-+/g, '-');
+    return cleaned && cleaned !== '' ? cleaned : fallback;
+}
+
 function packagePathCandidates(path: string): string[] {
     const candidates = new Set<string>();
     const normalized = normalizePackagePath(path);
@@ -136,9 +144,35 @@ function pickSupplementaryPart(path: string, supplementaryMap: Map<string, Part>
     const fileName = normalized.split('/').pop() || '';
     if (fileName === '') return null;
 
-    const matchingParts = Array.from(supplementaryMap.values()).filter(
-        (part) => (part.URI.pathname.split('/').pop() || '') === fileName
-    );
+    const decodedFileName = (() => {
+        try {
+            return decodeURIComponent(fileName);
+        } catch {
+            return fileName;
+        }
+    })();
+
+    const sanitizedFileName = safeSegment(decodedFileName, '');
+    if (sanitizedFileName !== '') {
+        const directSanitizedMatch =
+            supplementaryMap.get(`/aasx-suppl/${sanitizedFileName}`) ||
+            supplementaryMap.get(`aasx-suppl/${sanitizedFileName}`);
+        if (directSanitizedMatch) return directSanitizedMatch;
+    }
+
+    const fileNameCandidates = new Set<string>([fileName, decodedFileName]);
+    if (sanitizedFileName !== '') fileNameCandidates.add(sanitizedFileName);
+
+    const matchingParts = Array.from(supplementaryMap.values()).filter((part) => {
+        const partFileName = part.URI.pathname.split('/').pop() || '';
+        if (fileNameCandidates.has(partFileName)) return true;
+
+        try {
+            return fileNameCandidates.has(decodeURIComponent(partFileName));
+        } catch {
+            return false;
+        }
+    });
 
     return matchingParts.length === 1 ? matchingParts[0] : null;
 }
@@ -195,13 +229,23 @@ function collectAttachmentUploads(
 
     const visited = new WeakSet<object>();
 
-    const visit = (node: unknown, idShortPath: string[]): void => {
+    const visit = (node: unknown, idShortPath: string[], parentModelType: string = ''): void => {
         if (!node || typeof node !== 'object') return;
         if (visited.has(node as object)) return;
         visited.add(node as object);
 
         if (Array.isArray(node)) {
-            for (const item of node) visit(item, idShortPath);
+            for (const [index, item] of node.entries()) {
+                let indexedPath = idShortPath;
+
+                // AAS paths address SubmodelElementList children using bracket index notation (e.g., Markings[0]).
+                if (parentModelType === 'SubmodelElementList' && idShortPath.length > 0) {
+                    indexedPath = [...idShortPath];
+                    indexedPath[indexedPath.length - 1] = `${indexedPath[indexedPath.length - 1]}[${index}]`;
+                }
+
+                visit(item, indexedPath, parentModelType);
+            }
             return;
         }
 
@@ -246,8 +290,9 @@ function collectAttachmentUploads(
             });
         }
 
-        for (const value of Object.values(record)) {
-            visit(value, nextPath);
+        for (const [key, value] of Object.entries(record)) {
+            const nestedParentModelType = key === 'value' || key === 'statements' ? modelType : '';
+            visit(value, nextPath, nestedParentModelType);
         }
     };
 

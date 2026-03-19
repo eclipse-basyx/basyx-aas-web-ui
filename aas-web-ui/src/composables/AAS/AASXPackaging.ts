@@ -439,7 +439,11 @@ export function useAASXPackaging(): {
         const thumbnailPath = asString(defaultThumbnail.path).trim();
         if (thumbnailPath === '') return null;
 
-        if (isExternalHttpUrl(thumbnailPath)) {
+        const isExternalThumbnail =
+            defaultThumbnail.isExternal === true ||
+            (defaultThumbnail.isExternal === undefined && isExternalHttpUrl(thumbnailPath));
+
+        if (isExternalThumbnail) {
             warnings.push(`Skipped external thumbnail URL: ${thumbnailPath}`);
             return null;
         }
