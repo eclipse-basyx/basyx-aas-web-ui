@@ -7,7 +7,7 @@
 </template>
 
 <script lang="ts" setup>
-    import ApexCharts from 'apexcharts';
+    import ApexCharts, { type ApexOptions } from 'apexcharts';
     import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
     import { useTheme } from 'vuetify';
 
@@ -140,7 +140,7 @@
             };
 
             // Create and render the chart
-            chartInstance = new ApexCharts(pieChart.value, chartOptions);
+            chartInstance = new ApexCharts(pieChart.value, chartOptions as ApexOptions);
             chartInstance.render();
         }
     }

@@ -36,7 +36,7 @@
 </template>
 
 <script lang="ts" setup>
-    import ApexCharts from 'apexcharts';
+    import ApexCharts, { type ApexOptions } from 'apexcharts';
     import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
     import { useTheme } from 'vuetify';
     import { useChartHandling } from '@/composables/ChartHandling';
@@ -178,7 +178,7 @@
             }
 
             // Create and render the chart
-            chartInstance = new ApexCharts(histogramChart.value, chartOptions);
+            chartInstance = new ApexCharts(histogramChart.value, chartOptions as ApexOptions);
             chartInstance.render();
 
             // Store the chart options
@@ -228,7 +228,7 @@
 
             localChartOptions.value = {
                 ...localChartOptions.value,
-                chart: { ...localChartOptions.value.chart, stacked: stacked.value },
+                chart: { ...(localChartOptions.value.chart || {}), stacked: stacked.value },
             };
 
             // Emit the updated options
