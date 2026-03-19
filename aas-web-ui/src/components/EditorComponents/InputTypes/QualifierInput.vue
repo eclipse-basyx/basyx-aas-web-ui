@@ -78,18 +78,36 @@
         </v-card-text>
     </v-sheet>
 
-    <v-btn
-        color="primary"
-        prepend-icon="mdi-plus"
-        variant="outlined"
-        text="Add Qualifier"
-        class="text-none mt-1 mb-4"
-        @click="addQualifier"></v-btn>
+    <v-row align="start" class="mt-1 mb-4">
+        <v-col cols="9" class="py-0">
+            <v-select
+                v-model="predefinedQualifierIdSelected"
+                :items="predefinedQualifier"
+                item-title="title"
+                item-value="id"
+                :hint="predefinedQualifierSelected?.description"
+                label="Qualifier"
+                variant="outlined"
+                density="comfortable"
+                persistent-hint />
+        </v-col>
+
+        <v-col cols="3" class="py-0 d-flex align-end">
+            <v-btn
+                color="primary"
+                prepend-icon="mdi-plus"
+                variant="outlined"
+                text="Add Qualifier"
+                class="text-none mt-1"
+                @click="addQualifier" />
+        </v-col>
+    </v-row>
 </template>
 
 <script setup lang="ts">
     import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
-    import { ref, watch } from 'vue';
+    import { computed, ref, watch } from 'vue';
+    import predefinedQualifierJson from '@/assets/Data/predefinedQualifier.json';
 
     const props = defineProps<{
         modelValue: Array<aasTypes.Qualifier> | null;
@@ -100,6 +118,38 @@
     }>();
 
     const qualifiersValue = ref<Array<aasTypes.Qualifier> | null>(props.modelValue);
+    const predefinedQualifier = predefinedQualifierJson.map((predefinedQualifier) => ({
+        id: predefinedQualifier.id,
+        title: predefinedQualifier.title,
+        description: predefinedQualifier.description,
+        qualifier: new aasTypes.Qualifier(
+            predefinedQualifier.qualifier.type ?? '',
+            aasTypes.DataTypeDefXsd[predefinedQualifier.qualifier.dataType as keyof typeof aasTypes.DataTypeDefXsd],
+            new aasTypes.Reference(
+                aasTypes.ReferenceTypes[
+                    predefinedQualifier.qualifier.reference.referenceType as keyof typeof aasTypes.ReferenceTypes
+                ],
+                predefinedQualifier.qualifier.reference.keys.map(
+                    (key) =>
+                        new aasTypes.Key(aasTypes.KeyTypes[key.keyType as keyof typeof aasTypes.KeyTypes], key.value)
+                ),
+                null
+            ),
+            null,
+            aasTypes.QualifierKind[predefinedQualifier.qualifier.kind as keyof typeof aasTypes.QualifierKind],
+            predefinedQualifier.qualifier.value ?? null,
+            null
+        ),
+    }));
+    const predefinedQualifierIdSelected = ref<string>(predefinedQualifier[0].id);
+
+    const predefinedQualifierSelected = computed(() => {
+        return (
+            predefinedQualifier.find(
+                (predefinedQualifier) => predefinedQualifier.id === predefinedQualifierIdSelected.value
+            ) || null
+        );
+    });
 
     watch(
         qualifiersValue,
@@ -120,7 +170,9 @@
         if (qualifiersValue.value === null) {
             qualifiersValue.value = [];
         }
-        qualifiersValue.value.push(new aasTypes.Qualifier('', aasTypes.DataTypeDefXsd.String));
+
+        if (predefinedQualifierSelected.value !== null)
+            qualifiersValue.value.push(predefinedQualifierSelected.value.qualifier as aasTypes.Qualifier);
     }
 
     function removeQualifier(index: number): void {
