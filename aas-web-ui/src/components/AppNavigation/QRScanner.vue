@@ -88,6 +88,12 @@
     import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
 
+    interface CameraInfo {
+        id: string;
+        label: string;
+        facing: 'front' | 'back' | 'unknown';
+    }
+
     const props = defineProps<{
         modelValue: boolean;
     }>();
@@ -109,15 +115,61 @@
     const scanSuccess = ref(false);
     const errorMessage = ref('');
     const fileInput = ref<HTMLInputElement | null>(null);
-    const currentFacingMode = ref<'environment' | 'user'>('environment'); // 'environment' = back camera
-    const availableCameras = ref<Array<{ id: string; label: string }>>([]);
-    const currentCameraIndex = ref(0);
+    const allCameras = ref<CameraInfo[]>([]);
+    const switchableCameras = ref<CameraInfo[]>([]);
+    const currentSwitchIndex = ref(0);
     const hasCameraToggle = ref(false);
     const hasTorch = ref(false);
     const isTorchOn = ref(false);
 
     let html5QrCode: Html5Qrcode | null = null;
     let currentVideoTrack: MediaStreamTrack | null = null;
+
+    // Probe which deviceId the browser selects for a given facingMode.
+    // This is language-independent — facingMode is a WebRTC standard constraint.
+    async function probeDeviceIdForFacingMode(facingMode: 'environment' | 'user'): Promise<string | null> {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { exact: facingMode } },
+            });
+            const track = stream.getVideoTracks()[0];
+            const deviceId = track.getSettings().deviceId ?? null;
+            track.stop();
+            return deviceId;
+        } catch {
+            return null;
+        }
+    }
+
+    async function buildCameraLists(rawCameras: Array<{ id: string; label: string }>): Promise<void> {
+        // Probe browser for front/back deviceIds (language-independent)
+        const backDeviceId = await probeDeviceIdForFacingMode('environment');
+        const frontDeviceId = await probeDeviceIdForFacingMode('user');
+        const hasRecognizedFacing = backDeviceId !== null || frontDeviceId !== null;
+
+        const classified: CameraInfo[] = rawCameras.map((cam) => {
+            let facing: 'front' | 'back' | 'unknown' = 'unknown';
+            if (cam.id === backDeviceId) facing = 'back';
+            else if (cam.id === frontDeviceId) facing = 'front';
+            return { id: cam.id, label: cam.label, facing };
+        });
+        allCameras.value = classified;
+
+        if (hasRecognizedFacing) {
+            // Mobile-style: use only the probed front/back cameras for switching
+            const curated: CameraInfo[] = [];
+            const primaryBack = classified.find((c) => c.facing === 'back');
+            const primaryFront = classified.find((c) => c.facing === 'front');
+            if (primaryBack) curated.push(primaryBack);
+            if (primaryFront) curated.push(primaryFront);
+            switchableCameras.value = curated;
+        } else {
+            // Desktop-style: no facingMode support, expose all cameras
+            switchableCameras.value = [...classified];
+        }
+
+        hasCameraToggle.value = switchableCameras.value.length > 1;
+    }
 
     // Watch dialog open/close to start/stop scanner
     watch(dialogModel, async (isOpen) => {
@@ -130,20 +182,16 @@
             // Reset state
             scanSuccess.value = false;
             errorMessage.value = '';
-            currentCameraIndex.value = 0;
+            currentSwitchIndex.value = 0;
         }
     });
 
     async function startScanning(): Promise<void> {
         try {
-            console.log('[QRScanner] Starting scanner initialization...');
             isInitializing.value = true;
             errorMessage.value = '';
 
-            // Check if camera is available
-            console.log('[QRScanner] Checking for available cameras...');
             const cameras = await Html5Qrcode.getCameras();
-            console.log('[QRScanner] Found cameras:', cameras);
 
             if (!cameras || cameras.length === 0) {
                 console.warn('[QRScanner] No cameras found');
@@ -153,27 +201,13 @@
                 return;
             }
 
-            // Store available cameras and enable toggle if multiple are present
-            availableCameras.value = cameras;
-            hasCameraToggle.value = cameras.length > 1;
-            console.log('[QRScanner] Camera toggle enabled:', hasCameraToggle.value);
+            await buildCameraLists(cameras);
 
-            // Initialize scanner
-            console.log('[QRScanner] Initializing Html5Qrcode...');
             html5QrCode = new Html5Qrcode('qr-reader');
 
-            // Use facingMode for the first camera (index 0) to guarantee the back camera on
-            // mobile devices. For any other index, use the exact deviceId so camera switching
-            // works reliably on desktop (where facingMode doesn't distinguish between cameras).
-            let cameraConstraint: { facingMode: string } | { deviceId: { exact: string } };
-            if (cameras.length > 1 && currentCameraIndex.value > 0) {
-                const selectedCamera = cameras[currentCameraIndex.value];
-                cameraConstraint = { deviceId: { exact: selectedCamera.id } };
-                console.log('[QRScanner] Starting camera with deviceId:', selectedCamera.label);
-            } else {
-                cameraConstraint = { facingMode: currentFacingMode.value };
-                console.log('[QRScanner] Starting camera with facingMode:', currentFacingMode.value);
-            }
+            // Always use deviceId for a consistent, predictable camera selection
+            const selectedCamera = switchableCameras.value[currentSwitchIndex.value];
+            const cameraConstraint = { deviceId: { exact: selectedCamera.id } };
 
             await html5QrCode.start(
                 cameraConstraint,
@@ -185,7 +219,6 @@
                 onScanError
             );
 
-            console.log('[QRScanner] Camera started successfully');
             isScanning.value = true;
             isInitializing.value = false;
 
@@ -214,7 +247,6 @@
             } else if (message.includes('secure context') || message.includes('HTTPS')) {
                 errorMessage.value = 'Camera requires HTTPS. Please access this page via HTTPS.';
             } else {
-                // Show full error for debugging
                 errorMessage.value = `Failed to start camera: ${message}. Try using "Upload QR Image" instead.`;
             }
 
@@ -246,15 +278,9 @@
     }
 
     async function switchCamera(): Promise<void> {
-        if (availableCameras.value.length <= 1) {
-            console.warn('[QRScanner] Cannot switch camera - only one camera available');
-            return;
-        }
+        if (switchableCameras.value.length <= 1) return;
 
-        // Cycle to the next camera, wrapping around to 0 at the end
-        currentCameraIndex.value = (currentCameraIndex.value + 1) % availableCameras.value.length;
-        console.log('[QRScanner] Switching to camera index:', currentCameraIndex.value);
-        console.log('[QRScanner] Camera label:', availableCameras.value[currentCameraIndex.value].label);
+        currentSwitchIndex.value = (currentSwitchIndex.value + 1) % switchableCameras.value.length;
 
         await stopScanning();
         await startScanning();
