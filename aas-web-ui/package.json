@@ -46,7 +46,7 @@
     "vue": "^3.5.30",
     "vue-router": "^5.0.4",
     "vue3-apexcharts": "^1.11.1",
-    "vuetify": "^3.12.0",
+    "vuetify": "^4.0.3",
     "web-ifc": "^0.0.77",
     "webfontloader": "^1.0.0"
   },
