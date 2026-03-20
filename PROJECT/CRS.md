@@ -121,10 +121,10 @@ These requirements are the basis of the contract with the customer and form, dep
 
 ### 4.1.5 FR05: API Enhancements <a name="fr05"></a>
 
-| Requirement ID | FR05 - Priority: 2 |
+| Requirement ID | FR05 - Priority: 1 |
 | :-- | :-- |
-| Overview | The API must provide more comprehensive information for each AAS. |
-| Fit Criterion | The API endpoint `localhost:8081/shells` must return all available information for each AAS. |
+| Overview | The API must provide the createdAt and updatedAt information for each component that inherits from the AdministrativeInformation class as per the standard https://industrialdigitaltwin.io/aas-specifications/IDTA-01001/v3.2/spec-metamodel/common.html. |
+| Fit Criterion | The API endpoint `localhost:8081/shells/{aasIdentifier}` must return the information createdAt and updatedAt. In addition to that, when a shell is updated, the information should be propagated correctly.|
 
 ### 4.1.6 FR06: Improve Labeling of Input Variables <a name="fr06"></a>
 
