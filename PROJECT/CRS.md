@@ -34,6 +34,7 @@
 | :-- | :-- | :-- | :-- |
 | Amon Rizzo | 18.10.2025 | first version | 1.0 |
 | Amon Rizzo | 01.11.2025 | Restructured use cases and requirements | 1.1 |
+| Amon Rizzo | 20.04.2026 | Improved description of FR.05 | 1.2 |
 
 ***
 ## 1 Scope <a name="scope"></a>
@@ -123,8 +124,8 @@ These requirements are the basis of the contract with the customer and form, dep
 
 | Requirement ID | FR05 - Priority: 2 |
 | :-- | :-- |
-| Overview | The API must provide more comprehensive information for each AAS. |
-| Fit Criterion | The API endpoint `localhost:8081/shells` must return all available information for each AAS. |
+| Overview | The API must provide the createdAt and updatedAt information for each component that inherits from the AdministrativeInformation class as per the standard https://industrialdigitaltwin.io/aas-specifications/IDTA-01001/v3.2/spec-metamodel/common.html. |
+| Fit Criterion | The API endpoint `localhost:8081/shells/{aasIdentifier}` must return the information createdAt and updatedAt. In addition to that, when a shell is updated, the information should be propagated correctly|
 
 ### 4.1.6 FR06: Improve Labeling of Input Variables <a name="fr06"></a>
 
