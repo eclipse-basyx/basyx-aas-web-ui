@@ -1,9 +1,9 @@
-import { useIDUtils } from '@/composables/IDUtils';
+import { useIDUtils } from '@/composables/IDUtils'
 
-export function useReferableUtils() {
-    const { uuidV4Regex } = useIDUtils();
+export function useReferableUtils () {
+  const { uuidV4Regex } = useIDUtils()
 
-    /**
+  /**
      * Extracts the display name from a Referable object based on the specified language.
      *
      * The function follows these steps to determine the display name:
@@ -18,45 +18,50 @@ export function useReferableUtils() {
      * @param {string} [defaultNameToDisplay=''] - The default name to return if no display name is found. Defaults to an empty string.
      * @returns {string} The determined display name or an appropriate fallback value.
      */
-    function nameToDisplay(referable: any, language: string = 'en', defaultNameToDisplay: string = ''): string {
-        if (referable && Object.keys(referable).length > 0) {
-            // 1.) Check if displayName is available, if so, return displayName
-            if (referable?.displayName && Array.isArray(referable?.displayName) && referable?.displayName.length > 0) {
-                const displayNameEn = referable.displayName.find((displayName: any) => {
-                    return displayName.language === language && displayName?.text;
-                });
-                if (displayNameEn && displayNameEn?.text && displayNameEn?.text.trim() !== '')
-                    return displayNameEn.text;
-            }
+  function nameToDisplay (referable: any, language = 'en', defaultNameToDisplay = ''): string {
+    if (referable && Object.keys(referable).length > 0) {
+      // 1.) Check if displayName is available, if so, return displayName
+      if (referable?.displayName && Array.isArray(referable?.displayName) && referable?.displayName.length > 0) {
+        const displayNameEn = referable.displayName.find((displayName: any) => {
+          return displayName.language === language && displayName?.text
+        })
+        if (displayNameEn && displayNameEn?.text && displayNameEn?.text.trim() !== '') {
+          return displayNameEn.text
+        }
+      }
 
-            // 2.) Otherwise return defaultNameToDisplay (if specified)
-            if (defaultNameToDisplay.trim() !== '') return defaultNameToDisplay;
+      // 2.) Otherwise return defaultNameToDisplay (if specified)
+      if (defaultNameToDisplay.trim() !== '') {
+        return defaultNameToDisplay
+      }
 
-            // 3.) Otherwise return idShort (if available and not empty string)
-            if (referable?.idShort && referable?.idShort.trim() !== '') return referable.idShort;
+      // 3.) Otherwise return idShort (if available and not empty string)
+      if (referable?.idShort && referable?.idShort.trim() !== '') {
+        return referable.idShort
+      }
 
-            // 4.) If referable is also an identifiable at the same time return id (if available and not empty string)
-            if (referable?.id && referable?.id.trim() !== '') {
-                // Note: Constraint AASd-120: idShort of submodel elements being a direct child of a SubmodelElementList shall not be specified.
-                // This condition avoids the output of an UUID v4
-                if (
-                    (referable?.parent &&
-                        Object.keys(referable.parent).length > 0 &&
-                        referable.parent?.modelType === 'SubmodelElementList') ||
-                    referable.id.match(new RegExp(uuidV4Regex))
-                ) {
-                    return defaultNameToDisplay.trim() || '';
-                }
-
-                return referable.id;
-            }
+      // 4.) If referable is also an identifiable at the same time return id (if available and not empty string)
+      if (referable?.id && referable?.id.trim() !== '') {
+        // Note: Constraint AASd-120: idShort of submodel elements being a direct child of a SubmodelElementList shall not be specified.
+        // This condition avoids the output of an UUID v4
+        if (
+          (referable?.parent
+            && Object.keys(referable.parent).length > 0
+            && referable.parent?.modelType === 'SubmodelElementList')
+          || new RegExp(uuidV4Regex).test(referable.id)
+        ) {
+          return defaultNameToDisplay.trim() || ''
         }
 
-        // 4.) Return defaultNameToDisplay if specified, otherwise return an empty string
-        return defaultNameToDisplay.trim() || '';
+        return referable.id
+      }
     }
 
-    /**
+    // 4.) Return defaultNameToDisplay if specified, otherwise return an empty string
+    return defaultNameToDisplay.trim() || ''
+  }
+
+  /**
      * Extracts the description from a Referable object based on the specified language.
      * If no suitable description is found, it returns a default description.
      *
@@ -68,22 +73,24 @@ export function useReferableUtils() {
      * @param {string} [defaultDescriptionToDisplay=''] - The default description to return if no matching description is found.
      * @returns {string} The text of the found description in the specified language or the default description if not found.
      */
-    function descriptionToDisplay(referable: any, language = 'en', defaultDescriptionToDisplay = '') {
-        if (
-            referable &&
-            Object.keys(referable).length > 0 &&
-            Array.isArray(referable?.description) &&
-            referable?.description.length > 0
-        ) {
-            const descriptionEn = referable.description.find(
-                (description: any) => description && description.language === language && description.text !== ''
-            );
-            if (descriptionEn && descriptionEn.text) return descriptionEn.text;
-        }
-        return defaultDescriptionToDisplay;
+  function descriptionToDisplay (referable: any, language = 'en', defaultDescriptionToDisplay = '') {
+    if (
+      referable
+      && Object.keys(referable).length > 0
+      && Array.isArray(referable?.description)
+      && referable?.description.length > 0
+    ) {
+      const descriptionEn = referable.description.find(
+        (description: any) => description && description.language === language && description.text !== '',
+      )
+      if (descriptionEn && descriptionEn.text) {
+        return descriptionEn.text
+      }
     }
+    return defaultDescriptionToDisplay
+  }
 
-    /**
+  /**
      * Checks if the `idShort` of a Referable object matches the given `idShort`.
      * The comparison can be performed in two modes:
      * - **startsWith**: checks if the `idShort` of the Referable object starts with the given `idShort`.
@@ -95,48 +102,45 @@ export function useReferableUtils() {
      * @param {boolean} [strict=false] - If true, the check will be case-sensitive.
      * @returns {boolean} Returns true if a matching `idShort` is found, false otherwise.
      */
-    function checkIdShort(
-        referable: any,
-        idShort: string,
-        startsWith: boolean = false,
-        strict: boolean = false
-    ): boolean {
-        if (idShort.trim() === '') return false;
-
-        if (
-            !referable ||
-            Object.keys(referable).length === 0 ||
-            !referable?.idShort ||
-            referable?.idShort.trim() === ''
-        )
-            return false;
-
-        if (startsWith) {
-            // For matching e.g. ProductImage{00} with idShort ProductImage
-            // For matching e.g. Markings__00__
-            if (strict) {
-                return (
-                    referable.idShort === idShort ||
-                    referable.idShort.startsWith(idShort + '{') ||
-                    referable.idShort.startsWith(idShort + '__')
-                );
-            } else {
-                return (
-                    referable.idShort.toLowerCase() === idShort.toLowerCase() ||
-                    referable.idShort.toLowerCase().startsWith(idShort.toLowerCase() + '{') ||
-                    referable.idShort.toLowerCase().startsWith(idShort.toLowerCase() + '__')
-                );
-            }
-        } else {
-            if (strict) {
-                return referable.idShort === idShort;
-            } else {
-                return referable.idShort.toLowerCase() === idShort.toLowerCase();
-            }
-        }
+  function checkIdShort (
+    referable: any,
+    idShort: string,
+    startsWith = false,
+    strict = false,
+  ): boolean {
+    if (idShort.trim() === '') {
+      return false
     }
 
-    /**
+    if (
+      !referable
+      || Object.keys(referable).length === 0
+      || !referable?.idShort
+      || referable?.idShort.trim() === ''
+    ) {
+      return false
+    }
+
+    if (startsWith) {
+      // For matching e.g. ProductImage{00} with idShort ProductImage
+      // For matching e.g. Markings__00__
+      return strict
+        ? (
+            referable.idShort === idShort
+            || referable.idShort.startsWith(idShort + '{')
+            || referable.idShort.startsWith(idShort + '__')
+          )
+        : (
+            referable.idShort.toLowerCase() === idShort.toLowerCase()
+            || referable.idShort.toLowerCase().startsWith(idShort.toLowerCase() + '{')
+            || referable.idShort.toLowerCase().startsWith(idShort.toLowerCase() + '__')
+          )
+    } else {
+      return strict ? referable.idShort === idShort : referable.idShort.toLowerCase() === idShort.toLowerCase()
+    }
+  }
+
+  /**
      * Retrieves a SubmodelElement (SME) by its `idShort` from a given Submodel (SM) or SubmodelElement (SME).
      * If the `idShort` is not found or if the input is invalid, an empty object is returned.
      *
@@ -148,42 +152,48 @@ export function useReferableUtils() {
      * @param {any} submodelElement - The parent SM/SME to search within.
      * @returns {any} The found SME or an empty object if not found or input is invalid.
      */
-    function getSubmodelElementByIdShort(idShort: string, submodelElement: any): any {
-        const failResponse = {} as any;
+  function getSubmodelElementByIdShort (idShort: string, submodelElement: any): any {
+    const failResponse = {} as any
 
-        if (idShort.trim() == '') return failResponse;
-
-        if (!submodelElement?.modelType || submodelElement?.modelType.trim() === '') return failResponse;
-
-        switch (submodelElement.modelType) {
-            case 'Submodel':
-                if (
-                    submodelElement?.submodelElements &&
-                    Array.isArray(submodelElement.submodelElements) &&
-                    submodelElement.submodelElements.length > 0
-                ) {
-                    return submodelElement.submodelElements.find((sme: any) => {
-                        return checkIdShort(sme, idShort);
-                    });
-                }
-                break;
-            case 'SubmodelElementCollection':
-            case 'SubmodelElementList':
-                if (
-                    submodelElement?.value &&
-                    Array.isArray(submodelElement.value) &&
-                    submodelElement.value.length > 0
-                ) {
-                    return submodelElement.value.find((sme: any) => {
-                        return checkIdShort(sme, idShort);
-                    });
-                }
-                break;
-        }
-
-        return failResponse;
+    if (idShort.trim() == '') {
+      return failResponse
     }
-    /**
+
+    if (!submodelElement?.modelType || submodelElement?.modelType.trim() === '') {
+      return failResponse
+    }
+
+    switch (submodelElement.modelType) {
+      case 'Submodel': {
+        if (
+          submodelElement?.submodelElements
+          && Array.isArray(submodelElement.submodelElements)
+          && submodelElement.submodelElements.length > 0
+        ) {
+          return submodelElement.submodelElements.find((sme: any) => {
+            return checkIdShort(sme, idShort)
+          })
+        }
+        break
+      }
+      case 'SubmodelElementCollection':
+      case 'SubmodelElementList': {
+        if (
+          submodelElement?.value
+          && Array.isArray(submodelElement.value)
+          && submodelElement.value.length > 0
+        ) {
+          return submodelElement.value.find((sme: any) => {
+            return checkIdShort(sme, idShort)
+          })
+        }
+        break
+      }
+    }
+
+    return failResponse
+  }
+  /**
      * Retrieves an array of SubmodelElements (SMEs) by their `idShort` from a given Submodel (SM) or SubmodelElement (SME).
      * If the `idShort` is not found or if the input is invalid, an empty array is returned.
      *
@@ -195,47 +205,53 @@ export function useReferableUtils() {
      * @param {any} submodelElement - The parent SM/SME to search within.
      * @returns {any[]} An array of found SMEs matching the `idShort`, or an empty array if not found or input is invalid.
      */
-    function getSubmodelElementsByIdShort(idShort: string, submodelElement: any): any[] {
-        const failResponse = [] as any[];
+  function getSubmodelElementsByIdShort (idShort: string, submodelElement: any): any[] {
+    const failResponse = [] as any[]
 
-        if (idShort.trim() == '') return failResponse;
-
-        if (!submodelElement?.modelType || submodelElement?.modelType.trim() === '') return failResponse;
-
-        switch (submodelElement.modelType) {
-            case 'Submodel':
-                if (
-                    submodelElement?.submodelElements &&
-                    Array.isArray(submodelElement.submodelElements) &&
-                    submodelElement.submodelElements.length > 0
-                ) {
-                    return submodelElement.submodelElements.filter((sme: any) => {
-                        return checkIdShort(sme, idShort);
-                    });
-                }
-                break;
-            case 'SubmodelElementCollection':
-            case 'SubmodelElementList':
-                if (
-                    submodelElement?.value &&
-                    Array.isArray(submodelElement.value) &&
-                    submodelElement.value.length > 0
-                ) {
-                    return submodelElement.value.filter((sme: any) => {
-                        return checkIdShort(sme, idShort);
-                    });
-                }
-                break;
-        }
-
-        return failResponse;
+    if (idShort.trim() == '') {
+      return failResponse
     }
 
-    return {
-        nameToDisplay,
-        descriptionToDisplay,
-        checkIdShort,
-        getSubmodelElementByIdShort,
-        getSubmodelElementsByIdShort,
-    };
+    if (!submodelElement?.modelType || submodelElement?.modelType.trim() === '') {
+      return failResponse
+    }
+
+    switch (submodelElement.modelType) {
+      case 'Submodel': {
+        if (
+          submodelElement?.submodelElements
+          && Array.isArray(submodelElement.submodelElements)
+          && submodelElement.submodelElements.length > 0
+        ) {
+          return submodelElement.submodelElements.filter((sme: any) => {
+            return checkIdShort(sme, idShort)
+          })
+        }
+        break
+      }
+      case 'SubmodelElementCollection':
+      case 'SubmodelElementList': {
+        if (
+          submodelElement?.value
+          && Array.isArray(submodelElement.value)
+          && submodelElement.value.length > 0
+        ) {
+          return submodelElement.value.filter((sme: any) => {
+            return checkIdShort(sme, idShort)
+          })
+        }
+        break
+      }
+    }
+
+    return failResponse
+  }
+
+  return {
+    nameToDisplay,
+    descriptionToDisplay,
+    checkIdShort,
+    getSubmodelElementByIdShort,
+    getSubmodelElementsByIdShort,
+  }
 }

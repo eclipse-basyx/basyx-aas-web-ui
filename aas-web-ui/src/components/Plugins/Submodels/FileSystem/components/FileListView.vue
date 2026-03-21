@@ -1,221 +1,228 @@
 <template>
-    <v-data-table
-        :headers="tableHeaders"
-        :items="fileObjects"
-        :row-props="getRowProps"
-        class="bg-transparent border rounded-lg mt-5"
-        hide-default-footer
-        hover
-        density="compact"
-        @click:row="handleRowClick">
-        <!-- Selection header -->
-        <template #[`header.selection`]>
-            <v-checkbox-btn
-                :model-value="isAllSelected"
-                :indeterminate="isSomeSelected && !isAllSelected"
-                @update:model-value="handleToggleSelectAll"
-                @click.stop>
-            </v-checkbox-btn>
+  <v-data-table
+    class="bg-transparent border rounded-lg mt-5"
+    density="compact"
+    :headers="tableHeaders"
+    hide-default-footer
+    hover
+    :items="fileObjects"
+    :row-props="getRowProps"
+    @click:row="handleRowClick"
+  >
+    <!-- Selection header -->
+    <template #[`header.selection`]>
+      <v-checkbox-btn
+        :indeterminate="isSomeSelected && !isAllSelected"
+        :model-value="isAllSelected"
+        @click.stop
+        @update:model-value="handleToggleSelectAll"
+      />
+    </template>
+
+    <!-- Selection column -->
+    <template #[`item.selection`]="{ item }">
+      <v-checkbox-btn
+        v-if="item.modelType !== 'NavigationElement'"
+        :model-value="isItemSelected(item)"
+        @click.stop
+        @update:model-value="handleToggleSelection(item)"
+      />
+    </template>
+
+    <!-- Name column -->
+    <template #[`item.idShort`]="{ item }">
+      <!-- File item -->
+      <v-list-item
+        v-if="item.modelType === 'File'"
+        class="draggable-item pl-0"
+        :draggable="true"
+        lines="one"
+        @dragend="handleDragEnd"
+        @dragstart="(e: any) => handleDragStart(e, item)"
+      >
+        <template #prepend>
+          <v-icon
+            v-if="(item as FileElement).contentType === 'application/pdf'"
+            color="red"
+          >mdi-file-pdf-box</v-icon>
+          <v-icon
+            v-else-if="checkContentType((item as FileElement).contentType) === 'image'"
+            color="blue-darken-2"
+          >mdi-image</v-icon>
+          <v-icon
+            v-else-if="checkContentType((item as FileElement).contentType) === 'video'"
+            color="orange-darken-1"
+          >mdi-video</v-icon>
+          <v-icon v-else color="grey">mdi-file</v-icon>
         </template>
+        <v-list-item-title class="text-subtitle-2">{{ item.idShort }}</v-list-item-title>
+      </v-list-item>
 
-        <!-- Selection column -->
-        <template #[`item.selection`]="{ item }">
-            <v-checkbox-btn
-                v-if="item.modelType !== 'NavigationElement'"
-                :model-value="isItemSelected(item)"
-                @update:model-value="handleToggleSelection(item)"
-                @click.stop>
-            </v-checkbox-btn>
+      <!-- Folder item -->
+      <v-list-item
+        v-else-if="item.modelType === 'SubmodelElementCollection'"
+        class="draggable-item pl-0"
+        :draggable="true"
+        @dragend="handleDragEnd"
+        @dragleave="(e: any) => handleDragLeave(e, item)"
+        @dragover.prevent="(e: any) => handleDragOver(e, item)"
+        @dragstart="(e: any) => handleDragStart(e, item)"
+        @drop="(e: any) => handleDrop(e, item)"
+      >
+        <template #prepend>
+          <v-icon color="yellow darken-2">mdi-folder</v-icon>
         </template>
+        <v-list-item-title class="text-subtitle-2">
+          {{ getFolderDisplayName(item) }}
+          <span class="text-caption text-medium-emphasis ml-2">({{ getFolderElementCount(item) }})</span>
+        </v-list-item-title>
+      </v-list-item>
 
-        <!-- Name column -->
-        <template #[`item.idShort`]="{ item }">
-            <!-- File item -->
-            <v-list-item
-                v-if="item.modelType === 'File'"
-                lines="one"
-                :draggable="true"
-                class="draggable-item pl-0"
-                @dragstart="(e: any) => handleDragStart(e, item)"
-                @dragend="handleDragEnd">
-                <template #prepend>
-                    <v-icon v-if="(item as FileElement).contentType === 'application/pdf'" color="red"
-                        >mdi-file-pdf-box</v-icon
-                    >
-                    <v-icon
-                        v-else-if="checkContentType((item as FileElement).contentType) === 'image'"
-                        color="blue-darken-2"
-                        >mdi-image</v-icon
-                    >
-                    <v-icon
-                        v-else-if="checkContentType((item as FileElement).contentType) === 'video'"
-                        color="orange-darken-1"
-                        >mdi-video</v-icon
-                    >
-                    <v-icon v-else color="grey">mdi-file</v-icon>
-                </template>
-                <v-list-item-title class="text-subtitle-2">{{ item.idShort }}</v-list-item-title>
-            </v-list-item>
-
-            <!-- Folder item -->
-            <v-list-item
-                v-else-if="item.modelType === 'SubmodelElementCollection'"
-                :draggable="true"
-                class="draggable-item pl-0"
-                @dragstart="(e: any) => handleDragStart(e, item)"
-                @dragend="handleDragEnd"
-                @dragover.prevent="(e: any) => handleDragOver(e, item)"
-                @dragleave="(e: any) => handleDragLeave(e, item)"
-                @drop="(e: any) => handleDrop(e, item)">
-                <template #prepend>
-                    <v-icon color="yellow darken-2">mdi-folder</v-icon>
-                </template>
-                <v-list-item-title class="text-subtitle-2">
-                    {{ getFolderDisplayName(item) }}
-                    <span class="text-caption text-medium-emphasis ml-2">({{ getFolderElementCount(item) }})</span>
-                </v-list-item-title>
-            </v-list-item>
-
-            <!-- Navigation item -->
-            <v-list-item
-                v-else-if="item.modelType === 'NavigationElement'"
-                class="draggable-item pl-0"
-                @dragover.prevent="(e: any) => handleDragOver(e, item)"
-                @dragleave="(e: any) => handleDragLeave(e, item)"
-                @drop="(e: any) => handleDrop(e, item)">
-                <template #prepend>
-                    <v-icon color="yellow darken-2">mdi-folder</v-icon>
-                </template>
-                <v-list-item-title class="text-subtitle-2">...</v-list-item-title>
-            </v-list-item>
+      <!-- Navigation item -->
+      <v-list-item
+        v-else-if="item.modelType === 'NavigationElement'"
+        class="draggable-item pl-0"
+        @dragleave="(e: any) => handleDragLeave(e, item)"
+        @dragover.prevent="(e: any) => handleDragOver(e, item)"
+        @drop="(e: any) => handleDrop(e, item)"
+      >
+        <template #prepend>
+          <v-icon color="yellow darken-2">mdi-folder</v-icon>
         </template>
+        <v-list-item-title class="text-subtitle-2">...</v-list-item-title>
+      </v-list-item>
+    </template>
 
-        <!-- Content type column -->
-        <template #[`item.contentType`]="{ item }">
-            <span v-if="item.modelType === 'File'">{{ `.${mimeToExtension((item as FileElement).contentType)}` }}</span>
-            <span v-else-if="item.modelType === 'SubmodelElementCollection'">Folder</span>
-        </template>
+    <!-- Content type column -->
+    <template #[`item.contentType`]="{ item }">
+      <span v-if="item.modelType === 'File'">{{ `.${mimeToExtension((item as FileElement).contentType)}` }}</span>
+      <span v-else-if="item.modelType === 'SubmodelElementCollection'">Folder</span>
+    </template>
 
-        <!-- Actions column -->
-        <template #[`item.actions`]="{ item }">
-            <div class="d-flex ga-2 justify-end">
-                <v-icon
-                    v-if="isOnSubpath && item.modelType !== 'NavigationElement'"
-                    icon="mdi-arrow-up-bold"
-                    size="small"
-                    color="medium-emphasis"
-                    :disabled="hasSelection"
-                    @click.stop="handleMoveUp(item)" />
-                <v-icon
-                    v-if="item.modelType === 'SubmodelElementCollection'"
-                    icon="mdi-pencil"
-                    size="small"
-                    color="medium-emphasis"
-                    :disabled="hasSelection"
-                    @click.stop="handleEditFolder(item)" />
-                <v-icon
-                    v-if="item.modelType === 'File'"
-                    icon="mdi-tray-arrow-down"
-                    size="small"
-                    color="medium-emphasis"
-                    :disabled="hasSelection"
-                    @click.stop="handleDownload(item)" />
-                <v-icon
-                    v-if="item.modelType !== 'NavigationElement'"
-                    icon="mdi-delete"
-                    size="small"
-                    color="medium-emphasis"
-                    :disabled="hasSelection"
-                    @click.stop="handleDelete(item)" />
-            </div>
-        </template>
-    </v-data-table>
+    <!-- Actions column -->
+    <template #[`item.actions`]="{ item }">
+      <div class="d-flex ga-2 justify-end">
+        <v-icon
+          v-if="isOnSubpath && item.modelType !== 'NavigationElement'"
+          color="medium-emphasis"
+          :disabled="hasSelection"
+          icon="mdi-arrow-up-bold"
+          size="small"
+          @click.stop="handleMoveUp(item)"
+        />
+        <v-icon
+          v-if="item.modelType === 'SubmodelElementCollection'"
+          color="medium-emphasis"
+          :disabled="hasSelection"
+          icon="mdi-pencil"
+          size="small"
+          @click.stop="handleEditFolder(item)"
+        />
+        <v-icon
+          v-if="item.modelType === 'File'"
+          color="medium-emphasis"
+          :disabled="hasSelection"
+          icon="mdi-tray-arrow-down"
+          size="small"
+          @click.stop="handleDownload(item)"
+        />
+        <v-icon
+          v-if="item.modelType !== 'NavigationElement'"
+          color="medium-emphasis"
+          :disabled="hasSelection"
+          icon="mdi-delete"
+          size="small"
+          @click.stop="handleDelete(item)"
+        />
+      </div>
+    </template>
+  </v-data-table>
 </template>
 
 <script setup lang="ts">
-    import type { FileElement, FileSystemElement, TableHeader } from '../types';
-    import { computed } from 'vue';
-    import { useDisplay } from 'vuetify';
-    import { checkContentType, mimeToExtension } from '@/utils/FileHandling';
+  import type { FileElement, FileSystemElement, TableHeader } from '../types'
+  import { computed } from 'vue'
+  import { useDisplay } from 'vuetify'
+  import { checkContentType, mimeToExtension } from '@/utils/FileHandling'
 
-    interface Props {
-        fileObjects: FileSystemElement[];
-        headers: TableHeader[];
-        dragOverFolder: string | null;
-        isOnSubpath: boolean;
-        hasSelection: boolean;
-        isAllSelected: boolean;
-        isSomeSelected: boolean;
-        isItemSelected: (item: FileSystemElement) => boolean;
-        getFolderName: (element: FileSystemElement) => string;
-        getFolderElementCount: (folder: FileSystemElement) => number;
+  interface Props {
+    fileObjects: FileSystemElement[]
+    headers: TableHeader[]
+    dragOverFolder: string | null
+    isOnSubpath: boolean
+    hasSelection: boolean
+    isAllSelected: boolean
+    isSomeSelected: boolean
+    isItemSelected: (item: FileSystemElement) => boolean
+    getFolderName: (element: FileSystemElement) => string
+    getFolderElementCount: (folder: FileSystemElement) => number
+  }
+
+  const props = defineProps<Props>()
+
+  const emit = defineEmits<{
+    (e: 'row-click', item: FileSystemElement): void
+    (e: 'toggle-select-all'): void
+    (e: 'toggle-selection', item: FileSystemElement): void
+    (e: 'navigate-up'): void
+    (e: 'move-up', item: FileSystemElement): void
+    (e: 'edit-folder', item: FileSystemElement): void
+    (e: 'download', item: FileSystemElement): void
+    (e: 'delete', item: FileSystemElement): void
+    (e: 'dragstart', event: DragEvent, item: FileSystemElement): void
+    (e: 'dragend'): void
+    (e: 'dragover', event: DragEvent, item: FileSystemElement): void
+    (e: 'dragleave', event: DragEvent, item: FileSystemElement): void
+    (e: 'drop', event: DragEvent, item: FileSystemElement): void
+  }>()
+
+  const handleToggleSelectAll = (): void => emit('toggle-select-all')
+  const handleToggleSelection = (item: FileSystemElement): void => emit('toggle-selection', item)
+  const handleMoveUp = (item: FileSystemElement): void => emit('move-up', item)
+  const handleEditFolder = (item: FileSystemElement): void => emit('edit-folder', item)
+  const handleDownload = (item: FileSystemElement): void => emit('download', item)
+  const handleDelete = (item: FileSystemElement): void => emit('delete', item)
+  const handleDragStart = (event: DragEvent, item: FileSystemElement): void => emit('dragstart', event, item)
+  const handleDragEnd = (): void => emit('dragend')
+  const handleDragOver = (event: DragEvent, item: FileSystemElement): void => emit('dragover', event, item)
+  const handleDragLeave = (event: DragEvent, item: FileSystemElement): void => emit('dragleave', event, item)
+  const handleDrop = (event: DragEvent, item: FileSystemElement): void => emit('drop', event, item)
+
+  const { mdAndUp } = useDisplay()
+
+  const tableHeaders = computed(() => {
+    if (mdAndUp.value) {
+      return props.headers
     }
+    return props.headers.filter(header => header.key !== 'contentType')
+  })
 
-    const props = defineProps<Props>();
+  function getFolderDisplayName (item: FileSystemElement): string {
+    if (item.displayName) {
+      const nameEntry = item.displayName.find(name => name.language === 'en')
+      if (nameEntry) return nameEntry.text
+    }
+    return item.idShort
+  }
 
-    const emit = defineEmits<{
-        (e: 'row-click', item: FileSystemElement): void;
-        (e: 'toggle-select-all'): void;
-        (e: 'toggle-selection', item: FileSystemElement): void;
-        (e: 'navigate-up'): void;
-        (e: 'move-up', item: FileSystemElement): void;
-        (e: 'edit-folder', item: FileSystemElement): void;
-        (e: 'download', item: FileSystemElement): void;
-        (e: 'delete', item: FileSystemElement): void;
-        (e: 'dragstart', event: DragEvent, item: FileSystemElement): void;
-        (e: 'dragend'): void;
-        (e: 'dragover', event: DragEvent, item: FileSystemElement): void;
-        (e: 'dragleave', event: DragEvent, item: FileSystemElement): void;
-        (e: 'drop', event: DragEvent, item: FileSystemElement): void;
-    }>();
+  function handleRowClick (_event: Event, { item }: { item: FileSystemElement }): void {
+    if (item.modelType === 'NavigationElement') {
+      emit('navigate-up')
+    } else {
+      emit('row-click', item)
+    }
+  }
 
-    const handleToggleSelectAll = (): void => emit('toggle-select-all');
-    const handleToggleSelection = (item: FileSystemElement): void => emit('toggle-selection', item);
-    const handleMoveUp = (item: FileSystemElement): void => emit('move-up', item);
-    const handleEditFolder = (item: FileSystemElement): void => emit('edit-folder', item);
-    const handleDownload = (item: FileSystemElement): void => emit('download', item);
-    const handleDelete = (item: FileSystemElement): void => emit('delete', item);
-    const handleDragStart = (event: DragEvent, item: FileSystemElement): void => emit('dragstart', event, item);
-    const handleDragEnd = (): void => emit('dragend');
-    const handleDragOver = (event: DragEvent, item: FileSystemElement): void => emit('dragover', event, item);
-    const handleDragLeave = (event: DragEvent, item: FileSystemElement): void => emit('dragleave', event, item);
-    const handleDrop = (event: DragEvent, item: FileSystemElement): void => emit('drop', event, item);
-
-    const { mdAndUp } = useDisplay();
-
-    const tableHeaders = computed(() => {
-        if (mdAndUp.value) {
-            return props.headers;
-        }
-        return props.headers.filter((header) => header.key !== 'contentType');
-    });
-
-    const getFolderDisplayName = (item: FileSystemElement): string => {
-        if (item.displayName) {
-            const nameEntry = item.displayName.find((name) => name.language === 'en');
-            if (nameEntry) return nameEntry.text;
-        }
-        return item.idShort;
-    };
-
-    const handleRowClick = (_event: Event, { item }: { item: FileSystemElement }): void => {
-        if (item.modelType === 'NavigationElement') {
-            emit('navigate-up');
-        } else {
-            emit('row-click', item);
-        }
-    };
-
-    const getRowProps = ({ item }: { item: FileSystemElement }): Record<string, any> => {
-        const classes: string[] = [];
-        if (props.isItemSelected(item)) {
-            classes.push('selected-item');
-        }
-        if (props.dragOverFolder === item.idShort) {
-            classes.push('drop-zone-active');
-        }
-        return { class: classes.join(' ') };
-    };
+  function getRowProps ({ item }: { item: FileSystemElement }): Record<string, any> {
+    const classes: string[] = []
+    if (props.isItemSelected(item)) {
+      classes.push('selected-item')
+    }
+    if (props.dragOverFolder === item.idShort) {
+      classes.push('drop-zone-active')
+    }
+    return { class: classes.join(' ') }
+  }
 </script>
 
 <style scoped>

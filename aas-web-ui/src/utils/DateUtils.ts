@@ -1,4 +1,4 @@
-import { padTo2Digits } from '@/utils/NumberUtils';
+import { padTo2Digits } from '@/utils/NumberUtils'
 
 /**
  * RegExp to test date string
@@ -8,14 +8,14 @@ import { padTo2Digits } from '@/utils/NumberUtils';
  *  YYYY-MM-DD
  * @type {RegExp}
  */
-export const dateRegex = /^(\d{4})-?(0[1-9]|1[0-2])-?(0[1-9]|[12]\d|3[01])$/;
+export const dateRegex = /^(\d{4})-?(0[1-9]|1[0-2])-?(0[1-9]|[12]\d|3[01])$/
 
 /**
  * RegExp to test date time string
  * @type {RegExp}
  */
-export const dateTimeRegex =
-    /^((\d{4})-?(0[1-9]|1[0-2])-?(0[1-9]|[12]\d|3[01]))T(([01]\d|2[0-3]):([0-5]\d):([0-5]\d)(\.\d+)?)(Z|(\+|-)((0\d|1[0-3]):[0-5]\d))?$/;
+export const dateTimeRegex
+  = /^((\d{4})-?(0[1-9]|1[0-2])-?(0[1-9]|[12]\d|3[01]))T(([01]\d|2[0-3]):([0-5]\d):([0-5]\d)(\.\d+)?)(Z|(\+|-)((0\d|1[0-3]):[0-5]\d))?$/
 
 /**
  * Converts a JavaScript Date object into a formatted string.
@@ -28,12 +28,12 @@ export const dateTimeRegex =
  * const date = new Date('2023-10-05T15:30:00Z');
  * console.log(formatDate(date)); // "2023-10-05 15:30:00"
  */
-export function formatDate(date: Date): string {
-    return (
-        [date.getFullYear(), padTo2Digits(date.getMonth() + 1), padTo2Digits(date.getDate())].join('-') +
-        ' ' +
-        [padTo2Digits(date.getHours()), padTo2Digits(date.getMinutes()), padTo2Digits(date.getSeconds())].join(':')
-    );
+export function formatDate (date: Date): string {
+  return (
+    [date.getFullYear(), padTo2Digits(date.getMonth() + 1), padTo2Digits(date.getDate())].join('-')
+    + ' '
+    + [padTo2Digits(date.getHours()), padTo2Digits(date.getMinutes()), padTo2Digits(date.getSeconds())].join(':')
+  )
 }
 
 /**
@@ -46,19 +46,19 @@ export function formatDate(date: Date): string {
  * const isoDateTime = getISO8601UTCDateTime();
  * console.log(isoDateTime); // Example output: "2025-02-07T12:34:56Z"
  */
-export function getISO8601UTCDateTime(): string {
-    const date = new Date();
+export function getISO8601UTCDateTime (): string {
+  const date = new Date()
 
-    // Get UTC components
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(date.getUTCDate()).padStart(2, '0');
-    const hours = String(date.getUTCHours()).padStart(2, '0');
-    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-    const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+  // Get UTC components
+  const year = date.getUTCFullYear()
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(date.getUTCDate()).padStart(2, '0')
+  const hours = String(date.getUTCHours()).padStart(2, '0')
+  const minutes = String(date.getUTCMinutes()).padStart(2, '0')
+  const seconds = String(date.getUTCSeconds()).padStart(2, '0')
 
-    // Format as YYYY-MM-DD HH:mm:ss
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}Z`;
+  // Format as YYYY-MM-DD HH:mm:ss
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}Z`
 }
 
 /**
@@ -73,25 +73,25 @@ export function getISO8601UTCDateTime(): string {
  * const xsdDateString = createXSDDateString();
  * console.log(xsdDateString); // Outputs: '2023-10-04T15:30:45.000+01:00'
  */
-export function createXSDDateString(): string {
-    const date = new Date();
-    // Generate the date and time part in the format 'yyyy-mm-ddThh:mm:ss.sss'
-    let dateTime = date.toISOString();
+export function createXSDDateString (): string {
+  const date = new Date()
+  // Generate the date and time part in the format 'yyyy-mm-ddThh:mm:ss.sss'
+  let dateTime = date.toISOString()
 
-    // Get the timezone offset in minutes and convert it to the format '+hh:mm'
-    let timezoneOffset = -date.getTimezoneOffset();
-    const timezoneSign = timezoneOffset >= 0 ? '+' : '-';
-    timezoneOffset = Math.abs(timezoneOffset);
-    const timezoneHours = String(Math.floor(timezoneOffset / 60)).padStart(2, '0');
-    const timezoneMinutes = String(timezoneOffset % 60).padStart(2, '0');
-    const timezone = timezoneSign + timezoneHours + ':' + timezoneMinutes;
+  // Get the timezone offset in minutes and convert it to the format '+hh:mm'
+  let timezoneOffset = -date.getTimezoneOffset()
+  const timezoneSign = timezoneOffset >= 0 ? '+' : '-'
+  timezoneOffset = Math.abs(timezoneOffset)
+  const timezoneHours = String(Math.floor(timezoneOffset / 60)).padStart(2, '0')
+  const timezoneMinutes = String(timezoneOffset % 60).padStart(2, '0')
+  const timezone = timezoneSign + timezoneHours + ':' + timezoneMinutes
 
-    // Add pseudo microseconds and replace the timezone part
-    const pseudoMicroseconds = '000';
+  // Add pseudo microseconds and replace the timezone part
+  const pseudoMicroseconds = '000'
 
-    dateTime = dateTime.replace('Z', pseudoMicroseconds + timezone);
+  dateTime = dateTime.replace('Z', pseudoMicroseconds + timezone)
 
-    return dateTime;
+  return dateTime
 }
 
 /**
@@ -106,14 +106,15 @@ export function createXSDDateString(): string {
  * const time = getTimeFromDate(date);
  * console.log(time); // Outputs: "15:30:45"
  */
-export function getTime(date: Date): string {
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    const seconds = date.getSeconds().toString().padStart(2, '0');
+export function getTime (date: Date): string {
+  const hours = date.getHours().toString().padStart(2, '0')
+  const minutes = date.getMinutes().toString().padStart(2, '0')
+  const seconds = date.getSeconds().toString().padStart(2, '0')
 
-    // check if any of the values is NaN
-    if (isNaN(Number(hours)) || isNaN(Number(minutes)) || isNaN(Number(seconds)) || !hours || !minutes || !seconds)
-        return '';
+  // check if any of the values is NaN
+  if (isNaN(Number(hours)) || isNaN(Number(minutes)) || isNaN(Number(seconds)) || !hours || !minutes || !seconds) {
+    return ''
+  }
 
-    return hours + ':' + minutes + ':' + seconds;
+  return hours + ':' + minutes + ':' + seconds
 }

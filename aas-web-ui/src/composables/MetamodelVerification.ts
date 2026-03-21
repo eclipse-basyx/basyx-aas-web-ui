@@ -1,133 +1,134 @@
-import { types as aasTypes, verification } from '@aas-core-works/aas-core3.1-typescript';
+import type { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
+import { verification } from '@aas-core-works/aas-core3.1-typescript'
 
 export interface VerificationOptions {
-    maxErrors?: number;
-    fieldAliases?: Record<string, string>;
+  maxErrors?: number
+  fieldAliases?: Record<string, string>
 }
 
 export interface VerificationResult {
-    isValid: boolean;
-    totalErrors: number;
-    reportedErrors: number;
-    truncated: boolean;
-    fieldErrors: Map<string, string>;
-    globalErrors: string[];
+  isValid: boolean
+  totalErrors: number
+  reportedErrors: number
+  truncated: boolean
+  fieldErrors: Map<string, string>
+  globalErrors: string[]
 }
 
 const defaultFieldAliases: Record<string, string> = {
-    idShort: 'idShort',
-    category: 'category',
-    description: 'description',
-    displayName: 'displayName',
-    semanticId: 'semanticId',
-    first: 'first',
-    second: 'second',
-    value: 'value',
-    valueType: 'valueType',
-    min: 'min',
-    max: 'max',
-    valueId: 'valueId',
-    contentType: 'contentType',
-    kind: 'kind',
-    entityType: 'entityType',
-    globalAssetId: 'globalAssetId',
-    specificAssetIds: 'specificAssetIds',
-};
-
-function normalizePath(path: string | null | undefined): string {
-    if (!path) {
-        return '';
-    }
-
-    const decoded = path.replaceAll('%5B', '[').replaceAll('%5D', ']');
-    if (decoded.startsWith('.')) {
-        return decoded.slice(1);
-    }
-
-    return decoded;
+  idShort: 'idShort',
+  category: 'category',
+  description: 'description',
+  displayName: 'displayName',
+  semanticId: 'semanticId',
+  first: 'first',
+  second: 'second',
+  value: 'value',
+  valueType: 'valueType',
+  min: 'min',
+  max: 'max',
+  valueId: 'valueId',
+  contentType: 'contentType',
+  kind: 'kind',
+  entityType: 'entityType',
+  globalAssetId: 'globalAssetId',
+  specificAssetIds: 'specificAssetIds',
 }
 
-function tryMapField(path: string, fieldAliases: Record<string, string>): string | null {
-    if (!path) {
-        return null;
-    }
+function normalizePath (path: string | null | undefined): string {
+  if (!path) {
+    return ''
+  }
 
-    const parts = path.split('.').filter((part) => part.length > 0);
-    const lastPart = parts.at(-1);
+  const decoded = path.replaceAll('%5B', '[').replaceAll('%5D', ']')
+  if (decoded.startsWith('.')) {
+    return decoded.slice(1)
+  }
 
-    if (!lastPart) {
-        return null;
-    }
-
-    const normalizedLastPart = lastPart.replace(/\[[^\]]*\]/g, '');
-
-    return fieldAliases[normalizedLastPart] ?? null;
+  return decoded
 }
 
-export function verifyForEditor(element: aasTypes.Class, options?: VerificationOptions): VerificationResult {
-    const maxErrors = options?.maxErrors ?? 10;
-    const fieldAliases = { ...defaultFieldAliases, ...(options?.fieldAliases ?? {}) };
+function tryMapField (path: string, fieldAliases: Record<string, string>): string | null {
+  if (!path) {
+    return null
+  }
 
-    const fieldErrors = new Map<string, string>();
-    const globalErrors: string[] = [];
+  const parts = path.split('.').filter(part => part.length > 0)
+  const lastPart = parts.at(-1)
 
-    let totalErrors = 0;
-    let reportedErrors = 0;
+  if (!lastPart) {
+    return null
+  }
 
-    try {
-        for (const error of verification.verify(element)) {
-            totalErrors += 1;
+  const normalizedLastPart = lastPart.replace(/\[[^\]]*\]/g, '')
 
-            // Only record up to maxErrors, but keep counting totalErrors
-            if (reportedErrors >= maxErrors) {
-                continue;
-            }
-
-            reportedErrors += 1;
-
-            const normalizedPath = normalizePath(String(error.path));
-            const mappedField = tryMapField(normalizedPath, fieldAliases);
-
-            if (mappedField && !fieldErrors.has(mappedField)) {
-                fieldErrors.set(mappedField, error.message);
-                continue;
-            }
-
-            const prefix = normalizedPath ? `${normalizedPath}: ` : '';
-            globalErrors.push(`${prefix}${error.message}`);
-        }
-    } catch (error) {
-        totalErrors = Math.max(totalErrors, 1);
-        reportedErrors = Math.max(reportedErrors, 1);
-        const message = error instanceof Error ? error.message : String(error);
-        globalErrors.push(`Verification failed unexpectedly: ${message}`);
-    }
-
-    return {
-        isValid: totalErrors === 0,
-        totalErrors,
-        reportedErrors,
-        truncated: totalErrors > maxErrors,
-        fieldErrors,
-        globalErrors,
-    };
+  return fieldAliases[normalizedLastPart] ?? null
 }
 
-export function applyFieldErrors(targetErrors: Map<string, string>, sourceErrors: Map<string, string>): void {
-    for (const [field, message] of sourceErrors.entries()) {
-        targetErrors.set(field, message);
+export function verifyForEditor (element: aasTypes.Class, options?: VerificationOptions): VerificationResult {
+  const maxErrors = options?.maxErrors ?? 10
+  const fieldAliases = { ...defaultFieldAliases, ...options?.fieldAliases }
+
+  const fieldErrors = new Map<string, string>()
+  const globalErrors: string[] = []
+
+  let totalErrors = 0
+  let reportedErrors = 0
+
+  try {
+    for (const error of verification.verify(element)) {
+      totalErrors += 1
+
+      // Only record up to maxErrors, but keep counting totalErrors
+      if (reportedErrors >= maxErrors) {
+        continue
+      }
+
+      reportedErrors += 1
+
+      const normalizedPath = normalizePath(String(error.path))
+      const mappedField = tryMapField(normalizedPath, fieldAliases)
+
+      if (mappedField && !fieldErrors.has(mappedField)) {
+        fieldErrors.set(mappedField, error.message)
+        continue
+      }
+
+      const prefix = normalizedPath ? `${normalizedPath}: ` : ''
+      globalErrors.push(`${prefix}${error.message}`)
     }
+  } catch (error) {
+    totalErrors = Math.max(totalErrors, 1)
+    reportedErrors = Math.max(reportedErrors, 1)
+    const message = error instanceof Error ? error.message : String(error)
+    globalErrors.push(`Verification failed unexpectedly: ${message}`)
+  }
+
+  return {
+    isValid: totalErrors === 0,
+    totalErrors,
+    reportedErrors,
+    truncated: totalErrors > maxErrors,
+    fieldErrors,
+    globalErrors,
+  }
 }
 
-export function buildVerificationSummary(result: VerificationResult): string {
-    if (result.totalErrors <= 0) {
-        return '';
-    }
+export function applyFieldErrors (targetErrors: Map<string, string>, sourceErrors: Map<string, string>): void {
+  for (const [field, message] of sourceErrors.entries()) {
+    targetErrors.set(field, message)
+  }
+}
 
-    const shown = result.reportedErrors;
-    if (result.truncated) {
-        return `Validation found ${result.totalErrors} issues. Showing first ${shown}.`;
-    }
+export function buildVerificationSummary (result: VerificationResult): string {
+  if (result.totalErrors <= 0) {
+    return ''
+  }
 
-    return `Validation found ${shown} issue${shown === 1 ? '' : 's'}.`;
+  const shown = result.reportedErrors
+  if (result.truncated) {
+    return `Validation found ${result.totalErrors} issues. Showing first ${shown}.`
+  }
+
+  return `Validation found ${shown} issue${shown === 1 ? '' : 's'}.`
 }
