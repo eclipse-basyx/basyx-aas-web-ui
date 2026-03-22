@@ -149,7 +149,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onMounted, ref } from 'vue'
+  import { computed, onMounted, ref, toRaw } from 'vue'
   import { useDisplay, useTheme } from 'vuetify'
   import { useAASHandling } from '@/composables/AAS/AASHandling'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
@@ -207,7 +207,7 @@
   }
 
   function selectShell (shell: any): void {
-    selectedShell.value = structuredClone(shell)
+    selectedShell.value = structuredClone(toRaw(shell))
     displayName.value = selectedShell.value['displayName']
   }
 

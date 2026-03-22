@@ -156,7 +156,7 @@ export function useSMHandling () {
     }
 
     // An endpoint containing '/submodel-elements/' points to an SME instead of an SM.
-    const smOrSme: any = smEndpoint.includes('/submodel-elements/')
+    let smOrSme: any = smEndpoint.includes('/submodel-elements/')
       ? await fetchSmeFromRepo(smEndpoint)
       : await fetchSmFromRepo(smEndpoint)
 
