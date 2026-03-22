@@ -32,7 +32,7 @@
                                 clearable
                                 :placeholder="aasList.length.toString() + ' Shells'"
                                 persistent-placeholder
-                                @update:model-value="debouncedFilterAasList"></v-text-field>
+                                @update:model-value="onSearchInput"></v-text-field>
                         </v-col>
                         <!-- Add AAS -->
                         <v-col cols="auto" class="px-0">
@@ -96,7 +96,7 @@
                         </v-col>
                         <!-- AAS Filter -->
                         <v-col cols="auto" class="px-0">
-                            <FilterAAS />
+                            <FilterAAS @update:filters="onAttributeFiltersChange" />
                         </v-col>
                     </v-row>
                 </v-card-title>
@@ -330,12 +330,21 @@
         scrollToIndex: (index: number) => void;
     }
 
+    interface AASAttributeFilters {
+        manufacturerName: string;
+        manufacturerProductDesignation: string;
+        manufacturerProductFamily: string;
+        manufacturerProductType: string;
+        orderCodeOfManufacturer: string;
+        productArticleNumberOfManufacturer: string;
+    }
+
     // Vue Router
     const route = useRoute();
     const router = useRouter();
 
     // Composables
-    const { fetchAasDescriptorList, fetchAasList, aasIsAvailableById } = useAASHandling();
+    const { fetchAasDescriptorList, fetchAasList, fetchAas, fetchAasSmListById, aasIsAvailableById } = useAASHandling();
     const { nameToDisplay, descriptionToDisplay } = useReferableUtils();
     const { copyToClipboard } = useClipboardUtil();
 
@@ -351,7 +360,17 @@
     // Data
     const aasList = ref([] as Array<any>) as Ref<Array<any>>; // Variable to store the AAS Data (AAS or AAS Descriptors)
     const aasListUnfiltered = ref([] as Array<any>) as Ref<Array<any>>; // Variable to store the AAS Data before filtering
-    const debouncedFilterAasList = debounce(filterAasList, 300); // Debounced function to filter the AAS List
+    const searchInput = ref('');
+    const attributeFilters = ref<AASAttributeFilters>({
+        manufacturerName: '',
+        manufacturerProductDesignation: '',
+        manufacturerProductFamily: '',
+        manufacturerProductType: '',
+        orderCodeOfManufacturer: '',
+        productArticleNumberOfManufacturer: '',
+    });
+    const debouncedApplyListFilters = debounce(applyListFilters, 300);
+    const enrichedAasIds = ref(new Set<string>());
     const listLoading = ref(false); // Variable to store if the AAS List is loading
     const deleteDialog = ref(false); // Variable to store if the Delete Dialog should be shown
     const downloadAASDialog = ref(false); // Variable to store if the DownloadAAS Dialog should be shown
@@ -468,6 +487,7 @@
         () => {
             aasList.value = [];
             aasListUnfiltered.value = [];
+            enrichedAasIds.value.clear();
         }
     );
 
@@ -494,6 +514,263 @@
         navigationStore.dispatchDrawerState(false);
     }
 
+    function normalizeStringValue(value: unknown): string {
+        if (typeof value === 'string') return value;
+        if (typeof value === 'number' || typeof value === 'boolean') return value.toString();
+        return '';
+    }
+
+    function flattenPrimitiveValues(node: unknown, maxValues: number = 20): Array<string> {
+        const values: Array<string> = [];
+
+        function traverse(currentNode: unknown): void {
+            if (values.length >= maxValues) return;
+
+            if (Array.isArray(currentNode)) {
+                currentNode.forEach((entry) => traverse(entry));
+                return;
+            }
+
+            if (currentNode && typeof currentNode === 'object') {
+                Object.values(currentNode as Record<string, unknown>).forEach((entry) => traverse(entry));
+                return;
+            }
+
+            const normalizedValue = normalizeStringValue(currentNode).trim();
+            if (normalizedValue !== '') values.push(normalizedValue);
+        }
+
+        traverse(node);
+        return values;
+    }
+
+    function normalizeAlias(value: string): string {
+        return value.toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+
+    function isAliasMatch(candidate: unknown, targetAliases: Set<string>): boolean {
+        if (typeof candidate !== 'string') return false;
+
+        const normalizedCandidate = normalizeAlias(candidate);
+        if (normalizedCandidate === '') return false;
+
+        for (const targetAlias of targetAliases) {
+            if (
+                normalizedCandidate === targetAlias ||
+                normalizedCandidate.includes(targetAlias)
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function extractAttributeValue(item: any, aliases: Array<string>): string {
+        if (!item || Object.keys(item).length === 0 || aliases.length === 0) return '';
+
+        const targetAliases = new Set(aliases.map((alias) => normalizeAlias(alias)));
+        const visited = new WeakSet<object>();
+        const collectedValues = [] as Array<string>;
+
+        function addValues(node: unknown): void {
+            const valuesFromNode = flattenPrimitiveValues(node);
+            valuesFromNode.forEach((value) => {
+                const loweredValue = value.toLowerCase();
+                if (loweredValue !== '') collectedValues.push(loweredValue);
+            });
+        }
+
+        function traverse(node: unknown): void {
+            if (!node) return;
+
+            if (Array.isArray(node)) {
+                node.forEach((entry) => traverse(entry));
+                return;
+            }
+
+            if (node && typeof node === 'object') {
+                if (visited.has(node as object)) return;
+                visited.add(node as object);
+
+                const nodeAsRecord = node as Record<string, unknown>;
+                const nodeIdShort =
+                    typeof nodeAsRecord.idShort === 'string' ? nodeAsRecord.idShort : '';
+                const nodeName = typeof nodeAsRecord.name === 'string' ? nodeAsRecord.name : '';
+                const nodeKey = typeof nodeAsRecord.key === 'string' ? nodeAsRecord.key : '';
+
+                if (
+                    isAliasMatch(nodeIdShort, targetAliases) ||
+                    isAliasMatch(nodeName, targetAliases) ||
+                    isAliasMatch(nodeKey, targetAliases)
+                ) {
+                    addValues(Object.hasOwn(nodeAsRecord, 'value') ? nodeAsRecord.value : nodeAsRecord);
+                }
+
+                Object.entries(nodeAsRecord).forEach(([entryKey, entryValue]) => {
+                    if (isAliasMatch(entryKey, targetAliases)) {
+                        addValues(entryValue);
+                    }
+                });
+
+                if (
+                    Array.isArray(nodeAsRecord.specificAssetIds) &&
+                    nodeAsRecord.specificAssetIds.length > 0
+                ) {
+                    (nodeAsRecord.specificAssetIds as Array<Record<string, unknown>>).forEach((specificAssetId) => {
+                        const specificNameCandidates = flattenPrimitiveValues(specificAssetId.name, 3);
+                        const hasMatchingSpecificName = specificNameCandidates.some((nameCandidate) =>
+                            isAliasMatch(nameCandidate, targetAliases)
+                        );
+
+                        if (hasMatchingSpecificName) {
+                            addValues(specificAssetId.value);
+                        }
+                    });
+                }
+
+                Object.values(nodeAsRecord).forEach((entry) => traverse(entry));
+            }
+        }
+
+        traverse(item);
+
+        return Array.from(new Set(collectedValues)).join(' ');
+    }
+
+    function enrichAttributeFields(list: Array<any>): void {
+        list.forEach((item) => {
+            if (!item?.id || typeof item.id !== 'string' || item.id.trim() === '') return;
+            if (enrichedAasIds.value.has(item.id)) return;
+
+            item.manufacturerNameLower = extractAttributeValue(item, [
+                'ManufacturerName',
+                'ManufactorName',
+                'Manufacturer',
+                'Manufactor',
+            ]);
+            item.manufacturerProductDesignationLower = extractAttributeValue(item, [
+                'ManufacturerProductDesignation',
+                'ProductDesignation',
+            ]);
+            item.manufacturerProductFamilyLower = extractAttributeValue(item, [
+                'ManufacturerProductFamily',
+                'ProductFamily',
+            ]);
+            item.manufacturerProductTypeLower = extractAttributeValue(item, [
+                'ManufacturerProductType',
+                'ProductType',
+            ]);
+            item.orderCodeOfManufacturerLower = extractAttributeValue(item, [
+                'OrderCodeOfManufacturer',
+                'OrderCode',
+            ]);
+            item.productArticleNumberOfManufacturerLower = extractAttributeValue(item, [
+                'ProductArticleNumberOfManufacturer',
+                'ProductArticleNumberOfManufacture',
+                'ArticleNumberOfManufacturer',
+                'ManufacturerCode',
+                'ArticleNumber',
+            ]);
+
+            enrichedAasIds.value.add(item.id);
+        });
+    }
+
+    function normalizeFilters(filters: AASAttributeFilters): AASAttributeFilters {
+        return {
+            manufacturerName: filters.manufacturerName.trim().toLowerCase(),
+            manufacturerProductDesignation: filters.manufacturerProductDesignation.trim().toLowerCase(),
+            manufacturerProductFamily: filters.manufacturerProductFamily.trim().toLowerCase(),
+            manufacturerProductType: filters.manufacturerProductType.trim().toLowerCase(),
+            orderCodeOfManufacturer: filters.orderCodeOfManufacturer.trim().toLowerCase(),
+            productArticleNumberOfManufacturer: filters.productArticleNumberOfManufacturer.trim().toLowerCase(),
+        };
+    }
+
+    function onSearchInput(value: string): void {
+        searchInput.value = value || '';
+        debouncedApplyListFilters();
+    }
+
+    function onAttributeFiltersChange(filters: AASAttributeFilters): void {
+        attributeFilters.value = filters;
+
+        const hasActiveAttributeFilters = Object.values(normalizeFilters(filters)).some((value) => value !== '');
+        if (hasActiveAttributeFilters) {
+            enrichAttributeFields(aasListUnfiltered.value);
+        }
+
+        applyListFilters();
+    }
+
+    function applyListFilters(): void {
+        const globalSearch = searchInput.value.trim().toLowerCase();
+        const normalizedFilters = normalizeFilters(attributeFilters.value);
+
+        aasList.value = aasListUnfiltered.value.filter((aasOrAasDescriptor: any) => {
+const hasGlobalMatch = (searchTerm: string) => {
+            if (!searchTerm) return false;
+            return (
+                aasOrAasDescriptor.idLower.includes(searchTerm) ||
+                aasOrAasDescriptor.idShortLower.includes(searchTerm) ||
+                aasOrAasDescriptor.nameLower.includes(searchTerm) ||
+                aasOrAasDescriptor.descLower.includes(searchTerm) ||
+                typeof aasOrAasDescriptor.globalAssetId === 'string' && aasOrAasDescriptor.globalAssetId.toLowerCase().includes(searchTerm)
+            );
+        };
+
+        const globalSearchMatch =
+            globalSearch === '' || hasGlobalMatch(globalSearch);
+
+        const manufacturerNameMatch =
+            normalizedFilters.manufacturerName === '' ||
+            aasOrAasDescriptor.manufacturerNameLower.includes(normalizedFilters.manufacturerName) ||
+            hasGlobalMatch(normalizedFilters.manufacturerName);
+
+        const manufacturerProductDesignationMatch =
+            normalizedFilters.manufacturerProductDesignation === '' ||
+            aasOrAasDescriptor.manufacturerProductDesignationLower.includes(
+                normalizedFilters.manufacturerProductDesignation
+            ) ||
+            hasGlobalMatch(normalizedFilters.manufacturerProductDesignation);
+
+        const manufacturerProductFamilyMatch =
+            normalizedFilters.manufacturerProductFamily === '' ||
+            aasOrAasDescriptor.manufacturerProductFamilyLower.includes(normalizedFilters.manufacturerProductFamily) ||
+            hasGlobalMatch(normalizedFilters.manufacturerProductFamily);
+
+        const manufacturerProductTypeMatch =
+            normalizedFilters.manufacturerProductType === '' ||
+            aasOrAasDescriptor.manufacturerProductTypeLower.includes(normalizedFilters.manufacturerProductType) ||
+            hasGlobalMatch(normalizedFilters.manufacturerProductType);
+
+        const orderCodeOfManufacturerMatch =
+            normalizedFilters.orderCodeOfManufacturer === '' ||
+            aasOrAasDescriptor.orderCodeOfManufacturerLower.includes(normalizedFilters.orderCodeOfManufacturer) ||
+            hasGlobalMatch(normalizedFilters.orderCodeOfManufacturer);
+
+        const productArticleNumberOfManufacturerMatch =
+            normalizedFilters.productArticleNumberOfManufacturer === '' ||
+            aasOrAasDescriptor.productArticleNumberOfManufacturerLower.includes(
+                normalizedFilters.productArticleNumberOfManufacturer
+            ) ||
+            hasGlobalMatch(normalizedFilters.productArticleNumberOfManufacturer);
+
+            return (
+                globalSearchMatch &&
+                manufacturerNameMatch &&
+                manufacturerProductDesignationMatch &&
+                manufacturerProductFamilyMatch &&
+                manufacturerProductTypeMatch &&
+                orderCodeOfManufacturerMatch &&
+                productArticleNumberOfManufacturerMatch
+            );
+        });
+
+        scrollToSelectedAAS();
+    }
+
     // Function to get the AAS Data from the Registry Server
     async function initialize(): Promise<void> {
         listLoading.value = true;
@@ -508,14 +785,37 @@
                 ...item,
                 idLower: item?.id?.toLowerCase() || '',
                 idShortLower: item?.idShort?.toLowerCase() || '',
-                nameLower: nameToDisplay(item).toLowerCase(),
-                descLower: descriptionToDisplay(item).toLowerCase(),
+                nameLower: flattenPrimitiveValues(item?.displayName || nameToDisplay(item)).join(' ').toLowerCase(),
+                descLower: flattenPrimitiveValues(item?.description || descriptionToDisplay(item)).join(' ').toLowerCase(),
+                manufacturerNameLower: extractAttributeValue(item, [
+                    'ManufacturerName',
+                    'ManufactorName',
+                    'Manufacturer',
+                ]),
+                manufacturerProductDesignationLower: extractAttributeValue(item, [
+                    'ManufacturerProductDesignation',
+                    'ProductDesignation',
+                ]),
+                manufacturerProductFamilyLower: extractAttributeValue(item, [
+                    'ManufacturerProductFamily',
+                    'ProductFamily',
+                ]),
+                manufacturerProductTypeLower: extractAttributeValue(item, ['ManufacturerProductType', 'ProductType']),
+                orderCodeOfManufacturerLower: extractAttributeValue(item, ['OrderCodeOfManufacturer', 'OrderCode']),
+                productArticleNumberOfManufacturerLower: extractAttributeValue(item, [
+                    'ProductArticleNumberOfManufacturer',
+                    'ProductArticleNumberOfManufacture',
+                    'ManufacturerCode',
+                ]),
             }));
 
-            aasList.value = processedList;
             aasListUnfiltered.value = processedList;
-            scrollToSelectedAAS();
+            applyListFilters();
             listLoading.value = false;
+
+            if (aasDescriptorList.length > 0) {
+                enrichAttributeFields(processedList);
+            }
         });
     }
 
@@ -547,22 +847,6 @@
                     }
                 }
             });
-    }
-
-    function filterAasList(value: string): void {
-        if (!value || value.trim() === '') {
-            aasList.value = aasListUnfiltered.value;
-        } else {
-            const search = value.toLowerCase();
-            aasList.value = aasListUnfiltered.value.filter(
-                (aasOrAasDescriptor) =>
-                    aasOrAasDescriptor.idLower.includes(search) ||
-                    aasOrAasDescriptor.idShortLower.includes(search) ||
-                    aasOrAasDescriptor.nameLower.includes(search) ||
-                    aasOrAasDescriptor.descLower.includes(search)
-            );
-        }
-        scrollToSelectedAAS();
     }
 
     // Function to select an AAS
