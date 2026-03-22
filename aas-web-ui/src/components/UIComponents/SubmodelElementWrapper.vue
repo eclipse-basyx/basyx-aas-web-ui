@@ -63,10 +63,10 @@
   })
 
   const emit = defineEmits<{
-    (e: 'updateValue', submodelElement: any): void
+    (e: 'update-value', submodelElement: any): void
   }>()
 
   function updatePropertyValue (submodelElement: any): void {
-    emit('updateValue', submodelElement)
+    emit('update-value', submodelElement)
   }
 </script>

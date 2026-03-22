@@ -8,23 +8,23 @@ export function useIDUtils () {
 
   const uuidV4Regex = /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/
   /**
-     * Generates an UUID v4.
-     *
-     * The return value matches the regular expression: /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/
-     *
-     * @returns {string} An UUID v4.
-     */
+   * Generates an UUID v4.
+   *
+   * The return value matches the regular expression: /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/
+   *
+   * @returns {string} An UUID v4.
+   */
   function generateUUID (): string {
     return uuidv4()
   }
 
   /**
-     * Generates UUID v4 based to a specified string.
-     *
-     * The return value matches the regular expression: /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/
-     *
-     * @returns {string} An UUID v4.
-     */
+   * Generates UUID v4 based to a specified string.
+   *
+   * The return value matches the regular expression: /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/
+   *
+   * @returns {string} An UUID v4.
+   */
   function generateUUIDFromString (str: any): string {
     // create md5 hash from string
     const hash = md5(str)
@@ -43,24 +43,24 @@ export function useIDUtils () {
   }
 
   /**
-     * Generates an Internationalized Resource Identifier (IRI) based on the given type.
-     * This function constructs an IRI using a prefix which defaults to 'https://example.com/'.
-     * If the provided `type` is not 'Asset', 'AssetAdministrationShell' or 'Submodel', it defaults to an empty string.
-     * The generated IRI includes the given type and a custom ID.
-     *
-     * @param {string} type - The type to be included in the generated IRI.
-     * @returns {string} The generated IRI as a string. If the type is invalid, it uses an empty string for the type.
-     *
-     * @example
-     * // Generates an IRI with type 'AssetAdministrationShell'
-     * const iri = generateIri('AssetAdministrationShell');
-     * console.log(iri); // Output: 'https://example.com/ids/aas/{customId}'
-     *
-     * @example
-     * // Generates an IRI with an empty type since 'InvalidType' is not allowed
-     * const iri = generateIri('InvalidType');
-     * console.log(iri); // Output: 'https://example.com/ids/{customId}'
-     */
+   * Generates an Internationalized Resource Identifier (IRI) based on the given type.
+   * This function constructs an IRI using a prefix which defaults to 'https://example.com/'.
+   * If the provided `type` is not 'Asset', 'AssetAdministrationShell' or 'Submodel', it defaults to an empty string.
+   * The generated IRI includes the given type and a custom ID.
+   *
+   * @param {string} type - The type to be included in the generated IRI.
+   * @returns {string} The generated IRI as a string. If the type is invalid, it uses an empty string for the type.
+   *
+   * @example
+   * // Generates an IRI with type 'AssetAdministrationShell'
+   * const iri = generateIri('AssetAdministrationShell');
+   * console.log(iri); // Output: 'https://example.com/ids/aas/{customId}'
+   *
+   * @example
+   * // Generates an IRI with an empty type since 'InvalidType' is not allowed
+   * const iri = generateIri('InvalidType');
+   * console.log(iri); // Output: 'https://example.com/ids/{customId}'
+   */
   function generateIri (type: string): string {
     const defaultIdPrefix = 'https://example.com/'
 
@@ -97,14 +97,14 @@ export function useIDUtils () {
 
   const customIdRegex = /^((1000|[1-9][0-9]{3})_){3}(1000|[1-9][0-9]{3})$/
   /**
-     * Generates a custom ID consisting of four segments, each being a random number between 1000 and 9999,
-     * joined by underscores.
-     *
-     * The return value matches the regular expression: /^((1000|[1-9][0-9]{3})_){3}(1000|[1-9][0-9]{3})$/
-     *
-     * @returns {string} A custom ID in the format of "xxxx_xxxx_xxxx_xxxx" where each "xxxx" is a random number
-     * between 1000 and 9999.
-     */
+   * Generates a custom ID consisting of four segments, each being a random number between 1000 and 9999,
+   * joined by underscores.
+   *
+   * The return value matches the regular expression: /^((1000|[1-9][0-9]{3})_){3}(1000|[1-9][0-9]{3})$/
+   *
+   * @returns {string} A custom ID in the format of "xxxx_xxxx_xxxx_xxxx" where each "xxxx" is a random number
+   * between 1000 and 9999.
+   */
   function generateCustomId (): string {
     // Random number between 1000 and 9999
     const segment = (): string => {

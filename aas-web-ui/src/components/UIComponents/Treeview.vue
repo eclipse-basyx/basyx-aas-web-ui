@@ -138,7 +138,7 @@
                           pointerEvents: isHovering ? 'auto' : 'none',
                         }"
                         variant="plain"
-                        @click.stop="$emit('openAddSubmodelElementDialog', item)"
+                        @click.stop="$emit('open-add-submodel-element-dialog', item)"
                       />
                     </template>
                   </v-tooltip>
@@ -400,10 +400,10 @@
         :key="innerItem.id"
         :depth="depth + 1"
         :item="innerItem"
-        @open-add-submodel-element-dialog="$emit('openAddSubmodelElementDialog', $event)"
-        @open-edit-submodel-element-dialog="$emit('openEditSubmodelElementDialog', $event)"
-        @open-json-insert-dialog="$emit('openJsonInsertDialog', $event)"
-        @show-delete-dialog="$emit('showDeleteDialog', $event)"
+        @open-add-submodel-element-dialog="$emit('open-add-submodel-element-dialog', $event)"
+        @open-edit-submodel-element-dialog="$emit('open-edit-submodel-element-dialog', $event)"
+        @open-json-insert-dialog="$emit('open-json-insert-dialog', $event)"
+        @show-delete-dialog="$emit('show-delete-dialog', $event)"
       />
     </template>
   </div>
@@ -447,11 +447,11 @@
 
   // Emits
   const emit = defineEmits<{
-    (event: 'openEditDialog', item: any): void
-    (event: 'showDeleteDialog', item: any): void
-    (event: 'openAddSubmodelElementDialog', item: any): void
-    (event: 'openJsonInsertDialog', item: any): void
-    (event: 'openEditSubmodelElementDialog', item: any): void
+    'open-edit-dialog': [item: any]
+    'show-delete-dialog': [item: any]
+    'open-add-submodel-element-dialog': [item: any]
+    'open-json-insert-dialog': [item: any]
+    'open-edit-submodel-element-dialog': [item: any]
   }>()
 
   // Data
@@ -587,27 +587,27 @@
 
   function openAddSubmodelElementDialog (item: any, isActive: Ref<boolean>): void {
     isActive.value = false
-    emit('openAddSubmodelElementDialog', item)
+    emit('open-add-submodel-element-dialog', item)
   }
 
   function openJsonInsertDialog (item: any, isActive: Ref<boolean>): void {
     isActive.value = false
-    emit('openJsonInsertDialog', item)
+    emit('open-json-insert-dialog', item)
   }
 
   function openEditDialog (item: any, isActive: Ref<boolean>): void {
     isActive.value = false
-    emit('openEditDialog', item)
+    emit('open-edit-dialog', item)
   }
 
   function openSubmodelElementEditDialog (item: any, isActive: Ref<boolean>): void {
     isActive.value = false
-    emit('openEditSubmodelElementDialog', item)
+    emit('open-edit-submodel-element-dialog', item)
   }
 
   function openDeleteDialog (item: any, isActive: Ref<boolean>): void {
     isActive.value = false
-    emit('showDeleteDialog', item)
+    emit('show-delete-dialog', item)
   }
 </script>
 

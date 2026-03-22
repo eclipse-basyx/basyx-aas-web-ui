@@ -123,12 +123,12 @@ export const useNavigationStore = defineStore('navigationStore', () => {
   }
 
   /**
-     * Registers a query parameter for a specific plugin (identified by semanticId).
-     * This allows the plugin to preserve its query params when active.
-     *
-     * @param paramName - The name of the query parameter to register
-     * @param semanticId - The semanticId of the plugin registering the param
-     */
+   * Registers a query parameter for a specific plugin (identified by semanticId).
+   * This allows the plugin to preserve its query params when active.
+   *
+   * @param paramName - The name of the query parameter to register
+   * @param semanticId - The semanticId of the plugin registering the param
+   */
   function registerQueryParam (paramName: string, semanticId: string): void {
     // Avoid duplicates
     const exists = registeredQueryParams.value.some(
@@ -140,11 +140,11 @@ export const useNavigationStore = defineStore('navigationStore', () => {
   }
 
   /**
-     * Unregisters a query parameter for a specific plugin.
-     *
-     * @param paramName - The name of the query parameter to unregister
-     * @param semanticId - The semanticId of the plugin unregistering the param
-     */
+   * Unregisters a query parameter for a specific plugin.
+   *
+   * @param paramName - The name of the query parameter to unregister
+   * @param semanticId - The semanticId of the plugin unregistering the param
+   */
   function unregisterQueryParam (paramName: string, semanticId: string): void {
     registeredQueryParams.value = registeredQueryParams.value.filter(
       p => !(p.paramName === paramName && p.semanticId === semanticId),
@@ -152,22 +152,22 @@ export const useNavigationStore = defineStore('navigationStore', () => {
   }
 
   /**
-     * Unregisters all query parameters for a specific plugin.
-     *
-     * @param semanticId - The semanticId of the plugin to unregister all params for
-     */
+   * Unregisters all query parameters for a specific plugin.
+   *
+   * @param semanticId - The semanticId of the plugin to unregister all params for
+   */
   function unregisterAllQueryParamsForPlugin (semanticId: string): void {
     registeredQueryParams.value = registeredQueryParams.value.filter(p => p.semanticId !== semanticId)
   }
 
   /**
-     * Gets all allowed query params for a given node/element.
-     * Returns core params plus any params registered by plugins whose semanticId matches the node's semanticId.
-     * Uses checkSemanticId for proper semanticId comparison (handles IRI variants, versions, etc.)
-     *
-     * @param node - The currently selected node/element (optional)
-     * @returns Array of allowed query param names
-     */
+   * Gets all allowed query params for a given node/element.
+   * Returns core params plus any params registered by plugins whose semanticId matches the node's semanticId.
+   * Uses checkSemanticId for proper semanticId comparison (handles IRI variants, versions, etc.)
+   *
+   * @param node - The currently selected node/element (optional)
+   * @returns Array of allowed query param names
+   */
   function getAllowedQueryParams (node?: any): string[] {
     const allowed = [...coreQueryParams]
     if (node) {
@@ -182,13 +182,13 @@ export const useNavigationStore = defineStore('navigationStore', () => {
   }
 
   /**
-     * Filters a query object to only include allowed params.
-     * Logs a warning for any params that are removed.
-     *
-     * @param query - The query object to filter
-     * @param node - The currently selected node/element (optional)
-     * @returns Object with filtered query and array of removed param names
-     */
+   * Filters a query object to only include allowed params.
+   * Logs a warning for any params that are removed.
+   *
+   * @param query - The query object to filter
+   * @param node - The currently selected node/element (optional)
+   * @returns Object with filtered query and array of removed param names
+   */
   function filterQueryParams (
     query: LocationQuery,
     node?: any,

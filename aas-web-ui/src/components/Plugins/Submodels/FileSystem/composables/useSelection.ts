@@ -15,43 +15,43 @@ export function useSelection (options: UseSelectionOptions) {
   const selectedItems = ref<FileSystemElement[]>([])
 
   /**
-     * Get all selectable items (excluding navigation elements)
-     */
+   * Get all selectable items (excluding navigation elements)
+   */
   const selectableItems = computed(() => {
     return fileObjects.value.filter(item => item.modelType !== 'NavigationElement')
   })
 
   /**
-     * Check if all selectable items are selected
-     */
+   * Check if all selectable items are selected
+   */
   const isAllSelected = computed(() => {
     return selectableItems.value.length > 0 && selectedItems.value.length === selectableItems.value.length
   })
 
   /**
-     * Check if some (but not all) items are selected
-     */
+   * Check if some (but not all) items are selected
+   */
   const isSomeSelected = computed(() => {
     return selectedItems.value.length > 0
   })
 
   /**
-     * Check if a specific item is selected
-     */
+   * Check if a specific item is selected
+   */
   const isItemSelected = (item: FileSystemElement): boolean => {
     return selectedItems.value.some(selected => selected.idShort === item.idShort)
   }
 
   /**
-     * Toggle selection of all items
-     */
+   * Toggle selection of all items
+   */
   const toggleSelectAll = (): void => {
     selectedItems.value = isAllSelected.value ? [] : [...selectableItems.value]
   }
 
   /**
-     * Toggle selection of a specific item
-     */
+   * Toggle selection of a specific item
+   */
   const toggleItemSelection = (item: FileSystemElement): void => {
     // Don't allow selecting navigation elements
     if (item.modelType === 'NavigationElement') {
@@ -67,8 +67,8 @@ export function useSelection (options: UseSelectionOptions) {
   }
 
   /**
-     * Select a single item (replacing current selection)
-     */
+   * Select a single item (replacing current selection)
+   */
   const selectItem = (item: FileSystemElement): void => {
     if (item.modelType === 'NavigationElement') {
       return
@@ -77,8 +77,8 @@ export function useSelection (options: UseSelectionOptions) {
   }
 
   /**
-     * Add an item to the selection
-     */
+   * Add an item to the selection
+   */
   const addToSelection = (item: FileSystemElement): void => {
     if (item.modelType === 'NavigationElement') {
       return
@@ -89,8 +89,8 @@ export function useSelection (options: UseSelectionOptions) {
   }
 
   /**
-     * Remove an item from the selection
-     */
+   * Remove an item from the selection
+   */
   const removeFromSelection = (item: FileSystemElement): void => {
     const index = selectedItems.value.findIndex(selected => selected.idShort === item.idShort)
     if (index !== -1) {
@@ -99,20 +99,20 @@ export function useSelection (options: UseSelectionOptions) {
   }
 
   /**
-     * Clear all selections
-     */
+   * Clear all selections
+   */
   const clearSelection = (): void => {
     selectedItems.value = []
   }
 
   /**
-     * Get the count of selected items
-     */
+   * Get the count of selected items
+   */
   const selectionCount = computed(() => selectedItems.value.length)
 
   /**
-     * Check if selection is not empty
-     */
+   * Check if selection is not empty
+   */
   const hasSelection = computed(() => selectedItems.value.length > 0)
 
   return {

@@ -103,7 +103,7 @@
 
   // Data
   const submodelElementData = ref({} as any)
-  const routesToVisualization: Array<RouteRecordNameGeneric> = ['ComponentVisualization', 'Visualization']
+  const routesToVisualization = new Set<RouteRecordNameGeneric>(['ComponentVisualization', 'Visualization'])
 
   // Computed Properties
   const aasRegistryURL = computed(() => infrastructureStore.getAASRegistryURL)
@@ -126,6 +126,18 @@
       return false
     })
 
+    const getLatestSemanticId = (plugin: any): string => {
+      if (typeof plugin.semanticId === 'string') {
+        return plugin.semanticId
+      }
+
+      if (Array.isArray(plugin.semanticId) && plugin.semanticId.length > 0) {
+        return plugin.semanticId.toSorted((semanticIdA: any, semanticIdB: any) => semanticIdA.localeCompare(semanticIdB)).at(-1) || ''
+      }
+
+      return ''
+    }
+
     // In case of multiple plugins matching for the semanticId of
     // submodelElementData, the plugins are sorted in descending
     // alphabetical order with respect to their semanticIds.
@@ -133,36 +145,14 @@
     // top. Plugins without version in the semanticId will be
     // displayed at the bottom.
 
-    // Sort filtered plugins with respect to semanticId
-    plugins
-      .sort((pluginA: any, pluginB: any) => {
-        let pluginASemanticId = ''
-        let pluginBSemanticId = ''
-
-        if (typeof pluginA.semanticId === 'string') pluginASemanticId = pluginA.semanticId
-        if (typeof pluginB.semanticId === 'string') pluginBSemanticId = pluginB.semanticId
-
-        if (Array.isArray(pluginA.semanticId) && pluginA.semanticId.length > 0) {
-          pluginA.semanticId
-            .sort((semanticIdA: any, semanticIdB: any) => semanticIdA.localeCompare(semanticIdB))
-            .reverse()
-          pluginASemanticId = pluginA.semanticId[0]
-        }
-
-        if (Array.isArray(pluginB.semanticId) && pluginB.semanticId.length > 0) {
-          pluginB.semanticId
-            .sort((semanticIdA: any, semanticIdB: any) => semanticIdA.localeCompare(semanticIdB))
-            .reverse()
-          pluginBSemanticId = pluginB.semanticId[0]
-        }
-
-        return pluginASemanticId.localeCompare(pluginBSemanticId)
-      })
-      .reverse()
-
-    return plugins
+    // Sort filtered plugins with respect to semanticId in descending order.
+    return plugins.toSorted((pluginA: any, pluginB: any) => {
+      const pluginASemanticId = getLatestSemanticId(pluginA)
+      const pluginBSemanticId = getLatestSemanticId(pluginB)
+      return pluginBSemanticId.localeCompare(pluginASemanticId)
+    })
   })
-  const visualizationMode = computed(() => routesToVisualization.includes(route.name))
+  const visualizationMode = computed(() => routesToVisualization.has(route.name as RouteRecordNameGeneric))
   const aasSubmodelViewerMode = computed(() => route.name === 'AASSubmodelViewer')
 
   // Watchers

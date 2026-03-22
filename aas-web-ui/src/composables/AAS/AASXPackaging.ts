@@ -1,5 +1,7 @@
 import * as aasCore from '@aas-core-works/aas-core3.1-typescript'
 import { NewPackaging, type ReadWriteSeeker } from 'aasx-package-ts'
+import { serializeXml } from 'basyx-typescript-sdk/dist/lib/aas-dataformat-xml/xmlization.js'
+import { BaSyxEnvironment } from 'basyx-typescript-sdk/dist/models/BaSyxEnvironment.js'
 import mime from 'mime'
 import { useAASHandling } from '@/composables/AAS/AASHandling'
 import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling'
@@ -12,8 +14,6 @@ import { useRequestHandling } from '@/composables/RequestHandling'
 import { extractId as extractIdFromReference } from '@/utils/AAS/ReferenceUtil'
 import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import { safeSegment } from '@/utils/StringUtils'
-import { serializeXml } from '../../../node_modules/basyx-typescript-sdk/dist/lib/aas-dataformat-xml/xmlization.js'
-import { BaSyxEnvironment } from '../../../node_modules/basyx-typescript-sdk/dist/models/BaSyxEnvironment.js'
 
 type JsonRecord = Record<string, unknown>
 
@@ -645,8 +645,9 @@ export function useAASXPackaging (): {
     const supplementaryParts = await buildSupplementaryParts(fileBindings, warnings)
     const thumbnailPart = await fetchThumbnailPart(aas, warnings)
 
-    let specBytes: Uint8Array
-    specBytes = options.format === 'aasx-json' ? new TextEncoder().encode(`${JSON.stringify(environmentJson, null, 2)}\n`) : new TextEncoder().encode(environmentToXml(environment))
+    const specBytes: Uint8Array = options.format === 'aasx-json'
+      ? new TextEncoder().encode(`${JSON.stringify(environmentJson, null, 2)}\n`)
+      : new TextEncoder().encode(environmentToXml(environment))
 
     const packaging = NewPackaging()
     const inMemoryStream = new InMemoryReadWriteSeeker()

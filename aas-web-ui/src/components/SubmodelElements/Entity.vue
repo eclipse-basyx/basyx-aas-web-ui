@@ -17,7 +17,7 @@
     </v-list-item>
     <v-divider v-if="entityObject?.globalAssetId" />
     <!-- globalAssetId -->
-    <v-hover v-slot="{ isHovering, props }">
+    <v-hover v-slot="{ isHovering, props: hoverProps }">
       <v-list-item v-if="entityObject?.globalAssetId" class="px-1 pb-1 py-2 mb-3">
         <template #title>
           <div class="text-subtitle-2 mt-2">{{ 'Global Asset ID: ' }}</div>
@@ -35,7 +35,7 @@
         <template #subtitle>
           <div
             v-if="entityObject.globalAssetId"
-            v-bind="props"
+            v-bind="hoverProps"
             :class="isHovering ? 'cursor-pointer' : ''"
             @click="copyToClipboard(entityObject.globalAssetId, 'Global Asset ID', getCopyIconAsRef())"
           >
@@ -127,10 +127,10 @@
         loadingStates.value[props.entityObject.globalAssetId] = false
       }
       if (props.entityObject.specificAssetIds) {
-        props.entityObject.specificAssetIds.forEach((specificAssetId: any) => {
+        for (const specificAssetId of props.entityObject.specificAssetIds) {
           checkAndSetDisabledState(specificAssetId.name)
           loadingStates.value[specificAssetId.name] = false
-        })
+        }
       }
     },
   )
@@ -142,10 +142,10 @@
       loadingStates.value[props.entityObject.globalAssetId] = false
     }
     if (props.entityObject.specificAssetIds) {
-      props.entityObject.specificAssetIds.forEach((specificAssetId: any) => {
+      for (const specificAssetId of props.entityObject.specificAssetIds) {
         checkAndSetDisabledState(specificAssetId.name)
         loadingStates.value[specificAssetId.name] = false
-      })
+      }
     }
   })
 

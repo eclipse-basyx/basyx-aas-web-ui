@@ -23,8 +23,8 @@ export function useComponentConnectionTesting (): {
   const testingAllConnections = ref(false)
 
   /**
-     * Test connection to a single component
-     */
+   * Test connection to a single component
+   */
   async function testComponentConnection (componentKey: BaSyxComponentKey, url: string): Promise<void> {
     if (!url || url.trim() === '') {
       componentConnectionStatus.value[componentKey] = false
@@ -58,8 +58,8 @@ export function useComponentConnectionTesting (): {
   }
 
   /**
-     * Test all component connections
-     */
+   * Test all component connections
+   */
   async function testAllConnections (components: Record<BaSyxComponentKey, { url: string }>): Promise<void> {
     testingAllConnections.value = true
     const testPromises = BASYX_COMPONENT_KEYS.map(key => testComponentConnection(key, components[key].url))
@@ -68,8 +68,8 @@ export function useComponentConnectionTesting (): {
   }
 
   /**
-     * Reset connection status for all components
-     */
+   * Reset connection status for all components
+   */
   function resetConnectionStatus (): void {
     for (const key of BASYX_COMPONENT_KEYS) {
       componentConnectionStatus.value[key] = null

@@ -2,10 +2,10 @@ import { padTo2Digits } from '@/utils/NumberUtils'
 
 /**
  * RegExp to test date string
- *  YYYYMMDD
- *  YYYY-MMDD
- *  YYYYMM-DD
- *  YYYY-MM-DD
+ * YYYYMMDD
+ * YYYY-MMDD
+ * YYYYMM-DD
+ * YYYY-MM-DD
  * @type {RegExp}
  */
 export const dateRegex = /^(\d{4})-?(0[1-9]|1[0-2])-?(0[1-9]|[12]\d|3[01])$/
@@ -67,7 +67,7 @@ export function getISO8601UTCDateTime (): string {
  * milliseconds and the timezone offset is expressed in hours and minutes.
  *
  * @returns {string} - A string representing the current date and time in XSD format,
- *                     including a pseudo microseconds and timezone offset.
+ * including a pseudo microseconds and timezone offset.
  *
  * @example
  * const xsdDateString = createXSDDateString();
@@ -99,7 +99,7 @@ export function createXSDDateString (): string {
  *
  * @param {Date} date - The Date object from which to extract the time.
  * @returns {string} - A string representing the time in the format HH:mm:ss,
- *                     or an empty string if the time could not be determined.
+ * or an empty string if the time could not be determined.
  *
  * @example
  * const date = new Date('2023-10-04T15:30:45');
@@ -112,7 +112,14 @@ export function getTime (date: Date): string {
   const seconds = date.getSeconds().toString().padStart(2, '0')
 
   // check if any of the values is NaN
-  if (isNaN(Number(hours)) || isNaN(Number(minutes)) || isNaN(Number(seconds)) || !hours || !minutes || !seconds) {
+  if (
+    Number.isNaN(Number(hours))
+    || Number.isNaN(Number(minutes))
+    || Number.isNaN(Number(seconds))
+    || !hours
+    || !minutes
+    || !seconds
+  ) {
     return ''
   }
 

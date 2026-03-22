@@ -120,10 +120,8 @@
 </template>
 
 <script lang="ts" setup>
-    /* eslint-disable simple-import-sort/imports */
   import Prism from 'prismjs'
   import { computed, nextTick, onMounted, ref, watch } from 'vue'
-  /* eslint-enable simple-import-sort/imports */
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import 'prismjs/themes/prism.css'
 
@@ -210,11 +208,11 @@
     const lines = xmlContent.value.split('\n')
     const query = searchQuery.value.toLowerCase()
 
-    lines.forEach((line: string, index: number) => {
+    for (const [index, line] of lines.entries()) {
       if (line.toLowerCase().includes(query)) {
         searchResults.value.push(index + 1)
       }
-    })
+    }
 
     if (searchResults.value.length > 0) {
       highlightedLineNumbers.value = [searchResults.value[0]]
@@ -284,7 +282,7 @@
         }
       }
 
-      return formatted.substring(1, formatted.length - 2)
+      return formatted.slice(1, -2)
     } catch (error_) {
       console.error('Error formatting XML:', error_)
       return xml

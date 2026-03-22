@@ -120,10 +120,8 @@
 </template>
 
 <script lang="ts" setup>
-    /* eslint-disable simple-import-sort/imports */
   import Prism from 'prismjs'
   import { computed, nextTick, onMounted, ref, watch } from 'vue'
-  /* eslint-enable simple-import-sort/imports */
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
   import 'prismjs/themes/prism.css'
@@ -163,7 +161,8 @@
 
   onMounted(() => {
     if (typeof window !== 'undefined') {
-      window.Prism = window.Prism || Prism
+      const prismWindow = window as Window & { Prism?: typeof Prism }
+      prismWindow.Prism = prismWindow.Prism || Prism
     }
 
     initialize()
@@ -213,11 +212,11 @@
     const lines = jsonContent.value.split('\n')
     const query = searchQuery.value.toLowerCase()
 
-    lines.forEach((line: string, index: number) => {
+    for (const [index, line] of lines.entries()) {
       if (line.toLowerCase().includes(query)) {
         searchResults.value.push(index + 1)
       }
-    })
+    }
 
     if (searchResults.value.length > 0) {
       highlightedLineNumbers.value = [searchResults.value[0]]

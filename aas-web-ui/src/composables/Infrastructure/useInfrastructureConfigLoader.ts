@@ -14,9 +14,9 @@ export function useInfrastructureConfigLoader (): {
   const envStore = useEnvStore()
 
   /**
-     * Fetches and parses the infrastructure configuration YAML file
-     * Returns null if no configuration file exists (will fall back to env vars)
-     */
+   * Fetches and parses the infrastructure configuration YAML file
+   * Returns null if no configuration file exists (will fall back to env vars)
+   */
   async function loadInfrastructureConfig (): Promise<ParsedInfrastructureConfig | null> {
     try {
       // Use BASE_URL to support custom base paths

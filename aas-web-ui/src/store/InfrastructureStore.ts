@@ -488,9 +488,9 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   }
 
   /**
-     * Wait for the store to finish initializing
-     * Used by router to ensure infrastructures are loaded before processing OAuth2 callbacks
-     */
+   * Wait for the store to finish initializing
+   * Used by router to ensure infrastructures are loaded before processing OAuth2 callbacks
+   */
   async function waitForInitialization (): Promise<void> {
     if (isInitialized.value) {
       return
@@ -638,7 +638,19 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       && userValue.roles.length > 0
     ) {
       const keycloakFeatureControlRolePrefix = envStore.getKeycloakFeatureControlRolePrefix
-      const keycloak_roles_features = [
+      type KeycloakFeatureSetter = 'setSingleAas'
+        | 'setSmViewerEditor'
+        | 'setAllowEditing'
+        | 'setAllowUploading'
+        | 'setAllowLogout'
+        | 'setEndpointConfigAvailable'
+
+      const keycloak_roles_features: Array<{
+        keycloakRole: string
+        feature: string
+        setFunction: KeycloakFeatureSetter
+        setValue: string
+      }> = [
         {
           keycloakRole: keycloakFeatureControlRolePrefix + 'multiple-aas',
           feature: 'SINGLE_AAS',
@@ -677,15 +689,15 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         },
       ]
 
-      keycloak_roles_features.forEach((keycloak_roles_feature: any) => {
-        const key = keycloak_roles_feature.setFunction as keyof typeof envStore
+      for (const keycloak_roles_feature of keycloak_roles_features) {
+        const key = keycloak_roles_feature.setFunction
         if (
           userValue?.roles?.includes(keycloak_roles_feature.keycloakRole)
           && typeof envStore[key] === 'function'
         ) {
           envStore[key](keycloak_roles_feature.setValue)
         }
-      })
+      }
     }
   }
 

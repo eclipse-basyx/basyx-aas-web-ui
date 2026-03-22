@@ -43,7 +43,7 @@
   }>()
 
   const emit = defineEmits<{
-    (event: 'chartOptions', value: any): void
+    (event: 'chart-options', value: any): void
   }>()
 
   const theme = useTheme()
@@ -192,7 +192,7 @@
       localChartOptions.value = { ...chartOptions }
 
       // Emit the initial chart options
-      emit('chartOptions', localChartOptions.value)
+      emit('chart-options', localChartOptions.value)
     }
   }
 
@@ -233,7 +233,7 @@
       localChartOptions.value = { ...localChartOptions.value, xaxis: { range: rangeValue } }
 
       // Emit the updated options
-      emit('chartOptions', localChartOptions.value)
+      emit('chart-options', localChartOptions.value)
     }
   }
 </script>

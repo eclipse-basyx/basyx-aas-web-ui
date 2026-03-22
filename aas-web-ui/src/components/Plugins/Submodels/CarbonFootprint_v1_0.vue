@@ -147,7 +147,7 @@
                   </span>
                   <span
                     v-if="
-                      pcfSMC.value.find(
+                      pcfSMC.value.some(
                         (sme: any) =>
                           checkIdShort(sme, 'ExpirationDate') ||
                           checkSemanticId(
@@ -174,7 +174,7 @@
                 </p>
                 <p
                   v-if="
-                    pcfSMC.value.find(
+                    pcfSMC.value.some(
                       (sme: any) =>
                         checkIdShort(sme, 'GoodsHandoverAddress') ||
                         checkSemanticId(
@@ -324,7 +324,7 @@
       quantity: string
     }> = []
 
-    productCarbonFootprints.value.forEach((pcfSMC: any) => {
+    for (const pcfSMC of productCarbonFootprints.value) {
       // Extract calculation methods
       const pcfCalculationMethodsSml = pcfSMC.value.find(
         (sme: any) =>
@@ -340,7 +340,7 @@
               || checkSemanticId(sme, '0173-1#02-ABG854#003'),
           )
           .map((method: any) => valueToDisplay(method))
-          .sort() || []
+          .toSorted() || []
 
       // Extract reference unit
       const referenceUnitElement = pcfSMC.value.find(
@@ -362,7 +362,7 @@
         referenceUnit,
         quantity,
       })
-    })
+    }
 
     // Check if all PCFs are compatible
     const firstPcf = pcfMetadata[0]
@@ -380,7 +380,7 @@
     }
 
     // If compatible, prepare pie chart data
-    productCarbonFootprints.value.forEach((pcfSMC: any) => {
+    for (const pcfSMC of productCarbonFootprints.value) {
       // Extract PcfCO2eq value
       const pcfCO2eqElement = pcfSMC.value.find(
         (sme: any) => checkIdShort(sme, 'PcfCO2eq') || checkSemanticId(sme, '0173-1#02-ABG855#003'),
@@ -390,7 +390,7 @@
 
       const pcfValue = Number.parseFloat(valueToDisplay(pcfCO2eqElement))
 
-      if (isNaN(pcfValue)) return
+      if (Number.isNaN(pcfValue)) return
 
       // Extract lifecycle phases for label
       const lifeCyclePhasesSml = pcfSMC.value.find(
@@ -431,7 +431,7 @@
         label: label,
         value: pcfValue,
       })
-    })
+    }
 
     showPieChart.value = pieChartData.value.length > 0
   }

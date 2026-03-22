@@ -66,7 +66,7 @@
                   refX="9"
                   refY="3.5"
                 >
-                  <polygon :fill="primaryColor" :points="'0 0, 10 3.5, 0 7'" />
+                  <polygon :fill="getPrimaryColor()" :points="'0 0, 10 3.5, 0 7'" />
                 </marker>
               </defs>
             </template>
@@ -117,7 +117,7 @@
             <template #item="{ item, props: itemProps }">
               <v-list-item v-bind="itemProps">
                 <template #subtitle>
-                  <span class="text-caption">{{ item.raw.description }}</span>
+                  <span class="text-caption">{{ item.description }}</span>
                 </template>
               </v-list-item>
             </template>
@@ -153,7 +153,7 @@
             <template #item="{ item, props: itemProps }">
               <v-list-item v-bind="itemProps">
                 <template #subtitle>
-                  <span class="text-caption">{{ item.raw.description }}</span>
+                  <span class="text-caption">{{ item.description }}</span>
                 </template>
               </v-list-item>
             </template>
@@ -206,7 +206,7 @@
 </template>
 
 <script lang="ts" setup>
-  import type { Edge, EdgeProps, Node } from '@vue-flow/core'
+  import type { Edge, EdgeComponent, EdgeProps, Node } from '@vue-flow/core'
   import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
   import { Background } from '@vue-flow/background'
   import { Controls } from '@vue-flow/controls'
@@ -364,9 +364,13 @@
   // Computed Properties
   const isDark = computed(() => theme.global.current.value.dark)
   const primaryColor = computed(() => theme.current.value.colors.primary)
+  function getPrimaryColor (): string {
+    const color = primaryColor.value
+    return typeof color === 'string' ? color : '#1976d2'
+  }
   const editorMode = computed(() => ['AASEditor', 'SMEditor'].includes(route.name as string))
   // Custom self-loop edge component
-  const SelfLoopEdge: import('@vue-flow/core').EdgeComponent = (props: EdgeProps) => {
+  const SelfLoopEdge: EdgeComponent = (props: EdgeProps) => {
     const { sourceX, sourceY, label, style } = props
 
     // Loop starts and ends on the bottom edge, curves downward
@@ -386,7 +390,7 @@
       h('path', {
         'd': path,
         'fill': 'none',
-        'stroke': style?.stroke || primaryColor.value,
+        'stroke': style?.stroke || getPrimaryColor(),
         'stroke-width': 2,
         'marker-end': 'url(#arrowhead)',
       }),
@@ -511,7 +515,7 @@
 
     validateRelationshipConsistency(relationships)
 
-    children.forEach((child: Record<string, unknown>) => {
+    for (const child of children) {
       const childEntities = extractChildEntities(child)
       const childFlowNode = addNodeIfNotExists(child, tempNodes, level + 1, 0, thisX, childEntities)
       childFlowNode.data.parent = parentFlowNode
@@ -520,7 +524,7 @@
       const relationshipLabel = findRelationshipLabelForChild(parentNode, child)
       addEdgeBetweenNodes(parentNode, child, tempEdges, relationshipLabel)
       processChildRecursively(child, tempNodes, tempEdges, level, 0)
-    })
+    }
     return positionInLevel + 1
   }
 
@@ -601,7 +605,7 @@
       return
     }
 
-    const edge = createEdge(sourceId, targetId, relationshipLabel, { stroke: primaryColor.value }, isSelfLoop)
+    const edge = createEdge(sourceId, targetId, relationshipLabel, { stroke: getPrimaryColor() }, isSelfLoop)
     tempEdges.push(edge)
   }
 
@@ -810,7 +814,7 @@
       node.style = newStyle
     }
     for (const edge of edges.value) {
-      edge.style = { stroke: primaryColor.value }
+      edge.style = { stroke: getPrimaryColor() }
       edge.labelStyle = { fill: '#000', fontSize: '12px' }
       edge.labelBgStyle = { fill: '#fff' }
     }

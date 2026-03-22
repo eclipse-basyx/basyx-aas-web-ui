@@ -34,12 +34,12 @@ export function useAASRepositoryClient () {
   })
 
   /**
-     * Fetches a list of all available Asset Administration Shells (AAS).
-     *
-     * @async
-     * @returns {Promise<Array<any>>} A promise that resolves to an array of AAS.
-     * An empty array is returned if the request fails or no AAS are found.
-     */
+   * Fetches a list of all available Asset Administration Shells (AAS).
+   *
+   * @async
+   * @returns {Promise<Array<any>>} A promise that resolves to an array of AAS.
+   * An empty array is returned if the request fails or no AAS are found.
+   */
   async function fetchAasList (): Promise<Array<any>> {
     const failResponse = [] as Array<any>
 
@@ -71,12 +71,12 @@ export function useAASRepositoryClient () {
   }
 
   /**
-     * Fetches a Asset Administration Shell (AAS) by the provided AAS ID.
-     *
-     * @async
-     * @param {string} aasId - The ID of the AAS to fetch.
-     * @returns {Promise<any>} A promise that resolves to an AAS.
-     */
+   * Fetches a Asset Administration Shell (AAS) by the provided AAS ID.
+   *
+   * @async
+   * @param {string} aasId - The ID of the AAS to fetch.
+   * @returns {Promise<any>} A promise that resolves to an AAS.
+   */
   async function fetchAasById (aasId: string): Promise<any> {
     const failResponse = {} as any
 
@@ -100,12 +100,12 @@ export function useAASRepositoryClient () {
   }
 
   /**
-     * Fetches a Asset Administration Shell (AAS) by the provided AAS endpoint.
-     *
-     * @async
-     * @param {string} aasEndpoint - The endpoint URL of the AAS to fetch.
-     * @returns {Promise<any>} A promise that resolves to the AAS.
-     */
+   * Fetches a Asset Administration Shell (AAS) by the provided AAS endpoint.
+   *
+   * @async
+   * @param {string} aasEndpoint - The endpoint URL of the AAS to fetch.
+   * @returns {Promise<any>} A promise that resolves to the AAS.
+   */
   async function fetchAas (aasEndpoint: string): Promise<any> {
     const failResponse = {} as any
 
@@ -178,12 +178,12 @@ export function useAASRepositoryClient () {
   }
 
   /**
-     * Checks if Asset Administration Shell with provided ID is available
-     *
-     * @async
-     * @param {string} aasId - The ID of the AAS to check.
-     * @returns {Promise<boolean>} A promise that resolves to `true` if AAS with provided ID is available, otherwise `false`.
-     */
+   * Checks if Asset Administration Shell with provided ID is available
+   *
+   * @async
+   * @param {string} aasId - The ID of the AAS to check.
+   * @returns {Promise<boolean>} A promise that resolves to `true` if AAS with provided ID is available, otherwise `false`.
+   */
   async function aasIsAvailableById (aasId: string): Promise<boolean> {
     const failResponse = false
 
@@ -207,12 +207,12 @@ export function useAASRepositoryClient () {
   }
 
   /**
-     * Checks if Asset Administration Shell (AAS) is available for provided AAS endpoint
-     *
-     * @async
-     * @param {string} aasEndpoint - The endpoint URL of the AAS to check.
-     * @returns {Promise<boolean>} A promise that resolves to `true` if AAS with provided ID is available, otherwise `false`.
-     */
+   * Checks if Asset Administration Shell (AAS) is available for provided AAS endpoint
+   *
+   * @async
+   * @param {string} aasEndpoint - The endpoint URL of the AAS to check.
+   * @returns {Promise<boolean>} A promise that resolves to `true` if AAS with provided ID is available, otherwise `false`.
+   */
   async function aasIsAvailable (aasEndpoint: string): Promise<boolean> {
     const failResponse = false
 
@@ -248,13 +248,13 @@ export function useAASRepositoryClient () {
   }
 
   /**
-     * Retrieves the Asset Administration Shell (AAS) endpoint URL by its ID.
-     *
-     * Just concats SM repository URL (from the store) with the Base64UrlEncoded provided AAS ID.
-     *
-     * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
-     * @returns {string} The AAS endpoint.
-     */
+   * Retrieves the Asset Administration Shell (AAS) endpoint URL by its ID.
+   *
+   * Just concats SM repository URL (from the store) with the Base64UrlEncoded provided AAS ID.
+   *
+   * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
+   * @returns {string} The AAS endpoint.
+   */
   function getAasEndpointById (aasId: string): string {
     const failResponse = ''
 
@@ -285,12 +285,12 @@ export function useAASRepositoryClient () {
   }
 
   /**
-     * Fetches asset information by Asset Administration Shell (AAS) ID.
-     *
-     * @async
-     * @param {string} aasId - The ID of the AAS to check.
-     * @returns {Promise<any>} A promise that resolves to the asset information if found, otherwise an empty object.
-     */
+   * Fetches asset information by Asset Administration Shell (AAS) ID.
+   *
+   * @async
+   * @param {string} aasId - The ID of the AAS to check.
+   * @returns {Promise<any>} A promise that resolves to the asset information if found, otherwise an empty object.
+   */
   async function fetchAssetInformationById (aasId: string): Promise<any> {
     const failResponse = {} as any
 
@@ -314,12 +314,12 @@ export function useAASRepositoryClient () {
   }
 
   /**
-     * Fetches asset information by Asset Administration Shell (AAS) endpoint URL.
-     *
-     * @async
-     * @param {string} aasEndpoint - The endpoint URL of the AAS.
-     * @returns {Promise<any>} A promise that resolves to the asset information if found, otherwise an empty object.
-     */
+   * Fetches asset information by Asset Administration Shell (AAS) endpoint URL.
+   *
+   * @async
+   * @param {string} aasEndpoint - The endpoint URL of the AAS.
+   * @returns {Promise<any>} A promise that resolves to the asset information if found, otherwise an empty object.
+   */
   async function fetchAssetInformation (aasEndpoint: string): Promise<any> {
     const failResponse = {} as any
 
@@ -658,12 +658,12 @@ export function useAASRepositoryClient () {
   }
 
   /**
-     * Deletes an Asset Administration Shell (AAS) by the provided AAS ID.
-     *
-     * @async
-     * @param {string} aasId - The ID of the AAS to delete.
-     * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
-     */
+   * Deletes an Asset Administration Shell (AAS) by the provided AAS ID.
+   *
+   * @async
+   * @param {string} aasId - The ID of the AAS to delete.
+   * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
+   */
   async function deleteAasById (aasId: string): Promise<boolean> {
     const failResponse = false
 
@@ -691,12 +691,12 @@ export function useAASRepositoryClient () {
   }
 
   /**
-     * Deletes an Asset Administration Shell (AAS) by the provided AAS endpoint.
-     *
-     * @async
-     * @param {string} aasEndpoint - The endpoint URL of the AAS to delete.
-     * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
-     */
+   * Deletes an Asset Administration Shell (AAS) by the provided AAS endpoint.
+   *
+   * @async
+   * @param {string} aasEndpoint - The endpoint URL of the AAS to delete.
+   * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
+   */
   async function deleteAas (aasEndpoint: string): Promise<boolean> {
     const failResponse = false
 

@@ -5,8 +5,8 @@ import { useNavigationStore } from '@/store/NavigationStore'
 
 // Type for page/module shortcut definitions
 export type PageShortcutDefinitions = (params: {
-  route: RouteLocationNormalizedLoaded
   [key: string]: any
+  route: RouteLocationNormalizedLoaded
 }) => ShortcutDefinition[]
 // Cache for dynamically loaded page shortcuts
 const pageShortcutsCache = new Map<string, PageShortcutDefinitions | null>()
@@ -20,13 +20,13 @@ const pageShortcutsCache = new Map<string, PageShortcutDefinitions | null>()
  * Pages can define shortcuts like:
  *
  * export const shortcuts: PageShortcutDefinitions = ({ route, ... }) => [
- *   {
- *     id: 'page-action',
- *     title: 'Page Action',
- *     category: 'Page Shortcuts',
- *     keys: 'cmd+m',
- *     handler: () => { ... }
- *   }
+ * {
+ * id: 'page-action',
+ * title: 'Page Action',
+ * category: 'Page Shortcuts',
+ * keys: 'cmd+m',
+ * handler: () => { ... }
+ * }
  * ];
  */
 async function loadPageShortcuts (routeName: string): Promise<PageShortcutDefinitions | null> {

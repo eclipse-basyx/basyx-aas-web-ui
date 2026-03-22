@@ -11,7 +11,7 @@ function base64UrlEncode (input: string): string {
   let binary = ''
   const chunk = 0x80_00
   for (let i = 0; i < utf8.length; i += chunk) {
-    binary += String.fromCharCode(...utf8.subarray(i, i + chunk))
+    binary += String.fromCodePoint(...utf8.subarray(i, i + chunk))
   }
   const base64 = btoa(binary)
   return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')

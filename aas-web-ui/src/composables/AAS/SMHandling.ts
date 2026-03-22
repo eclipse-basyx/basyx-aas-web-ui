@@ -26,11 +26,11 @@ export function useSMHandling () {
   const aasStore = useAASStore()
 
   /**
-     * Fetches a Submodel (SM) by the provided SM endpoint.
-     * @param smEndpoint the endpoint URL of the SM to fetch.
-     * @param withConceptDescriptions Flag to specify concept descriptions should be included
-     * @returns A promise that resolves to a SM.
-     */
+   * Fetches a Submodel (SM) by the provided SM endpoint.
+   * @param smEndpoint the endpoint URL of the SM to fetch.
+   * @param withConceptDescriptions Flag to specify concept descriptions should be included
+   * @returns A promise that resolves to a SM.
+   */
   async function fetchAndDispatchSm (smEndpoint: string, withConceptDescriptions = false): Promise<any> {
     const failResponse = {}
     if (!smEndpoint) {
@@ -49,12 +49,12 @@ export function useSMHandling () {
   }
 
   /**
-     * Fetches a list of all available Submodel (SM) Descriptors.
-     *
-     * @async
-     * @returns {Promise<Array<any>>} A promise that resolves to an array of SM Descriptors.
-     * An empty array is returned if the request fails or no SM Descriptors are found.
-     */
+   * Fetches a list of all available Submodel (SM) Descriptors.
+   *
+   * @async
+   * @returns {Promise<Array<any>>} A promise that resolves to an array of SM Descriptors.
+   * An empty array is returned if the request fails or no SM Descriptors are found.
+   */
   async function fetchSmDescriptorList (): Promise<Array<any>> {
     const failResponse = [] as Array<any>
 
@@ -74,12 +74,12 @@ export function useSMHandling () {
   }
 
   /**
-     * Fetches a list of all available Submodels (SM).
-     *
-     * @async
-     * @returns {Promise<Array<any>>} A promise that resolves to an array of SM.
-     * An empty array is returned if the request fails or no AAS Descriptors are found.
-     */
+   * Fetches a list of all available Submodels (SM).
+   *
+   * @async
+   * @returns {Promise<Array<any>>} A promise that resolves to an array of SM.
+   * An empty array is returned if the request fails or no AAS Descriptors are found.
+   */
   async function fetchSmList (): Promise<Array<any>> {
     const failResponse = [] as Array<any>
 
@@ -99,12 +99,12 @@ export function useSMHandling () {
   }
 
   /**
-     * Fetches an Submodel (SM) Descriptor by the provided SM ID.
-     *
-     * @async
-     * @param {string} smId - The ID of the SM Descriptor to fetch.
-     * @returns {Promise<any>} A promise that resolves to a SM Descriptor.
-     */
+   * Fetches an Submodel (SM) Descriptor by the provided SM ID.
+   *
+   * @async
+   * @param {string} smId - The ID of the SM Descriptor to fetch.
+   * @returns {Promise<any>} A promise that resolves to a SM Descriptor.
+   */
   async function fetchSmDescriptor (smId: string): Promise<any> {
     const failResponse = {}
 
@@ -128,16 +128,16 @@ export function useSMHandling () {
   }
 
   /**
-     * Fetches a Submodel (SM) by the provided SM endpoint.
-     *
-     * @async
-     * @param {string} smEndpoint - The endpoint URL of the SM to fetch.
-     * @param {boolean} withConceptDescriptions - Flag to specify if SM/SME and its Submodel Elements (SME)
-     *                                            should be fetched with ConceptDescriptions (CDs)
-     * @param {boolean} setDataFlag - Flag to specify if data (`path`, `timestamp`, ìd`) should be set to
-     *                               Submodel Elements (SME) of SM/SME object
-     * @returns {Promise<any>} A promise that resolves to a SM.
-     */
+   * Fetches a Submodel (SM) by the provided SM endpoint.
+   *
+   * @async
+   * @param {string} smEndpoint - The endpoint URL of the SM to fetch.
+   * @param {boolean} withConceptDescriptions - Flag to specify if SM/SME and its Submodel Elements (SME)
+   * should be fetched with ConceptDescriptions (CDs)
+   * @param {boolean} setDataFlag - Flag to specify if data (`path`, `timestamp`, ìd`) should be set to
+   * Submodel Elements (SME) of SM/SME object
+   * @returns {Promise<any>} A promise that resolves to a SM.
+   */
   async function fetchSm (
     smEndpoint: string,
     withConceptDescriptions = false,
@@ -155,16 +155,13 @@ export function useSMHandling () {
       return failResponse
     }
 
-    let smOrSme: any
-    if (smEndpoint.includes('/submodel-elements/')) {
-      // smEndoint seems to be an SME endpoint
-      smOrSme = await fetchSmeFromRepo(smEndpoint)
+    // An endpoint containing '/submodel-elements/' points to an SME instead of an SM.
+    const smOrSme: any = smEndpoint.includes('/submodel-elements/')
+      ? await fetchSmeFromRepo(smEndpoint)
+      : await fetchSmFromRepo(smEndpoint)
 
-      // Note usage of fetchSme() (SMHandling) not possible
-      // Reciprocal import of SMHandling/SMEHandling leads to error "Maximum call stack size exceeded"
-    } else {
-      smOrSme = await fetchSmFromRepo(smEndpoint)
-    }
+    // Note usage of fetchSme() (SMHandling) not possible.
+    // Reciprocal import of SMHandling/SMEHandling leads to error "Maximum call stack size exceeded".
 
     if (!smOrSme || Object.keys(smOrSme).length === 0) {
       console.warn('Fetching SM/SME (' + smEndpoint + ') failed!')
@@ -184,16 +181,16 @@ export function useSMHandling () {
   }
 
   /**
-     * Fetches a Submodel (SM) by the provided SM ID.
-     *
-     * @async
-     * @param {string} smId - The ID of the SM to fetch.
-     * @param {boolean} withConceptDescriptions - Flag to specify if SM and its Submodel Elements (SME)
-     *                                            should be fetched with ConceptDescriptions (CDs)
-     * @param {boolean} setDataFlag - Flag to specify if data (`path`, `timestamp`, ìd`) should be set to
-     *                               Submodel Elements (SME) of SM object
-     * @returns {Promise<any>} A promise that resolves to a SM.
-     */
+   * Fetches a Submodel (SM) by the provided SM ID.
+   *
+   * @async
+   * @param {string} smId - The ID of the SM to fetch.
+   * @param {boolean} withConceptDescriptions - Flag to specify if SM and its Submodel Elements (SME)
+   * should be fetched with ConceptDescriptions (CDs)
+   * @param {boolean} setDataFlag - Flag to specify if data (`path`, `timestamp`, ìd`) should be set to
+   * Submodel Elements (SME) of SM object
+   * @returns {Promise<any>} A promise that resolves to a SM.
+   */
   async function fetchSmById (
     smId: string,
     withConceptDescriptions = false,
@@ -213,20 +210,18 @@ export function useSMHandling () {
 
     const smEndpoint = await getSmEndpointById(smId)
 
-    if (smEndpoint && smEndpoint.trim() !== '') {
-      return fetchSm(smEndpoint.trim(), withConceptDescriptions, setDataFlag)
-    }
-
-    return failResponse
+    return smEndpoint && smEndpoint.trim() !== ''
+      ? fetchSm(smEndpoint.trim(), withConceptDescriptions, setDataFlag)
+      : failResponse
   }
 
   /**
-     * Deletes a Submodel by the provided Submodel ID.
-     *
-     * @async
-     * @param {string} smId - The ID of the Submodel to delete.
-     * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
-     */
+   * Deletes a Submodel by the provided Submodel ID.
+   *
+   * @async
+   * @param {string} smId - The ID of the Submodel to delete.
+   * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
+   */
   async function deleteSmById (smId: string): Promise<boolean> {
     const failResponse = false
 
@@ -249,12 +244,12 @@ export function useSMHandling () {
   }
 
   /**
-     * Deletes a Submodel by the provided Submodel endpoint.
-     *
-     * @async
-     * @param {string} smEndpoint - The endpoint URL of the Submodel to delete.
-     * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
-     */
+   * Deletes a Submodel by the provided Submodel endpoint.
+   *
+   * @async
+   * @param {string} smEndpoint - The endpoint URL of the Submodel to delete.
+   * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
+   */
   async function deleteSm (smEndpoint: string): Promise<boolean> {
     const failResponse = false
 
@@ -272,16 +267,16 @@ export function useSMHandling () {
   }
 
   /**
-     * Retrieves the Submodel (Sm) endpoint URL by its ID.
-     *
-     * This function attempts to obtain the SM endpoint using two methods: first by querying
-     * the SM registry, and if that fails, it tries to obtain it from the SM repository. If the provided
-     * SM ID is invalid or empty, the function returns an empty string.
-     *
-     * @async
-     * @param {string} smId - The ID of the SM to retrieve the endpoint for.
-     * @returns {Promise<string>} A promise that resolves to an SM endpoint.
-     */
+   * Retrieves the Submodel (Sm) endpoint URL by its ID.
+   *
+   * This function attempts to obtain the SM endpoint using two methods: first by querying
+   * the SM registry, and if that fails, it tries to obtain it from the SM repository. If the provided
+   * SM ID is invalid or empty, the function returns an empty string.
+   *
+   * @async
+   * @param {string} smId - The ID of the SM to retrieve the endpoint for.
+   * @returns {Promise<string>} A promise that resolves to an SM endpoint.
+   */
   async function getSmEndpointById (smId: string): Promise<string> {
     const failResponse = ''
 
@@ -309,26 +304,26 @@ export function useSMHandling () {
   }
 
   /**
-     * Recursively calculates and sets data of SubmodelElements (SMEs) within a given Submodel (SM) or SubmodelElement (SME).
-     * The function modifies the SM/SME object by:
-     * - Assigning a unique `id` property to all SME objects using `generateUUID()`.
-     * - Assigning `path` to the SM/SME object.
-     * - Assigning `timestamp` to the SM/SME object.
-     * - Setting the `conceptDescriptions` property array by fetching Concept Descriptions (CDs)
-     *   from repository if `withConceptDescription`is `true`
-     *
-     * The function handles different types of parent structures:
-     * - For **Submodel**, it iterates over `submodelElements` and appends their `idShort` to the path.
-     * - For **SubmodelElementCollection**, it processes the items in its `value` array.
-     * - For **SubmodelElementList**, it uses array index notation (`[index]`).
-     * - For **Entity**, it processes `statements` similarly.
-     *
-     * @param {any} smOrSme - The Submodel or SubmodelElement object to process, which will have its `path` set and potentially modified.
-     * @param {string} path - The base path string.
-     * @param {boolean} withConceptDescriptions - Flag to specify if `conceptDescriptions` property array should be set with fetched CDs
-     * @param {string} timestamp - The timestamp
-     * @returns {Promise<any>} A promise that resolves with the modified SM/SME object.
-     */
+   * Recursively calculates and sets data of SubmodelElements (SMEs) within a given Submodel (SM) or SubmodelElement (SME).
+   * The function modifies the SM/SME object by:
+   * - Assigning a unique `id` property to all SME objects using `generateUUID()`.
+   * - Assigning `path` to the SM/SME object.
+   * - Assigning `timestamp` to the SM/SME object.
+   * - Setting the `conceptDescriptions` property array by fetching Concept Descriptions (CDs)
+   * from repository if `withConceptDescription`is `true`
+   *
+   * The function handles different types of parent structures:
+   * - For **Submodel**, it iterates over `submodelElements` and appends their `idShort` to the path.
+   * - For **SubmodelElementCollection**, it processes the items in its `value` array.
+   * - For **SubmodelElementList**, it uses array index notation (`[index]`).
+   * - For **Entity**, it processes `statements` similarly.
+   *
+   * @param {any} smOrSme - The Submodel or SubmodelElement object to process, which will have its `path` set and potentially modified.
+   * @param {string} path - The base path string.
+   * @param {boolean} withConceptDescriptions - Flag to specify if `conceptDescriptions` property array should be set with fetched CDs
+   * @param {string} timestamp - The timestamp
+   * @returns {Promise<any>} A promise that resolves with the modified SM/SME object.
+   */
   async function setData (
     smOrSme: any,
     path: string,
@@ -350,7 +345,7 @@ export function useSMHandling () {
       smOrSme.id = generateUUID()
     }
     smOrSme.path = path
-    smOrSme.timestamp = timestamp ? timestamp : formatDate(new Date())
+    smOrSme.timestamp = timestamp || formatDate(new Date())
 
     if (
       withConceptDescriptions
@@ -415,24 +410,24 @@ export function useSMHandling () {
   }
 
   /**
-     * Iteratively fetches all Concept Descriptions (CDs) for a Submodel (SM) or SubmodelElement (SME) and all its nested elements.
-     * This function uses a stack-based approach to traverse the entire SM/SME hierarchy without recursion.
-     *
-     * The function processes different types of structures:
-     * - For **Submodel**, it processes all `submodelElements` recursively
-     * - For **SubmodelElementCollection**, it processes all items in the `value` array
-     * - For **SubmodelElementList**, it processes all items in the `value` array
-     * - For **Entity**, it processes all `statements`
-     *
-     * Each element is checked for Concept Descriptions via `fetchCds()`, and all found CDs are collected
-     * into a single array that is returned.
-     *
-     * @async
-     * @param {any} smOrSme - The Submodel or SubmodelElement object to process
-     * @param {string} path - The base path string (used for tracking context during traversal)
-     * @param {string} [cdEndpoint] - Optional Concept Description repository endpoint URL
-     * @returns {Promise<any>} A promise that resolves to the array of all fetched Concept Descriptions.
-     */
+   * Iteratively fetches all Concept Descriptions (CDs) for a Submodel (SM) or SubmodelElement (SME) and all its nested elements.
+   * This function uses a stack-based approach to traverse the entire SM/SME hierarchy without recursion.
+   *
+   * The function processes different types of structures:
+   * - For **Submodel**, it processes all `submodelElements` recursively
+   * - For **SubmodelElementCollection**, it processes all items in the `value` array
+   * - For **SubmodelElementList**, it processes all items in the `value` array
+   * - For **Entity**, it processes all `statements`
+   *
+   * Each element is checked for Concept Descriptions via `fetchCds()`, and all found CDs are collected
+   * into a single array that is returned.
+   *
+   * @async
+   * @param {any} smOrSme - The Submodel or SubmodelElement object to process
+   * @param {string} path - The base path string (used for tracking context during traversal)
+   * @param {string} [cdEndpoint] - Optional Concept Description repository endpoint URL
+   * @returns {Promise<any>} A promise that resolves to the array of all fetched Concept Descriptions.
+   */
   async function fetchAllConceptDescriptions (smOrSme: any, path: string, cdEndpoint?: string): Promise<any> {
     const failResponse = {}
     const conceptDescriptions = [] as Array<any>

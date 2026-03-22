@@ -4,6 +4,7 @@ export type LangString = {
 }
 
 export type SubmodelElementLike = {
+  [key: string]: unknown
   id?: string
   idShort?: string
   path?: string
@@ -11,7 +12,6 @@ export type SubmodelElementLike = {
   description?: unknown
   contentType?: string
   value?: unknown
-  [key: string]: unknown
 }
 
 export type DocumentLike = SubmodelElementLike & {

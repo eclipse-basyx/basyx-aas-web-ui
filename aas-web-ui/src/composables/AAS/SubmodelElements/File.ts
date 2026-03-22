@@ -9,11 +9,11 @@ export function useSMEFile () {
   const { getBlobUrl } = useUrlUtils()
 
   /**
-     * Checks if the given file object is a valid File model with respect to AAS metamodel specs.
-     *
-     * @param {any} file - The file object to check.
-     * @returns {boolean} True if the object is a File model, otherwise false.
-     */
+   * Checks if the given file object is a valid File model with respect to AAS metamodel specs.
+   *
+   * @param {any} file - The file object to check.
+   * @returns {boolean} True if the object is a File model, otherwise false.
+   */
   function isFile (file: any): boolean {
     if (
       file
@@ -29,11 +29,11 @@ export function useSMEFile () {
   }
 
   /**
-     * Checks whether the given file object has a non-empty value.
-     *
-     * @param {any} file - The file object to check.
-     * @returns {boolean} True if the file has a non-empty value, otherwise false.
-     */
+   * Checks whether the given file object has a non-empty value.
+   *
+   * @param {any} file - The file object to check.
+   * @returns {boolean} True if the file has a non-empty value, otherwise false.
+   */
   function hasValue (file: any): boolean {
     if (isFile(file) && file?.value && file.value.trim() !== '') {
       return true
@@ -42,12 +42,12 @@ export function useSMEFile () {
   }
 
   /**
-     * Retrieves the display value of a file if it exists, otherwise returns a default value.
-     *
-     * @param {any} file - The file object to check.
-     * @param {string} [defaultValueToDisplay=''] - The default value to return if the file is invalid or has no value.
-     * @returns {string} The display value of the file or the default value.
-     */
+   * Retrieves the display value of a file if it exists, otherwise returns a default value.
+   *
+   * @param {any} file - The file object to check.
+   * @param {string} [defaultValueToDisplay=''] - The default value to return if the file is invalid or has no value.
+   * @returns {string} The display value of the file or the default value.
+   */
   function valueToDisplay (file: any, defaultValueToDisplay = ''): string {
     if (isFile(file) && hasValue(file)) {
       return file.value
@@ -56,11 +56,11 @@ export function useSMEFile () {
   }
 
   /**
-     * Retrieves the URL value of a file if it exists, otherwise returns a default value.
-     *
-     * @param {any} file - The file object to check.
-     * @returns {{ url: string, isExternal: boolean }} The URL value of the file or the default value.
-     */
+   * Retrieves the URL value of a file if it exists, otherwise returns a default value.
+   *
+   * @param {any} file - The file object to check.
+   * @returns {{ url: string, isExternal: boolean }} The URL value of the file or the default value.
+   */
   function valueUrl (file: any): { url: string, isExternal: boolean } {
     if (isFile(file) && hasValue(file)) {
       try {
@@ -88,20 +88,20 @@ export function useSMEFile () {
   }
 
   /**
-     * Retrieves a Blob URL for a given file if it has a valid URL.
-     *
-     * This function checks if the provided file object has a valid URL,
-     * and if so, makes a request to retrieve the associated Blob data.
-     * Upon a successful response, it creates and returns a URL that can
-     * be used to access the Blob. If the file does not have a valid URL
-     * or the request fails, it returns an empty string.
-     *
-     * @param {any} file - The file object to be processed. It is expected
-     *                     to have a method or property that allows
-     *                     getting its URL.
-     * @returns {string} - A URL string for the Blob if successful,
-     *                    or an empty string if not.
-     */
+   * Retrieves a Blob URL for a given file if it has a valid URL.
+   *
+   * This function checks if the provided file object has a valid URL,
+   * and if so, makes a request to retrieve the associated Blob data.
+   * Upon a successful response, it creates and returns a URL that can
+   * be used to access the Blob. If the file does not have a valid URL
+   * or the request fails, it returns an empty string.
+   *
+   * @param {any} file - The file object to be processed. It is expected
+   * to have a method or property that allows
+   * getting its URL.
+   * @returns {string} - A URL string for the Blob if successful,
+   * or an empty string if not.
+   */
   async function valueBlob (file: any): Promise<string> {
     const fileUrl = valueUrl(file)
     if (fileUrl.url && fileUrl.url.trim() !== '') {
@@ -111,11 +111,11 @@ export function useSMEFile () {
   }
 
   /**
-     * Retrieves the filename of a file if it exists, otherwise returns a default value.
-     *
-     * @param {any} file - The file object to check.
-     * @returns {string} The filename of the file or an empty string if filename determination is not possible.
-     */
+   * Retrieves the filename of a file if it exists, otherwise returns a default value.
+   *
+   * @param {any} file - The file object to check.
+   * @returns {string} The filename of the file or an empty string if filename determination is not possible.
+   */
   function getFilename (file: any): string {
     if (isFile(file) && hasValue(file)) {
       const fileValueUrl = valueUrl(file).url
@@ -171,10 +171,10 @@ export function useSMEFile () {
   }
 
   /**
-     * Downloads file if it exists.
-     *
-     * @param {any} file - The file object to check.
-     */
+   * Downloads file if it exists.
+   *
+   * @param {any} file - The file object to check.
+   */
   async function downloadFile (file: any): Promise<void> {
     if (isFile(file) && hasValue(file) && valueUrl(file)) {
       const path = valueUrl(file).url
@@ -206,8 +206,8 @@ export function useSMEFile () {
   }
 
   /**
-     * Custom MIME type mappings for specific file types used in visualizations
-     */
+   * Custom MIME type mappings for specific file types used in visualizations
+   */
   const CUSTOM_MIME_MAPPINGS: Record<string, string> = {
     // CAD file types
     'stl': 'application/sla', // STL files
@@ -226,11 +226,11 @@ export function useSMEFile () {
   }
 
   /**
-     * Determines the content type of a file based on various properties.
-     * @param file - The file object to check.
-     * @param fallbackType - The fallback content type to use if none is found.
-     * @returns The determined content type or the fallback type.
-     */
+   * Determines the content type of a file based on various properties.
+   * @param file - The file object to check.
+   * @param fallbackType - The fallback content type to use if none is found.
+   * @returns The determined content type or the fallback type.
+   */
   function determineContentType (file: any, fallbackType = 'application/octet-stream'): string {
     if (!file) {
       return fallbackType
@@ -267,10 +267,10 @@ export function useSMEFile () {
   }
 
   /**
-     * Extracts content type from a file path or URL based on its extension
-     * @param path - The file path or URL
-     * @returns The MIME type or null if not determinable
-     */
+   * Extracts content type from a file path or URL based on its extension
+   * @param path - The file path or URL
+   * @returns The MIME type or null if not determinable
+   */
   function getContentTypeFromPath (path: string): string | null {
     if (!path || typeof path !== 'string') {
       return null

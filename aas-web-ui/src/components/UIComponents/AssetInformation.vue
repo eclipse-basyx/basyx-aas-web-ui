@@ -89,7 +89,7 @@
   // Computed
   const assetInfo = computed(() => {
     return {
-      idShort: props.assetObject.assetType ? props.assetObject.assetType : 'Asset',
+      idShort: props.assetObject.assetType || 'Asset',
       id: props.assetObject.globalAssetId,
       modelType: 'Asset',
     }
@@ -123,15 +123,13 @@
     }
 
     try {
-      if (assetInfo.value.id && assetInfo.value.id.trim() !== '') {
-        qrCodeUrl.value = await QRCode.toDataURL(assetInfo.value.id, {
+      qrCodeUrl.value = assetInfo.value.id && assetInfo.value.id.trim() !== ''
+        ? await QRCode.toDataURL(assetInfo.value.id, {
           errorCorrectionLevel: 'Q',
           margin: 3,
           scale: 4, // module size
         })
-      } else {
-        qrCodeUrl.value = ''
-      }
+        : ''
     } catch (error) {
       console.error(error)
       qrCodeUrl.value = ''
@@ -177,11 +175,11 @@
     const assetInformationIdentificationHeight = document.querySelector('#assetInformationIdentification')
       ?.clientHeight as number
     const availableHeight = (screenHeight.value
-      - (toolbarHeight ? toolbarHeight : 0)
-      - (titleAasListHeight ? titleAasListHeight : 0)
-      - (assetInformationIdentificationHeight ? assetInformationIdentificationHeight : 0)
-      - (closeSidebarHeight ? closeSidebarHeight : 0)
-      - (footerHeight ? footerHeight : 0)) as number
+      - (toolbarHeight || 0)
+      - (titleAasListHeight || 0)
+      - (assetInformationIdentificationHeight || 0)
+      - (closeSidebarHeight || 0)
+      - (footerHeight || 0)) as number
     if (screenHeight.value < 600) {
       // xs display
       thumbnailMaxHeight.value = 1 * availableHeight

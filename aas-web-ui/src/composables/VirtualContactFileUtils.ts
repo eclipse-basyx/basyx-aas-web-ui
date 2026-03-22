@@ -9,17 +9,17 @@ export function useVirtualContactFileUtils () {
   const isIOs = computed(() => navigationStore.getPlatform.ios)
 
   /**
-     * Downloads a vCard file with the specified filename.
-     *
-     * This function checks if the provided string is a valid vCard format (starts with 'BEGIN:VCARD'
-     * and ends with 'END:VCARD'). If valid, it creates a Blob from the string, generates a URL
-     * for that Blob, and then initiates a download of the file. On iOS and Mac devices, it opens
-     * the vCard in a new tab instead of downloading it directly.
-     *
-     * @param {string} vCardString - The vCard data string, which must be in valid vCard format.
-     * @param {string} filename - The desired filename for the downloaded vCard file.
-     * @returns {void} This function does not return a value.
-     */
+   * Downloads a vCard file with the specified filename.
+   *
+   * This function checks if the provided string is a valid vCard format (starts with 'BEGIN:VCARD'
+   * and ends with 'END:VCARD'). If valid, it creates a Blob from the string, generates a URL
+   * for that Blob, and then initiates a download of the file. On iOS and Mac devices, it opens
+   * the vCard in a new tab instead of downloading it directly.
+   *
+   * @param {string} vCardString - The vCard data string, which must be in valid vCard format.
+   * @param {string} filename - The desired filename for the downloaded vCard file.
+   * @returns {void} This function does not return a value.
+   */
   function downloadVCard (vCardString: string, filename: string): void {
     if (vCardString.startsWith('BEGIN:VCARD') && vCardString.endsWith('END:VCARD')) {
       // Add file extension

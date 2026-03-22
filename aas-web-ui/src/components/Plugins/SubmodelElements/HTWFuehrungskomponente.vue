@@ -1325,6 +1325,9 @@
 
   const selectedNode = computed(() => aasStore.getSelectedNode)
   const uniqueId = computed(() => generateUUIDFromString(selectedNode.value.path))
+  function getStatePath (stateName: string): HTMLElement | null {
+    return document.querySelector<HTMLElement>(`[id="${stateName}_Border${uniqueId.value}"]`)
+  }
 
   const states = ref([
     {
@@ -1335,87 +1338,87 @@
     {
       value: 1,
       text: 'Clearing',
-      path: document.getElementById('Clearing_Border' + uniqueId.value),
+      path: getStatePath('Clearing'),
     },
     {
       value: 2,
       text: 'Stopped',
-      path: document.getElementById('Stopped_Border' + uniqueId.value),
+      path: getStatePath('Stopped'),
     },
     {
       value: 3,
       text: 'Starting',
-      path: document.getElementById('Starting_Border' + uniqueId.value),
+      path: getStatePath('Starting'),
     },
     {
       value: 4,
       text: 'Idle',
-      path: document.getElementById('Idle_Border' + uniqueId.value),
+      path: getStatePath('Idle'),
     },
     {
       value: 5,
       text: 'Suspended',
-      path: document.getElementById('Suspended_Border' + uniqueId.value),
+      path: getStatePath('Suspended'),
     },
     {
       value: 6,
       text: 'Execute',
-      path: document.getElementById('Execute_Border' + uniqueId.value),
+      path: getStatePath('Execute'),
     },
     {
       value: 7,
       text: 'Stopping',
-      path: document.getElementById('Stopping_Border' + uniqueId.value),
+      path: getStatePath('Stopping'),
     },
     {
       value: 8,
       text: 'Aborting',
-      path: document.getElementById('Aborting_Border' + uniqueId.value),
+      path: getStatePath('Aborting'),
     },
     {
       value: 9,
       text: 'Aborted',
-      path: document.getElementById('Aborted_Border' + uniqueId.value),
+      path: getStatePath('Aborted'),
     },
     {
       value: 10,
       text: 'Holding',
-      path: document.getElementById('Holding_Border' + uniqueId.value),
+      path: getStatePath('Holding'),
     },
     {
       value: 11,
       text: 'Held',
-      path: document.getElementById('Held_Border' + uniqueId.value),
+      path: getStatePath('Held'),
     },
     {
       value: 12,
       text: 'Unholding',
-      path: document.getElementById('Unholding_Border' + uniqueId.value),
+      path: getStatePath('Unholding'),
     },
     {
       value: 13,
       text: 'Suspending',
-      path: document.getElementById('Suspending_Border' + uniqueId.value),
+      path: getStatePath('Suspending'),
     },
     {
       value: 14,
       text: 'Unsuspending',
-      path: document.getElementById('Unsuspending_Border' + uniqueId.value),
+      path: getStatePath('Unsuspending'),
     },
     {
       value: 15,
       text: 'Resetting',
-      path: document.getElementById('Resetting_Border' + uniqueId.value),
+      path: getStatePath('Resetting'),
     },
     {
       value: 16,
       text: 'Completing',
-      path: document.getElementById('Completing_Border' + uniqueId.value),
+      path: getStatePath('Completing'),
     },
     {
       value: 17,
       text: 'Complete',
-      path: document.getElementById('Complete_Border' + uniqueId.value),
+      path: getStatePath('Complete'),
     },
   ])
 
@@ -1430,7 +1433,10 @@
   const clearStates = ref(['Aborted']) // List of states that can be cleared
 
   const isDark = computed(() => theme.global.current.value.dark)
-  const primaryColor = computed(() => theme.current.value.colors.primary || '#1976d2')
+  const primaryColor = computed<string>(() => {
+    const color = theme.current.value.colors.primary
+    return typeof color === 'string' ? color : '#1976d2'
+  })
   const primaryColorLighten2 = computed(() => lightenDarkenColor(primaryColor.value, 20))
 
   watch(
@@ -1447,14 +1453,16 @@
 
   function updateSVG (): void {
     // console.log('updateSVG');
-    states.value.forEach((state: any) => {
+    for (const state of states.value) {
       if (
         props.submodelElementData.value[0].value
         && state.text === makeUniform(props.submodelElementData.value[0].value)
       ) {
-        state.path.style.strokeWidth = '4'
-        state.path.style.stroke = isDark.value ? '#ff0000' : '#ff0000'
-        state.path.style.fill = 'rgb(0,0,0);'
+        if (state.path != undefined) {
+          state.path.style.strokeWidth = '4'
+          state.path.style.stroke = isDark.value ? '#ff0000' : '#ff0000'
+          state.path.style.fill = 'rgb(0,0,0);'
+        }
       } else {
         if (state.path != undefined) {
           state.path.style.strokeWidth = ''
@@ -1462,7 +1470,7 @@
           state.path.style.fill = ''
         }
       }
-    })
+    }
   }
 
   function makeUniform (state: string): string {
@@ -1475,9 +1483,9 @@
     // console.log("Set Mode: ", mode, this.selectedNode.pathFull + '/Prop_UnitMode/value');
     let propName = 'Prop_Mode'
     // console.log('setState: ', state, this.selectedNode)
-    props.submodelElementData.value.forEach((element: any) => {
+    for (const element of props.submodelElementData.value) {
       if (checkIdShort(element, 'Prop_UnitMode')) propName = 'Prop_UnitMode'
-    })
+    }
 
     const path = selectedNode.value.pathFull + '/' + propName + '/value'
     const content = '\'' + mode + '\''
@@ -1504,9 +1512,9 @@
     // check which property-name is used for the state
     let propName = 'Prop_ControlCommand'
     // console.log('setState: ', state, this.selectedNode)
-    props.submodelElementData.value.forEach((element: any) => {
+    for (const element of props.submodelElementData.value) {
       if (checkIdShort(element, 'Prop_eCommand')) propName = 'Prop_eCommand'
-    })
+    }
 
     const path = selectedNode.value.pathFull + '/' + propName + '/value'
     const content = '\'' + state + '\''

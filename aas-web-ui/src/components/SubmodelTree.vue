@@ -519,7 +519,7 @@
       const validSubmodels: Array<any> = []
       const emptySubmodels: Array<any> = []
 
-      submodels.forEach((submodel: any) => {
+      for (const submodel of submodels) {
         const isEmpty = !submodel || Object.keys(submodel).length === 0 || (!submodel.id && !submodel.idShort)
         if (isEmpty) {
           emptySubmodels.push({
@@ -530,17 +530,17 @@
         } else {
           validSubmodels.push(submodel)
         }
-      })
+      }
 
       // Sort valid submodels
-      validSubmodels.sort((a, b) => {
+      const sortedValidSubmodels = validSubmodels.toSorted((a, b) => {
         const aId = a?.id || a?.idShort || ''
         const bId = b?.id || b?.idShort || ''
         return aId.localeCompare(bId)
       })
 
       // Combine: valid first, empty at the bottom
-      const sortedSubmodels = [...validSubmodels, ...emptySubmodels]
+      const sortedSubmodels = [...sortedValidSubmodels, ...emptySubmodels]
 
       let processedList = [] as Array<any>
 
@@ -677,24 +677,24 @@
 
   // Collapse the entire tree recursively
   function collapseTree (submodelElements: Array<any> = submodelTree.value): void {
-    submodelElements.forEach((sme: any) => {
+    for (const sme of submodelElements) {
       sme.showChildren = false
 
       if (sme.children && Array.isArray(sme.children) && sme.children.length > 0) {
         collapseTree(sme.children)
       }
-    })
+    }
   }
 
   // Expand the tree recursively
   function expandTree (submodelElements: Array<any> = submodelTree.value): void {
-    submodelElements.forEach((sme: any) => {
+    for (const sme of submodelElements) {
       sme.showChildren = shouldExpandNode(sme.path)
 
       if (sme.children && Array.isArray(sme.children) && sme.children.length > 0) {
         expandTree(sme.children)
       }
-    })
+    }
   }
 
   function openEditDialog (createNew: boolean, submodel?: any): void {

@@ -137,7 +137,7 @@
       const binaryString = atob(value)
       const bytes = new Uint8Array(binaryString.length)
       for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i)
+        bytes[i] = binaryString.codePointAt(i) ?? 0
       }
 
       blobData.value = bytes
@@ -207,7 +207,7 @@
         const bytes = new TextEncoder().encode(displayedContent.value)
         let binary = ''
         for (const byte of bytes) {
-          binary += String.fromCharCode(byte)
+          binary += String.fromCodePoint(byte)
         }
         base64Value = btoa(binary)
       } else {
@@ -219,7 +219,7 @@
         }
         let binary = ''
         for (const byte of bytes) {
-          binary += String.fromCharCode(byte)
+          binary += String.fromCodePoint(byte)
         }
         base64Value = btoa(binary)
       }

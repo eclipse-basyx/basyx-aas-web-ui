@@ -84,21 +84,21 @@
   const props = withDefaults(defineProps<Props>(), {})
 
   const emit = defineEmits<{
-    (e: 'folder-click', element: FileSystemElement): void
-    (e: 'preview', file: FileSystemElement): void
-    (e: 'download', file: FileSystemElement): void
-    (e: 'edit-folder', element: FileSystemElement): void
-    (e: 'delete', element: FileSystemElement): void
-    (e: 'toggle-selection', element: FileSystemElement): void
-    (e: 'change-startscreen', state: boolean, file: FileSystemElement): void
-    (e: 'navigate-up'): void
-    (e: 'open-upload-dialog'): void
-    (e: 'create-folder'): void
-    (e: 'dragstart', event: DragEvent, element: FileSystemElement): void
-    (e: 'dragend'): void
-    (e: 'dragover', event: DragEvent, element: FileSystemElement): void
-    (e: 'dragleave', event: DragEvent, element: FileSystemElement): void
-    (e: 'drop', event: DragEvent, element: FileSystemElement): void
+    'folder-click': [element: FileSystemElement]
+    'preview': [file: FileSystemElement]
+    'download': [file: FileSystemElement]
+    'edit-folder': [element: FileSystemElement]
+    'delete': [element: FileSystemElement]
+    'toggle-selection': [element: FileSystemElement]
+    'change-startscreen': [state: boolean, file: FileSystemElement]
+    'navigate-up': []
+    'open-upload-dialog': []
+    'create-folder': []
+    'dragstart': [event: DragEvent, element: FileSystemElement]
+    'dragend': []
+    'dragover': [event: DragEvent, element: FileSystemElement]
+    'dragleave': [event: DragEvent, element: FileSystemElement]
+    'drop': [event: DragEvent, element: FileSystemElement]
   }>()
 
   const handleNavigateUp = (): void => emit('navigate-up')

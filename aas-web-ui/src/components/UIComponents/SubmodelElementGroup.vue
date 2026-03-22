@@ -101,7 +101,7 @@
                       {{ nameToDisplay(SubmodelElement) + ':' }}
                     </div>
                   </template>
-                  <v-list-item-subtitle v-for="(value, i) in SubmodelElement.value" :key="i">
+                  <v-list-item-subtitle v-for="(value, valueIndex) in SubmodelElement.value" :key="valueIndex">
                     <div class="pt-2">
                       <v-chip border class="mr-2" label size="x-small">{{
                         value.language ? value.language : 'no-lang'

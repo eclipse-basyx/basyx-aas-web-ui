@@ -21,12 +21,12 @@ export function useSMRegistryClient () {
   const submodelRegistryUrl = computed(() => infrastructureStore.getSubmodelRegistryURL)
 
   /**
-     * Fetches a list of all available Submodel (SM) Descriptors.
-     *
-     * @async
-     * @returns {Promise<Array<any>>} A promise that resolves to an array of SM Descriptors.
-     * An empty array is returned if the request fails or no SM Descriptors are found.
-     */
+   * Fetches a list of all available Submodel (SM) Descriptors.
+   *
+   * @async
+   * @returns {Promise<Array<any>>} A promise that resolves to an array of SM Descriptors.
+   * An empty array is returned if the request fails or no SM Descriptors are found.
+   */
   async function fetchSmDescriptorList (): Promise<Array<any>> {
     const failResponse = [] as Array<any>
 
@@ -61,12 +61,12 @@ export function useSMRegistryClient () {
   }
 
   /**
-     * Fetches a Submodel (SM)  Descriptor by the provided SM ID.
-     *
-     * @async
-     * @param {string} smId - The ID of the SM Descriptor to fetch.
-     * @returns {Promise<any>} A promise that resolves to a SM Descriptor.
-     */
+   * Fetches a Submodel (SM)  Descriptor by the provided SM ID.
+   *
+   * @async
+   * @param {string} smId - The ID of the SM Descriptor to fetch.
+   * @returns {Promise<any>} A promise that resolves to a SM Descriptor.
+   */
   async function fetchSmDescriptorById (smId: string, endpoint?: string): Promise<any> {
     const failResponse = {} as any
 
@@ -80,7 +80,7 @@ export function useSMRegistryClient () {
       return failResponse
     }
 
-    let smRegistryUrl = endpoint ? endpoint : submodelRegistryUrl.value.trim()
+    let smRegistryUrl = endpoint || submodelRegistryUrl.value.trim()
     if (smRegistryUrl === '') {
       return failResponse
     }
@@ -111,12 +111,12 @@ export function useSMRegistryClient () {
   }
 
   /**
-     * Retrieves the Submodel (Sm) endpoint URL by its ID.
-     *
-     * @async
-     * @param {string} smId - The ID of the SM to retrieve the endpoint for.
-     * @returns {Promise<string>} A promise that resolves to an SM endpoint.
-     */
+   * Retrieves the Submodel (Sm) endpoint URL by its ID.
+   *
+   * @async
+   * @param {string} smId - The ID of the SM to retrieve the endpoint for.
+   * @returns {Promise<string>} A promise that resolves to an SM endpoint.
+   */
   async function getSmEndpointById (smId: string, endpoint?: string): Promise<string> {
     const failResponse = ''
 
@@ -137,12 +137,12 @@ export function useSMRegistryClient () {
   }
 
   /**
-     * Checks if Submodel (SM) Descriptor with provided ID is available (in registry).
-     *
-     * @async
-     * @param {string} smId - The ID of the SM to check.
-     * @returns {Promise<boolean>} A promise that resolves to `true` if SM with provided ID is available, otherwise `false`.
-     */
+   * Checks if Submodel (SM) Descriptor with provided ID is available (in registry).
+   *
+   * @async
+   * @param {string} smId - The ID of the SM to check.
+   * @returns {Promise<boolean>} A promise that resolves to `true` if SM with provided ID is available, otherwise `false`.
+   */
   async function isAvailableById (smId: string): Promise<boolean> {
     const failResponse = false
 

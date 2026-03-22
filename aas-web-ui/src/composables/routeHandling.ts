@@ -11,17 +11,17 @@ export function useRouteHandling () {
   const { getSmEndpointById } = useSMHandling()
 
   /**
-     * Handles the redirection of `globalAssetId`, `aasId` and `smId` query parameter from the given route location.
-     *
-     * @async
-     * @function idRedirectHandled
-     * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
-     * @param {string[]} possibleIdQueryParameter - The possible query parameter names for the `globalAssetId`.
-     * @param {string[]} possibleGloBalAssetIdQueryParameter - The possible query parameter names for the `globalAssetId`.
-     * @param {string[]} possibleAasIdQueryParameter - The possible query parameter names for the `aasId`.
-     * @param {string[]} possibleSmIdQueryParameter - The possible query parameter names for the `smId`.
-     * @returns {Promise<RouteLocationRaw | null>} Returns a redirect location if a redirection is needed, otherwise null.
-     */
+   * Handles the redirection of `globalAssetId`, `aasId` and `smId` query parameter from the given route location.
+   *
+   * @async
+   * @function idRedirectHandled
+   * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
+   * @param {string[]} possibleIdQueryParameter - The possible query parameter names for the `globalAssetId`.
+   * @param {string[]} possibleGloBalAssetIdQueryParameter - The possible query parameter names for the `globalAssetId`.
+   * @param {string[]} possibleAasIdQueryParameter - The possible query parameter names for the `aasId`.
+   * @param {string[]} possibleSmIdQueryParameter - The possible query parameter names for the `smId`.
+   * @returns {Promise<RouteLocationRaw | null>} Returns a redirect location if a redirection is needed, otherwise null.
+   */
   async function idRedirectHandled (
     to: RouteLocationNormalizedGeneric,
     possibleIdQueryParameter: string[],
@@ -49,15 +49,15 @@ export function useRouteHandling () {
   }
 
   /**
-     * Handles the redirection of `globalAssetId` query parameter from the given route location.
-     * It resolves the `globalAssetId` to an `aasId` and finally to an `aasEndpoint`, and updates the route query.
-     *
-     * @async
-     * @function globalAssetIdRedirectHandled
-     * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
-     * @param {string[]} possibleGloBalAssetIdQueryParameter - The possible query parameter names for the `globalAssetId`.
-     * @returns {Promise<RouteLocationRaw | null>} Returns a redirect location if a redirection is needed, otherwise null.
-     */
+   * Handles the redirection of `globalAssetId` query parameter from the given route location.
+   * It resolves the `globalAssetId` to an `aasId` and finally to an `aasEndpoint`, and updates the route query.
+   *
+   * @async
+   * @function globalAssetIdRedirectHandled
+   * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
+   * @param {string[]} possibleGloBalAssetIdQueryParameter - The possible query parameter names for the `globalAssetId`.
+   * @returns {Promise<RouteLocationRaw | null>} Returns a redirect location if a redirection is needed, otherwise null.
+   */
   async function globalAssetIdRedirectHandled (
     to: RouteLocationNormalizedGeneric,
     possibleGloBalAssetIdQueryParameter: string[],
@@ -80,16 +80,16 @@ export function useRouteHandling () {
   }
 
   /**
-     * Handles the redirection of `aasId` and `smId` query parameter from the given route location.
-     * It resolves the `aasId`to an `aasEndpoint`, the `smId`to an `smEndpoint` and updates the route query.
-     *
-     * @async
-     * @function aasIdSmIdRedirectHandled
-     * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
-     * @param {string[]} possibleAasIdQueryParameter - The possible query parameter names for the `aasId`.
-     * @param {string[]} possibleSmIdQueryParameter - The possible query parameter names for the `smId`.
-     * @returns {Promise<RouteLocationRaw | null>} Returns a redirect location if a redirection is needed, otherwise null.
-     */
+   * Handles the redirection of `aasId` and `smId` query parameter from the given route location.
+   * It resolves the `aasId`to an `aasEndpoint`, the `smId`to an `smEndpoint` and updates the route query.
+   *
+   * @async
+   * @function aasIdSmIdRedirectHandled
+   * @param {RouteLocationNormalizedGeneric} to - The target route to navigate to, which contains query parameters.
+   * @param {string[]} possibleAasIdQueryParameter - The possible query parameter names for the `aasId`.
+   * @param {string[]} possibleSmIdQueryParameter - The possible query parameter names for the `smId`.
+   * @returns {Promise<RouteLocationRaw | null>} Returns a redirect location if a redirection is needed, otherwise null.
+   */
   async function aasIdSmIdRedirectHandled (
     to: RouteLocationNormalizedGeneric,
     possibleAasIdQueryParameter: string[],

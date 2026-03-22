@@ -179,21 +179,21 @@
 
   function clearFields (): void {
     if (localOperationObject.value.inputVariables) {
-      localOperationObject.value.inputVariables.forEach((variable: any) => {
+      for (const variable of localOperationObject.value.inputVariables) {
         variable.value.value = null
-      })
+      }
     }
 
     if (localOperationObject.value.inoutputVariables) {
-      localOperationObject.value.inoutputVariables.forEach((variable: any) => {
+      for (const variable of localOperationObject.value.inoutputVariables) {
         variable.value.value = null
-      })
+      }
     }
 
     if (localOperationObject.value.outputVariables) {
-      localOperationObject.value.outputVariables.forEach((variable: any) => {
+      for (const variable of localOperationObject.value.outputVariables) {
         variable.value.value = null
-      })
+      }
     }
   }
 

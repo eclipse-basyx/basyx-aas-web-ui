@@ -149,7 +149,7 @@
   watch(
     () => props.multiLanguagePropertyObject,
     (newVal: any) => {
-      mlpValue.value = newVal && newVal.value ? JSON.parse(JSON.stringify(newVal.value)) : []
+      mlpValue.value = newVal && newVal.value ? structuredClone(newVal.value) : []
     },
     { deep: true },
   )

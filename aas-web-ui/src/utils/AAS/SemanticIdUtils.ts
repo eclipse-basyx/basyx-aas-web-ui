@@ -225,7 +225,7 @@ export function checkSemanticIdIri (keyValue: string, semanticId: string): boole
  *
  * @param {string} semanticId - The EClass semantic ID to evaluate and convert.
  * @returns {any[]} An array of the original `semanticId` and its equivalent variations,
- *                  or an empty array if the input is invalid.
+ * or an empty array if the input is invalid.
  */
 export function getEquivalentEclassSemanticIds (semanticId: string): any[] {
   if (
@@ -242,12 +242,14 @@ export function getEquivalentEclassSemanticIds (semanticId: string): any[] {
 
   if (semanticId.startsWith('0173-1#')) {
     // e.g. 0173-1#01-AHF578#001
-    semanticIds.push(semanticId.replace(/-1#(\d{2})-/, '/1///$1#')) // 0173-1#01-AHF578#001 --> 0173/1///01#AHF578#001
-    semanticIds.push('https://api.eclass-cdp.com/' + semanticId.replaceAll('#', '-')) // 0173-1#01-AHF578#001 --> https://api.eclass-cdp.com/0173-1-01-AHF578-001
+    semanticIds.push(
+      semanticId.replace(/-1#(\d{2})-/, '/1///$1#'), // 0173-1#01-AHF578#001 --> 0173/1///01#AHF578#001
+      'https://api.eclass-cdp.com/' + semanticId.replaceAll('#', '-'), // 0173-1#01-AHF578#001 --> https://api.eclass-cdp.com/0173-1-01-AHF578-001
+    )
   } else if (semanticId.startsWith('0173/1///')) {
     // e.g. 0173/1///01#AHF578#001
-    semanticIds.push(semanticId.replace(/\/1\/\/\/(\d{2})#/, '-1#$1-')) // 0173/1///01#AHF578#001 --> 0173-1#01-AHF578#001
     semanticIds.push(
+      semanticId.replace(/\/1\/\/\/(\d{2})#/, '-1#$1-'), // 0173/1///01#AHF578#001 --> 0173-1#01-AHF578#001
       'https://api.eclass-cdp.com/' + semanticId.replace(/\/1\/\/\/(\d{2})#/, '-1-$1-').replaceAll('#', '-'), // 0173/1///01#AHF578#001 --> https://api.eclass-cdp.com/0173-1-01-AHF578-001
     )
   } else if (semanticId.startsWith('https://api.eclass-cdp.com/0173-1')) {
@@ -257,8 +259,6 @@ export function getEquivalentEclassSemanticIds (semanticId: string): any[] {
         .replaceAll('https://api.eclass-cdp.com/', '')
         .replace(/-1-(\d{2})-/, '-1#$1-')
         .replace(/-(\d{3})$/, '#$1'), // https://api.eclass-cdp.com/0173-1-01-AHF578-001 --> 0173-1#01-AHF578#001
-    )
-    semanticIds.push(
       semanticId
         .replaceAll('https://api.eclass-cdp.com/', '')
         .replace(/-1-(\d{2})-/, '/1///$1#')
@@ -279,7 +279,7 @@ export function getEquivalentEclassSemanticIds (semanticId: string): any[] {
  *
  * @param {string} semanticId - The semantic ID to evaluate.
  * @returns {any[]} An array containing the original `semanticId` and its equivalent variations,
- *                  or an empty array if the input is invalid.
+ * or an empty array if the input is invalid.
  */
 export function getEquivalentIriSemanticIds (semanticId: string): any[] {
   if (semanticId.trim() === '' || !(semanticId.startsWith('http://') || semanticId.startsWith('https://'))) {

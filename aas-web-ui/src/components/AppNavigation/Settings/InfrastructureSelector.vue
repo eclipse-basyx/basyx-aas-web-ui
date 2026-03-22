@@ -39,7 +39,7 @@
 
   // Emit
   const emit = defineEmits<{
-    openManage: []
+    'open-manage': []
   }>()
 
   // Computed Properties
@@ -95,6 +95,6 @@
   }
 
   function openManageDialog (): void {
-    emit('openManage')
+    emit('open-manage')
   }
 </script>

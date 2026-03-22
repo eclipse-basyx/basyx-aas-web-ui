@@ -70,5 +70,5 @@ export function extractEndpointHref (descriptor_or_model: any, interfaceShortNam
     })
   }
 
-  return endpoint?.protocolInformation?.href ? endpoint.protocolInformation.href : ''
+  return endpoint?.protocolInformation?.href || ''
 }

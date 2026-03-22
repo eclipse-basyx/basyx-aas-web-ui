@@ -134,10 +134,8 @@
 </template>
 
 <script lang="ts" setup>
-    /* eslint-disable simple-import-sort/imports */
   import Prism from 'prismjs'
   import { computed, nextTick, onMounted, ref, watch } from 'vue'
-  /* eslint-enable simple-import-sort/imports */
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { useAASStore } from '@/store/AASDataStore'
   import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
@@ -235,7 +233,7 @@
       }
 
       // Create a copy of the selected node
-      const nodeCopy = JSON.parse(JSON.stringify(selectedNode.value))
+      const nodeCopy = structuredClone(selectedNode.value)
 
       // Clean the selected node
       const cleanedNode = cleanObjectRecursively(nodeCopy)
@@ -268,11 +266,11 @@
     const lines = jsonContent.value.split('\n')
     const query = searchQuery.value.toLowerCase()
 
-    lines.forEach((line: string, index: number) => {
+    for (const [index, line] of lines.entries()) {
       if (line.toLowerCase().includes(query)) {
         searchResults.value.push(index + 1)
       }
-    })
+    }
 
     if (searchResults.value.length > 0) {
       highlightedLineNumbers.value = [searchResults.value[0]]

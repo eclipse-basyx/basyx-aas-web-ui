@@ -16,12 +16,12 @@ export function useInfrastructureAuth (): {
   ) => void
 } {
   /**
-     * Refreshes expired or expiring tokens for all infrastructures with OAuth2 authentication.
-     * Tokens are refreshed if they expire within 5 minutes (300 seconds).
-     * @param infrastructures Array of infrastructure configurations
-     * @param infrastructureId Optional specific infrastructure ID to refresh
-     * @returns Array of failed refresh attempts with infrastructure info
-     */
+   * Refreshes expired or expiring tokens for all infrastructures with OAuth2 authentication.
+   * Tokens are refreshed if they expire within 5 minutes (300 seconds).
+   * @param infrastructures Array of infrastructure configurations
+   * @param infrastructureId Optional specific infrastructure ID to refresh
+   * @returns Array of failed refresh attempts with infrastructure info
+   */
   async function refreshInfrastructureTokens (
     infrastructures: InfrastructureConfig[],
     infrastructureId?: string,
@@ -80,10 +80,8 @@ export function useInfrastructureAuth (): {
             error: 'No refresh token available - re-authentication required',
           })
           continue
-        }
-
         // Handle OAuth2 token refresh
-        else if (auth.securityType === 'OAuth2') {
+        } else if (auth.securityType === 'OAuth2') {
           if (!auth.oauth2) {
             failures.push({
               infraId: infrastructure.id,
@@ -152,11 +150,11 @@ export function useInfrastructureAuth (): {
   }
 
   /**
-     * Sets the authentication status for a specific infrastructure
-     * @param infrastructures Array of infrastructure configurations
-     * @param infrastructureId Infrastructure ID to update
-     * @param state New authentication state
-     */
+   * Sets the authentication status for a specific infrastructure
+   * @param infrastructures Array of infrastructure configurations
+   * @param infrastructureId Infrastructure ID to update
+   * @param state New authentication state
+   */
   function setAuthenticationStatusForInfrastructure (
     infrastructures: InfrastructureConfig[],
     infrastructureId: string,

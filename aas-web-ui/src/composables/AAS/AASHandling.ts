@@ -29,13 +29,13 @@ export function useAASHandling () {
   const aasStore = useAASStore()
 
   /**
-     * Fetches an Asset Administration Shell (AAS) by the provided AAS endpoint
-     * and dispatches it to the AAS store.
-     *
-     * @async
-     * @param {string} aasEndpoint - The endpoint URL of the AAS to fetch.
-     * @returns {Promise<any>} A promise that resolves to an AAS.
-     */
+   * Fetches an Asset Administration Shell (AAS) by the provided AAS endpoint
+   * and dispatches it to the AAS store.
+   *
+   * @async
+   * @param {string} aasEndpoint - The endpoint URL of the AAS to fetch.
+   * @returns {Promise<any>} A promise that resolves to an AAS.
+   */
   async function fetchAndDispatchAas (aasEndpoint: string): Promise<any> {
     const failResponse = {}
 
@@ -61,13 +61,13 @@ export function useAASHandling () {
   }
 
   /**
-     * Fetches an Asset Administration Shell (AAS) by the provided AAS ID
-     * and dispatches it to the AAS store.
-     *
-     * @async
-     * @param {string} aasId - The ID of the AAS to fetch.
-     * @returns {Promise<any>} A promise that resolves to an AAS.
-     */
+   * Fetches an Asset Administration Shell (AAS) by the provided AAS ID
+   * and dispatches it to the AAS store.
+   *
+   * @async
+   * @param {string} aasId - The ID of the AAS to fetch.
+   * @returns {Promise<any>} A promise that resolves to an AAS.
+   */
   async function fetchAndDispatchAasById (aasId: string): Promise<any> {
     const failResponse = {}
 
@@ -93,12 +93,12 @@ export function useAASHandling () {
   }
 
   /**
-     * Fetches a list of all available Asset Administration Shell (AAS) Descriptors.
-     *
-     * @async
-     * @returns {Promise<Array<any>>} A promise that resolves to an array of AAS Descriptors.
-     * An empty array is returned if the request fails or no AAS Descriptors are found.
-     */
+   * Fetches a list of all available Asset Administration Shell (AAS) Descriptors.
+   *
+   * @async
+   * @returns {Promise<Array<any>>} A promise that resolves to an array of AAS Descriptors.
+   * An empty array is returned if the request fails or no AAS Descriptors are found.
+   */
   async function fetchAasDescriptorList (): Promise<Array<any>> {
     const failResponse = [] as Array<any>
 
@@ -118,12 +118,12 @@ export function useAASHandling () {
   }
 
   /**
-     * Fetches a list of all available Asset Administration Shell (AAS).
-     *
-     * @async
-     * @returns {Promise<Array<any>>} A promise that resolves to an array of AAS.
-     * An empty array is returned if the request fails or no AAS Descriptors are found.
-     */
+   * Fetches a list of all available Asset Administration Shell (AAS).
+   *
+   * @async
+   * @returns {Promise<Array<any>>} A promise that resolves to an array of AAS.
+   * An empty array is returned if the request fails or no AAS Descriptors are found.
+   */
   async function fetchAasList (): Promise<Array<any>> {
     const failResponse = [] as Array<any>
 
@@ -143,12 +143,12 @@ export function useAASHandling () {
   }
 
   /**
-     * Fetches an Asset Administration Shell (AAS) Descriptor by the provided AAS ID.
-     *
-     * @async
-     * @param {string} aasId - The ID of the AAS Descriptor to fetch.
-     * @returns {Promise<any>} A promise that resolves to an AAS Descriptor.
-     */
+   * Fetches an Asset Administration Shell (AAS) Descriptor by the provided AAS ID.
+   *
+   * @async
+   * @param {string} aasId - The ID of the AAS Descriptor to fetch.
+   * @returns {Promise<any>} A promise that resolves to an AAS Descriptor.
+   */
   async function fetchAasDescriptor (aasId: string): Promise<any> {
     const failResponse = {}
 
@@ -176,12 +176,12 @@ export function useAASHandling () {
   }
 
   /**
-     * Fetches an Asset Administration Shell (AAS) by the provided AAS endpoint.
-     *
-     * @async
-     * @param {string} aasEndpoint - The endpoint URL of the AAS to fetch.
-     * @returns {Promise<any>} A promise that resolves to an AAS.
-     */
+   * Fetches an Asset Administration Shell (AAS) by the provided AAS endpoint.
+   *
+   * @async
+   * @param {string} aasEndpoint - The endpoint URL of the AAS to fetch.
+   * @returns {Promise<any>} A promise that resolves to an AAS.
+   */
   async function fetchAas (aasEndpoint: string): Promise<any> {
     const failResponse = {}
 
@@ -209,12 +209,12 @@ export function useAASHandling () {
   }
 
   /**
-     * Fetches an Asset Administration Shell (AAS) by the provided AAS ID.
-     *
-     * @async
-     * @param {string} aasId - The ID of the AAS to fetch.
-     * @returns {Promise<any>} A promise that resolves to an AAS.
-     */
+   * Fetches an Asset Administration Shell (AAS) by the provided AAS ID.
+   *
+   * @async
+   * @param {string} aasId - The ID of the AAS to fetch.
+   * @returns {Promise<any>} A promise that resolves to an AAS.
+   */
   async function fetchAasById (aasId: string): Promise<any> {
     const failResponse = {}
 
@@ -238,16 +238,16 @@ export function useAASHandling () {
   }
 
   /**
-     * Retrieves the Asset Administration Shell (AAS) endpoint URL by its ID.
-     *
-     * This function attempts to obtain the AAS endpoint using two methods: first by querying
-     * the AAS registry, and if that fails, it tries to obtain it from the AAS repository. If the provided
-     * AAS ID is invalid or empty, the function returns an empty string.
-     *
-     * @async
-     * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
-     * @returns {Promise<string>} A promise that resolves to an AAS endpoint.
-     */
+   * Retrieves the Asset Administration Shell (AAS) endpoint URL by its ID.
+   *
+   * This function attempts to obtain the AAS endpoint using two methods: first by querying
+   * the AAS registry, and if that fails, it tries to obtain it from the AAS repository. If the provided
+   * AAS ID is invalid or empty, the function returns an empty string.
+   *
+   * @async
+   * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
+   * @returns {Promise<string>} A promise that resolves to an AAS endpoint.
+   */
   async function getAasEndpointById (aasId: string): Promise<string> {
     const failResponse = ''
 
@@ -273,12 +273,12 @@ export function useAASHandling () {
   }
 
   /**
-     * Deletes an Asset Administration Shell (AAS) by the provided AAS ID.
-     *
-     * @async
-     * @param {string} aasId - The ID of the AAS to delete.
-     * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
-     */
+   * Deletes an Asset Administration Shell (AAS) by the provided AAS ID.
+   *
+   * @async
+   * @param {string} aasId - The ID of the AAS to delete.
+   * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
+   */
   async function deleteAasById (aasId: string): Promise<boolean> {
     const failResponse = false
 
@@ -301,12 +301,12 @@ export function useAASHandling () {
   }
 
   /**
-     * Deletes an Asset Administration Shell (AAS) by the provided AAS endpoint.
-     *
-     * @async
-     * @param {string} aasEndpoint - The endpoint URL of the AAS to delete.
-     * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
-     */
+   * Deletes an Asset Administration Shell (AAS) by the provided AAS endpoint.
+   *
+   * @async
+   * @param {string} aasEndpoint - The endpoint URL of the AAS to delete.
+   * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
+   */
   async function deleteAas (aasEndpoint: string): Promise<boolean> {
     const failResponse = false
 
@@ -324,13 +324,13 @@ export function useAASHandling () {
   }
 
   /**
-     * Fetches a list of all available Submodel (SM) Descriptors of a specified Asset Administration Shell (AAS).
-     *
-     * @async
-     * @param {string} aasId - The ID of the AAS
-     * @returns {Promise<Array<any>>} A promise that resolves to an array of SM Descriptors.
-     * An empty array is returned if the request fails or no SM Descriptors are found.
-     */
+   * Fetches a list of all available Submodel (SM) Descriptors of a specified Asset Administration Shell (AAS).
+   *
+   * @async
+   * @param {string} aasId - The ID of the AAS
+   * @returns {Promise<Array<any>>} A promise that resolves to an array of SM Descriptors.
+   * An empty array is returned if the request fails or no SM Descriptors are found.
+   */
   async function fetchAasSmListById (aasId: string): Promise<Array<any>> {
     const failResponse = [] as Array<any>
 
@@ -367,14 +367,14 @@ export function useAASHandling () {
   }
 
   /**
-     * Checks if an Asset Administration Shell (AAS) contains a specific Submodel (SM) by ID
-     * or a Submodel Element (SME) by path.
-     *
-     * @async
-     * @param {string} aasEndpoint - The endpoint URL of the AAS
-     * @param {string} smePath - smePath - The path URL of the SME
-     * @returns {Promise<boolean>} Promise that resolves to true if the AAS contains the specified SM OR SME, false otherwise
-     */
+   * Checks if an Asset Administration Shell (AAS) contains a specific Submodel (SM) by ID
+   * or a Submodel Element (SME) by path.
+   *
+   * @async
+   * @param {string} aasEndpoint - The endpoint URL of the AAS
+   * @param {string} smePath - smePath - The path URL of the SME
+   * @returns {Promise<boolean>} Promise that resolves to true if the AAS contains the specified SM OR SME, false otherwise
+   */
   async function aasByEndpointHasSmeByPath (aasEndpoint: string, smePath: string): Promise<boolean> {
     const failResponse = false
 
@@ -453,13 +453,13 @@ export function useAASHandling () {
   }
 
   /**
-     * Retrieves a Submodel (SM) of an Asset Administration Shell (AAS) SM descriptor.
-     *
-     * @async
-     * @param {string} aasId - The ID of the AAS to retrieve its SM.
-     * @param {string} semanticId - The semantic ID of the SM.
-     * @returns {string} A promise that resolves to a SM.
-     */
+   * Retrieves a Submodel (SM) of an Asset Administration Shell (AAS) SM descriptor.
+   *
+   * @async
+   * @param {string} aasId - The ID of the AAS to retrieve its SM.
+   * @param {string} semanticId - The semantic ID of the SM.
+   * @returns {string} A promise that resolves to a SM.
+   */
   async function getSmIdOfAasIdBySemanticId (aasId: string, semanticId: string): Promise<string> {
     const failResponse = ''
 

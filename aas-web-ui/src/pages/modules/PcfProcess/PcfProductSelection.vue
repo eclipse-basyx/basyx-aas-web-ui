@@ -207,7 +207,7 @@
   }
 
   function selectShell (shell: any): void {
-    selectedShell.value = JSON.parse(JSON.stringify(shell))
+    selectedShell.value = structuredClone(shell)
     displayName.value = selectedShell.value['displayName']
   }
 

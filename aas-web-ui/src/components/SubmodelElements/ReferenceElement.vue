@@ -178,7 +178,7 @@
   })
 
   const emit = defineEmits<{
-    (e: 'updateValue', submodelElement: any): void
+    (e: 'update-value', submodelElement: any): void
   }>()
 
   const { checkReference } = useReferenceComposable()
@@ -265,7 +265,7 @@
   function updateReferenceElementObject (): void {
     const referenceElementObject = { ...props.referenceElementObject, value: reference.value }
     // Emit the updated ReferenceElement Object
-    emit('updateValue', referenceElementObject.value)
+    emit('update-value', referenceElementObject.value)
   }
 
   function addReferenceKey (): void {

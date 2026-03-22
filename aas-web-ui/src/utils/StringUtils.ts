@@ -32,9 +32,9 @@ export function firstLetterToLowerCase (string: string): string {
  * one character, it returns an empty string.
  *
  * @param {string} string - The input string from which the last character
- *                          will be removed.
+ * will be removed.
  * @returns {string} - The string without the last character, or an empty
- *                     string if the input is empty has only one character.
+ * string if the input is empty has only one character.
  */
 export function stripLastCharacter (string: string): string {
   if (!string || string.length < 2) {

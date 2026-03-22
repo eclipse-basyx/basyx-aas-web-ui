@@ -38,8 +38,8 @@ export function useOAuth2Form (): {
   const loading = ref<boolean>(false)
 
   /**
-     * Load OAuth2 configuration from infrastructure
-     */
+   * Load OAuth2 configuration from infrastructure
+   */
   function loadFromInfrastructure (infra: InfrastructureConfig): void {
     const auth = infra.auth
     const tokenData = infra.token
@@ -69,8 +69,8 @@ export function useOAuth2Form (): {
   }
 
   /**
-     * Save OAuth2 configuration to infrastructure
-     */
+   * Save OAuth2 configuration to infrastructure
+   */
   function saveToInfrastructure (infra: InfrastructureConfig): void {
     if (!infra.auth) {
       return
@@ -96,9 +96,9 @@ export function useOAuth2Form (): {
   }
 
   /**
-     * Authenticate with OAuth2
-     * @param infrastructureId - The ID of the infrastructure being authenticated (used as state parameter for auth-code flow)
-     */
+   * Authenticate with OAuth2
+   * @param infrastructureId - The ID of the infrastructure being authenticated (used as state parameter for auth-code flow)
+   */
   async function authenticate (infrastructureId: string): Promise<void> {
     if (!formData.value.host || !formData.value.clientId) {
       navigationStore.dispatchSnackbar({
@@ -219,8 +219,8 @@ export function useOAuth2Form (): {
   }
 
   /**
-     * Reset form to initial state
-     */
+   * Reset form to initial state
+   */
   function resetForm (): void {
     formData.value = {
       scope: '',

@@ -27,10 +27,10 @@
   defineProps<Props>()
 
   const emit = defineEmits<{
-    (e: 'navigate-up'): void
-    (e: 'dragover', event: DragEvent): void
-    (e: 'dragleave', event: DragEvent): void
-    (e: 'drop', event: DragEvent): void
+    'navigate-up': []
+    'dragover': [event: DragEvent]
+    'dragleave': [event: DragEvent]
+    'drop': [event: DragEvent]
   }>()
 
   const handleNavigateUp = (): void => emit('navigate-up')

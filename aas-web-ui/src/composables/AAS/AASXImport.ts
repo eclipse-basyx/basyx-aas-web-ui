@@ -1,12 +1,12 @@
 import * as aasCore from '@aas-core-works/aas-core3.1-typescript'
 import { NewPackaging, type Part } from 'aasx-package-ts'
+import { deserializeXml } from 'basyx-typescript-sdk/dist/lib/aas-dataformat-xml/xmlization.js'
 import mime from 'mime'
 import { useSMEFile } from '@/composables/AAS/SubmodelElements/File'
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
 import { useCDRepositoryClient } from '@/composables/Client/CDRepositoryClient'
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
 import { safeSegment } from '@/utils/StringUtils'
-import { deserializeXml } from '../../../node_modules/basyx-typescript-sdk/dist/lib/aas-dataformat-xml/xmlization.js'
 
 type JsonRecord = Record<string, unknown>
 
@@ -623,13 +623,13 @@ export function useAASXImport (): {
 
     const importedAas = Array.from(parsedPackage.aasById.values())
       .map(entry => entry.json)
-      .filter(hasKeys)
+      .filter(entry => hasKeys(entry))
     const importedSubmodels = Array.from(parsedPackage.submodelById.values())
       .map(entry => entry.json)
-      .filter(hasKeys)
+      .filter(entry => hasKeys(entry))
     const importedConceptDescriptions = Array.from(parsedPackage.cdById.values())
       .map(entry => entry.json)
-      .filter(hasKeys)
+      .filter(entry => hasKeys(entry))
 
     return {
       importedAas,

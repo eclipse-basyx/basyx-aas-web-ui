@@ -20,12 +20,12 @@ export function useSMRepositoryClient () {
   const submodelRepoUrl = computed(() => infrastructureStore.getSubmodelRepoURL)
 
   /**
-     * Fetches a list of all available Submodels (SMs).
-     *
-     * @async
-     * @returns {Promise<Array<any>>} A promise that resolves to an array of SMs.
-     * An empty array is returned if the request fails or no SMs are found.
-     */
+   * Fetches a list of all available Submodels (SMs).
+   *
+   * @async
+   * @returns {Promise<Array<any>>} A promise that resolves to an array of SMs.
+   * An empty array is returned if the request fails or no SMs are found.
+   */
   async function fetchSmList (): Promise<Array<any>> {
     const failResponse = [] as Array<any>
 
@@ -57,12 +57,12 @@ export function useSMRepositoryClient () {
   }
 
   /**
-     * Fetches a Submodel (SM) by the provided SM ID.
-     *
-     * @async
-     * @param {string} smId - The ID of the SM to fetch.
-     * @returns {Promise<any>} A promise that resolves to a SM.
-     */
+   * Fetches a Submodel (SM) by the provided SM ID.
+   *
+   * @async
+   * @param {string} smId - The ID of the SM to fetch.
+   * @returns {Promise<any>} A promise that resolves to a SM.
+   */
   async function fetchSmById (smId: string): Promise<any> {
     const failResponse = {} as any
 
@@ -86,12 +86,12 @@ export function useSMRepositoryClient () {
   }
 
   /**
-     * Fetches a Submodel (SM) by the provided SM endpoint.
-     *
-     * @async
-     * @param {string} smEndpoint - The endpoint URL of the SM to fetch.
-     * @returns {Promise<any>} A promise that resolves to a SM.
-     */
+   * Fetches a Submodel (SM) by the provided SM endpoint.
+   *
+   * @async
+   * @param {string} smEndpoint - The endpoint URL of the SM to fetch.
+   * @returns {Promise<any>} A promise that resolves to a SM.
+   */
   async function fetchSm (smEndpoint: string): Promise<any> {
     const failResponse = {} as any
 
@@ -170,12 +170,12 @@ export function useSMRepositoryClient () {
   }
 
   /**
-     * Fetches a Submodel Element (SME) by the provided SME path.
-     *
-     * @async
-     * @param {string} smePath - The path URL of the SME to fetch.
-     * @returns {Promise<any>} A promise that resolves to a SM.
-     */
+   * Fetches a Submodel Element (SME) by the provided SME path.
+   *
+   * @async
+   * @param {string} smePath - The path URL of the SME to fetch.
+   * @returns {Promise<any>} A promise that resolves to a SM.
+   */
   async function fetchSme (smePath: string): Promise<any> {
     const failResponse = {} as any
 
@@ -250,12 +250,12 @@ export function useSMRepositoryClient () {
   }
 
   /**
-     * Checks if Submodel with provided ID is available (in repository)
-     *
-     * @async
-     * @param {string} smId - The ID of the SM to check.
-     * @returns {Promise<boolean>} A promise that resolves to `true` if SM with provided ID is available, otherwise `false`.
-     */
+   * Checks if Submodel with provided ID is available (in repository)
+   *
+   * @async
+   * @param {string} smId - The ID of the SM to check.
+   * @returns {Promise<boolean>} A promise that resolves to `true` if SM with provided ID is available, otherwise `false`.
+   */
   async function smIsAvailableById (smId: string): Promise<boolean> {
     const failResponse = false
 
@@ -279,12 +279,12 @@ export function useSMRepositoryClient () {
   }
 
   /**
-     * Checks if Submodel (SM) is available for provided SM endpoint
-     *
-     * @async
-     * @param {string} smEndpopint - The endpoint URL of the SM to check.
-     * @returns {Promise<boolean>} A promise that resolves to `true` if SM with provided endpoint is available, otherwise `false`.
-     */
+   * Checks if Submodel (SM) is available for provided SM endpoint
+   *
+   * @async
+   * @param {string} smEndpopint - The endpoint URL of the SM to check.
+   * @returns {Promise<boolean>} A promise that resolves to `true` if SM with provided endpoint is available, otherwise `false`.
+   */
   async function smIsAvailable (smEndpopint: string): Promise<boolean> {
     const failResponse = false
 
@@ -321,24 +321,24 @@ export function useSMRepositoryClient () {
   }
 
   /**
-     * Checks if Submodel Element (SME) is available for provided SME path
-     *
-     * @async
-     * @param {string} smePath - The path of the SME to check.
-     * @returns {Promise<boolean>} A promise that resolves to `true` if SME with provided path is available, otherwise `false`.
-     */
+   * Checks if Submodel Element (SME) is available for provided SME path
+   *
+   * @async
+   * @param {string} smePath - The path of the SME to check.
+   * @returns {Promise<boolean>} A promise that resolves to `true` if SME with provided path is available, otherwise `false`.
+   */
   async function smeIsAvailable (smePath: string): Promise<boolean> {
     return smIsAvailable(smePath)
   }
 
   /**
-     * Retrieves the Submodel (SM) endpoint URL by its ID.
-     *
-     * Just concats SM repository URL (from the store) with the Base64UrlEncoded provided SM ID.
-     *
-     * @param {string} smId - The ID of the SM to retrieve the endpoint for.
-     * @returns {string} The SM endpoint.
-     */
+   * Retrieves the Submodel (SM) endpoint URL by its ID.
+   *
+   * Just concats SM repository URL (from the store) with the Base64UrlEncoded provided SM ID.
+   *
+   * @param {string} smId - The ID of the SM to retrieve the endpoint for.
+   * @returns {string} The SM endpoint.
+   */
   function getSmEndpointById (smId: string): string {
     const failResponse = ''
 
@@ -427,12 +427,12 @@ export function useSMRepositoryClient () {
   }
 
   /**
-     * Deletes a Submodel by the provided Submodel ID.
-     *
-     * @async
-     * @param {string} submodelId - The ID of the Submodel to delete.
-     * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
-     */
+   * Deletes a Submodel by the provided Submodel ID.
+   *
+   * @async
+   * @param {string} submodelId - The ID of the Submodel to delete.
+   * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
+   */
   async function deleteSubmodelById (submodelId: string): Promise<boolean> {
     const failResponse = false
 
@@ -460,12 +460,12 @@ export function useSMRepositoryClient () {
   }
 
   /**
-     * Deletes a Submodel by the provided Submodel endpoint.
-     *
-     * @async
-     * @param {string} submodelEndpoint - The endpoint URL of the Submodel to delete.
-     * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
-     */
+   * Deletes a Submodel by the provided Submodel endpoint.
+   *
+   * @async
+   * @param {string} submodelEndpoint - The endpoint URL of the Submodel to delete.
+   * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
+   */
   async function deleteSubmodel (submodelEndpoint: string): Promise<boolean> {
     const failResponse = false
 

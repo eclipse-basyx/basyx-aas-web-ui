@@ -596,7 +596,7 @@ describe('SemanticIdUtils.ts; Tests for getEquivalentEclassSemanticIds()', () =>
       + '\']',
       () => {
         // Perform the assertion
-        expect(getEquivalentEclassSemanticIds(semanticId).sort()).toStrictEqual(semanticIds.sort())
+        expect(getEquivalentEclassSemanticIds(semanticId).toSorted()).toStrictEqual(semanticIds.toSorted())
       },
     )
   }
@@ -636,7 +636,7 @@ describe('SemanticIdUtils.ts; Tests for getEquivalentIriSemanticIds()', () => {
       + '\']',
       () => {
         // Perform the assertion
-        expect(getEquivalentIriSemanticIds(semanticId).sort()).toStrictEqual(semanticIds.sort())
+        expect(getEquivalentIriSemanticIds(semanticId).toSorted()).toStrictEqual(semanticIds.toSorted())
       },
     )
   }

@@ -358,7 +358,7 @@
       contactInformationSMCs = [submodelElementData]
     }
 
-    contactInformationSMCs.forEach((contactInformationSMC: any) => {
+    for (const contactInformationSMC of contactInformationSMCs) {
       const contactInformation = {} as any
 
       contactInformation.idShort = contactInformationSMC.idShort
@@ -398,8 +398,8 @@
       }
 
       // General properties
-      contactInformationSMC.value.forEach((sme: any) => {
-        [
+      for (const sme of contactInformationSMC.value) {
+        for (const idShort of [
           'FurtherDetailsOfContact',
           'Company',
           'Department',
@@ -407,12 +407,12 @@
           'TimeZone',
           'AddressOfAdditionalLink',
           'NationalCode',
-        ].forEach((idShort: any) => {
+        ]) {
           if (checkIdShort(sme, idShort) && hasValue(sme)) {
             contactInformation.properties.push(sme)
           }
-        })
-      })
+        }
+      }
 
       // (postal) address
       const address = determineAddress(contactInformationSMC)
@@ -486,7 +486,7 @@
       // console.log('vCard:', contactInformation.vCard);
 
       contactInformations.value.push(contactInformation)
-    })
+    }
 
     loading.value = false
   }

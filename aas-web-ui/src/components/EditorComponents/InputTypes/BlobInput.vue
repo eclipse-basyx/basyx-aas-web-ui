@@ -233,15 +233,10 @@
     return URL.createObjectURL(blob)
   })
 
-  function convertToBlob (file: File | undefined): void {
+  async function convertToBlob (file: File | undefined): Promise<void> {
     if (file) {
-      const reader = new FileReader()
-      reader.addEventListener('load', event => {
-        if (event.target && event.target.result) {
-          contentValue.value = new Uint8Array(event.target.result as ArrayBuffer)
-        }
-      })
-      reader.readAsArrayBuffer(file)
+      const arrayBuffer = await file.arrayBuffer()
+      contentValue.value = new Uint8Array(arrayBuffer)
 
       contentTypeValue.value = file.type
     } else {

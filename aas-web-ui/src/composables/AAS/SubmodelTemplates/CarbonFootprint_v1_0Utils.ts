@@ -155,13 +155,13 @@ export function useCarbonFootprint_v1_0Utils () {
   ]
 
   /**
-     * Retrieves PCF Submodel (SM) of an Asset Administration Shell (AAS).
-     *
-     * @async
-     * @param {string} aasId - The ID of the AAS to retrieve its PCF SM.
-     * @param {boolean} withConceptDescriptions - Flag to specify if SM should be fetched with ConceptDescriptions (CDs)
-     * @returns {Promise<any>} A promise that resolves to a PCF SM.
-     */
+   * Retrieves PCF Submodel (SM) of an Asset Administration Shell (AAS).
+   *
+   * @async
+   * @param {string} aasId - The ID of the AAS to retrieve its PCF SM.
+   * @param {boolean} withConceptDescriptions - Flag to specify if SM should be fetched with ConceptDescriptions (CDs)
+   * @returns {Promise<any>} A promise that resolves to a PCF SM.
+   */
   async function getSm (aasId: string, withConceptDescriptions = false): Promise<any> {
     const failResponse = {}
 
@@ -331,14 +331,14 @@ export function useCarbonFootprint_v1_0Utils () {
   }
 
   /**
-     * Finds a PCF submodel element by semantic ID or idShort
-     *
-     * @param {any} parentElement - The parent element containing the value array
-     * @param {string} semanticId - The semantic ID to search for
-     * @param {string} idShort - The idShort to search for
-     * @param {boolean} caseInsensitive - Whether to perform case-insensitive idShort matching
-     * @returns {any} The found SubmodelElement or undefined
-     */
+   * Finds a PCF submodel element by semantic ID or idShort
+   *
+   * @param {any} parentElement - The parent element containing the value array
+   * @param {string} semanticId - The semantic ID to search for
+   * @param {string} idShort - The idShort to search for
+   * @param {boolean} caseInsensitive - Whether to perform case-insensitive idShort matching
+   * @returns {any} The found SubmodelElement or undefined
+   */
   function findPcfElement (
     parentElement: any,
     semanticId: string,
@@ -355,15 +355,15 @@ export function useCarbonFootprint_v1_0Utils () {
   }
 
   /**
-     * Sets the value of a PCF property element
-     *
-     * @param {any} parentElement - The parent element containing the value array
-     * @param {string} semanticId - The semantic ID to search for
-     * @param {string} idShort - The idShort to search for
-     * @param {any} value - The value to set
-     * @param {boolean} caseInsensitive - Whether to perform case-insensitive idShort matching
-     * @returns {boolean} Whether the element was found and updated
-     */
+   * Sets the value of a PCF property element
+   *
+   * @param {any} parentElement - The parent element containing the value array
+   * @param {string} semanticId - The semantic ID to search for
+   * @param {string} idShort - The idShort to search for
+   * @param {any} value - The value to set
+   * @param {boolean} caseInsensitive - Whether to perform case-insensitive idShort matching
+   * @returns {boolean} Whether the element was found and updated
+   */
   function setPcfElementValue (
     parentElement: any,
     semanticId: string,
@@ -380,20 +380,20 @@ export function useCarbonFootprint_v1_0Utils () {
   }
 
   /**
-     * Creates a PCF submodel from template with the provided values
-     *
-     * @param {Record<string, unknown>} pcfTemplate - The PCF template JSON object
-     * @param {Object} params - Parameters for PCF submodel creation
-     * @param {string} params.submodelId - The ID to assign to the new submodel
-     * @param {string} params.pcfCalculationMethod - The calculation method used
-     * @param {number|string} params.pcfCO2eq - The CO2 equivalent value
-     * @param {string} params.referenceUnit - The reference impact unit for calculation (e.g., 'piece', 'kg')
-     * @param {number} params.referenceQuantity - The quantity of measure for calculation
-     * @param {string} params.lifeCyclePhase - The lifecycle phase (e.g., 'A3 - Production')
-     * @param {string} [params.publicationDate] - The publication date (ISO format). Defaults to current date.
-     * @param {string} [params.expirationDate] - Optional expiration date (ISO format)
-     * @returns {Record<string, unknown> | null} The populated PCF submodel or null if creation fails
-     */
+   * Creates a PCF submodel from template with the provided values
+   *
+   * @param {Record<string, unknown>} pcfTemplate - The PCF template JSON object
+   * @param {Object} params - Parameters for PCF submodel creation
+   * @param {string} params.submodelId - The ID to assign to the new submodel
+   * @param {string} params.pcfCalculationMethod - The calculation method used
+   * @param {number|string} params.pcfCO2eq - The CO2 equivalent value
+   * @param {string} params.referenceUnit - The reference impact unit for calculation (e.g., 'piece', 'kg')
+   * @param {number} params.referenceQuantity - The quantity of measure for calculation
+   * @param {string} params.lifeCyclePhase - The lifecycle phase (e.g., 'A3 - Production')
+   * @param {string} [params.publicationDate] - The publication date (ISO format). Defaults to current date.
+   * @param {string} [params.expirationDate] - Optional expiration date (ISO format)
+   * @returns {Record<string, unknown> | null} The populated PCF submodel or null if creation fails
+   */
   function createPcfSubmodelFromTemplate (
     pcfTemplate: Record<string, unknown>,
     params: {
@@ -409,7 +409,7 @@ export function useCarbonFootprint_v1_0Utils () {
   ): Record<string, unknown> | null {
     try {
       // Create a deep copy of the template
-      const pcfSubmodel = JSON.parse(JSON.stringify(pcfTemplate))
+      const pcfSubmodel = structuredClone(pcfTemplate)
 
       // Set submodel ID and kind
       pcfSubmodel.id = params.submodelId

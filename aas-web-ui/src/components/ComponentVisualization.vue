@@ -5,7 +5,7 @@
       <template v-if="isMobile || (isMobile && !singleAas)">
         <v-card-title :style="{ padding: isMobile ? '0px' : '15px 16px 16px' }">
           <div v-if="!isMobile" class="d-flex align-center">
-            <template v-if="routesToVisualization.includes(route.name)">
+            <template v-if="routesToVisualization.has(route.name)">
               <v-btn class="ml-0" icon="mdi-chevron-left" variant="plain" @click="backToAASViewer()" />
               <v-icon class="ml-2" color="primary" icon="custom:aasIcon" size="small" />
               <span class="text-truncate ml-2">
@@ -69,7 +69,7 @@
 
   // Data
   const submodelElementData = ref({} as any)
-  const routesToVisualization: Array<RouteRecordNameGeneric> = ['ComponentVisualization', 'Visualization']
+  const routesToVisualization = new Set<RouteRecordNameGeneric>(['ComponentVisualization', 'Visualization'])
 
   // Computed Properties
   const aasRegistryURL = computed(() => infrastructureStore.getAASRegistryURL)
@@ -78,7 +78,7 @@
   const selectedNode = computed(() => aasStore.getSelectedNode)
   const isMobile = computed(() => navigationStore.getIsMobile)
   const singleAas = computed(() => envStore.getSingleAas)
-  const visualizationMode = computed(() => routesToVisualization.includes(route.name))
+  const visualizationMode = computed(() => routesToVisualization.has(route.name))
   const aasSubmodelViewerMode = computed(() => route.name === 'AASSubmodelViewer')
 
   // Watchers

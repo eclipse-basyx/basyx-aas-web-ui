@@ -223,7 +223,7 @@ export async function createAppRouter (): Promise<Router> {
   const { idRedirectHandled } = useRouteHandling()
 
   // Data
-  const routesStayOnPages: Array<RouteRecordNameGeneric> = ['About', 'NotFound404']
+  const routesStayOnPages: Set<RouteRecordNameGeneric> = new Set(['About', 'NotFound404'])
   const routesForMobile: Array<RouteRecordNameGeneric> = ['AASList', 'SubmodelList', 'Visualization']
   const routesForDesktop: Array<RouteRecordNameGeneric> = [
     'AASEditor',
@@ -233,11 +233,11 @@ export async function createAppRouter (): Promise<Router> {
     'SMViewer',
     'Visualization',
   ]
-  const routesOnlyMobile: Array<RouteRecordNameGeneric> = routesForMobile.filter(
-    x => !routesForDesktop.includes(x),
+  const routesOnlyMobile: Set<RouteRecordNameGeneric> = new Set(
+    routesForMobile.filter(x => !routesForDesktop.includes(x)),
   )
-  const routesOnlyDesktop: Array<RouteRecordNameGeneric> = routesForDesktop.filter(
-    x => !routesForMobile.includes(x),
+  const routesOnlyDesktop: Set<RouteRecordNameGeneric> = new Set(
+    routesForDesktop.filter(x => !routesForMobile.includes(x)),
   )
 
   const routesUsingAasUrlQuery: Array<RouteRecordNameGeneric> = [
@@ -262,18 +262,19 @@ export async function createAppRouter (): Promise<Router> {
 
     'Visualization', // desktop and mobile
   ]
-  const routesUsingAasOrPathUrlQuery: Array<RouteRecordNameGeneric> = [
-    ...new Set([...routesUsingAasUrlQuery, ...routesUsingPathUrlQuery]),
-  ]
+  const routesUsingAasOrPathUrlQuery: Set<RouteRecordNameGeneric> = new Set([
+    ...routesUsingAasUrlQuery,
+    ...routesUsingPathUrlQuery,
+  ])
 
-  const routesUsingOnlyPathUrlQuery: Array<RouteRecordNameGeneric> = routesUsingPathUrlQuery.filter(
-    x => !routesUsingAasUrlQuery.includes(x),
+  const routesUsingOnlyPathUrlQuery: Set<RouteRecordNameGeneric> = new Set(
+    routesUsingPathUrlQuery.filter(x => !routesUsingAasUrlQuery.includes(x)),
   )
-  const routesUsingOnlyAasUrlQuery: Array<RouteRecordNameGeneric> = routesUsingAasUrlQuery.filter(
-    x => !routesUsingPathUrlQuery.includes(x),
+  const routesUsingOnlyAasUrlQuery: Set<RouteRecordNameGeneric> = new Set(
+    routesUsingAasUrlQuery.filter(x => !routesUsingPathUrlQuery.includes(x)),
   )
 
-  const routesToVisualization: Array<RouteRecordNameGeneric> = ['ComponentVisualization']
+  const routesToVisualization: Set<RouteRecordNameGeneric> = new Set(['ComponentVisualization'])
 
   const possibleGloBalAssetIdQueryParameter = ['globalAssetId', 'globalassetid']
   const possibleAasIdQueryParameter = ['aasId', 'aasid']
@@ -351,130 +352,457 @@ export async function createAppRouter (): Promise<Router> {
     return record.name?.toString() || 'AASViewer'
   }
 
-  router.beforeEach(async (to, from) => {
+  const saveUrlQueryForSameRoute = (to: any, from: any): void => {
+    if (Object.hasOwn(from, 'name') && Object.hasOwn(to, 'name') && from.name === to.name && from.query !== to.query && Object.keys(to.query).length > 0) {
+      const queryToDispatch = { ...to.query }
+      const queryLoaded = navigationStore.getUrlQuery
+
+      if (routesUsingAasOrPathUrlQuery.has(to.name)) {
+        if (!Object.hasOwn(queryToDispatch, 'aas') && Object.hasOwn(queryLoaded, 'aas')) {
+          queryToDispatch.aas = queryLoaded.aas
+        }
+        if (!Object.hasOwn(queryToDispatch, 'path') && Object.hasOwn(queryLoaded, 'path')) {
+          queryToDispatch.path = queryLoaded.path
+        }
+        if (
+          !Object.hasOwn(queryToDispatch, 'ignorePreConfAuth')
+          && Object.hasOwn(queryLoaded, 'ignorePreConfAuth')
+        ) {
+          queryToDispatch.ignorePreConfAuth = queryLoaded.ignorePreConfAuth
+        }
+
+        navigationStore.dispatchUrlQuery(queryToDispatch)
+      } else if (
+        !Object.hasOwn(queryToDispatch, 'ignorePreConfAuth')
+        && Object.hasOwn(queryLoaded, 'ignorePreConfAuth')
+      ) {
+        queryToDispatch.ignorePreConfAuth = queryLoaded.ignorePreConfAuth
+        navigationStore.dispatchUrlQuery(queryToDispatch)
+      }
+    }
+  }
+
+  const saveQueryFromPreviousRoute = (from: any): void => {
+    if (Object.keys(from.query).length === 0) {
+      return
+    }
+
+    const queryToDispatch = { ...from.query }
+    const queryLoaded = navigationStore.getUrlQuery
+
+    if (routesUsingAasOrPathUrlQuery.has(from.name) || from.path.startsWith('/modules/')) {
+      if (!Object.hasOwn(queryToDispatch, 'aas') && Object.hasOwn(queryLoaded, 'aas')) {
+        queryToDispatch.aas = queryLoaded.aas
+      }
+      if (!Object.hasOwn(queryToDispatch, 'path') && Object.hasOwn(queryLoaded, 'path')) {
+        queryToDispatch.path = queryLoaded.path
+      }
+      if (
+        !Object.hasOwn(queryToDispatch, 'ignorePreConfAuth')
+        && Object.hasOwn(queryLoaded, 'ignorePreConfAuth')
+      ) {
+        queryToDispatch.ignorePreConfAuth = queryLoaded.ignorePreConfAuth
+      }
+
+      navigationStore.dispatchUrlQuery(queryToDispatch)
+      return
+    }
+
+    if (
+      !Object.hasOwn(queryToDispatch, 'ignorePreConfAuth')
+      && Object.hasOwn(queryLoaded, 'ignorePreConfAuth')
+    ) {
+      queryToDispatch.ignorePreConfAuth = queryLoaded.ignorePreConfAuth
+      navigationStore.dispatchUrlQuery(queryToDispatch)
+    }
+  }
+
+  const restoreQueryForNewRoute = (to: any): { path: string, name: any, query: LocationQueryRaw } | null => {
+    if (Object.hasOwn(to, 'query') && Object.keys(to.query).length > 0) {
+      return null
+    }
+
+    const queryLoaded = navigationStore.getUrlQuery
+    const updatedRoute = { path: to.path, name: to.name, query: {} as LocationQueryRaw }
+
+    if (routesUsingAasOrPathUrlQuery.has(to.name) || to.path.startsWith('/modules/')) {
+      if (
+        routesUsingAasUrlQuery.includes(to.name)
+        && Object.hasOwn(queryLoaded, 'aas')
+        && (queryLoaded.aas as string).trim() !== ''
+      ) {
+        updatedRoute.query.aas = queryLoaded.aas
+      }
+      if (
+        routesUsingPathUrlQuery.includes(to.name)
+        && Object.hasOwn(queryLoaded, 'path')
+        && (queryLoaded.path as string).trim() !== ''
+      ) {
+        updatedRoute.query.path = queryLoaded.path
+      }
+      if (Object.hasOwn(queryLoaded, 'ignorePreConfAuth')) {
+        updatedRoute.query.ignorePreConfAuth = queryLoaded.ignorePreConfAuth
+      }
+
+      if (
+        routesUsingAasUrlQuery.includes(updatedRoute.name)
+        && !Object.hasOwn(updatedRoute.query, 'aas')
+        && Object.hasOwn(updatedRoute.query, 'path')
+      ) {
+        delete updatedRoute.query.path
+      }
+
+      if (routesUsingOnlyAasUrlQuery.has(updatedRoute.name) && Object.hasOwn(updatedRoute.query, 'path')) {
+        delete updatedRoute.query.path
+      }
+
+      if (routesUsingOnlyPathUrlQuery.has(updatedRoute.name) && Object.hasOwn(updatedRoute.query, 'aas')) {
+        delete updatedRoute.query.aas
+      }
+
+      return Object.keys(updatedRoute.query).length > 0 ? updatedRoute : null
+    }
+
+    if (Object.hasOwn(queryLoaded, 'ignorePreConfAuth')) {
+      updatedRoute.query.ignorePreConfAuth = queryLoaded.ignorePreConfAuth
+      return Object.keys(updatedRoute.query).length > 0 ? updatedRoute : null
+    }
+
+    return null
+  }
+
+  const saveAndRestoreUrlQueryOnRouteSwitch = (to: any, from: any): { path: string, name: any, query: LocationQueryRaw } | null => {
+    if (!(Object.hasOwn(from, 'name') && Object.hasOwn(to, 'name') && from.name !== to.name)) {
+      return null
+    }
+
+    saveQueryFromPreviousRoute(from)
+    return restoreQueryForNewRoute(to)
+  }
+
+  const removeInvalidQueryParamsForRoute = (to: any): { path: string, query: LocationQueryRaw } | null => {
+    if (
+      routesUsingAasUrlQuery.includes(to.name)
+      && !Object.hasOwn(to.query, 'aas')
+      && Object.hasOwn(to.query, 'path')
+    ) {
+      const query = { ...to.query }
+      delete query.path
+      return { path: to.path, query }
+    }
+
+    if (routesUsingOnlyAasUrlQuery.has(to.name) && Object.hasOwn(to.query, 'path')) {
+      const query = { ...to.query }
+      delete query.path
+      return { path: to.path, query }
+    }
+    if (routesUsingOnlyPathUrlQuery.has(to.name) && Object.hasOwn(to.query, 'aas')) {
+      const query = { ...to.query }
+      delete query.aas
+      return { path: to.path, query }
+    }
+
+    return null
+  }
+
+  const handleSingleAasAndDeviceRouting = (to: any): { name: string, query?: any } | false | null => {
+    if (
+      envStore.getSingleAas
+      && (routesUsingAasUrlQuery.includes(to.name)
+        || (to.path.includes('/modules/') && to.meta.isOnlyVisibleWithSelectedAas))
+      && (!Object.hasOwn(to.query, 'aas') || (to.query.aas as string).trim() === '')
+    ) {
+      if (envStore.getSingleAasRedirect) {
+        window.location.replace(envStore.getSingleAasRedirect)
+        return false
+      } else if (to.name !== 'NotFound404') {
+        return { name: 'NotFound404' }
+      }
+    }
+
+    if (routesToVisualization.has(to.name)) {
+      return { name: 'Visualization', query: to.query }
+    }
+
+    if (isMobile.value) {
+      if (
+        routesForMobile.includes(to.name)
+        || routesStayOnPages.has(to.name)
+        || (to.path.includes('/modules/') && to.meta.isMobileModule)
+      ) {
+        return null
+      }
+      if (
+        routesOnlyDesktop.has(to.name)
+        || (to.path.includes('/modules/') && !to.meta.isMobileModule)
+      ) {
+        return { name: 'AASList', query: to.query }
+      }
+      return null
+    }
+
+    if (
+      routesForDesktop.includes(to.name)
+      || routesStayOnPages.has(to.name)
+      || (to.path.includes('/modules/') && to.meta.isDesktopModule)
+    ) {
+      if (['SMViewer', 'SMEditor'].includes(to.name as string)) {
+        if (smViewerEditor.value && to.name === 'SMEditor' && !allowEditing.value) {
+          return { name: 'SMViewer', query: to.query }
+        }
+        if (!smViewerEditor.value) {
+          return { name: (to.name as string).replace('SM', 'AAS'), query: to.query }
+        }
+      }
+      if (to.name === 'AASEditor' && !allowEditing.value) {
+        return { name: 'AASViewer', query: to.query }
+      }
+      return null
+    }
+
+    if (
+      routesOnlyMobile.has(to.name)
+      || (to.path.includes('/modules/') && !to.meta.isDesktopModule)
+    ) {
+      return { name: 'AASViewer', query: to.query }
+    }
+
+    return null
+  }
+
+  const validateAasPathCombination = async (to: any): Promise<{ path: string, query: LocationQueryRaw } | null> => {
+    if (
+      Object.hasOwn(to.query, 'aas')
+      && (to.query.aas as string).trim() !== ''
+      && Object.hasOwn(to.query, 'path')
+      && (to.query.path as string).trim() !== ''
+    ) {
+      const combinationAasPathIsOk = await aasByEndpointHasSmeByPath(
+        (to.query.aas as string).trim(),
+        (to.query.path as string).trim(),
+      )
+      if (!combinationAasPathIsOk) {
+        const query = { ...to.query }
+        delete query.path
+        return { path: to.path, query }
+      }
+    }
+
+    return null
+  }
+
+  const fetchAndValidateAasForRoute = async (to: any, from: any): Promise<{ path: string, query: LocationQueryRaw } | null> => {
+    if (
+      Object.hasOwn(to.query, 'aas')
+      && (to.query.aas as string).trim() !== ''
+      && (!aasStore.getSelectedAAS
+        || Object.keys(aasStore.getSelectedAAS).length === 0
+        || !Object.hasOwn(from.query, 'aas')
+        || (Object.hasOwn(to.query, 'aas')
+          && (from.query.aas as string).trim() !== (to.query.aas as string).trim()))
+    ) {
+      const aas = await fetchAndDispatchAas(to.query.aas as string)
+
+      if (!aas || Object.keys(aas).length === 0) {
+        const query = { ...to.query }
+        delete query.aas
+        return { path: to.path, query }
+      }
+    } else if (!to.query.aas || to.query.aas === '') {
+      aasStore.dispatchSelectedAAS({})
+    }
+
+    return null
+  }
+
+  const fetchAndValidateSmeForRoute = async (
+    to: any,
+    from: any,
+  ): Promise<{ fetchedSme: Record<string, unknown> | null, redirect: { path: string, query: LocationQueryRaw } | null }> => {
+    let fetchedSme: Record<string, unknown> | null = null
+    if (
+      Object.hasOwn(to.query, 'path')
+      && (to.query.path as string).trim() !== ''
+      && (!aasStore.getSelectedNode
+        || Object.keys(aasStore.getSelectedNode).length === 0
+        || !Object.hasOwn(from.query, 'path')
+        || (Object.hasOwn(from.query, 'path')
+          && (from.query.path as string).trim() !== (to.query.path as string).trim()))
+    ) {
+      fetchedSme = await fetchAndDispatchSme(to.query.path as string, true)
+      if (!fetchedSme || Object.keys(fetchedSme).length === 0) {
+        const query = { ...to.query }
+        delete query.path
+        return { fetchedSme: null, redirect: { path: to.path, query } }
+      }
+    } else if (!to.query.path || to.query.path === '') {
+      aasStore.dispatchSelectedNode({})
+    }
+
+    return { fetchedSme, redirect: null }
+  }
+
+  const cleanupPluginQueryParams = (
+    to: any,
+    from: any,
+    fetchedSme: Record<string, unknown> | null,
+  ): { path: string, query: LocationQueryRaw } | null => {
+    const pathChanged
+      = Object.hasOwn(from.query, 'path')
+        && Object.hasOwn(to.query, 'path')
+        && (from.query.path as string).trim() !== (to.query.path as string).trim()
+    const aasChanged
+      = Object.hasOwn(from.query, 'aas')
+        && Object.hasOwn(to.query, 'aas')
+        && (from.query.aas as string).trim() !== (to.query.aas as string).trim()
+
+    if (pathChanged || aasChanged) {
+      const selectedNode = fetchedSme || aasStore.getSelectedNode
+      const { filteredQuery, removedParams } = navigationStore.filterQueryParams(to.query, selectedNode)
+
+      if (removedParams.length > 0) {
+        return { path: to.path, query: filteredQuery }
+      }
+    }
+
+    return null
+  }
+
+  const handleAasAndSmeDataLoading = async (to: any, from: any): Promise<{ path: string, query: LocationQueryRaw } | null> => {
+    const invalidPathRoute = await validateAasPathCombination(to)
+    if (invalidPathRoute) {
+      return invalidPathRoute
+    }
+
+    const invalidAasRoute = await fetchAndValidateAasForRoute(to, from)
+    if (invalidAasRoute) {
+      return invalidAasRoute
+    }
+
+    const { fetchedSme, redirect } = await fetchAndValidateSmeForRoute(to, from)
+    if (redirect) {
+      return redirect
+    }
+
+    return cleanupPluginQueryParams(to, from, fetchedSme)
+  }
+
+  const handleOAuthCallback = async (to: any): Promise<{ name: string, replace: true } | null> => {
+    if (!(to.query.state && to.query.code)) {
+      return null
+    }
+
+    const state = to.query.state as string
+    const code = to.query.code as string
+    const issuerURL = to.query.iss as string
+
+    try {
+      const { exchangeOAuth2AuthorizationCode } = await import('@/composables/Auth/OAuth2Auth')
+      const infraStore = useInfrastructureStore()
+
+      await infraStore.waitForInitialization()
+
+      const infrastructure = infraStore.getInfrastructures.find(
+        (infra: InfrastructureConfig) => infra.id === state,
+      )
+
+      if (!infrastructure || !infrastructure.auth?.oauth2) {
+        throw new Error(`Infrastructure with ID '${state}' not found or missing OAuth2 config`)
+      }
+
+      const issuer = issuerURL || infrastructure.auth.oauth2.host
+      if (!issuer) {
+        throw new Error('OAuth2 issuer URL not found in callback or infrastructure config')
+      }
+
+      try {
+        const issuerUrl = new URL(issuer)
+        if (!['http:', 'https:'].includes(issuerUrl.protocol)) {
+          throw new Error(`Invalid issuer URL protocol: ${issuerUrl.protocol}. Must be http: or https:`)
+        }
+      } catch (error) {
+        if (error instanceof TypeError) {
+          throw new Error(`Invalid issuer URL format: ${issuer}. Must be a valid HTTP(S) URL.`, {
+            cause: error,
+          })
+        }
+        throw error
+      }
+
+      const wellKnownUrl = `${issuer}/.well-known/openid-configuration`
+      let tokenEndpoint
+
+      try {
+        const wellKnownResponse = await fetch(wellKnownUrl)
+
+        if (wellKnownResponse.ok) {
+          const wellKnownConfig = await wellKnownResponse.json()
+          tokenEndpoint = wellKnownConfig.token_endpoint
+        }
+      } catch (error) {
+        console.warn('[OAuth2 Callback] Failed to fetch .well-known configuration, using fallback', error)
+      }
+
+      if (!tokenEndpoint) {
+        const normalizedIssuer = issuer.endsWith('/') ? issuer.slice(0, -1) : issuer
+        tokenEndpoint = `${normalizedIssuer}/token`
+      }
+
+      const pathname = window.location.pathname
+      const redirectUri = `${window.location.origin}${pathname}`
+
+      const tokenData = await exchangeOAuth2AuthorizationCode({
+        tokenEndpoint,
+        clientId: infrastructure.auth.oauth2.clientId,
+        redirectUri,
+        code,
+        state,
+      })
+
+      infrastructure.token = {
+        accessToken: tokenData.accessToken,
+        refreshToken: tokenData.refreshToken,
+        expiresAt: tokenData.expiresAt,
+        idToken: tokenData.idToken,
+      }
+
+      infraStore.dispatchUpdateInfrastructure(infrastructure)
+      infraStore.setAuthenticationStatusForInfrastructure(infrastructure.id, true)
+
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 3000,
+        color: 'success',
+        btnColor: 'buttonText',
+        text: 'OAuth2 authentication successful!',
+      })
+
+      return { name: resolveStartRouteName(), replace: true }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'OAuth2 authentication failed'
+      console.error('[OAuth2 Callback] Failed:', errorMessage, error)
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 10_000,
+        color: 'error',
+        btnColor: 'buttonText',
+        text: 'OAuth2 authentication failed',
+        extendedError: errorMessage,
+      })
+
+      return { name: resolveStartRouteName(), replace: true }
+    }
+  }
+
+  router.beforeEach(async function (to, from) {
     if (!infrastructureInitializationEnsured) {
       await infrastructureStore.waitForInitialization()
       infrastructureInitializationEnsured = true
     }
 
-    // Handle OAuth2 callback (state + code in URL)
-    if (to.query.state && to.query.code) {
-      const state = to.query.state as string
-      const code = to.query.code as string
-      const issuerURL = to.query.iss as string
-
-      // Try to handle OAuth2 callback
-      try {
-        const { exchangeOAuth2AuthorizationCode } = await import('@/composables/Auth/OAuth2Auth')
-        const infraStore = useInfrastructureStore()
-
-        // Wait for infrastructure store to finish loading
-        await infraStore.waitForInitialization()
-
-        // Find the infrastructure by state (infrastructure ID)
-        const infrastructure = infraStore.getInfrastructures.find(
-          (infra: InfrastructureConfig) => infra.id === state,
-        )
-
-        if (!infrastructure || !infrastructure.auth?.oauth2) {
-          throw new Error(`Infrastructure with ID '${state}' not found or missing OAuth2 config`)
-        }
-
-        // Get issuer URL from infrastructure config if not in query params
-        const issuer = issuerURL || infrastructure.auth.oauth2.host
-        if (!issuer) {
-          throw new Error('OAuth2 issuer URL not found in callback or infrastructure config')
-        }
-
-        // Validate issuer URL format
-        try {
-          const issuerUrl = new URL(issuer)
-          if (!['http:', 'https:'].includes(issuerUrl.protocol)) {
-            throw new Error(`Invalid issuer URL protocol: ${issuerUrl.protocol}. Must be http: or https:`)
-          }
-        } catch (error) {
-          if (error instanceof TypeError) {
-            throw new Error(`Invalid issuer URL format: ${issuer}. Must be a valid HTTP(S) URL.`, {
-              cause: error,
-            })
-          }
-          throw error
-        }
-
-        // Fetch .well-known configuration to get token endpoint
-        const wellKnownUrl = `${issuer}/.well-known/openid-configuration`
-        let tokenEndpoint
-
-        try {
-          const wellKnownResponse = await fetch(wellKnownUrl)
-
-          if (wellKnownResponse.ok) {
-            const wellKnownConfig = await wellKnownResponse.json()
-            tokenEndpoint = wellKnownConfig.token_endpoint
-          }
-        } catch (error) {
-          console.warn('[OAuth2 Callback] Failed to fetch .well-known configuration, using fallback', error)
-        }
-
-        // Fallback to issuer + /token if well-known config is not available
-        if (!tokenEndpoint) {
-          const normalizedIssuer = issuer.endsWith('/') ? issuer.slice(0, -1) : issuer
-          tokenEndpoint = `${normalizedIssuer}/token`
-        }
-
-        // Normalize redirect URI (remove trailing slash for root path)
-        const pathname = window.location.pathname
-        const redirectUri = `${window.location.origin}${pathname}`
-
-        // Exchange authorization code for tokens
-        const tokenData = await exchangeOAuth2AuthorizationCode({
-          tokenEndpoint,
-          clientId: infrastructure.auth.oauth2.clientId,
-          redirectUri,
-          code,
-          state, // Pass state to retrieve correct code verifier
-        })
-
-        // Update infrastructure with token
-        infrastructure.token = {
-          accessToken: tokenData.accessToken,
-          refreshToken: tokenData.refreshToken,
-          expiresAt: tokenData.expiresAt,
-          idToken: tokenData.idToken,
-        }
-
-        // Save updated infrastructure
-        infraStore.dispatchUpdateInfrastructure(infrastructure)
-        // Set authentication status to true
-        infraStore.setAuthenticationStatusForInfrastructure(infrastructure.id, true)
-
-        // Show success notification
-        navigationStore.dispatchSnackbar({
-          status: true,
-          timeout: 3000,
-          color: 'success',
-          btnColor: 'buttonText',
-          text: 'OAuth2 authentication successful!',
-        })
-
-        // Clean up URL and redirect to home
-        return { name: resolveStartRouteName(), replace: true }
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'OAuth2 authentication failed'
-        console.error('[OAuth2 Callback] Failed:', errorMessage, error)
-        // Show error notification
-        navigationStore.dispatchSnackbar({
-          status: true,
-          timeout: 10_000,
-          color: 'error',
-          btnColor: 'buttonText',
-          text: 'OAuth2 authentication failed',
-          extendedError: errorMessage,
-        })
-
-        // Clean up URL and redirect to home
-        return { name: resolveStartRouteName(), replace: true }
-      }
+    const oauthRedirect = await handleOAuthCallback(to)
+    if (oauthRedirect) {
+      return oauthRedirect
     }
 
     // Handle redirection of `globalAssetId`, `aasId` and `smId`
@@ -497,349 +825,26 @@ export async function createAppRouter (): Promise<Router> {
       return { name: startRouteName, query: to.query, replace: true }
     }
 
-    // Same route
-    if (Object.hasOwn(from, 'name') && Object.hasOwn(to, 'name') && from.name === to.name && from.query !== to.query && Object.keys(to.query).length > 0) {
-      // --> Save url query parameter
+    saveUrlQueryForSameRoute(to, from)
 
-      const queryToDispatch = { ...to.query }
-      const queryLoaded = navigationStore.getUrlQuery
-
-      if (routesUsingAasOrPathUrlQuery.includes(to.name)) {
-        // Just for routes using url query parameter and changed url query parameter
-
-        // Take into account also possible previous saved url query parameter
-        if (!Object.hasOwn(queryToDispatch, 'aas') && Object.hasOwn(queryLoaded, 'aas')) {
-          queryToDispatch.aas = queryLoaded.aas
-        }
-        if (!Object.hasOwn(queryToDispatch, 'path') && Object.hasOwn(queryLoaded, 'path')) {
-          queryToDispatch.path = queryLoaded.path
-        }
-        if (
-          !Object.hasOwn(queryToDispatch, 'ignorePreConfAuth')
-          && Object.hasOwn(queryLoaded, 'ignorePreConfAuth')
-        ) {
-          queryToDispatch.ignorePreConfAuth = queryLoaded.ignorePreConfAuth
-        }
-
-        // Save url query parameter
-        navigationStore.dispatchUrlQuery(queryToDispatch)
-      } else if (
-        !Object.hasOwn(queryToDispatch, 'ignorePreConfAuth')
-        && Object.hasOwn(queryLoaded, 'ignorePreConfAuth')
-      ) {
-        // For all other routes
-
-        // Take into account also possible previous saved url query parameter
-        queryToDispatch.ignorePreConfAuth = queryLoaded.ignorePreConfAuth
-
-        // Save url query parameter
-        navigationStore.dispatchUrlQuery(queryToDispatch)
-      }
+    const restoredRoute = saveAndRestoreUrlQueryOnRouteSwitch(to, from)
+    if (restoredRoute) {
+      return restoredRoute
     }
 
-    // Switch from one route to another one
-    if (Object.hasOwn(from, 'name') && Object.hasOwn(to, 'name') && from.name !== to.name) {
-      if (Object.keys(from.query).length > 0) {
-        // --> Save url query parameter
-
-        const queryToDispatch = { ...from.query }
-        const queryLoaded = navigationStore.getUrlQuery
-
-        if (routesUsingAasOrPathUrlQuery.includes(from.name) || from.path.startsWith('/modules/')) {
-          // Just for switching FROM a route using url query parameter
-
-          // Take into account also possible previous saved url query parameter
-          if (!Object.hasOwn(queryToDispatch, 'aas') && Object.hasOwn(queryLoaded, 'aas')) {
-            queryToDispatch.aas = queryLoaded.aas
-          }
-          if (!Object.hasOwn(queryToDispatch, 'path') && Object.hasOwn(queryLoaded, 'path')) {
-            queryToDispatch.path = queryLoaded.path
-          }
-          if (
-            !Object.hasOwn(queryToDispatch, 'ignorePreConfAuth')
-            && Object.hasOwn(queryLoaded, 'ignorePreConfAuth')
-          ) {
-            queryToDispatch.ignorePreConfAuth = queryLoaded.ignorePreConfAuth
-          }
-
-          // Save url query parameter
-          navigationStore.dispatchUrlQuery(queryToDispatch)
-        } else if (
-          !Object.hasOwn(queryToDispatch, 'ignorePreConfAuth')
-          && Object.hasOwn(queryLoaded, 'ignorePreConfAuth')
-        ) {
-          // For all other routes
-
-          // Take into account also possible previous saved url query parameter
-          queryToDispatch.ignorePreConfAuth = queryLoaded.ignorePreConfAuth
-
-          // Save url query parameter
-          navigationStore.dispatchUrlQuery(queryToDispatch)
-        }
-      }
-      if (!Object.hasOwn(to, 'query') || Object.keys(to.query).length === 0) {
-        // --> Load url query parameter
-
-        const queryLoaded = navigationStore.getUrlQuery
-        const updatedRoute = { path: to.path, name: to.name, query: {} as LocationQueryRaw }
-
-        if (routesUsingAasOrPathUrlQuery.includes(to.name) || to.path.startsWith('/modules/')) {
-          // Just for switching TO a route using url query parameter
-
-          if (
-            routesUsingAasUrlQuery.includes(to.name)
-            && Object.hasOwn(queryLoaded, 'aas')
-            && (queryLoaded.aas as string).trim() !== ''
-          ) {
-            updatedRoute.query.aas = queryLoaded.aas
-          }
-          if (
-            routesUsingPathUrlQuery.includes(to.name)
-            && Object.hasOwn(queryLoaded, 'path')
-            && (queryLoaded.path as string).trim() !== ''
-          ) {
-            updatedRoute.query.path = queryLoaded.path
-          }
-          if (Object.hasOwn(queryLoaded, 'ignorePreConfAuth')) {
-            updatedRoute.query.ignorePreConfAuth = queryLoaded.ignorePreConfAuth
-          }
-
-          if (
-            routesUsingAasUrlQuery.includes(updatedRoute.name)
-            && !Object.hasOwn(updatedRoute.query, 'aas')
-            && Object.hasOwn(updatedRoute.query, 'path')
-          ) {
-            delete updatedRoute.query.path
-          }
-
-          if (
-            routesUsingOnlyAasUrlQuery.includes(updatedRoute.name)
-            && Object.hasOwn(updatedRoute.query, 'path')
-          ) {
-            delete updatedRoute.query.path
-          }
-
-          if (
-            routesUsingOnlyPathUrlQuery.includes(updatedRoute.name)
-            && Object.hasOwn(updatedRoute.query, 'aas')
-          ) {
-            delete updatedRoute.query.aas
-          }
-
-          if (Object.keys(updatedRoute.query).length > 0) {
-            return updatedRoute
-          }
-        } else if (Object.hasOwn(queryLoaded, 'ignorePreConfAuth')) {
-          // For all other routes
-
-          updatedRoute.query.ignorePreConfAuth = queryLoaded.ignorePreConfAuth
-
-          if (Object.keys(updatedRoute.query).length > 0) {
-            return updatedRoute
-          }
-        }
-      }
+    const cleanedRoute = removeInvalidQueryParamsForRoute(to)
+    if (cleanedRoute) {
+      return cleanedRoute
     }
 
-    // Delete not needed url query parameter
-    if (
-      routesUsingAasUrlQuery.includes(to.name)
-      && !Object.hasOwn(to.query, 'aas')
-      && Object.hasOwn(to.query, 'path')
-    ) {
-      // --> Delete path url query parameter
-      const query = { ...to.query }
-      delete query.path
-      const updatedRoute = { path: to.path, query }
-      return updatedRoute
+    const displayRoute = handleSingleAasAndDeviceRouting(to)
+    if (displayRoute !== null) {
+      return displayRoute
     }
 
-    if (routesUsingOnlyAasUrlQuery.includes(to.name) && Object.hasOwn(to.query, 'path')) {
-      // --> Delete path url query parameter
-      const query = { ...to.query }
-      delete query.path
-      const updatedRoute = { path: to.path, query }
-      return updatedRoute
-    }
-    if (routesUsingOnlyPathUrlQuery.includes(to.name) && Object.hasOwn(to.query, 'aas')) {
-      // --> Delete aas url query parameter
-      const query = { ...to.query }
-      delete query.aas
-      const updatedRoute = { path: to.path, query }
-      return updatedRoute
-    }
-
-    // Check if single AAS mode is on and no aas query is set to either redirect or show 404
-    if (
-      envStore.getSingleAas
-      && (routesUsingAasUrlQuery.includes(to.name)
-        || (to.path.includes('/modules/') && to.meta.isOnlyVisibleWithSelectedAas))
-      && (!Object.hasOwn(to.query, 'aas') || (to.query.aas as string).trim() === '')
-    ) {
-      if (envStore.getSingleAasRedirect) {
-        window.location.replace(envStore.getSingleAasRedirect)
-        return false
-      } else if (to.name !== 'NotFound404') {
-        const updatedRoute = { name: 'NotFound404' }
-        return updatedRoute
-      }
-    }
-
-    if (routesToVisualization.includes(to.name)) {
-      // General redirect to 'Visualization' with query
-      const updatedRoute = { name: 'Visualization', query: to.query }
-      return updatedRoute
-    }
-
-    // Handle mobile/desktop views
-    else if (isMobile.value) {
-      // Handle mobile views
-      if (
-        routesForMobile.includes(to.name)
-        || routesStayOnPages.includes(to.name)
-        || (to.path.includes('/modules/') && to.meta.isMobileModule)
-      ) {
-        // Do nothing
-      } else if (
-        routesOnlyDesktop.includes(to.name)
-        || (to.path.includes('/modules/') && !to.meta.isMobileModule)
-      ) {
-        // Redirect to 'AASList' with query
-        const updatedRoute = { name: 'AASList', query: to.query }
-        return updatedRoute
-      }
-    } else {
-      // Handle desktop views
-      if (
-        routesForDesktop.includes(to.name)
-        || routesStayOnPages.includes(to.name)
-        || (to.path.includes('/modules/') && to.meta.isDesktopModule)
-      ) {
-        if (['SMViewer', 'SMEditor'].includes(to.name as string)) {
-          if (smViewerEditor.value && to.name === 'SMEditor' && !allowEditing.value) {
-            // Redirect to 'SMViewer' with query
-            const updatedRoute = { name: 'SMViewer', query: to.query }
-            return updatedRoute
-          }
-          if (!smViewerEditor.value) {
-            // Redirect to 'AASViewer' resp. 'AASEditor' with query
-            const updatedRoute = { name: (to.name as string).replace('SM', 'AAS'), query: to.query }
-            return updatedRoute
-          }
-        }
-        if (to.name === 'AASEditor' && !allowEditing.value) {
-          // Redirect to 'AASViewer' with query
-          const updatedRoute = { name: 'AASViewer', query: to.query }
-          return updatedRoute
-        }
-        // Do nothing
-      } else if (
-        routesOnlyMobile.includes(to.name)
-        || (to.path.includes('/modules/') && !to.meta.isDesktopModule)
-      ) {
-        // Redirect to 'AASViewer' with query
-        const updatedRoute = { name: 'AASViewer', query: to.query }
-        return updatedRoute
-      }
-    }
-
-    // Validate combination of specified aas and path url query parameter
-    if (
-      Object.hasOwn(to.query, 'aas')
-      && (to.query.aas as string).trim() !== ''
-      && Object.hasOwn(to.query, 'path')
-      && (to.query.path as string).trim() !== ''
-    ) {
-      const combinationAasPathIsOk = await aasByEndpointHasSmeByPath(
-        (to.query.aas as string).trim(),
-        (to.query.path as string).trim(),
-      )
-      if (!combinationAasPathIsOk) {
-        // Remove path query for not available SME path in AAS
-        const query = { ...to.query }
-        delete query.path
-        const updatedRoute = { path: to.path, query }
-        return updatedRoute
-      }
-    }
-
-    // Fetch and dispatch AAS
-    if (
-      Object.hasOwn(to.query, 'aas')
-      && (to.query.aas as string).trim() !== ''
-      && (!aasStore.getSelectedAAS
-        || Object.keys(aasStore.getSelectedAAS).length === 0
-        || !Object.hasOwn(from.query, 'aas')
-        || (Object.hasOwn(to.query, 'aas')
-          && (from.query.aas as string).trim() !== (to.query.aas as string).trim()))
-    ) {
-      const aas = await fetchAndDispatchAas(to.query.aas as string)
-
-      if (!aas || Object.keys(aas).length === 0) {
-        // Remove aas query for not available AAS endpoint
-        const query = { ...to.query }
-        delete query.aas
-        const updatedRoute = { path: to.path, query }
-        return updatedRoute
-      }
-    } else if (!to.query.aas || to.query.aas === '') {
-      aasStore.dispatchSelectedAAS({})
-    }
-
-    // Fetch and dispatch SM/SME
-    // Track the fetched SME to use for semanticId check (avoids timing issues with store reactivity)
-    let fetchedSme: Record<string, unknown> | null = null
-    if (
-      Object.hasOwn(to.query, 'path')
-      && (to.query.path as string).trim() !== ''
-      && (!aasStore.getSelectedNode
-        || Object.keys(aasStore.getSelectedNode).length === 0
-        || !Object.hasOwn(from.query, 'path')
-        || (Object.hasOwn(from.query, 'path')
-          && (from.query.path as string).trim() !== (to.query.path as string).trim()))
-    ) {
-      fetchedSme = await fetchAndDispatchSme(to.query.path as string, true)
-      if (!fetchedSme || Object.keys(fetchedSme).length === 0) {
-        // Remove path query for not available SME path
-        const query = { ...to.query }
-        delete query.path
-        const updatedRoute = { path: to.path, query }
-        return updatedRoute
-      }
-    } else if (!to.query.path || to.query.path === '') {
-      aasStore.dispatchSelectedNode({})
-    }
-
-    // Clean up non-core query params when node/AAS changes
-    // This ensures plugin-specific params (like filePath) don't persist when switching context
-    // Note: We do NOT clean up on initial load because:
-    // 1. The user might have bookmarked or shared a URL with plugin-specific params
-    // 2. Plugin components haven't loaded yet to register their params
-    const pathChanged
-      = Object.hasOwn(from.query, 'path')
-        && Object.hasOwn(to.query, 'path')
-        && (from.query.path as string).trim() !== (to.query.path as string).trim()
-    const aasChanged
-      = Object.hasOwn(from.query, 'aas')
-        && Object.hasOwn(to.query, 'aas')
-        && (from.query.aas as string).trim() !== (to.query.aas as string).trim()
-
-    if (pathChanged || aasChanged) {
-      // Get the currently selected node
-      // Use the freshly fetched SME if available (avoids timing issues with Pinia store on initial load)
-      // Otherwise fall back to the store value
-      const selectedNode = fetchedSme || aasStore.getSelectedNode
-
-      // Filter query params based on what's allowed for this node's semanticId
-      // Note: view=Visualization is handled by the filtering - if a plugin registered
-      // its params for its semanticId, they'll be allowed when that semanticId is selected
-      const { filteredQuery, removedParams } = navigationStore.filterQueryParams(to.query, selectedNode)
-
-      if (removedParams.length > 0) {
-        // Redirect with cleaned query params
-        const updatedRoute = { path: to.path, query: filteredQuery }
-        return updatedRoute
-      }
+    const aasSmeRoute = await handleAasAndSmeDataLoading(to, from)
+    if (aasSmeRoute) {
+      return aasSmeRoute
     }
 
     return true

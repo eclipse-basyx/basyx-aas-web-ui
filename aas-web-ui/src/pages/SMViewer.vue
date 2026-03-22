@@ -39,51 +39,51 @@
   })
 
   onBeforeUnmount(() => {
-    // remove all Event Listeners from the Resize Bars
-    const divs = document.querySelectorAll('.resizeBar')
-    for (const div of divs) {
-      div.removeEventListener('mouseover', function () {})
-      div.removeEventListener('mouseout', function () {})
-      div.removeEventListener('mousedown', function () {})
-      document.removeEventListener('mousemove', function () {})
-      document.removeEventListener('mouseup', function () {})
+    for (const cleanup of cleanupResizeListeners) {
+      cleanup()
     }
+    cleanupResizeListeners.length = 0
   })
+
+  const cleanupResizeListeners: Array<() => void> = []
 
   // creates a div element (Resize Bar) on each Divider between Windows to allow the user to resize the windows
   function resizableWindow (window: any): void {
     window.style.position = 'relative'
     const div = createDiv() // create div element (Resize Bar) on each Divider between Windows
     window.append(div) // append the div to the Window
-    setListeners(div) // create event listeners for Resize Bars
+    cleanupResizeListeners.push(setListeners(div)) // create event listeners for Resize Bars
   }
 
   // creates Event Listeners for the Resize Bars to allow the user to resize the windows
-  function setListeners (div: HTMLDivElement): void {
+  function setListeners (div: HTMLDivElement): () => void {
     let pageX: number, curCol: any, nxtCol: any, curColWidth: number, nxtColWidth: number
 
     // highlight Resize Bar when mouse is over it
-    div.addEventListener('mouseover', (e: Event) => {
+    const onMouseOver = (e: Event) => {
       const target = e.target as HTMLElement
       if (target) target.style.borderRight = '2px solid ' + primaryColor.value
-    })
+    }
+    div.addEventListener('mouseover', onMouseOver)
 
     // remove highlight from Resize Bar when mouse leaves it
-    div.addEventListener('mouseout', function (e: any) {
+    const onMouseOut = function (e: any): void {
       if (e.target) e.target.style.borderRight = ''
-    })
+    }
+    div.addEventListener('mouseout', onMouseOut)
 
     // Eventlistener to select the Resize Bar on Mouse down
-    div.addEventListener('mousedown', function (e: any) {
+    const onMouseDown = function (e: any): void {
       curCol = e.target.parentElement // the current element that will be scaled
       nxtCol = curCol.nextElementSibling // selects the divider
       if (nxtCol) nxtCol = nxtCol.nextElementSibling // the next element that will be scaled too
       pageX = Number.parseInt(e.pageX) // the current x position of the mouse
       curColWidth = Number.parseInt(curCol.offsetWidth) // the current width of the current element
       if (nxtCol) nxtColWidth = Number.parseInt(nxtCol.offsetWidth) // the current width of the next element
-    })
+    }
+    div.addEventListener('mousedown', onMouseDown)
     // Eventlistener to scale the current and next Window when the mouse is moved
-    document.addEventListener('mousemove', function (e: any) {
+    const onMouseMove = function (e: any): void {
       if (!curCol) return // if no element is selected return
       let screenWidth = document.documentElement.clientWidth // the width of the screen (Window) excluding the scrollbar
       const navigationDrawer: any = document.querySelectorAll('.leftMenu')[0] // the width of the navigation drawer
@@ -97,15 +97,25 @@
         if (nxtCol)
           nxtCol.style.width = 100 - ((screenWidth - (nxtColWidth - diffX)) / screenWidth) * 100 + '%' // scale the next Column (Window) if it exists
       }
-    })
+    }
+    document.addEventListener('mousemove', onMouseMove)
     // Eventlistener to clear the local Variables mouse up
-    document.addEventListener('mouseup', function () {
+    const onMouseUp = function (): void {
       curCol = null
       nxtCol = null
       pageX = 0
       nxtColWidth = 0
       curColWidth = 0
-    })
+    }
+    document.addEventListener('mouseup', onMouseUp)
+
+    return () => {
+      div.removeEventListener('mouseover', onMouseOver)
+      div.removeEventListener('mouseout', onMouseOut)
+      div.removeEventListener('mousedown', onMouseDown)
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+    }
   }
 
   // creates the div element (Resize Bar) on each Divider between Windows

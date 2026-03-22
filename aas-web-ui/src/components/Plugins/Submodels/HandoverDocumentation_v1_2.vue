@@ -438,7 +438,7 @@
       return hasValue(sme)
     })
 
-    documents.value.forEach((document: any) => {
+    for (const document of documents.value) {
       extractDocumentVersions(document)
 
       // Extract Document IDs
@@ -456,7 +456,7 @@
       ).filter((sme: any) => {
         return hasValue(sme)
       })
-    })
+    }
 
     isLoading.value = false
   }
@@ -471,7 +471,7 @@
     })
 
     // Extract Digital File / Preview File / Meta data for each Document Version
-    document.documentVersions.forEach((documentVersion: any) => {
+    for (const documentVersion of document.documentVersions) {
       // Extract the Digital File
       documentVersion.digitalFile = getSubmodelElementBySemanticId('0173-1#02-ABI504', documentVersion)
 
@@ -491,6 +491,6 @@
       })
 
       documentVersion.fileToggle = 'preview'
-    })
+    }
   }
 </script>

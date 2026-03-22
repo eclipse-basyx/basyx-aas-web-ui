@@ -18,8 +18,8 @@ export function useInfrastructureYamlParser (): {
   generateYamlInfrastructureId: (yamlKey: string) => string
 } {
   /**
-     * Maps YAML component keys (camelCase) to internal BaSyx component keys (PascalCase)
-     */
+   * Maps YAML component keys (camelCase) to internal BaSyx component keys (PascalCase)
+   */
   const componentKeyMap: Record<string, BaSyxComponentKey> = {
     aasDiscovery: 'AASDiscovery',
     aasRegistry: 'AASRegistry',
@@ -30,8 +30,8 @@ export function useInfrastructureYamlParser (): {
   }
 
   /**
-     * Maps YAML security type to internal security type
-     */
+   * Maps YAML security type to internal security type
+   */
   function mapSecurityType (yamlType: string): InfrastructureAuth['securityType'] {
     switch (yamlType) {
       case 'none': {
@@ -54,8 +54,8 @@ export function useInfrastructureYamlParser (): {
   }
 
   /**
-     * Maps YAML OAuth2 flow to internal format
-     */
+   * Maps YAML OAuth2 flow to internal format
+   */
   function mapOAuth2Flow (yamlFlow: string): 'auth-code' | 'client-credentials' {
     switch (yamlFlow) {
       case 'auth_code': {
@@ -72,8 +72,8 @@ export function useInfrastructureYamlParser (): {
   }
 
   /**
-     * Converts YAML security configuration to internal auth configuration
-     */
+   * Converts YAML security configuration to internal auth configuration
+   */
   function parseSecurityConfig (yamlSecurity: YamlSecurityConfig): InfrastructureAuth {
     const auth: InfrastructureAuth = {
       securityType: mapSecurityType(yamlSecurity.type),
@@ -132,15 +132,15 @@ export function useInfrastructureYamlParser (): {
   }
 
   /**
-     * Generates a stable infrastructure ID based on YAML key
-     */
+   * Generates a stable infrastructure ID based on YAML key
+   */
   function generateYamlInfrastructureId (yamlKey: string): string {
     return `yaml_${yamlKey}`
   }
 
   /**
-     * Parses a single YAML infrastructure configuration
-     */
+   * Parses a single YAML infrastructure configuration
+   */
   function parseInfrastructure (
     yamlKey: string,
     yamlConfig: YamlInfrastructureConfig,
@@ -181,8 +181,8 @@ export function useInfrastructureYamlParser (): {
   }
 
   /**
-     * Parses the complete YAML configuration
-     */
+   * Parses the complete YAML configuration
+   */
   function parseYamlConfig (yamlConfig: YamlInfrastructuresConfig): ParsedInfrastructureConfig {
     const infrastructures: InfrastructureConfig[] = []
     let defaultInfrastructureId: string | null = null
@@ -222,8 +222,8 @@ export function useInfrastructureYamlParser (): {
   }
 
   /**
-     * Validates YAML configuration structure
-     */
+   * Validates YAML configuration structure
+   */
   function validateYamlConfig (config: unknown): config is YamlInfrastructuresConfig {
     if (!config || typeof config !== 'object') {
       console.error('Invalid YAML configuration: not an object')

@@ -187,17 +187,13 @@
   const aasRepoURL = computed(() => infrastructureStore.getAASRepoURL) // Get the AAS Repository URL from the Store
   const detailsListHeight = computed(() => {
     if (isMobile.value) {
-      if (singleAas.value) {
-        return 'calc(100vh - 40px - 64px - 34px)' // Full height - footer - header - details header (divider)
-      } else {
-        return 'calc(100vh - 231px - 40px - 64px - 36px - 64px)' // Full height - 4x AAS items - footer - header - details header (divider) - Searchbar
-      }
+      return singleAas.value
+        ? 'calc(100vh - 40px - 64px - 34px)' // Full height - footer - header - details header (divider)
+        : 'calc(100vh - 231px - 40px - 64px - 36px - 64px)' // Full height - 4x AAS items - footer - header - details header (divider) - Searchbar
     } else {
-      if (singleAas.value) {
-        return 'calc(100vh - 64px - 48px - 40px - 35px)' // Full height - header - collapse button - footer - details header (divider)
-      } else {
-        return 'calc(50vh - 40px - 48px - 33px)' // Half height - footer - collapse button - details header (divider)
-      }
+      return singleAas.value
+        ? 'calc(100vh - 64px - 48px - 40px - 35px)' // Full height - header - collapse button - footer - details header (divider)
+        : 'calc(50vh - 40px - 48px - 33px)' // Half height - footer - collapse button - details header (divider)
     }
   })
   const autoSync = computed(() => navigationStore.getAutoSync)

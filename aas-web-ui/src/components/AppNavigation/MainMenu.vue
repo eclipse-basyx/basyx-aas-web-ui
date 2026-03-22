@@ -225,7 +225,7 @@
 
   // Emit
   const emit = defineEmits<{
-    (e: 'closeMenu'): void
+    (e: 'close-menu'): void
   }>()
 
   // Data
@@ -257,7 +257,7 @@
       return moduleRoute?.meta?.isVisibleModule === true || isActiveRoutePath(moduleRoute.path)
     })
 
-    const filteredAndOrderedModuleRoutes = filteredModuleRoutes.sort(
+    const filteredAndOrderedModuleRoutes = filteredModuleRoutes.toSorted(
       (moduleRouteA: RouteRecordRaw, moduleRouteB: RouteRecordRaw) => {
         const moduleNameA: string = moduleRouteA?.name?.toString() || ''
         const moduleNameB: string = moduleRouteB?.name?.toString() || ''
@@ -274,7 +274,7 @@
   })
 
   function closeMenu (): void {
-    emit('closeMenu')
+    emit('close-menu')
   }
 
   function isActiveRoutePath (routePath: string): boolean {

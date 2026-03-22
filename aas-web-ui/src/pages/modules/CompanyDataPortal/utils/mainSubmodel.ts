@@ -25,7 +25,7 @@ function buildCompanyDataSubmodel () {
     store.digital,
     store.businessFigures,
     store.government,
-  ].filter(notNull)
+  ].filter(element => notNull(element))
 
   return submodel
 }

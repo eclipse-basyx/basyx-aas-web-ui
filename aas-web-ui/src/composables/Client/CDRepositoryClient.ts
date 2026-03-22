@@ -19,12 +19,12 @@ export function useCDRepositoryClient () {
   const conceptDescriptionRepoUrl = computed(() => infrastructureStore.getConceptDescriptionRepoURL)
 
   /**
-     * Fetches a list of all available Concept Descriptions (CDs).
-     *
-     * @async
-     * @returns {Promise<Array<any>>} A promise that resolves to an array of CDs.
-     * An empty array is returned if the request fails or no CDs are found.
-     */
+   * Fetches a list of all available Concept Descriptions (CDs).
+   *
+   * @async
+   * @returns {Promise<Array<any>>} A promise that resolves to an array of CDs.
+   * An empty array is returned if the request fails or no CDs are found.
+   */
   async function fetchCdList (): Promise<Array<any>> {
     const failResponse = [] as Array<any>
 
@@ -60,12 +60,12 @@ export function useCDRepositoryClient () {
   }
 
   /**
-     * Fetches a Concept Description (CD) by the provided CD ID.
-     *
-     * @async
-     * @param {string} cdId - The ID of the CD to fetch.
-     * @returns {Promise<any>} A promise that resolves to a CD.
-     */
+   * Fetches a Concept Description (CD) by the provided CD ID.
+   *
+   * @async
+   * @param {string} cdId - The ID of the CD to fetch.
+   * @returns {Promise<any>} A promise that resolves to a CD.
+   */
   async function fetchCdById (cdId: string, endpoint?: string): Promise<any> {
     const failResponse = {} as any
 
@@ -83,7 +83,7 @@ export function useCDRepositoryClient () {
       return failResponse
     }
 
-    let cdRepoUrl = endpoint ? endpoint : conceptDescriptionRepoUrl.value
+    let cdRepoUrl = endpoint || conceptDescriptionRepoUrl.value
     if (cdRepoUrl.trim() === '') {
       return failResponse
     }
@@ -99,12 +99,12 @@ export function useCDRepositoryClient () {
   }
 
   /**
-     * Fetches a Concept Description (CD) by the provided CD endpoint.
-     *
-     * @async
-     * @param {string} cdEndpoint - The endpoint URL of the CD to fetch.
-     * @returns {Promise<any>} A promise that resolves to a CD.
-     */
+   * Fetches a Concept Description (CD) by the provided CD endpoint.
+   *
+   * @async
+   * @param {string} cdEndpoint - The endpoint URL of the CD to fetch.
+   * @returns {Promise<any>} A promise that resolves to a CD.
+   */
   async function fetchCd (cdEndpoint: string): Promise<any> {
     const failResponse = {} as any
 
@@ -141,12 +141,12 @@ export function useCDRepositoryClient () {
   }
 
   /**
-     * Checks if Concept Description with provided ID is available (in repository)
-     *
-     * @async
-     * @param {string} cdId - The ID of the CD to check.
-     * @returns {Promise<boolean>} A promise that resolves to `true` if CD with provided ID is available, otherwise `false`.
-     */
+   * Checks if Concept Description with provided ID is available (in repository)
+   *
+   * @async
+   * @param {string} cdId - The ID of the CD to check.
+   * @returns {Promise<boolean>} A promise that resolves to `true` if CD with provided ID is available, otherwise `false`.
+   */
   async function isAvailableByIdInRepo (cdId: string): Promise<boolean> {
     const failResponse = false
 
@@ -170,12 +170,12 @@ export function useCDRepositoryClient () {
   }
 
   /**
-     * Checks if Concept Description (CD) is available (in repository) by the provided CD endpoint
-     *
-     * @async
-     * @param {string} cdEndpoint - The endpoint URL of the CD to check.
-     * @returns {Promise<boolean>} A promise that resolves to `true` if CD with provided ID is available, otherwise `false`.
-     */
+   * Checks if Concept Description (CD) is available (in repository) by the provided CD endpoint
+   *
+   * @async
+   * @param {string} cdEndpoint - The endpoint URL of the CD to check.
+   * @returns {Promise<boolean>} A promise that resolves to `true` if CD with provided ID is available, otherwise `false`.
+   */
   async function isAvailable (cdEndpoint: string): Promise<boolean> {
     const failResponse = false
 
@@ -207,11 +207,11 @@ export function useCDRepositoryClient () {
   }
 
   /**
-     * Retrieves the Concept Description (CD) endpoint URL by its ID.
-     *
-     * @param {string} cdId - The ID of the CD to retrieve the endpoint for.
-     * @returns {string} A CD endpoint.
-     */
+   * Retrieves the Concept Description (CD) endpoint URL by its ID.
+   *
+   * @param {string} cdId - The ID of the CD to retrieve the endpoint for.
+   * @returns {string} A CD endpoint.
+   */
   function getCdEndpointById (cdId: string): string {
     const failResponse = ''
 

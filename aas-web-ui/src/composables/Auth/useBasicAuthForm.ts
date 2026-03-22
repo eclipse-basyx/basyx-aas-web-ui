@@ -18,8 +18,8 @@ export function useBasicAuthForm (): {
   const bearerToken = ref<string>('')
 
   /**
-     * Load authentication configuration from infrastructure
-     */
+   * Load authentication configuration from infrastructure
+   */
   function loadFromInfrastructure (infra: InfrastructureConfig): void {
     const auth = infra.auth
 
@@ -42,8 +42,8 @@ export function useBasicAuthForm (): {
   }
 
   /**
-     * Save authentication configuration to infrastructure
-     */
+   * Save authentication configuration to infrastructure
+   */
   function saveToInfrastructure (infra: InfrastructureConfig): void {
     if (!infra.auth) {
       return
@@ -64,8 +64,8 @@ export function useBasicAuthForm (): {
   }
 
   /**
-     * Reset form to initial state
-     */
+   * Reset form to initial state
+   */
   function resetForm (): void {
     basicAuthUsername.value = ''
     basicAuthPassword.value = ''

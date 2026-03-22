@@ -66,15 +66,15 @@
   defineProps<Props>()
 
   const emit = defineEmits<{
-    (e: 'click'): void
-    (e: 'edit'): void
-    (e: 'delete'): void
-    (e: 'toggle-selection'): void
-    (e: 'dragstart', event: DragEvent): void
-    (e: 'dragend'): void
-    (e: 'dragover', event: DragEvent): void
-    (e: 'dragleave', event: DragEvent): void
-    (e: 'drop', event: DragEvent): void
+    'click': []
+    'edit': []
+    'delete': []
+    'toggle-selection': []
+    'dragstart': [event: DragEvent]
+    'dragend': []
+    'dragover': [event: DragEvent]
+    'dragleave': [event: DragEvent]
+    'drop': [event: DragEvent]
   }>()
 
   const handleClick = (): void => emit('click')

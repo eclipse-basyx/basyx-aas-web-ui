@@ -21,12 +21,12 @@ export function useAASRegistryClient () {
   const aasRegistryUrl = computed(() => infrastructureStore.getAASRegistryURL)
 
   /**
-     * Fetches a list of all available Asset Administration Shell (AAS) Descriptors.
-     *
-     * @async
-     * @returns {Promise<Array<any>>} A promise that resolves to an array of AAS Descriptors.
-     * An empty array is returned if the request fails or no AAS Descriptors are found.
-     */
+   * Fetches a list of all available Asset Administration Shell (AAS) Descriptors.
+   *
+   * @async
+   * @returns {Promise<Array<any>>} A promise that resolves to an array of AAS Descriptors.
+   * An empty array is returned if the request fails or no AAS Descriptors are found.
+   */
   async function fetchAasDescriptorList (): Promise<Array<any>> {
     const failResponse = [] as Array<any>
 
@@ -62,12 +62,12 @@ export function useAASRegistryClient () {
   }
 
   /**
-     * Fetches a Asset Administration Shell (AAS)  Descriptor by the provided AAS ID.
-     *
-     * @async
-     * @param {string} aasId - The ID of the AAS Descriptor to fetch.
-     * @returns {Promise<any>} A promise that resolves to an AAS Descriptor.
-     */
+   * Fetches a Asset Administration Shell (AAS)  Descriptor by the provided AAS ID.
+   *
+   * @async
+   * @param {string} aasId - The ID of the AAS Descriptor to fetch.
+   * @returns {Promise<any>} A promise that resolves to an AAS Descriptor.
+   */
   async function fetchAasDescriptorById (aasId: string, registryUrl?: string): Promise<any> {
     const failResponse = {} as any
 
@@ -81,7 +81,7 @@ export function useAASRegistryClient () {
       return failResponse
     }
 
-    let aasRegUrl = registryUrl ? registryUrl : aasRegistryUrl.value.trim()
+    let aasRegUrl = registryUrl || aasRegistryUrl.value.trim()
     if (aasRegUrl === '') {
       return failResponse
     }
@@ -112,12 +112,12 @@ export function useAASRegistryClient () {
   }
 
   /**
-     * Retrieves the Asset Administration Shell (AAS) endpoint URL by its ID.
-     *
-     * @async
-     * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
-     * @returns {Promise<string>} A promise that resolves to an AAS endpoint.
-     */
+   * Retrieves the Asset Administration Shell (AAS) endpoint URL by its ID.
+   *
+   * @async
+   * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
+   * @returns {Promise<string>} A promise that resolves to an AAS endpoint.
+   */
   async function getAasEndpointById (aasId: string, registryUrl?: string): Promise<string> {
     const failResponse = ''
 
@@ -138,12 +138,12 @@ export function useAASRegistryClient () {
   }
 
   /**
-     * Checks if Asset Administration Shell (AAS) Descriptor with provided ID is available (in registry).
-     *
-     * @async
-     * @param {string} aasId - The ID of the AAS to check.
-     * @returns {Promise<boolean>} A promise that resolves to `true` if AAS with provided ID is available, otherwise `false`.
-     */
+   * Checks if Asset Administration Shell (AAS) Descriptor with provided ID is available (in registry).
+   *
+   * @async
+   * @param {string} aasId - The ID of the AAS to check.
+   * @returns {Promise<boolean>} A promise that resolves to `true` if AAS with provided ID is available, otherwise `false`.
+   */
   async function aasDescriptorIsAvailableById (aasId: string): Promise<boolean> {
     const failResponse = false
 

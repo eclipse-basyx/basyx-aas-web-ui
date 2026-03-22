@@ -4,9 +4,9 @@ import { base64Decode } from '@/utils/EncodeDecodeUtils'
 
 export function useHierarchicalStructure_v1_xUtils () {
   /**
-     * Find the RelationshipElement that connects the parent to a specific child entity.
-     * Returns the relationship label if found, empty string otherwise.
-     */
+   * Find the RelationshipElement that connects the parent to a specific child entity.
+   * Returns the relationship label if found, empty string otherwise.
+   */
   function findRelationshipLabelForChild (
     parentNode: Record<string, unknown>,
     childNode: Record<string, unknown>,
@@ -52,10 +52,10 @@ export function useHierarchicalStructure_v1_xUtils () {
   }
 
   /**
-     * Build a ModelReference to an Entity based on its path.
-     * The path format is: .../submodels/{base64SubmodelId}/submodel-elements/{idShortPath}
-     * We need to create a reference with keys for Submodel and each Entity in the path.
-     */
+   * Build a ModelReference to an Entity based on its path.
+   * The path format is: .../submodels/{base64SubmodelId}/submodel-elements/{idShortPath}
+   * We need to create a reference with keys for Submodel and each Entity in the path.
+   */
   function buildEntityReference (entityElement: Record<string, unknown>): aasTypes.Reference {
     const entityPath = entityElement.path as string
 
@@ -80,7 +80,7 @@ export function useHierarchicalStructure_v1_xUtils () {
 
   function findEntryNode (bomData: Record<string, unknown>): Record<string, unknown> | undefined {
     const submodelElements = bomData.submodelElements as Record<string, unknown>[] | undefined
-    return submodelElements?.find(isEntryNode)
+    return submodelElements?.find(element => isEntryNode(element))
   }
 
   function isEntryNode (element: Record<string, unknown>): boolean {
@@ -103,9 +103,9 @@ export function useHierarchicalStructure_v1_xUtils () {
   }
 
   /**
-     * Find the parent entity of a given entity in the BOM data structure.
-     * Traverses the hierarchy to find which entity contains the target entity in its statements.
-     */
+   * Find the parent entity of a given entity in the BOM data structure.
+   * Traverses the hierarchy to find which entity contains the target entity in its statements.
+   */
   function findParentEntity (
     bomData: Record<string, unknown>,
     targetEntity: Record<string, unknown>,
@@ -122,8 +122,8 @@ export function useHierarchicalStructure_v1_xUtils () {
   }
 
   /**
-     * Recursively search through the entity tree to find the parent of the target entity.
-     */
+   * Recursively search through the entity tree to find the parent of the target entity.
+   */
   function findParentInTree (
     currentEntity: Record<string, unknown>,
     targetIdShort: string,
@@ -153,9 +153,9 @@ export function useHierarchicalStructure_v1_xUtils () {
   }
 
   /**
-     * Find the RelationshipElement in the parent entity that references the target entity.
-     * This relationship becomes orphaned when the target entity is deleted.
-     */
+   * Find the RelationshipElement in the parent entity that references the target entity.
+   * This relationship becomes orphaned when the target entity is deleted.
+   */
   function findRelationshipToEntity (
     parentEntity: Record<string, unknown>,
     targetEntity: Record<string, unknown>,

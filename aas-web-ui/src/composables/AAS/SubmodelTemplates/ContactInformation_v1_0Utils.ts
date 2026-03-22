@@ -205,14 +205,14 @@ export function useContactInformation_v1_0Utils () {
     const nameIdShorts = ['NameOfContact', 'FirstName', 'MiddleNames', 'Title', 'AcademicTitle']
     const nameValues = {} as any
 
-    contactInformationSMC.value.forEach((sme: any) => {
-      nameIdShorts.forEach((idShort: any) => {
+    for (const sme of contactInformationSMC.value) {
+      for (const idShort of nameIdShorts) {
         if (checkIdShort(sme, idShort) && hasValue(sme)) {
           const value = valueToDisplay(sme, 'en', firstLangStringSetText(sme))
           nameValues[firstLetterToLowerCase(idShort)] = value
         }
-      })
-    })
+      }
+    }
 
     return nameTemplate(
       nameValues?.title,
@@ -282,23 +282,23 @@ export function useContactInformation_v1_0Utils () {
       return ''
     }
 
-    contactInformationSMC.value.forEach((sme: any) => {
-      addressIdShorts.forEach((idShort: any) => {
+    for (const sme of contactInformationSMC.value) {
+      for (const idShort of addressIdShorts) {
         if (checkIdShort(sme, idShort) && hasValue(sme)) {
           const value = valueToDisplay(sme, 'en', firstLangStringSetText(sme))
           addressValues[firstLetterToLowerCase(idShort)] = value
         }
-      })
-    })
+      }
+    }
+
+    const countryName = getCountryName(addressValues?.nationalCode)
 
     return addressTemplate(
       addressValues?.street,
       addressValues?.zipcode,
       addressValues?.cityTown,
       addressValues?.stateCounty,
-      getCountryName(addressValues?.nationalCode)
-        ? getCountryName(addressValues?.nationalCode)
-        : addressValues?.country,
+      countryName || addressValues?.country,
       addressValues?.pOBox,
       addressValues?.zipCodeOfPOBox,
     )
@@ -306,6 +306,59 @@ export function useContactInformation_v1_0Utils () {
 
   function generateVCard (contactInformationSMC: any, companyNameProperty?: any, logoFile?: any): string {
     // console.log('generateVCard()', 'contactInformationSMC:', contactInformationSMC);
+
+    const assignVCardValue = (vCardValues: any, idShort: string, sme: any): void => {
+      switch (idShort) {
+        case 'RoleOfContactPerson': {
+          const value = getRoleOfContactPerson(
+            valueToDisplay(sme, 'en', firstLangStringSetText(sme)),
+          )
+          vCardValues[firstLetterToLowerCase(idShort)] = value
+          break
+        }
+
+        case 'Phone': {
+          const telephoneNumberMLP = getSubmodelElementByIdShort('TelephoneNumber', sme)
+          if (hasValue(telephoneNumberMLP)) {
+            vCardValues.telephoneNumber = valueToDisplay(
+              telephoneNumberMLP,
+              'en',
+              firstLangStringSetText(telephoneNumberMLP),
+            )
+          }
+          break
+        }
+
+        case 'Fax': {
+          const faxNumberMLP = getSubmodelElementByIdShort('FaxNumber', sme)
+          if (hasValue(faxNumberMLP)) {
+            vCardValues.faxNumber = valueToDisplay(
+              faxNumberMLP,
+              'en',
+              firstLangStringSetText(faxNumberMLP),
+            )
+          }
+          break
+        }
+
+        case 'Email': {
+          const emailAddressMLP = getSubmodelElementByIdShort('EmailAddress', sme)
+          if (hasValue(emailAddressMLP)) {
+            vCardValues.emailAddress = valueToDisplay(
+              emailAddressMLP,
+              'en',
+              firstLangStringSetText(emailAddressMLP),
+            )
+          }
+          break
+        }
+
+        default: {
+          const value = valueToDisplay(sme, 'en', firstLangStringSetText(sme))
+          vCardValues[firstLetterToLowerCase(idShort)] = value
+        }
+      }
+    }
 
     const vCardTemplate = (
       contactPerson: string,
@@ -331,6 +384,17 @@ export function useContactInformation_v1_0Utils () {
       faxNumber: string,
       emailAddress: string,
     ) => {
+      const normalize = (value: string): string => {
+        return value && value.trim() !== '' ? value : ''
+      }
+
+      const addField = (parts: string[], field: string, value: string): void => {
+        const normalizedValue = normalize(value)
+        if (normalizedValue !== '') {
+          parts.push(`${field}${normalizedValue}`)
+        }
+      }
+
       const vCardParts: string[] = ['BEGIN:VCARD', 'VERSION:3.0']
 
       const vCardNameTemplate = (
@@ -340,69 +404,27 @@ export function useContactInformation_v1_0Utils () {
         prefix: string,
         suffix: string,
       ) => {
-        // ADR;TYPE=home:;;123 Main St.;Springfield;IL;12345;USA
-        const vCardNameParts: string[] = []
-
-        if (surname && surname.trim() !== '') {
-          vCardNameParts.push(surname)
-        } else {
-          vCardNameParts.push('')
-        }
-
-        if (firstName && firstName.trim() !== '') {
-          vCardNameParts.push(firstName)
-        } else {
-          vCardNameParts.push('')
-        }
-
-        if (middleNames && middleNames.trim() !== '') {
-          vCardNameParts.push(middleNames)
-        } else {
-          vCardNameParts.push('')
-        }
-
-        if (prefix && prefix.trim() !== '') {
-          vCardNameParts.push(prefix)
-        } else {
-          vCardNameParts.push('')
-        }
-
-        if (suffix && suffix.trim() !== '') {
-          vCardNameParts.push(suffix)
-        } else {
-          vCardNameParts.push('')
-        }
-
-        return vCardNameParts.join(';')
+        return [surname, firstName, middleNames, prefix, suffix].map(part => normalize(part)).join(';')
       }
       const name = vCardNameTemplate(surname, firstName, middleNames, prefixName, suffixName)
-      if (name && name.trim() !== '') {
-        vCardParts.push('N:' + name)
-      }
+      addField(vCardParts, 'N:', name)
 
-      if (contactPerson && contactPerson.trim() !== '') {
-        vCardParts.push('FN:' + contactPerson)
-      }
-      if (company && company.trim() !== '') {
+      const normalizedContactPerson = normalize(contactPerson)
+      const normalizedCompany = normalize(company)
+
+      addField(vCardParts, 'FN:', normalizedContactPerson)
+      if (normalizedCompany !== '') {
         // Note, that "FN:" is a mandatory field for vCard v3.0
-        if (!contactPerson || contactPerson.trim() === '') {
-          vCardParts.push('FN:' + company)
+        if (normalizedContactPerson === '') {
+          vCardParts.push('FN:' + normalizedCompany)
         } else {
-          vCardParts.push('ORG:' + company)
+          vCardParts.push('ORG:' + normalizedCompany)
         }
       }
-      if (department && department.trim() !== '') {
-        vCardParts.push('TITLE:' + department)
-      }
-      if (roleOfContactPerson && roleOfContactPerson.trim() !== '') {
-        vCardParts.push('ROLE:' + roleOfContactPerson)
-      }
-      if (language && language.trim() !== '') {
-        vCardParts.push('LANG:' + language)
-      }
-      if (addressOfAdditionalLink && addressOfAdditionalLink.trim() !== '') {
-        vCardParts.push('URL:' + addressOfAdditionalLink)
-      }
+      addField(vCardParts, 'TITLE:', department)
+      addField(vCardParts, 'ROLE:', roleOfContactPerson)
+      addField(vCardParts, 'LANG:', language)
+      addField(vCardParts, 'URL:', addressOfAdditionalLink)
 
       const vCardAddressTemplate = (
         street: string,
@@ -413,44 +435,9 @@ export function useContactInformation_v1_0Utils () {
         poBox: string,
         zipCodeOfPOBox: string,
       ) => {
-        // ADR;TYPE=home:;;123 Main St.;Springfield;IL;12345;USA
-        const vCardAddressParts: string[] = []
-
-        if (street && street.trim() !== '') {
-          vCardAddressParts.push(street)
-        } else if (poBox && poBox.trim() !== '') {
-          vCardAddressParts.push(poBox)
-        } else {
-          vCardAddressParts.push('')
-        }
-
-        if (cityTown && cityTown.trim() !== '') {
-          vCardAddressParts.push(cityTown)
-        } else {
-          vCardAddressParts.push('')
-        }
-
-        if (stateCounty && stateCounty.trim() !== '') {
-          vCardAddressParts.push(stateCounty)
-        } else {
-          vCardAddressParts.push('')
-        }
-
-        if (zipcode && zipcode.trim() !== '') {
-          vCardAddressParts.push(zipcode)
-        } else if (zipCodeOfPOBox && zipCodeOfPOBox.trim() !== '') {
-          vCardAddressParts.push(zipCodeOfPOBox)
-        } else {
-          vCardAddressParts.push('')
-        }
-
-        if (country && country.trim() !== '') {
-          vCardAddressParts.push(country)
-        } else {
-          vCardAddressParts.push('')
-        }
-
-        return vCardAddressParts.join(';')
+        const primaryStreet = normalize(street) || normalize(poBox)
+        const postalCode = normalize(zipcode) || normalize(zipCodeOfPOBox)
+        return [primaryStreet, normalize(cityTown), normalize(stateCounty), postalCode, normalize(country)].join(';')
       }
       const address = vCardAddressTemplate(
         street,
@@ -478,15 +465,9 @@ export function useContactInformation_v1_0Utils () {
         vCardParts.push('PHOTO;MEDIATYPE=' + logoFile.contentType + ':' + valueUrl(logoFile))
       }
 
-      if (telephoneNumber && telephoneNumber.trim() !== '') {
-        vCardParts.push('TEL;TYPE=WORK,VOICE:' + telephoneNumber)
-      }
-      if (faxNumber && faxNumber.trim() !== '') {
-        vCardParts.push('TEL;TYPE=WORK,FAX:' + faxNumber)
-      }
-      if (emailAddress && emailAddress.trim() !== '') {
-        vCardParts.push('EMAIL;TYPE=WORK:' + emailAddress)
-      }
+      addField(vCardParts, 'TEL;TYPE=WORK,VOICE:', telephoneNumber)
+      addField(vCardParts, 'TEL;TYPE=WORK,FAX:', faxNumber)
+      addField(vCardParts, 'EMAIL;TYPE=WORK:', emailAddress)
 
       vCardParts.push('END:VCARD')
 
@@ -518,63 +499,13 @@ export function useContactInformation_v1_0Utils () {
     ]
     const vCardValues = {} as any
 
-    contactInformationSMC.value.forEach((sme: any) => {
-      vCardIdShorts.forEach((idShort: any) => {
+    for (const sme of contactInformationSMC.value) {
+      for (const idShort of vCardIdShorts) {
         if (checkIdShort(sme, idShort) && hasValue(sme)) {
-          switch (idShort) {
-            case 'RoleOfContactPerson': {
-              const value = getRoleOfContactPerson(
-                valueToDisplay(sme, 'en', firstLangStringSetText(sme)),
-              )
-              vCardValues[firstLetterToLowerCase(idShort)] = value
-              break
-            }
-
-            case 'Phone': {
-              const telephoneNumberMLP = getSubmodelElementByIdShort('TelephoneNumber', sme)
-              if (hasValue(telephoneNumberMLP)) {
-                vCardValues['telephoneNumber'] = valueToDisplay(
-                  telephoneNumberMLP,
-                  'en',
-                  firstLangStringSetText(telephoneNumberMLP),
-                )
-              }
-              break
-            }
-
-            case 'Fax': {
-              const faxNumberMLP = getSubmodelElementByIdShort('FaxNumber', sme)
-              if (hasValue(faxNumberMLP)) {
-                vCardValues['faxNumber'] = valueToDisplay(
-                  faxNumberMLP,
-                  'en',
-                  firstLangStringSetText(faxNumberMLP),
-                )
-              }
-              break
-            }
-
-            case 'Email': {
-              const emailAddressMLP = getSubmodelElementByIdShort('EmailAddress', sme)
-              if (hasValue(emailAddressMLP)) {
-                vCardValues['emailAddress'] = valueToDisplay(
-                  emailAddressMLP,
-                  'en',
-                  firstLangStringSetText(emailAddressMLP),
-                )
-              }
-              break
-            }
-
-            default: {
-              const value = valueToDisplay(sme, 'en', firstLangStringSetText(sme))
-              vCardValues[firstLetterToLowerCase(idShort)] = value
-              break
-            }
-          }
+          assignVCardValue(vCardValues, idShort, sme)
         }
-      })
-    })
+      }
+    }
 
     return vCardTemplate(
       vCardValues?.contactPerson,
@@ -583,9 +514,7 @@ export function useContactInformation_v1_0Utils () {
       vCardValues?.middleNames,
       vCardValues?.title,
       vCardValues?.academicTitle,
-      vCardValues?.company
-        ? vCardValues?.company
-        : valueToDisplay(companyNameProperty, 'en', firstLangStringSetText(companyNameProperty)),
+      vCardValues?.company || valueToDisplay(companyNameProperty, 'en', firstLangStringSetText(companyNameProperty)),
       vCardValues?.department,
       vCardValues?.roleOfContactPerson,
       vCardValues?.language,

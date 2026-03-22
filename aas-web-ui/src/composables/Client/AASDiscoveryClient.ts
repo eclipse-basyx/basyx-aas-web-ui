@@ -17,15 +17,15 @@ export function useAASDiscoveryClient () {
   const aasDiscoveryUrl = computed(() => infrastructureStore.getAASDiscoveryURL)
 
   /**
-     * Retrieves the Asset Administration Shell (AAS) ID corresponding to a given global asset ID.
-     *
-     * This function sends an HTTP request to the AAS Discovery service to look up the AAS ID based on the provided global asset ID.
-     * If the global asset ID or the AAS Discovery URL is invalid or if the AAS ID cannot be retrieved, the function returns an empty string.
-     *
-     * @async
-     * @param {string} globalAssetId - The global asset ID for which to retrieve the AAS ID.
-     * @returns {Promise<string>} A promise that resolves to the AAS ID as a string if found; otherwise, an empty string.
-     */
+   * Retrieves the Asset Administration Shell (AAS) ID corresponding to a given global asset ID.
+   *
+   * This function sends an HTTP request to the AAS Discovery service to look up the AAS ID based on the provided global asset ID.
+   * If the global asset ID or the AAS Discovery URL is invalid or if the AAS ID cannot be retrieved, the function returns an empty string.
+   *
+   * @async
+   * @param {string} globalAssetId - The global asset ID for which to retrieve the AAS ID.
+   * @returns {Promise<string>} A promise that resolves to the AAS ID as a string if found; otherwise, an empty string.
+   */
   async function getAasId (globalAssetId: string, endpoint?: string): Promise<string> {
     const aasIds = await getAasIds(globalAssetId, endpoint)
     if (aasIds.length > 0) {
@@ -43,7 +43,7 @@ export function useAASDiscoveryClient () {
       return failResponse
     }
 
-    let aasDiscUrl = endpoint ? endpoint : aasDiscoveryUrl.value.trim()
+    let aasDiscUrl = endpoint || aasDiscoveryUrl.value.trim()
     if (aasDiscUrl === '') {
       return failResponse
     }
@@ -176,15 +176,15 @@ export function useAASDiscoveryClient () {
   }
 
   /**
-     * Checks the availability of a global asset by its ID.
-     *
-     * This function trims the provided global asset ID and checks if a corresponding AAS ID exists.
-     * If the global asset ID is empty or invalid, it returns false.
-     * Otherwise, it returns true if a valid AAS ID is found.
-     *
-     * @param {string} globalAssetId - The ID of the global asset to check availability for.
-     * @returns {Promise<boolean>} A promise that resolves to true if the asset is available, otherwise false.
-     */
+   * Checks the availability of a global asset by its ID.
+   *
+   * This function trims the provided global asset ID and checks if a corresponding AAS ID exists.
+   * If the global asset ID is empty or invalid, it returns false.
+   * Otherwise, it returns true if a valid AAS ID is found.
+   *
+   * @param {string} globalAssetId - The ID of the global asset to check availability for.
+   * @returns {Promise<boolean>} A promise that resolves to true if the asset is available, otherwise false.
+   */
   async function isAvailableById (globalAssetId: string): Promise<boolean> {
     const failResponse = false
 

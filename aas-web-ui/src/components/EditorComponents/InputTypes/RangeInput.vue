@@ -28,8 +28,8 @@
   }>()
 
   const emit = defineEmits<{
-    (event: 'update:minValue', value: string | null): void
-    (event: 'update:maxValue', value: string | null): void
+    'update:minValue': [value: string | null]
+    'update:maxValue': [value: string | null]
   }>()
 
   const minValue = ref<string | null>(props.minValue)

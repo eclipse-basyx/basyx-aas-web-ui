@@ -161,19 +161,19 @@
   const props = defineProps<Props>()
 
   const emit = defineEmits<{
-    (e: 'row-click', item: FileSystemElement): void
-    (e: 'toggle-select-all'): void
-    (e: 'toggle-selection', item: FileSystemElement): void
-    (e: 'navigate-up'): void
-    (e: 'move-up', item: FileSystemElement): void
-    (e: 'edit-folder', item: FileSystemElement): void
-    (e: 'download', item: FileSystemElement): void
-    (e: 'delete', item: FileSystemElement): void
-    (e: 'dragstart', event: DragEvent, item: FileSystemElement): void
-    (e: 'dragend'): void
-    (e: 'dragover', event: DragEvent, item: FileSystemElement): void
-    (e: 'dragleave', event: DragEvent, item: FileSystemElement): void
-    (e: 'drop', event: DragEvent, item: FileSystemElement): void
+    'row-click': [item: FileSystemElement]
+    'toggle-select-all': []
+    'toggle-selection': [item: FileSystemElement]
+    'navigate-up': []
+    'move-up': [item: FileSystemElement]
+    'edit-folder': [item: FileSystemElement]
+    'download': [item: FileSystemElement]
+    'delete': [item: FileSystemElement]
+    'dragstart': [event: DragEvent, item: FileSystemElement]
+    'dragend': []
+    'dragover': [event: DragEvent, item: FileSystemElement]
+    'dragleave': [event: DragEvent, item: FileSystemElement]
+    'drop': [event: DragEvent, item: FileSystemElement]
   }>()
 
   const handleToggleSelectAll = (): void => emit('toggle-select-all')

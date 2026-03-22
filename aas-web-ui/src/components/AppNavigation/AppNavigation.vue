@@ -343,7 +343,7 @@
         return false
       return moduleRoute?.meta?.isVisibleModule === true || isActiveModuleRoute(moduleRoute.path)
     })
-    const filteredAndOrderedModuleRoutes = filteredModuleRoutes.sort(
+    const filteredAndOrderedModuleRoutes = filteredModuleRoutes.toSorted(
       (moduleRouteA: RouteRecordRaw, moduleRouteB: RouteRecordRaw) => {
         const moduleNameA: string = moduleRouteA?.name?.toString() || ''
         const moduleNameB: string = moduleRouteB?.name?.toString() || ''

@@ -409,7 +409,7 @@
     digitalNameplateData.value = await setData({ ...props.submodelElementData }, props.submodelElementData.path)
 
     extractProductProperties(digitalNameplateData.value)
-    extractManufacturerProperties(digitalNameplateData.value)
+    await extractManufacturerProperties(digitalNameplateData.value)
     extractMarkings(digitalNameplateData.value)
     extractAssetSpecificProperties(digitalNameplateData.value)
 
@@ -436,8 +436,8 @@
 
     const versions = [] as Array<any>
 
-    digitalNameplateData.submodelElements.forEach((sme: any) => {
-      productPropertyIdShorts.forEach((idShort: any) => {
+    for (const sme of digitalNameplateData.submodelElements) {
+      for (const idShort of productPropertyIdShorts) {
         if (checkIdShort(sme, idShort)) {
           if (['HardwareVersion', 'FirmwareVersion', 'SoftwareVersion'].includes(idShort)) {
             if (hasValue(sme)) versions.push(sme)
@@ -445,27 +445,27 @@
             if (hasValue(sme)) productProperties.value.push(sme)
           }
         }
-      })
-    })
+      }
+    }
 
     if (versions.length > 0) {
       productProperties.value.push({ idShort: 'Versions', value: versions, modelType: 'Versions' })
     }
   }
 
-  function extractManufacturerProperties (digitalNameplateData: any): void {
+  async function extractManufacturerProperties (digitalNameplateData: any): Promise<void> {
     const manufacturerPropertyIdShorts = ['ManufacturerName', 'CompanyLogo']
 
-    digitalNameplateData.submodelElements.forEach((sme: any) => {
-      manufacturerPropertyIdShorts.forEach(async (idShort: any) => {
+    for (const sme of digitalNameplateData.submodelElements) {
+      for (const idShort of manufacturerPropertyIdShorts) {
         if (checkIdShort(sme, idShort) && hasValue(sme)) {
           if (idShort === 'CompanyLogo') {
             sme.value = await valueBlob(sme)
           }
           manufacturerProperties.value.push(sme)
         }
-      })
-    })
+      }
+    }
 
     const manufacturerContactInformationSMC = getSubmodelElementByIdShort('ContactInformation', digitalNameplateData)
     if (hasValue(manufacturerContactInformationSMC)) {

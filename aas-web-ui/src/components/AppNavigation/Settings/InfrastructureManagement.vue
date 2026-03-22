@@ -275,7 +275,7 @@
 
   async function editInfrastructure (infra: InfrastructureConfig): Promise<void> {
     editMode.value = 'edit'
-    editingInfrastructure.value = JSON.parse(JSON.stringify(infra)) // Deep clone
+    editingInfrastructure.value = structuredClone(infra)
     loadAuthDataFromInfrastructure(editingInfrastructure.value)
     expandedPanels.value = []
     editDialogOpen.value = true

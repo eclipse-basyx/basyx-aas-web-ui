@@ -25,7 +25,7 @@ export function createBusinessReportFiguresSMC (forms: any): aas.types.SubmodelE
     elements.push(lastReportRef)
   }
 
-  forms.forEach((report: any, index: number) => {
+  for (const [index, report] of forms.entries()) {
     const reportSMC = new aas.types.SubmodelElementCollection()
     reportSMC.idShort = `BusinessReportFigure__${String(index).padStart(2, '0')}__`
     reportSMC.description = [new aas.types.LangStringTextType('en', 'List of annual business reports')]
@@ -209,7 +209,7 @@ export function createBusinessReportFiguresSMC (forms: any): aas.types.SubmodelE
         customersElements.push(p)
       }
 
-      report.customers?.forEach((cust: any, ci: number) => {
+      for (const [ci, cust] of (report.customers ?? []).entries()) {
         const refCustSMC = new aas.types.SubmodelElementCollection()
         refCustSMC.idShort = `ReferenceCustomer__${String(ci).padStart(2, '0')}__`
         refCustSMC.semanticId = new aas.types.Reference(aas.types.ReferenceTypes.ExternalReference, [
@@ -261,7 +261,7 @@ export function createBusinessReportFiguresSMC (forms: any): aas.types.SubmodelE
         refCustSMC.value = refCustElements
 
         customersElements.push(refCustSMC)
-      })
+      }
       customersSMC.value = customersElements
       reportElements.push(customersSMC)
     }
@@ -283,7 +283,7 @@ export function createBusinessReportFiguresSMC (forms: any): aas.types.SubmodelE
     }
     reportSMC.value = reportElements
     elements.push(reportSMC)
-  })
+  }
 
   const smc = new aas.types.SubmodelElementCollection()
   smc.idShort = 'BusinessReportFigures'

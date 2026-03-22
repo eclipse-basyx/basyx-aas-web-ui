@@ -32,17 +32,17 @@ export function prepareHistogramData (chartData: any, numberOfCategories: any) {
 
   // Create bins for histogram for each series
   const histograms = chartData.map((series: any) => {
-    const histogram = new Array(bins).fill(0)
-    series.forEach((item: any) => {
+    const histogram: number[] = Array.from({ length: bins }, () => 0)
+    for (const item of series) {
       const value = Number(item.value)
       const index = Math.min(Math.floor((value - minValue) / interval), bins - 1)
       histogram[index]++
-    })
+    }
     return histogram
   })
 
   // Prepare categories array
-  const categories = new Array(bins)
+  const categories: string[] = Array.from({ length: bins }, () => '')
   for (let i = 0; i < bins; i++) {
     const rangeStart = minValue + i * interval
     const rangeEnd = rangeStart + interval

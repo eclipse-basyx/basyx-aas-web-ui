@@ -383,8 +383,8 @@
       const firstPcf = pcfDataArray[0]
       const allCompatible = pcfDataArray.every(
         (pcf: ReturnType<typeof extractProductCarbonFootprint>) =>
-          JSON.stringify(pcf.pcfCalculationMethods.sort())
-          === JSON.stringify(firstPcf.pcfCalculationMethods.sort())
+          JSON.stringify(pcf.pcfCalculationMethods.toSorted())
+          === JSON.stringify(firstPcf.pcfCalculationMethods.toSorted())
           && pcf.pcfReferenceValueForCalculation === firstPcf.pcfReferenceValueForCalculation
           && pcf.quantityOfMeasureForCalculation === firstPcf.quantityOfMeasureForCalculation,
       )
@@ -411,7 +411,7 @@
     let totalPcfCO2eq = 0
     for (const pcf of pcfDataArray) {
       const pcfValue = Number.parseFloat(pcf.pcfco2eq)
-      if (!isNaN(pcfValue)) {
+      if (!Number.isNaN(pcfValue)) {
         totalPcfCO2eq += pcfValue
       }
     }
@@ -425,7 +425,7 @@
     const referenceQuantity = Number.parseFloat(quantityStr)
 
     // Validate PCF CO2 value
-    if (!pcfCO2eqStr || isNaN(pcfCO2eq)) {
+    if (!pcfCO2eqStr || Number.isNaN(pcfCO2eq)) {
       materialEntry.hasError = true
       materialEntry.errorMessage = 'Invalid or missing PcfCO2eq value in PCF data'
       return
@@ -443,7 +443,7 @@
       materialEntry.unitErrorMessage = 'Missing reference unit or quantity in PCF data'
     }
 
-    if (isNaN(referenceQuantity) || referenceQuantity === 0) {
+    if (Number.isNaN(referenceQuantity) || referenceQuantity === 0) {
       materialEntry.unitError = true
       materialEntry.unitErrorMessage = 'Invalid or zero reference quantity'
     }
@@ -455,7 +455,7 @@
 
     // Update material entry
     materialEntry.pcfCO2eq = pcfCO2eq
-    materialEntry.referenceQuantity = isNaN(referenceQuantity) || referenceQuantity === 0 ? 1 : referenceQuantity
+    materialEntry.referenceQuantity = Number.isNaN(referenceQuantity) || referenceQuantity === 0 ? 1 : referenceQuantity
     materialEntry.unit = referenceUnit || ''
 
     // Calculate footprint with current amount
@@ -501,7 +501,7 @@
   }
 
   function createAasInstance (idSuffix: string): any {
-    const shellCopy = JSON.parse(JSON.stringify(props.shell))
+    const shellCopy = structuredClone(props.shell)
     const newAasId = shellCopy.id + idSuffix
 
     shellCopy.id = newAasId

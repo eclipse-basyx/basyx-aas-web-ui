@@ -364,9 +364,7 @@
 
         if (editedElementSelected) {
           fetchAndDispatchSme(
-            props.parentElement.path
-            + '/submodel-elements/'
-              + annotatedRelationshipElementObject.value.idShort,
+            `${props.parentElement.path}/submodel-elements/${annotatedRelationshipElementObject.value.idShort}`,
           )
         }
       } else if (props.parentElement.modelType === 'SubmodelElementList') {

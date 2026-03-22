@@ -68,7 +68,7 @@
   })
 
   const emit = defineEmits<{
-    (event: 'updateValue', updatedBooleanValue: any): void
+    (event: 'update-value', updatedBooleanValue: any): void
   }>()
 
   // Data
@@ -109,7 +109,7 @@
 
   function updateValue (): void {
     if (IsOperationVariable.value) {
-      emit('updateValue', newBooleanValue.value)
+      emit('update-value', newBooleanValue.value)
       return
     }
 

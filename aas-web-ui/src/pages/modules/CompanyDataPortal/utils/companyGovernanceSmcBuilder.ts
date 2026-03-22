@@ -1,83 +1,6 @@
 import * as aas from '@aas-core-works/aas-core3.1-typescript'
 
-export function createCompanyGovernanceSMC (form: any): aas.types.SubmodelElementCollection {
-  const elements: aas.types.ISubmodelElement[] = []
-
-  // CorporatePolicies
-  if (form.codeOfConduct || form.generalTermsAndConditions || form.qualityAssurance) {
-    const corporatePolicies = new aas.types.SubmodelElementCollection()
-    corporatePolicies.description = [
-      new aas.types.LangStringTextType(
-        'en',
-        'The guidelines and principles that govern the company\'s d and behavior',
-      ),
-    ]
-    corporatePolicies.idShort = 'CorporatePolicies'
-    corporatePolicies.semanticId = new aas.types.Reference(aas.types.ReferenceTypes.ExternalReference, [
-      new aas.types.Key(
-        aas.types.KeyTypes.GlobalReference,
-        'https://admin-shell.io/idta/CompanyData/CorporatePolicies/1/0',
-      ),
-    ])
-    const policiesElements: aas.types.ISubmodelElement[] = []
-
-    if (form.codeOfConduct) {
-      const ref = new aas.types.ReferenceElement()
-      ref.idShort = 'CodeOfConduct'
-      ref.value = new aas.types.Reference(aas.types.ReferenceTypes.ModelReference, [
-        new aas.types.Key(aas.types.KeyTypes.AssetAdministrationShell, form.codeOfConduct),
-      ])
-      ref.description = [new aas.types.LangStringTextType('en', 'Reference to a code of conduct document')]
-      ref.semanticId = new aas.types.Reference(aas.types.ReferenceTypes.ExternalReference, [
-        new aas.types.Key(
-          aas.types.KeyTypes.GlobalReference,
-          'https://admin-shell.io/idta/CompanyData/CodeOfConduct/1/0',
-        ),
-      ])
-      policiesElements.push(ref)
-    }
-
-    if (form.generalTermsAndConditions) {
-      const ref = new aas.types.ReferenceElement()
-      ref.idShort = 'GeneralTermsAndConditions'
-      ref.value = new aas.types.Reference(aas.types.ReferenceTypes.ModelReference, [
-        new aas.types.Key(aas.types.KeyTypes.AssetAdministrationShell, form.generalTermsAndConditions),
-      ])
-      ref.description = [
-        new aas.types.LangStringTextType('en', 'Reference to a contractual terms and conditions document'),
-      ]
-      ref.semanticId = new aas.types.Reference(aas.types.ReferenceTypes.ExternalReference, [
-        new aas.types.Key(
-          aas.types.KeyTypes.GlobalReference,
-          'https://admin-shell.io/idta/CompanyData/GeneralTermsAndConditions/1/0',
-        ),
-      ])
-      policiesElements.push(ref)
-    }
-
-    if (form.qualityAssurance) {
-      const ref = new aas.types.ReferenceElement()
-      ref.idShort = 'QualityAssuranceAgreements'
-      ref.value = new aas.types.Reference(aas.types.ReferenceTypes.ModelReference, [
-        new aas.types.Key(aas.types.KeyTypes.AssetAdministrationShell, form.qualityAssurance),
-      ])
-      ref.description = [
-        new aas.types.LangStringTextType('en', 'Reference to a quality assurance agreement document'),
-      ]
-      ref.semanticId = new aas.types.Reference(aas.types.ReferenceTypes.ExternalReference, [
-        new aas.types.Key(
-          aas.types.KeyTypes.GlobalReference,
-          'https://admin-shell.io/idta/CompanyData/QualityAssuranceAgreements/1/0',
-        ),
-      ])
-      policiesElements.push(ref)
-    }
-
-    corporatePolicies.value = policiesElements
-    elements.push(corporatePolicies)
-  }
-
-  // IndustryStandards
+function appendIndustryStandards (form: any, elements: aas.types.ISubmodelElement[]): void {
   if (form.memberships.length > 0 || form.certifications.length > 0) {
     const industryStandards = new aas.types.SubmodelElementCollection()
     industryStandards.description = [
@@ -92,7 +15,6 @@ export function createCompanyGovernanceSMC (form: any): aas.types.SubmodelElemen
     ])
     const industryElements: aas.types.ISubmodelElement[] = []
 
-    // Memberships
     if (form.memberships.length > 0) {
       const list = new aas.types.SubmodelElementList(aas.types.AasSubmodelElements.Property)
       list.idShort = 'Memberships'
@@ -123,7 +45,6 @@ export function createCompanyGovernanceSMC (form: any): aas.types.SubmodelElemen
       industryElements.push(list)
     }
 
-    // Certifications
     if (form.certifications.length > 0) {
       const list = new aas.types.SubmodelElementList(aas.types.AasSubmodelElements.SubmodelElementCollection)
       list.idShort = 'Certifications'
@@ -250,7 +171,7 @@ export function createCompanyGovernanceSMC (form: any): aas.types.SubmodelElemen
         }
 
         if (c.certificationDocuments) {
-          c.certificationDocuments.forEach((document: any, idx: number) => {
+          for (const [idx, document] of c.certificationDocuments.entries()) {
             const ref = new aas.types.ReferenceElement()
             ref.idShort = 'CertificationDocument__0' + idx + '__'
             ref.value = new aas.types.Reference(aas.types.ReferenceTypes.ModelReference, [
@@ -266,7 +187,7 @@ export function createCompanyGovernanceSMC (form: any): aas.types.SubmodelElemen
               ),
             ])
             certificationElements.push(ref)
-          })
+          }
         }
 
         certification.value = certificationElements
@@ -278,6 +199,89 @@ export function createCompanyGovernanceSMC (form: any): aas.types.SubmodelElemen
     industryStandards.value = industryElements
     elements.push(industryStandards)
   }
+}
+
+function appendCorporatePolicies (form: any, elements: aas.types.ISubmodelElement[]): void {
+  if (form.codeOfConduct || form.generalTermsAndConditions || form.qualityAssurance) {
+    const corporatePolicies = new aas.types.SubmodelElementCollection()
+    corporatePolicies.description = [
+      new aas.types.LangStringTextType(
+        'en',
+        'The guidelines and principles that govern the company\'s d and behavior',
+      ),
+    ]
+    corporatePolicies.idShort = 'CorporatePolicies'
+    corporatePolicies.semanticId = new aas.types.Reference(aas.types.ReferenceTypes.ExternalReference, [
+      new aas.types.Key(
+        aas.types.KeyTypes.GlobalReference,
+        'https://admin-shell.io/idta/CompanyData/CorporatePolicies/1/0',
+      ),
+    ])
+    const policiesElements: aas.types.ISubmodelElement[] = []
+
+    if (form.codeOfConduct) {
+      const ref = new aas.types.ReferenceElement()
+      ref.idShort = 'CodeOfConduct'
+      ref.value = new aas.types.Reference(aas.types.ReferenceTypes.ModelReference, [
+        new aas.types.Key(aas.types.KeyTypes.AssetAdministrationShell, form.codeOfConduct),
+      ])
+      ref.description = [new aas.types.LangStringTextType('en', 'Reference to a code of conduct document')]
+      ref.semanticId = new aas.types.Reference(aas.types.ReferenceTypes.ExternalReference, [
+        new aas.types.Key(
+          aas.types.KeyTypes.GlobalReference,
+          'https://admin-shell.io/idta/CompanyData/CodeOfConduct/1/0',
+        ),
+      ])
+      policiesElements.push(ref)
+    }
+
+    if (form.generalTermsAndConditions) {
+      const ref = new aas.types.ReferenceElement()
+      ref.idShort = 'GeneralTermsAndConditions'
+      ref.value = new aas.types.Reference(aas.types.ReferenceTypes.ModelReference, [
+        new aas.types.Key(aas.types.KeyTypes.AssetAdministrationShell, form.generalTermsAndConditions),
+      ])
+      ref.description = [
+        new aas.types.LangStringTextType('en', 'Reference to a contractual terms and conditions document'),
+      ]
+      ref.semanticId = new aas.types.Reference(aas.types.ReferenceTypes.ExternalReference, [
+        new aas.types.Key(
+          aas.types.KeyTypes.GlobalReference,
+          'https://admin-shell.io/idta/CompanyData/GeneralTermsAndConditions/1/0',
+        ),
+      ])
+      policiesElements.push(ref)
+    }
+
+    if (form.qualityAssurance) {
+      const ref = new aas.types.ReferenceElement()
+      ref.idShort = 'QualityAssuranceAgreements'
+      ref.value = new aas.types.Reference(aas.types.ReferenceTypes.ModelReference, [
+        new aas.types.Key(aas.types.KeyTypes.AssetAdministrationShell, form.qualityAssurance),
+      ])
+      ref.description = [
+        new aas.types.LangStringTextType('en', 'Reference to a quality assurance agreement document'),
+      ]
+      ref.semanticId = new aas.types.Reference(aas.types.ReferenceTypes.ExternalReference, [
+        new aas.types.Key(
+          aas.types.KeyTypes.GlobalReference,
+          'https://admin-shell.io/idta/CompanyData/QualityAssuranceAgreements/1/0',
+        ),
+      ])
+      policiesElements.push(ref)
+    }
+
+    corporatePolicies.value = policiesElements
+    elements.push(corporatePolicies)
+  }
+}
+
+export function createCompanyGovernanceSMC (form: any): aas.types.SubmodelElementCollection {
+  const elements: aas.types.ISubmodelElement[] = []
+
+  appendCorporatePolicies(form, elements)
+
+  appendIndustryStandards(form, elements)
 
   // RiskManagement
 
@@ -846,49 +850,49 @@ export function createCompanyGovernanceSMC (form: any): aas.types.SubmodelElemen
 
       // DocumentationURI__00__ (AnyUri, 0..*)
       if (Array.isArray(r.documentationURIs) && r.documentationURIs.length > 0) {
-        r.documentationURIs
-          .filter((u: any) => u !== undefined && u !== null && String(u) !== '')
-          .forEach((u: string, idx: number) => {
-            const p = new aas.types.Property(aas.types.DataTypeDefXsd.AnyUri)
-            p.idShort = 'DocumentationURI__0' + idx + '__'
-            p.value = String(u)
-            p.description = [
-              new aas.types.LangStringTextType(
-                'en',
-                'The web address where documentation can be accessed',
-              ),
-            ]
-            p.semanticId = new aas.types.Reference(aas.types.ReferenceTypes.ExternalReference, [
-              new aas.types.Key(
-                aas.types.KeyTypes.GlobalReference,
-                'https://admin-shell.io/idta/CompanyData/DocumentationURI/1/0',
-              ),
-            ])
-            regElems.push(p)
-          })
+        const documentationUris = r.documentationURIs.filter(
+          (u: any) => u !== undefined && u !== null && String(u) !== '',
+        )
+        for (const [idx, u] of documentationUris.entries()) {
+          const p = new aas.types.Property(aas.types.DataTypeDefXsd.AnyUri)
+          p.idShort = 'DocumentationURI__0' + idx + '__'
+          p.value = String(u)
+          p.description = [
+            new aas.types.LangStringTextType(
+              'en',
+              'The web address where documentation can be accessed',
+            ),
+          ]
+          p.semanticId = new aas.types.Reference(aas.types.ReferenceTypes.ExternalReference, [
+            new aas.types.Key(
+              aas.types.KeyTypes.GlobalReference,
+              'https://admin-shell.io/idta/CompanyData/DocumentationURI/1/0',
+            ),
+          ])
+          regElems.push(p)
+        }
       }
 
       // DocumentationReference__00__ (ReferenceElement, 0..*)
       if (Array.isArray(r.documentationReferences) && r.documentationReferences.length > 0) {
-        r.documentationReferences
-          .filter(Boolean)
-          .forEach((docRef: any, idx: number) => {
-            const ref = new aas.types.ReferenceElement()
-            ref.idShort = 'DocumentationReference__0' + idx + '__'
-            ref.value = new aas.types.Reference(aas.types.ReferenceTypes.ModelReference, [
-              new aas.types.Key(aas.types.KeyTypes.AssetAdministrationShell, docRef),
-            ])
-            ref.description = [
-              new aas.types.LangStringTextType('en', 'Reference to regulation compliance documentation'),
-            ]
-            ref.semanticId = new aas.types.Reference(aas.types.ReferenceTypes.ExternalReference, [
-              new aas.types.Key(
-                aas.types.KeyTypes.GlobalReference,
-                'https://admin-shell.io/idta/CompanyData/DocumentationReference/1/0',
-              ),
-            ])
-            regElems.push(ref)
-          })
+        const documentationReferences = r.documentationReferences.filter(Boolean)
+        for (const [idx, docRef] of documentationReferences.entries()) {
+          const ref = new aas.types.ReferenceElement()
+          ref.idShort = 'DocumentationReference__0' + idx + '__'
+          ref.value = new aas.types.Reference(aas.types.ReferenceTypes.ModelReference, [
+            new aas.types.Key(aas.types.KeyTypes.AssetAdministrationShell, docRef),
+          ])
+          ref.description = [
+            new aas.types.LangStringTextType('en', 'Reference to regulation compliance documentation'),
+          ]
+          ref.semanticId = new aas.types.Reference(aas.types.ReferenceTypes.ExternalReference, [
+            new aas.types.Key(
+              aas.types.KeyTypes.GlobalReference,
+              'https://admin-shell.io/idta/CompanyData/DocumentationReference/1/0',
+            ),
+          ])
+          regElems.push(ref)
+        }
       }
 
       regulation.value = regElems

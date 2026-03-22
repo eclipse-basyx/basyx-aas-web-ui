@@ -21,8 +21,8 @@ export function useDragAndDrop (options: UseDragAndDropOptions) {
   const isExternalDragOver = ref<boolean>(false)
 
   /**
-     * Handle drag start event
-     */
+   * Handle drag start event
+   */
   const handleDragStart = (event: DragEvent, item: FileSystemElement): void => {
     // If the dragged item is selected, drag all selected items
     // Otherwise, just drag this single item
@@ -40,22 +40,22 @@ export function useDragAndDrop (options: UseDragAndDropOptions) {
           = 'position: absolute; top: -1000px; padding: 8px 16px; background: #2196f3; color: white; border-radius: 4px; font-weight: 500;'
         document.body.append(dragImage)
         event.dataTransfer.setDragImage(dragImage, 0, 0)
-        setTimeout(() => document.body.removeChild(dragImage), 0)
+        setTimeout(() => dragImage.remove(), 0)
       }
     }
   }
 
   /**
-     * Handle drag end event
-     */
+   * Handle drag end event
+   */
   const handleDragEnd = (): void => {
     draggedItems.value = []
     dragOverFolder.value = null
   }
 
   /**
-     * Handle drag over a folder target
-     */
+   * Handle drag over a folder target
+   */
   const handleDragOver = (event: DragEvent, targetFolder: FileSystemElement): void => {
     event.preventDefault()
 
@@ -70,8 +70,8 @@ export function useDragAndDrop (options: UseDragAndDropOptions) {
   }
 
   /**
-     * Handle drag leave from a folder target
-     */
+   * Handle drag leave from a folder target
+   */
   const handleDragLeave = (event: DragEvent, targetFolder: FileSystemElement): void => {
     if ((
       event.currentTarget === event.target
@@ -82,8 +82,8 @@ export function useDragAndDrop (options: UseDragAndDropOptions) {
   }
 
   /**
-     * Handle drop on a folder target
-     */
+   * Handle drop on a folder target
+   */
   const handleDrop = async (event: DragEvent, targetFolder: FileSystemElement): Promise<void> => {
     event.preventDefault()
     event.stopPropagation()
@@ -107,8 +107,8 @@ export function useDragAndDrop (options: UseDragAndDropOptions) {
   }
 
   /**
-     * Handle external file drag over the drop zone
-     */
+   * Handle external file drag over the drop zone
+   */
   const handleExternalDragOver = (event: DragEvent): void => {
     // Only show drop zone for external files (not internal drag)
     if (draggedItems.value.length > 0) {
@@ -124,8 +124,8 @@ export function useDragAndDrop (options: UseDragAndDropOptions) {
   }
 
   /**
-     * Handle external file drag leave from the drop zone
-     */
+   * Handle external file drag leave from the drop zone
+   */
   const handleExternalDragLeave = (event: DragEvent): void => {
     // Only reset if we're leaving the drop zone entirely
     const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
@@ -138,8 +138,8 @@ export function useDragAndDrop (options: UseDragAndDropOptions) {
   }
 
   /**
-     * Handle external file drop
-     */
+   * Handle external file drop
+   */
   const handleExternalDrop = async (event: DragEvent): Promise<void> => {
     isExternalDragOver.value = false
 
@@ -182,15 +182,15 @@ export function useDragAndDrop (options: UseDragAndDropOptions) {
   }
 
   /**
-     * Check if a folder is currently being dragged over
-     */
+   * Check if a folder is currently being dragged over
+   */
   const isDragOverFolder = (folderId: string): boolean => {
     return dragOverFolder.value === folderId
   }
 
   /**
-     * Check if currently dragging items
-     */
+   * Check if currently dragging items
+   */
   const isDragging = (): boolean => {
     return draggedItems.value.length > 0
   }

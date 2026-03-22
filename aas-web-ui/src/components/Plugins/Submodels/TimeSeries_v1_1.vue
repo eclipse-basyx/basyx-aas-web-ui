@@ -210,11 +210,11 @@
   )
 
   const emit = defineEmits<{
-    (event: 'timeVal', value: any): void
-    (event: 'YVal', value: any): void
-    (event: 'segment', value: any): void
-    (event: 'chartOptions', value: any): void
-    (event: 'newOptions', value: any): void
+    'timeVal': [value: any]
+    'YVal': [value: any]
+    'segment': [value: any]
+    'chartOptions': [value: any]
+    'new-options': [value: any]
   }>()
 
   // Stores
@@ -616,7 +616,7 @@
     let currentTable: string | null = null
     let headerLine = ''
 
-    lines.forEach((line: string) => {
+    for (const line of lines) {
       const columns = line.split(',')
 
       if (columns[1] === 'result') {
@@ -641,7 +641,7 @@
         currentDataset = [line]
         currentTable = table
       }
-    })
+    }
 
     if (currentDataset.length > 0) {
       const { key, series } = finalizeDataset(headerLine, currentDataset)
@@ -702,7 +702,7 @@
     let key: string | null = null
     if (rawField === 'value' && topic && topic.trim() !== '') {
       const topicParts = topic.split('/')
-      key = topicParts.at(-1) // Get last part (e.g., "AirQuality", "Temperature")
+      key = topicParts.at(-1) ?? null // Get last part (e.g., "AirQuality", "Temperature")
     } else if (rawField && rawField.trim() !== '') {
       key = rawField
     } else {
@@ -725,7 +725,7 @@
       chartOptions: options,
     }
     // Emit the new chart options to the Edit Element Dialog
-    emit('newOptions', chartOptionsObject)
+    emit('new-options', chartOptionsObject)
   }
 
   function clearChartOptions (event: any): void {
@@ -734,7 +734,7 @@
       chartType: event,
     }
     // Emit the new chart type to the Edit Element Dialog
-    emit('newOptions', chartType)
+    emit('new-options', chartType)
   }
 
   function emitSegment (event: any): void {
@@ -742,7 +742,7 @@
       segment: event,
     }
     // Emit the new segment to the Edit Element Dialog
-    emit('newOptions', segmentObject)
+    emit('new-options', segmentObject)
   }
 
   function emitTimeValue (event: any): void {
@@ -750,7 +750,7 @@
       timeVal: event,
     }
     // Emit the new time value to the Edit Element Dialog
-    emit('newOptions', timeValObject)
+    emit('new-options', timeValObject)
   }
 
   function emitYValue (event: any): void {
@@ -758,6 +758,6 @@
       yvals: event,
     }
     // Emit the new y values to the Edit Element Dialog
-    emit('newOptions', yValObject)
+    emit('new-options', yValObject)
   }
 </script>

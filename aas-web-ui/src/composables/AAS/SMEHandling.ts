@@ -13,14 +13,14 @@ export function useSMEHandling () {
   const aasStore = useAASStore()
 
   /**
-     * Fetches a Submodel Element (SME) by the provided SME path.
-     * and dispatches it to the AAS store.
-     *
-     * @async
-     * @param {string} smePath - The path URL of the SME to fetch.
-     * @param {boolean} withConceptDescriptions - Flag to specify if SME should be fetched with ConceptDescriptions (CDs)
-     * @returns {Promise<any>} A promise that resolves to a SME.
-     */
+   * Fetches a Submodel Element (SME) by the provided SME path.
+   * and dispatches it to the AAS store.
+   *
+   * @async
+   * @param {string} smePath - The path URL of the SME to fetch.
+   * @param {boolean} withConceptDescriptions - Flag to specify if SME should be fetched with ConceptDescriptions (CDs)
+   * @returns {Promise<any>} A promise that resolves to a SME.
+   */
   async function fetchAndDispatchSme (smePath: string, withConceptDescriptions = false): Promise<any> {
     const failResponse = {}
 
@@ -46,13 +46,13 @@ export function useSMEHandling () {
   }
 
   /**
-     * Fetches a Submodel Element (SME) by the provided SME path.
-     *
-     * @async
-     * @param {string} smePath - The path URL of the SME to fetch.
-     * @param {boolean} withConceptDescriptions - Flag to specify if SME should be fetched with ConceptDescriptions (CDs)
-     * @returns {Promise<any>} A promise that resolves to a SME.
-     */
+   * Fetches a Submodel Element (SME) by the provided SME path.
+   *
+   * @async
+   * @param {string} smePath - The path URL of the SME to fetch.
+   * @param {boolean} withConceptDescriptions - Flag to specify if SME should be fetched with ConceptDescriptions (CDs)
+   * @returns {Promise<any>} A promise that resolves to a SME.
+   */
   async function fetchSme (smePath: string, withConceptDescriptions = false): Promise<any> {
     const failResponse = {}
 
@@ -66,16 +66,13 @@ export function useSMEHandling () {
       return failResponse
     }
 
-    let smOrSme: any
-    if (smePath.includes('/submodel-elements/')) {
-      smOrSme = await fetchSmeFromRepo(smePath)
-    } else {
-      // No valid SME path, maybe just SM endpoint
-      smOrSme = await fetchSmFromRepo(smePath)
+    // No valid SME path means this is likely an SM endpoint.
+    const smOrSme: any = smePath.includes('/submodel-elements/')
+      ? await fetchSmeFromRepo(smePath)
+      : await fetchSmFromRepo(smePath)
 
-      // Note usage of fetchSm() (SMHandling) not possible
-      // Reciprocal import of SMHandling/SMEHandling leads to error "Maximum call stack size exceeded"
-    }
+    // Note usage of fetchSm() (SMHandling) not possible.
+    // Reciprocal import of SMHandling/SMEHandling leads to error "Maximum call stack size exceeded".
 
     if (!smOrSme || Object.keys(smOrSme).length === 0) {
       console.warn('Fetching SM/SME (' + smePath + ') failed!')
@@ -91,11 +88,11 @@ export function useSMEHandling () {
   }
 
   /**
-     * Extracts the Submodel (SM) ID from a Submodel Element (SME) path
-     *
-     * @param {string} smePath - The SME path containing the encoded SM ID
-     * @returns {string} The decoded SM ID, or empty string if extraction fails
-     */
+   * Extracts the Submodel (SM) ID from a Submodel Element (SME) path
+   *
+   * @param {string} smePath - The SME path containing the encoded SM ID
+   * @returns {string} The decoded SM ID, or empty string if extraction fails
+   */
   function getSmIdOfSmePath (smePath: string): string {
     const failResponse = ''
 

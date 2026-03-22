@@ -11,9 +11,9 @@ export function useAuth (router?: Router) {
   const navStore = useNavigationStore()
 
   /**
-     * Perform login for the current infrastructure
-     * Handles OAuth2 (both flows) authentication
-     */
+   * Perform login for the current infrastructure
+   * Handles OAuth2 (both flows) authentication
+   */
   async function login (): Promise<void> {
     const infra = infrastructureStore.getSelectedInfrastructure
 
@@ -117,8 +117,8 @@ export function useAuth (router?: Router) {
   }
 
   /**
-     * Clear local token and update UI
-     */
+   * Clear local token and update UI
+   */
   function clearLocalToken (): void {
     const infra = infrastructureStore.getSelectedInfrastructure
     if (infra) {
@@ -144,9 +144,9 @@ export function useAuth (router?: Router) {
   }
 
   /**
-     * Perform logout for the current infrastructure
-     * Handles OAuth2 logout flow
-     */
+   * Perform logout for the current infrastructure
+   * Handles OAuth2 logout flow
+   */
   async function logout (): Promise<void> {
     const infra = infrastructureStore.getSelectedInfrastructure
     if (!infra) {

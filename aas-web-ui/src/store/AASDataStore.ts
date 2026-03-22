@@ -13,6 +13,7 @@ export const useAASStore = defineStore('aasStore', () => {
 
   // Actions
   function dispatchSelectedAAS (aasValue: any): void {
+    // If existing AAS is replaced by another one, clear selectedNode.
     if (
       aasObject.value
       && Object.keys(aasObject.value).length > 0
@@ -20,8 +21,7 @@ export const useAASStore = defineStore('aasStore', () => {
       && aasValue
       && Object.keys(aasValue).length > 0
       && aasValue?.id
-         && // If existing AAS is replaced by another one, clear selectedNode
-      aasObject.value?.id !== aasValue?.id) {
+      && aasObject.value?.id !== aasValue?.id) {
       selectedNode.value = {}
     }
 

@@ -114,7 +114,7 @@
                       <v-divider
                         v-if="
                           item?.semanticId?.keys[0]?.value &&
-                            (smts.find(
+                            (smts.some(
                               (smt: any) => item.semanticId.keys[0].value === smt.semanticId
                             ) ||
                               extractVersionRevision(item.semanticId.keys[0].value).version)
@@ -124,7 +124,7 @@
                       <!-- Submodel Template name -->
                       <div
                         v-if="
-                          smts.find(
+                          smts.some(
                             (smt: any) =>
                               item?.semanticId?.keys[0]?.value === smt.semanticId
                           )
@@ -142,7 +142,7 @@
                       <!-- Submodel Template version -->
                       <div
                         v-if="
-                          smts.find(
+                          smts.some(
                             (smt: any) =>
                               item?.semanticId?.keys[0]?.value === smt.semanticId
                           )
@@ -304,7 +304,7 @@
     listLoading.value = true
 
     fetchAasSmListById(selectedAAS.value.id).then((submodels: Array<any>) => {
-      const submodelsSorted = submodels.sort((smA: any, smB: any) => {
+      const submodelsSorted = submodels.toSorted((smA: any, smB: any) => {
         // Sort SMs with respect to displayed title and version
         return smTitleToDisplay(smA) + '|' + smVersionToDisplay(smA)
           > smTitleToDisplay(smB) + '|' + smVersionToDisplay(smB)

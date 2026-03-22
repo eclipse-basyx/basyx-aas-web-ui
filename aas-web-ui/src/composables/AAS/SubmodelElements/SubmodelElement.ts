@@ -10,22 +10,22 @@ export function useSME () {
   const { hasValue: propHasValue, valueToDisplay: propValueToDisplay } = useSMEProperty()
 
   /**
-     * Checks if the given Submodel Element (SME) has a valid value based on its type.
-     *
-     * The function evaluates whether the provided SME object:
-     * - Exists and is not empty
-     * - Has a non-empty modelType property
-     *
-     * Depending on the `modelType`, it evaluates the value differently:
-     * - For 'File' type, it delegates to the `fileHasValue` function.
-     * - For 'MultiLanguageProperty' type, it delegates to the `mlpHasValue` function.
-     * - For 'Property' type, it delegates to the `propHasValue` function.
-     * - For 'SubmodelElementCollection' and 'SubmodelElementList',
-     *   it checks if the `value` is an array and has at least one element.
-     *
-     * @param {any} sme - The Submodel Element object to check.
-     * @returns {boolean} Returns true if the `sme` has a valid value, false otherwise.
-     */
+   * Checks if the given Submodel Element (SME) has a valid value based on its type.
+   *
+   * The function evaluates whether the provided SME object:
+   * - Exists and is not empty
+   * - Has a non-empty modelType property
+   *
+   * Depending on the `modelType`, it evaluates the value differently:
+   * - For 'File' type, it delegates to the `fileHasValue` function.
+   * - For 'MultiLanguageProperty' type, it delegates to the `mlpHasValue` function.
+   * - For 'Property' type, it delegates to the `propHasValue` function.
+   * - For 'SubmodelElementCollection' and 'SubmodelElementList',
+   * it checks if the `value` is an array and has at least one element.
+   *
+   * @param {any} sme - The Submodel Element object to check.
+   * @returns {boolean} Returns true if the `sme` has a valid value, false otherwise.
+   */
   function hasValue (sme: any): boolean {
     if (sme && Object.keys(sme).length > 0 && sme?.modelType.trim() !== '') {
       switch (sme.modelType) {
@@ -60,12 +60,12 @@ export function useSME () {
   }
 
   /**
-     * Retrieves the display value of a Submodel Element (SME) if it exists, otherwise returns a default value.
-     *
-     * @param {any} sme - The SME object to check.
-     * @param {string} [defaultValueToDisplay=''] - The default value to return if the SME is invalid or has no value.
-     * @returns {string} The display value of the SME or the default value.
-     */
+   * Retrieves the display value of a Submodel Element (SME) if it exists, otherwise returns a default value.
+   *
+   * @param {any} sme - The SME object to check.
+   * @param {string} [defaultValueToDisplay=''] - The default value to return if the SME is invalid or has no value.
+   * @returns {string} The display value of the SME or the default value.
+   */
   function valueToDisplay (sme: any, language = 'en', defaultValueToDisplay = ''): string {
     if (sme && Object.keys(sme).length > 0 && sme?.modelType && sme.modelType.trim() !== '') {
       switch (sme.modelType) {

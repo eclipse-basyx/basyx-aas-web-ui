@@ -2,9 +2,9 @@ import * as aas from '@aas-core-works/aas-core3.1-typescript'
 
 export function createBankAccountsSMC (forms: any): aas.types.SubmodelElementCollection {
   const elements: aas.types.ISubmodelElement[] = []
-  forms.forEach((account: any, index: number) => {
+  for (const [index, account] of forms.entries()) {
     const bankAccountSMC = new aas.types.SubmodelElementCollection()
-    bankAccountSMC.idShort = account.idShort ? account.idShort : `BankAccount__${String(index).padStart(2, '0')}__`
+    bankAccountSMC.idShort = account.idShort || `BankAccount__${String(index).padStart(2, '0')}__`
     bankAccountSMC.description = [
       new aas.types.LangStringTextType('en', 'A bank account of the company for customer payments'),
     ]
@@ -84,7 +84,7 @@ export function createBankAccountsSMC (forms: any): aas.types.SubmodelElementCol
 
     bankAccountSMC.value = bankAccountElements
     elements.push(bankAccountSMC)
-  })
+  }
 
   const mainAccountRef = new aas.types.ReferenceElement()
   mainAccountRef.idShort = 'MainAccount'

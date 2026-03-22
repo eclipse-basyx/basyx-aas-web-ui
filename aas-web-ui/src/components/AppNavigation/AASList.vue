@@ -396,17 +396,13 @@
   const singleAas = computed(() => envStore.getSingleAas) // Get the single AAS state from the Store
   const listHeight = computed(() => {
     if (isMobile.value) {
-      if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
-        return '231px' // 4x AAS items
-      } else {
-        return 'calc(100vh - 64px - 40px - 64px - 2px)' // Full height - header - footer - Searchbar - 2x divider
-      }
+      return selectedAAS.value && Object.keys(selectedAAS.value).length > 0
+        ? '231px' // 4x AAS items
+        : 'calc(100vh - 64px - 40px - 64px - 2px)' // Full height - header - footer - Searchbar - 2x divider
     } else {
-      if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
-        return 'calc(50vh - 64px - 64px - 2px - 1px)' // Half height - header - title - 2x divider - border
-      } else {
-        return 'calc(100vh - 64px - 64px - 48px - 40px - 2px)' // Full height - header - title - collapse button - footer - 2x divider
-      }
+      return selectedAAS.value && Object.keys(selectedAAS.value).length > 0
+        ? 'calc(50vh - 64px - 64px - 2px - 1px)' // Half height - header - title - 2x divider - border
+        : 'calc(100vh - 64px - 64px - 48px - 40px - 2px)' // Full height - header - title - collapse button - footer - 2x divider
     }
   })
   const editMode = computed(() => route.name === 'AASEditor') // Check if the current Route is the AAS Editor
@@ -449,22 +445,22 @@
     statusCheckValue => {
       window.clearInterval(statusCheckInterval.value) // clear old interval
       if (statusCheckValue.state === true) {
-        updateStatus()
+        void updateStatus()
 
         // create new interval
         statusCheckInterval.value = window.setInterval(() => {
-          updateStatus()
+          void updateStatus()
         }, statusCheck.value.interval)
       } else {
-        aasList.value.forEach((aasDescriptor: any) => {
+        for (const aasDescriptor of aasList.value) {
           aasDescriptor.status = 'check disabled'
-        })
+        }
 
         // Reset status icon after 2 seconds
         setTimeout(() => {
-          aasList.value.forEach((aasDescriptor: any) => {
+          for (const aasDescriptor of aasList.value) {
             aasDescriptor.status = ''
-          })
+          }
         }, 2000)
       }
     },
@@ -494,7 +490,7 @@
 
       // create new interval
       statusCheckInterval.value = window.setInterval(() => {
-        updateStatus()
+        void updateStatus()
       }, statusCheck.value.interval)
     }
   })
@@ -517,8 +513,8 @@
     fetchAasDescriptorList().then(async (aasDescriptorList: Array<any>) => {
       const sortedList
         = aasDescriptorList.length > 0
-          ? aasDescriptorList.sort((a, b) => (a.id > b.id ? 1 : -1))
-          : (await fetchAasList()).sort((a, b) => (a.id > b.id ? 1 : -1))
+          ? aasDescriptorList.toSorted((a, b) => (a.id > b.id ? 1 : -1))
+          : (await fetchAasList()).toSorted((a, b) => (a.id > b.id ? 1 : -1))
 
       // Precompute lowercase search fields
       const processedList = sortedList.map(item => ({
@@ -540,16 +536,15 @@
    * Updates the status of each AAS descriptor in the descriptor list.
    *
    * This function checks the availability of the AAS in the repository
-   * updates its status based on the result.
+   * and updates its status based on the result.
    *
-   * @param {boolean} [init=false] - Indicates whether to initialize the status
-   *                                  of descriptors. If true, sets status to
-   *                                  an empty string; if false, sets it
-   *                                  based on availability checks.
+   * @param {boolean} [init=false] Indicates whether to initialize descriptor
+   * status. If true, sets status to an empty string; otherwise sets it based
+   * on availability checks.
    */
-  function updateStatus (init = false): void {
+  async function updateStatus (init = false): Promise<void> {
     if (Array.isArray(aasList.value) && aasList.value.length > 0)
-      aasList.value.forEach(async (aasOrAasDescriptor: any) => {
+      for (const aasOrAasDescriptor of aasList.value) {
         if (aasOrAasDescriptor && Object.keys(aasOrAasDescriptor).length > 0) {
           await new Promise(resolve => setTimeout(resolve, 600)) // Give the UI the chance to refresh status icons
 
@@ -563,7 +558,7 @@
               = statusCheck.value.state === true ? 'offline' : (init ? '' : 'check disabled')
           }
         }
-      })
+      }
   }
 
   function filterAasList (value: string): void {

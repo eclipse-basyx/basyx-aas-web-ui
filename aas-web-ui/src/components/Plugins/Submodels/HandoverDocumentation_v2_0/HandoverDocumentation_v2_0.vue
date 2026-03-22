@@ -159,7 +159,7 @@
     documents.value = documentSmcs
 
     //  For each Document → get Document data
-    documents.value.forEach((doc: DocumentLike) => {
+    for (const doc of documents.value as DocumentLike[]) {
       // function for Document Versions
       extractDocumentVersionInfo(doc)
 
@@ -178,7 +178,7 @@
       ) as SubmodelElementLike[]
 
       doc.documentIds = documentIdSmcs
-    })
+    }
     isLoading.value = false
   }
 

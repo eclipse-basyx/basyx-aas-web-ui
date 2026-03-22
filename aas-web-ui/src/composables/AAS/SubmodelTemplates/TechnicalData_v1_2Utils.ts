@@ -20,12 +20,12 @@ export function useTechnicalData_v1_2Utils () {
   const fileProductImageSemanticId = 'https://admin-shell.io/ZVEI/TechnicalData/ProductImage/1/1'
 
   /**
-     * Retrieves Product Image URL of Technical Data Submodel (SM) of an Asset Administration Shell (AAS).
-     *
-     * @async
-     * @param {string} aasId - The ID of the AAS to retrieve its Product Image URL.
-     * @returns {string} A promise that resolves to  URL of the Product Image.
-     */
+   * Retrieves Product Image URL of Technical Data Submodel (SM) of an Asset Administration Shell (AAS).
+   *
+   * @async
+   * @param {string} aasId - The ID of the AAS to retrieve its Product Image URL.
+   * @returns {string} A promise that resolves to  URL of the Product Image.
+   */
   async function getProductImageUrlByAasId (aasId: string): Promise<{ url: string, isExternal: boolean }> {
     const failResponse = { url: '', isExternal: false }
 

@@ -54,11 +54,11 @@
   })
 
   const emit = defineEmits<{
-    (e: 'update:selected-view', value: number): void
-    (e: 'open-upload-dialog'): void
-    (e: 'create-folder'): void
-    (e: 'deselect-all'): void
-    (e: 'delete-selected'): void
+    'update:selected-view': [value: number]
+    'open-upload-dialog': []
+    'create-folder': []
+    'deselect-all': []
+    'delete-selected': []
   }>()
 
   const handleOpenUploadDialog = (): void => emit('open-upload-dialog')

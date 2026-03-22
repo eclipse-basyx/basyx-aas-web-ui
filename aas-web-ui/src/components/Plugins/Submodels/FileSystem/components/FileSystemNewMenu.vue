@@ -32,8 +32,8 @@
 
 <script setup lang="ts">
   const emit = defineEmits<{
-    (e: 'open-upload-dialog'): void
-    (e: 'create-folder'): void
+    'open-upload-dialog': []
+    'create-folder': []
   }>()
 
   const handleOpenUploadDialog = (): void => emit('open-upload-dialog')

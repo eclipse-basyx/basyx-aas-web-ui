@@ -37,7 +37,7 @@
 
   const emit = defineEmits<{
     (event: 'update:modelValue', value: boolean): void
-    (event: 'openCreateSMEDialog', value: string): void
+    (event: 'open-create-sme-dialog', value: string): void
   }>()
 
   const allSMEs = [
@@ -95,6 +95,6 @@
   function openCreateSMEDialog (): void {
     if (selectedSME.value == '') return
     closeDialog()
-    emit('openCreateSMEDialog', selectedSME.value)
+    emit('open-create-sme-dialog', selectedSME.value)
   }
 </script>

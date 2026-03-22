@@ -80,7 +80,7 @@
   })
 
   const emit = defineEmits<{
-    (e: 'updateValue', updatedInvalidElementObject: any): void
+    (e: 'update-value', updatedInvalidElementObject: any): void
   }>()
 
   const submodelElements = ref([
@@ -125,7 +125,7 @@
   })
 
   function updateValue (): void {
-    emit('updateValue', JSON.parse(jsonString.value))
+    emit('update-value', JSON.parse(jsonString.value))
   }
 
   function setFocus (e: boolean): void {

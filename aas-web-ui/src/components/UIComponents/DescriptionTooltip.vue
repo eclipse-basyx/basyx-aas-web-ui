@@ -47,7 +47,6 @@
     descriptionArray: {
       type: Array<any>,
       default: [] as Array<any>,
-      required: true,
     },
   })
 </script>

@@ -133,7 +133,7 @@
                   </span>
                   <span
                     v-if="
-                      pcfSMC.value.find(
+                      pcfSMC.value.some(
                         (sme: any) =>
                           checkIdShort(sme, 'ExpirationnDate') ||
                           checkSemanticId(
@@ -160,7 +160,7 @@
                 </p>
                 <p
                   v-if="
-                    pcfSMC.value.find(
+                    pcfSMC.value.some(
                       (sme: any) =>
                         checkIdShort(sme, 'PCFGoodsAddressHandover') ||
                         checkSemanticId(sme, '0173-1#02-ABI497#001')
@@ -319,7 +319,7 @@
                   </span>
                   <span
                     v-if="
-                      tcfSMC.value.find(
+                      tcfSMC.value.some(
                         (sme: any) =>
                           checkIdShort(sme, 'ExpirationnDate') ||
                           checkSemanticId(
@@ -346,7 +346,7 @@
                 </p>
                 <p
                   v-if="
-                    tcfSMC.value.find(
+                    tcfSMC.value.some(
                       (sme: any) =>
                         checkIdShort(sme, 'TCFGoodsTransportAddressTakeover') ||
                         checkSemanticId(sme, '0173-1#02-ABI499#001')
@@ -369,7 +369,7 @@
                 </p>
                 <p
                   v-if="
-                    tcfSMC.value.find(
+                    tcfSMC.value.some(
                       (sme: any) =>
                         checkIdShort(sme, 'TCFGoodsTransportAddressHandover') ||
                         checkSemanticId(sme, '0173-1#02-ABI498#001')

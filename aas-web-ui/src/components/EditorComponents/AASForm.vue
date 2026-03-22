@@ -620,7 +620,7 @@
     if (left.length !== right.length) return false
 
     const normalize = (links: Array<{ name: string, value: string }>): Array<string> =>
-      links.map(link => `${link.name}\u0000${link.value}`).sort((a, b) => a.localeCompare(b))
+      links.map(link => `${link.name}\u0000${link.value}`).toSorted((a, b) => a.localeCompare(b))
 
     const leftNormalized = normalize(left)
     const rightNormalized = normalize(right)

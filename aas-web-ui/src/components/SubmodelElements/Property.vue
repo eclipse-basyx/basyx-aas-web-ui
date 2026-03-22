@@ -111,7 +111,7 @@
   })
 
   const emit = defineEmits<{
-    (e: 'updateValue', updatedPropertyObject: any): void
+    (e: 'update-value', updatedPropertyObject: any): void
   }>()
 
   const isOperationVariable = computed(() => {
@@ -119,6 +119,6 @@
   })
 
   function updateValue (updatedPropertyObject: any): void {
-    emit('updateValue', updatedPropertyObject)
+    emit('update-value', updatedPropertyObject)
   }
 </script>

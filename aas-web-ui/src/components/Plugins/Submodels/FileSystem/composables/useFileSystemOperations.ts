@@ -32,22 +32,22 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
   const moveProgress = ref<MoveProgress>({ current: 0, total: 0, itemName: '' })
 
   /**
-     * Get the current file path from route query
-     */
+   * Get the current file path from route query
+   */
   const getCurrentFilePath = (): string => {
     return (route.query.filePath as string) || ''
   }
 
   /**
-     * Check if currently on a subpath (not root)
-     */
+   * Check if currently on a subpath (not root)
+   */
   const isOnASubpath = (): boolean => {
     return getCurrentFilePath().length > 0
   }
 
   /**
-     * Build the API path for submodel elements
-     */
+   * Build the API path for submodel elements
+   */
   const buildElementPath = (filePath = '', elementIdShort?: string): string => {
     const basePath = submodelElementData().path + '/submodel-elements'
     if (elementIdShort) {
@@ -57,8 +57,8 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
   }
 
   /**
-     * Fetch files/folders from the current path
-     */
+   * Fetch files/folders from the current path
+   */
   const fetchFiles = async (filePath = ''): Promise<void> => {
     const data = submodelElementData()
     if (!data) {
@@ -106,18 +106,18 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
       })
 
       // Fetch file URLs for display
-      filteredElements.forEach((file: FileSystemElement) => {
+      for (const file of filteredElements) {
         if (file.modelType === 'File') {
           getFileUrl(file.idShort)
         }
         fileObjects.value.push(file)
-      })
+      }
     }
   }
 
   /**
-     * Get file URL/blob for preview
-     */
+   * Get file URL/blob for preview
+   */
   const getFileUrl = async (idShort: string): Promise<void> => {
     const currentPath = getCurrentFilePath()
     const path = buildElementPath(currentPath, idShort) + '/attachment'
@@ -137,8 +137,8 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
   }
 
   /**
-     * Upload multiple files
-     */
+   * Upload multiple files
+   */
   const uploadFiles = async (files: File[]): Promise<void> => {
     if (!files || files.length === 0) {
       return
@@ -185,8 +185,8 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
   }
 
   /**
-     * Add attachment to a file element
-     */
+   * Add attachment to a file element
+   */
   const addAttachmentFile = async (file: File, idShort: string): Promise<void> => {
     const path = submodelElementData().path + '/submodel-elements/' + idShort + '/attachment'
     const formData = new FormData()
@@ -200,8 +200,8 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
   }
 
   /**
-     * Delete a single element
-     */
+   * Delete a single element
+   */
   const deleteElement = async (element: FileSystemElement): Promise<void> => {
     const filePath = getCurrentFilePath()
     const path = buildElementPath(filePath, element.idShort)
@@ -213,8 +213,8 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
   }
 
   /**
-     * Delete multiple elements
-     */
+   * Delete multiple elements
+   */
   const deleteElements = async (elements: FileSystemElement[]): Promise<void> => {
     const filePath = getCurrentFilePath()
 
@@ -227,8 +227,8 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
   }
 
   /**
-     * Create a new folder
-     */
+   * Create a new folder
+   */
   const createFolder = async (): Promise<void> => {
     const filePath = getCurrentFilePath()
     const newFolderTemplate: NewFolderTemplate = {
@@ -254,8 +254,8 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
   }
 
   /**
-     * Update folder name
-     */
+   * Update folder name
+   */
   const saveFolderName = async (folder: FolderElement, newName: string): Promise<void> => {
     const nameEntry = folder.displayName?.find(name => name.language === 'en')
     if (nameEntry) {
@@ -281,8 +281,8 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
   }
 
   /**
-     * Get display name for an element by path from server
-     */
+   * Get display name for an element by path from server
+   */
   const getDisplayNameByPath = async (idShortPath: string): Promise<string> => {
     const path = submodelElementData().path + '/submodel-elements/' + idShortPath
     let displayName = idShortPath
@@ -302,8 +302,8 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
   }
 
   /**
-     * Move element to a target folder
-     */
+   * Move element to a target folder
+   */
   const moveElementToFolder = async (element: FileSystemElement, targetFolder: FolderElement): Promise<void> => {
     try {
       const currentPath = getCurrentFilePath()
@@ -380,8 +380,8 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
   }
 
   /**
-     * Move element up one level
-     */
+   * Move element up one level
+   */
   const moveElementUp = async (element: FileSystemElement): Promise<void> => {
     try {
       const currentPath = getCurrentFilePath()
@@ -460,8 +460,8 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
   }
 
   /**
-     * Move multiple items with progress tracking
-     */
+   * Move multiple items with progress tracking
+   */
   const moveItems = async (items: FileSystemElement[], targetFolder: FileSystemElement): Promise<void> => {
     isMoving.value = true
     moveProgress.value = { current: 0, total: items.length, itemName: '' }
@@ -479,8 +479,8 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
   }
 
   /**
-     * Get full file name with extension
-     */
+   * Get full file name with extension
+   */
   const getFullFileName = (file: FileElement): string => {
     if (!file) {
       return ''
@@ -490,8 +490,8 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
   }
 
   /**
-     * Get folder display name
-     */
+   * Get folder display name
+   */
   const getFolderName = (element: FileSystemElement): string => {
     if (element.displayName) {
       const nameEntry = element.displayName.find(name => name.language === 'en')
@@ -503,8 +503,8 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
   }
 
   /**
-     * Get folder element count
-     */
+   * Get folder element count
+   */
   const getFolderElementCount = (folder: FileSystemElement): number => {
     if (folder.modelType !== 'SubmodelElementCollection') {
       return 0

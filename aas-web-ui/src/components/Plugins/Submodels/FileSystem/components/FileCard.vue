@@ -86,13 +86,13 @@
   })
 
   const emit = defineEmits<{
-    (e: 'preview'): void
-    (e: 'download'): void
-    (e: 'delete'): void
-    (e: 'toggle-selection'): void
-    (e: 'change-startscreen', state: boolean): void
-    (e: 'dragstart', event: DragEvent): void
-    (e: 'dragend'): void
+    'preview': []
+    'download': []
+    'delete': []
+    'toggle-selection': []
+    'change-startscreen': [state: boolean]
+    'dragstart': [event: DragEvent]
+    'dragend': []
   }>()
 
   const handlePreview = (): void => emit('preview')
