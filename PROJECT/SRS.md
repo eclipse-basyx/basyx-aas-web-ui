@@ -148,26 +148,93 @@ The system provides:
 
 ## 4. Functional Requirements
 
-| ID     | Title                           | Description                                                         | Priority |
-| ------ | ------------------------------- | ------------------------------------------------------------------- | -------- |
-| FR.001 | Preserve existing functionality | All existing viewer functions must remain intact after enhancement. | Must     |
-| FR.002 | Sorting                         | Implement dynamic sorting of shells by key attributes.              | Must     |
-| FR.003 | Search                          | Extend search functionality recursively through AAS content.        | Must     |
-| FR.004 | Nameplate generator integration | Integrate submodule into digital nameplate plugin.                  | Must     |
-| FR.005 | API enhancements                | Extend JSON output for `/shells` endpoint.                          | Should   |
-| FR.006 | Improved labeling               | Add extra labels for Boolean values.                                | Could    |
+### 4.1 FR.001 – Preserve existing functionality
+
+All existing viewer functions must remain intact after enhancement.
+
+**Priority:** Must
+
+---
+
+### 4.2 FR.002 – Sorting
+
+Implement dynamic sorting of shells by key attributes.
+
+**Priority:** Must
+
+---
+
+### 4.3 FR.003 – Search
+
+Extend search functionality recursively through AAS content.
+
+**Priority:** Must
+
+---
+
+### 4.4 FR.004 – Nameplate generator integration
+
+Integrate submodule into digital nameplate plugin.
+
+**Priority:** Must
+
+---
+
+### 4.5 FR.005 – API enhancements
+
+Extend JSON output for `/shells` endpoint.
+
+**Priority:** Should
+
+---
+
+### 4.6 FR.006 – Improved labeling
+
+Add extra labels for Boolean values.
+
+**Priority:** Could
 
 ---
 
 ## 5. Non-Functional Requirements
 
-| ID      | Title           | Description                                                 | Fit Criterion                                                  |
-| ------- | --------------- | ----------------------------------------------------------- | -------------------------------------------------------------- |
-| NFR.001 | Usability       | UI improvements must reduce average task time.              | Loose Guideline: Experienced users locate functions <10 min; new users <20 min. |
-| NFR.002 | Performance     | No significant delay from enhancements.                     | Loose Guideline: API calls ≤ 0.2s slower than current baseline.                 |
-| NFR.003 | Stability       | Application should not crash under standard or rapid usage. | 0 critical failures in 10 test runs.                           |
-| NFR.004 | Maintainability | Clear documentation and readable code.                      | Loose Guideline: New dev understands within 1 hour.                             |
-| NFR.005 | Licensing       | Maintain current open-source license.                       | License remains unchanged.                                     |
+### 5.1 NFR.001 – Usability
+
+UI improvements must reduce average task time.
+
+**Fit Criterion:** Experienced users locate functions <10 min; new users <20 min.
+
+---
+
+### 5.2 NFR.002 – Performance
+
+No significant delay from enhancements.
+
+**Fit Criterion:** API calls ≤ 0.2s slower than current baseline.
+
+---
+
+### 5.3 NFR.003 – Stability
+
+Application should not crash under standard or rapid usage.
+
+**Fit Criterion:** 0 critical failures in 10 test runs.
+
+---
+
+### 5.4 NFR.004 – Maintainability
+
+Clear documentation and readable code.
+
+**Fit Criterion:** New dev understands within 1 hour.
+
+---
+
+### 5.5 NFR.005 – Licensing
+
+Maintain current open-source license.
+
+**Fit Criterion:** License remains unchanged.
 
 ---
 
@@ -212,5 +279,6 @@ Key components:
 | Version | Date       | Author                       | Comment                                                          |
 | ------- | ---------- | ---------------------------- | ---------------------------------------------------------------- |
 | 0.1     | 20.10.2025 | Matti Frey & Laszlo Engemann | Initial draft based on CRS                                       |
-| 0.9     | 22.10.2025 | Matti Frey & Laszlo Engemann | Extended with structure and examples from previous SRS documents |
-| 1.0     | 24.10.2025 | Matti Frey & Laszlo Engemann | Final version for submission                                     |
+| 0.9     | 22.10.2025 | Matti Frey  | Extended with structure and examples from previous SRS documents |
+| 1.0     | 24.10.2025 | Matti Frey  | Final version for submission                                     |
+| 1.1     | 23.03.2026 | Matti Frey  | Added linkable functions                                         |
