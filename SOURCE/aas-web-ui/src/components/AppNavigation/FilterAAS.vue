@@ -10,7 +10,7 @@
 
                 <v-list-item>
                     <v-radio-group v-model="sortField" density="compact" hide-details>
-                        <v-radio label="Name" value="name" />
+                        <v-radio label="Name" value="nameLower" />
                         <v-radio label="Last Updated" value="updated" />
                         <v-radio label="Date Created" value="created" />
                     </v-radio-group>
@@ -21,6 +21,7 @@
                     color="primary"
                     variant="outlined"
                     divided
+                    mandatory
                     density="compact"
                     class="mx-2 mt-1">
                     <v-btn value="asc">
@@ -122,6 +123,11 @@
 <script setup lang="ts">
     import { reactive, ref, watch } from 'vue';
 
+    interface AASAttributeSortValues {
+        sortField: number;
+        sortDirection: string;
+    }
+
     interface AASAttributeFilters {
         manufacturerName: string;
         manufacturerProductDesignation: string;
@@ -134,10 +140,11 @@
     }
 
     const emit = defineEmits<{
+        (event: 'update:sort', value: AASAttributeSortValues): void;
         (event: 'update:filters', value: AASAttributeFilters): void;
     }>();
 
-    const sortField = ref('name');
+    const sortField = ref('nameLower');
     const sortDirection = ref('asc');
 
     const filters = reactive<AASAttributeFilters>({
@@ -156,6 +163,17 @@
             filters[key as keyof AASAttributeFilters] = '';
         });
     };
+
+    watch(
+        [sortField, sortDirection, filters],
+        () => {
+            emit('update:sort', {
+                sortField: sortField.value,
+                sortDirection: sortDirection.value,
+            });
+        },
+        { deep: true, }
+    );
 
     watch(
         () => ({ ...filters }),

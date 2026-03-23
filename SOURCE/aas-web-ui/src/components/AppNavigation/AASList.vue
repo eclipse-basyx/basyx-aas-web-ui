@@ -96,7 +96,7 @@
                         </v-col>
                         <!-- AAS Filter -->
                         <v-col cols="auto" class="px-0">
-                            <FilterAAS @update:filters="onAttributeFiltersChange" />
+                            <FilterAAS @update:sort="sortAasList" @update:filters="onAttributeFiltersChange" />
                         </v-col>
                     </v-row>
                 </v-card-title>
@@ -1039,6 +1039,35 @@ const hasGlobalMatch = (searchTerm: string) => {
                     }
                 }
             });
+    }
+
+    function sortAasList({sortField, sortDirection}) {
+        const direction = sortDirection === 'asc' ? 1 : -1;
+
+        const sortFunction = (a: any, b: any) => {
+            const valA = a[sortField];
+            const valB = b[sortField];
+            return valA > valB ? direction : valA < valB ? -direction : 0;
+        };
+
+        aasList.value = [...aasList.value].sort(sortFunction);
+        aasListUnfiltered.value = [...aasListUnfiltered.value].sort(sortFunction);
+    }
+
+    function filterAasList(value: string): void {
+        if (!value || value.trim() === '') {
+            aasList.value = aasListUnfiltered.value;
+        } else {
+            const search = value.toLowerCase();
+            aasList.value = aasListUnfiltered.value.filter(
+                (aasOrAasDescriptor) =>
+                    aasOrAasDescriptor.idLower.includes(search) ||
+                    aasOrAasDescriptor.idShortLower.includes(search) ||
+                    aasOrAasDescriptor.nameLower.includes(search) ||
+                    aasOrAasDescriptor.descLower.includes(search)
+            );
+        }
+        scrollToSelectedAAS();
     }
 
     // Function to select an AAS
