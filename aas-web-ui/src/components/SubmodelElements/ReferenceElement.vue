@@ -2,7 +2,7 @@
   <v-container class="pa-0" fluid>
     <v-list-item v-if="!isOperationVariable" class="px-1 pb-1 pt-0">
       <!-- Title of the ReferenceElement Value -->
-      <v-list-item-title class="text-subtitle-2 mt-2">{{
+      <v-list-item-title class="text-title-small mt-2">{{
         (reference?.type ? reference.type : 'Reference') + ':'
       }}</v-list-item-title>
     </v-list-item>
@@ -20,13 +20,13 @@
                 open-delay="600"
                 transition="slide-x-transition"
               >
-                <div class="text-caption">
+                <div class="text-body-small">
                   <span class="font-weight-bold">{{ '(' + key.type + ') ' }}</span>{{ key.value }}
                 </div>
               </v-tooltip>
               <!-- Reference Title -->
               <!-- <template v-if="IsOperationVariable" #title>
-                                <div class="text-subtitle-2 mt-2">
+                                <div class="text-title-small mt-2">
                                     {{ IsOperationVariable ? 'Reference:' : 'Description:' }}
                                 </div>
                             </template> -->

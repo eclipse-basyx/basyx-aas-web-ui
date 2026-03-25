@@ -4,7 +4,7 @@
     <v-list class="pa-0" nav style="margin-left: -8px; margin-top: -14px">
       <v-list-item class="pb-0">
         <template #title>
-          <div class="text-subtitle-2">{{ 'Options: ' }}</div>
+          <div class="text-title-small">{{ 'Options: ' }}</div>
         </template>
       </v-list-item>
     </v-list>

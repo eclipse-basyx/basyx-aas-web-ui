@@ -59,7 +59,7 @@
                 <v-col class="d-flex justify-center align-center" cols="4">
                   <div>
                     <div class="text-h6 font-weight-bold">{{ settings[model].title }}</div>
-                    <div class="text-body-2 text-medium-emphasis">
+                    <div class="text-body-medium opacity-60">
                       {{ settings[model].subtitle }}
                     </div>
                   </div>

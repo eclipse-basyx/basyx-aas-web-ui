@@ -3,7 +3,7 @@
     <!-- Plugin Title -->
     <v-card class="mb-3">
       <v-card-title>
-        <div class="text-subtitle-1">{{ nameToDisplay(submodelElementData) }}</div>
+        <div class="text-body-large">{{ nameToDisplay(submodelElementData) }}</div>
       </v-card-title>
     </v-card>
     <v-card>

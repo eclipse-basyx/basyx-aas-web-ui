@@ -16,7 +16,7 @@
     @drop="handleDrop"
   >
     <v-toolbar class="cursor-pointer" color="transparent" density="compact" @click="handleClick">
-      <v-toolbar-title class="text-truncate text-subtitle-2 ml-2">{{ displayName }}</v-toolbar-title>
+      <v-toolbar-title class="text-truncate text-title-small ml-2">{{ displayName }}</v-toolbar-title>
       <template #prepend>
         <v-checkbox-btn
           class="ml-1"

@@ -11,7 +11,7 @@
       <v-form @submit.prevent="saveAndNext">
         <v-slide-y-transition group>
           <div v-for="(form, index) in forms" :key="index" class="mb-6">
-            <div class="text-subtitle-1 font-weight-bold mb-2">
+            <div class="text-body-large font-weight-bold mb-2">
               {{ index === 0 ? 'Last Report' : 'Business report figure ' + index }}
             </div>
 
@@ -100,7 +100,7 @@
             <v-divider class="my-4" />
 
             <!-- Customers -->
-            <div class="text-subtitle-1 font-weight-bold mb-2">Customers</div>
+            <div class="text-body-large font-weight-bold mb-2">Customers</div>
 
             <FormField label="Total Number of Customers" tip="Optional. Total number served.">
               <v-text-field

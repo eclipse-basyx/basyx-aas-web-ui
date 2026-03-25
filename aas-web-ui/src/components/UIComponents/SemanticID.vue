@@ -6,13 +6,13 @@
     >
       <!-- Tooltip with SemanticId -->
       <v-tooltip activator="parent" open-delay="600" transition="slide-x-transition">
-        <div v-for="(semanticId, i) in semanticIdObject.keys" :key="i" class="text-caption">
+        <div v-for="(semanticId, i) in semanticIdObject.keys" :key="i" class="text-body-small">
           <span class="font-weight-bold">{{ '(' + semanticId.type + ') ' }}</span>{{ semanticId.value }}
         </div>
       </v-tooltip>
       <!-- SemanticIId Title -->
       <template v-if="semanticTitle && semanticTitle.trim().length > 0" #title>
-        <div class="mt-1" :class="small ? 'text-caption' : 'text-subtitle-2 '">{{ semanticTitle + ':' }}</div>
+        <div class="mt-1" :class="small ? 'text-body-small' : 'text-title-small '">{{ semanticTitle + ':' }}</div>
       </template>
       <!-- SemanticId List -->
       <v-list-item-subtitle v-for="(semanticId, i) in semanticIdObject.keys" :key="i">

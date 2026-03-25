@@ -3,7 +3,7 @@
     <!-- kind -->
     <v-list-item v-if="submodelObject.kind" class="px-1 pb-1 pt-2">
       <v-list-item-title>
-        <span class="text-subtitle-2 mr-2">{{ 'Kind: ' }}</span>
+        <span class="text-title-small mr-2">{{ 'Kind: ' }}</span>
         <v-chip
           border
           color="primary"

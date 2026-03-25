@@ -3,12 +3,12 @@
     <v-list-item v-if="dataSpecificationObject && Object.keys(dataSpecificationObject).length > 0">
       <!-- Title -->
       <template #title>
-        <div class="text-subtitle-2 mt-2">{{ 'Data Specification Content:' }}</div>
+        <div class="text-title-small mt-2">{{ 'Data Specification Content:' }}</div>
       </template>
       <!-- Content List -->
       <!-- dataType -->
       <v-list-item-title v-if="dataSpecificationObject.dataType" class="pt-3 pl-2">
-        <span class="text-caption">DataType: </span>
+        <span class="text-body-small">DataType: </span>
         <span class="text-primary">{{ dataSpecificationObject.dataType }}</span>
       </v-list-item-title>
       <v-divider
@@ -32,7 +32,7 @@
         v-if="dataSpecificationObject.levelTypes && dataSpecificationObject.levelTypes.length > 0"
         class="pt-2 pl-2"
       >
-        <div class="text-caption">LevelTypes:</div>
+        <div class="text-body-small">LevelTypes:</div>
         <span v-for="(levelType, i) in dataSpecificationObject.levelTypes" :key="i" class="text-primary">{{
           levelType
         }}</span>
@@ -62,18 +62,18 @@
       <v-divider v-if="dataSpecificationObject.unit" class="mt-2" />
       <!-- unit -->
       <v-list-item-title v-if="dataSpecificationObject.unit" class="pt-2 pl-2">
-        <span class="text-caption">Unit: </span>
+        <span class="text-body-small">Unit: </span>
         <span class="text-primary">{{ dataSpecificationObject.unit }}</span>
       </v-list-item-title>
       <v-list-item v-if="dataSpecificationObject.unitId" class="pb-0">
         <v-tooltip activator="parent" open-delay="600" transition="slide-x-transition">
-          <div v-for="(unitId, i) in dataSpecificationObject.unitId.keys" :key="i" class="text-caption">
+          <div v-for="(unitId, i) in dataSpecificationObject.unitId.keys" :key="i" class="text-body-small">
             <span class="font-weight-bold">{{ '(' + unitId.type + ') ' }}</span>
             {{ unitId.value }}
           </div>
         </v-tooltip>
         <template #title>
-          <span class="text-caption">{{ 'Unit Id: ' }}</span>
+          <span class="text-body-small">{{ 'Unit Id: ' }}</span>
         </template>
         <template #subtitle>
           <v-list-item-subtitle v-for="(unitId, i) in dataSpecificationObject.unitId.keys" :key="i">
@@ -94,7 +94,7 @@
         v-if="dataSpecificationObject.valueList && dataSpecificationObject.valueList.length > 0"
         class="pt-2 pl-2"
       >
-        <div class="text-caption">ValueList:</div>
+        <div class="text-body-small">ValueList:</div>
         <span v-for="(valueList, i) in dataSpecificationObject.valueList" :key="i" class="text-primary">{{
           valueList
         }}</span>

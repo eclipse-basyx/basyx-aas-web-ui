@@ -18,7 +18,7 @@
     <template v-else-if="Object.keys(carbonFootprintData).length > 0">
       <!-- Pie Chart -->
       <v-card v-if="showPieChart && pieChartData && pieChartData.length > 0" class="mb-4">
-        <v-card-title class="text-subtitle-1">Carbon Footprint Distribution</v-card-title>
+        <v-card-title class="text-body-large">Carbon Footprint Distribution</v-card-title>
         <v-card-text>
           <PieChart :chart-data="pieChartData" />
         </v-card-text>
@@ -33,7 +33,7 @@
       </v-card>
       <!-- Timeline -->
       <v-card v-if="productCarbonFootprints && Object.keys(productCarbonFootprints).length > 0" class="mb-4">
-        <v-card-title class="text-subtitle-1">
+        <v-card-title class="text-body-large">
           {{ 'Product Carbon Footprint' + (Object.keys(productCarbonFootprints).length > 1 ? 's' : '') }}
         </v-card-title>
         <v-card-text>
@@ -67,7 +67,7 @@
                   }}
                   <span class="">CO<sub>2</sub>eq</span>
                 </div>
-                <p class="text-caption text-medium-emphasis">
+                <p class="text-body-small opacity-60">
                   <span> per </span>
                   {{
                     valueToDisplay(
@@ -128,7 +128,7 @@
                       }}
                     </span> </template>)
                 </p>
-                <p class="text-caption text-medium-emphasis">
+                <p class="text-body-small opacity-60">
                   <v-icon class="mr-1" size="small">mdi-calendar</v-icon>
                   <span>valid from </span>
                   <span>
@@ -157,7 +157,7 @@
                       )
                     "
                   >
-                    <span class="text-medium-emphasis">till </span>
+                    <span class="opacity-60">till </span>
                     {{
                       valueToDisplay(
                         pcfSMC.value.find(
@@ -183,7 +183,7 @@
                         )
                     )
                   "
-                  class="text-caption text-medium-emphasis"
+                  class="text-body-small opacity-60"
                 >
                   <v-icon class="mr-1" size="small">mdi-map-marker-outline</v-icon>
                   <span>

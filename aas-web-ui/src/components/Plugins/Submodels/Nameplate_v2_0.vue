@@ -19,7 +19,7 @@
       <!-- Product properties-->
       <v-card v-if="productProperties.length > 0" class="mb-4">
         <v-card-title>
-          <div class="text-subtitle-1">{{ 'Product' }}</div>
+          <div class="text-body-large">{{ 'Product' }}</div>
         </v-card-title>
         <v-card-text>
           <v-sheet border rounded>
@@ -34,7 +34,7 @@
                     :class="index % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'"
                   >
                     <td>
-                      <div class="text-subtitleText text-caption">
+                      <div class="text-subtitleText text-body-small">
                         <span>{{ nameToDisplay(productProperty) }}</span>
                         <DescriptionTooltip :description-array="productProperty?.description" />
                       </div>
@@ -44,13 +44,13 @@
                       <template v-if="checkIdShort(productProperty, 'URIOfTheProduct')">
                         <a
                           v-if="valueToDisplay(productProperty).startsWith('http')"
-                          class="text-caption text-primary"
+                          class="text-body-small text-primary"
                           :href="valueToDisplay(productProperty)"
                           target="_blank"
                         >
                           {{ valueToDisplay(productProperty) }}
                         </a>
-                        <span v-else class="text-caption">
+                        <span v-else class="text-body-small">
                           {{ valueToDisplay(productProperty) }}
                         </span>
                       </template>
@@ -58,13 +58,13 @@
                       <template v-else-if="checkIdShort(productProperty, 'CountryOfOrigin')">
                         <div
                           v-if="getCountryName(valueToDisplay(productProperty))"
-                          class="text-caption"
+                          class="text-body-small"
                         >
                           {{ getCountryName(valueToDisplay(productProperty)) }} ({{
                             valueToDisplay(productProperty)
                           }})
                         </div>
-                        <div v-else class="text-caption">
+                        <div v-else class="text-body-small">
                           {{ valueToDisplay(productProperty) }}
                         </div>
                       </template>
@@ -75,7 +75,7 @@
                           :key="i"
                           style="white-space: nowrap"
                         >
-                          <span class="text-caption mr-2">
+                          <span class="text-body-small mr-2">
                             {{ nameToDisplay(version) + ':' }}
                           </span>
                           <!-- Show english value, if available -->
@@ -103,7 +103,7 @@
                       <!-- MultiLanguageProperties -->
                       <template v-else-if="productProperty.modelType == 'MultiLanguageProperty'">
                         <!-- Show english value, if available -->
-                        <div v-if="valueToDisplay(productProperty)" class="text-caption">
+                        <div v-if="valueToDisplay(productProperty)" class="text-body-small">
                           {{ valueToDisplay(productProperty) }}
                         </div>
                         <!-- Otherwise show all available values -->
@@ -112,7 +112,7 @@
                           v-else
                           :key="j"
                         >
-                          <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                          <div v-if="langStringSet?.text.length > 0" class="text-body-small">
                             <v-chip class="mr-1" label size="x-small">{{
                               langStringSet.language
                             }}</v-chip>
@@ -121,7 +121,7 @@
                         </template>
                       </template>
                       <!-- Default -->
-                      <span v-else class="text-caption">
+                      <span v-else class="text-body-small">
                         {{ valueToDisplay(productProperty) }}
                       </span>
                     </td>
@@ -135,7 +135,7 @@
       <!-- Manufacturer properties -->
       <v-card v-if="manufacturerProperties.length > 0" class="mb-4">
         <v-card-title>
-          <div class="text-subtitle-1">{{ 'Manufacturer' }}</div>
+          <div class="text-body-large">{{ 'Manufacturer' }}</div>
         </v-card-title>
         <v-card-text class="pb-0">
           <v-sheet border rounded>
@@ -150,7 +150,7 @@
                     :class="index % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'"
                   >
                     <td>
-                      <div class="text-subtitleText text-caption">
+                      <div class="text-subtitleText text-body-small">
                         <span>{{ nameToDisplay(manufacturerProperty) }}</span>
                         <DescriptionTooltip
                           :description-array="manufacturerProperty?.description"
@@ -164,13 +164,13 @@
                       >
                         <a
                           v-if="valueToDisplay(manufacturerProperty).startsWith('http')"
-                          class="text-caption text-primary"
+                          class="text-body-small text-primary"
                           :href="valueToDisplay(manufacturerProperty)"
                           target="_blank"
                         >
                           {{ valueToDisplay(manufacturerProperty) }}
                         </a>
-                        <span v-else class="text-caption">
+                        <span v-else class="text-body-small">
                           {{ valueToDisplay(manufacturerProperty) }}
                         </span>
                       </template>
@@ -190,7 +190,7 @@
                             checkIdShort(manufacturerProperty, 'FaxNumber') ||
                             checkIdShort(manufacturerProperty, 'Email')
                         "
-                        class="text-caption"
+                        class="text-body-small"
                       >
                         <v-chip
                           v-if="
@@ -217,7 +217,7 @@
                           "
                         >
                           <a
-                            class="text-caption text-primary"
+                            class="text-body-small text-primary"
                             :href="`tel:${valueToDisplay(manufacturerProperty).replaceAll(' ', '')}`"
                           >
                             {{ valueToDisplay(manufacturerProperty) }}
@@ -225,7 +225,7 @@
                         </template>
                         <template v-else-if="checkIdShort(manufacturerProperty, 'Email')">
                           <a
-                            class="text-caption text-primary"
+                            class="text-body-small text-primary"
                             :href="`mailto:${valueToDisplay(manufacturerProperty)}`"
                           >
                             {{ valueToDisplay(manufacturerProperty) }}
@@ -240,7 +240,7 @@
                         v-else-if="manufacturerProperty.modelType == 'MultiLanguageProperty'"
                       >
                         <!-- Show english value, if available -->
-                        <div v-if="valueToDisplay(manufacturerProperty)" class="text-caption">
+                        <div v-if="valueToDisplay(manufacturerProperty)" class="text-body-small">
                           {{ valueToDisplay(manufacturerProperty) }}
                         </div>
                         <!-- Otherwise show all available values -->
@@ -249,7 +249,7 @@
                           v-else
                           :key="j"
                         >
-                          <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                          <div v-if="langStringSet?.text.length > 0" class="text-body-small">
                             <v-chip class="mr-1" label size="x-small">{{
                               langStringSet.language
                             }}</v-chip>
@@ -258,7 +258,7 @@
                         </template>
                       </template>
                       <!-- Default -->
-                      <span v-else class="text-caption">
+                      <span v-else class="text-body-small">
                         {{ valueToDisplay(manufacturerProperty) }}
                       </span>
                     </td>
@@ -297,16 +297,16 @@
       <!-- Markings -->
       <v-card v-if="markingsSMC && Object.keys(markingsSMC).length > 0 && markings.length > 0" class="mb-4">
         <v-card-title>
-          <div class="text-subtitle-1">
+          <div class="text-body-large">
             {{ nameToDisplay(markingsSMC, 'en', 'Markings') }}
             <DescriptionTooltip :description-array="markingsSMC?.description" />
           </div>
         </v-card-title>
         <v-card-text>
-          <v-row class="text-caption mb-2" justify="start">
+          <v-row class="text-body-small mb-2" justify="start">
             <v-col v-for="marking in markings" :key="marking.idShort" class="pb-0" cols="auto">
               <v-img contain height="150px" :src="marking.src" width="150px" />
-              <span class="text-subtitleText text-caption">{{ marking.name }}</span>
+              <span class="text-subtitleText text-body-small">{{ marking.name }}</span>
             </v-col>
           </v-row>
         </v-card-text>
@@ -322,7 +322,7 @@
         "
       >
         <v-card-title>
-          <div class="text-subtitle-1">
+          <div class="text-body-large">
             {{ nameToDisplay(assetSpecificPropertiesSMC, 'en', 'Asset Specific Properties') }}
             <DescriptionTooltip :description-array="assetSpecificPropertiesSMC?.description" />
           </div>

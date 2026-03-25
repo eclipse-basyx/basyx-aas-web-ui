@@ -1220,7 +1220,7 @@
       </svg>
       <!-- Buttons to interact with the Statemachine Mode -->
       <v-card class="mt-3" color="elevatedCard">
-        <v-card-title class="text-subtitle-2">Set Statemachine Mode</v-card-title>
+        <v-card-title class="text-title-small">Set Statemachine Mode</v-card-title>
         <v-divider />
         <v-card-actions>
           <v-btn class="mr-2" variant="elevated" @click="setMode(1)">Production</v-btn>
@@ -1230,7 +1230,7 @@
       </v-card>
       <!-- Buttons to interact with the Statemachine States -->
       <v-card class="mt-3" color="elevatedCard">
-        <v-card-title class="text-subtitle-2">Send State Command</v-card-title>
+        <v-card-title class="text-title-small">Send State Command</v-card-title>
         <v-divider />
         <v-card-actions>
           <v-btn

@@ -22,6 +22,11 @@ export function initializeVuetify (primaryLightColor = '#0cb2f0', primaryDarkCol
     components: {
       VFileUpload,
     },
+    defaults: {
+      VBtn: {
+        class: 'text-body-medium',
+      },
+    },
     icons: {
       defaultSet: 'mdi',
       sets: {

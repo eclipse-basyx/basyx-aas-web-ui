@@ -48,7 +48,7 @@
           <v-divider />
           <v-list-item class="pl-0 pt-0">
             <template #title>
-              <div class="text-subtitle-2">Semantic ID</div>
+              <div class="text-title-small">Semantic ID</div>
             </template>
           </v-list-item>
           <v-btn
@@ -69,7 +69,7 @@
           <v-divider />
           <v-list-item class="pl-0 pt-0">
             <template #title>
-              <div class="text-subtitle-2">Value ID</div>
+              <div class="text-title-small">Value ID</div>
             </template>
           </v-list-item>
           <v-btn

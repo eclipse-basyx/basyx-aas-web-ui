@@ -3,7 +3,7 @@
     <!-- entityType -->
     <v-list-item class="px-1 pb-1 pt-2">
       <v-list-item-title>
-        <span class="text-subtitle-2 mr-2">{{ 'Entity Type: ' }}</span>
+        <span class="text-title-small mr-2">{{ 'Entity Type: ' }}</span>
         <v-chip
           border
           color="primary"
@@ -20,7 +20,7 @@
     <v-hover v-slot="{ isHovering, props: hoverProps }">
       <v-list-item v-if="entityObject?.globalAssetId" class="px-1 pb-1 py-2 mb-3">
         <template #title>
-          <div class="text-subtitle-2 mt-2">{{ 'Global Asset ID: ' }}</div>
+          <div class="text-title-small mt-2">{{ 'Global Asset ID: ' }}</div>
         </template>
         <template #append>
           <v-btn
@@ -54,7 +54,7 @@
       class="px-1 pb-1 py-2 mb-3"
     >
       <template #title>
-        <div class="text-subtitle-2 mt-2">{{ 'Specific Asset IDs: ' }}</div>
+        <div class="text-title-small mt-2">{{ 'Specific Asset IDs: ' }}</div>
       </template>
       <template #subtitle>
         <div v-for="specificAssetId in entityObject.specificAssetIds" :key="specificAssetId.name" class="pt-2">

@@ -1,7 +1,7 @@
 <template>
   <v-container class="pa-0" fluid>
     <v-list-item class="px-1 pb-1 pt-0">
-      <v-list-item-title class="text-subtitle-2 mt-2">{{ 'Range: ' }}</v-list-item-title>
+      <v-list-item-title class="text-title-small mt-2">{{ 'Range: ' }}</v-list-item-title>
     </v-list-item>
     <v-card v-if="rangeObject" class="pt-10 pb-5 px-3" color="elevatedCard">
       <v-range-slider

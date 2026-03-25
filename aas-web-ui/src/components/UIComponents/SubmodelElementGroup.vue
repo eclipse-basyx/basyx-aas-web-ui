@@ -97,7 +97,7 @@
               <template v-else-if="SubmodelElement.modelType == 'MultiLanguageProperty'">
                 <v-list-item class="mt-n2">
                   <template #title>
-                    <div class="mt-1 text-subtitle-2">
+                    <div class="mt-1 text-title-small">
                       {{ nameToDisplay(SubmodelElement) + ':' }}
                     </div>
                   </template>
@@ -171,7 +171,7 @@
                 <v-list-item style="margin-top: -12px">
                   <!-- Reference idShort -->
                   <template #title>
-                    <div class="text-subtitle-2">{{ nameToDisplay(SubmodelElement) }}</div>
+                    <div class="text-title-small">{{ nameToDisplay(SubmodelElement) }}</div>
                   </template>
                 </v-list-item>
                 <v-chip border class="mr-2" label size="x-small">{{
@@ -184,7 +184,7 @@
                 <v-list-item style="margin-top: -12px">
                   <!-- Range idShort -->
                   <template #title>
-                    <div class="text-subtitle-2">{{ nameToDisplay(SubmodelElement) }}</div>
+                    <div class="text-title-small">{{ nameToDisplay(SubmodelElement) }}</div>
                   </template>
                 </v-list-item>
                 <v-row>
@@ -215,7 +215,7 @@
                 <v-list-item style="margin-top: -12px">
                   <!-- Relationship idShort -->
                   <template #title>
-                    <div class="text-subtitle-2">{{ nameToDisplay(SubmodelElement) }}</div>
+                    <div class="text-title-small">{{ nameToDisplay(SubmodelElement) }}</div>
                   </template>
                 </v-list-item>
                 <div>
@@ -238,7 +238,7 @@
                 <v-list-item style="margin-top: -12px">
                   <!-- Relationship idShort -->
                   <template #title>
-                    <div class="text-subtitle-2">{{ nameToDisplay(SubmodelElement) }}</div>
+                    <div class="text-title-small">{{ nameToDisplay(SubmodelElement) }}</div>
                   </template>
                 </v-list-item>
                 <div>
@@ -256,7 +256,7 @@
                   <span>{{ referenceKeyValueToDisplay(SubmodelElement.second?.keys) }}</span>
                 </div>
                 <div class="mt-3 ml-3">
-                  <span class="text-caption">{{ 'Annotations: ' }}</span>
+                  <span class="text-body-small">{{ 'Annotations: ' }}</span>
                   <v-chip border class="mr-2" size="x-small">{{
                     SubmodelElement.annotations.length
                   }}</v-chip>

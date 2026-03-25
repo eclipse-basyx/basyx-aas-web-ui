@@ -3,7 +3,7 @@
     <!-- Header -->
     <v-card class="mb-4">
       <v-card-title>
-        <div class="text-subtitle-1">
+        <div class="text-body-large">
           {{ nameToDisplay(submodelElementData, 'en', 'Time Series Data') }}
         </div>
       </v-card-title>
@@ -17,7 +17,7 @@
       <v-list class="py-0" nav>
         <v-list-item class="pb-0">
           <template #title>
-            <div class="text-subtitle-2">{{ 'Preview Configuration: ' }}</div>
+            <div class="text-title-small">{{ 'Preview Configuration: ' }}</div>
           </template>
         </v-list-item>
       </v-list>
@@ -114,7 +114,7 @@
       <v-list class="py-0" nav>
         <v-list-item>
           <template #title>
-            <div class="text-subtitle-2">{{ 'Preview Chart: ' }}</div>
+            <div class="text-title-small">{{ 'Preview Chart: ' }}</div>
           </template>
         </v-list-item>
       </v-list>

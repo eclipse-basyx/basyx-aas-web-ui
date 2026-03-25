@@ -2,7 +2,7 @@
   <v-container class="pa-0" fluid>
     <div v-for="(referenceKey, j) in referenceKeys" :key="j">
       <v-list-item class="px-1 pb-1 pt-0">
-        <v-list-item-title class="text-subtitle-2 mt-2">{{
+        <v-list-item-title class="text-title-small mt-2">{{
           capitalizeFirstLetter(referenceKey) +
             ' (' +
             getReferences[referenceKey as 'first' | 'second']?.type +
@@ -17,7 +17,7 @@
               <v-list-item>
                 <!-- Tooltip with Reference ID -->
                 <v-tooltip activator="parent" open-delay="600" transition="slide-x-transition">
-                  <div class="text-caption">
+                  <div class="text-body-small">
                     <span class="font-weight-bold">{{ '(' + keys.type + ') ' }}</span>{{ keys.value }}
                   </div>
                 </v-tooltip>

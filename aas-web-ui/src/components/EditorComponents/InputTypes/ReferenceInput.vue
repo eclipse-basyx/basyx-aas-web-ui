@@ -2,7 +2,7 @@
   <v-divider v-if="!noHeader" />
   <v-list-item v-if="!noHeader" class="pl-0 pt-0">
     <template #title>
-      <div class="text-subtitle-2">{{ label }}</div>
+      <div class="text-title-small">{{ label }}</div>
     </template>
   </v-list-item>
   <!-- Reference Type Selection -->

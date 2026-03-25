@@ -3,7 +3,7 @@
     <!-- Selection Actions -->
     <v-sheet v-if="hasSelection" border class="d-flex flex-row align-center ml-3" rounded="xl">
       <v-btn icon="mdi-close" size="small" variant="text" @click="handleDeselectAll" />
-      <v-toolbar-title class="ml-2 text-subtitle-2">{{ selectedCount }} selected</v-toolbar-title>
+      <v-toolbar-title class="ml-2 text-title-small">{{ selectedCount }} selected</v-toolbar-title>
       <v-btn
         class="ml-2"
         icon="mdi-delete"

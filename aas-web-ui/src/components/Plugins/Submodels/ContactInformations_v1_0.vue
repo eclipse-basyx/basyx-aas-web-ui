@@ -36,7 +36,7 @@
                       :class="(i as number) % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'"
                     >
                       <td>
-                        <div class="text-subtitleText text-caption">
+                        <div class="text-subtitleText text-body-small">
                           <span>{{ nameToDisplay(contactInformationProperty) }}</span>
                           <DescriptionTooltip
                             :description-array="contactInformationProperty?.description"
@@ -59,13 +59,13 @@
                                 'http'
                               )
                             "
-                            class="text-caption text-primary"
+                            class="text-body-small text-primary"
                             :href="valueToDisplay(contactInformationProperty)"
                             target="_blank"
                           >
                             {{ valueToDisplay(contactInformationProperty) }}
                           </a>
-                          <span v-else class="text-caption">{{
+                          <span v-else class="text-body-small">{{
                             valueToDisplay(contactInformationProperty)
                           }}</span>
                         </template>
@@ -76,7 +76,7 @@
                           <!-- Show english value, if available -->
                           <div
                             v-if="valueToDisplay(contactInformationProperty)"
-                            class="text-caption"
+                            class="text-body-small"
                           >
                             <template
                               v-if="
@@ -102,7 +102,7 @@
                             v-else
                             :key="j"
                           >
-                            <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                            <div v-if="langStringSet?.text.length > 0" class="text-body-small">
                               <v-chip class="mr-1" label size="x-small">{{
                                 langStringSet.language
                               }}</v-chip>
@@ -119,7 +119,7 @@
                           <!-- Show english value, if available -->
                           <div
                             v-if="valueToDisplay(contactInformationProperty)"
-                            class="text-caption"
+                            class="text-body-small"
                           >
                             {{ valueToDisplay(contactInformationProperty) }}
                             {{
@@ -138,7 +138,7 @@
                             v-else
                             :key="j"
                           >
-                            <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                            <div v-if="langStringSet?.text.length > 0" class="text-body-small">
                               <v-chip class="mr-1" label size="x-small">{{
                                 langStringSet.language
                               }}</v-chip>
@@ -153,7 +153,7 @@
                               checkIdShort(contactInformationProperty, 'FaxNumber') ||
                               checkIdShort(contactInformationProperty, 'Email')
                           "
-                          class="text-caption"
+                          class="text-body-small"
                         >
                           <v-chip
                             v-if="
@@ -179,7 +179,7 @@
                             "
                           >
                             <a
-                              class="text-caption text-primary"
+                              class="text-body-small text-primary"
                               :href="`tel:${valueToDisplay(contactInformationProperty).replaceAll(' ', '')}`"
                             >
                               {{ valueToDisplay(contactInformationProperty) }}
@@ -189,7 +189,7 @@
                             v-else-if="checkIdShort(contactInformationProperty, 'Email')"
                           >
                             <a
-                              class="text-caption text-primary"
+                              class="text-body-small text-primary"
                               :href="`mailto:${valueToDisplay(contactInformationProperty)}`"
                             >
                               {{ valueToDisplay(contactInformationProperty) }}
@@ -208,7 +208,7 @@
                           <!-- Show english value, if available -->
                           <div
                             v-if="valueToDisplay(contactInformationProperty)"
-                            class="text-caption"
+                            class="text-body-small"
                           >
                             {{ valueToDisplay(contactInformationProperty) }}
                           </div>
@@ -218,7 +218,7 @@
                             v-else
                             :key="j"
                           >
-                            <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                            <div v-if="langStringSet?.text.length > 0" class="text-body-small">
                               <v-chip class="mr-1" label size="x-small">{{
                                 langStringSet.language
                               }}</v-chip>
@@ -227,7 +227,7 @@
                           </template>
                         </template>
                         <!-- Default -->
-                        <span v-else class="text-caption">
+                        <span v-else class="text-body-small">
                           {{ valueToDisplay(contactInformationProperty) }}
                         </span>
                       </td>

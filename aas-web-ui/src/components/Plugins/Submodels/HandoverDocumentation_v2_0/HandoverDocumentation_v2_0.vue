@@ -29,7 +29,7 @@
 
             <!-- Document Versions -->
             <template v-if="(document.documentVersionInfo ?? []).length > 0">
-              <div class="text-caption text-subtitleText">
+              <div class="text-body-small text-subtitleText">
                 <!-- Tabs for document versions -->
                 <v-tabs
                   class="mt-2"
@@ -73,8 +73,8 @@
               type="warning"
               variant="outlined"
             />
-            <!-- <div class="mt-6 text-subtitle-2">Document Classifications (TODO)</div> -->
-            <!-- <div class="mt-3 text-subtitle-2">Documented Entities (TODO)</div> -->
+            <!-- <div class="mt-6 text-title-small">Document Classifications (TODO)</div> -->
+            <!-- <div class="mt-3 text-title-small">Documented Entities (TODO)</div> -->
           </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>

@@ -17,7 +17,7 @@
         <div>
           {{ nameToDisplay(item.submodel) }}
         </div>
-        <div class="text-medium-emphasis">
+        <div class="opacity-60">
           {{ item.smId }}
         </div>
       </template>

@@ -4,7 +4,7 @@
       <template v-if="['SubmodelElementCollection', 'SubmodelElementList'].includes(submodelElement.modelType)">
         <tr class="bg-tableOdd">
           <td colspan="4">
-            <p class="text-subtitle-2 py-4" :class="'pl-' + level * 3">
+            <p class="text-title-small py-4" :class="'pl-' + level * 3">
               <v-icon class="mr-2" color="icon" size="small">mdi-folder</v-icon>
               <span class="text-titleText">{{ nameToDisplay(submodelElement) }}</span>
             </p>
@@ -18,18 +18,18 @@
       <template v-else-if="['Property', 'MultiLanguageProperty'].includes(submodelElement.modelType)">
         <tr>
           <td>
-            <p class="text-caption">
+            <p class="text-body-small">
               {{ nameToDisplay(submodelElement) }}
             </p>
           </td>
           <td>
-            <p class="text-caption" style="min-width: 100px">{{ descriptionToDisplay(submodelElement) }}</p>
+            <p class="text-body-small" style="min-width: 100px">{{ descriptionToDisplay(submodelElement) }}</p>
           </td>
           <td>
-            <p class="text-caption" style="min-width: 200px">{{ cdDefinition(submodelElement) }}</p>
+            <p class="text-body-small" style="min-width: 200px">{{ cdDefinition(submodelElement) }}</p>
           </td>
           <td>
-            <p class="text-caption">
+            <p class="text-body-small">
               {{ valueToDisplay(submodelElement) }}
             </p>
           </td>

@@ -8,7 +8,7 @@
           :class="Number(c) % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'"
         >
           <td class="w-50">
-            <div class="text-caption">
+            <div class="text-body-small">
               {{ nameToDisplay(child) }}
               <DescriptionTooltip :description-array="getDescriptionArray(child)" />
             </div>
@@ -17,11 +17,11 @@
           <td>
             <!-- MultiLanguageProperty -->
             <template v-if="child.modelType === 'MultiLanguageProperty'">
-              <div v-if="valueToDisplay(child)" class="text-caption text-subtitleText">
+              <div v-if="valueToDisplay(child)" class="text-body-small text-subtitleText">
                 {{ valueToDisplay(child) }}
               </div>
               <div v-else>
-                <div v-for="(langStringSet, k) in getLangSets(child)" :key="k" class="text-caption">
+                <div v-for="(langStringSet, k) in getLangSets(child)" :key="k" class="text-body-small">
                   <v-chip class="mr-1" label size="x-small">
                     {{ langStringSet.language }}
                   </v-chip>
@@ -31,7 +31,7 @@
             </template>
 
             <template v-else-if="child.modelType === 'SubmodelElementList'">
-              <div v-if="getChildEntries(child).length === 0" class="text-caption text-subtitleText">
+              <div v-if="getChildEntries(child).length === 0" class="text-body-small text-subtitleText">
                 —
               </div>
 
@@ -39,7 +39,7 @@
                 <div
                   v-for="(entry, e) in getChildEntries(child)"
                   :key="entry.idShort ?? entry.id ?? `entry-${e}`"
-                  class="text-caption text-subtitleText"
+                  class="text-body-small text-subtitleText"
                 >
                   <!-- entry can be Property, ReferenceElement, File etc -->
                   <template v-if="entry.modelType === 'MultiLanguageProperty'">
@@ -54,7 +54,7 @@
             </template>
             <!-- File -->
             <template v-else-if="child.modelType === 'File'">
-              <div class="text-caption text-subtitleText">
+              <div class="text-body-small text-subtitleText">
                 {{ child.contentType }}
                 <span v-if="child.value">
                   —
@@ -63,7 +63,7 @@
             </template>
 
             <!-- Default -->
-            <span v-else class="text-caption text-subtitleText">
+            <span v-else class="text-body-small text-subtitleText">
               {{ valueToDisplay(child) }}
             </span>
           </td>

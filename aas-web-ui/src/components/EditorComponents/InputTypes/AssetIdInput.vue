@@ -35,7 +35,7 @@
       <v-divider v-if="showGlobalAssetId" class="mt-2" />
       <v-list-item v-if="showGlobalAssetId" class="pl-0 pt-0">
         <template #title>
-          <div class="text-subtitle-2">{{ 'Specific Asset Ids' }}</div>
+          <div class="text-title-small">{{ 'Specific Asset Ids' }}</div>
         </template>
       </v-list-item>
       <v-row align="center">

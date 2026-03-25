@@ -10,7 +10,7 @@
     >
       <!-- SupplementalSemanticIds Title -->
       <template v-if="supplementalSemanticIdsTitle && supplementalSemanticIdsTitle.trim().length > 0" #title>
-        <div class="text-subtitle-2 mt-2">{{ supplementalSemanticIdsTitle + ':' }}</div>
+        <div class="text-title-small mt-2">{{ supplementalSemanticIdsTitle + ':' }}</div>
       </template>
       <!-- SupplementalSemanticIds List -->
       <template

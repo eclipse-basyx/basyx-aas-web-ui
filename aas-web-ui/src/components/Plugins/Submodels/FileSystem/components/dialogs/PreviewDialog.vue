@@ -3,7 +3,7 @@
     <v-card class="d-flex flex-column" color="transparent">
       <v-toolbar class="pl-3" color="transparent">
         <v-icon :color="fileTypeIcon.color">{{ fileTypeIcon.icon }}</v-icon>
-        <v-toolbar-title class="text-body-2 text-md-h6 text-white">
+        <v-toolbar-title class="text-title-medium text-white">
           {{ fileName }}
         </v-toolbar-title>
         <v-spacer />

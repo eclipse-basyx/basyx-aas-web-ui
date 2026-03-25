@@ -1,76 +1,72 @@
 <template>
   <v-container class="pa-0" fluid>
     <v-sheet>
-      <v-divider v-if="!singleAas || !isMobile" />
-      <v-card-title class="bg-detailsHeader px-1">
-        <v-row align="center" class="mx-0" style="height: 40px">
-          <!-- AAS Status -->
-          <div
+      <v-divider v-if="!singleAas && !isMobile" />
+      <v-card-title class="bg-detailsHeader px-1 py-0 d-flex align-center" style="height: 32px">
+        <!-- AAS Status -->
+        <div
+          v-if="
+            !isMobile &&
+              singleAas &&
+              assetAdministrationShellData.status &&
+              assetAdministrationShellData.status.trim() !== ''
+          "
+          class="text-body-small px-1"
+        >
+          <v-tooltip
             v-if="
-              !isMobile &&
-                singleAas &&
-                assetAdministrationShellData.status &&
-                assetAdministrationShellData.status.trim() !== ''
+              assetAdministrationShellData.status && assetAdministrationShellData.status === 'offline'
             "
-            class="text-caption px-1"
+            :text="'AAS status ' + assetAdministrationShellData.status"
           >
-            <v-tooltip
-              v-if="
-                assetAdministrationShellData.status && assetAdministrationShellData.status === 'offline'
-              "
-              :text="'AAS status ' + assetAdministrationShellData.status"
-            >
-              <template #activator="{ props }">
-                <v-icon v-bind="props" class="text-error" size="small"> mdi-cloud-off-outline </v-icon>
-              </template>
-            </v-tooltip>
-          </div>
-          <!-- Last Sync -->
-          <div class="text-caption ml-1">
-            <v-icon class="text-caption" size="small">mdi-autorenew</v-icon>
-            <span
-              class="text-caption ml-1"
-              :class="
-                assetAdministrationShellData?.timestamp === 'no sync'
-                  ? 'text-error'
-                  : 'text-subtitleText'
-              "
-            >
-              {{ assetAdministrationShellData.timestamp }}
-            </span>
-          </div>
-          <v-spacer v-if="isMobile || singleAas" />
-          <!-- Jump to Submodel List on mobile -->
-          <v-btn
-            v-if="isMobile"
-            append-icon="mdi-chevron-right"
-            border
-            class="text-none"
-            color="primary"
-            density="compact"
-            text="Submodels"
-            variant="tonal"
-            @click="gotoSubmodelList()"
-          />
-          <!-- Download AAS on Desktop -->
-          <v-tooltip location="end" :open-delay="600">
             <template #activator="{ props }">
-              <v-btn
-                v-if="singleAas && !isMobile"
-                v-bind="props"
-                append-icon="mdi-download"
-                border
-                class="text-none"
-                color="primary"
-                density="compact"
-                text="Download"
-                variant="tonal"
-                @click="openDownloadDialog(assetAdministrationShellData)"
-              />
+              <v-icon v-bind="props" class="text-error" size="small"> mdi-cloud-off-outline </v-icon>
             </template>
-            <span>Download Asset Administration Shell as .aasx file</span>
           </v-tooltip>
-        </v-row>
+        </div>
+        <!-- Last Sync -->
+        <div class="text-body-small ml-1">
+          <v-icon class="text-body-small" size="small">mdi-autorenew</v-icon>
+          <span
+            class="text-body-small ml-1"
+            :class="
+              assetAdministrationShellData?.timestamp === 'no sync'
+                ? 'text-error'
+                : 'text-subtitleText'
+            "
+          >
+            {{ assetAdministrationShellData.timestamp }}
+          </span>
+        </div>
+        <v-spacer v-if="isMobile || singleAas" />
+        <!-- Jump to Submodel List on mobile -->
+        <v-btn
+          v-if="isMobile"
+          append-icon="mdi-chevron-right"
+          border
+          color="primary"
+          density="compact"
+          text="Submodels"
+          variant="tonal"
+          @click="gotoSubmodelList()"
+        />
+        <!-- Download AAS on Desktop -->
+        <v-tooltip location="end" :open-delay="600">
+          <template #activator="{ props }">
+            <v-btn
+              v-if="singleAas && !isMobile"
+              v-bind="props"
+              append-icon="mdi-download"
+              border
+              color="primary"
+              density="compact"
+              text="Download"
+              variant="tonal"
+              @click="openDownloadDialog(assetAdministrationShellData)"
+            />
+          </template>
+          <span>Download Asset Administration Shell as .aasx file</span>
+        </v-tooltip>
       </v-card-title>
       <v-divider />
       <v-card-text class="bg-detailsCard pa-0" style="overflow-y: auto" :style="{ height: detailsListHeight }">
@@ -192,7 +188,7 @@
         : 'calc(100vh - 231px - 40px - 64px - 36px - 64px)' // Full height - 4x AAS items - footer - header - details header (divider) - Searchbar
     } else {
       return singleAas.value
-        ? 'calc(100vh - 64px - 48px - 40px - 35px)' // Full height - header - collapse button - footer - details header (divider)
+        ? 'calc(100vh - 64px - 48px - 40px - 34px)' // Full height - header - collapse button - footer - details header (divider)
         : 'calc(50vh - 40px - 48px - 33px)' // Half height - footer - collapse button - details header (divider)
     }
   })

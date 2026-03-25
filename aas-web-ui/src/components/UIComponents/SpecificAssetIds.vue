@@ -2,7 +2,7 @@
   <v-container class="pa-0" fluid>
     <v-list-item v-if="specificAssetIds && Array.isArray(specificAssetIds) && specificAssetIds.length > 0">
       <template #title>
-        <div class="mt-1 mb-2 text-subtitle-2">
+        <div class="mt-1 mb-2 text-title-small">
           {{ 'Specific Asset IDs:' }}
         </div>
       </template>
@@ -12,13 +12,13 @@
             <v-hover v-slot="{ isHovering, props }">
               <div
                 v-bind="props"
-                class="text-caption"
+                class="text-body-small"
                 :class="isHovering ? 'cursor-pointer' : ''"
                 @click="
                   copyToClipboard(specificAssetId.value, specificAssetId.name, getCopyIconAsRef())
                 "
               >
-                <span class="text-subtitle-2">{{ specificAssetId.name + ': ' }}</span>
+                <span class="text-title-small">{{ specificAssetId.name + ': ' }}</span>
                 <v-icon
                   v-if="isHovering"
                   class="mr-1"

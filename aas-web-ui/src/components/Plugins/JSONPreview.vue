@@ -89,7 +89,7 @@
           <v-progress-circular color="primary" indeterminate />
         </div>
         <div v-else-if="error" class="error-message pa-4 text-center">
-          <v-icon class="mb-2" color="error" size="large">mdi-alert-circle</v-icon>
+          <v-icon class="mb-2" color="error" size="28">mdi-alert-circle</v-icon>
           <div>{{ error }}</div>
         </div>
         <div v-else-if="!jsonContent" class="no-content pa-4 text-center">No JSON content available</div>

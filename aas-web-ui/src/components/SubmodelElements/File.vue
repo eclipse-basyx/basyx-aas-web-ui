@@ -1,7 +1,7 @@
 <template>
   <v-container class="pa-0" fluid>
     <v-list-item class="px-1 pb-1 pt-0">
-      <v-list-item-title class="text-subtitle-2 mt-2">{{ 'Path: ' }}</v-list-item-title>
+      <v-list-item-title class="text-title-small mt-2">{{ 'Path: ' }}</v-list-item-title>
     </v-list-item>
     <v-card v-if="fileObject" color="elevatedCard">
       <!-- Path (Value) of the File Element -->
@@ -9,7 +9,7 @@
         <v-list-item class="pb-0">
           <!-- mimeType -->
           <v-list-item-title>
-            <span class="text-caption">{{ 'Mime Type: ' }}</span>
+            <span class="text-body-small">{{ 'Mime Type: ' }}</span>
             <v-chip border color="primary" label size="x-small">{{
               fileObject.contentType ? fileObject.contentType : 'no-mime'
             }}</v-chip>

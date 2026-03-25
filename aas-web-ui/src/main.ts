@@ -17,6 +17,7 @@ import App from '@/App.vue'
 import { registerVuetify } from '@/plugins'
 import { createAppRouter } from '@/router'
 import { useNavigationStore } from '@/store/NavigationStore'
+import 'unfonts.css'
 
 initialize()
 

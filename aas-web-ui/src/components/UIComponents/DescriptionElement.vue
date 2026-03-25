@@ -3,13 +3,13 @@
     <v-list-item v-if="descriptionArray && Array.isArray(descriptionArray) && descriptionArray.length > 0">
       <!-- Tooltip with Description -->
       <v-tooltip activator="parent" open-delay="600" transition="slide-x-transition">
-        <div v-for="(description, i) in descriptionArray" :key="i" class="text-caption">
+        <div v-for="(description, i) in descriptionArray" :key="i" class="text-body-small">
           <span class="font-weight-bold">{{ description.language + ': ' }}</span>{{ description.text }}
         </div>
       </v-tooltip>
       <!-- Description Title -->
       <template #title>
-        <div class="mt-1" :class="small ? 'text-caption' : 'text-subtitle-2 '">
+        <div class="mt-1" :class="small ? 'text-body-small' : 'text-title-small '">
           {{ descriptionTitle + ':' }}
         </div>
       </template>

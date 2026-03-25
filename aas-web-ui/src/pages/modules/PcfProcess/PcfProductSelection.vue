@@ -23,7 +23,7 @@
         >
           <!-- Title -->
           <v-list-item class="pl-3">
-            <v-list-item-title class="text-subtitle-1">Select product</v-list-item-title>
+            <v-list-item-title class="text-body-large">Select product</v-list-item-title>
           </v-list-item>
           <!-- Search -->
           <v-list-item class="mb-3 mt-0">
@@ -71,10 +71,10 @@
               >
                 <!-- Tooltip with idShort and id -->
                 <v-tooltip activator="parent" open-delay="600" transition="slide-x-transition">
-                  <div class="text-caption">
+                  <div class="text-body-small">
                     <span class="font-weight-bold">{{ 'idShort: ' }}</span>{{ item['idShort'] }}
                   </div>
-                  <div class="text-caption">
+                  <div class="text-body-small">
                     <span class="font-weight-bold">{{ 'ID: ' }}</span>{{ item['id'] }}
                   </div>
                 </v-tooltip>
@@ -124,7 +124,7 @@
         <template v-else>
           <v-list-item class="pl-0 pt-0">
             <template #title>
-              <div class="text-subtitle-2">Display Name for the product</div>
+              <div class="text-title-small">Display Name for the product</div>
             </template>
           </v-list-item>
           <MultiLanguageTextInput v-model="displayName" :show-label="false" type="displayName" />

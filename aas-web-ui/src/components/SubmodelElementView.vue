@@ -184,7 +184,7 @@
                 }}</v-chip>
               </template>
               <v-list-item-title>
-                <div class="text-primary text-subtitle-1">
+                <div class="text-primary text-body-large">
                   {{ nameToDisplay(conceptDescription) }}
                 </div>
               </v-list-item-title>

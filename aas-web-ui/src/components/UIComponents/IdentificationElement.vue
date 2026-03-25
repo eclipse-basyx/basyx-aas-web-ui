@@ -12,7 +12,7 @@
                     identificationObject.modelType
                   )
               "
-              class="text-caption"
+              class="text-body-small"
             >
               <span class="font-weight-bold">{{ identificationTitle + ': ' }}</span>{{ identificationObject['id'] }}
             </div>
@@ -21,14 +21,14 @@
                 identificationObject?.idShort &&
                   (!identificationObject?.modelType || identificationObject.modelType !== 'Asset')
               "
-              class="text-caption"
+              class="text-body-small"
             >
               <span class="font-weight-bold">{{ idShortTitle + ': ' }}</span>{{ identificationObject['idShort'] }}
             </div>
           </v-tooltip>
           <template v-if="identificationObject.modelType !== 'ConceptDescription'">
             <v-list-item-title>
-              <div class="text-primary text-subtitle-1">
+              <div class="text-primary text-body-large">
                 {{ nameToDisplay(identificationObject) }}
               </div>
             </v-list-item-title>

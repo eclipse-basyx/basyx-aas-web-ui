@@ -21,7 +21,7 @@
           >
             <!-- Title of the Variable Type -->
             <v-list-item class="px-1 pb-1 pt-0">
-              <v-list-item-title class="text-subtitle-2 mt-2">{{
+              <v-list-item-title class="text-title-small mt-2">{{
                 variableType.name + ':'
               }}</v-list-item-title>
             </v-list-item>

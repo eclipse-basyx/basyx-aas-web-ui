@@ -17,7 +17,7 @@
     </v-sheet>
     <template v-else-if="Object.keys(carbonFootprintData).length > 0">
       <v-card v-if="productCarbonFootprints && Object.keys(productCarbonFootprints).length > 0" class="mb-4">
-        <v-card-title class="text-subtitle-1">
+        <v-card-title class="text-body-large">
           {{ 'Product Carbon Footprint' + (Object.keys(productCarbonFootprints).length > 1 ? 's' : '') }}
         </v-card-title>
         <v-card-text>
@@ -71,7 +71,7 @@
                   }}
                   <span class="">CO<sub>2</sub>eq</span>
                 </div>
-                <p class="text-caption text-medium-emphasis">
+                <p class="text-body-small opacity-60">
                   <span> per </span>
                   {{
                     valueToDisplay(
@@ -114,7 +114,7 @@
                       }}
                     </span> </template>)
                 </p>
-                <p class="text-caption text-medium-emphasis">
+                <p class="text-body-small opacity-60">
                   <v-icon class="mr-1" size="small">mdi-calendar</v-icon>
                   <span>valid from </span>
                   <span>
@@ -143,7 +143,7 @@
                       )
                     "
                   >
-                    <span class="text-medium-emphasis">till </span>
+                    <span class="opacity-60">till </span>
                     {{
                       valueToDisplay(
                         pcfSMC.value.find(
@@ -166,7 +166,7 @@
                         checkSemanticId(sme, '0173-1#02-ABI497#001')
                     )
                   "
-                  class="text-caption text-medium-emphasis"
+                  class="text-body-small opacity-60"
                 >
                   <v-icon class="mr-1" size="small">mdi-map-marker-outline</v-icon>
                   <span>
@@ -188,7 +188,7 @@
       </v-card>
 
       <v-card v-if="transportCarbonFootprints && Object.keys(transportCarbonFootprints).length > 0" class="mb-4">
-        <v-card-title class="text-subtitle-1">
+        <v-card-title class="text-body-large">
           {{ 'Transport Carbon Footprint' + (Object.keys(productCarbonFootprints).length > 1 ? 's' : '') }}
         </v-card-title>
         <v-card-text>
@@ -257,7 +257,7 @@
                   }}
                   <span class="">CO<sub>2</sub>eq</span>
                 </div>
-                <p class="text-caption text-medium-emphasis">
+                <p class="text-body-small opacity-60">
                   <span> per </span>
                   {{
                     valueToDisplay(
@@ -300,7 +300,7 @@
                       }}
                     </span> </template>)
                 </p>
-                <p class="text-caption text-medium-emphasis">
+                <p class="text-body-small opacity-60">
                   <v-icon class="mr-1" size="small">mdi-calendar</v-icon>
                   <span>valid from </span>
                   <span>
@@ -352,7 +352,7 @@
                         checkSemanticId(sme, '0173-1#02-ABI499#001')
                     )
                   "
-                  class="text-caption text-medium-emphasis"
+                  class="text-body-small opacity-60"
                 >
                   <v-icon class="mr-1" size="small">mdi-map-marker-outline</v-icon>
                   <span>
@@ -375,7 +375,7 @@
                         checkSemanticId(sme, '0173-1#02-ABI498#001')
                     )
                   "
-                  class="text-caption text-medium-emphasis"
+                  class="text-body-small opacity-60"
                 >
                   <v-icon size="small">mdi-map-marker-outline</v-icon>
                   <span>

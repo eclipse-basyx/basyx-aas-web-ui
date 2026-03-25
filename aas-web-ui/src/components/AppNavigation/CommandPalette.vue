@@ -57,7 +57,7 @@
                 />
               </template>
               <template #append>
-                <v-hotkey v-if="command.shortcut" class="text-caption" :keys="command.shortcut" />
+                <v-hotkey v-if="command.shortcut" class="text-body-small" :keys="command.shortcut" />
               </template>
             </v-list-item>
           </template>
@@ -66,7 +66,7 @@
       <v-divider />
       <v-card-actions>
         <v-spacer />
-        <div class="pe-4 text-caption">
+        <div class="pe-4 text-body-small">
           <v-kbd>Esc</v-kbd>
           to close
         </div>

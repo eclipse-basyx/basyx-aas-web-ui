@@ -30,9 +30,9 @@
               </v-sheet>
             </v-col>
             <v-col class="pa-2" cols="12" md="6">
-              <div class="text-subtitle-1 font-weight-medium mb-2">{{ selectedAasTitle }}</div>
-              <div class="text-caption text-medium-emphasis">DPP ID</div>
-              <div class="text-body-2 text-break">{{ dppIdToDisplay }}</div>
+              <div class="text-body-large font-weight-medium mb-2">{{ selectedAasTitle }}</div>
+              <div class="text-body-small opacity-60">DPP ID</div>
+              <div class="text-body-medium text-break">{{ dppIdToDisplay }}</div>
             </v-col>
             <v-col class="pa-2 d-flex justify-center justify-md-end" cols="12" md="3">
               <v-sheet border class="pa-2" min-width="132" rounded="lg">

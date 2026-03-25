@@ -31,8 +31,8 @@
         <v-table class="text-no-wrap border rounded-lg" density="comfortable">
           <thead>
             <tr>
-              <th class="text-left text-caption text-sm-body-2">Property</th>
-              <th class="text-left text-caption text-sm-body-2">Value</th>
+              <th class="text-left text-body-small">Property</th>
+              <th class="text-left text-body-small">Value</th>
             </tr>
           </thead>
           <tbody>
@@ -41,8 +41,8 @@
               :key="`${row.idShort}-${index}`"
               :class="index % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'"
             >
-              <td class="text-caption text-sm-body-2">{{ row.label }}</td>
-              <td class="text-caption text-sm-body-2">
+              <td class="text-body-small">{{ row.label }}</td>
+              <td class="text-body-small">
                 <v-img
                   v-if="row.type === 'logo' && logoSrc"
                   class="my-1"

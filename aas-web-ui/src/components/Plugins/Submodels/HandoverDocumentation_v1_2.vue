@@ -38,7 +38,7 @@
                       :class="(j as number) % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'"
                     >
                       <td>
-                        <div class="text-subtitleText text-caption">
+                        <div class="text-subtitleText text-body-small">
                           <span>{{ nameToDisplay(metaProperty) }}</span>
                           <DescriptionTooltip
                             :description-array="metaProperty?.description"
@@ -49,7 +49,7 @@
                         <!-- Language -->
                         <template v-if="checkIdShort(metaProperty, 'Language')">
                           <!-- Show english value, if available -->
-                          <div v-if="valueToDisplay(metaProperty)" class="text-caption">
+                          <div v-if="valueToDisplay(metaProperty)" class="text-body-small">
                             <template v-if="getLanguageName(valueToDisplay(metaProperty))">
                               {{ getLanguageName(valueToDisplay(metaProperty)) }}
                               ({{ valueToDisplay(metaProperty) }})
@@ -62,7 +62,7 @@
                             v-else
                             :key="k"
                           >
-                            <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                            <div v-if="langStringSet?.text.length > 0" class="text-body-small">
                               <v-chip class="mr-1" label size="x-small">{{
                                 langStringSet.language
                               }}</v-chip>
@@ -73,7 +73,7 @@
                         <!-- MultiLanguageProperties -->
                         <template v-else-if="metaProperty.modelType == 'MultiLanguageProperty'">
                           <!-- Show english value, if available -->
-                          <div v-if="valueToDisplay(metaProperty)" class="text-caption">
+                          <div v-if="valueToDisplay(metaProperty)" class="text-body-small">
                             {{ valueToDisplay(metaProperty) }}
                           </div>
                           <!-- Otherwise show all available values -->
@@ -82,7 +82,7 @@
                             v-else
                             :key="k"
                           >
-                            <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                            <div v-if="langStringSet?.text.length > 0" class="text-body-small">
                               <v-chip class="mr-1" label size="x-small">{{
                                 langStringSet.language
                               }}</v-chip>
@@ -91,7 +91,7 @@
                           </template>
                         </template>
                         <!-- Default -->
-                        <span v-else class="text-caption">
+                        <span v-else class="text-body-small">
                           {{ valueToDisplay(metaProperty) }}
                         </span>
                       </td>
@@ -253,7 +253,7 @@
                         .value"
                       :key="classificationProperty.idShort"
                     >
-                      <div class="text-caption">
+                      <div class="text-body-small">
                         <span>{{ nameToDisplay(classificationProperty) }}</span>
                         <DescriptionTooltip
                           :description-array="classificationProperty?.description"
@@ -282,7 +282,7 @@
                           <!-- Show english value, if available -->
                           <div
                             v-if="valueToDisplay(classificationProperty)"
-                            class="text-caption text-subtitleText"
+                            class="text-body-small text-subtitleText"
                           >
                             {{ valueToDisplay(classificationProperty) }}
                           </div>
@@ -292,7 +292,7 @@
                             v-else
                             :key="k"
                           >
-                            <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                            <div v-if="langStringSet?.text.length > 0" class="text-body-small">
                               <v-chip class="mr-1" label size="x-small">{{
                                 langStringSet.language
                               }}</v-chip>
@@ -301,7 +301,7 @@
                           </template>
                         </template>
                         <!-- Default -->
-                        <span v-else class="text-caption text-subtitleText">
+                        <span v-else class="text-body-small text-subtitleText">
                           {{ valueToDisplay(classificationProperty) }}
                         </span>
                       </td>
@@ -321,7 +321,7 @@
                       v-for="idProperty in document.documentIds[0].value"
                       :key="idProperty.idShort"
                     >
-                      <div class="text-caption">
+                      <div class="text-body-small">
                         <span>{{ nameToDisplay(idProperty) }}</span>
                         <DescriptionTooltip :description-array="idProperty?.description" />
                       </div>
@@ -343,7 +343,7 @@
                           <!-- Show english value, if available -->
                           <div
                             v-if="valueToDisplay(idProperty)"
-                            class="text-caption text-subtitleText"
+                            class="text-body-small text-subtitleText"
                           >
                             {{ valueToDisplay(idProperty) }}
                           </div>
@@ -353,7 +353,7 @@
                             v-else
                             :key="k"
                           >
-                            <div v-if="langStringSet?.text.length > 0" class="text-caption">
+                            <div v-if="langStringSet?.text.length > 0" class="text-body-small">
                               <v-chip class="mr-1" label size="x-small">{{
                                 langStringSet.language
                               }}</v-chip>
@@ -362,7 +362,7 @@
                           </template>
                         </template>
                         <!-- Default -->
-                        <span v-else class="text-caption text-subtitleText">
+                        <span v-else class="text-body-small text-subtitleText">
                           {{ valueToDisplay(idProperty) }}
                         </span>
                       </td>

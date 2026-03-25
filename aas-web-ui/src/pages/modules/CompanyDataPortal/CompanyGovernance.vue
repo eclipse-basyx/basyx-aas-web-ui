@@ -4,7 +4,7 @@
       <v-sheet border class="pa-6" elevation="4" rounded="lg">
         <v-form @submit.prevent="initSave">
           <!-- Corporate Policies -->
-          <div class="mb-2 text-subtitle-1 font-weight-bold">Corporate Policies</div>
+          <div class="mb-2 text-body-large font-weight-bold">Corporate Policies</div>
 
           <FormField label="Code of Conduct" tip="Reference to a code of conduct document">
             <v-text-field
@@ -48,7 +48,7 @@
           <v-divider class="my-4" />
 
           <!-- Industry Standards -->
-          <div class="mb-2 text-subtitle-1 font-weight-bold">Industry Standards</div>
+          <div class="mb-2 text-body-large font-weight-bold">Industry Standards</div>
 
           <FormField
             label="Industry Memberships"
@@ -168,7 +168,7 @@
           <v-divider class="my-4" />
 
           <!-- Risk Management -->
-          <div class="mb-2 text-subtitle-1 font-weight-bold">Risk Management</div>
+          <div class="mb-2 text-body-large font-weight-bold">Risk Management</div>
 
           <FormField
             label="Business Continuity Plan"
@@ -186,7 +186,7 @@
             />
           </FormField>
 
-          <div class="mb-2 text-subtitle-2 font-weight-bold">Security Policies</div>
+          <div class="mb-2 text-title-small font-weight-bold">Security Policies</div>
 
           <FormField
             label="Information Security Policy"
@@ -361,7 +361,7 @@
           </FormField>
 
           <!-- Insurances -->
-          <div class="mb-2 text-subtitle-1 font-weight-bold">Insurances</div>
+          <div class="mb-2 text-body-large font-weight-bold">Insurances</div>
           <v-slide-y-transition group>
             <div v-for="(insurance, index) in form.insurances" :key="index" class="mb-3">
               <v-card class="pa-4" elevation="0" variant="tonal">
@@ -418,7 +418,7 @@
           <v-divider class="my-4" />
 
           <!-- Employee Trainings -->
-          <div class="mb-2 text-subtitle-1 font-weight-bold">Employee Trainings</div>
+          <div class="mb-2 text-body-large font-weight-bold">Employee Trainings</div>
           <v-slide-y-transition group>
             <div v-for="(training, index) in form.employeeTrainings" :key="index" class="mb-2">
               <v-row dense>
@@ -457,7 +457,7 @@
           <v-divider class="my-4" />
 
           <!-- Legal Compliance -->
-          <div class="mb-2 text-subtitle-1 font-weight-bold">Legal Compliance</div>
+          <div class="mb-2 text-body-large font-weight-bold">Legal Compliance</div>
           <v-expansion-panels variant="accordion">
             <v-expansion-panel v-for="(reg, index) in form.legalCompliance" :key="index">
               <v-expansion-panel-title>

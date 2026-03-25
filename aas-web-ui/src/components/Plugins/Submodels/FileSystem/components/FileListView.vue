@@ -55,7 +55,7 @@
           >mdi-video</v-icon>
           <v-icon v-else color="grey">mdi-file</v-icon>
         </template>
-        <v-list-item-title class="text-subtitle-2">{{ item.idShort }}</v-list-item-title>
+        <v-list-item-title class="text-title-small">{{ item.idShort }}</v-list-item-title>
       </v-list-item>
 
       <!-- Folder item -->
@@ -72,9 +72,9 @@
         <template #prepend>
           <v-icon color="yellow darken-2">mdi-folder</v-icon>
         </template>
-        <v-list-item-title class="text-subtitle-2">
+        <v-list-item-title class="text-title-small">
           {{ getFolderDisplayName(item) }}
-          <span class="text-caption text-medium-emphasis ml-2">({{ getFolderElementCount(item) }})</span>
+          <span class="text-body-small opacity-60 ml-2">({{ getFolderElementCount(item) }})</span>
         </v-list-item-title>
       </v-list-item>
 
@@ -89,7 +89,7 @@
         <template #prepend>
           <v-icon color="yellow darken-2">mdi-folder</v-icon>
         </template>
-        <v-list-item-title class="text-subtitle-2">...</v-list-item-title>
+        <v-list-item-title class="text-title-small">...</v-list-item-title>
       </v-list-item>
     </template>
 

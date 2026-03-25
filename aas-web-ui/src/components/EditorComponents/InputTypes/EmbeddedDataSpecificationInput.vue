@@ -87,7 +87,7 @@
             <v-divider />
             <v-list-item class="pl-0 pt-0">
               <template #title>
-                <div class="text-subtitle-2">Unit ID</div>
+                <div class="text-title-small">Unit ID</div>
               </template>
             </v-list-item>
             <v-btn
@@ -154,7 +154,7 @@
             <v-divider />
             <v-list-item class="pl-0 pt-0">
               <template #title>
-                <div class="text-subtitle-2">Value List</div>
+                <div class="text-title-small">Value List</div>
               </template>
             </v-list-item>
             <v-btn
@@ -222,7 +222,7 @@
             <v-divider />
             <v-list-item class="pl-0 pt-0">
               <template #title>
-                <div class="text-subtitle-2">Level Type</div>
+                <div class="text-title-small">Level Type</div>
               </template>
             </v-list-item>
             <v-btn

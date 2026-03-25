@@ -42,7 +42,7 @@
                 >mdi-video</v-icon>
                 <v-icon v-else color="grey" size="small">mdi-file</v-icon>
               </template>
-              <v-list-item-title class="text-body-2">
+              <v-list-item-title class="text-body-medium">
                 {{ getItemDisplayName(item) }}
               </v-list-item-title>
             </v-list-item>

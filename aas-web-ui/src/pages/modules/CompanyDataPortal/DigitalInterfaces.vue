@@ -29,7 +29,7 @@
 
         <v-divider class="my-4" />
 
-        <div class="text-subtitle-2 font-weight-bold mb-2">Email System</div>
+        <div class="text-title-small font-weight-bold mb-2">Email System</div>
 
         <FormField label="Email System Name" tip="The specific name of the email software used by the company">
           <v-text-field v-model="form.emailSystem" density="comfortable" hide-details variant="outlined" />
@@ -51,7 +51,7 @@
 
         <v-divider class="my-4" />
 
-        <div class="text-subtitle-2 font-weight-bold mb-2">CAD Tools</div>
+        <div class="text-title-small font-weight-bold mb-2">CAD Tools</div>
         <FormField label="CAD Tools" tip="Computer-aided design tool">
           <v-combobox
             v-model="form.cadTools"
@@ -67,7 +67,7 @@
 
         <v-divider class="my-4" />
 
-        <div class="text-subtitle-2 font-weight-bold mb-2">Data Exchange</div>
+        <div class="text-title-small font-weight-bold mb-2">Data Exchange</div>
 
         <FormField
           label="Encrypted Data Transmission"

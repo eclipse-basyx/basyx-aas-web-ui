@@ -31,7 +31,7 @@
               </div>
             </td>
             <td>
-              <span class="text-caption text-medium-emphasis">{{ getInfrastructureSummary(infra) }}</span>
+              <span class="text-body-small opacity-60">{{ getInfrastructureSummary(infra) }}</span>
             </td>
             <td style="width: 120px">
               <div class="d-flex justify-end">

@@ -6,7 +6,7 @@
     >
       <v-expansion-panel elevation="0" static tile>
         <v-expansion-panel-title class="px-2">
-          <span :class="small ? 'text-caption' : 'text-subtitle-2 '">
+          <span :class="small ? 'text-body-small' : 'text-title-small '">
             {{ qualifierTitle }}
           </span>
         </v-expansion-panel-title>
@@ -28,7 +28,7 @@
                 "
                 class="pt-1"
               >
-                <span class="text-caption">
+                <span class="text-body-small">
                   {{ 'Semantic Id: ' }}
                 </span>
               </v-list-item-subtitle>
@@ -53,7 +53,7 @@
               />
               <!-- Qualifier Type -->
               <v-list-item-subtitle v-if="qualifier.type && !isEmptyString(qualifier.type)" class="pt-1">
-                <span class="text-caption">
+                <span class="text-body-small">
                   {{ 'Type: ' }}
                 </span>
                 <v-chip border color="primary" label size="x-small">
@@ -65,7 +65,7 @@
                 v-if="qualifier.valueType && !isEmptyString(qualifier.valueType)"
                 class="pt-1"
               >
-                <span class="text-caption">
+                <span class="text-body-small">
                   {{ 'Value Type: ' }}
                 </span>
                 <v-chip border color="primary" label size="x-small">

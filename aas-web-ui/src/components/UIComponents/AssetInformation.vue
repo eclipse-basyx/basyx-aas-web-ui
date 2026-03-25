@@ -11,7 +11,7 @@
         <v-expansion-panel color="detailsCard" elevation="0" static tile>
           <v-expansion-panel-title class="px-2">
             <v-icon class="mr-2" icon="mdi-qrcode" size="small" />
-            <span class="text-subtitle-2"> Global Asset ID QR-Code </span>
+            <span class="text-title-small"> Global Asset ID QR-Code </span>
           </v-expansion-panel-title>
           <v-expansion-panel-text class="py-2 bg-detailsCard">
             <div class="qr-container">
@@ -49,7 +49,7 @@
       />
       <span
         v-if="thumbnailSrc && thumbnailCaption !== ''"
-        class="font-weight-light text-medium-emphasis"
+        class="font-weight-light opacity-60"
         style="font-size: 0.5rem"
       >
         {{ thumbnailCaption }}

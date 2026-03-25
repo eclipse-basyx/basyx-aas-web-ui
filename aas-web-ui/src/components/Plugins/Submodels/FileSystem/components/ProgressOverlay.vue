@@ -4,14 +4,14 @@
     <v-card-text>
       <div class="text-center mb-2">
         <span class="text-h5">{{ progress.current }}</span>
-        <span class="text-body-1"> / {{ progress.total }}</span>
+        <span class="text-body-large"> / {{ progress.total }}</span>
       </div>
       <v-progress-linear color="primary" height="20" :model-value="percentComplete" rounded>
         <template #default>
           <strong>{{ Math.round(percentComplete) }}%</strong>
         </template>
       </v-progress-linear>
-      <div class="text-caption text-center mt-2 text-truncate" :title="itemName">
+      <div class="text-body-small text-center mt-2 text-truncate" :title="itemName">
         {{ itemName }}
       </div>
     </v-card-text>

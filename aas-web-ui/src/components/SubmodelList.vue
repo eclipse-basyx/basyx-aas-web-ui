@@ -86,23 +86,23 @@
                       transition="slide-x-transition"
                     >
                       <!-- Submodel ID -->
-                      <div v-if="item.id" class="text-caption">
+                      <div v-if="item.id" class="text-body-small">
                         <span class="font-weight-bold">{{ 'ID: ' }}</span>
                         {{ item.id }}
                       </div>
                       <!-- Submodel idShort -->
-                      <div v-if="item.idShort" class="text-caption">
+                      <div v-if="item.idShort" class="text-body-small">
                         <span class="font-weight-bold"> {{ 'idShort: ' }}</span>
                         {{ item.idShort }}
                       </div>
                       <!-- Submodel semanticId -->
-                      <div v-if="item?.semanticId?.keys[0]?.value" class="text-caption">
+                      <div v-if="item?.semanticId?.keys[0]?.value" class="text-body-small">
                         <span class="font-weight-bold"> {{ 'semanticId: ' }}</span>
                         {{ item.semanticId.keys[0].value }}
                       </div>
                       <v-divider v-if="item.administration?.version" class="my-1" />
                       <!-- Submodel administrative information -->
-                      <div v-if="item.administration?.version" class="text-caption">
+                      <div v-if="item.administration?.version" class="text-body-small">
                         <span class="font-weight-bold">{{ 'Version: ' }}</span>
                         {{
                           item.administration.version +
@@ -129,7 +129,7 @@
                               item?.semanticId?.keys[0]?.value === smt.semanticId
                           )
                         "
-                        class="text-caption"
+                        class="text-body-small"
                       >
                         <span class="font-weight-bold">{{ 'SMT: ' }}</span>
                         {{
@@ -147,7 +147,7 @@
                               item?.semanticId?.keys[0]?.value === smt.semanticId
                           )
                         "
-                        class="text-caption"
+                        class="text-body-small"
                       >
                         <span class="font-weight-bold">{{ 'SMT Version: ' }}</span>
                         {{
@@ -163,7 +163,7 @@
                           item?.semanticId?.keys[0]?.value &&
                             extractVersionRevision(item?.semanticId?.keys[0]?.value).version
                         "
-                        class="text-caption"
+                        class="text-body-small"
                       >
                         <span class="font-weight-bold">{{ 'SMT Version: ' }}</span>
                         {{

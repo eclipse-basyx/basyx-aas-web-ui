@@ -9,7 +9,7 @@
       open-delay="600"
       transition="slide-y-transition"
     >
-      <div class="text-caption">
+      <div class="text-body-small">
         {{ descriptionToDisplay({ description: descriptionArray }, 'en') }}
       </div>
     </v-tooltip>
@@ -22,7 +22,7 @@
       open-delay="600"
       transition="slide-y-transition"
     >
-      <div v-for="(description, i) in descriptionArray" :key="i" class="text-caption">
+      <div v-for="(description, i) in descriptionArray" :key="i" class="text-body-small">
         <span class="font-weight-thin">
           {{
             (getLanguageName(description.language)

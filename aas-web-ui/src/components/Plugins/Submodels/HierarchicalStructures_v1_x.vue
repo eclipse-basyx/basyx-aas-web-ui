@@ -11,7 +11,7 @@
         <!-- Archetype -->
         <v-list-item>
           <v-list-item-title>
-            <span class="text-subtitle-2 mr-2">Archetype:</span>
+            <span class="text-title-small mr-2">Archetype:</span>
             <v-chip
               border
               :class="{ 'cursor-pointer': editorMode }"
@@ -93,12 +93,12 @@
     <!-- Dialog for creating RelationshipElement -->
     <v-dialog v-model="relationshipDialog" max-width="500" persistent>
       <v-card>
-        <v-card-title class="text-subtitle-1">{{
+        <v-card-title class="text-body-large">{{
           existingRelationship ? 'Edit Relationship Element' : 'Add Relationship Element'
         }}</v-card-title>
         <v-divider />
         <v-card-text>
-          <p class="text-body-2 mb-4">
+          <p class="text-body-medium mb-4">
             {{ existingRelationship ? 'Edit the' : 'Create a' }} relationship between
             <v-chip class="mx-1" label size="small">{{ selectedEdge?.sourceNode }}</v-chip>
             and
@@ -117,7 +117,7 @@
             <template #item="{ item, props: itemProps }">
               <v-list-item v-bind="itemProps">
                 <template #subtitle>
-                  <span class="text-caption">{{ item.description }}</span>
+                  <span class="text-body-small">{{ item.description }}</span>
                 </template>
               </v-list-item>
             </template>
@@ -136,10 +136,10 @@
     <!-- Dialog for editing Archetype -->
     <v-dialog v-model="archetypeDialog" max-width="500" persistent>
       <v-card>
-        <v-card-title class="text-subtitle-1">Edit Archetype</v-card-title>
+        <v-card-title class="text-body-large">Edit Archetype</v-card-title>
         <v-divider />
         <v-card-text>
-          <p class="text-body-2 mb-4">Select the archetype for this hierarchical structure.</p>
+          <p class="text-body-medium mb-4">Select the archetype for this hierarchical structure.</p>
           <v-select
             v-model="selectedArchetype"
             density="compact"
@@ -153,7 +153,7 @@
             <template #item="{ item, props: itemProps }">
               <v-list-item v-bind="itemProps">
                 <template #subtitle>
-                  <span class="text-caption">{{ item.description }}</span>
+                  <span class="text-body-small">{{ item.description }}</span>
                 </template>
               </v-list-item>
             </template>

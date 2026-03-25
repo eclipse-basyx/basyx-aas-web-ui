@@ -5,7 +5,7 @@
         <thead>
           <tr>
             <th v-for="idProperty in getHeaderProperties()" :key="idProperty.idShort">
-              <div class="text-caption">
+              <div class="text-body-small">
                 <span>{{ nameToDisplay(idProperty) }}</span>
                 <DescriptionTooltip :description-array="getDescriptionArray(idProperty)" />
               </div>
@@ -23,14 +23,14 @@
               <!-- MultiLanguageProperty -->
               <template v-if="idProperty.modelType === 'MultiLanguageProperty'">
                 <!-- Show english value, if available -->
-                <div v-if="valueToDisplay(idProperty)" class="text-caption text-subtitleText">
+                <div v-if="valueToDisplay(idProperty)" class="text-body-small text-subtitleText">
                   {{ valueToDisplay(idProperty) }}
                 </div>
 
                 <!-- Otherwise show all available values -->
                 <div v-else>
                   <template v-for="(langStringSet, k) in getLangSets(idProperty)" :key="k">
-                    <div class="text-caption">
+                    <div class="text-body-small">
                       <v-chip class="mr-1" label size="x-small">
                         {{ langStringSet.language }}
                       </v-chip>
@@ -41,7 +41,7 @@
               </template>
 
               <!-- Default -->
-              <span v-else class="text-caption text-subtitleText">
+              <span v-else class="text-body-small text-subtitleText">
                 {{ valueToDisplay(idProperty) }}
               </span>
             </td>

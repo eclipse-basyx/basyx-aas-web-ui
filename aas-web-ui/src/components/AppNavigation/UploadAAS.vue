@@ -59,7 +59,7 @@
             <strong>{{ Math.round(uploadProgress) }}%</strong>
           </template>
         </v-progress-linear>
-        <div v-if="loadingUpload && currentFileLabel.trim() !== ''" class="text-caption mt-2">
+        <div v-if="loadingUpload && currentFileLabel.trim() !== ''" class="text-body-small mt-2">
           Processing: {{ currentFileLabel }}
         </div>
       </v-card-text>

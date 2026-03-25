@@ -2,7 +2,7 @@
   <v-dialog v-model="addSMEDialog" persistent width="860">
     <v-card>
       <v-card-title>
-        <span class="text-subtile-1">Create new Submodel Element</span>
+        <span class="text-body-large">Create new Submodel Element</span>
       </v-card-title>
       <v-divider />
       <v-select

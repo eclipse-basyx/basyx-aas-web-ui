@@ -1,7 +1,7 @@
 <template>
   <v-container class="pa-0" fluid>
     <v-list-item class="px-1 pb-1 pt-0">
-      <v-list-item-title class="text-subtitle-2 mt-2">{{ 'Value: ' }}</v-list-item-title>
+      <v-list-item-title class="text-title-small mt-2">{{ 'Value: ' }}</v-list-item-title>
     </v-list-item>
     <v-card v-if="props.blobObject" color="elevatedCard">
       <!-- Path (Value) of the File Element -->
@@ -9,7 +9,7 @@
         <v-list-item class="pb-0">
           <!-- mimeType -->
           <v-list-item-title>
-            <span class="text-caption">{{ 'Content Type: ' }}</span>
+            <span class="text-body-small">{{ 'Content Type: ' }}</span>
             <v-chip border color="primary" label size="x-small">{{
               props.blobObject.contentType ? props.blobObject.contentType : 'no-mime'
             }}</v-chip>

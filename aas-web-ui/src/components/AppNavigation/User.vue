@@ -41,7 +41,7 @@
         <v-icon class="ml-2" size="small">
           {{ authStatusIcon }}
         </v-icon>
-        <span class="text-subtitleText text-subtitle-2">{{ authStatus }}</span>
+        <span class="text-subtitleText text-title-small">{{ authStatus }}</span>
         <template v-if="showAuthButtons">
           <v-spacer />
           <v-btn

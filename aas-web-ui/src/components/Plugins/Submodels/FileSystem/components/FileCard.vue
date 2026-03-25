@@ -10,7 +10,7 @@
     @dragstart="handleDragStart"
   >
     <v-toolbar class="cursor-pointer" color="transparent" density="compact" @click="handlePreview">
-      <v-toolbar-title class="text-truncate text-subtitle-2 ml-2">{{ fullFileName }}</v-toolbar-title>
+      <v-toolbar-title class="text-truncate text-title-small ml-2">{{ fullFileName }}</v-toolbar-title>
       <template #prepend>
         <v-checkbox-btn
           class="ml-1"
@@ -62,9 +62,9 @@
         <v-icon
           v-else-if="file.contentType === 'application/pdf'"
           color="red"
-          size="x-large"
+          size="large"
         >mdi-file-pdf-box</v-icon>
-        <v-icon v-else color="grey" size="x-large">mdi-file</v-icon>
+        <v-icon v-else color="grey" size="large">mdi-file</v-icon>
       </v-card>
     </v-card-item>
   </v-card>

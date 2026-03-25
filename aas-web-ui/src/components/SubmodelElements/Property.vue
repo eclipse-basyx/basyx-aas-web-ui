@@ -1,7 +1,7 @@
 <template>
   <v-container class="pa-0" fluid>
     <v-list-item v-if="!isOperationVariable" class="px-1 pb-1 pt-0">
-      <v-list-item-title class="text-subtitle-2 mt-2">{{ 'Value: ' }}</v-list-item-title>
+      <v-list-item-title class="text-title-small mt-2">{{ 'Value: ' }}</v-list-item-title>
     </v-list-item>
     <v-card v-if="propertyObject" color="elevatedCard">
       <!-- Value of the Property -->
@@ -17,13 +17,13 @@
           class="pb-0"
         >
           <v-tooltip activator="parent" open-delay="600" transition="slide-x-transition">
-            <div v-for="(valueId, i) in propertyObject.valueId.keys" :key="i" class="text-caption">
+            <div v-for="(valueId, i) in propertyObject.valueId.keys" :key="i" class="text-body-small">
               <span class="font-weight-bold">{{ '(' + valueId.type + ') ' }}</span>
               {{ valueId.value }}
             </div>
           </v-tooltip>
           <template #title>
-            <span class="text-caption">{{ 'ValueId: ' }}</span>
+            <span class="text-body-small">{{ 'ValueId: ' }}</span>
           </template>
           <template #subtitle>
             <v-list-item-subtitle v-for="(valueId, i) in propertyObject.valueId.keys" :key="i">
@@ -37,7 +37,7 @@
         <!-- valueType -->
         <v-list-item v-if="!isOperationVariable" class="pb-0">
           <v-list-item-title>
-            <span class="text-caption">{{ 'Value Type: ' }}</span>
+            <span class="text-body-small">{{ 'Value Type: ' }}</span>
             <v-chip border color="primary" label size="x-small">{{ propertyObject.valueType }}</v-chip>
           </v-list-item-title>
         </v-list-item>
