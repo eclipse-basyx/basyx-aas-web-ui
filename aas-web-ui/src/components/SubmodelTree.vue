@@ -3,6 +3,7 @@
     <v-card color="rgba(0,0,0,0)" elevation="0">
       <!-- Title bar -->
       <v-card-title
+        style="height: 63px"
         :style="
           (selectedAAS && Object.keys(selectedAAS).length > 0) ||
             ['SMViewer', 'SMEditor'].includes(route.name as string)
