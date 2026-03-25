@@ -97,7 +97,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onMounted, ref, watch } from 'vue'
+  import { computed, onMounted, ref, toRaw, watch } from 'vue'
   import { useSMEHandling } from '@/composables/AAS/SMEHandling'
   import { useRequestHandling } from '@/composables/RequestHandling'
   import { useAASStore } from '@/store/AASDataStore'
@@ -149,7 +149,7 @@
   watch(
     () => props.multiLanguagePropertyObject,
     (newVal: any) => {
-      mlpValue.value = newVal && newVal.value ? structuredClone(newVal.value) : []
+      mlpValue.value = newVal && newVal.value ? structuredClone(toRaw(newVal.value)) : []
     },
     { deep: true },
   )

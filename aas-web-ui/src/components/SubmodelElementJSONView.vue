@@ -135,7 +135,7 @@
 
 <script lang="ts" setup>
   import Prism from 'prismjs'
-  import { computed, nextTick, onMounted, ref, watch } from 'vue'
+  import { computed, nextTick, onMounted, ref, toRaw, watch } from 'vue'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { useAASStore } from '@/store/AASDataStore'
   import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
@@ -233,7 +233,7 @@
       }
 
       // Create a copy of the selected node
-      const nodeCopy = structuredClone(selectedNode.value)
+      const nodeCopy = structuredClone(toRaw(selectedNode.value))
 
       // Clean the selected node
       const cleanedNode = cleanObjectRecursively(nodeCopy)

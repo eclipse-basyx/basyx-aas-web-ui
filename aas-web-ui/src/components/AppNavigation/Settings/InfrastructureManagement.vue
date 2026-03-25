@@ -160,7 +160,7 @@
 <script lang="ts" setup>
   import type { BaSyxComponentKey } from '@/types/BaSyx'
   import type { AuthFlowOption, InfrastructureConfig, SecurityType } from '@/types/Infrastructure'
-  import { computed, ref, watch } from 'vue'
+  import { computed, ref, toRaw, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import { useAuth } from '@/composables/Auth/useAuth'
   import { useBasicAuthForm } from '@/composables/Auth/useBasicAuthForm'
@@ -275,7 +275,7 @@
 
   async function editInfrastructure (infra: InfrastructureConfig): Promise<void> {
     editMode.value = 'edit'
-    editingInfrastructure.value = structuredClone(infra)
+    editingInfrastructure.value = structuredClone(toRaw(infra))
     loadAuthDataFromInfrastructure(editingInfrastructure.value)
     expandedPanels.value = []
     editDialogOpen.value = true
