@@ -1,18 +1,19 @@
 <template>
-    <v-container fluid class="pa-0">
-        <!-- Group of contained SubmodelElements -->
-        <SubmodelElementGroup
-            :sme-object="submodelElementListObject"
-            :sme-locator="'value'"
-            :top-margin="'mt-4'"></SubmodelElementGroup>
-    </v-container>
+  <v-container class="pa-0" fluid>
+    <!-- Group of contained SubmodelElements -->
+    <SubmodelElementGroup
+      :sme-locator="'value'"
+      :sme-object="submodelElementListObject"
+      :top-margin="'mt-4'"
+    />
+  </v-container>
 </template>
 
 <script lang="ts" setup>
-    defineProps({
-        submodelElementListObject: {
-            type: Object,
-            default: () => ({}),
-        },
-    });
+  defineProps({
+    submodelElementListObject: {
+      type: Object,
+      default: () => ({}),
+    },
+  })
 </script>

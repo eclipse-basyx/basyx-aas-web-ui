@@ -1,92 +1,100 @@
 <template>
-    <template v-if="(props.documentIds ?? []).length > 0">
-        <v-card variant="outlined" class="mt-3">
-            <v-table>
-                <thead>
-                    <tr>
-                        <th v-for="idProperty in getHeaderProperties()" :key="idProperty.idShort">
-                            <div class="text-caption">
-                                <span>{{ nameToDisplay(idProperty) }}</span>
-                                <DescriptionTooltip :description-array="getDescriptionArray(idProperty)" />
-                            </div>
-                        </th>
-                    </tr>
-                </thead>
+  <template v-if="(props.documentIds ?? []).length > 0">
+    <v-card class="mt-3" variant="outlined">
+      <v-table>
+        <thead>
+          <tr>
+            <th v-for="idProperty in getHeaderProperties()" :key="idProperty.idShort">
+              <div class="text-body-small">
+                <span>{{ nameToDisplay(idProperty) }}</span>
+                <DescriptionTooltip :description-array="getDescriptionArray(idProperty)" />
+              </div>
+            </th>
+          </tr>
+        </thead>
 
-                <tbody>
-                    <tr
-                        v-for="(documentIdSMC, j) in visibleDocumentIds"
-                        :key="documentIdSMC.idShort ?? String(j)"
-                        :class="Number(j) % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'">
-                        <td v-for="idProperty in getRowProperties(documentIdSMC)" :key="idProperty.idShort">
-                            <!-- MultiLanguageProperty -->
-                            <template v-if="idProperty.modelType === 'MultiLanguageProperty'">
-                                <!-- Show english value, if available -->
-                                <div v-if="valueToDisplay(idProperty)" class="text-caption text-subtitleText">
-                                    {{ valueToDisplay(idProperty) }}
-                                </div>
+        <tbody>
+          <tr
+            v-for="(documentIdSMC, j) in visibleDocumentIds"
+            :key="documentIdSMC.idShort ?? String(j)"
+            :class="Number(j) % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'"
+          >
+            <td v-for="idProperty in getRowProperties(documentIdSMC)" :key="idProperty.idShort">
+              <!-- MultiLanguageProperty -->
+              <template v-if="idProperty.modelType === 'MultiLanguageProperty'">
+                <!-- Show english value, if available -->
+                <div v-if="valueToDisplay(idProperty)" class="text-body-small text-subtitleText">
+                  {{ valueToDisplay(idProperty) }}
+                </div>
 
-                                <!-- Otherwise show all available values -->
-                                <div v-else>
-                                    <template v-for="(langStringSet, k) in getLangSets(idProperty)" :key="k">
-                                        <div class="text-caption">
-                                            <v-chip size="x-small" label class="mr-1">
-                                                {{ langStringSet.language }}
-                                            </v-chip>
-                                            {{ langStringSet.text }}
-                                        </div>
-                                    </template>
-                                </div>
-                            </template>
+                <!-- Otherwise show all available values -->
+                <div v-else>
+                  <template v-for="(langStringSet, k) in getLangSets(idProperty)" :key="k">
+                    <div class="text-body-small">
+                      <v-chip class="mr-1" label size="x-small">
+                        {{ langStringSet.language }}
+                      </v-chip>
+                      {{ langStringSet.text }}
+                    </div>
+                  </template>
+                </div>
+              </template>
 
-                            <!-- Default -->
-                            <span v-else class="text-caption text-subtitleText">
-                                {{ valueToDisplay(idProperty) }}
-                            </span>
-                        </td>
-                    </tr>
-                </tbody>
-            </v-table>
-        </v-card>
-    </template>
+              <!-- Default -->
+              <span v-else class="text-body-small text-subtitleText">
+                {{ valueToDisplay(idProperty) }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </v-table>
+    </v-card>
+  </template>
 
-    <v-alert v-else class="mt-3" density="compact" type="warning" variant="outlined" text="No Document IDs available" />
+  <v-alert
+    v-else
+    class="mt-3"
+    density="compact"
+    text="No Document IDs available"
+    type="warning"
+    variant="outlined"
+  />
 </template>
 <script lang="ts" setup>
-    import type { SubmodelElementLike } from '../types';
-    import { computed } from 'vue';
-    import { useReferableUtils } from '@/composables/AAS/ReferableUtils';
-    import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement';
-    import { asSubmodelElementArray, getDescriptionArray, getLangSets } from '../utils/submodelElementUtils';
+  import type { SubmodelElementLike } from '../types'
+  import { computed } from 'vue'
+  import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
+  import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement'
+  import { asSubmodelElementArray, getDescriptionArray, getLangSets } from '../utils/submodelElementUtils'
 
-    const { nameToDisplay } = useReferableUtils();
-    const { hasValue, valueToDisplay } = useSME();
+  const { nameToDisplay } = useReferableUtils()
+  const { hasValue, valueToDisplay } = useSME()
 
-    defineOptions({
-        name: 'DocumentIdsTable',
-    });
+  defineOptions({
+    name: 'DocumentIdsTable',
+  })
 
-    const props = withDefaults(
-        defineProps<{
-            documentIds?: SubmodelElementLike[];
-        }>(),
-        {
-            documentIds: () => [],
-        }
-    );
+  const props = withDefaults(
+    defineProps<{
+      documentIds?: SubmodelElementLike[]
+    }>(),
+    {
+      documentIds: () => [],
+    },
+  )
 
-    const visibleDocumentIds = computed(() => props.documentIds.filter((entry) => hasValue(entry)));
+  const visibleDocumentIds = computed(() => props.documentIds.filter(entry => hasValue(entry)))
 
-    function getHeaderProperties(): SubmodelElementLike[] {
-        if (props.documentIds.length === 0) {
-            return [];
-        }
-
-        const firstEntry = props.documentIds[0];
-        return asSubmodelElementArray(firstEntry.value);
+  function getHeaderProperties (): SubmodelElementLike[] {
+    if (props.documentIds.length === 0) {
+      return []
     }
 
-    function getRowProperties(documentIdSMC: SubmodelElementLike): SubmodelElementLike[] {
-        return asSubmodelElementArray(documentIdSMC.value);
-    }
+    const firstEntry = props.documentIds[0]
+    return asSubmodelElementArray(firstEntry.value)
+  }
+
+  function getRowProperties (documentIdSMC: SubmodelElementLike): SubmodelElementLike[] {
+    return asSubmodelElementArray(documentIdSMC.value)
+  }
 </script>

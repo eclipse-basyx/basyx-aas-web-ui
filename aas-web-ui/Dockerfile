@@ -13,16 +13,18 @@ ENV VITE_APP_BUILD_DATE=$VITE_APP_BUILD_DATE
 # Set working directory
 WORKDIR /app
 # Copy package manifests and install scripts
-COPY package.json yarn.lock ./
+COPY package.json pnpm-lock.yaml ./
 COPY scripts ./scripts
+# Enable pnpm via Corepack
+RUN corepack enable
 # Install dependencies
-RUN --mount=type=cache,target=/root/.cache/yarn \
-    yarn install --frozen-lockfile --non-interactive --network-timeout 600000
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 # Copy project files
 COPY . .
 # Build the application
 ENV NODE_OPTIONS=--max-old-space-size=4096
-RUN yarn build
+RUN pnpm build
 
 # Production Stage
 FROM nginx:mainline-alpine-slim AS production-stage

@@ -1,136 +1,142 @@
 <template>
-    <v-dialog
-        v-model="editRangeDialog"
-        width="860"
-        persistent
-        @keydown="keyDown"
-        @keyup="keyUp($event, saveRangeElement)">
-        <v-card>
-            <v-card-title>
-                {{ props.newRange ? 'Create a new Range Element' : 'Edit Range Element' }}
-            </v-card-title>
-            <v-divider></v-divider>
-            <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
-                <v-expansion-panels v-model="openPanels" multiple>
-                    <!-- Details -->
-                    <v-expansion-panel class="border-t-thin border-s-thin border-e-thin" :class="bordersToShow(0)">
-                        <v-expansion-panel-title>Details</v-expansion-panel-title>
-                        <v-expansion-panel-text>
-                            <v-row align="center">
-                                <v-col class="py-0">
-                                    <TextInput
-                                        v-model="rangeIdShort"
-                                        label="IdShort"
-                                        :error="hasError('idShort')"
-                                        :rules="isParentSubmodelElementList ? [] : [rules.required]"
-                                        :error-messages="getError('idShort')" />
-                                </v-col>
-                                <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="idShort" />
-                                </v-col>
-                            </v-row>
-                            <v-row align="center">
-                                <v-col class="py-0">
-                                    <MultiLanguageTextInput
-                                        v-model="displayName"
-                                        :show-label="true"
-                                        label="Display Name"
-                                        type="displayName" />
-                                </v-col>
-                                <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="displayName" />
-                                </v-col>
-                            </v-row>
-                            <v-row align="center">
-                                <v-col class="py-0">
-                                    <MultiLanguageTextInput
-                                        v-model="description"
-                                        :show-label="true"
-                                        label="Description"
-                                        type="description" />
-                                </v-col>
-                                <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="description" />
-                                </v-col>
-                            </v-row>
-                            <v-row align="center">
-                                <v-col class="py-0">
-                                    <SelectInput
-                                        v-model="rangeCategory"
-                                        label="Category"
-                                        type="category"
-                                        :clearable="true" />
-                                </v-col>
-                                <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="category" />
-                                </v-col>
-                            </v-row>
-                        </v-expansion-panel-text>
-                    </v-expansion-panel>
-                    <!-- Range Value -->
-                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(1)">
-                        <v-expansion-panel-title>Value</v-expansion-panel-title>
-                        <v-expansion-panel-text>
-                            <v-row align="center">
-                                <v-col class="py-0">
-                                    <SelectInput
-                                        v-model="valueType"
-                                        label="Data Type"
-                                        type="dataType"
-                                        :clearable="true" />
-                                </v-col>
-                                <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="dataType" />
-                                </v-col>
-                            </v-row>
-                            <v-row align="center">
-                                <v-col class="py-0">
-                                    <RangeInput v-model:min-value="minValue" v-model:max-value="maxValue" />
-                                </v-col>
-                                <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="range-minmax" />
-                                </v-col>
-                            </v-row>
-                        </v-expansion-panel-text>
-                    </v-expansion-panel>
-                    <!-- Semantic ID -->
-                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(2)">
-                        <v-expansion-panel-title>Semantic ID</v-expansion-panel-title>
-                        <v-expansion-panel-text>
-                            <v-row align="center">
-                                <v-col class="py-0">
-                                    <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" />
-                                </v-col>
-                                <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="semanticId" />
-                                </v-col>
-                            </v-row>
-                        </v-expansion-panel-text>
-                    </v-expansion-panel>
-                    <!-- Qualifiers -->
-                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
-                        <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
-                        <v-expansion-panel-text>
-                            <QualifierInput v-model="qualifiers" />
-                        </v-expansion-panel-text>
-                    </v-expansion-panel>
-                    <!-- Data Specification -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
-                        <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
-                        <v-expansion-panel-text>
-                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
-                        </v-expansion-panel-text>
-                    </v-expansion-panel>
-                </v-expansion-panels>
-            </v-card-text>
-            <v-divider></v-divider>
-            <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn @click="closeDialog">Cancel</v-btn>
-                <v-btn color="primary" @click="saveRangeElement">Save</v-btn>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
+  <v-dialog
+    v-model="editRangeDialog"
+    persistent
+    width="860"
+    @keydown="keyDown"
+    @keyup="keyUp($event, saveRangeElement)"
+  >
+    <v-card>
+      <v-card-title>
+        {{ props.newRange ? 'Create a new Range Element' : 'Edit Range Element' }}
+      </v-card-title>
+      <v-divider />
+      <v-card-text class="pa-3 bg-card" style="overflow-y: auto">
+        <v-expansion-panels v-model="openPanels" multiple>
+          <!-- Details -->
+          <v-expansion-panel class="border-t-thin border-s-thin border-e-thin" :class="bordersToShow(0)">
+            <v-expansion-panel-title>Details</v-expansion-panel-title>
+            <v-expansion-panel-text>
+              <v-row align="center">
+                <v-col class="py-0">
+                  <TextInput
+                    v-model="rangeIdShort"
+                    :error="hasError('idShort')"
+                    :error-messages="getError('idShort')"
+                    label="IdShort"
+                    :rules="isParentSubmodelElementList ? [] : [rules.required]"
+                  />
+                </v-col>
+                <v-col class="px-0" cols="auto">
+                  <HelpInfoButton help-type="idShort" />
+                </v-col>
+              </v-row>
+              <v-row align="center">
+                <v-col class="py-0">
+                  <MultiLanguageTextInput
+                    v-model="displayName"
+                    label="Display Name"
+                    :show-label="true"
+                    type="displayName"
+                  />
+                </v-col>
+                <v-col class="px-0" cols="auto">
+                  <HelpInfoButton help-type="displayName" />
+                </v-col>
+              </v-row>
+              <v-row align="center">
+                <v-col class="py-0">
+                  <MultiLanguageTextInput
+                    v-model="description"
+                    label="Description"
+                    :show-label="true"
+                    type="description"
+                  />
+                </v-col>
+                <v-col class="px-0" cols="auto">
+                  <HelpInfoButton help-type="description" />
+                </v-col>
+              </v-row>
+              <v-row align="center">
+                <v-col class="py-0">
+                  <SelectInput
+                    v-model="rangeCategory"
+                    :clearable="true"
+                    label="Category"
+                    type="category"
+                  />
+                </v-col>
+                <v-col class="px-0" cols="auto">
+                  <HelpInfoButton help-type="category" />
+                </v-col>
+              </v-row>
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+          <!-- Range Value -->
+          <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(1)">
+            <v-expansion-panel-title>Value</v-expansion-panel-title>
+            <v-expansion-panel-text>
+              <v-row align="center">
+                <v-col class="py-0">
+                  <SelectInput
+                    v-model="valueType"
+                    :clearable="true"
+                    label="Data Type"
+                    type="dataType"
+                  />
+                </v-col>
+                <v-col class="px-0" cols="auto">
+                  <HelpInfoButton help-type="dataType" />
+                </v-col>
+              </v-row>
+              <v-row align="center">
+                <v-col class="py-0">
+                  <RangeInput v-model:max-value="maxValue" v-model:min-value="minValue" />
+                </v-col>
+                <v-col class="px-0" cols="auto">
+                  <HelpInfoButton help-type="range-minmax" />
+                </v-col>
+              </v-row>
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+          <!-- Semantic ID -->
+          <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(2)">
+            <v-expansion-panel-title>Semantic ID</v-expansion-panel-title>
+            <v-expansion-panel-text>
+              <v-row align="center">
+                <v-col class="py-0">
+                  <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" />
+                </v-col>
+                <v-col class="px-0" cols="auto">
+                  <HelpInfoButton help-type="semanticId" />
+                </v-col>
+              </v-row>
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+          <!-- Qualifiers -->
+          <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
+            <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
+            <v-expansion-panel-text>
+              <QualifierInput v-model="qualifiers" />
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+          <!-- Data Specification -->
+          <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
+            <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
+            <v-expansion-panel-text>
+              <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+        </v-expansion-panels>
+      </v-card-text>
+      <v-divider />
+      <v-card-actions>
+        <v-spacer />
+        <v-btn @click="closeDialog">Cancel</v-btn>
+        <v-btn color="primary" @click="saveRangeElement">Save</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script setup lang="ts">
@@ -140,299 +146,304 @@
     usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not execute when in such form fields.
 */
 
-    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
-    import { computed, ref, watch } from 'vue';
-    import { useRoute, useRouter } from 'vue-router';
-    import { useSMEHandling } from '@/composables/AAS/SMEHandling';
-    import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
-    import { applyFieldErrors, buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
-    import { useNavigationStore } from '@/store/NavigationStore';
-    import { clearOptionalIdShort } from '@/utils/AAS/OptionalPropertyUtils';
-    import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils';
-    import { keyDown, keyUp } from '@/utils/EditorUtils';
-    import { base64Decode } from '@/utils/EncodeDecodeUtils';
+  import { types as aasTypes, jsonization } from '@aas-core-works/aas-core3.1-typescript'
+  import { computed, ref, watch } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import { useSMEHandling } from '@/composables/AAS/SMEHandling'
+  import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
+  import { applyFieldErrors, buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification'
+  import { useNavigationStore } from '@/store/NavigationStore'
+  import { clearOptionalIdShort } from '@/utils/AAS/OptionalPropertyUtils'
+  import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils'
+  import { keyDown, keyUp } from '@/utils/EditorUtils'
+  import { base64Decode } from '@/utils/EncodeDecodeUtils'
 
-    const props = defineProps<{
-        modelValue: boolean;
-        newRange: boolean;
-        parentElement: any;
-        path?: string;
-        range?: any;
-    }>();
+  const props = defineProps<{
+    modelValue: boolean
+    newRange: boolean
+    parentElement: any
+    path?: string
+    range?: any
+  }>()
 
-    // Stores
-    const navigationStore = useNavigationStore();
+  // Stores
+  const navigationStore = useNavigationStore()
 
-    // Composables
-    const { fetchSme, putSubmodelElement, postSubmodelElement } = useSMRepositoryClient();
-    const { fetchAndDispatchSme } = useSMEHandling();
+  // Composables
+  const { fetchSme, putSubmodelElement, postSubmodelElement } = useSMRepositoryClient()
+  const { fetchAndDispatchSme } = useSMEHandling()
 
-    // Vue Router
-    const router = useRouter();
-    const route = useRoute();
+  // Vue Router
+  const router = useRouter()
+  const route = useRoute()
 
-    const editRangeDialog = ref(false);
-    const rangeObject = ref<aasTypes.Range | undefined>(undefined);
-    const openPanels = ref<number[]>([0]);
+  const editRangeDialog = ref(false)
+  const rangeObject = ref<aasTypes.Range | undefined>(undefined)
+  const openPanels = ref<number[]>([0])
 
-    const rangeIdShort = ref<string | null>(null);
+  const rangeIdShort = ref<string | null>(null)
 
-    const displayName = ref<Array<aasTypes.LangStringNameType> | null>(null);
-    const description = ref<Array<aasTypes.LangStringTextType> | null>(null);
-    const rangeCategory = ref<string | null>(null);
+  const displayName = ref<Array<aasTypes.LangStringNameType> | null>(null)
+  const description = ref<Array<aasTypes.LangStringTextType> | null>(null)
+  const rangeCategory = ref<string | null>(null)
 
-    const semanticId = ref<aasTypes.Reference | null>(null);
-    const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
-    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
-    const minValue = ref<string | null>(null);
-    const maxValue = ref<string | null>(null);
-    const valueType = ref<aasTypes.DataTypeDefXsd>(aasTypes.DataTypeDefXsd.String);
+  const semanticId = ref<aasTypes.Reference | null>(null)
+  const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null)
+  const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null)
+  const minValue = ref<string | null>(null)
+  const maxValue = ref<string | null>(null)
+  const valueType = ref<aasTypes.DataTypeDefXsd>(aasTypes.DataTypeDefXsd.String)
 
-    const errors = ref<Map<string, string>>(new Map());
+  const errors = ref<Map<string, string>>(new Map())
 
-    const isParentSubmodelElementList = computed(() => props.parentElement?.modelType === 'SubmodelElementList');
+  const isParentSubmodelElementList = computed(() => props.parentElement?.modelType === 'SubmodelElementList')
 
-    const rules = {
-        required: (value: any) => !!value || 'Required.',
-    };
+  const rules = {
+    required: (value: any) => !!value || 'Required.',
+  }
 
-    const emit = defineEmits<{
-        (event: 'update:modelValue', value: boolean): void;
-    }>();
+  const emit = defineEmits<{
+    (event: 'update:modelValue', value: boolean): void
+  }>()
 
-    watch(
-        () => props.modelValue,
-        (value) => {
-            editRangeDialog.value = value;
-            if (value) {
-                initializeInputs();
-            }
+  watch(
+    () => props.modelValue,
+    value => {
+      editRangeDialog.value = value
+      if (value) {
+        initializeInputs()
+      }
+    },
+  )
+
+  watch(
+    () => editRangeDialog.value,
+    value => {
+      emit('update:modelValue', value)
+    },
+  )
+
+  const bordersToShow = computed(() => (panel: number) => {
+    let border = ''
+    switch (panel) {
+      case 0: {
+        if (openPanels.value.includes(0) || openPanels.value.includes(1)) {
+          border = 'border-b-thin'
         }
-    );
-
-    watch(
-        () => editRangeDialog.value,
-        (value) => {
-            emit('update:modelValue', value);
+        break
+      }
+      case 1: {
+        if (openPanels.value.includes(0) || openPanels.value.includes(1)) {
+          border += ' border-t-thin'
         }
-    );
-
-    const bordersToShow = computed(() => (panel: number) => {
-        let border = '';
-        switch (panel) {
-            case 0:
-                if (openPanels.value.includes(0) || openPanels.value.includes(1)) {
-                    border = 'border-b-thin';
-                }
-                break;
-            case 1:
-                if (openPanels.value.includes(0) || openPanels.value.includes(1)) {
-                    border += ' border-t-thin';
-                }
-                if (openPanels.value.includes(1) || openPanels.value.includes(2)) {
-                    border += ' border-b-thin';
-                }
-                break;
-            case 2:
-                if (openPanels.value.includes(1) || openPanels.value.includes(2)) {
-                    border += ' border-t-thin';
-                }
-                if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
-                    border += ' border-b-thin';
-                }
-                break;
-            case 3:
-                if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
-                    border += ' border-t-thin';
-                }
-                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
-                    border += ' border-b-thin';
-                }
-                break;
-            case 4:
-                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
-                    border += 'border-t-thin';
-                }
-                break;
+        if (openPanels.value.includes(1) || openPanels.value.includes(2)) {
+          border += ' border-b-thin'
         }
-        return border;
-    });
+        break
+      }
+      case 2: {
+        if (openPanels.value.includes(1) || openPanels.value.includes(2)) {
+          border += ' border-t-thin'
+        }
+        if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+          border += ' border-b-thin'
+        }
+        break
+      }
+      case 3: {
+        if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+          border += ' border-t-thin'
+        }
+        if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+          border += ' border-b-thin'
+        }
+        break
+      }
+      case 4: {
+        if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+          border += 'border-t-thin'
+        }
+        break
+      }
+    }
+    return border
+  })
 
-    function hasError(field: string): boolean {
-        return errors.value.has(field);
+  function hasError (field: string): boolean {
+    return errors.value.has(field)
+  }
+
+  function getError (field: string): string | undefined {
+    if (!hasError(field)) {
+      return undefined
+    }
+    return errors.value.get(field)
+  }
+
+  async function saveRangeElement (): Promise<void> {
+    errors.value.clear()
+
+    if (props.newRange || rangeObject.value === undefined) {
+      rangeObject.value = new aasTypes.Range(valueType.value)
     }
 
-    function getError(field: string): string | undefined {
-        if (!hasError(field)) {
-            return undefined;
-        }
-        return errors.value.get(field);
+    const normalizedIdShort = rangeIdShort.value?.trim() ?? null
+    if (normalizedIdShort) {
+      rangeObject.value.idShort = normalizedIdShort
+    } else if (isParentSubmodelElementList.value) {
+      clearOptionalIdShort(rangeObject.value)
+    } else {
+      errors.value.set('idShort', 'Range IdShort is required')
+      return
     }
 
-    async function saveRangeElement(): Promise<void> {
-        errors.value.clear();
+    rangeObject.value.min = minValue.value
+    rangeObject.value.max = maxValue.value
 
-        if (props.newRange || rangeObject.value === undefined) {
-            rangeObject.value = new aasTypes.Range(valueType.value);
-        }
-
-        const normalizedIdShort = rangeIdShort.value?.trim() ?? null;
-        if (normalizedIdShort) {
-            rangeObject.value.idShort = normalizedIdShort;
-        } else if (!isParentSubmodelElementList.value) {
-            errors.value.set('idShort', 'Range IdShort is required');
-            return;
-        } else {
-            clearOptionalIdShort(rangeObject.value);
-        }
-
-        rangeObject.value.min = minValue.value;
-        rangeObject.value.max = maxValue.value;
-
-        if (semanticId.value !== null) {
-            rangeObject.value.semanticId = semanticId.value;
-        }
-
-        if (displayName.value !== null) {
-            rangeObject.value.displayName = displayName.value;
-        }
-
-        if (description.value !== null) {
-            rangeObject.value.description = description.value;
-        }
-
-        rangeObject.value.category = rangeCategory.value;
-        rangeObject.value.qualifiers = qualifiers.value;
-        rangeObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
-
-        const verificationResult = verifyForEditor(rangeObject.value, { maxErrors: 10 });
-        if (!verificationResult.isValid) {
-            applyFieldErrors(errors.value, verificationResult.fieldErrors);
-            const summary = buildVerificationSummary(verificationResult);
-            const firstError = verificationResult.globalErrors[0];
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 10000,
-                color: 'error',
-                btnColor: 'buttonText',
-                baseError: 'Range validation failed',
-                extendedError: firstError ? `${summary} ${firstError}` : summary,
-            });
-            return;
-        }
-
-        if (props.newRange) {
-            if (props.parentElement.modelType === 'Submodel') {
-                // Create the Range Element on the parent Submodel
-                await postSubmodelElement(rangeObject.value, props.parentElement.id);
-
-                // Navigate to the new Range Element
-                const query = structuredClone(route.query);
-                query.path = props.parentElement.path + '/submodel-elements/' + rangeObject.value.idShort;
-
-                router.push({
-                    query: query,
-                });
-            } else {
-                // Extract the submodel ID and the idShortPath from the parentElement path
-                const splitted = props.parentElement.path.split('/submodel-elements/');
-                const submodelId = base64Decode(splitted[0].split('/submodels/')[1]);
-                const idShortPath = splitted[1];
-
-                // Create the Range Element on the parent element
-                await postSubmodelElement(rangeObject.value, submodelId, idShortPath);
-
-                const createdPath = getCreatedSubmodelElementPath(props.parentElement, rangeObject.value.idShort);
-                if (createdPath) {
-                    const query = structuredClone(route.query);
-                    query.path = createdPath;
-
-                    router.push({
-                        query: query,
-                    });
-                }
-            }
-        } else {
-            if (props.path == undefined) {
-                console.error('Range Path is missing');
-                return;
-            }
-
-            const editedElementSelected = route.query.path === props.path;
-
-            // Update the Range Element
-            if (props.parentElement.modelType === 'Submodel') {
-                await putSubmodelElement(rangeObject.value, props.path);
-
-                if (editedElementSelected) {
-                    fetchAndDispatchSme(props.parentElement.path + '/submodel-elements/' + rangeObject.value.idShort);
-                }
-            } else if (props.parentElement.modelType === 'SubmodelElementList') {
-                const index = props.parentElement.value.indexOf(
-                    props.parentElement.value.find((el: any) => el.id === props.range.id)
-                );
-                const path = props.parentElement.path + `%5B${index}%5D`;
-                await putSubmodelElement(rangeObject.value, path);
-
-                if (editedElementSelected) {
-                    fetchAndDispatchSme(path);
-                }
-            } else {
-                // Submodel Element Collection or Entity
-                await putSubmodelElement(rangeObject.value, props.range.path);
-
-                if (editedElementSelected) {
-                    fetchAndDispatchSme(props.parentElement.path + '.' + rangeObject.value.idShort);
-                }
-            }
-        }
-        closeDialog();
-        navigationStore.dispatchTriggerTreeviewReload();
+    if (semanticId.value !== null) {
+      rangeObject.value.semanticId = semanticId.value
     }
 
-    function closeDialog(): void {
-        editRangeDialog.value = false;
+    if (displayName.value !== null) {
+      rangeObject.value.displayName = displayName.value
     }
 
-    function resetFormValues(): void {
-        rangeIdShort.value = null;
-        displayName.value = null;
-        description.value = null;
-        rangeCategory.value = null;
-        minValue.value = null;
-        maxValue.value = null;
-        valueType.value = aasTypes.DataTypeDefXsd.String;
-        semanticId.value = null;
-        qualifiers.value = null;
-        embeddedDataSpecifications.value = null;
-        openPanels.value = [0, 1];
+    if (description.value !== null) {
+      rangeObject.value.description = description.value
     }
 
-    async function initializeInputs(): Promise<void> {
-        // Always reset form values first to clear any stale data from previously opened elements
-        resetFormValues();
+    rangeObject.value.category = rangeCategory.value
+    rangeObject.value.qualifiers = qualifiers.value
+    rangeObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value
 
-        if (!props.newRange && props.range) {
-            const rangeJSON = await fetchSme(props.range.path);
-            const instanceOrError = jsonization.rangeFromJsonable(rangeJSON);
+    const verificationResult = verifyForEditor(rangeObject.value, { maxErrors: 10 })
+    if (!verificationResult.isValid) {
+      applyFieldErrors(errors.value, verificationResult.fieldErrors)
+      const summary = buildVerificationSummary(verificationResult)
+      const firstError = verificationResult.globalErrors[0]
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 10_000,
+        color: 'error',
+        btnColor: 'buttonText',
+        baseError: 'Range validation failed',
+        extendedError: firstError ? `${summary} ${firstError}` : summary,
+      })
+      return
+    }
 
-            if (instanceOrError.error !== null) {
-                console.error('Error parsing Range Element: ', instanceOrError.error);
-                return;
-            }
+    if (props.newRange) {
+      if (props.parentElement.modelType === 'Submodel') {
+        // Create the Range Element on the parent Submodel
+        await postSubmodelElement(rangeObject.value, props.parentElement.id)
 
-            rangeObject.value = instanceOrError.mustValue();
+        // Navigate to the new Range Element
+        const query = structuredClone(route.query)
+        query.path = props.parentElement.path + '/submodel-elements/' + rangeObject.value.idShort
 
-            rangeIdShort.value = rangeObject.value.idShort ?? null;
-            displayName.value = rangeObject.value.displayName ?? null;
-            description.value = rangeObject.value.description ?? null;
-            rangeCategory.value = rangeObject.value.category ?? null;
-            minValue.value = rangeObject.value.min ?? null;
-            maxValue.value = rangeObject.value.max ?? null;
-            valueType.value = rangeObject.value.valueType ?? aasTypes.DataTypeDefXsd.String;
-            semanticId.value = rangeObject.value.semanticId ?? null;
-            qualifiers.value = rangeObject.value.qualifiers ?? null;
-            embeddedDataSpecifications.value = rangeObject.value.embeddedDataSpecifications ?? null;
+        router.push({
+          query: query,
+        })
+      } else {
+        // Extract the submodel ID and the idShortPath from the parentElement path
+        const splitted = props.parentElement.path.split('/submodel-elements/')
+        const submodelId = base64Decode(splitted[0].split('/submodels/')[1])
+        const idShortPath = splitted[1]
+
+        // Create the Range Element on the parent element
+        await postSubmodelElement(rangeObject.value, submodelId, idShortPath)
+
+        const createdPath = getCreatedSubmodelElementPath(props.parentElement, rangeObject.value.idShort)
+        if (createdPath) {
+          const query = structuredClone(route.query)
+          query.path = createdPath
+
+          router.push({
+            query: query,
+          })
         }
+      }
+    } else {
+      if (props.path == undefined) {
+        console.error('Range Path is missing')
+        return
+      }
+
+      const editedElementSelected = route.query.path === props.path
+
+      // Update the Range Element
+      if (props.parentElement.modelType === 'Submodel') {
+        await putSubmodelElement(rangeObject.value, props.path)
+
+        if (editedElementSelected) {
+          fetchAndDispatchSme(props.parentElement.path + '/submodel-elements/' + rangeObject.value.idShort)
+        }
+      } else if (props.parentElement.modelType === 'SubmodelElementList') {
+        const index = props.parentElement.value.indexOf(
+          props.parentElement.value.find((el: any) => el.id === props.range.id),
+        )
+        const path = props.parentElement.path + `%5B${index}%5D`
+        await putSubmodelElement(rangeObject.value, path)
+
+        if (editedElementSelected) {
+          fetchAndDispatchSme(path)
+        }
+      } else {
+        // Submodel Element Collection or Entity
+        await putSubmodelElement(rangeObject.value, props.range.path)
+
+        if (editedElementSelected) {
+          fetchAndDispatchSme(props.parentElement.path + '.' + rangeObject.value.idShort)
+        }
+      }
     }
+    closeDialog()
+    navigationStore.dispatchTriggerTreeviewReload()
+  }
+
+  function closeDialog (): void {
+    editRangeDialog.value = false
+  }
+
+  function resetFormValues (): void {
+    rangeIdShort.value = null
+    displayName.value = null
+    description.value = null
+    rangeCategory.value = null
+    minValue.value = null
+    maxValue.value = null
+    valueType.value = aasTypes.DataTypeDefXsd.String
+    semanticId.value = null
+    qualifiers.value = null
+    embeddedDataSpecifications.value = null
+    openPanels.value = [0, 1]
+  }
+
+  async function initializeInputs (): Promise<void> {
+    // Always reset form values first to clear any stale data from previously opened elements
+    resetFormValues()
+
+    if (!props.newRange && props.range) {
+      const rangeJSON = await fetchSme(props.range.path)
+      const instanceOrError = jsonization.rangeFromJsonable(rangeJSON)
+
+      if (instanceOrError.error !== null) {
+        console.error('Error parsing Range Element:', instanceOrError.error)
+        return
+      }
+
+      rangeObject.value = instanceOrError.mustValue()
+
+      rangeIdShort.value = rangeObject.value.idShort ?? null
+      displayName.value = rangeObject.value.displayName ?? null
+      description.value = rangeObject.value.description ?? null
+      rangeCategory.value = rangeObject.value.category ?? null
+      minValue.value = rangeObject.value.min ?? null
+      maxValue.value = rangeObject.value.max ?? null
+      valueType.value = rangeObject.value.valueType ?? aasTypes.DataTypeDefXsd.String
+      semanticId.value = rangeObject.value.semanticId ?? null
+      qualifiers.value = rangeObject.value.qualifiers ?? null
+      embeddedDataSpecifications.value = rangeObject.value.embeddedDataSpecifications ?? null
+    }
+  }
 </script>

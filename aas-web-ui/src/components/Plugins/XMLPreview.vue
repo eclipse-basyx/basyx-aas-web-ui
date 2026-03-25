@@ -1,373 +1,386 @@
 <template>
-    <v-container fluid class="pa-0">
-        <v-card>
-            <v-card-title class="d-flex align-center">
-                <v-icon class="mr-2">mdi-xml</v-icon>
-                XML Preview
-                <v-spacer></v-spacer>
-                <!-- Search input -->
-                <v-text-field
-                    v-if="xmlContent"
-                    v-model="searchQuery"
-                    placeholder="Search in XML"
-                    density="compact"
-                    hide-details
-                    class="mx-2"
-                    style="max-width: 200px"
-                    prepend-inner-icon="mdi-magnify"
-                    clearable
-                    @update:model-value="searchInXml"></v-text-field>
-                <!-- Line wrap toggle -->
-                <v-btn
-                    v-if="xmlContent"
-                    icon
-                    variant="text"
-                    :title="wordWrapEnabled ? 'Disable word wrap' : 'Enable word wrap'"
-                    @click="toggleWordWrap">
-                    <v-icon>{{ wordWrapEnabled ? 'mdi-wrap-disabled' : 'mdi-wrap' }}</v-icon>
-                </v-btn>
-                <!-- Line numbers toggle -->
-                <v-btn
-                    v-if="xmlContent"
-                    icon
-                    variant="text"
-                    :title="showLineNumbers ? 'Hide line numbers' : 'Show line numbers'"
-                    @click="showLineNumbers = !showLineNumbers">
-                    <v-icon>mdi-format-list-numbered</v-icon>
-                </v-btn>
-                <!-- Download button -->
-                <v-btn v-if="xmlContent" icon variant="text" title="Download XML" @click="downloadXml">
-                    <v-icon>mdi-download</v-icon>
-                </v-btn>
-                <!-- Copy button -->
-                <v-btn v-if="xmlContent" icon variant="text" title="Copy to clipboard" @click="copyToClipboard">
-                    <v-icon>{{ hasCopied ? 'mdi-check' : 'mdi-content-copy' }}</v-icon>
-                </v-btn>
-            </v-card-title>
-            <v-divider></v-divider>
-            <!-- Search results indicator -->
-            <v-card-subtitle v-if="searchResults.length > 0" class="d-flex align-center">
-                <span>{{ searchResults.length }} results found</span>
-                <v-spacer></v-spacer>
-                <v-btn-group density="comfortable" variant="outlined">
-                    <v-btn
-                        size="small"
-                        :disabled="currentSearchIndex <= 0"
-                        title="Previous result"
-                        @click="navigateSearchResult(-1)">
-                        <v-icon>mdi-chevron-up</v-icon>
-                    </v-btn>
-                    <v-btn
-                        size="small"
-                        :disabled="currentSearchIndex >= searchResults.length - 1"
-                        title="Next result"
-                        @click="navigateSearchResult(1)">
-                        <v-icon>mdi-chevron-down</v-icon>
-                    </v-btn>
-                </v-btn-group>
-                <span class="ml-2">{{ currentSearchIndex + 1 }} of {{ searchResults.length }}</span>
-            </v-card-subtitle>
-            <v-card-text>
-                <div v-if="loading" class="d-flex justify-center align-center" style="min-height: 200px">
-                    <v-progress-circular indeterminate color="primary"></v-progress-circular>
-                </div>
-                <div v-else-if="error" class="error-message pa-4 text-center">
-                    <v-icon color="error" size="large" class="mb-2">mdi-alert-circle</v-icon>
-                    <div>{{ error }}</div>
-                </div>
-                <div v-else-if="!xmlContent" class="no-content pa-4 text-center">No XML content available</div>
-                <div v-else class="xml-container" :class="{ 'word-wrap-enabled': wordWrapEnabled }">
-                    <!-- Line numbers column -->
-                    <div v-if="showLineNumbers" ref="lineNumbersContainer" class="line-numbers">
-                        <div
-                            v-for="n in lineCount"
-                            :key="n"
-                            :class="{ 'highlighted-line': highlightedLineNumbers.includes(n) }">
-                            {{ n }}
-                        </div>
-                    </div>
-                    <!-- XML content with highlighting -->
-                    <pre
-                        ref="xmlContainer"
-                        class="xml-content"
-                        :class="{ 'with-line-numbers': showLineNumbers }"
-                        @scroll="syncScroll">
-                        <code ref="codeElement" class="language-xml" v-html="formattedXml"></code>
+  <v-container class="pa-0" fluid>
+    <v-card>
+      <v-card-title class="d-flex align-center">
+        <v-icon class="mr-2">mdi-xml</v-icon>
+        XML Preview
+        <v-spacer />
+        <!-- Search input -->
+        <v-text-field
+          v-if="xmlContent"
+          v-model="searchQuery"
+          class="mx-2"
+          clearable
+          density="compact"
+          hide-details
+          placeholder="Search in XML"
+          prepend-inner-icon="mdi-magnify"
+          style="max-width: 200px"
+          @update:model-value="searchInXml"
+        />
+        <!-- Line wrap toggle -->
+        <v-btn
+          v-if="xmlContent"
+          icon
+          :title="wordWrapEnabled ? 'Disable word wrap' : 'Enable word wrap'"
+          variant="text"
+          @click="toggleWordWrap"
+        >
+          <v-icon>{{ wordWrapEnabled ? 'mdi-wrap-disabled' : 'mdi-wrap' }}</v-icon>
+        </v-btn>
+        <!-- Line numbers toggle -->
+        <v-btn
+          v-if="xmlContent"
+          icon
+          :title="showLineNumbers ? 'Hide line numbers' : 'Show line numbers'"
+          variant="text"
+          @click="showLineNumbers = !showLineNumbers"
+        >
+          <v-icon>mdi-format-list-numbered</v-icon>
+        </v-btn>
+        <!-- Download button -->
+        <v-btn
+          v-if="xmlContent"
+          icon
+          title="Download XML"
+          variant="text"
+          @click="downloadXml"
+        >
+          <v-icon>mdi-download</v-icon>
+        </v-btn>
+        <!-- Copy button -->
+        <v-btn
+          v-if="xmlContent"
+          icon
+          title="Copy to clipboard"
+          variant="text"
+          @click="copyToClipboard"
+        >
+          <v-icon>{{ hasCopied ? 'mdi-check' : 'mdi-content-copy' }}</v-icon>
+        </v-btn>
+      </v-card-title>
+      <v-divider />
+      <!-- Search results indicator -->
+      <v-card-subtitle v-if="searchResults.length > 0" class="d-flex align-center">
+        <span>{{ searchResults.length }} results found</span>
+        <v-spacer />
+        <v-btn-group density="comfortable" variant="outlined">
+          <v-btn
+            :disabled="currentSearchIndex <= 0"
+            size="small"
+            title="Previous result"
+            @click="navigateSearchResult(-1)"
+          >
+            <v-icon>mdi-chevron-up</v-icon>
+          </v-btn>
+          <v-btn
+            :disabled="currentSearchIndex >= searchResults.length - 1"
+            size="small"
+            title="Next result"
+            @click="navigateSearchResult(1)"
+          >
+            <v-icon>mdi-chevron-down</v-icon>
+          </v-btn>
+        </v-btn-group>
+        <span class="ml-2">{{ currentSearchIndex + 1 }} of {{ searchResults.length }}</span>
+      </v-card-subtitle>
+      <v-card-text>
+        <div v-if="loading" class="d-flex justify-center align-center" style="min-height: 200px">
+          <v-progress-circular color="primary" indeterminate />
+        </div>
+        <div v-else-if="error" class="error-message pa-4 text-center">
+          <v-icon class="mb-2" color="error" size="28">mdi-alert-circle</v-icon>
+          <div>{{ error }}</div>
+        </div>
+        <div v-else-if="!xmlContent" class="no-content pa-4 text-center">No XML content available</div>
+        <div v-else class="xml-container" :class="{ 'word-wrap-enabled': wordWrapEnabled }">
+          <!-- Line numbers column -->
+          <div v-if="showLineNumbers" ref="lineNumbersContainer" class="line-numbers">
+            <div
+              v-for="n in lineCount"
+              :key="n"
+              :class="{ 'highlighted-line': highlightedLineNumbers.includes(n) }"
+            >
+              {{ n }}
+            </div>
+          </div>
+          <!-- XML content with highlighting -->
+          <pre
+            ref="xmlContainer"
+            class="xml-content"
+            :class="{ 'with-line-numbers': showLineNumbers }"
+            @scroll="syncScroll"
+          >
+                        <code ref="codeElement" class="language-xml" v-html="formattedXml" />
                     </pre>
-                </div>
-            </v-card-text>
-        </v-card>
-    </v-container>
+        </div>
+      </v-card-text>
+    </v-card>
+  </v-container>
 </template>
 
 <script lang="ts" setup>
-    /* eslint-disable simple-import-sort/imports */
-    import Prism from 'prismjs';
-    import 'prismjs/themes/prism.css';
-    /* eslint-enable simple-import-sort/imports */
-    import { computed, nextTick, onMounted, ref, watch } from 'vue';
-    import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
+  import Prism from 'prismjs'
+  import { computed, nextTick, onMounted, ref, watch } from 'vue'
+  import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
+  import 'prismjs/themes/prism.css'
 
-    const props = defineProps({
-        submodelElementData: {
-            type: Object as () => any,
-            default: () => ({}),
-        },
-    });
+  const props = defineProps({
+    submodelElementData: {
+      type: Object as () => any,
+      default: () => ({}),
+    },
+  })
 
-    const xmlContent = ref<string>('');
-    const formattedXml = ref<string>('');
-    const loading = ref<boolean>(false);
-    const error = ref<string | null>(null);
-    const hasCopied = ref<boolean>(false);
-    const xmlContainer = ref<HTMLElement | null>(null);
-    const codeElement = ref<HTMLElement | null>(null);
-    const wordWrapEnabled = ref<boolean>(true);
-    const showLineNumbers = ref<boolean>(true);
-    const searchQuery = ref<string>('');
-    const searchResults = ref<number[]>([]);
-    const currentSearchIndex = ref<number>(0);
-    const highlightedLineNumbers = ref<number[]>([]);
-    const lineNumbersContainer = ref<HTMLElement | null>(null);
+  const xmlContent = ref<string>('')
+  const formattedXml = ref<string>('')
+  const loading = ref<boolean>(false)
+  const error = ref<string | null>(null)
+  const hasCopied = ref<boolean>(false)
+  const xmlContainer = ref<HTMLElement | null>(null)
+  const codeElement = ref<HTMLElement | null>(null)
+  const wordWrapEnabled = ref<boolean>(true)
+  const showLineNumbers = ref<boolean>(true)
+  const searchQuery = ref<string>('')
+  const searchResults = ref<number[]>([])
+  const currentSearchIndex = ref<number>(0)
+  const highlightedLineNumbers = ref<number[]>([])
+  const lineNumbersContainer = ref<HTMLElement | null>(null)
 
-    // Computed properties
-    const lineCount = computed(() => {
-        if (!formattedXml.value) return 0;
-        return formattedXml.value.split('\n').length;
-    });
+  // Computed properties
+  const lineCount = computed(() => {
+    if (!formattedXml.value) return 0
+    return formattedXml.value.split('\n').length
+  })
 
-    // Composables
-    const { fetchAttachmentFile } = useSMRepositoryClient();
+  // Composables
+  const { fetchAttachmentFile } = useSMRepositoryClient()
 
-    onMounted(() => {
-        if (typeof window !== 'undefined') {
-            window.Prism = window.Prism || Prism;
-        }
-
-        initialize();
-    });
-
-    // Watchers
-    watch(
-        () => props.submodelElementData,
-        () => {
-            initialize();
-        }
-    );
-
-    // Apply highlighting whenever xmlContent changes
-    watch(xmlContent, () => {
-        highlightXml();
-    });
-
-    // Reset search when XML content changes
-    watch(xmlContent, () => {
-        searchQuery.value = '';
-        searchResults.value = [];
-        highlightedLineNumbers.value = [];
-    });
-
-    // Watch for search query changes
-    watch(searchQuery, () => {
-        if (searchQuery.value === '') {
-            searchResults.value = [];
-            highlightedLineNumbers.value = [];
-        } else {
-            searchInXml();
-        }
-    });
-
-    function toggleWordWrap(): void {
-        wordWrapEnabled.value = !wordWrapEnabled.value;
+  onMounted(() => {
+    if (typeof window !== 'undefined') {
+      window.Prism = window.Prism || Prism
     }
 
-    function searchInXml(): void {
-        searchResults.value = [];
-        highlightedLineNumbers.value = [];
-        currentSearchIndex.value = 0;
+    initialize()
+  })
 
-        if (!searchQuery.value || !xmlContent.value) return;
+  // Watchers
+  watch(
+    () => props.submodelElementData,
+    () => {
+      initialize()
+    },
+  )
 
-        const lines = xmlContent.value.split('\n');
-        const query = searchQuery.value.toLowerCase();
+  // Apply highlighting whenever xmlContent changes
+  watch(xmlContent, () => {
+    highlightXml()
+  })
 
-        lines.forEach((line: string, index: number) => {
-            if (line.toLowerCase().includes(query)) {
-                searchResults.value.push(index + 1);
-            }
-        });
+  // Reset search when XML content changes
+  watch(xmlContent, () => {
+    searchQuery.value = ''
+    searchResults.value = []
+    highlightedLineNumbers.value = []
+  })
 
-        if (searchResults.value.length > 0) {
-            highlightedLineNumbers.value = [searchResults.value[0]];
-            scrollToLine(searchResults.value[0]);
-        }
+  // Watch for search query changes
+  watch(searchQuery, () => {
+    if (searchQuery.value === '') {
+      searchResults.value = []
+      highlightedLineNumbers.value = []
+    } else {
+      searchInXml()
+    }
+  })
+
+  function toggleWordWrap (): void {
+    wordWrapEnabled.value = !wordWrapEnabled.value
+  }
+
+  function searchInXml (): void {
+    searchResults.value = []
+    highlightedLineNumbers.value = []
+    currentSearchIndex.value = 0
+
+    if (!searchQuery.value || !xmlContent.value) return
+
+    const lines = xmlContent.value.split('\n')
+    const query = searchQuery.value.toLowerCase()
+
+    for (const [index, line] of lines.entries()) {
+      if (line.toLowerCase().includes(query)) {
+        searchResults.value.push(index + 1)
+      }
     }
 
-    function navigateSearchResult(direction: number): void {
-        if (searchResults.value.length === 0) return;
+    if (searchResults.value.length > 0) {
+      highlightedLineNumbers.value = [searchResults.value[0]]
+      scrollToLine(searchResults.value[0])
+    }
+  }
 
-        currentSearchIndex.value += direction;
+  function navigateSearchResult (direction: number): void {
+    if (searchResults.value.length === 0) return
 
-        if (currentSearchIndex.value < 0) {
-            currentSearchIndex.value = 0;
-        } else if (currentSearchIndex.value >= searchResults.value.length) {
-            currentSearchIndex.value = searchResults.value.length - 1;
-        }
+    currentSearchIndex.value += direction
 
-        const lineNumber = searchResults.value[currentSearchIndex.value];
-        highlightedLineNumbers.value = [lineNumber];
-        scrollToLine(lineNumber);
+    if (currentSearchIndex.value < 0) {
+      currentSearchIndex.value = 0
+    } else if (currentSearchIndex.value >= searchResults.value.length) {
+      currentSearchIndex.value = searchResults.value.length - 1
     }
 
-    function scrollToLine(lineNumber: number): void {
-        nextTick(() => {
-            if (!xmlContainer.value) return;
+    const lineNumber = searchResults.value[currentSearchIndex.value]
+    highlightedLineNumbers.value = [lineNumber]
+    scrollToLine(lineNumber)
+  }
 
-            const lineHeight = 21;
-            const containerTop = xmlContainer.value.getBoundingClientRect().top;
-            const scrollTo = (lineNumber - 1) * lineHeight;
+  function scrollToLine (lineNumber: number): void {
+    nextTick(() => {
+      if (!xmlContainer.value) return
 
-            xmlContainer.value.scrollTop = scrollTo - containerTop - 100;
-        });
+      const lineHeight = 21
+      const containerTop = xmlContainer.value.getBoundingClientRect().top
+      const scrollTo = (lineNumber - 1) * lineHeight
+
+      xmlContainer.value.scrollTop = scrollTo - containerTop - 100
+    })
+  }
+
+  function formatXML (xml: string): string {
+    try {
+      if (!xml || typeof xml !== 'string') {
+        return ''
+      }
+
+      const trimmedXml = xml.trim()
+
+      if (!trimmedXml) {
+        return ''
+      }
+
+      const hasXmlDeclaration = trimmedXml.startsWith('<?xml')
+
+      let formatted = ''
+      let indent = ''
+
+      const xmlNodes = trimmedXml.split(/>\s*</)
+      for (const [index, node] of xmlNodes.entries()) {
+        if (index === 0 && node.includes('?xml') && !hasXmlDeclaration) {
+          continue
+        }
+
+        if (/^\/\w/.test(node)) {
+          indent = indent.slice(2)
+        }
+
+        formatted += index === 0 ? '<' + node + '>\n' : indent + '<' + node + '>\n'
+
+        if (/^<?\w[^>]*[^/]$/.test(node) && !node.startsWith('?')) {
+          indent += '  '
+        }
+      }
+
+      return formatted.slice(1, -2)
+    } catch (error_) {
+      console.error('Error formatting XML:', error_)
+      return xml
+    }
+  }
+
+  function highlightXml (): void {
+    if (!xmlContent.value) {
+      formattedXml.value = ''
+      return
     }
 
-    function formatXML(xml: string): string {
-        try {
-            if (!xml || typeof xml !== 'string') {
-                return '';
-            }
+    try {
+      const formatted = formatXML(xmlContent.value)
 
-            const trimmedXml = xml.trim();
+      // Apply syntax highlighting using Prism
+      if (Prism && Prism.highlight) {
+        formattedXml.value = Prism.highlight(formatted, Prism.languages.markup || {}, 'markup').trimStart()
+      } else {
+        formattedXml.value = formatted
+        console.warn('Prism highlighting not available')
+      }
+    } catch (error_) {
+      console.error('Error highlighting XML:', error_)
+      formattedXml.value = xmlContent.value || ''
+    }
+  }
 
-            if (!trimmedXml) {
-                return '';
-            }
+  async function copyToClipboard (): Promise<void> {
+    if (xmlContent.value) {
+      try {
+        await navigator.clipboard.writeText(xmlContent.value)
+        hasCopied.value = true
+        setTimeout(() => {
+          hasCopied.value = false
+        }, 2000)
+      } catch (error_) {
+        console.error('Failed to copy XML to clipboard', error_)
+      }
+    }
+  }
 
-            const hasXmlDeclaration = trimmedXml.startsWith('<?xml');
+  function downloadXml (): void {
+    if (xmlContent.value) {
+      const blob = new Blob([xmlContent.value], { type: 'application/xml' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${props.submodelElementData.idShort || 'download'}.xml`
+      document.body.append(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    }
+  }
 
-            let formatted = '';
-            let indent = '';
-
-            const xmlNodes = trimmedXml.split(/>\s*</);
-            xmlNodes.forEach(function (node, index) {
-                if (index === 0 && node.includes('?xml') && !hasXmlDeclaration) {
-                    return;
-                }
-
-                if (node.match(/^\/\w/)) {
-                    indent = indent.substring(2);
-                }
-
-                if (index === 0) {
-                    formatted += '<' + node + '>\n';
-                } else {
-                    formatted += indent + '<' + node + '>\n';
-                }
-
-                if (node.match(/^<?\w[^>]*[^/]$/) && !node.startsWith('?')) {
-                    indent += '  ';
-                }
-            });
-
-            return formatted.substring(1, formatted.length - 2);
-        } catch (e) {
-            console.error('Error formatting XML:', e);
-            return xml;
-        }
+  async function initialize (): Promise<void> {
+    if (!props.submodelElementData || !props.submodelElementData.path) {
+      xmlContent.value = ''
+      error.value = 'No file path provided'
+      return
     }
 
-    function highlightXml(): void {
-        if (!xmlContent.value) {
-            formattedXml.value = '';
-            return;
-        }
+    loading.value = true
+    error.value = null
+    xmlContent.value = ''
 
-        try {
-            const formatted = formatXML(xmlContent.value);
+    try {
+      const fileBlob = await fetchAttachmentFile(props.submodelElementData.path)
 
-            // Apply syntax highlighting using Prism
-            if (Prism && Prism.highlight) {
-                formattedXml.value = Prism.highlight(formatted, Prism.languages.markup || {}, 'markup').trimStart();
-            } else {
-                formattedXml.value = formatted;
-                console.warn('Prism highlighting not available');
-            }
-        } catch (e) {
-            console.error('Error highlighting XML:', e);
-            formattedXml.value = xmlContent.value || '';
-        }
+      if (!fileBlob) {
+        error.value = 'Failed to load XML file'
+        return
+      }
+
+      // Convert blob to text
+      if (fileBlob instanceof Blob) {
+        // Read the blob as text
+        const text = await fileBlob.text()
+        xmlContent.value = text
+      } else {
+        console.error('Expected a Blob, but received:', fileBlob)
+      }
+
+      highlightXml()
+    } catch (error_) {
+      console.error('Error loading XML file:', error_)
+      error.value = `Error loading XML file: ${error_ instanceof Error ? error_.message : 'Unknown error'}`
+    } finally {
+      loading.value = false
     }
+  }
 
-    async function copyToClipboard(): Promise<void> {
-        if (xmlContent.value) {
-            try {
-                await navigator.clipboard.writeText(xmlContent.value);
-                hasCopied.value = true;
-                setTimeout(() => {
-                    hasCopied.value = false;
-                }, 2000);
-            } catch (err) {
-                console.error('Failed to copy XML to clipboard', err);
-            }
-        }
+  function syncScroll (): void {
+    if (showLineNumbers.value && lineNumbersContainer.value && xmlContainer.value) {
+      lineNumbersContainer.value.scrollTop = xmlContainer.value.scrollTop
     }
-
-    function downloadXml(): void {
-        if (xmlContent.value) {
-            const blob = new Blob([xmlContent.value], { type: 'application/xml' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${props.submodelElementData.idShort || 'download'}.xml`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-    }
-
-    async function initialize(): Promise<void> {
-        if (!props.submodelElementData || !props.submodelElementData.path) {
-            xmlContent.value = '';
-            error.value = 'No file path provided';
-            return;
-        }
-
-        loading.value = true;
-        error.value = null;
-        xmlContent.value = '';
-
-        try {
-            const fileBlob = await fetchAttachmentFile(props.submodelElementData.path);
-
-            if (!fileBlob) {
-                error.value = 'Failed to load XML file';
-                return;
-            }
-
-            // Convert blob to text
-            if (fileBlob instanceof Blob) {
-                // Read the blob as text
-                const text = await fileBlob.text();
-                xmlContent.value = text;
-            } else {
-                console.error('Expected a Blob, but received:', fileBlob);
-            }
-
-            highlightXml();
-        } catch (e) {
-            console.error('Error loading XML file:', e);
-            error.value = `Error loading XML file: ${e instanceof Error ? e.message : 'Unknown error'}`;
-        } finally {
-            loading.value = false;
-        }
-    }
-
-    function syncScroll(): void {
-        if (showLineNumbers.value && lineNumbersContainer.value && xmlContainer.value) {
-            lineNumbersContainer.value.scrollTop = xmlContainer.value.scrollTop;
-        }
-    }
+  }
 </script>
 
 <style scoped>
