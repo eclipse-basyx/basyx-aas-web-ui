@@ -10,7 +10,7 @@
       <div class="ml-2">Qualifier {{ index + 1 }}</div>
       <v-spacer />
       <v-btn
-        class="text-none"
+
         prepend-icon="mdi-delete"
         text="Remove Qualifier"
         variant="text"
@@ -53,7 +53,7 @@
           </v-list-item>
           <v-btn
             v-if="qualifier.semanticId === null"
-            class="text-none mt-1 mb-4"
+            class="mt-1 mb-4"
             color="primary"
             prepend-icon="mdi-plus"
             text="Add Semantic ID"
@@ -74,7 +74,7 @@
           </v-list-item>
           <v-btn
             v-if="qualifier.valueId === null"
-            class="text-none mt-1 mb-4"
+            class="mt-1 mb-4"
             color="primary"
             prepend-icon="mdi-plus"
             text="Add Value ID"
@@ -104,7 +104,7 @@
 
     <v-col class="py-0 d-flex align-end" cols="3">
       <v-btn
-        class="text-none mt-1"
+        class="mt-1"
         color="primary"
         prepend-icon="mdi-plus"
         text="Add Qualifier"

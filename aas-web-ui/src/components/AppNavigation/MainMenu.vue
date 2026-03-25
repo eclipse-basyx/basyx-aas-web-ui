@@ -16,17 +16,17 @@
         >
           <template v-if="smViewerEditor || filteredAndOrderedModuleRoutes.length > 0">
             <v-tabs v-model="currentTab" color="primary" grow>
-              <v-tab class="text-none" text="AAS" value="aas" />
+              <v-tab text="AAS" value="aas" />
 
               <v-divider vertical />
 
-              <v-tab v-if="smViewerEditor" class="text-none" text="Submodel" value="submodel" />
+              <v-tab v-if="smViewerEditor" text="Submodel" value="submodel" />
 
               <v-divider vertical />
 
               <v-tab
                 v-if="filteredAndOrderedModuleRoutes.length > 0"
-                class="text-none"
+
                 text="Modules"
                 value="modules"
               />
@@ -175,7 +175,7 @@
       </v-container>
       <template #actions>
         <v-btn
-          class="text-none"
+
           color="primary"
           text="About"
           :to="isActiveRoutePath('/about') ? '' : '/about'"
@@ -186,7 +186,7 @@
 
         <v-btn
           append-icon="custom:aasIcon"
-          class="text-none"
+
           color="primary"
           href="https://basyx.org"
           target="_blank"

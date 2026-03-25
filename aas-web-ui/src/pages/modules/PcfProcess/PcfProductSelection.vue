@@ -136,7 +136,7 @@
       <div v-if="!mdAndDown" style="width: 340px" />
       <v-spacer v-if="!mdAndDown" />
       <v-btn
-        class="text-none text-buttonText"
+        class="text-buttonText"
         color="success"
         :disabled="!selectedShell"
         text="Produce"

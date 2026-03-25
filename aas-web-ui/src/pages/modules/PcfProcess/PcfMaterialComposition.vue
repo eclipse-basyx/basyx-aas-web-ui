@@ -174,7 +174,7 @@
     <v-card-actions :class="{ 'justify-center': smAndDown }">
       <v-spacer v-if="!smAndDown" />
       <v-btn
-        class="text-none text-buttonText"
+        class="text-buttonText"
         color="success"
         :disabled="hasValidationErrors"
         :loading="isCompleting"

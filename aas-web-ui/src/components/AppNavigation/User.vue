@@ -47,7 +47,7 @@
           <v-btn
             v-if="currentInfrastructure?.token?.accessToken"
             append-icon="mdi-logout"
-            class="text-none"
+
             color="primary"
             text="Logout"
             @click="logout"
@@ -55,7 +55,7 @@
           <v-btn
             v-else
             append-icon="mdi-login"
-            class="text-none"
+
             color="primary"
             text="Login"
             @click="login"

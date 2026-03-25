@@ -43,7 +43,7 @@
     />
   </v-list-item>
   <v-btn
-    class="text-none mt-1 mb-4"
+    class="mt-1 mb-4"
     color="primary"
     prepend-icon="mdi-plus"
     text="Add"

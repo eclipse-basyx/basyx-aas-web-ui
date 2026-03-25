@@ -13,7 +13,7 @@
       <v-row class="mt-3">
         <v-col class="d-flex justify-center" cols="12" md="auto">
           <v-btn
-            class="text-none"
+
             href="https://github.com/eclipse-basyx"
             prepend-icon="mdi-account-group-outline"
             target="_blank"
@@ -24,7 +24,7 @@
         <v-spacer v-if="mdAndDown" />
         <v-col class="d-flex justify-center" cols="12" md="auto">
           <v-btn
-            class="text-none"
+
             color="primary"
             elevation="1"
             href="https://basyx.org/"
@@ -36,7 +36,7 @@
         <v-spacer v-if="mdAndDown" />
         <v-col class="d-flex justify-center" cols="12" md="auto">
           <v-btn
-            class="text-none"
+
             href="https://wiki.basyx.org/en/latest/content/user_documentation/basyx_components/web_ui/index.html"
             prepend-icon="mdi-text-box-outline"
             target="_blank"

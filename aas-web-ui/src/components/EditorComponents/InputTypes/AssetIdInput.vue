@@ -14,7 +14,7 @@
           <template v-if="showGenerateIriForGlobal" #append-inner>
             <v-btn
               border
-              class="text-none"
+
               color="primary"
               size="small"
               slim
@@ -64,7 +64,7 @@
               <template v-if="showGenerateIriForSpecific" #append-inner>
                 <v-btn
                   border
-                  class="text-none"
+
                   color="primary"
                   size="small"
                   slim
@@ -76,7 +76,7 @@
             </v-text-field>
           </v-list-item>
           <v-btn
-            class="text-none mt-2"
+            class="mt-2"
             color="primary"
             prepend-icon="mdi-plus"
             text="Add"

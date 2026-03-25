@@ -13,7 +13,7 @@
       <v-btn
         v-if="showGenerateIriButton"
         border
-        class="text-none"
+
         color="primary"
         size="small"
         slim

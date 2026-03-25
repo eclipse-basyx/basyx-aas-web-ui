@@ -37,7 +37,6 @@
               <v-btn
                 v-bind="menuProps"
                 append-icon="mdi-menu-down"
-                class="text-none"
                 size="small"
                 variant="tonal"
               >

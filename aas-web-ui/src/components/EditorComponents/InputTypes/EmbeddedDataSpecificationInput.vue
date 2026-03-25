@@ -10,7 +10,7 @@
       <div class="ml-2">Embedded Data Specification {{ index + 1 }}</div>
       <v-spacer />
       <v-btn
-        class="text-none"
+
         prepend-icon="mdi-delete"
         text="Remove"
         variant="text"
@@ -92,7 +92,7 @@
             </v-list-item>
             <v-btn
               v-if="embeddedDataSpecification.dataSpecificationContent.unitId === null"
-              class="text-none mt-1 mb-4"
+              class="mt-1 mb-4"
               color="primary"
               prepend-icon="mdi-plus"
               text="Add Unit ID"
@@ -159,7 +159,7 @@
             </v-list-item>
             <v-btn
               v-if="embeddedDataSpecification.dataSpecificationContent.valueList === null"
-              class="text-none mt-1 mb-4"
+              class="mt-1 mb-4"
               color="primary"
               prepend-icon="mdi-plus"
               text="Add Value List"
@@ -186,7 +186,7 @@
                     <v-col class="py-0">
                       <v-btn
                         v-if="valueReferencePair.valueId === null"
-                        class="text-none mt-1 mb-4"
+                        class="mt-1 mb-4"
                         color="primary"
                         prepend-icon="mdi-plus"
                         text="Add Value ID"
@@ -206,7 +206,7 @@
                 </v-card-text>
               </v-sheet>
               <v-btn
-                class="text-none mt-1 mb-4"
+                class="mt-1 mb-4"
                 color="primary"
                 prepend-icon="mdi-plus"
                 text="Add Value Pair"
@@ -227,7 +227,7 @@
             </v-list-item>
             <v-btn
               v-if="embeddedDataSpecification.dataSpecificationContent.levelType === null"
-              class="text-none mt-1 mb-4"
+              class="mt-1 mb-4"
               color="primary"
               prepend-icon="mdi-plus"
               text="Add Level Type"
@@ -287,7 +287,7 @@
   </v-sheet>
 
   <v-btn
-    class="text-none mt-1 mb-4"
+    class="mt-1 mb-4"
     color="primary"
     prepend-icon="mdi-plus"
     text="Add Embedded Data Specification"
