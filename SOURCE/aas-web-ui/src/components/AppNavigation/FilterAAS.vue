@@ -24,11 +24,11 @@
                     mandatory
                     density="compact"
                     class="mx-2 mt-1">
-                    <v-btn value="asc">
+                    <v-btn :value="1">
                         <span>Asc</span>
                         <v-icon class="ml-1">mdi-arrow-up</v-icon>
                     </v-btn>
-                    <v-btn value="desc">
+                    <v-btn :value="-1">
                         <span>Desc</span>
                         <v-icon class="ml-1">mdi-arrow-down</v-icon>
                     </v-btn>
@@ -145,7 +145,7 @@
     }>();
 
     const sortField = ref('nameLower');
-    const sortDirection = ref('asc');
+    const sortDirection = ref(1);
 
     const filters = reactive<AASAttributeFilters>({
         manufacturerName: '',
@@ -172,7 +172,7 @@
                 sortDirection: sortDirection.value,
             });
         },
-        { deep: true, }
+        { deep: true }
     );
 
     watch(

@@ -960,13 +960,10 @@ const hasGlobalMatch = (searchTerm: string) => {
         listLoading.value = true;
         resetAttributeHydrationState();
         fetchAasDescriptorList().then(async (aasDescriptorList: Array<any>) => {
-            let sortedList =
-                aasDescriptorList.length > 0
-                    ? aasDescriptorList.sort((a, b) => (a.id > b.id ? 1 : -1))
-                    : (await fetchAasList()).sort((a, b) => (a.id > b.id ? 1 : -1));
+            let fetchedList = aasDescriptorList.length > 0 ? aasDescriptorList : await fetchAasList();
 
             // Precompute lowercase search fields
-            const processedList = sortedList.map((item) => ({
+            const processedList = fetchedList.map((item) => ({
                 ...item,
                 idLower: item?.id?.toLowerCase() || '',
                 idShortLower: item?.idShort?.toLowerCase() || '',
@@ -1004,9 +1001,10 @@ const hasGlobalMatch = (searchTerm: string) => {
                 enrichAttributeFields(processedList);
             }
 
+            sortAasList({ sortField: 'nameLower', sortDirection: 1 });
             applyListFilters();
+            scrollToSelectedAAS();
             listLoading.value = false;
-
             preloadAttributeDataInBackground();
         });
     }
@@ -1041,14 +1039,8 @@ const hasGlobalMatch = (searchTerm: string) => {
             });
     }
 
-    function sortAasList({sortField, sortDirection}) {
-        const direction = sortDirection === 'asc' ? 1 : -1;
-
-        const sortFunction = (a: any, b: any) => {
-            const valA = a[sortField];
-            const valB = b[sortField];
-            return valA > valB ? direction : valA < valB ? -direction : 0;
-        };
+    function sortAasList({ sortField, sortDirection }) {
+        const sortFunction = (a: any, b: any) => a[sortField].localeCompare(b[sortField]) * sortDirection;
 
         aasList.value = [...aasList.value].sort(sortFunction);
         aasListUnfiltered.value = [...aasListUnfiltered.value].sort(sortFunction);
