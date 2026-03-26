@@ -13,7 +13,7 @@
 
             <v-stepper-window>
                 <v-stepper-window-item :value="1">
-                    <StepAssetData :next="goNext" :prev="goPrev" :is-active-component="step === 1" />
+                    <StepAssetInformation :next="goNext" :prev="goPrev" :is-active-component="step === 1" />
                 </v-stepper-window-item>
 
                 <v-stepper-window-item :value="2">
@@ -41,7 +41,7 @@
     //     isMobileModule: false,
     // });
     import { ref } from 'vue';
-    import StepAssetData from './components/StepAssetData.vue';
+    import StepAssetInformation from './components/StepAssetInformation.vue';
     import StepDigitalNamePlate from './components/StepDigitalNamePlate.vue';
     import StepHandoverDocumentation from './components/StepHandoverDocumentation.vue';
     import StepTechnicalData from './components/StepTechnicalData.vue';

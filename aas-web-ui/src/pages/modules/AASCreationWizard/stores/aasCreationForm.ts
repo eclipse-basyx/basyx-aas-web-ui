@@ -1,3 +1,4 @@
+import type { DigitalNameplateTemplate } from '../types/template';
 import { defineStore } from 'pinia';
 
 export type LangText = {
@@ -25,7 +26,7 @@ export const useAASCreationStore = defineStore('aasCreationForm', {
             thumbnailFile: null as File | null,
         } as AssetDataForm,
 
-        digitalNameplateData: null as Record<string, any> | null,
+        digitalNameplateData: null as DigitalNameplateTemplate | null,
         technicalDataData: null as Record<string, any> | null,
         handoverDocumentationData: null as Record<string, any> | null,
     }),
@@ -39,7 +40,7 @@ export const useAASCreationStore = defineStore('aasCreationForm', {
             this.assetData.thumbnailFile = file;
         },
 
-        saveDigitalNameplateData(data: Record<string, any>) {
+        saveDigitalNameplateData(data: DigitalNameplateTemplate) {
             this.digitalNameplateData = data;
         },
 

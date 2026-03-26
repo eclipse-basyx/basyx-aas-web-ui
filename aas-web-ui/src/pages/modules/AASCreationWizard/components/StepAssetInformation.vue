@@ -49,7 +49,6 @@
                         <FormField label="Description" tip="description of the asset">
                             <v-textarea
                                 v-model="form.description"
-                                label="Description"
                                 variant="outlined"
                                 density="comfortable"
                                 rows="3"
@@ -140,7 +139,6 @@
     }
 
     async function saveAndNext(): Promise<void> {
-        console.log('saveAndNext clicked');
         if (!props.isActiveComponent) {
             return;
         }

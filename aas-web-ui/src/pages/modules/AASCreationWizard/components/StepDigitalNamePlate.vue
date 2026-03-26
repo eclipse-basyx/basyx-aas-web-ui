@@ -11,7 +11,7 @@
                             </div>
                         </div>
                     </v-col>
-                    <v-col v-for="element in template.submodelElements" :key="element.idShort" cols="12">
+                    <!-- <v-col v-for="element in template.submodelElements" :key="element.idShort" cols="12">
                         <FormField :label="formatLabel(element.idShort)">
                             <v-text-field
                                 v-if="element.modelType === 'Property' && element.valueType === 'string'"
@@ -20,23 +20,32 @@
                                 density="comfortable"
                                 hide-details="auto" />
                         </FormField>
+                    </v-col> -->
+                    <v-col>
+                        <NameplateRenderer
+                            :elements="templateData.submodelElements"
+                            :form-state="formValues"
+                            @update:form-state="onFormStateUpdate" />
+                    </v-col>
+                    <v-col cols="12" class="d-flex justify-space-between mt-4">
+                        <v-btn color="primary" @click="props.prev"> Back </v-btn>
+
+                        <v-btn type="submit" color="primary"> Next </v-btn>
                     </v-col>
                 </v-row>
             </v-form>
         </v-sheet>
     </v-container>
-    <div class="d-flex justify-space-between">
-        <v-btn color="primary" @click="props.prev">Back</v-btn>
-        <v-btn color="primary" @click="props.next">Next</v-btn>
-    </div>
 </template>
 <script lang="ts" setup>
     import type { DigitalNameplateTemplate } from '../types/template';
-    import { onMounted, reactive, ref } from 'vue';
-    import { useAASCreationStore } from '../stores/aasCreationForm';
+    import { onMounted, ref } from 'vue';
+    // import { buildDigitalNameplate } from '../builders/buildDigitalNameplate';
+    // import { useAASCreationStore } from '../stores/aasCreationForm';
     import template from '../templates/digital-nameplate.json';
-    import { formatLabel } from '../utils/formFieldUtils';
-    import FormField from './FormField.vue';
+    import { FormStateObject } from '../types/form';
+    import { createInitialFormState } from '../utils/createInitialFormState';
+    import NameplateRenderer from './renderer/NamePlateRenderer.vue';
 
     const props = defineProps<{
         next: () => void;
@@ -44,26 +53,41 @@
         isActiveComponent: boolean;
     }>();
 
-    const store = useAASCreationStore();
+    // const store = useAASCreationStore();
     const formRef = ref();
 
     const templateData = template as DigitalNameplateTemplate;
 
-    const formValues = reactive<Record<string, string>>({});
-    onMounted(() => {
-        const existingData = store.digitalNameplateData ?? {};
+    const formValues = ref<FormStateObject>(createInitialFormState(templateData));
 
-        for (const element of templateData.submodelElements) {
-            formValues[element.idShort] = existingData[element.idShort] ?? '';
-        }
+    onMounted(() => {
+        console.log('templatedata is', templateData);
+        console.log('formvalues is', formValues);
+        // const existingData = store.digitalNameplateData;
+        const initialState = createInitialFormState(templateData);
+        console.log('initial digital nameplate form state:', initialState);
+        // for (const element of templateData.submodelElements) {
+        //     const storedElement = existingData?.submodelElements?.find((item) => item.idShort === element.idShort);
+        //     formValues[element.idShort] = storedElement?.value ?? '';
+        // }
     });
+    // Function to save form values from UI into central store
     async function saveAndNext(): Promise<void> {
         console.log('saveAndNext clicked');
         if (!props.isActiveComponent) {
             return;
         }
 
-        store.saveDigitalNameplateData({ ...formValues });
+        // store.saveDigitalNameplateData({ ...formValues });
+        // const builtDigitalNameplate = buildDigitalNameplate({ ...formValues });
+
+        // store.saveDigitalNameplateData(builtDigitalNameplate);
+
+        // console.log('digital nameplate data is', store.digitalNameplateData);
+        // console.log('built data is', builtDigitalNameplate);
         props.next();
+    }
+    function onFormStateUpdate(value: FormStateObject): void {
+        formValues.value = value;
     }
 </script>
