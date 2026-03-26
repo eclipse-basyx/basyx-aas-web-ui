@@ -11,8 +11,9 @@
                 <v-list-item>
                     <v-radio-group v-model="sortField" density="compact" hide-details>
                         <v-radio label="Name" value="nameLower" />
-                        <v-radio label="Last Updated" value="updated" />
-                        <v-radio label="Date Created" value="created" />
+                        <v-radio label="ID" value="id" />
+                        <v-radio disabled label="Last Updated" value="updated" />
+                        <v-radio disabled label="Date Created" value="created" />
                     </v-radio-group>
                 </v-list-item>
 
