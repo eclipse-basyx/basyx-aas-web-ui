@@ -1,7 +1,7 @@
 <template>
     <v-menu :close-on-content-click="false" location="bottom">
         <template #activator="{ props }">
-            <v-btn icon="mdi-sort-variant" v-bind="Object.assign({}, props, tooltipProps)" variant="plain" />
+            <v-btn icon="mdi-sort-variant" v-bind="props" variant="plain" />
         </template>
 
         <v-card>
@@ -53,7 +53,7 @@
                 </v-list-item>
                 <v-list-item>
                     <v-text-field
-                        v-model="filters.productDesignation"
+                        v-model="filters.manufacturerProductDesignation"
                         label="Product Designation"
                         density="compact"
                         hide-details
@@ -62,8 +62,8 @@
                 </v-list-item>
                 <v-list-item>
                     <v-text-field
-                        v-model="filters.orderCode"
-                        label="Order Code"
+                        v-model="filters.manufacturerProductFamily"
+                        label="Product Family"
                         density="compact"
                         hide-details
                         class="mt-1"
@@ -71,8 +71,8 @@
                 </v-list-item>
                 <v-list-item>
                     <v-text-field
-                        v-model="filters.manufacturerCode"
-                        label="Manufacturer Code"
+                        v-model="filters.manufacturerProductType"
+                        label="Product Type"
                         density="compact"
                         hide-details
                         class="mt-1"
@@ -80,8 +80,35 @@
                 </v-list-item>
                 <v-list-item>
                     <v-text-field
-                        v-model="filters.globalAssetId"
-                        label="Global Asset ID"
+                        v-model="filters.orderCodeOfManufacturer"
+                        label="Order Code Of Manufacturer"
+                        density="compact"
+                        hide-details
+                        class="mt-1"
+                        variant="outlined" />
+                </v-list-item>
+                <v-list-item>
+                    <v-text-field
+                        v-model="filters.productArticleNumberOfManufacturer"
+                        label="Product Article Number Of Manufacturer"
+                        density="compact"
+                        hide-details
+                        class="mt-1"
+                        variant="outlined" />
+                </v-list-item>
+                <v-list-item>
+                    <v-text-field
+                        v-model="filters.productClassificationSystem"
+                        label="Product Classification System"
+                        density="compact"
+                        hide-details
+                        class="mt-1"
+                        variant="outlined" />
+                </v-list-item>
+                <v-list-item>
+                    <v-text-field
+                        v-model="filters.productClassId"
+                        label="Product Class Id"
                         density="compact"
                         hide-details
                         class="mt-1"
@@ -92,21 +119,49 @@
     </v-menu>
 </template>
 
-<script setup>
-    import { reactive, ref } from 'vue';
+<script setup lang="ts">
+    import { reactive, ref, watch } from 'vue';
+
+    interface AASAttributeFilters {
+        manufacturerName: string;
+        manufacturerProductDesignation: string;
+        manufacturerProductFamily: string;
+        manufacturerProductType: string;
+        orderCodeOfManufacturer: string;
+        productArticleNumberOfManufacturer: string;
+        productClassificationSystem: string;
+        productClassId: string;
+    }
+
+    const emit = defineEmits<{
+        (event: 'update:filters', value: AASAttributeFilters): void;
+    }>();
 
     const sortField = ref('name');
     const sortDirection = ref('asc');
 
-    const filters = reactive({
+    const filters = reactive<AASAttributeFilters>({
         manufacturerName: '',
-        productDesignation: '',
-        orderCode: '',
-        manufacturerCode: '',
-        globalAssetId: '',
+        manufacturerProductDesignation: '',
+        manufacturerProductFamily: '',
+        manufacturerProductType: '',
+        orderCodeOfManufacturer: '',
+        productArticleNumberOfManufacturer: '',
+        productClassificationSystem: '',
+        productClassId: '',
     });
 
     const clearFilters = () => {
-        Object.keys(filters).forEach(k => filters[k] = '');
+        Object.keys(filters).forEach((key) => {
+            filters[key as keyof AASAttributeFilters] = '';
+        });
     };
+
+    watch(
+        () => ({ ...filters }),
+        (newFilters) => {
+            emit('update:filters', newFilters);
+        },
+        { deep: true, immediate: true }
+    );
 </script>
