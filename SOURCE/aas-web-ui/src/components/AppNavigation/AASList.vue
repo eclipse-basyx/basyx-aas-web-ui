@@ -346,7 +346,7 @@
     const router = useRouter();
 
     // Composables
-    const { fetchAasDescriptorList, fetchAasList, fetchAas, fetchAasById, fetchAasSmListById, aasIsAvailableById } =
+    const { fetchAasDescriptorList, fetchAasList, fetchAas, fetchAasSmListById, aasIsAvailableById } =
         useAASHandling();
     const { nameToDisplay, descriptionToDisplay } = useReferableUtils();
     const { copyToClipboard } = useClipboardUtil();
@@ -377,6 +377,10 @@
     const debouncedApplyListFilters = debounce(applyListFilters, 300);
     const enrichedAasIds = ref(new Set<string>());
     const hydratedAasIds = ref(new Set<string>());
+    const attributeHydrationInProgress = ref(false);
+    const attributeHydrationCompleted = ref(false);
+    const attributeHydrationPromise = ref<Promise<void> | null>(null);
+    const attributeHydrationRunId = ref(0);
     const listLoading = ref(false); // Variable to store if the AAS List is loading
     const deleteDialog = ref(false); // Variable to store if the Delete Dialog should be shown
     const downloadAASDialog = ref(false); // Variable to store if the DownloadAAS Dialog should be shown
@@ -493,8 +497,7 @@
         () => {
             aasList.value = [];
             aasListUnfiltered.value = [];
-            enrichedAasIds.value.clear();
-            hydratedAasIds.value.clear();
+            resetAttributeHydrationState();
         }
     );
 
@@ -768,6 +771,15 @@
         return keys.some((key) => typeof item?.[key] !== 'string' || item[key].trim() === '');
     }
 
+    function resetAttributeHydrationState(): void {
+        enrichedAasIds.value.clear();
+        hydratedAasIds.value.clear();
+        attributeHydrationInProgress.value = false;
+        attributeHydrationCompleted.value = false;
+        attributeHydrationPromise.value = null;
+        attributeHydrationRunId.value += 1;
+    }
+
     async function hydrateAttributeFieldsForList(list: Array<any>): Promise<void> {
         const hydrateCandidates = list.filter(
             (item) =>
@@ -784,10 +796,6 @@
 
             if (typeof item.path === 'string' && item.path.trim() !== '') {
                 fullAas = await fetchAas(item.path);
-            }
-
-            if ((!fullAas || Object.keys(fullAas).length === 0) && typeof item.id === 'string' && item.id.trim() !== '') {
-                fullAas = await fetchAasById(item.id);
             }
 
             if (typeof item.id === 'string' && item.id.trim() !== '') {
@@ -809,6 +817,46 @@
         }
     }
 
+    async function ensureAttributeHydrationForCurrentList(): Promise<void> {
+        if (attributeHydrationCompleted.value) return;
+
+        if (attributeHydrationPromise.value) {
+            await attributeHydrationPromise.value;
+            return;
+        }
+
+        const runId = attributeHydrationRunId.value;
+        const currentList = aasListUnfiltered.value;
+
+        attributeHydrationPromise.value = (async () => {
+            attributeHydrationInProgress.value = true;
+
+            enrichAttributeFields(currentList);
+            await hydrateAttributeFieldsForList(currentList);
+
+            if (runId === attributeHydrationRunId.value) {
+                attributeHydrationCompleted.value = true;
+            }
+        })().finally(() => {
+            if (runId === attributeHydrationRunId.value) {
+                attributeHydrationInProgress.value = false;
+                attributeHydrationPromise.value = null;
+            }
+        });
+
+        await attributeHydrationPromise.value;
+    }
+
+    function preloadAttributeDataInBackground(): void {
+        if (attributeHydrationCompleted.value || attributeHydrationInProgress.value) return;
+
+        void ensureAttributeHydrationForCurrentList().then(() => {
+            if (hasActiveAttributeFilters(attributeFilters.value)) {
+                applyListFilters();
+            }
+        });
+    }
+
     function onSearchInput(value: string): void {
         searchInput.value = value || '';
         debouncedApplyListFilters();
@@ -818,8 +866,7 @@
         attributeFilters.value = filters;
 
         if (hasActiveAttributeFilters(filters)) {
-            enrichAttributeFields(aasListUnfiltered.value);
-            await hydrateAttributeFieldsForList(aasListUnfiltered.value);
+            await ensureAttributeHydrationForCurrentList();
         }
 
         applyListFilters();
@@ -901,6 +948,7 @@ const hasGlobalMatch = (searchTerm: string) => {
     // Function to get the AAS Data from the Registry Server
     async function initialize(): Promise<void> {
         listLoading.value = true;
+        resetAttributeHydrationState();
         fetchAasDescriptorList().then(async (aasDescriptorList: Array<any>) => {
             let sortedList =
                 aasDescriptorList.length > 0
@@ -946,12 +994,10 @@ const hasGlobalMatch = (searchTerm: string) => {
                 enrichAttributeFields(processedList);
             }
 
-            if (hasActiveAttributeFilters(attributeFilters.value)) {
-                await hydrateAttributeFieldsForList(processedList);
-            }
-
             applyListFilters();
             listLoading.value = false;
+
+            preloadAttributeDataInBackground();
         });
     }
 
