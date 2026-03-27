@@ -337,6 +337,8 @@
         manufacturerProductType: string;
         orderCodeOfManufacturer: string;
         productArticleNumberOfManufacturer: string;
+        productClassificationSystem: string;
+        productClassId: string;
     }
 
     // Vue Router
@@ -344,7 +346,8 @@
     const router = useRouter();
 
     // Composables
-    const { fetchAasDescriptorList, fetchAasList, fetchAas, fetchAasSmListById, aasIsAvailableById } = useAASHandling();
+    const { fetchAasDescriptorList, fetchAasList, fetchAas, fetchAasById, fetchAasSmListById, aasIsAvailableById } =
+        useAASHandling();
     const { nameToDisplay, descriptionToDisplay } = useReferableUtils();
     const { copyToClipboard } = useClipboardUtil();
 
@@ -368,9 +371,12 @@
         manufacturerProductType: '',
         orderCodeOfManufacturer: '',
         productArticleNumberOfManufacturer: '',
+        productClassificationSystem: '',
+        productClassId: '',
     });
     const debouncedApplyListFilters = debounce(applyListFilters, 300);
     const enrichedAasIds = ref(new Set<string>());
+    const hydratedAasIds = ref(new Set<string>());
     const listLoading = ref(false); // Variable to store if the AAS List is loading
     const deleteDialog = ref(false); // Variable to store if the Delete Dialog should be shown
     const downloadAASDialog = ref(false); // Variable to store if the DownloadAAS Dialog should be shown
@@ -488,6 +494,7 @@
             aasList.value = [];
             aasListUnfiltered.value = [];
             enrichedAasIds.value.clear();
+            hydratedAasIds.value.clear();
         }
     );
 
@@ -672,6 +679,10 @@
                 'ManufacturerCode',
                 'ArticleNumber',
             ]);
+            item.productClassificationSystemLower = extractAttributeValue(item, [
+                'ProductClassificationSystem',
+            ]);
+            item.productClassIdLower = extractAttributeValue(item, ['ProductClassId']);
 
             enrichedAasIds.value.add(item.id);
         });
@@ -685,7 +696,117 @@
             manufacturerProductType: filters.manufacturerProductType.trim().toLowerCase(),
             orderCodeOfManufacturer: filters.orderCodeOfManufacturer.trim().toLowerCase(),
             productArticleNumberOfManufacturer: filters.productArticleNumberOfManufacturer.trim().toLowerCase(),
+            productClassificationSystem: filters.productClassificationSystem.trim().toLowerCase(),
+            productClassId: filters.productClassId.trim().toLowerCase(),
         };
+    }
+
+    function hasActiveAttributeFilters(filters: AASAttributeFilters): boolean {
+        return Object.values(normalizeFilters(filters)).some((value) => value !== '');
+    }
+
+    function combineExtractedAttributeValue(sources: Array<any>, aliases: Array<string>): string {
+        if (!Array.isArray(sources) || sources.length === 0) return '';
+
+        return Array.from(
+            new Set(
+                sources
+                    .map((source) => extractAttributeValue(source, aliases).trim())
+                    .filter((value) => value !== '')
+            )
+        ).join(' ');
+    }
+
+    function applyExtractedAttributeFields(targetItem: any, sources: Array<any>): void {
+        targetItem.manufacturerNameLower = combineExtractedAttributeValue(sources, [
+            'ManufacturerName',
+            'ManufactorName',
+            'Manufacturer',
+            'Manufactor',
+        ]);
+        targetItem.manufacturerProductDesignationLower = combineExtractedAttributeValue(sources, [
+            'ManufacturerProductDesignation',
+            'ProductDesignation',
+        ]);
+        targetItem.manufacturerProductFamilyLower = combineExtractedAttributeValue(sources, [
+            'ManufacturerProductFamily',
+            'ProductFamily',
+        ]);
+        targetItem.manufacturerProductTypeLower = combineExtractedAttributeValue(sources, [
+            'ManufacturerProductType',
+            'ProductType',
+        ]);
+        targetItem.orderCodeOfManufacturerLower = combineExtractedAttributeValue(sources, [
+            'OrderCodeOfManufacturer',
+            'OrderCode',
+        ]);
+        targetItem.productArticleNumberOfManufacturerLower = combineExtractedAttributeValue(sources, [
+            'ProductArticleNumberOfManufacturer',
+            'ProductArticleNumberOfManufacture',
+            'ArticleNumberOfManufacturer',
+            'ManufacturerCode',
+            'ArticleNumber',
+        ]);
+        targetItem.productClassificationSystemLower = combineExtractedAttributeValue(sources, [
+            'ProductClassificationSystem',
+        ]);
+        targetItem.productClassIdLower = combineExtractedAttributeValue(sources, ['ProductClassId']);
+    }
+
+    function hasMissingAttributeValues(item: any): boolean {
+        const keys = [
+            'manufacturerNameLower',
+            'manufacturerProductDesignationLower',
+            'manufacturerProductFamilyLower',
+            'manufacturerProductTypeLower',
+            'orderCodeOfManufacturerLower',
+            'productArticleNumberOfManufacturerLower',
+            'productClassificationSystemLower',
+            'productClassIdLower',
+        ];
+
+        return keys.some((key) => typeof item?.[key] !== 'string' || item[key].trim() === '');
+    }
+
+    async function hydrateAttributeFieldsForList(list: Array<any>): Promise<void> {
+        const hydrateCandidates = list.filter(
+            (item) =>
+                item &&
+                typeof item.id === 'string' &&
+                item.id.trim() !== '' &&
+                !hydratedAasIds.value.has(item.id) &&
+                hasMissingAttributeValues(item)
+        );
+
+        for (const item of hydrateCandidates) {
+            let fullAas = {} as any;
+            let submodels = [] as Array<any>;
+
+            if (typeof item.path === 'string' && item.path.trim() !== '') {
+                fullAas = await fetchAas(item.path);
+            }
+
+            if ((!fullAas || Object.keys(fullAas).length === 0) && typeof item.id === 'string' && item.id.trim() !== '') {
+                fullAas = await fetchAasById(item.id);
+            }
+
+            if (typeof item.id === 'string' && item.id.trim() !== '') {
+                const fetchedSubmodels = await fetchAasSmListById(item.id);
+                if (Array.isArray(fetchedSubmodels) && fetchedSubmodels.length > 0) {
+                    submodels = fetchedSubmodels.filter((submodel) => submodel && Object.keys(submodel).length > 0);
+                }
+            }
+
+            const extractionSources = [] as Array<any>;
+            if (fullAas && Object.keys(fullAas).length > 0) extractionSources.push(fullAas);
+            extractionSources.push(...submodels);
+
+            if (extractionSources.length > 0) {
+                applyExtractedAttributeFields(item, extractionSources);
+            }
+
+            hydratedAasIds.value.add(item.id);
+        }
     }
 
     function onSearchInput(value: string): void {
@@ -693,12 +814,12 @@
         debouncedApplyListFilters();
     }
 
-    function onAttributeFiltersChange(filters: AASAttributeFilters): void {
+    async function onAttributeFiltersChange(filters: AASAttributeFilters): Promise<void> {
         attributeFilters.value = filters;
 
-        const hasActiveAttributeFilters = Object.values(normalizeFilters(filters)).some((value) => value !== '');
-        if (hasActiveAttributeFilters) {
+        if (hasActiveAttributeFilters(filters)) {
             enrichAttributeFields(aasListUnfiltered.value);
+            await hydrateAttributeFieldsForList(aasListUnfiltered.value);
         }
 
         applyListFilters();
@@ -725,37 +846,41 @@ const hasGlobalMatch = (searchTerm: string) => {
 
         const manufacturerNameMatch =
             normalizedFilters.manufacturerName === '' ||
-            aasOrAasDescriptor.manufacturerNameLower.includes(normalizedFilters.manufacturerName) ||
-            hasGlobalMatch(normalizedFilters.manufacturerName);
+            aasOrAasDescriptor.manufacturerNameLower.includes(normalizedFilters.manufacturerName);
 
         const manufacturerProductDesignationMatch =
             normalizedFilters.manufacturerProductDesignation === '' ||
             aasOrAasDescriptor.manufacturerProductDesignationLower.includes(
                 normalizedFilters.manufacturerProductDesignation
-            ) ||
-            hasGlobalMatch(normalizedFilters.manufacturerProductDesignation);
+            );
 
         const manufacturerProductFamilyMatch =
             normalizedFilters.manufacturerProductFamily === '' ||
-            aasOrAasDescriptor.manufacturerProductFamilyLower.includes(normalizedFilters.manufacturerProductFamily) ||
-            hasGlobalMatch(normalizedFilters.manufacturerProductFamily);
+            aasOrAasDescriptor.manufacturerProductFamilyLower.includes(normalizedFilters.manufacturerProductFamily);
 
         const manufacturerProductTypeMatch =
             normalizedFilters.manufacturerProductType === '' ||
-            aasOrAasDescriptor.manufacturerProductTypeLower.includes(normalizedFilters.manufacturerProductType) ||
-            hasGlobalMatch(normalizedFilters.manufacturerProductType);
+            aasOrAasDescriptor.manufacturerProductTypeLower.includes(normalizedFilters.manufacturerProductType);
 
         const orderCodeOfManufacturerMatch =
             normalizedFilters.orderCodeOfManufacturer === '' ||
-            aasOrAasDescriptor.orderCodeOfManufacturerLower.includes(normalizedFilters.orderCodeOfManufacturer) ||
-            hasGlobalMatch(normalizedFilters.orderCodeOfManufacturer);
+            aasOrAasDescriptor.orderCodeOfManufacturerLower.includes(normalizedFilters.orderCodeOfManufacturer);
 
         const productArticleNumberOfManufacturerMatch =
             normalizedFilters.productArticleNumberOfManufacturer === '' ||
             aasOrAasDescriptor.productArticleNumberOfManufacturerLower.includes(
                 normalizedFilters.productArticleNumberOfManufacturer
-            ) ||
-            hasGlobalMatch(normalizedFilters.productArticleNumberOfManufacturer);
+            );
+
+        const productClassificationSystemMatch =
+            normalizedFilters.productClassificationSystem === '' ||
+            aasOrAasDescriptor.productClassificationSystemLower.includes(
+                normalizedFilters.productClassificationSystem
+            );
+
+        const productClassIdMatch =
+            normalizedFilters.productClassId === '' ||
+            aasOrAasDescriptor.productClassIdLower.includes(normalizedFilters.productClassId);
 
             return (
                 globalSearchMatch &&
@@ -764,7 +889,9 @@ const hasGlobalMatch = (searchTerm: string) => {
                 manufacturerProductFamilyMatch &&
                 manufacturerProductTypeMatch &&
                 orderCodeOfManufacturerMatch &&
-                productArticleNumberOfManufacturerMatch
+                productArticleNumberOfManufacturerMatch &&
+                productClassificationSystemMatch &&
+                productClassIdMatch
             );
         });
 
@@ -807,15 +934,24 @@ const hasGlobalMatch = (searchTerm: string) => {
                     'ProductArticleNumberOfManufacture',
                     'ManufacturerCode',
                 ]),
+                productClassificationSystemLower: extractAttributeValue(item, [
+                    'ProductClassificationSystem',
+                ]),
+                productClassIdLower: extractAttributeValue(item, ['ProductClassId']),
             }));
 
             aasListUnfiltered.value = processedList;
-            applyListFilters();
-            listLoading.value = false;
 
             if (aasDescriptorList.length > 0) {
                 enrichAttributeFields(processedList);
             }
+
+            if (hasActiveAttributeFilters(attributeFilters.value)) {
+                await hydrateAttributeFieldsForList(processedList);
+            }
+
+            applyListFilters();
+            listLoading.value = false;
         });
     }
 

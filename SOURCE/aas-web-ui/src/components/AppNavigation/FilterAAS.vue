@@ -1,7 +1,7 @@
 <template>
     <v-menu :close-on-content-click="false" location="bottom">
         <template #activator="{ props }">
-            <v-btn icon="mdi-sort-variant" v-bind="Object.assign({}, props, tooltipProps)" variant="plain" />
+            <v-btn icon="mdi-sort-variant" v-bind="props" variant="plain" />
         </template>
 
         <v-card>
@@ -96,6 +96,24 @@
                         class="mt-1"
                         variant="outlined" />
                 </v-list-item>
+                <v-list-item>
+                    <v-text-field
+                        v-model="filters.productClassificationSystem"
+                        label="Product Classification System"
+                        density="compact"
+                        hide-details
+                        class="mt-1"
+                        variant="outlined" />
+                </v-list-item>
+                <v-list-item>
+                    <v-text-field
+                        v-model="filters.productClassId"
+                        label="Product Class Id"
+                        density="compact"
+                        hide-details
+                        class="mt-1"
+                        variant="outlined" />
+                </v-list-item>
             </v-list>
         </v-card>
     </v-menu>
@@ -111,6 +129,8 @@
         manufacturerProductType: string;
         orderCodeOfManufacturer: string;
         productArticleNumberOfManufacturer: string;
+        productClassificationSystem: string;
+        productClassId: string;
     }
 
     const emit = defineEmits<{
@@ -127,6 +147,8 @@
         manufacturerProductType: '',
         orderCodeOfManufacturer: '',
         productArticleNumberOfManufacturer: '',
+        productClassificationSystem: '',
+        productClassId: '',
     });
 
     const clearFilters = () => {
