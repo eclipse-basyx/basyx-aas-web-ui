@@ -1,22 +1,33 @@
 <template>
-    <v-list-item class="pt-0">
-        <template #title>
-            <v-switch
-                v-model="newBooleanValue"
-                inset
-                density="compact"
-                :readonly="IsOutputVariable || !isEditable"
-                color="primary"
-                :messages="isOperationVariable ? '' : 'greyed out text on the right shows the current value in the AAS'"
-                :hide-details="IsOperationVariable ? true : false"
-                @update:model-value="changeState">
-                <template #label>
-                    <span style="display: inline; white-space: nowrap" class="text-subtitleText">
-                        {{ booleanValue.value }}
+    <v-list-item class="pt-0" :class="isOperationVariable ? '' : 'pb-2'">
+        <v-list-item-title :class="isOperationVariable ? 'pt-2' : ''">
+            <div class="d-flex align-center justify-space-between">
+                <!-- Label with switch and value -->
+                <div class="d-flex align-center gap-1">
+                    <span v-if="isOperationVariable" class="text-body-2 font-weight-bold">
+                        {{ displayName || booleanValue.idShort }}:
                     </span>
-                </template>
-            </v-switch>
-        </template>
+                    <!-- Property label for non-operation variables -->
+                    <span v-else class="text-caption font-weight-bold">
+                        {{ displayLabel }}:
+                    </span>
+                    <!-- Switch control -->
+                    <v-switch
+                        v-model="newBooleanValue"
+                        inset
+                        density="compact"
+                        :readonly="IsOutputVariable || !isEditable"
+                        color="primary"
+                        :hide-details="true"
+                        @update:model-value="changeState">
+                    </v-switch>
+                    <!-- Current value indicator right after switch -->
+                    <span :class="newBooleanValue ? 'text-success' : 'text-warning'" style="font-weight: 500">
+                        {{ newBooleanValue ? 'true' : 'false' }}
+                    </span>
+                </div>
+            </div>
+        </v-list-item-title>
         <!-- Update Value Button -->
         <template #append>
             <v-btn
@@ -28,6 +39,9 @@
                 style="right: -4px"
                 @click.stop="updateValue()">
                 <v-icon>mdi-upload</v-icon>
+                <v-tooltip activator="parent" location="top">
+                    Save changes to the AAS backend
+                </v-tooltip>
             </v-btn>
         </template>
     </v-list-item>
@@ -79,6 +93,17 @@
     });
     const IsOutputVariable = computed(() => {
         return props.isOperationVariable != undefined ? props.variableType == 'outputVariables' : false;
+    });
+    const displayName = computed(() => {
+        // Display the displayName if available (for multi-language support)
+        if (props.booleanValue.displayName && props.booleanValue.displayName.length > 0) {
+            return props.booleanValue.displayName[0]?.text || props.booleanValue.idShort;
+        }
+        return null;
+    });
+    const displayLabel = computed(() => {
+        // Show displayName (if available) or idShort as the property label
+        return displayName.value || props.booleanValue.idShort || 'Value';
     });
 
     // Watchers
