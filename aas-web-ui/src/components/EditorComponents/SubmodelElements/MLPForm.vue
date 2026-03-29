@@ -93,7 +93,7 @@
             <v-expansion-panel-text>
               <v-row align="center">
                 <v-col class="py-0">
-                  <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" />
+                  <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" :show-remove-button="true" />
                 </v-col>
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="semanticId" />
@@ -279,6 +279,8 @@
 
     if (semanticId.value !== null) {
       mlpObject.value.semanticId = semanticId.value
+    } else {
+      mlpObject.value.semanticId = null
     }
 
     if (displayName.value !== null) {

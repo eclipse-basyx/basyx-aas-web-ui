@@ -117,7 +117,7 @@
             <v-expansion-panel-text>
               <v-row align="center">
                 <v-col class="py-0">
-                  <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" />
+                  <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" :show-remove-button="true" />
                 </v-col>
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="semanticId" />
@@ -237,6 +237,18 @@
 
   const valueTypeString = computed(() => aasTypes.DataTypeDefXsd[valueType.value])
 
+  const fieldLabels: Record<string, string> = {
+    idShort: 'IdShort',
+    displayName: 'Display Name',
+    description: 'Description',
+    category: 'Category',
+    valueType: 'Data Type',
+    value: 'Value',
+    semanticId: 'Semantic ID',
+    qualifiers: 'Qualifiers',
+    embeddedDataSpecifications: 'Data Specification',
+  }
+
   const bordersToShow = computed(() => (panel: number) => {
     let border = ''
     switch (panel) {
@@ -294,6 +306,41 @@
     return errors.value.get(field)
   }
 
+  function ensurePanelOpenForField (field: string): void {
+    const panelByField: Record<string, number> = {
+      idShort: 0,
+      displayName: 0,
+      description: 0,
+      category: 0,
+      valueType: 1,
+      value: 1,
+      semanticId: 2,
+      qualifiers: 3,
+      embeddedDataSpecifications: 4,
+    }
+
+    const panel = panelByField[field]
+    if (panel === undefined || openPanels.value.includes(panel)) {
+      return
+    }
+
+    openPanels.value = [...openPanels.value, panel].toSorted((a, b) => a - b)
+  }
+
+  function getFirstDetailedVerificationIssue (verificationResult: {
+    fieldErrors: Map<string, string>
+    globalErrors: string[]
+  }): string | null {
+    const firstFieldError = verificationResult.fieldErrors.entries().next().value as [string, string] | undefined
+    if (firstFieldError) {
+      const [field, message] = firstFieldError
+      const fieldLabel = fieldLabels[field] ?? field
+      return `${fieldLabel}: ${message}`
+    }
+
+    return verificationResult.globalErrors[0] ?? null
+  }
+
   function normalizePropertyInputValue (): void {
     if (valueTypeString.value === 'Boolean' && typeof propertyValue.value === 'boolean') {
       // Always use string representative of boolean value
@@ -334,9 +381,7 @@
 
     propertyObject.value.valueType = valueType.value
 
-    if (semanticId.value !== null) {
-      propertyObject.value.semanticId = semanticId.value
-    }
+    propertyObject.value.semanticId = semanticId.value === null ? null : semanticId.value
 
     if (displayName.value !== null) {
       propertyObject.value.displayName = displayName.value
@@ -353,6 +398,12 @@
     const verificationResult = verifyForEditor(propertyObject.value, { maxErrors: 10 })
     if (!verificationResult.isValid) {
       applyFieldErrors(errors.value, verificationResult.fieldErrors)
+
+      const firstField = verificationResult.fieldErrors.keys().next().value as string | undefined
+      if (firstField) {
+        ensurePanelOpenForField(firstField)
+      }
+
       const mappedValueError = verificationResult.fieldErrors.get('value')
       const mappedValueTypeError = verificationResult.fieldErrors.get('valueType')
       const globalValueError = verificationResult.globalErrors.find(message => {
@@ -363,7 +414,7 @@
       propertyValueErrorMessage.value = mappedValueError ?? mappedValueTypeError ?? globalValueError ?? null
 
       const summary = buildVerificationSummary(verificationResult)
-      const firstError = verificationResult.globalErrors[0]
+      const firstError = getFirstDetailedVerificationIssue(verificationResult)
       navigationStore.dispatchSnackbar({
         status: true,
         timeout: 10_000,
