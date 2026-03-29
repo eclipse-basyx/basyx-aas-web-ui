@@ -1,5 +1,6 @@
 import vuetify from 'eslint-config-vuetify'
 import jsdoc from 'eslint-plugin-jsdoc'
+import vue from 'eslint-plugin-vue'
 
 export default vuetify({
   ts: true,
@@ -12,6 +13,7 @@ export default vuetify({
 }, {
   plugins: {
     jsdoc,
+    vue,
   },
   rules: {
     'linebreak-style': ['error', 'unix'],

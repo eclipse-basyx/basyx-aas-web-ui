@@ -11,8 +11,8 @@ import { mdi } from 'vuetify/iconsets/mdi'
 import { VFileUpload } from 'vuetify/labs/VFileUpload'
 import {
   VStepperVertical,
-  VStepperVerticalItem,
   VStepperVerticalActions,
+  VStepperVerticalItem,
 } from 'vuetify/labs/VStepperVertical'
 import { customIcons } from '@/assets/Icons/customIcons'
 import { adjustColorBrightness } from '@/utils/ThemeUtils'
