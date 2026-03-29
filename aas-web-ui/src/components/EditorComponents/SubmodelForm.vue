@@ -392,11 +392,7 @@
     }
 
     // Add optional parameter semanticId
-    if (semanticId.value !== null) {
-      submodelObject.value.semanticId = semanticId.value
-    } else {
-      submodelObject.value.semanticId = null
-    }
+    submodelObject.value.semanticId = semanticId.value === null ? null : semanticId.value
 
     submodelObject.value.qualifiers = qualifiers.value
     submodelObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value
