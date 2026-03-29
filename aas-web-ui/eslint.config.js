@@ -14,6 +14,9 @@ export default vuetify({
     jsdoc,
   },
   rules: {
+    'linebreak-style': ['error', 'unix'],
+    'vue/component-api-style': ['error', ['script-setup']],
+    'vue/script-indent': ['error', 2, { baseIndent: 1, switchCase: 1 }],
     'jsdoc/check-alignment': 'error',
     'jsdoc/check-indentation': 'error',
     'jsdoc/check-line-alignment': 'error',

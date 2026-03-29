@@ -9,6 +9,11 @@ import { createVuetify } from 'vuetify'
 // Composables
 import { mdi } from 'vuetify/iconsets/mdi'
 import { VFileUpload } from 'vuetify/labs/VFileUpload'
+import {
+  VStepperVertical,
+  VStepperVerticalItem,
+  VStepperVerticalActions,
+} from 'vuetify/labs/VStepperVertical'
 import { customIcons } from '@/assets/Icons/customIcons'
 import { adjustColorBrightness } from '@/utils/ThemeUtils'
 // Styles
@@ -21,6 +26,9 @@ export function initializeVuetify (primaryLightColor = '#0cb2f0', primaryDarkCol
   const vuetify = createVuetify({
     components: {
       VFileUpload,
+      VStepperVertical,
+      VStepperVerticalItem,
+      VStepperVerticalActions,
     },
     defaults: {
       VBtn: {
