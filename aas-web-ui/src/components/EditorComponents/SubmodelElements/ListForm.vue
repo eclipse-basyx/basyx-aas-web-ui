@@ -118,7 +118,7 @@
             <v-expansion-panel-text>
               <v-row align="center">
                 <v-col class="py-0">
-                  <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" />
+                  <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" :show-remove-button="true" />
                 </v-col>
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="semanticId" />
@@ -288,6 +288,33 @@
     return errors.value.get(field)
   }
 
+  function getFirstDetailedVerificationIssue (verificationResult: {
+    fieldErrors: Map<string, string>
+    globalErrors: string[]
+  }): string | null {
+    const firstFieldError = verificationResult.fieldErrors.entries().next().value as [string, string] | undefined
+    if (firstFieldError) {
+      const [field, message] = firstFieldError
+      return `${field}: ${message}`
+    }
+
+    return verificationResult.globalErrors[0] ?? null
+  }
+
+  function normalizeListValueElementIdShorts (): void {
+    if (!smlObject.value?.value) {
+      return
+    }
+
+    for (const valueElement of smlObject.value.value) {
+      const elementWithOptionalIdShort = valueElement as unknown as { idShort?: string | null }
+      const idShort = elementWithOptionalIdShort.idShort
+      if (typeof idShort === 'string' && idShort.trim() === '') {
+        clearOptionalIdShort(valueElement as object)
+      }
+    }
+  }
+
   function resetFormValues (): void {
     smlIdShort.value = null
     displayName.value = null
@@ -347,9 +374,7 @@
       return
     }
 
-    if (semanticId.value !== null) {
-      smlObject.value.semanticId = semanticId.value
-    }
+    smlObject.value.semanticId = semanticId.value === null ? null : semanticId.value
 
     if (displayName.value !== null) {
       smlObject.value.displayName = displayName.value
@@ -374,11 +399,13 @@
     smlObject.value.qualifiers = qualifiers.value
     smlObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value
 
+    normalizeListValueElementIdShorts()
+
     const verificationResult = verifyForEditor(smlObject.value, { maxErrors: 10 })
     if (!verificationResult.isValid) {
       applyFieldErrors(errors.value, verificationResult.fieldErrors)
       const summary = buildVerificationSummary(verificationResult)
-      const firstError = verificationResult.globalErrors[0]
+      const firstError = getFirstDetailedVerificationIssue(verificationResult)
       navigationStore.dispatchSnackbar({
         status: true,
         timeout: 10_000,

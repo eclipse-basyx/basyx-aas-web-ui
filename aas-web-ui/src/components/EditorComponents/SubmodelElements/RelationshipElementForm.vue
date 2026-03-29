@@ -100,7 +100,7 @@
             <v-expansion-panel-text>
               <v-row align="center">
                 <v-col class="py-0">
-                  <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" />
+                  <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" :show-remove-button="true" />
                 </v-col>
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="semanticId" />
@@ -288,9 +288,7 @@
     relationshipElementObject.value.first = firstReference.value
     relationshipElementObject.value.second = secondReference.value
 
-    if (semanticId.value !== null) {
-      relationshipElementObject.value.semanticId = semanticId.value
-    }
+    relationshipElementObject.value.semanticId = semanticId.value === null ? null : semanticId.value
 
     if (displayName.value !== null) {
       relationshipElementObject.value.displayName = displayName.value

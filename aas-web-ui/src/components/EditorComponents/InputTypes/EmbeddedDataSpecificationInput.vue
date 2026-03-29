@@ -28,11 +28,16 @@
       <!-- Content Type (Currently only IEC 61360 is supported) -->
       <v-row align="center">
         <v-col class="py-0">
-          <v-select
+          <v-combobox
+            auto-select-first
             density="comfortable"
+            hide-no-data
+            item-title="title"
+            item-value="value"
             :items="contentTypeOptions"
             label="Content Type"
             :model-value="getContentType(embeddedDataSpecification)"
+            :return-object="false"
             variant="outlined"
             @update:model-value="setContentType(index, $event)"
           />
@@ -65,13 +70,19 @@
         <!-- Data Type -->
         <v-row align="center">
           <v-col class="py-0">
-            <v-select
-              v-model="embeddedDataSpecification.dataSpecificationContent.dataType"
+            <v-combobox
+              auto-select-first
               clearable
               density="comfortable"
+              hide-no-data
+              item-title="title"
+              item-value="value"
               :items="dataTypeIec61360Options"
               label="Data Type"
+              :model-value="embeddedDataSpecification.dataSpecificationContent.dataType"
+              :return-object="false"
               variant="outlined"
+              @update:model-value="setDataType(index, $event)"
             />
           </v-col>
         </v-row>
@@ -302,6 +313,11 @@
 
   const IEC_61360_DATA_SPEC_IRI = 'https://admin-shell.io/DataSpecificationTemplates/DataSpecificationIEC61360/3/0'
 
+  type SelectOption<T> = {
+    title: string
+    value: T
+  }
+  type ComboboxValue<T> = SelectOption<T> | T | string | null
   type ContentType = 'DataSpecificationIec61360' | 'Unsupported'
 
   const props = defineProps<{
@@ -314,7 +330,7 @@
 
   const embeddedDataSpecificationsValue = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(props.modelValue)
 
-  const contentTypeOptions = [{ title: 'IEC 61360', value: 'DataSpecificationIec61360' }]
+  const contentTypeOptions = [{ title: 'IEC 61360', value: 'DataSpecificationIec61360' }] as const
 
   const dataTypeIec61360Options = computed(() => {
     return Object.entries(aasTypes.DataTypeIec61360)
@@ -323,7 +339,20 @@
         title,
         value: value as aasTypes.DataTypeIec61360,
       }))
+      .toSorted((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }))
   })
+
+  const allowedContentTypes = new Set(contentTypeOptions.map(option => option.value))
+  const allowedDataTypes = computed(() => new Set(dataTypeIec61360Options.value.map(option => option.value)))
+
+  function normalizeComboboxValue<T> (value: ComboboxValue<T>): T | null {
+    if (value === null) return null
+    if (typeof value === 'object' && 'value' in value) {
+      return value.value
+    }
+
+    return value as T
+  }
 
   watch(
     embeddedDataSpecificationsValue,
@@ -390,13 +419,35 @@
     return 'Unsupported'
   }
 
-  function setContentType (index: number, contentType: ContentType): void {
+  function setContentType (index: number, newValue: ComboboxValue<ContentType>): void {
     if (embeddedDataSpecificationsValue.value === null || !embeddedDataSpecificationsValue.value[index]) {
+      return
+    }
+
+    const contentType = normalizeComboboxValue(newValue)
+    if (contentType === null || !allowedContentTypes.has(contentType as 'DataSpecificationIec61360')) {
       return
     }
 
     if (contentType === 'DataSpecificationIec61360') {
       embeddedDataSpecificationsValue.value[index].dataSpecificationContent = createDefaultIec61360Content()
+    }
+  }
+
+  function setDataType (index: number, newValue: ComboboxValue<aasTypes.DataTypeIec61360>): void {
+    const embeddedDataSpecification = embeddedDataSpecificationsValue.value?.[index]
+    if (!embeddedDataSpecification || !isIec61360Content(embeddedDataSpecification)) {
+      return
+    }
+
+    const dataType = normalizeComboboxValue(newValue)
+    if (dataType === null) {
+      embeddedDataSpecification.dataSpecificationContent.dataType = null
+      return
+    }
+
+    if (allowedDataTypes.value.has(dataType)) {
+      embeddedDataSpecification.dataSpecificationContent.dataType = dataType
     }
   }
 

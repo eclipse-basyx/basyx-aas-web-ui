@@ -89,15 +89,18 @@
 
   <v-row align="start" class="mt-1 mb-4">
     <v-col class="py-0" cols="9">
-      <v-select
+      <v-combobox
         v-model="predefinedQualifierIdSelected"
+        auto-select-first
         density="comfortable"
+        hide-no-data
         :hint="predefinedQualifierSelected?.description"
         item-title="title"
         item-value="id"
         :items="predefinedQualifier"
         label="Qualifier"
         persistent-hint
+        :return-object="false"
         variant="outlined"
       />
     </v-col>
@@ -120,6 +123,13 @@
   import { computed, ref, watch } from 'vue'
   import predefinedQualifierJson from '@/assets/Data/predefinedQualifier.json'
 
+  type PredefinedQualifier = {
+    id: string
+    title: string
+    description: string
+    qualifier: aasTypes.Qualifier
+  }
+
   const props = defineProps<{
     modelValue: Array<aasTypes.Qualifier> | null
   }>()
@@ -129,30 +139,43 @@
   }>()
 
   const qualifiersValue = ref<Array<aasTypes.Qualifier> | null>(props.modelValue)
-  const predefinedQualifier = predefinedQualifierJson.map(predefinedQualifier => ({
-    id: predefinedQualifier.id,
-    title: predefinedQualifier.title,
-    description: predefinedQualifier.description,
-    qualifier: new aasTypes.Qualifier(
-      predefinedQualifier.qualifier.type ?? '',
-      aasTypes.DataTypeDefXsd[predefinedQualifier.qualifier.dataType as keyof typeof aasTypes.DataTypeDefXsd],
-      new aasTypes.Reference(
-        aasTypes.ReferenceTypes[
-          predefinedQualifier.qualifier.reference.referenceType as keyof typeof aasTypes.ReferenceTypes
-        ],
-        predefinedQualifier.qualifier.reference.keys.map(
-          key =>
-            new aasTypes.Key(aasTypes.KeyTypes[key.keyType as keyof typeof aasTypes.KeyTypes], key.value),
+  const predefinedQualifier: PredefinedQualifier[] = predefinedQualifierJson
+    .map(predefinedQualifier => ({
+      id: predefinedQualifier.id,
+      title: predefinedQualifier.title,
+      description: predefinedQualifier.description,
+      qualifier: new aasTypes.Qualifier(
+        predefinedQualifier.qualifier.type ?? '',
+        aasTypes.DataTypeDefXsd[predefinedQualifier.qualifier.dataType as keyof typeof aasTypes.DataTypeDefXsd],
+        new aasTypes.Reference(
+          aasTypes.ReferenceTypes[
+            predefinedQualifier.qualifier.reference.referenceType as keyof typeof aasTypes.ReferenceTypes
+          ],
+          predefinedQualifier.qualifier.reference.keys.map(
+            key =>
+              new aasTypes.Key(aasTypes.KeyTypes[key.keyType as keyof typeof aasTypes.KeyTypes], key.value),
+          ),
+          null,
         ),
         null,
+        aasTypes.QualifierKind[predefinedQualifier.qualifier.kind as keyof typeof aasTypes.QualifierKind],
+        predefinedQualifier.qualifier.value ?? null,
+        null,
       ),
-      null,
-      aasTypes.QualifierKind[predefinedQualifier.qualifier.kind as keyof typeof aasTypes.QualifierKind],
-      predefinedQualifier.qualifier.value ?? null,
-      null,
-    ),
-  }))
+    }))
+    .toSorted((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }))
   const predefinedQualifierIdSelected = ref<string>(predefinedQualifier[0].id)
+  const lastValidPredefinedQualifierId = ref(predefinedQualifierIdSelected.value)
+  const allowedPredefinedQualifierIds = new Set(predefinedQualifier.map(predefinedQualifier => predefinedQualifier.id))
+
+  watch(predefinedQualifierIdSelected, newValue => {
+    if (allowedPredefinedQualifierIds.has(newValue)) {
+      lastValidPredefinedQualifierId.value = newValue
+      return
+    }
+
+    predefinedQualifierIdSelected.value = lastValidPredefinedQualifierId.value
+  })
 
   const predefinedQualifierSelected = computed(() => {
     return (

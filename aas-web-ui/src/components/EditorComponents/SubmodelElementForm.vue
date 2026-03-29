@@ -5,13 +5,16 @@
         <span class="text-body-large">Create new Submodel Element</span>
       </v-card-title>
       <v-divider />
-      <v-select
+      <v-combobox
         v-model="selectedSME"
+        auto-select-first
         class="px-4 pt-4"
         density="compact"
+        hide-no-data
         :items="availableSMEs"
         label="Select Submodel Element Type"
         required
+        :return-object="false"
         variant="outlined"
       />
       <v-divider />
@@ -56,13 +59,23 @@
 
   const availableSMEs = computed(() => {
     if (props.parentElement?.modelType === 'AnnotatedRelationshipElement') {
-      return getDataElementModelTypes()
+      return [...getDataElementModelTypes()].toSorted((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
     }
 
-    return allSMEs
+    return [...allSMEs].toSorted((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
   })
 
   const selectedSME = ref(availableSMEs.value[0] ?? '')
+  const lastValidSelectedSME = ref(selectedSME.value)
+
+  watch(selectedSME, newValue => {
+    if (availableSMEs.value.includes(newValue)) {
+      lastValidSelectedSME.value = newValue
+      return
+    }
+
+    selectedSME.value = lastValidSelectedSME.value
+  })
 
   watch(
     () => props.modelValue,
@@ -77,6 +90,7 @@
       if (!value.includes(selectedSME.value)) {
         selectedSME.value = value[0] ?? ''
       }
+      lastValidSelectedSME.value = selectedSME.value
     },
     { immediate: true },
   )

@@ -97,7 +97,7 @@
             <v-expansion-panel-text>
               <v-row align="center">
                 <v-col class="py-0">
-                  <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" />
+                  <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" :show-remove-button="true" />
                 </v-col>
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="semanticId" />
@@ -341,9 +341,7 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
       blobObject.value.contentType = blobElement.value.type
     }
 
-    if (semanticId.value !== null) {
-      blobObject.value.semanticId = semanticId.value
-    }
+    blobObject.value.semanticId = semanticId.value === null ? null : semanticId.value
 
     if (displayName.value !== null) {
       blobObject.value.displayName = displayName.value
