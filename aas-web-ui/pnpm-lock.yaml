@@ -150,6 +150,9 @@ importers:
       eslint-plugin-jsdoc:
         specifier: ^62.8.1
         version: 62.8.1(eslint@10.1.0)
+      eslint-plugin-vue:
+        specifier: ^10.8.0
+        version: 10.8.0(@stylistic/eslint-plugin@5.10.0(eslint@10.1.0))(@typescript-eslint/parser@8.57.1(eslint@10.1.0)(typescript@6.0.2))(eslint@10.1.0)(vue-eslint-parser@10.4.0(eslint@10.1.0))
       jsdom:
         specifier: ^29.0.0
         version: 29.0.1

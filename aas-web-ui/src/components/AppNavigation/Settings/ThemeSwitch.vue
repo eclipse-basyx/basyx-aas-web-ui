@@ -1,15 +1,13 @@
 <template>
   <v-container class="px-2 pt-2 pb-0">
     <v-list-subheader>Theme</v-list-subheader>
-    <v-list-item class="px-0 py-0">
+    <v-list-item class="px-0">
       <!-- Button toggle to switch theme -->
       <v-btn-toggle
         v-model="themeOption"
-        class="mt-2"
         color="primary"
         divided
         mandatory
-        style="margin-top: -10px"
         variant="outlined"
       >
         <v-btn value="system" @click="toggleTheme">
