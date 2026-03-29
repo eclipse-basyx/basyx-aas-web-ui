@@ -282,11 +282,7 @@
 
     referenceElementObject.value.value = referenceElementValue.value
 
-    if (semanticId.value !== null) {
-      referenceElementObject.value.semanticId = semanticId.value
-    } else {
-      referenceElementObject.value.semanticId = null
-    }
+    referenceElementObject.value.semanticId = semanticId.value === null ? null : semanticId.value
 
     if (displayName.value !== null) {
       referenceElementObject.value.displayName = displayName.value

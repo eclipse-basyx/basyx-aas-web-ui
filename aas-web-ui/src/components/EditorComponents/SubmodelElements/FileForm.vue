@@ -336,11 +336,7 @@
 
     fileObject.value.contentType = determineContentType(fileElement.value, contentType.value)
 
-    if (semanticId.value !== null) {
-      fileObject.value.semanticId = semanticId.value
-    } else {
-      fileObject.value.semanticId = null
-    }
+    fileObject.value.semanticId = semanticId.value === null ? null : semanticId.value
 
     if (displayName.value !== null) {
       fileObject.value.displayName = displayName.value

@@ -253,11 +253,7 @@
       return
     }
 
-    if (semanticId.value !== null) {
-      smcObject.value.semanticId = semanticId.value
-    } else {
-      smcObject.value.semanticId = null
-    }
+    smcObject.value.semanticId = semanticId.value === null ? null : semanticId.value
 
     if (displayName.value !== null) {
       smcObject.value.displayName = displayName.value

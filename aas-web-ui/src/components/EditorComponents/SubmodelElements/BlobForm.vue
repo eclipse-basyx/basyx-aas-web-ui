@@ -341,11 +341,7 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
       blobObject.value.contentType = blobElement.value.type
     }
 
-    if (semanticId.value !== null) {
-      blobObject.value.semanticId = semanticId.value
-    } else {
-      blobObject.value.semanticId = null
-    }
+    blobObject.value.semanticId = semanticId.value === null ? null : semanticId.value
 
     if (displayName.value !== null) {
       blobObject.value.displayName = displayName.value

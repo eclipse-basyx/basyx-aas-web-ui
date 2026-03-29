@@ -277,11 +277,7 @@
       return
     }
 
-    if (semanticId.value !== null) {
-      mlpObject.value.semanticId = semanticId.value
-    } else {
-      mlpObject.value.semanticId = null
-    }
+    mlpObject.value.semanticId = semanticId.value === null ? null : semanticId.value
 
     if (displayName.value !== null) {
       mlpObject.value.displayName = displayName.value

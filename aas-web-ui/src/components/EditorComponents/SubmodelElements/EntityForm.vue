@@ -286,11 +286,7 @@
 
     entityObject.value.entityType = entityType.value
 
-    if (semanticId.value !== null) {
-      entityObject.value.semanticId = semanticId.value
-    } else {
-      entityObject.value.semanticId = null
-    }
+    entityObject.value.semanticId = semanticId.value === null ? null : semanticId.value
 
     if (displayName.value !== null) {
       entityObject.value.displayName = displayName.value

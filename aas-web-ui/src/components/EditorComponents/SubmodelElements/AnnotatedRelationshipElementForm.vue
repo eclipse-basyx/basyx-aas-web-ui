@@ -292,11 +292,7 @@
     annotatedRelationshipElementObject.value.first = firstReference.value
     annotatedRelationshipElementObject.value.second = secondReference.value
 
-    if (semanticId.value !== null) {
-      annotatedRelationshipElementObject.value.semanticId = semanticId.value
-    } else {
-      annotatedRelationshipElementObject.value.semanticId = null
-    }
+    annotatedRelationshipElementObject.value.semanticId = semanticId.value === null ? null : semanticId.value
 
     if (displayName.value !== null) {
       annotatedRelationshipElementObject.value.displayName = displayName.value

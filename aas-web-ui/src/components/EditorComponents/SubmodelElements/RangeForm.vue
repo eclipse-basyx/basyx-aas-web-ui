@@ -300,11 +300,7 @@
     rangeObject.value.min = minValue.value
     rangeObject.value.max = maxValue.value
 
-    if (semanticId.value !== null) {
-      rangeObject.value.semanticId = semanticId.value
-    } else {
-      rangeObject.value.semanticId = null
-    }
+    rangeObject.value.semanticId = semanticId.value === null ? null : semanticId.value
 
     if (displayName.value !== null) {
       rangeObject.value.displayName = displayName.value

@@ -288,11 +288,7 @@
     relationshipElementObject.value.first = firstReference.value
     relationshipElementObject.value.second = secondReference.value
 
-    if (semanticId.value !== null) {
-      relationshipElementObject.value.semanticId = semanticId.value
-    } else {
-      relationshipElementObject.value.semanticId = null
-    }
+    relationshipElementObject.value.semanticId = semanticId.value === null ? null : semanticId.value
 
     if (displayName.value !== null) {
       relationshipElementObject.value.displayName = displayName.value
