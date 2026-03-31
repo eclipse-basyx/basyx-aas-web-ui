@@ -56,7 +56,7 @@
     "web-ifc": "^0.0.77"
   },
   "devDependencies": {
-    "@intellectronica/ruler": "^0.3.37",
+    "@intellectronica/ruler": "^0.3.38",
     "@tsconfig/node22": "^22.0.5",
     "@types/leaflet": "^1.9.21",
     "@types/md5": "^2.3.6",
