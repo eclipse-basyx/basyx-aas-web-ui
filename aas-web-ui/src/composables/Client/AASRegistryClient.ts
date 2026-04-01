@@ -20,6 +20,21 @@ export function useAASRegistryClient () {
   // Computed Properties
   const aasRegistryUrl = computed(() => infrastructureStore.getAASRegistryURL)
 
+  function getEffectiveAasRegistryUrl (registryUrl?: string): string {
+    const explicitRegistryUrl = registryUrl?.trim() ?? ''
+    if (explicitRegistryUrl !== '') {
+      return explicitRegistryUrl
+    }
+
+    const storeUrl = aasRegistryUrl.value.trim()
+    if (storeUrl !== '') {
+      return storeUrl
+    }
+
+    const selectedInfraUrl = infrastructureStore.getSelectedInfrastructure?.components?.AASRegistry?.url?.trim() ?? ''
+    return selectedInfraUrl
+  }
+
   /**
    * Fetches a list of all available Asset Administration Shell (AAS) Descriptors.
    *
@@ -30,7 +45,7 @@ export function useAASRegistryClient () {
   async function fetchAasDescriptorList (): Promise<Array<any>> {
     const failResponse = [] as Array<any>
 
-    let aasRegUrl = aasRegistryUrl.value.trim()
+    let aasRegUrl = getEffectiveAasRegistryUrl()
     if (aasRegUrl === '') {
       return failResponse
     }
@@ -81,7 +96,7 @@ export function useAASRegistryClient () {
       return failResponse
     }
 
-    let aasRegUrl = registryUrl || aasRegistryUrl.value.trim()
+    let aasRegUrl = getEffectiveAasRegistryUrl(registryUrl)
     if (aasRegUrl === '') {
       return failResponse
     }
@@ -169,7 +184,7 @@ export function useAASRegistryClient () {
   async function postAasDescriptor (aasDescriptor: descriptorTypes.AASDescriptor): Promise<boolean> {
     const failResponse = false
 
-    let aasRegUrl = aasRegistryUrl.value.trim()
+    let aasRegUrl = getEffectiveAasRegistryUrl()
     if (aasRegUrl === '') {
       return failResponse
     }
@@ -195,7 +210,7 @@ export function useAASRegistryClient () {
   async function putAasDescriptor (aasDescriptor: descriptorTypes.AASDescriptor): Promise<boolean> {
     const failResponse = false
 
-    let aasRegUrl = aasRegistryUrl.value.trim()
+    let aasRegUrl = getEffectiveAasRegistryUrl()
     if (aasRegUrl === '') {
       return failResponse
     }
@@ -230,7 +245,7 @@ export function useAASRegistryClient () {
       return failResponse
     }
 
-    let aasRegUrl = aasRegistryUrl.value.trim()
+    let aasRegUrl = getEffectiveAasRegistryUrl()
     if (aasRegUrl === '') {
       return failResponse
     }

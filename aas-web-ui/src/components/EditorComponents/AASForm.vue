@@ -200,6 +200,7 @@
   import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient'
   import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient'
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
+  import { upsertDescriptor } from '@/composables/DescriptorSync'
   import { useIDUtils } from '@/composables/IDUtils'
   import { buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification'
   import { useAASStore } from '@/store/AASDataStore'
@@ -542,16 +543,20 @@
     if (!aasRepoHasRegistryIntegration.value) {
       try {
         const jsonAAS = jsonization.toJsonable(aas)
-        const existingDescriptor = await fetchAasDescriptorById(aas.id)
         const fallbackAasEndpoint = getAasRepoEndpointById(aas.id)
-        const endpoints
-          = Array.isArray(existingDescriptor?.endpoints) && existingDescriptor.endpoints.length > 0
-            ? existingDescriptor.endpoints
-            : createEndpoints(fallbackAasEndpoint, 'AAS-3.0')
+        let endpoints = createEndpoints(fallbackAasEndpoint, 'AAS-3.0')
+        if (!isCreate) {
+          const existingDescriptor = await fetchAasDescriptorById(aas.id)
+          if (Array.isArray(existingDescriptor?.endpoints) && existingDescriptor.endpoints.length > 0) {
+            endpoints = existingDescriptor.endpoints
+          }
+        }
         const descriptor = createDescriptorFromAAS(jsonAAS, endpoints)
-        const success = isCreate
-          ? (await postAasDescriptor(descriptor)) || (await putAasDescriptor(descriptor))
-          : (await putAasDescriptor(descriptor)) || (await postAasDescriptor(descriptor))
+        const success = await upsertDescriptor(
+          isCreate,
+          () => postAasDescriptor(descriptor),
+          () => putAasDescriptor(descriptor),
+        )
 
         if (!success) {
           warnings.push(`Failed to synchronize AAS descriptor for '${aas.id}'.`)

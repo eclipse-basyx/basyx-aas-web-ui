@@ -168,13 +168,13 @@
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
   import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
+  import { upsertDescriptor } from '@/composables/DescriptorSync'
   import { useIDUtils } from '@/composables/IDUtils'
   import { buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification'
   import { useAASStore } from '@/store/AASDataStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { Endpoint, ProtocolInformation } from '@/types/Descriptors'
-  import { base64Encode } from '@/utils/EncodeDecodeUtils'
 
   const props = defineProps<{
     modelValue: boolean
@@ -198,7 +198,7 @@
     (event: 'update:modelValue', value: boolean): void
   }>()
 
-  const { postSubmodel, putSubmodel } = useSMRepositoryClient()
+  const { postSubmodel, putSubmodel, getSmEndpointById } = useSMRepositoryClient()
   const { postSubmodelDescriptor, putSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient()
   const { fetchSmById, fetchSmDescriptor, fetchAndDispatchSm } = useSMHandling()
   const { putAas } = useAASRepositoryClient()
@@ -227,7 +227,6 @@
   const selectedNode = computed(() => aasStore.getSelectedNode) // Get the selected AAS from Store
   const selectedAAS = computed(() => aasStore.getSelectedAAS) // Get the selected AAS from Store
   const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
-  const submodelRepoUrl = computed(() => infrastructureStore.getSubmodelRepoURL)
   const submodelRepoHasRegistryIntegration = computed(
     () => selectedInfrastructure.value?.components?.SubmodelRepo?.hasRegistryIntegration ?? true,
   )
@@ -422,22 +421,67 @@
 
     if (props.newSm) {
       // Create new Submodel
-      await postSubmodel(submodelObject.value)
+      const created = await postSubmodel(submodelObject.value)
+      if (!created) {
+        navigationStore.dispatchSnackbar({
+          status: true,
+          timeout: 8000,
+          color: 'error',
+          btnColor: 'buttonText',
+          baseError: 'Failed to create Submodel.',
+          extendedError: `Submodel '${submodelObject.value.id}' was not created in the repository.`,
+        })
+        return
+      }
+      await syncSubmodelDescriptor(submodelObject.value, true)
       // Add Submodel Reference to AAS
       await addSubmodelReferenceToAas(submodelObject.value)
-      await syncSubmodelDescriptor(submodelObject.value)
       // Fetch and dispatch Submodel
       const query = structuredClone(route.query)
-      query.path = submodelRepoUrl.value + '/submodels/' + base64Encode(submodelObject.value.id)
+      const path = getSmEndpointById(submodelObject.value.id)
+      if (path.trim() === '') {
+        navigationStore.dispatchSnackbar({
+          status: true,
+          timeout: 8000,
+          color: 'warning',
+          btnColor: 'buttonText',
+          baseError: 'Submodel created with navigation warning.',
+          extendedError: `Could not resolve endpoint for '${submodelObject.value.id}'.`,
+        })
+      } else {
+        query.path = path
+      }
       router.push({ query: query })
       navigationStore.dispatchTriggerTreeviewReload()
     } else {
       // Update existing Submodel
-      await putSubmodel(submodelObject.value)
-      await syncSubmodelDescriptor(submodelObject.value)
+      const updated = await putSubmodel(submodelObject.value)
+      if (!updated) {
+        navigationStore.dispatchSnackbar({
+          status: true,
+          timeout: 8000,
+          color: 'error',
+          btnColor: 'buttonText',
+          baseError: 'Failed to update Submodel.',
+          extendedError: `Submodel '${submodelObject.value.id}' was not updated in the repository.`,
+        })
+        return
+      }
+      await syncSubmodelDescriptor(submodelObject.value, false)
       if (submodelObject.value.id === selectedNode.value.id) {
-        const path = submodelRepoUrl.value + '/submodels/' + base64Encode(submodelObject.value.id)
-        fetchAndDispatchSm(path)
+        const path = getSmEndpointById(submodelObject.value.id)
+        if (path.trim() === '') {
+          navigationStore.dispatchSnackbar({
+            status: true,
+            timeout: 8000,
+            color: 'warning',
+            btnColor: 'buttonText',
+            baseError: 'Submodel updated with refresh warning.',
+            extendedError: `Could not resolve endpoint for '${submodelObject.value.id}'.`,
+          })
+        } else {
+          fetchAndDispatchSm(path)
+        }
       }
       navigationStore.dispatchTriggerTreeviewReload()
     }
@@ -445,7 +489,7 @@
     editSMDialog.value = false
   }
 
-  async function syncSubmodelDescriptor (submodel: aasTypes.Submodel): Promise<void> {
+  async function syncSubmodelDescriptor (submodel: aasTypes.Submodel, isCreate: boolean): Promise<void> {
     if (submodelRepoHasRegistryIntegration.value) {
       return
     }
@@ -454,14 +498,20 @@
     let descriptorSuccess = false
 
     try {
-      const fetchedDescriptor = await fetchSmDescriptor(submodel.id)
-      const fallbackEndpoint = `${submodelRepoUrl.value}/submodels/${base64Encode(submodel.id)}`
-      const endpoints
-        = Array.isArray(fetchedDescriptor?.endpoints) && fetchedDescriptor.endpoints.length > 0
-          ? fetchedDescriptor.endpoints
-          : createEndpoints(fallbackEndpoint, 'SUBMODEL-3.0')
+      const fallbackEndpoint = getSmEndpointById(submodel.id)
+      let endpoints = createEndpoints(fallbackEndpoint, 'SUBMODEL-3.0')
+      if (!isCreate) {
+        const fetchedDescriptor = await fetchSmDescriptor(submodel.id)
+        if (Array.isArray(fetchedDescriptor?.endpoints) && fetchedDescriptor.endpoints.length > 0) {
+          endpoints = fetchedDescriptor.endpoints
+        }
+      }
       const descriptor = createDescriptorFromSubmodel(jsonSubmodel, endpoints)
-      descriptorSuccess = (await putSubmodelDescriptor(descriptor)) || (await postSubmodelDescriptor(descriptor))
+      descriptorSuccess = await upsertDescriptor(
+        isCreate,
+        () => postSubmodelDescriptor(descriptor),
+        () => putSubmodelDescriptor(descriptor),
+      )
     } catch (error) {
       console.error('Failed to synchronize Submodel descriptor:', error)
     }
