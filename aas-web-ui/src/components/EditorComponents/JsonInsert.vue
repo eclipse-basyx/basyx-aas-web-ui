@@ -38,7 +38,7 @@
   import { useNavigationStore } from '@/store/NavigationStore'
   import { Endpoint, ProtocolInformation } from '@/types/Descriptors'
   import { getCreatedSubmodelElementPath, isDataElementModelType } from '@/utils/AAS/SubmodelElementPathUtils'
-  import { base64Decode, base64Encode } from '@/utils/EncodeDecodeUtils'
+  import { base64Decode } from '@/utils/EncodeDecodeUtils'
 
   const props = defineProps<{
     modelValue: boolean
@@ -60,7 +60,7 @@
   const infrastructureStore = useInfrastructureStore()
 
   // Composables
-  const { postSubmodel, postSubmodelElement } = useSMRepositoryClient()
+  const { postSubmodel, postSubmodelElement, getSmEndpointById } = useSMRepositoryClient()
   const { postSubmodelDescriptor, putSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient()
   const { putAas } = useAASRepositoryClient()
 
@@ -72,7 +72,6 @@
   // Computed Properties
   const selectedAAS = computed(() => aasStore.getSelectedAAS) // Get the selected AAS from Store
   const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
-  const submodelRepoUrl = computed(() => infrastructureStore.getSubmodelRepoURL)
   const submodelRepoHasRegistryIntegration = computed(
     () => selectedInfrastructure.value?.components?.SubmodelRepo?.hasRegistryIntegration ?? true,
   )
@@ -123,12 +122,12 @@
 
     // Create Submodel
     await postSubmodel(submodel)
+    await syncSubmodelDescriptor(submodel, true)
     // Add Submodel Reference to AAS
     await addSubmodelReferenceToAas(submodel)
-    await syncSubmodelDescriptor(submodel)
     // Fetch and dispatch Submodel
     const query = structuredClone(route.query)
-    query.path = submodelRepoUrl.value + '/' + base64Encode(submodel.id)
+    query.path = getSmEndpointById(submodel.id)
 
     router.push({ query: query })
 
@@ -227,18 +226,20 @@
     aasStore.dispatchSelectedAAS(localAAS)
   }
 
-  async function syncSubmodelDescriptor (submodel: aasTypes.Submodel): Promise<void> {
+  async function syncSubmodelDescriptor (submodel: aasTypes.Submodel, isCreate: boolean): Promise<void> {
     if (submodelRepoHasRegistryIntegration.value) {
       return
     }
 
-    const submodelHref = `${submodelRepoUrl.value}/submodels/${base64Encode(submodel.id)}`
+    const submodelHref = getSmEndpointById(submodel.id)
     const descriptor = createDescriptorFromSubmodel(
       jsonization.toJsonable(submodel),
       createEndpoints(submodelHref, 'SUBMODEL-3.0'),
     )
 
-    const success = (await putSubmodelDescriptor(descriptor)) || (await postSubmodelDescriptor(descriptor))
+    const success = isCreate
+      ? (await postSubmodelDescriptor(descriptor)) || (await putSubmodelDescriptor(descriptor))
+      : (await putSubmodelDescriptor(descriptor)) || (await postSubmodelDescriptor(descriptor))
     if (!success) {
       navigationStore.dispatchSnackbar({
         status: true,

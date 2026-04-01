@@ -20,6 +20,21 @@ export function useSMRegistryClient () {
   // Computed Properties
   const submodelRegistryUrl = computed(() => infrastructureStore.getSubmodelRegistryURL)
 
+  function getEffectiveSubmodelRegistryUrl (endpoint?: string): string {
+    const explicitEndpoint = endpoint?.trim() ?? ''
+    if (explicitEndpoint !== '') {
+      return explicitEndpoint
+    }
+
+    const storeUrl = submodelRegistryUrl.value.trim()
+    if (storeUrl !== '') {
+      return storeUrl
+    }
+
+    const selectedInfraUrl = infrastructureStore.getSelectedInfrastructure?.components?.SubmodelRegistry?.url?.trim() ?? ''
+    return selectedInfraUrl
+  }
+
   /**
    * Fetches a list of all available Submodel (SM) Descriptors.
    *
@@ -30,7 +45,7 @@ export function useSMRegistryClient () {
   async function fetchSmDescriptorList (): Promise<Array<any>> {
     const failResponse = [] as Array<any>
 
-    let smRegistryUrl = submodelRegistryUrl.value.trim()
+    let smRegistryUrl = getEffectiveSubmodelRegistryUrl()
     if (smRegistryUrl === '') {
       return failResponse
     }
@@ -80,7 +95,7 @@ export function useSMRegistryClient () {
       return failResponse
     }
 
-    let smRegistryUrl = endpoint || submodelRegistryUrl.value.trim()
+    let smRegistryUrl = getEffectiveSubmodelRegistryUrl(endpoint)
     if (smRegistryUrl === '') {
       return failResponse
     }
@@ -168,7 +183,7 @@ export function useSMRegistryClient () {
   async function postSubmodelDescriptor (submodelDescriptor: descriptorTypes.SubmodelDescriptor): Promise<boolean> {
     const failResponse = false
 
-    let smRegistryUrl = submodelRegistryUrl.value.trim()
+    let smRegistryUrl = getEffectiveSubmodelRegistryUrl()
     if (smRegistryUrl === '') {
       return failResponse
     }
@@ -194,7 +209,7 @@ export function useSMRegistryClient () {
   async function putSubmodelDescriptor (submodelDescriptor: descriptorTypes.SubmodelDescriptor): Promise<boolean> {
     const failResponse = false
 
-    let smRegistryUrl = submodelRegistryUrl.value.trim()
+    let smRegistryUrl = getEffectiveSubmodelRegistryUrl()
     if (smRegistryUrl === '') {
       return failResponse
     }
@@ -230,7 +245,7 @@ export function useSMRegistryClient () {
       return failResponse
     }
 
-    let smRegistryUrl = submodelRegistryUrl.value.trim()
+    let smRegistryUrl = getEffectiveSubmodelRegistryUrl()
     if (smRegistryUrl === '') {
       return failResponse
     }

@@ -542,12 +542,14 @@
     if (!aasRepoHasRegistryIntegration.value) {
       try {
         const jsonAAS = jsonization.toJsonable(aas)
-        const existingDescriptor = await fetchAasDescriptorById(aas.id)
         const fallbackAasEndpoint = getAasRepoEndpointById(aas.id)
-        const endpoints
-          = Array.isArray(existingDescriptor?.endpoints) && existingDescriptor.endpoints.length > 0
-            ? existingDescriptor.endpoints
-            : createEndpoints(fallbackAasEndpoint, 'AAS-3.0')
+        let endpoints = createEndpoints(fallbackAasEndpoint, 'AAS-3.0')
+        if (!isCreate) {
+          const existingDescriptor = await fetchAasDescriptorById(aas.id)
+          if (Array.isArray(existingDescriptor?.endpoints) && existingDescriptor.endpoints.length > 0) {
+            endpoints = existingDescriptor.endpoints
+          }
+        }
         const descriptor = createDescriptorFromAAS(jsonAAS, endpoints)
         const success = isCreate
           ? (await postAasDescriptor(descriptor)) || (await putAasDescriptor(descriptor))
