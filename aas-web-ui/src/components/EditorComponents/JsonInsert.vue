@@ -33,6 +33,7 @@
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
   import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
+  import { upsertDescriptor } from '@/composables/DescriptorSync'
   import { useAASStore } from '@/store/AASDataStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
@@ -121,15 +122,37 @@
     const submodel = instanceOrError.mustValue()
 
     // Create Submodel
-    await postSubmodel(submodel)
+    const created = await postSubmodel(submodel)
+    if (!created) {
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 8000,
+        color: 'error',
+        btnColor: 'buttonText',
+        baseError: 'Failed to create Submodel.',
+        extendedError: `Submodel '${submodel.id}' was not created in the repository.`,
+      })
+      return
+    }
     await syncSubmodelDescriptor(submodel, true)
     // Add Submodel Reference to AAS
     await addSubmodelReferenceToAas(submodel)
     // Fetch and dispatch Submodel
     const query = structuredClone(route.query)
-    query.path = getSmEndpointById(submodel.id)
-
-    router.push({ query: query })
+    const path = getSmEndpointById(submodel.id)
+    if (path.trim() === '') {
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 8000,
+        color: 'warning',
+        btnColor: 'buttonText',
+        baseError: 'Submodel inserted with navigation warning.',
+        extendedError: `Could not resolve endpoint for '${submodel.id}'.`,
+      })
+    } else {
+      query.path = path
+      router.push({ query: query })
+    }
 
     closeDialog()
     navigationStore.dispatchTriggerTreeviewReload()
@@ -237,9 +260,11 @@
       createEndpoints(submodelHref, 'SUBMODEL-3.0'),
     )
 
-    const success = isCreate
-      ? (await postSubmodelDescriptor(descriptor)) || (await putSubmodelDescriptor(descriptor))
-      : (await putSubmodelDescriptor(descriptor)) || (await postSubmodelDescriptor(descriptor))
+    const success = await upsertDescriptor(
+      isCreate,
+      () => postSubmodelDescriptor(descriptor),
+      () => putSubmodelDescriptor(descriptor),
+    )
     if (!success) {
       navigationStore.dispatchSnackbar({
         status: true,

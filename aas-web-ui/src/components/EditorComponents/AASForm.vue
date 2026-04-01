@@ -200,6 +200,7 @@
   import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient'
   import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient'
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
+  import { upsertDescriptor } from '@/composables/DescriptorSync'
   import { useIDUtils } from '@/composables/IDUtils'
   import { buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification'
   import { useAASStore } from '@/store/AASDataStore'
@@ -551,9 +552,11 @@
           }
         }
         const descriptor = createDescriptorFromAAS(jsonAAS, endpoints)
-        const success = isCreate
-          ? (await postAasDescriptor(descriptor)) || (await putAasDescriptor(descriptor))
-          : (await putAasDescriptor(descriptor)) || (await postAasDescriptor(descriptor))
+        const success = await upsertDescriptor(
+          isCreate,
+          () => postAasDescriptor(descriptor),
+          () => putAasDescriptor(descriptor),
+        )
 
         if (!success) {
           warnings.push(`Failed to synchronize AAS descriptor for '${aas.id}'.`)

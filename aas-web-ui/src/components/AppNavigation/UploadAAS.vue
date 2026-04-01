@@ -93,6 +93,7 @@
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
   import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
+  import { upsertDescriptor } from '@/composables/DescriptorSync'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { Endpoint, ProtocolInformation } from '@/types/Descriptors'
@@ -392,9 +393,11 @@
             if (!submodelId) continue
 
             const submodelDescriptor = await createSubmodelDescriptor(submodelId)
-            const smSuccess
-              = (await postSubmodelDescriptor(submodelDescriptor))
-                || (await putSubmodelDescriptor(submodelDescriptor))
+            const smSuccess = await upsertDescriptor(
+              true,
+              () => postSubmodelDescriptor(submodelDescriptor),
+              () => putSubmodelDescriptor(submodelDescriptor),
+            )
             if (!smSuccess) {
               warnings.push(`Failed to create Submodel Descriptor '${submodelId}'.`)
             }
@@ -404,8 +407,11 @@
         if (sync.syncAasDescriptor) {
           const aasEndpoints = createEndpoints(href, 'AAS-3.0')
           const aasDescriptor = createDescriptorFromAAS(fetchedShell, aasEndpoints)
-          const aasSuccess
-            = (await postAasDescriptor(aasDescriptor)) || (await putAasDescriptor(aasDescriptor))
+          const aasSuccess = await upsertDescriptor(
+            true,
+            () => postAasDescriptor(aasDescriptor),
+            () => putAasDescriptor(aasDescriptor),
+          )
           if (!aasSuccess) {
             warnings.push(`Failed to create AAS Descriptor '${aasId}'.`)
           }
@@ -468,9 +474,11 @@
               submodel as unknown as jsonization.JsonObject,
               createEndpoints(submodelHref, 'SUBMODEL-3.0'),
             )
-            const smSuccess
-              = (await postSubmodelDescriptor(submodelDescriptor))
-                || (await putSubmodelDescriptor(submodelDescriptor))
+            const smSuccess = await upsertDescriptor(
+              true,
+              () => postSubmodelDescriptor(submodelDescriptor),
+              () => putSubmodelDescriptor(submodelDescriptor),
+            )
             if (!smSuccess) {
               warnings.push(`Failed to create Submodel Descriptor '${submodelId}'.`)
             }
@@ -482,8 +490,11 @@
             aas as unknown as jsonization.JsonObject,
             createEndpoints(aasHref, 'AAS-3.0'),
           )
-          const aasSuccess
-            = (await postAasDescriptor(aasDescriptor)) || (await putAasDescriptor(aasDescriptor))
+          const aasSuccess = await upsertDescriptor(
+            true,
+            () => postAasDescriptor(aasDescriptor),
+            () => putAasDescriptor(aasDescriptor),
+          )
           if (!aasSuccess) {
             warnings.push(`Failed to create AAS Descriptor '${aasId}'.`)
           }

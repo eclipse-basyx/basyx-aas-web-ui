@@ -20,10 +20,10 @@ export function useSMRegistryClient () {
   // Computed Properties
   const submodelRegistryUrl = computed(() => infrastructureStore.getSubmodelRegistryURL)
 
-  function getEffectiveSubmodelRegistryUrl (endpoint?: string): string {
-    const explicitEndpoint = endpoint?.trim() ?? ''
-    if (explicitEndpoint !== '') {
-      return explicitEndpoint
+  function getEffectiveSubmodelRegistryUrl (registryUrl?: string): string {
+    const explicitRegistryUrl = registryUrl?.trim() ?? ''
+    if (explicitRegistryUrl !== '') {
+      return explicitRegistryUrl
     }
 
     const storeUrl = submodelRegistryUrl.value.trim()
