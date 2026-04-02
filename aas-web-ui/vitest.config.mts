@@ -16,6 +16,11 @@ export default defineConfig(env => {
     test: {
       globals: true,
       environment: 'jsdom',
+      server: {
+        deps: {
+          inline: ['vuetify'],
+        },
+      },
       coverage: {
         provider: 'istanbul',
         reporter: ['text', 'json', 'html'],

@@ -118,7 +118,6 @@
   const { fetchAndDispatchSme } = useSMEHandling()
   const { patchRequest } = useRequestHandling()
 
-  const localMultiLanguagePropertyObject = ref<any>(undefined)
   const mlpValue = ref<any>([])
   const languages = ref<any>([
     { id: 1, text: 'Deutsch', short: 'de' },
@@ -132,7 +131,7 @@
 
   const selectedNode = computed(() => {
     try {
-      return aasStore.getSelectedNode()
+      return aasStore.getSelectedNode
     } catch {
       return null
     }
@@ -155,16 +154,14 @@
   )
 
   onMounted(() => {
-    localMultiLanguagePropertyObject.value = props.multiLanguagePropertyObject
     const propValue = props.multiLanguagePropertyObject as any
-    mlpValue.value = propValue.value || []
+    mlpValue.value = propValue.value ? structuredClone(toRaw(propValue.value)) : []
   })
 
   // Function to remove an Entry from the MultiLanguageProperty
   function removeEntry (position: number): void {
     // console.log('removeEntry: ', value);
     mlpValue.value.splice(position, 1)
-    localMultiLanguagePropertyObject.value.value = mlpValue.value
     updateMLP()
   }
 
@@ -174,7 +171,6 @@
       language: '',
       text: '',
     })
-    localMultiLanguagePropertyObject.value.value = mlpValue.value
     // console.log('addEntry: ', this.multiLanguagePropertyObject)
     updateMLP()
   }
@@ -190,19 +186,20 @@
   function updateValue (): void {
     // console.log('updateValue: ', this.mlpValue);
     if (document.activeElement) (document.activeElement as HTMLElement).blur() // remove focus from input field
-    localMultiLanguagePropertyObject.value.value = mlpValue.value
     updateMLP()
   }
 
   // Function to update the value of the property
   function updateMLP (): void {
     try {
-      if (!localMultiLanguagePropertyObject.value || !localMultiLanguagePropertyObject.value.path) {
+      const currentMultiLanguagePropertyObject = props.multiLanguagePropertyObject as any
+
+      if (!currentMultiLanguagePropertyObject || !currentMultiLanguagePropertyObject.path) {
         console.warn('Cannot update MLP: missing object or path')
         return
       }
 
-      const path = localMultiLanguagePropertyObject.value.path + '/$value'
+      const path = currentMultiLanguagePropertyObject.path + '/$value'
       const content = JSON.stringify(
         mlpValue.value.map((item: { language: string, text: string }) => ({ [item.language]: item.text })),
       )
@@ -210,9 +207,9 @@
       headers.append('Content-Type', 'application/json')
       const context
         = 'updating '
-          + localMultiLanguagePropertyObject.value.modelType
+          + currentMultiLanguagePropertyObject.modelType
           + ' "'
-          + localMultiLanguagePropertyObject.value.idShort
+          + currentMultiLanguagePropertyObject.idShort
           + '"'
       const disableMessage = false
 
