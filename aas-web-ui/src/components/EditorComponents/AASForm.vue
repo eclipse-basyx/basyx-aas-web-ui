@@ -201,6 +201,7 @@
   import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient'
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
   import { upsertDescriptor } from '@/composables/DescriptorSync'
+  import { appendHttpStatusFailureReason } from '@/composables/HttpStatusMessages'
   import { useIDUtils } from '@/composables/IDUtils'
   import { buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification'
   import { useAASStore } from '@/store/AASDataStore'
@@ -237,6 +238,8 @@
     putAas,
     putThumbnail,
     getAasEndpointById: getAasRepoEndpointById,
+    consumeLastRequestFailureStatus,
+    consumeLastRequestFailureDetails,
   } = useAASRepositoryClient()
   const { fetchAasDescriptorById, postAasDescriptor, putAasDescriptor, createDescriptorFromAAS }
     = useAASRegistryClient()
@@ -503,11 +506,48 @@
 
     if (props.newShell) {
       // Create new AAS
-      await postAas(AASObject.value)
-      await syncAasDescriptorAndDiscovery(AASObject.value, true, previousAssetLinks)
+      const created = await postAas(AASObject.value, true)
+      if (!created) {
+        const failureStatus = consumeLastRequestFailureStatus()
+        const failureDetails = consumeLastRequestFailureDetails()
+        const baseFailure = appendHttpStatusFailureReason(
+          `AAS '${AASObject.value.id}' was not created in the repository.`,
+          failureStatus,
+        )
+        navigationStore.dispatchSnackbar({
+          status: true,
+          timeout: 8000,
+          color: 'error',
+          btnColor: 'buttonText',
+          baseError: 'Failed to create AAS.',
+          extendedError: failureDetails ? `${baseFailure}\n${failureDetails}` : baseFailure,
+        })
+        return
+      }
+      const syncSuccess = await syncAasDescriptorAndDiscovery(AASObject.value, true, previousAssetLinks)
+      if (!syncSuccess) {
+        return
+      }
       // Upload default thumbnail
       if (fileThumbnail.value !== undefined) {
-        await putThumbnail(fileThumbnail.value, AASObject.value.id)
+        const thumbnailUploaded = await putThumbnail(fileThumbnail.value, AASObject.value.id, true)
+        if (!thumbnailUploaded) {
+          const failureStatus = consumeLastRequestFailureStatus()
+          const failureDetails = consumeLastRequestFailureDetails()
+          const baseFailure = appendHttpStatusFailureReason(
+            `Failed to upload default thumbnail for '${AASObject.value.id}'.`,
+            failureStatus,
+          )
+          navigationStore.dispatchSnackbar({
+            status: true,
+            timeout: 8000,
+            color: 'error',
+            btnColor: 'buttonText',
+            baseError: 'AAS created with thumbnail upload error.',
+            extendedError: failureDetails ? `${baseFailure}\n${failureDetails}` : baseFailure,
+          })
+          return
+        }
       }
 
       const query = structuredClone(route.query)
@@ -518,11 +558,48 @@
       navigationStore.dispatchTriggerAASListReload() // Reload AAS List
     } else {
       // Update existing AAS
-      await putAas(AASObject.value)
-      await syncAasDescriptorAndDiscovery(AASObject.value, false, previousAssetLinks)
+      const updated = await putAas(AASObject.value, true)
+      if (!updated) {
+        const failureStatus = consumeLastRequestFailureStatus()
+        const failureDetails = consumeLastRequestFailureDetails()
+        const baseFailure = appendHttpStatusFailureReason(
+          `AAS '${AASObject.value.id}' was not updated in the repository.`,
+          failureStatus,
+        )
+        navigationStore.dispatchSnackbar({
+          status: true,
+          timeout: 8000,
+          color: 'error',
+          btnColor: 'buttonText',
+          baseError: 'Failed to update AAS.',
+          extendedError: failureDetails ? `${baseFailure}\n${failureDetails}` : baseFailure,
+        })
+        return
+      }
+      const syncSuccess = await syncAasDescriptorAndDiscovery(AASObject.value, false, previousAssetLinks)
+      if (!syncSuccess) {
+        return
+      }
       // Upload default thumbnail
       if (fileThumbnail.value !== undefined) {
-        await putThumbnail(fileThumbnail.value, AASObject.value.id)
+        const thumbnailUploaded = await putThumbnail(fileThumbnail.value, AASObject.value.id, true)
+        if (!thumbnailUploaded) {
+          const failureStatus = consumeLastRequestFailureStatus()
+          const failureDetails = consumeLastRequestFailureDetails()
+          const baseFailure = appendHttpStatusFailureReason(
+            `Failed to upload default thumbnail for '${AASObject.value.id}'.`,
+            failureStatus,
+          )
+          navigationStore.dispatchSnackbar({
+            status: true,
+            timeout: 8000,
+            color: 'error',
+            btnColor: 'buttonText',
+            baseError: 'AAS updated with thumbnail upload error.',
+            extendedError: failureDetails ? `${baseFailure}\n${failureDetails}` : baseFailure,
+          })
+          return
+        }
       }
       if (AASObject.value.id === selectedAAS.value.id) {
         await fetchAndDispatchAasById(AASObject.value.id)
@@ -537,7 +614,7 @@
     aas: aasTypes.AssetAdministrationShell,
     isCreate: boolean,
     previousAssetLinks: Array<{ name: string, value: string }>,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const warnings: string[] = []
 
     if (!aasRepoHasRegistryIntegration.value) {
@@ -615,7 +692,10 @@
         baseError: 'AAS saved with synchronization warnings.',
         extendedError: warnings.join('\n'),
       })
+      return true
     }
+
+    return true
   }
 
   function areAssetLinksEqual (

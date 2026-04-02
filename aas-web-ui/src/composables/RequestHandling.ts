@@ -6,8 +6,68 @@ import { useNavigationStore } from '@/store/NavigationStore'
 // Track if we've already shown auth error to avoid spam
 let authErrorShown = false
 let authErrorTimeout: NodeJS.Timeout | null = null
+let forbiddenErrorShown = false
+let forbiddenErrorTimeout: NodeJS.Timeout | null = null
 
 export function useRequestHandling () {
+  let lastRequestFailureStatus: number | undefined
+  let lastRequestFailureDetails: string | undefined
+
+  function setLastRequestFailureStatus (status: number | undefined): void {
+    lastRequestFailureStatus = status
+  }
+
+  function setLastRequestFailureDetails (details: string | undefined): void {
+    lastRequestFailureDetails = details
+  }
+
+  function buildErrorDetailsFromPayload (errorData: any): string {
+    if (!Array.isArray(errorData) || errorData.length === 0) {
+      return ''
+    }
+
+    const error = errorData[0] as {
+      code?: unknown
+      messageType?: unknown
+      correlationId?: unknown
+      timestamp?: unknown
+      text?: unknown
+    }
+
+    let errorMessage = ''
+
+    if (error.code) {
+      errorMessage += 'Status: ' + String(error.code)
+    }
+    if (error.messageType) {
+      errorMessage += '\nMessage Type: ' + String(error.messageType)
+    }
+    if (error.correlationId) {
+      errorMessage += '\nCorrelation ID: ' + String(error.correlationId)
+    }
+    if (error.timestamp) {
+      const errorDate = new Date(String(error.timestamp)).toLocaleString()
+      errorMessage += '\nTimestamp: ' + errorDate
+    }
+    if (error.text) {
+      errorMessage += '\nText: ' + String(error.text)
+    }
+
+    return errorMessage
+  }
+
+  function consumeLastRequestFailureStatus (): number | undefined {
+    const status = lastRequestFailureStatus
+    lastRequestFailureStatus = undefined
+    return status
+  }
+
+  function consumeLastRequestFailureDetails (): string | undefined {
+    const details = lastRequestFailureDetails
+    lastRequestFailureDetails = undefined
+    return details
+  }
+
   const navigationStore = useNavigationStore()
   const infrastructureStore = useInfrastructureStore()
   const environmentStore = useEnvStore()
@@ -19,15 +79,19 @@ export function useRequestHandling () {
    */
   function handleRequestError (error: unknown, disableMessage: boolean): { success: false, status?: number } {
     const errorMessage = error instanceof Error ? error.message : String(error)
-    const is401Error = errorMessage.includes('Error status: 401') || errorMessage.includes('401')
-    const isAuthFailure = is401Error
+    const statusCode = extractStatusCode(errorMessage)
+    const is401Error = statusCode === 401
+    const is403Error = statusCode === 403
+    const isAuthFailure = is401Error || is403Error
+    setLastRequestFailureStatus(statusCode)
+    setLastRequestFailureDetails(errorMessage)
 
     const currentInfra = infrastructureStore.getSelectedInfrastructure
     const hasAuth = currentInfra?.auth && currentInfra.auth.securityType !== 'No Authentication'
 
     // Handle authentication errors
     if (isAuthFailure && hasAuth) {
-      if (!authErrorShown) {
+      if (is401Error && !authErrorShown) {
         authErrorShown = true
         if (authErrorTimeout) {
           clearTimeout(authErrorTimeout)
@@ -54,7 +118,28 @@ export function useRequestHandling () {
           actionCallback: isLoginAvailable ? login : undefined,
         })
       }
-      return { success: false, status: 401 }
+
+      if (is403Error && !forbiddenErrorShown) {
+        forbiddenErrorShown = true
+        if (forbiddenErrorTimeout) {
+          clearTimeout(forbiddenErrorTimeout)
+        }
+        forbiddenErrorTimeout = setTimeout(() => {
+          forbiddenErrorShown = false
+          forbiddenErrorTimeout = null
+        }, 30_000)
+
+        navigationStore.dispatchSnackbar({
+          status: true,
+          timeout: 8000,
+          color: 'warning',
+          btnColor: 'buttonText',
+          baseError: 'Access denied!',
+          extendedError: 'You are not allowed to perform this action.',
+        })
+      }
+
+      return { success: false, status: statusCode }
     }
 
     // Handle other errors
@@ -67,7 +152,60 @@ export function useRequestHandling () {
         text: 'Error! Server responded with: ' + error,
       })
     }
-    return { success: false }
+    return { success: false, status: statusCode }
+  }
+
+  function extractStatusCode (errorMessage: string): number | undefined {
+    const explicitErrorStatusMatch = errorMessage.match(/Error status:\s*(\d{3})/i)
+    if (explicitErrorStatusMatch) {
+      const statusCode = Number(explicitErrorStatusMatch[1])
+      return Number.isNaN(statusCode) ? undefined : statusCode
+    }
+
+    const explicitStatusMatch = errorMessage.match(/\bstatus(?:\s*code)?\s*[:=]\s*(\d{3})\b/i)
+    if (!explicitStatusMatch) {
+      return undefined
+    }
+
+    const statusCode = Number(explicitStatusMatch[1])
+    if (Number.isNaN(statusCode)) {
+      return undefined
+    }
+
+    return statusCode
+  }
+
+  function extractErrorStatusFromPayload (data: any): number | undefined {
+    if (!data) {
+      return undefined
+    }
+
+    if (Array.isArray(data) && data.length > 0) {
+      const first = data[0] as { code?: unknown, status?: unknown }
+      const fromCode = Number(first?.code)
+      if (!Number.isNaN(fromCode) && fromCode >= 400) {
+        return fromCode
+      }
+      const fromStatus = Number(first?.status)
+      if (!Number.isNaN(fromStatus) && fromStatus >= 400) {
+        return fromStatus
+      }
+      return undefined
+    }
+
+    if (typeof data === 'object') {
+      const payload = data as { status?: unknown, code?: unknown }
+      const fromStatus = Number(payload.status)
+      if (!Number.isNaN(fromStatus) && fromStatus >= 400) {
+        return fromStatus
+      }
+      const fromCode = Number(payload.code)
+      if (!Number.isNaN(fromCode) && fromCode >= 400) {
+        return fromCode
+      }
+    }
+
+    return undefined
   }
 
   async function parseJsonIfPresent (response: Response): Promise<any> {
@@ -129,16 +267,23 @@ export function useRequestHandling () {
       })
       .then(({ response, data }) => {
         // Check if the Server responded with an error
-        if (data && Object.prototype.hasOwnProperty.call(data, 'status') && data.status >= 400) {
+        const payloadStatus = extractErrorStatusFromPayload(data)
+        if (payloadStatus !== undefined) {
+          setLastRequestFailureStatus(payloadStatus)
+          setLastRequestFailureDetails(buildErrorDetailsFromPayload(data))
           // Error response from the server
           if (!disableMessage) {
             errorHandler(data, context)
           } // Call the error handler
-          return { success: false, status: response.status, raw: response }
-        } else if (data) {
+          return { success: false, status: payloadStatus, raw: response }
+        } else if (data !== undefined) {
+          setLastRequestFailureStatus(undefined)
+          setLastRequestFailureDetails(undefined)
           // Successful response from the server
           return { success: true, data, status: response.status, raw: response }
         } else if (response.ok && response.status >= 200 && response.status < 300) {
+          setLastRequestFailureStatus(undefined)
+          setLastRequestFailureDetails(undefined)
           // Empty successful response
           return { success: true, data: {}, status: response.status, raw: response }
         } else {
@@ -161,43 +306,51 @@ export function useRequestHandling () {
       headers = addAuthorizationHeader(headers) // Add the Authorization header
     }
     return fetch(path, { method: 'POST', body, headers })
-      .then(response => {
+      .then(async response => {
         // Check if the Server responded with content
         if (
           response.headers.get('Content-Type')?.split(';')[0] === 'application/json'
           && response.headers.get('Content-Length') !== '0'
         ) {
-          return parseJsonIfPresent(response) // Return the response as JSON
+          return { response, data: await parseJsonIfPresent(response) } // Return the response as JSON
         } else if (
           response.headers.get('Content-Type')?.split(';')[0] === 'text/csv'
           && response.headers.get('Content-Length') !== '0'
         ) {
-          return response.text() // Return the response as text
+          return { response, data: await response.text() } // Return the response as text
         } else if (response.ok) {
-          return // Return without content
+          return { response, data: undefined } // Return without content
         } else {
           // No content but received an HTTP error status
           throw new Error('Error status: ' + response.status)
         }
       })
-      .then(data => {
+      .then(({ response, data }) => {
         // Check if the Server responded with an error
-        if (
-          data
-          && Array.isArray(data)
-          && data.length > 0
-          && Object.prototype.hasOwnProperty.call(data[0], 'code')
-          && data[0].code >= 400
-        ) {
+        const payloadStatus = extractErrorStatusFromPayload(data)
+        if (payloadStatus !== undefined) {
+          setLastRequestFailureStatus(payloadStatus)
+          setLastRequestFailureDetails(buildErrorDetailsFromPayload(data))
           // Error response from the server
           if (!disableMessage) {
             errorHandler(data, context)
           } // Call the error handler
-          return { success: false }
+          return { success: false, status: payloadStatus }
+        } else if (!response.ok) {
+          setLastRequestFailureStatus(response.status)
+          setLastRequestFailureDetails(buildErrorDetailsFromPayload(data) || undefined)
+          if (!disableMessage && data) {
+            errorHandler(data, context)
+          }
+          return { success: false, status: response.status }
         } else if (data) {
+          setLastRequestFailureStatus(undefined)
+          setLastRequestFailureDetails(undefined)
           // Successful response from the server
           return { success: true, data }
         } else if (data === null || data === undefined) {
+          setLastRequestFailureStatus(undefined)
+          setLastRequestFailureDetails(undefined)
           // in this case no content is expected
           return { success: true }
         } else {
@@ -227,16 +380,23 @@ export function useRequestHandling () {
       })
       .then(data => {
         // Check if the Server responded with an error
-        if (data && Object.prototype.hasOwnProperty.call(data, 'status') && data.status >= 400) {
+        const payloadStatus = extractErrorStatusFromPayload(data)
+        if (payloadStatus !== undefined) {
+          setLastRequestFailureStatus(payloadStatus)
+          setLastRequestFailureDetails(buildErrorDetailsFromPayload(data))
           // Error response from the server
           if (!disableMessage) {
             errorHandler(data, context)
           } // Call the error handler
-          return { success: false }
+          return { success: false, status: payloadStatus }
         } else if (data) {
+          setLastRequestFailureStatus(undefined)
+          setLastRequestFailureDetails(undefined)
           // Successful response from the server
           return { success: true, data }
         } else if (data === null || data === undefined) {
+          setLastRequestFailureStatus(undefined)
+          setLastRequestFailureDetails(undefined)
           // in this case no content is expected
           return { success: true }
         } else {
@@ -266,16 +426,23 @@ export function useRequestHandling () {
       })
       .then(data => {
         // Check if the Server responded with an error
-        if (data && Object.prototype.hasOwnProperty.call(data, 'status') && data.status >= 400) {
+        const payloadStatus = extractErrorStatusFromPayload(data)
+        if (payloadStatus !== undefined) {
+          setLastRequestFailureStatus(payloadStatus)
+          setLastRequestFailureDetails(buildErrorDetailsFromPayload(data))
           // Error response from the server
           if (!disableMessage) {
             errorHandler(data, context)
           } // Call the error handler
-          return { success: false }
+          return { success: false, status: payloadStatus }
         } else if (data) {
+          setLastRequestFailureStatus(undefined)
+          setLastRequestFailureDetails(undefined)
           // Successful response from the server
           return { success: true, data }
         } else if (data === null || data === undefined) {
+          setLastRequestFailureStatus(undefined)
+          setLastRequestFailureDetails(undefined)
           // in this case no content is expected
           return { success: true }
         } else {
@@ -304,16 +471,23 @@ export function useRequestHandling () {
       })
       .then(data => {
         // Check if the Server responded with an error
-        if (data && Object.prototype.hasOwnProperty.call(data, 'status') && data.status >= 400) {
+        const payloadStatus = extractErrorStatusFromPayload(data)
+        if (payloadStatus !== undefined) {
+          setLastRequestFailureStatus(payloadStatus)
+          setLastRequestFailureDetails(buildErrorDetailsFromPayload(data))
           // Error response from the server
           if (!disableMessage) {
             errorHandler(data, context)
           } // Call the error handler
-          return { success: false }
+          return { success: false, status: payloadStatus }
         } else if (data) {
+          setLastRequestFailureStatus(undefined)
+          setLastRequestFailureDetails(undefined)
           // Successful response from the server
           return { success: true, data }
         } else {
+          setLastRequestFailureStatus(undefined)
+          setLastRequestFailureDetails(undefined)
           // in this case no content is expected
           return { success: true }
         }
@@ -352,25 +526,8 @@ export function useRequestHandling () {
   function errorHandler (errorData: any, context: string): void {
     // console.log('Error: ', errorData, 'Context: ', context)
     const initialErrorMessage = 'Error ' + context + '!'
-    let errorMessage = ''
-    const error = errorData[0]
-    // Building error message based on the new error response structure
-    if (error.code) {
-      errorMessage += 'Status: ' + error.code
-    }
-    if (error.messageType) {
-      errorMessage += '\nMessage Type: ' + error.messageType
-    }
-    if (error.correlationId) {
-      errorMessage += '\nCorrelation ID: ' + error.correlationId
-    }
-    if (error.timestamp) {
-      const errorDate = new Date(error.timestamp).toLocaleString()
-      errorMessage += '\nTimestamp: ' + errorDate
-    }
-    if (error.text) {
-      errorMessage += '\nText: ' + error.text
-    }
+    const errorMessage = buildErrorDetailsFromPayload(errorData)
+    setLastRequestFailureDetails(errorMessage)
 
     navigationStore.dispatchSnackbar({
       status: true,
@@ -401,6 +558,8 @@ export function useRequestHandling () {
     putRequest,
     patchRequest,
     deleteRequest,
+    consumeLastRequestFailureStatus,
+    consumeLastRequestFailureDetails,
     errorHandler,
   }
 }

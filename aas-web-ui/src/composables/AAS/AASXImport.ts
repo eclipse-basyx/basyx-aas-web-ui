@@ -586,7 +586,13 @@ export function useAASXImport (): {
         type: attachment.contentType,
       })
 
-      const success = await putAttachmentFile(attachmentFile, smePath)
+      let success: boolean
+      try {
+        success = await putAttachmentFile(attachmentFile, smePath)
+      } catch {
+        success = false
+      }
+
       if (!success) {
         warnings.push(
           `Failed to upload attachment for Submodel '${attachment.submodelId}' at '${attachment.idShortPath.join('/')}'.`,

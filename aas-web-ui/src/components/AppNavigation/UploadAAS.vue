@@ -94,6 +94,7 @@
   import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { upsertDescriptor } from '@/composables/DescriptorSync'
+  import { appendHttpStatusFailureReason } from '@/composables/HttpStatusMessages'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { Endpoint, ProtocolInformation } from '@/types/Descriptors'
@@ -104,7 +105,12 @@
   const infrastructureStore = useInfrastructureStore()
 
   // Composables
-  const { fetchAas, uploadAas, getAasEndpointById } = useAASRepositoryClient()
+  const {
+    fetchAas,
+    uploadAas,
+    getAasEndpointById,
+    consumeLastRequestFailureStatus,
+  } = useAASRepositoryClient()
   const { getSmEndpointById } = useSMRepositoryClient()
   const { fetchSm } = useSMHandling()
   const { importAasxFileClient, importEnvironmentFileClient } = useAASXImport()
@@ -247,7 +253,10 @@
               summary.warnings.push(...createdWarnings.map(warning => `${aasFile.name}: ${warning}`))
             }
           } else {
-            summary.failed.push(`${aasFile.name}: upload failed.`)
+            const failureStatus = consumeLastRequestFailureStatus()
+            summary.failed.push(
+              `${aasFile.name}: ${appendHttpStatusFailureReason('upload failed.', failureStatus)}`,
+            )
           }
         } else {
           try {
@@ -387,6 +396,7 @@
         }
 
         if (sync.syncSubmodelDescriptor) {
+          let submodelDescriptorSyncFailed = false
           const submodelRefs = Array.isArray(fetchedShell.submodels) ? fetchedShell.submodels : []
           for (const submodelRef of submodelRefs) {
             const submodelId = submodelRef?.keys?.[0]?.value
@@ -400,7 +410,12 @@
             )
             if (!smSuccess) {
               warnings.push(`Failed to create Submodel Descriptor '${submodelId}'.`)
+              submodelDescriptorSyncFailed = true
+              break
             }
+          }
+          if (submodelDescriptorSyncFailed) {
+            continue
           }
         }
 
@@ -414,6 +429,7 @@
           )
           if (!aasSuccess) {
             warnings.push(`Failed to create AAS Descriptor '${aasId}'.`)
+            continue
           }
         }
 
@@ -426,6 +442,7 @@
             const discoverySuccess = await upsertAssetLinksForAas(aasId, links)
             if (!discoverySuccess) {
               warnings.push(`Failed to synchronize discovery asset links for '${aasId}'.`)
+              continue
             }
           }
         }
@@ -458,6 +475,7 @@
         const aasHref = getAasEndpointById(aasId)
 
         if (sync.syncSubmodelDescriptor) {
+          let submodelDescriptorSyncFailed = false
           const submodelRefs = Array.isArray(aas.submodels) ? aas.submodels : []
           for (const submodelRef of submodelRefs) {
             const submodelId = submodelRef?.keys?.[0]?.value
@@ -481,7 +499,12 @@
             )
             if (!smSuccess) {
               warnings.push(`Failed to create Submodel Descriptor '${submodelId}'.`)
+              submodelDescriptorSyncFailed = true
+              break
             }
+          }
+          if (submodelDescriptorSyncFailed) {
+            continue
           }
         }
 
@@ -497,6 +520,7 @@
           )
           if (!aasSuccess) {
             warnings.push(`Failed to create AAS Descriptor '${aasId}'.`)
+            continue
           }
         }
 
@@ -512,6 +536,7 @@
             const discoverySuccess = await upsertAssetLinksForAas(aasId, links)
             if (!discoverySuccess) {
               warnings.push(`Failed to synchronize discovery asset links for '${aasId}'.`)
+              continue
             }
           }
         }

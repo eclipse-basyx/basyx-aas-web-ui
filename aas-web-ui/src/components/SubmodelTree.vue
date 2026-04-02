@@ -243,7 +243,7 @@
   <SubmodelElementForm
     v-model="selectSMETypeToAddDialog"
     :parent-element="elementToAddSME"
-    @open-create-s-m-e-dialog="openSMEFormDialog"
+    @open-create-sme-dialog="openSMEFormDialog"
   />
   <!-- Dialog for creating/editing Properties -->
   <PropertyForm

@@ -34,6 +34,7 @@
   import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { upsertDescriptor } from '@/composables/DescriptorSync'
+  import { appendHttpStatusFailureReason } from '@/composables/HttpStatusMessages'
   import { useAASStore } from '@/store/AASDataStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
@@ -61,9 +62,19 @@
   const infrastructureStore = useInfrastructureStore()
 
   // Composables
-  const { postSubmodel, postSubmodelElement, getSmEndpointById } = useSMRepositoryClient()
+  const {
+    postSubmodel,
+    postSubmodelElement,
+    getSmEndpointById,
+    consumeLastRequestFailureStatus: consumeSmRequestFailureStatus,
+    consumeLastRequestFailureDetails: consumeSmRequestFailureDetails,
+  } = useSMRepositoryClient()
   const { postSubmodelDescriptor, putSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient()
-  const { putAas } = useAASRepositoryClient()
+  const {
+    putAas,
+    consumeLastRequestFailureStatus: consumeAasRequestFailureStatus,
+    consumeLastRequestFailureDetails: consumeAasRequestFailureDetails,
+  } = useAASRepositoryClient()
 
   // Data
   const jsonInsertDialog = ref(false)
@@ -122,21 +133,33 @@
     const submodel = instanceOrError.mustValue()
 
     // Create Submodel
-    const created = await postSubmodel(submodel)
+    const created = await postSubmodel(submodel, true)
     if (!created) {
+      const failureStatus = consumeSmRequestFailureStatus()
+      const failureDetails = consumeSmRequestFailureDetails()
+      const baseFailure = appendHttpStatusFailureReason(
+        `Submodel '${submodel.id}' was not created in the repository.`,
+        failureStatus,
+      )
       navigationStore.dispatchSnackbar({
         status: true,
         timeout: 8000,
         color: 'error',
         btnColor: 'buttonText',
         baseError: 'Failed to create Submodel.',
-        extendedError: `Submodel '${submodel.id}' was not created in the repository.`,
+        extendedError: failureDetails ? `${baseFailure}\n${failureDetails}` : baseFailure,
       })
       return
     }
-    await syncSubmodelDescriptor(submodel, true)
+    const descriptorSynced = await syncSubmodelDescriptor(submodel, true)
+    if (!descriptorSynced) {
+      return
+    }
     // Add Submodel Reference to AAS
-    await addSubmodelReferenceToAas(submodel)
+    const referenceAdded = await addSubmodelReferenceToAas(submodel)
+    if (!referenceAdded) {
+      return
+    }
     // Fetch and dispatch Submodel
     const query = structuredClone(route.query)
     const path = getSmEndpointById(submodel.id)
@@ -189,7 +212,24 @@
 
     if (props.parentElement.modelType === 'Submodel') {
       // Create the property on the parent Submodel
-      await postSubmodelElement(submodelElement, props.parentElement.id)
+      const created = await postSubmodelElement(submodelElement, props.parentElement.id, undefined, true)
+      if (!created) {
+        const failureStatus = consumeSmRequestFailureStatus()
+        const failureDetails = consumeSmRequestFailureDetails()
+        const baseFailure = appendHttpStatusFailureReason(
+          `Submodel element '${submodelElement.idShort}' was not created.`,
+          failureStatus,
+        )
+        navigationStore.dispatchSnackbar({
+          status: true,
+          timeout: 8000,
+          color: 'error',
+          btnColor: 'buttonText',
+          baseError: 'Failed to create Submodel Element.',
+          extendedError: failureDetails ? `${baseFailure}\n${failureDetails}` : baseFailure,
+        })
+        return
+      }
 
       // Navigate to the new property
       const query = structuredClone(route.query)
@@ -205,7 +245,24 @@
       const idShortPath = splitted[1]
 
       // Create the property on the parent element
-      await postSubmodelElement(submodelElement, submodelId, idShortPath)
+      const created = await postSubmodelElement(submodelElement, submodelId, idShortPath, true)
+      if (!created) {
+        const failureStatus = consumeSmRequestFailureStatus()
+        const failureDetails = consumeSmRequestFailureDetails()
+        const baseFailure = appendHttpStatusFailureReason(
+          `Submodel element '${submodelElement.idShort}' was not created.`,
+          failureStatus,
+        )
+        navigationStore.dispatchSnackbar({
+          status: true,
+          timeout: 8000,
+          color: 'error',
+          btnColor: 'buttonText',
+          baseError: 'Failed to create Submodel Element.',
+          extendedError: failureDetails ? `${baseFailure}\n${failureDetails}` : baseFailure,
+        })
+        return
+      }
 
       const createdPath = getCreatedSubmodelElementPath(props.parentElement, submodelElement.idShort)
       if (createdPath) {
@@ -222,13 +279,13 @@
     navigationStore.dispatchTriggerTreeviewReload()
   }
 
-  async function addSubmodelReferenceToAas (submodel: aasTypes.Submodel): Promise<void> {
-    if (selectedAAS.value === null) return
+  async function addSubmodelReferenceToAas (submodel: aasTypes.Submodel): Promise<boolean> {
+    if (selectedAAS.value === null) return false
     const localAAS = { ...selectedAAS.value }
     const instanceOrError = jsonization.assetAdministrationShellFromJsonable(localAAS)
     if (instanceOrError.error !== null) {
       console.error('Error parsing AAS:', instanceOrError.error)
-      return
+      return false
     }
     const aas = instanceOrError.mustValue()
     // Create new SubmodelReference
@@ -243,15 +300,33 @@
       aas.submodels.push(submodelReference)
       localAAS.submodels.push(jsonization.toJsonable(submodelReference))
     }
-    await putAas(aas)
+    const updated = await putAas(aas, true)
+    if (!updated) {
+      const failureStatus = consumeAasRequestFailureStatus()
+      const failureDetails = consumeAasRequestFailureDetails()
+      const baseFailure = appendHttpStatusFailureReason(
+        `Failed to update AAS Submodel references for '${submodel.id}'.`,
+        failureStatus,
+      )
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 8000,
+        color: 'error',
+        btnColor: 'buttonText',
+        baseError: 'Submodel inserted with update error.',
+        extendedError: failureDetails ? `${baseFailure}\n${failureDetails}` : baseFailure,
+      })
+      return false
+    }
 
     // Update AAS in Store
     aasStore.dispatchSelectedAAS(localAAS)
+    return true
   }
 
-  async function syncSubmodelDescriptor (submodel: aasTypes.Submodel, isCreate: boolean): Promise<void> {
+  async function syncSubmodelDescriptor (submodel: aasTypes.Submodel, isCreate: boolean): Promise<boolean> {
     if (submodelRepoHasRegistryIntegration.value) {
-      return
+      return true
     }
 
     const submodelHref = getSmEndpointById(submodel.id)
@@ -275,6 +350,8 @@
         extendedError: `Failed to synchronize Submodel descriptor for '${submodel.id}'.`,
       })
     }
+
+    return success
   }
 
   function createEndpoints (href: string, type: string): Array<Endpoint> {
