@@ -172,7 +172,6 @@
   import { appendHttpStatusFailureReason } from '@/composables/HttpStatusMessages'
   import { useIDUtils } from '@/composables/IDUtils'
   import { buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification'
-  import { useRequestHandling } from '@/composables/RequestHandling'
   import { useAASStore } from '@/store/AASDataStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
@@ -200,11 +199,20 @@
     (event: 'update:modelValue', value: boolean): void
   }>()
 
-  const { postSubmodel, putSubmodel, getSmEndpointById } = useSMRepositoryClient()
-  const { consumeLastRequestFailureStatus, consumeLastRequestFailureDetails } = useRequestHandling()
+  const {
+    postSubmodel,
+    putSubmodel,
+    getSmEndpointById,
+    consumeLastRequestFailureStatus: consumeSmRequestFailureStatus,
+    consumeLastRequestFailureDetails: consumeSmRequestFailureDetails,
+  } = useSMRepositoryClient()
   const { postSubmodelDescriptor, putSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient()
   const { fetchSmById, fetchSmDescriptor, fetchAndDispatchSm } = useSMHandling()
-  const { putAas } = useAASRepositoryClient()
+  const {
+    putAas,
+    consumeLastRequestFailureStatus: consumeAasRequestFailureStatus,
+    consumeLastRequestFailureDetails: consumeAasRequestFailureDetails,
+  } = useAASRepositoryClient()
 
   const editSMDialog = ref(false)
   const submodelObject = ref<aasTypes.Submodel | undefined>(undefined)
@@ -426,8 +434,8 @@
       // Create new Submodel
       const created = await postSubmodel(submodelObject.value, true)
       if (!created) {
-        const failureStatus = consumeLastRequestFailureStatus()
-        const failureDetails = consumeLastRequestFailureDetails()
+        const failureStatus = consumeSmRequestFailureStatus()
+        const failureDetails = consumeSmRequestFailureDetails()
         const baseFailure = appendHttpStatusFailureReason(
           `Submodel '${submodelObject.value.id}' was not created in the repository.`,
           failureStatus,
@@ -472,8 +480,8 @@
       // Update existing Submodel
       const updated = await putSubmodel(submodelObject.value, true)
       if (!updated) {
-        const failureStatus = consumeLastRequestFailureStatus()
-        const failureDetails = consumeLastRequestFailureDetails()
+        const failureStatus = consumeSmRequestFailureStatus()
+        const failureDetails = consumeSmRequestFailureDetails()
         const baseFailure = appendHttpStatusFailureReason(
           `Submodel '${submodelObject.value.id}' was not updated in the repository.`,
           failureStatus,
@@ -590,8 +598,8 @@
     }
     const updated = await putAas(aas, true)
     if (!updated) {
-      const failureStatus = consumeLastRequestFailureStatus()
-      const failureDetails = consumeLastRequestFailureDetails()
+      const failureStatus = consumeAasRequestFailureStatus()
+      const failureDetails = consumeAasRequestFailureDetails()
       const baseFailure = appendHttpStatusFailureReason(
         `Failed to update AAS Submodel references for '${submodel.id}'.`,
         failureStatus,

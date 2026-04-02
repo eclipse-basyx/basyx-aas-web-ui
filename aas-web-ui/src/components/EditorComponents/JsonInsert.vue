@@ -35,7 +35,6 @@
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { upsertDescriptor } from '@/composables/DescriptorSync'
   import { appendHttpStatusFailureReason } from '@/composables/HttpStatusMessages'
-  import { useRequestHandling } from '@/composables/RequestHandling'
   import { useAASStore } from '@/store/AASDataStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
@@ -63,10 +62,19 @@
   const infrastructureStore = useInfrastructureStore()
 
   // Composables
-  const { postSubmodel, postSubmodelElement, getSmEndpointById } = useSMRepositoryClient()
-  const { consumeLastRequestFailureStatus, consumeLastRequestFailureDetails } = useRequestHandling()
+  const {
+    postSubmodel,
+    postSubmodelElement,
+    getSmEndpointById,
+    consumeLastRequestFailureStatus: consumeSmRequestFailureStatus,
+    consumeLastRequestFailureDetails: consumeSmRequestFailureDetails,
+  } = useSMRepositoryClient()
   const { postSubmodelDescriptor, putSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient()
-  const { putAas } = useAASRepositoryClient()
+  const {
+    putAas,
+    consumeLastRequestFailureStatus: consumeAasRequestFailureStatus,
+    consumeLastRequestFailureDetails: consumeAasRequestFailureDetails,
+  } = useAASRepositoryClient()
 
   // Data
   const jsonInsertDialog = ref(false)
@@ -127,8 +135,8 @@
     // Create Submodel
     const created = await postSubmodel(submodel, true)
     if (!created) {
-      const failureStatus = consumeLastRequestFailureStatus()
-      const failureDetails = consumeLastRequestFailureDetails()
+      const failureStatus = consumeSmRequestFailureStatus()
+      const failureDetails = consumeSmRequestFailureDetails()
       const baseFailure = appendHttpStatusFailureReason(
         `Submodel '${submodel.id}' was not created in the repository.`,
         failureStatus,
@@ -206,8 +214,8 @@
       // Create the property on the parent Submodel
       const created = await postSubmodelElement(submodelElement, props.parentElement.id)
       if (!created) {
-        const failureStatus = consumeLastRequestFailureStatus()
-        const failureDetails = consumeLastRequestFailureDetails()
+        const failureStatus = consumeSmRequestFailureStatus()
+        const failureDetails = consumeSmRequestFailureDetails()
         const baseFailure = appendHttpStatusFailureReason(
           `Submodel element '${submodelElement.idShort}' was not created.`,
           failureStatus,
@@ -239,8 +247,8 @@
       // Create the property on the parent element
       const created = await postSubmodelElement(submodelElement, submodelId, idShortPath)
       if (!created) {
-        const failureStatus = consumeLastRequestFailureStatus()
-        const failureDetails = consumeLastRequestFailureDetails()
+        const failureStatus = consumeSmRequestFailureStatus()
+        const failureDetails = consumeSmRequestFailureDetails()
         const baseFailure = appendHttpStatusFailureReason(
           `Submodel element '${submodelElement.idShort}' was not created.`,
           failureStatus,
@@ -294,8 +302,8 @@
     }
     const updated = await putAas(aas, true)
     if (!updated) {
-      const failureStatus = consumeLastRequestFailureStatus()
-      const failureDetails = consumeLastRequestFailureDetails()
+      const failureStatus = consumeAasRequestFailureStatus()
+      const failureDetails = consumeAasRequestFailureDetails()
       const baseFailure = appendHttpStatusFailureReason(
         `Failed to update AAS Submodel references for '${submodel.id}'.`,
         failureStatus,

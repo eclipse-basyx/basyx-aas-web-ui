@@ -204,7 +204,6 @@
   import { appendHttpStatusFailureReason } from '@/composables/HttpStatusMessages'
   import { useIDUtils } from '@/composables/IDUtils'
   import { buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification'
-  import { useRequestHandling } from '@/composables/RequestHandling'
   import { useAASStore } from '@/store/AASDataStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
@@ -223,7 +222,6 @@
   // Composables
   const { generateUUID } = useIDUtils()
   const { getAasEndpointById, fetchAndDispatchAasById } = useAASHandling()
-  const { consumeLastRequestFailureStatus, consumeLastRequestFailureDetails } = useRequestHandling()
 
   // Stores
   const aasStore = useAASStore()
@@ -240,6 +238,8 @@
     putAas,
     putThumbnail,
     getAasEndpointById: getAasRepoEndpointById,
+    consumeLastRequestFailureStatus,
+    consumeLastRequestFailureDetails,
   } = useAASRepositoryClient()
   const { fetchAasDescriptorById, postAasDescriptor, putAasDescriptor, createDescriptorFromAAS }
     = useAASRegistryClient()
@@ -692,7 +692,7 @@
         baseError: 'AAS saved with synchronization warnings.',
         extendedError: warnings.join('\n'),
       })
-      return false
+      return true
     }
 
     return true

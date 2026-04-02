@@ -95,7 +95,6 @@
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { upsertDescriptor } from '@/composables/DescriptorSync'
   import { appendHttpStatusFailureReason } from '@/composables/HttpStatusMessages'
-  import { useRequestHandling } from '@/composables/RequestHandling'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { Endpoint, ProtocolInformation } from '@/types/Descriptors'
@@ -106,8 +105,12 @@
   const infrastructureStore = useInfrastructureStore()
 
   // Composables
-  const { fetchAas, uploadAas, getAasEndpointById } = useAASRepositoryClient()
-  const { consumeLastRequestFailureStatus } = useRequestHandling()
+  const {
+    fetchAas,
+    uploadAas,
+    getAasEndpointById,
+    consumeLastRequestFailureStatus,
+  } = useAASRepositoryClient()
   const { getSmEndpointById } = useSMRepositoryClient()
   const { fetchSm } = useSMHandling()
   const { importAasxFileClient, importEnvironmentFileClient } = useAASXImport()

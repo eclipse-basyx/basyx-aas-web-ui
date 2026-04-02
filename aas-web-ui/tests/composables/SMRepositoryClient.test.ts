@@ -40,13 +40,13 @@ vi.mock('@/composables/IDUtils', () => ({
   }),
 }))
 
-describe('SMRepositoryClient.ts write guard', () => {
+describe('SMRepositoryClient.ts write contract', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockState.submodelRepoUrl = 'https://example.test/submodels'
   })
 
-  it('throws when postSubmodelElement request result is not successful', async () => {
+  it('returns false when postSubmodelElement request result is not successful', async () => {
     mockDeps.postRequest.mockResolvedValueOnce({ success: false })
 
     const { useSMRepositoryClient } = await import('@/composables/Client/SMRepositoryClient')
@@ -54,7 +54,7 @@ describe('SMRepositoryClient.ts write guard', () => {
 
     await expect(
       postSubmodelElement({ idShort: 'temperature', modelType: 'Property' } as any, 'submodel-id'),
-    ).rejects.toThrow('Failed while creating Submodel Element.')
+    ).resolves.toBe(false)
   })
 
   it('returns true when putSubmodelElement succeeds', async () => {
@@ -66,5 +66,26 @@ describe('SMRepositoryClient.ts write guard', () => {
     await expect(
       putSubmodelElement({ idShort: 'temperature', modelType: 'Property' } as any, '/submodel-elements/temp'),
     ).resolves.toBe(true)
+  })
+
+  it('passes suppressRequestErrorMessage flag to putSubmodelElement request', async () => {
+    mockDeps.putRequest.mockResolvedValueOnce({ success: false })
+
+    const { useSMRepositoryClient } = await import('@/composables/Client/SMRepositoryClient')
+    const { putSubmodelElement } = useSMRepositoryClient()
+
+    await putSubmodelElement(
+      { idShort: 'temperature', modelType: 'Property' } as any,
+      '/submodel-elements/temp',
+      true,
+    )
+
+    expect(mockDeps.putRequest).toHaveBeenCalledWith(
+      '/submodel-elements/temp',
+      expect.any(String),
+      expect.any(Headers),
+      'updating Submodel Element',
+      true,
+    )
   })
 })

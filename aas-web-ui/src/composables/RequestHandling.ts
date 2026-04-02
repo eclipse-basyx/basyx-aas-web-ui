@@ -8,10 +8,11 @@ let authErrorShown = false
 let authErrorTimeout: NodeJS.Timeout | null = null
 let forbiddenErrorShown = false
 let forbiddenErrorTimeout: NodeJS.Timeout | null = null
-let lastRequestFailureStatus: number | undefined
-let lastRequestFailureDetails: string | undefined
 
 export function useRequestHandling () {
+  let lastRequestFailureStatus: number | undefined
+  let lastRequestFailureDetails: string | undefined
+
   function setLastRequestFailureStatus (status: number | undefined): void {
     lastRequestFailureStatus = status
   }

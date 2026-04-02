@@ -12,17 +12,20 @@ export function useSMRepositoryClient () {
   const infrastructureStore = useInfrastructureStore()
 
   // Composables
-  const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling()
+  const {
+    getRequest,
+    postRequest,
+    putRequest,
+    deleteRequest,
+    consumeLastRequestFailureStatus,
+    consumeLastRequestFailureDetails,
+  } = useRequestHandling()
   const { generateUUIDFromString } = useIDUtils()
 
   const endpointPath = '/submodels'
 
-  function ensureWriteSuccess (response: any, operationContext: string): true {
-    if (response?.success) {
-      return true
-    }
-
-    throw new Error(`Failed while ${operationContext}.`)
+  function ensureWriteSuccess (response: any): boolean {
+    return response?.success === true
   }
 
   // Computed Properties
@@ -499,6 +502,7 @@ export function useSMRepositoryClient () {
     submodelElement: aasTypes.ISubmodelElement,
     submodelId: string,
     idShortPath?: string,
+    suppressRequestErrorMessage = false,
   ): Promise<boolean> {
     const failResponse = false
 
@@ -518,7 +522,7 @@ export function useSMRepositoryClient () {
     // console.log('postSubmodel()', jsonSubmodel);
 
     const context = 'creating Submodel Element'
-    const disableMessage = false
+    const disableMessage = suppressRequestErrorMessage
     const path
       = smRepoUrl + '/' + base64Encode(submodelId) + '/submodel-elements' + (idShortPath ? '/' + idShortPath : '')
     const headers = new Headers()
@@ -526,38 +530,42 @@ export function useSMRepositoryClient () {
     const body = JSON.stringify(jsonSubmodelElement)
 
     const response = await postRequest(path, body, headers, context, disableMessage)
-    return ensureWriteSuccess(response, context)
+    return ensureWriteSuccess(response)
   }
 
-  async function putSubmodelElement (submodelElement: aasTypes.ISubmodelElement, path: string): Promise<boolean> {
+  async function putSubmodelElement (
+    submodelElement: aasTypes.ISubmodelElement,
+    path: string,
+    suppressRequestErrorMessage = false,
+  ): Promise<boolean> {
     // Convert SME to JSON
     const jsonSubmodelElement = jsonization.toJsonable(submodelElement)
 
     const context = 'updating Submodel Element'
-    const disableMessage = false
+    const disableMessage = suppressRequestErrorMessage
     const headers = new Headers()
     headers.append('Content-Type', 'application/json')
     const body = JSON.stringify(jsonSubmodelElement)
 
     const response = await putRequest(path, body, headers, context, disableMessage)
-    return ensureWriteSuccess(response, context)
+    return ensureWriteSuccess(response)
   }
 
-  async function putAttachmentFile (file: File, path: string): Promise<boolean> {
+  async function putAttachmentFile (file: File, path: string, suppressRequestErrorMessage = false): Promise<boolean> {
     // Create formData
     const formData = new FormData()
     formData.append('file', file)
     formData.append('fileName', file.name)
 
     const context = 'uploading file attachment'
-    const disableMessage = false
+    const disableMessage = suppressRequestErrorMessage
     const requestPath = path + '/attachment'
     const headers = new Headers()
     const body = formData
 
     // Send Request to upload the file
     const response = await putRequest(requestPath, body, headers, context, disableMessage)
-    return ensureWriteSuccess(response, context)
+    return ensureWriteSuccess(response)
   }
 
   async function fetchAttachmentFile (path: string): Promise<Blob | undefined> {
@@ -598,5 +606,7 @@ export function useSMRepositoryClient () {
     putSubmodelElement,
     putAttachmentFile,
     fetchAttachmentFile,
+    consumeLastRequestFailureStatus,
+    consumeLastRequestFailureDetails,
   }
 }

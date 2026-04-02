@@ -13,7 +13,14 @@ export function useAASRepositoryClient () {
   const infrastructureStore = useInfrastructureStore()
 
   // Composables
-  const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling()
+  const {
+    getRequest,
+    postRequest,
+    putRequest,
+    deleteRequest,
+    consumeLastRequestFailureStatus,
+    consumeLastRequestFailureDetails,
+  } = useRequestHandling()
   const { generateUUIDFromString } = useIDUtils()
 
   const endpointPath = '/shells'
@@ -741,5 +748,7 @@ export function useAASRepositoryClient () {
     deleteSubmodelRef,
     deleteAasById,
     deleteAas,
+    consumeLastRequestFailureStatus,
+    consumeLastRequestFailureDetails,
   }
 }
