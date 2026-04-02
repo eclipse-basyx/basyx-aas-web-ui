@@ -132,7 +132,7 @@ describe('RequestHandling.ts', () => {
 
   it('treats PUT array error payload with code 403 as failure', async () => {
     global.fetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify([{ code: 403, text: 'Forbidden' }]), {
+      Response.json([{ code: 403, text: 'Forbidden' }], {
         status: 200,
         statusText: 'OK',
         headers: {
@@ -158,8 +158,8 @@ describe('RequestHandling.ts', () => {
 
   it('stores backend payload details for follow-up UI messaging', async () => {
     global.fetch = vi.fn().mockResolvedValue(
-      new Response(
-        JSON.stringify([
+      Response.json(
+        [
           {
             messageType: 'Error',
             text: 'access denied',
@@ -167,7 +167,7 @@ describe('RequestHandling.ts', () => {
             correlationId: 'Middleware-403-Rules-Forbidden-Denied',
             timestamp: '2026-04-02T07:12:28Z',
           },
-        ]),
+        ],
         {
           status: 200,
           statusText: 'OK',
