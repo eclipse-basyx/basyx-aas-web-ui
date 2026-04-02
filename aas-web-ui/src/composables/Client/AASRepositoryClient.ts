@@ -382,7 +382,7 @@ export function useAASRepositoryClient () {
     return response
   }
 
-  async function postAas (aas: aasTypes.AssetAdministrationShell): Promise<boolean> {
+  async function postAas (aas: aasTypes.AssetAdministrationShell, suppressRequestErrorMessage = false): Promise<boolean> {
     const failResponse = false
 
     let aasRepoUrl = aasRepositoryUrl.value.trim()
@@ -401,7 +401,7 @@ export function useAASRepositoryClient () {
     // console.log('postAas()', jsonAas);
 
     const context = 'creating AAS'
-    const disableMessage = false
+    const disableMessage = suppressRequestErrorMessage
     const path = aasRepoUrl
     const headers = new Headers()
     headers.append('Content-Type', 'application/json')
@@ -411,7 +411,7 @@ export function useAASRepositoryClient () {
     return response.success
   }
 
-  async function putAas (aas: aasTypes.AssetAdministrationShell): Promise<boolean> {
+  async function putAas (aas: aasTypes.AssetAdministrationShell, suppressRequestErrorMessage = false): Promise<boolean> {
     const failResponse = false
 
     let aasRepoUrl = aasRepositoryUrl.value.trim()
@@ -429,7 +429,7 @@ export function useAASRepositoryClient () {
     const jsonAas = jsonization.toJsonable(aas)
 
     const context = 'updating AAS'
-    const disableMessage = false
+    const disableMessage = suppressRequestErrorMessage
     const path = aasRepoUrl + '/' + base64Encode(aas.id)
     const headers = new Headers()
     headers.append('Content-Type', 'application/json')
@@ -439,7 +439,7 @@ export function useAASRepositoryClient () {
     return response.success
   }
 
-  async function putThumbnail (thumbnail: File, aasId: string): Promise<boolean> {
+  async function putThumbnail (thumbnail: File, aasId: string, suppressRequestErrorMessage = false): Promise<boolean> {
     const failResponse = false
 
     if (!aasId) {
@@ -469,7 +469,7 @@ export function useAASRepositoryClient () {
     formData.append('fileName', thumbnail.name)
 
     const context = 'uploading thumbnail'
-    const disableMessage = false
+    const disableMessage = suppressRequestErrorMessage
     const path = aasRepoUrl + '/' + base64Encode(aasId) + '/asset-information/thumbnail'
     const headers = new Headers()
     const body = formData
@@ -538,15 +538,16 @@ export function useAASRepositoryClient () {
     return failResponse
   }
 
-  async function deleteSubmodelRef (aasPath: string, submodelId: string): Promise<void> {
+  async function deleteSubmodelRef (aasPath: string, submodelId: string): Promise<boolean> {
     if (aasPath.trim() === '' || submodelId.trim() === '') {
-      return
+      return false
     }
 
     const path = aasPath.trim() + '/submodel-refs/' + base64Encode(submodelId.trim())
     const context = 'deleting Submodel Reference'
     const disableMessage = false
-    await deleteRequest(path, context, disableMessage)
+    const response = await deleteRequest(path, context, disableMessage)
+    return response.success
   }
 
   async function downloadAasx (aas: any): Promise<void> {

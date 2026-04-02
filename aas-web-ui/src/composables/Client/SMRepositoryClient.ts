@@ -17,6 +17,14 @@ export function useSMRepositoryClient () {
 
   const endpointPath = '/submodels'
 
+  function ensureWriteSuccess (response: any, operationContext: string): true {
+    if (response?.success) {
+      return true
+    }
+
+    throw new Error(`Failed while ${operationContext}.`)
+  }
+
   // Computed Properties
   const submodelRepoUrl = computed(() => infrastructureStore.getSubmodelRepoURL)
 
@@ -369,7 +377,7 @@ export function useSMRepositoryClient () {
     return smEndpoint || failResponse
   }
 
-  async function postSubmodel (submodel: aasTypes.Submodel): Promise<boolean> {
+  async function postSubmodel (submodel: aasTypes.Submodel, suppressRequestErrorMessage = false): Promise<boolean> {
     const failResponse = false
 
     let smRepoUrl = submodelRepoUrl.value.trim()
@@ -388,7 +396,7 @@ export function useSMRepositoryClient () {
     // console.log('postSubmodel()', jsonSubmodel);
 
     const context = 'creating Submodel'
-    const disableMessage = false
+    const disableMessage = suppressRequestErrorMessage
     const path = smRepoUrl
     const headers = new Headers()
     headers.append('Content-Type', 'application/json')
@@ -398,7 +406,7 @@ export function useSMRepositoryClient () {
     return response.success
   }
 
-  async function putSubmodel (submodel: aasTypes.Submodel): Promise<boolean> {
+  async function putSubmodel (submodel: aasTypes.Submodel, suppressRequestErrorMessage = false): Promise<boolean> {
     const failResponse = false
 
     let smRepoUrl = submodelRepoUrl.value.trim()
@@ -417,7 +425,7 @@ export function useSMRepositoryClient () {
     // console.log('putSubmodel()', jsonSubmodel);
 
     const context = 'updating Submodel'
-    const disableMessage = false
+    const disableMessage = suppressRequestErrorMessage
     const path = smRepoUrl + '/' + base64Encode(submodel.id)
     const headers = new Headers()
     headers.append('Content-Type', 'application/json')
@@ -518,7 +526,7 @@ export function useSMRepositoryClient () {
     const body = JSON.stringify(jsonSubmodelElement)
 
     const response = await postRequest(path, body, headers, context, disableMessage)
-    return response.success
+    return ensureWriteSuccess(response, context)
   }
 
   async function putSubmodelElement (submodelElement: aasTypes.ISubmodelElement, path: string): Promise<boolean> {
@@ -532,7 +540,7 @@ export function useSMRepositoryClient () {
     const body = JSON.stringify(jsonSubmodelElement)
 
     const response = await putRequest(path, body, headers, context, disableMessage)
-    return response.success
+    return ensureWriteSuccess(response, context)
   }
 
   async function putAttachmentFile (file: File, path: string): Promise<boolean> {
@@ -549,7 +557,7 @@ export function useSMRepositoryClient () {
 
     // Send Request to upload the file
     const response = await putRequest(requestPath, body, headers, context, disableMessage)
-    return response.success
+    return ensureWriteSuccess(response, context)
   }
 
   async function fetchAttachmentFile (path: string): Promise<Blob | undefined> {

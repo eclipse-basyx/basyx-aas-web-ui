@@ -88,6 +88,7 @@
 
   async function confirmDelete (): Promise<void> {
     deleteLoading.value = true
+    let deleteSucceeded = false
     if (props.element.modelType === 'Submodel') {
       let smEndpoint = ''
       if (submodelRepoHasRegistryIntegration.value) {
@@ -114,14 +115,22 @@
 
       try {
         // delete the submodel
-        await deleteRequest(smEndpoint, 'removing Submodel', false)
+        const submodelDeleteResponse = await deleteRequest(smEndpoint, 'removing Submodel', false)
+        if (!submodelDeleteResponse?.success) {
+          deleteLoading.value = false
+          return
+        }
 
         // extract the AAS endpoint
         const aasEndpoint
           = extractEndpointHref(selectedAAS.value, 'AAS-3.0') || getAasEndpointById(selectedAAS.value.id)
 
         // delete the submodel reference from the AAS
-        await deleteSubmodelRef(aasEndpoint, props.element.id)
+        const submodelRefDeleted = await deleteSubmodelRef(aasEndpoint, props.element.id)
+        if (!submodelRefDeleted) {
+          deleteLoading.value = false
+          return
+        }
 
         if (!submodelRepoHasRegistryIntegration.value) {
           const descriptorDeleted = await deleteSubmodelDescriptor(props.element.id)
@@ -160,13 +169,18 @@
         }
         navigationStore.dispatchTriggerTreeviewReload()
         aasStore.dispatchSelectedAAS(localAAS)
+        deleteSucceeded = true
       } catch (error) {
         console.error('Error while deleting Submodel:', error)
       }
     } else {
       // delete Submodel Element
       try {
-        await deleteRequest(props.element.path, 'removing Submodel Element', false)
+        const submodelElementDeleteResponse = await deleteRequest(props.element.path, 'removing Submodel Element', false)
+        if (!submodelElementDeleteResponse?.success) {
+          deleteLoading.value = false
+          return
+        }
 
         // Check if the selected Submodel Element is the deleted one
         if (props.element.path === route.query.path) {
@@ -177,12 +191,15 @@
           aasStore.dispatchSelectedNode(props.element.parent)
         }
         navigationStore.dispatchTriggerTreeviewReload()
+        deleteSucceeded = true
       } catch (error) {
         console.error('Error while deleting Submodel Element:', error)
       }
     }
     deleteLoading.value = false
-    // close the dialog
-    deleteDialog.value = false
+    if (deleteSucceeded) {
+      // close the dialog only after a successful deletion chain
+      deleteDialog.value = false
+    }
   }
 </script>
