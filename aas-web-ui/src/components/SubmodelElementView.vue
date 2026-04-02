@@ -121,6 +121,7 @@
           />
           <MultiLanguageProperty
             v-else-if="submodelElementData.modelType === 'MultiLanguageProperty'"
+            :key="submodelElementData.path"
             :is-editable="editorMode"
             :multi-language-property-object="submodelElementData"
           />
