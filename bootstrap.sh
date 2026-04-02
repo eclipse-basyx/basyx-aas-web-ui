@@ -17,7 +17,7 @@ read build_images
 cd $PRJ_ROOT/aas-web-ui
 if [ "$FRESH_INSTALL" = "1" ]; then
     rm -rf node_modules
-    yarn install
+    pnpm install
 fi
 
 # Start Dev Server
@@ -31,7 +31,7 @@ if [ "$build_images" = "y" ]; then
     # Build and push the Docker images
     docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t eclipsebasyx/aas-gui:v2-$DATE . --push
 else
-    yarn dev --host
+    pnpm dev --host
 fi
 
 cd $PRJ_ROOT

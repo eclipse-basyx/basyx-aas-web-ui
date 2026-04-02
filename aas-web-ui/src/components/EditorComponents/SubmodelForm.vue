@@ -1,491 +1,594 @@
 <template>
-    <v-dialog v-model="editSMDialog" width="860" persistent>
-        <v-card>
-            <v-card-title>
-                {{ newSm ? 'Create a new Submodel' : 'Edit Submodel' }}
-            </v-card-title>
-            <v-divider></v-divider>
-            <v-card-text style="overflow-y: auto" class="pa-3 bg-card">
-                <v-expansion-panels v-model="openPanels" multiple>
-                    <!-- Details -->
-                    <v-expansion-panel class="border-t-thin border-s-thin border-e-thin" :class="bordersToShow(0)">
-                        <v-expansion-panel-title>Details</v-expansion-panel-title>
-                        <v-expansion-panel-text>
-                            <v-row align="center">
-                                <v-col class="py-0">
-                                    <TextInput
-                                        v-model="submodelId"
-                                        label="ID"
-                                        :show-generate-iri-button="true"
-                                        type="Submodel"
-                                        :disabled="!newSm" />
-                                </v-col>
-                                <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="identifier" />
-                                </v-col>
-                            </v-row>
-                            <v-row align="center">
-                                <v-col class="py-0">
-                                    <TextInput v-model="submodelIdShort" label="IdShort" />
-                                </v-col>
-                                <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="idShort" />
-                                </v-col>
-                            </v-row>
-                            <v-row align="center">
-                                <v-col class="py-0">
-                                    <SelectInput v-model="submodelKind" label="Modelling Kind" type="modellingKind" />
-                                </v-col>
-                                <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="modellingKind" />
-                                </v-col>
-                            </v-row>
-                            <v-row align="center">
-                                <v-col class="py-0">
-                                    <MultiLanguageTextInput
-                                        v-model="displayName"
-                                        :show-label="true"
-                                        label="Display Name"
-                                        type="displayName" />
-                                </v-col>
-                                <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="displayName" />
-                                </v-col>
-                            </v-row>
-                            <v-row align="center">
-                                <v-col class="py-0">
-                                    <MultiLanguageTextInput
-                                        v-model="description"
-                                        :show-label="true"
-                                        label="Description"
-                                        type="description" />
-                                </v-col>
-                                <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="description" />
-                                </v-col>
-                            </v-row>
-                            <v-row align="center">
-                                <v-col class="py-0">
-                                    <SelectInput
-                                        v-model="submodelCategory"
-                                        label="Category"
-                                        type="category"
-                                        :clearable="true" />
-                                </v-col>
-                                <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="category" />
-                                </v-col>
-                            </v-row>
-                        </v-expansion-panel-text>
-                    </v-expansion-panel>
-                    <!-- Administrative Information -->
-                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(1)">
-                        <v-expansion-panel-title>Administrative Information</v-expansion-panel-title>
-                        <v-expansion-panel-text>
-                            <v-row align="center">
-                                <v-col class="py-0">
-                                    <TextInput v-model="version" label="Version" />
-                                </v-col>
-                                <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="version" />
-                                </v-col>
-                            </v-row>
-                            <v-row align="center">
-                                <v-col class="py-0">
-                                    <TextInput v-model="revision" label="Revision" />
-                                </v-col>
-                                <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="revision" />
-                                </v-col>
-                            </v-row>
-                            <v-row align="center">
-                                <v-col class="py-0">
-                                    <ReferenceInput v-model="creator" label="Creator" />
-                                </v-col>
-                                <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="creator" />
-                                </v-col>
-                            </v-row>
-                            <v-row align="center">
-                                <v-col class="py-0">
-                                    <TextInput v-model="templateId" label="Template ID" />
-                                </v-col>
-                                <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="templateId" />
-                                </v-col>
-                            </v-row>
-                        </v-expansion-panel-text>
-                    </v-expansion-panel>
-                    <!-- Semantic ID -->
-                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(2)">
-                        <v-expansion-panel-title>Semantic ID</v-expansion-panel-title>
-                        <v-expansion-panel-text>
-                            <v-row align="center">
-                                <v-col class="py-0">
-                                    <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" />
-                                </v-col>
-                                <v-col cols="auto" class="px-0">
-                                    <HelpInfoButton help-type="semanticId" />
-                                </v-col>
-                            </v-row>
-                        </v-expansion-panel-text>
-                    </v-expansion-panel>
-                    <!-- Qualifiers -->
-                    <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
-                        <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
-                        <v-expansion-panel-text>
-                            <QualifierInput v-model="qualifiers" />
-                        </v-expansion-panel-text>
-                    </v-expansion-panel>
-                    <!-- Data Specification -->
-                    <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
-                        <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
-                        <v-expansion-panel-text>
-                            <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
-                        </v-expansion-panel-text>
-                    </v-expansion-panel>
-                </v-expansion-panels>
-            </v-card-text>
-            <v-divider></v-divider>
-            <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn @click="closeDialog">Cancel</v-btn>
-                <v-btn color="primary" @click="saveSubmodel">Save</v-btn>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
+  <v-dialog v-model="editSMDialog" persistent width="860">
+    <v-card>
+      <v-card-title>
+        {{ newSm ? 'Create a new Submodel' : 'Edit Submodel' }}
+      </v-card-title>
+      <v-divider />
+      <v-card-text class="pa-3 bg-card" style="overflow-y: auto">
+        <v-expansion-panels v-model="openPanels" multiple>
+          <!-- Details -->
+          <v-expansion-panel class="border-t-thin border-s-thin border-e-thin" :class="bordersToShow(0)">
+            <v-expansion-panel-title>Details</v-expansion-panel-title>
+            <v-expansion-panel-text>
+              <v-row align="center">
+                <v-col class="py-0">
+                  <TextInput
+                    v-model="submodelId"
+                    :disabled="!newSm"
+                    label="ID"
+                    :show-generate-iri-button="true"
+                    type="Submodel"
+                  />
+                </v-col>
+                <v-col class="px-0" cols="auto">
+                  <HelpInfoButton help-type="identifier" />
+                </v-col>
+              </v-row>
+              <v-row align="center">
+                <v-col class="py-0">
+                  <TextInput v-model="submodelIdShort" label="IdShort" />
+                </v-col>
+                <v-col class="px-0" cols="auto">
+                  <HelpInfoButton help-type="idShort" />
+                </v-col>
+              </v-row>
+              <v-row align="center">
+                <v-col class="py-0">
+                  <SelectInput v-model="submodelKind" label="Modelling Kind" type="modellingKind" />
+                </v-col>
+                <v-col class="px-0" cols="auto">
+                  <HelpInfoButton help-type="modellingKind" />
+                </v-col>
+              </v-row>
+              <v-row align="center">
+                <v-col class="py-0">
+                  <MultiLanguageTextInput
+                    v-model="displayName"
+                    label="Display Name"
+                    :show-label="true"
+                    type="displayName"
+                  />
+                </v-col>
+                <v-col class="px-0" cols="auto">
+                  <HelpInfoButton help-type="displayName" />
+                </v-col>
+              </v-row>
+              <v-row align="center">
+                <v-col class="py-0">
+                  <MultiLanguageTextInput
+                    v-model="description"
+                    label="Description"
+                    :show-label="true"
+                    type="description"
+                  />
+                </v-col>
+                <v-col class="px-0" cols="auto">
+                  <HelpInfoButton help-type="description" />
+                </v-col>
+              </v-row>
+              <v-row align="center">
+                <v-col class="py-0">
+                  <SelectInput
+                    v-model="submodelCategory"
+                    :clearable="true"
+                    label="Category"
+                    type="category"
+                  />
+                </v-col>
+                <v-col class="px-0" cols="auto">
+                  <HelpInfoButton help-type="category" />
+                </v-col>
+              </v-row>
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+          <!-- Administrative Information -->
+          <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(1)">
+            <v-expansion-panel-title>Administrative Information</v-expansion-panel-title>
+            <v-expansion-panel-text>
+              <v-row align="center">
+                <v-col class="py-0">
+                  <TextInput v-model="version" label="Version" />
+                </v-col>
+                <v-col class="px-0" cols="auto">
+                  <HelpInfoButton help-type="version" />
+                </v-col>
+              </v-row>
+              <v-row align="center">
+                <v-col class="py-0">
+                  <TextInput v-model="revision" label="Revision" />
+                </v-col>
+                <v-col class="px-0" cols="auto">
+                  <HelpInfoButton help-type="revision" />
+                </v-col>
+              </v-row>
+              <v-row align="center">
+                <v-col class="py-0">
+                  <ReferenceInput v-model="creator" label="Creator" />
+                </v-col>
+                <v-col class="px-0" cols="auto">
+                  <HelpInfoButton help-type="creator" />
+                </v-col>
+              </v-row>
+              <v-row align="center">
+                <v-col class="py-0">
+                  <TextInput v-model="templateId" label="Template ID" />
+                </v-col>
+                <v-col class="px-0" cols="auto">
+                  <HelpInfoButton help-type="templateId" />
+                </v-col>
+              </v-row>
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+          <!-- Semantic ID -->
+          <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(2)">
+            <v-expansion-panel-title>Semantic ID</v-expansion-panel-title>
+            <v-expansion-panel-text>
+              <v-row align="center">
+                <v-col class="py-0">
+                  <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" :show-remove-button="true" />
+                </v-col>
+                <v-col class="px-0" cols="auto">
+                  <HelpInfoButton help-type="semanticId" />
+                </v-col>
+              </v-row>
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+          <!-- Qualifiers -->
+          <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
+            <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
+            <v-expansion-panel-text>
+              <QualifierInput v-model="qualifiers" />
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+          <!-- Data Specification -->
+          <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
+            <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
+            <v-expansion-panel-text>
+              <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+        </v-expansion-panels>
+      </v-card-text>
+      <v-divider />
+      <v-card-actions>
+        <v-spacer />
+        <v-btn @click="closeDialog">Cancel</v-btn>
+        <v-btn color="primary" @click="saveSubmodel">Save</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
-    import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
-    import { jsonization } from '@aas-core-works/aas-core3.1-typescript';
-    import { computed, ref, watch } from 'vue';
-    import { useRoute, useRouter } from 'vue-router';
-    import { useSMHandling } from '@/composables/AAS/SMHandling';
-    import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
-    import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient';
-    import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
-    import { useIDUtils } from '@/composables/IDUtils';
-    import { buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification';
-    import { useAASStore } from '@/store/AASDataStore';
-    import { useInfrastructureStore } from '@/store/InfrastructureStore';
-    import { useNavigationStore } from '@/store/NavigationStore';
-    import { base64Encode } from '@/utils/EncodeDecodeUtils';
+  import { types as aasTypes, jsonization } from '@aas-core-works/aas-core3.1-typescript'
+  import { computed, ref, watch } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import { useSMHandling } from '@/composables/AAS/SMHandling'
+  import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
+  import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient'
+  import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
+  import { upsertDescriptor } from '@/composables/DescriptorSync'
+  import { useIDUtils } from '@/composables/IDUtils'
+  import { buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification'
+  import { useAASStore } from '@/store/AASDataStore'
+  import { useInfrastructureStore } from '@/store/InfrastructureStore'
+  import { useNavigationStore } from '@/store/NavigationStore'
+  import { Endpoint, ProtocolInformation } from '@/types/Descriptors'
 
-    const props = defineProps<{
-        modelValue: boolean;
-        newSm: boolean;
-        submodel?: aasTypes.Submodel;
-    }>();
+  const props = defineProps<{
+    modelValue: boolean
+    newSm: boolean
+    submodel?: aasTypes.Submodel
+  }>()
 
-    // Vue Router
-    const route = useRoute();
-    const router = useRouter();
+  // Vue Router
+  const route = useRoute()
+  const router = useRouter()
 
-    // Composables
-    const { generateUUID } = useIDUtils();
+  // Composables
+  const { generateUUID } = useIDUtils()
 
-    // Stores
-    const aasStore = useAASStore();
-    const navigationStore = useNavigationStore();
-    const infrastructureStore = useInfrastructureStore();
+  // Stores
+  const aasStore = useAASStore()
+  const navigationStore = useNavigationStore()
+  const infrastructureStore = useInfrastructureStore()
 
-    const emit = defineEmits<{
-        (event: 'update:modelValue', value: boolean): void;
-    }>();
+  const emit = defineEmits<{
+    (event: 'update:modelValue', value: boolean): void
+  }>()
 
-    const { postSubmodel, putSubmodel } = useSMRepositoryClient();
-    const { putSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient();
-    const { fetchSmById, fetchSmDescriptor, fetchAndDispatchSm } = useSMHandling();
-    const { putAas } = useAASRepositoryClient();
+  const { postSubmodel, putSubmodel, getSmEndpointById } = useSMRepositoryClient()
+  const { postSubmodelDescriptor, putSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient()
+  const { fetchSmById, fetchSmDescriptor, fetchAndDispatchSm } = useSMHandling()
+  const { putAas } = useAASRepositoryClient()
 
-    const editSMDialog = ref(false);
-    const submodelObject = ref<aasTypes.Submodel | undefined>(undefined);
-    const openPanels = ref<number[]>([0]);
+  const editSMDialog = ref(false)
+  const submodelObject = ref<aasTypes.Submodel | undefined>(undefined)
+  const openPanels = ref<number[]>([0])
 
-    const submodelId = ref<string | null>(generateUUID());
-    const submodelIdShort = ref<string | null>(null);
-    const submodelKind = ref<aasTypes.ModellingKind | null>(aasTypes.ModellingKind.Instance);
-    const displayName = ref<Array<aasTypes.LangStringNameType> | null>(null);
-    const description = ref<Array<aasTypes.LangStringTextType> | null>(null);
-    const submodelCategory = ref<string | null>(null);
+  const submodelId = ref<string | null>(generateUUID())
+  const submodelIdShort = ref<string | null>(null)
+  const submodelKind = ref<aasTypes.ModellingKind | null>(aasTypes.ModellingKind.Instance)
+  const displayName = ref<Array<aasTypes.LangStringNameType> | null>(null)
+  const description = ref<Array<aasTypes.LangStringTextType> | null>(null)
+  const submodelCategory = ref<string | null>(null)
 
-    const version = ref<string | null>(null);
-    const revision = ref<string | null>(null);
-    const creator = ref<aasTypes.Reference | null>(null);
-    const templateId = ref<string | null>(null);
+  const version = ref<string | null>(null)
+  const revision = ref<string | null>(null)
+  const creator = ref<aasTypes.Reference | null>(null)
+  const templateId = ref<string | null>(null)
 
-    const semanticId = ref<aasTypes.Reference | null>(null);
-    const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null);
-    const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null);
+  const semanticId = ref<aasTypes.Reference | null>(null)
+  const qualifiers = ref<Array<aasTypes.Qualifier> | null>(null)
+  const embeddedDataSpecifications = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(null)
 
-    // Computed Properties
-    const selectedNode = computed(() => aasStore.getSelectedNode); // Get the selected AAS from Store
-    const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
-    const submodelRepoUrl = computed(() => infrastructureStore.getSubmodelRepoURL);
-    const bordersToShow = computed(() => (panel: number) => {
-        let border = '';
-        switch (panel) {
-            case 0:
-                if (openPanels.value.includes(0) || openPanels.value.includes(1)) {
-                    border = 'border-b-thin';
-                }
-                break;
-            case 1:
-                if (openPanels.value.includes(0) || openPanels.value.includes(1)) {
-                    border += ' border-t-thin';
-                }
-                if (openPanels.value.includes(1) || openPanels.value.includes(2)) {
-                    border += ' border-b-thin';
-                }
-                break;
-            case 2:
-                if (openPanels.value.includes(1) || openPanels.value.includes(2)) {
-                    border += ' border-t-thin';
-                }
-                if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
-                    border += ' border-b-thin';
-                }
-                break;
-            case 3:
-                if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
-                    border += ' border-t-thin';
-                }
-                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
-                    border += ' border-b-thin';
-                }
-                break;
-            case 4:
-                if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
-                    border = 'border-t-thin';
-                }
-                break;
+  // Computed Properties
+  const selectedNode = computed(() => aasStore.getSelectedNode) // Get the selected AAS from Store
+  const selectedAAS = computed(() => aasStore.getSelectedAAS) // Get the selected AAS from Store
+  const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
+  const submodelRepoHasRegistryIntegration = computed(
+    () => selectedInfrastructure.value?.components?.SubmodelRepo?.hasRegistryIntegration ?? true,
+  )
+  const bordersToShow = computed(() => (panel: number) => {
+    let border = ''
+    switch (panel) {
+      case 0: {
+        if (openPanels.value.includes(0) || openPanels.value.includes(1)) {
+          border = 'border-b-thin'
         }
-        return border;
-    });
-
-    watch(
-        () => props.modelValue,
-        (value) => {
-            editSMDialog.value = value;
-            if (value) {
-                initializeInputs();
-            }
+        break
+      }
+      case 1: {
+        if (openPanels.value.includes(0) || openPanels.value.includes(1)) {
+          border += ' border-t-thin'
         }
-    );
-
-    watch(
-        () => editSMDialog.value,
-        (value) => {
-            emit('update:modelValue', value);
+        if (openPanels.value.includes(1) || openPanels.value.includes(2)) {
+          border += ' border-b-thin'
         }
-    );
-
-    async function initializeInputs(): Promise<void> {
-        // Always reset form values first to clear any stale data from previously opened elements
-        clearForm();
-
-        if (props.newSm === false && props.submodel) {
-            const submodel = await fetchSmById(props.submodel.id);
-
-            // Parse JSON to AssetAdministrationShell
-            const instanceOrError = jsonization.submodelFromJsonable(submodel);
-            if (instanceOrError.error !== null) {
-                console.error('Error parsing Submodel: ', instanceOrError.error);
-                return;
-            }
-            submodelObject.value = instanceOrError.mustValue();
-            // console.log('AASObject: ', AASObject.value);
-            // Set values of AAS
-            submodelId.value = submodelObject.value.id ?? generateUUID();
-            submodelIdShort.value = submodelObject.value.idShort ?? null;
-            submodelKind.value = submodelObject.value.kind ?? aasTypes.ModellingKind.Instance;
-            displayName.value = submodelObject.value.displayName ?? null;
-            description.value = submodelObject.value.description ?? null;
-            submodelCategory.value = submodelObject.value.category ?? null;
-            if (submodelObject.value.administration !== null && submodelObject.value.administration !== undefined) {
-                version.value = submodelObject.value.administration.version ?? null;
-                revision.value = submodelObject.value.administration.revision ?? null;
-                creator.value = submodelObject.value.administration.creator ?? null;
-                templateId.value = submodelObject.value.administration.templateId ?? null;
-            }
-            semanticId.value = submodelObject.value.semanticId ?? null;
-            qualifiers.value = submodelObject.value.qualifiers ?? null;
-            embeddedDataSpecifications.value = submodelObject.value.embeddedDataSpecifications ?? null;
+        break
+      }
+      case 2: {
+        if (openPanels.value.includes(1) || openPanels.value.includes(2)) {
+          border += ' border-t-thin'
         }
+        if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+          border += ' border-b-thin'
+        }
+        break
+      }
+      case 3: {
+        if (openPanels.value.includes(2) || openPanels.value.includes(3)) {
+          border += ' border-t-thin'
+        }
+        if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+          border += ' border-b-thin'
+        }
+        break
+      }
+      case 4: {
+        if (openPanels.value.includes(3) || openPanels.value.includes(4)) {
+          border = 'border-t-thin'
+        }
+        break
+      }
+    }
+    return border
+  })
+
+  watch(
+    () => props.modelValue,
+    value => {
+      editSMDialog.value = value
+      if (value) {
+        initializeInputs()
+      }
+    },
+  )
+
+  watch(
+    () => editSMDialog.value,
+    value => {
+      emit('update:modelValue', value)
+    },
+  )
+
+  async function initializeInputs (): Promise<void> {
+    // Always reset form values first to clear any stale data from previously opened elements
+    clearForm()
+
+    if (props.newSm === false && props.submodel) {
+      const submodel = await fetchSmById(props.submodel.id)
+
+      // Parse JSON to AssetAdministrationShell
+      const instanceOrError = jsonization.submodelFromJsonable(submodel)
+      if (instanceOrError.error !== null) {
+        console.error('Error parsing Submodel:', instanceOrError.error)
+        return
+      }
+      submodelObject.value = instanceOrError.mustValue()
+      // console.log('AASObject: ', AASObject.value);
+      // Set values of AAS
+      submodelId.value = submodelObject.value.id ?? generateUUID()
+      submodelIdShort.value = submodelObject.value.idShort ?? null
+      submodelKind.value = submodelObject.value.kind ?? aasTypes.ModellingKind.Instance
+      displayName.value = submodelObject.value.displayName ?? null
+      description.value = submodelObject.value.description ?? null
+      submodelCategory.value = submodelObject.value.category ?? null
+      if (submodelObject.value.administration !== null && submodelObject.value.administration !== undefined) {
+        version.value = submodelObject.value.administration.version ?? null
+        revision.value = submodelObject.value.administration.revision ?? null
+        creator.value = submodelObject.value.administration.creator ?? null
+        templateId.value = submodelObject.value.administration.templateId ?? null
+      }
+      semanticId.value = submodelObject.value.semanticId ?? null
+      qualifiers.value = submodelObject.value.qualifiers ?? null
+      embeddedDataSpecifications.value = submodelObject.value.embeddedDataSpecifications ?? null
+    }
+  }
+
+  function createAdministrativeInformation (): aasTypes.AdministrativeInformation {
+    const administrativeInformation = new aasTypes.AdministrativeInformation()
+
+    // Add optional parameter version
+    if (version.value !== null && version.value !== undefined) {
+      administrativeInformation.version = version.value
     }
 
-    function createAdministrativeInformation(): aasTypes.AdministrativeInformation {
-        const administrativeInformation = new aasTypes.AdministrativeInformation();
-
-        // Add optional parameter version
-        if (version.value !== null && version.value !== undefined) {
-            administrativeInformation.version = version.value;
-        }
-
-        // Add optional parameter revision
-        if (revision.value !== null && revision.value !== undefined) {
-            administrativeInformation.revision = revision.value;
-        }
-
-        // Add optional parameter creator
-        if (creator.value !== null && creator.value !== undefined) {
-            administrativeInformation.creator = creator.value;
-        }
-
-        // Add optional parameter templateId
-        if (templateId.value !== null && templateId.value !== undefined) {
-            administrativeInformation.templateId = templateId.value;
-        }
-
-        return administrativeInformation;
+    // Add optional parameter revision
+    if (revision.value !== null && revision.value !== undefined) {
+      administrativeInformation.revision = revision.value
     }
 
-    async function saveSubmodel(): Promise<void> {
-        if (submodelId.value === null) return;
+    // Add optional parameter creator
+    if (creator.value !== null && creator.value !== undefined) {
+      administrativeInformation.creator = creator.value
+    }
 
-        const administrativeInformation = createAdministrativeInformation();
+    // Add optional parameter templateId
+    if (templateId.value !== null && templateId.value !== undefined) {
+      administrativeInformation.templateId = templateId.value
+    }
 
-        if (props.newSm || submodelObject.value === undefined) {
-            submodelObject.value = new aasTypes.Submodel(submodelId.value);
-        }
+    return administrativeInformation
+  }
 
-        // Add optional parameter category
-        submodelObject.value.category = submodelCategory.value;
+  async function saveSubmodel (): Promise<void> {
+    if (submodelId.value === null) return
 
-        // Add optional parameter idShort
-        if (submodelIdShort.value !== null) {
-            submodelObject.value.idShort = submodelIdShort.value;
-        }
+    const administrativeInformation = createAdministrativeInformation()
 
-        // Add optional parameter kind
-        if (submodelKind.value !== null) {
-            submodelObject.value.kind = submodelKind.value;
-        }
+    if (props.newSm || submodelObject.value === undefined) {
+      submodelObject.value = new aasTypes.Submodel(submodelId.value)
+    }
 
-        // Add optional parameter displayName
-        if (displayName.value !== null) {
-            submodelObject.value.displayName = displayName.value;
-        }
+    // Add optional parameter category
+    submodelObject.value.category = submodelCategory.value
 
-        // Add optional parameter description
-        if (description.value !== null) {
-            submodelObject.value.description = description.value;
-        }
+    // Add optional parameter idShort
+    if (submodelIdShort.value !== null) {
+      submodelObject.value.idShort = submodelIdShort.value
+    }
 
-        // Add optional parameter administration
-        if (Object.values(administrativeInformation).some((value) => value !== null)) {
-            submodelObject.value.administration = administrativeInformation;
-        }
+    // Add optional parameter kind
+    if (submodelKind.value !== null) {
+      submodelObject.value.kind = submodelKind.value
+    }
 
-        // Add optional parameter semanticId
-        if (semanticId.value !== null) {
-            submodelObject.value.semanticId = semanticId.value;
-        }
+    // Add optional parameter displayName
+    if (displayName.value !== null) {
+      submodelObject.value.displayName = displayName.value
+    }
 
-        submodelObject.value.qualifiers = qualifiers.value;
-        submodelObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value;
+    // Add optional parameter description
+    if (description.value !== null) {
+      submodelObject.value.description = description.value
+    }
 
-        // extensions are out of scope
-        // SupplementalSemanticIds are out of scope
-        // SubmodelElements are added when they are created
+    // Add optional parameter administration
+    if (Object.values(administrativeInformation).some(value => value !== null)) {
+      submodelObject.value.administration = administrativeInformation
+    }
 
-        const verificationResult = verifyForEditor(submodelObject.value, { maxErrors: 10 });
-        if (!verificationResult.isValid) {
-            const summary = buildVerificationSummary(verificationResult);
-            const firstFieldErrorEntry = Array.from(verificationResult.fieldErrors.entries())[0];
-            const firstFieldError = firstFieldErrorEntry
-                ? `${firstFieldErrorEntry[0]}: ${firstFieldErrorEntry[1]}`
-                : undefined;
-            const firstError = verificationResult.globalErrors[0] ?? firstFieldError;
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 10000,
-                color: 'error',
-                btnColor: 'buttonText',
-                baseError: 'Submodel validation failed',
-                extendedError: firstError ? `${summary} ${firstError}` : summary,
-            });
-            return;
-        }
+    // Add optional parameter semanticId
+    submodelObject.value.semanticId = semanticId.value === null ? null : semanticId.value
 
-        if (props.newSm) {
-            // Create new Submodel
-            await postSubmodel(submodelObject.value);
-            // Add Submodel Reference to AAS
-            await addSubmodelReferenceToAas(submodelObject.value);
-            // Fetch and dispatch Submodel
-            const query = structuredClone(route.query);
-            query.path = submodelRepoUrl.value + '/submodels/' + base64Encode(submodelObject.value.id);
-            router.push({ query: query });
-            navigationStore.dispatchTriggerTreeviewReload();
+    submodelObject.value.qualifiers = qualifiers.value
+    submodelObject.value.embeddedDataSpecifications = embeddedDataSpecifications.value
+
+    // extensions are out of scope
+    // SupplementalSemanticIds are out of scope
+    // SubmodelElements are added when they are created
+
+    const verificationResult = verifyForEditor(submodelObject.value, { maxErrors: 10 })
+    if (!verificationResult.isValid) {
+      const summary = buildVerificationSummary(verificationResult)
+      const firstFieldErrorEntry = Array.from(verificationResult.fieldErrors.entries())[0]
+      const firstFieldError = firstFieldErrorEntry
+        ? `${firstFieldErrorEntry[0]}: ${firstFieldErrorEntry[1]}`
+        : undefined
+      const firstError = verificationResult.globalErrors[0] ?? firstFieldError
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 10_000,
+        color: 'error',
+        btnColor: 'buttonText',
+        baseError: 'Submodel validation failed',
+        extendedError: firstError ? `${summary} ${firstError}` : summary,
+      })
+      return
+    }
+
+    if (props.newSm) {
+      // Create new Submodel
+      const created = await postSubmodel(submodelObject.value)
+      if (!created) {
+        navigationStore.dispatchSnackbar({
+          status: true,
+          timeout: 8000,
+          color: 'error',
+          btnColor: 'buttonText',
+          baseError: 'Failed to create Submodel.',
+          extendedError: `Submodel '${submodelObject.value.id}' was not created in the repository.`,
+        })
+        return
+      }
+      await syncSubmodelDescriptor(submodelObject.value, true)
+      // Add Submodel Reference to AAS
+      await addSubmodelReferenceToAas(submodelObject.value)
+      // Fetch and dispatch Submodel
+      const query = structuredClone(route.query)
+      const path = getSmEndpointById(submodelObject.value.id)
+      if (path.trim() === '') {
+        navigationStore.dispatchSnackbar({
+          status: true,
+          timeout: 8000,
+          color: 'warning',
+          btnColor: 'buttonText',
+          baseError: 'Submodel created with navigation warning.',
+          extendedError: `Could not resolve endpoint for '${submodelObject.value.id}'.`,
+        })
+      } else {
+        query.path = path
+      }
+      router.push({ query: query })
+      navigationStore.dispatchTriggerTreeviewReload()
+    } else {
+      // Update existing Submodel
+      const updated = await putSubmodel(submodelObject.value)
+      if (!updated) {
+        navigationStore.dispatchSnackbar({
+          status: true,
+          timeout: 8000,
+          color: 'error',
+          btnColor: 'buttonText',
+          baseError: 'Failed to update Submodel.',
+          extendedError: `Submodel '${submodelObject.value.id}' was not updated in the repository.`,
+        })
+        return
+      }
+      await syncSubmodelDescriptor(submodelObject.value, false)
+      if (submodelObject.value.id === selectedNode.value.id) {
+        const path = getSmEndpointById(submodelObject.value.id)
+        if (path.trim() === '') {
+          navigationStore.dispatchSnackbar({
+            status: true,
+            timeout: 8000,
+            color: 'warning',
+            btnColor: 'buttonText',
+            baseError: 'Submodel updated with refresh warning.',
+            extendedError: `Could not resolve endpoint for '${submodelObject.value.id}'.`,
+          })
         } else {
-            // Update existing Submodel
-            await putSubmodel(submodelObject.value);
-            const jsonSubmodel = jsonization.toJsonable(submodelObject.value);
-            // Fetch the current desciptor from the registry
-            const fetchedDescriptor = await fetchSmDescriptor(submodelObject.value.id);
-            const descriptor = createDescriptorFromSubmodel(jsonSubmodel, fetchedDescriptor.endpoints);
-            // Update AAS Descriptor
-            await putSubmodelDescriptor(descriptor);
-            if (submodelObject.value.id === selectedNode.value.id) {
-                const path = submodelRepoUrl.value + '/submodels/' + base64Encode(submodelObject.value.id);
-                fetchAndDispatchSm(path);
-            }
-            navigationStore.dispatchTriggerTreeviewReload();
+          fetchAndDispatchSm(path)
         }
-        clearForm();
-        editSMDialog.value = false;
+      }
+      navigationStore.dispatchTriggerTreeviewReload()
+    }
+    clearForm()
+    editSMDialog.value = false
+  }
+
+  async function syncSubmodelDescriptor (submodel: aasTypes.Submodel, isCreate: boolean): Promise<void> {
+    if (submodelRepoHasRegistryIntegration.value) {
+      return
     }
 
-    async function addSubmodelReferenceToAas(submodel: aasTypes.Submodel): Promise<void> {
-        if (selectedAAS.value === null) return;
-        const localAAS = { ...selectedAAS.value };
-        const instanceOrError = jsonization.assetAdministrationShellFromJsonable(localAAS);
-        if (instanceOrError.error !== null) {
-            console.error('Error parsing AAS: ', instanceOrError.error);
-            return;
+    const jsonSubmodel = jsonization.toJsonable(submodel)
+    let descriptorSuccess = false
+
+    try {
+      const fallbackEndpoint = getSmEndpointById(submodel.id)
+      let endpoints = createEndpoints(fallbackEndpoint, 'SUBMODEL-3.0')
+      if (!isCreate) {
+        const fetchedDescriptor = await fetchSmDescriptor(submodel.id)
+        if (Array.isArray(fetchedDescriptor?.endpoints) && fetchedDescriptor.endpoints.length > 0) {
+          endpoints = fetchedDescriptor.endpoints
         }
-        const aas = instanceOrError.mustValue();
-        // Create new SubmodelReference
-        const submodelReference = new aasTypes.Reference(aasTypes.ReferenceTypes.ModelReference, [
-            new aasTypes.Key(aasTypes.KeyTypes.Submodel, submodel.id),
-        ]);
-        // Check if Submodels are null
-        if (aas.submodels === null || aas.submodels === undefined) {
-            aas.submodels = [submodelReference];
-            localAAS.submodels = [jsonization.toJsonable(submodelReference)];
-        } else {
-            aas.submodels.push(submodelReference);
-            localAAS.submodels.push(jsonization.toJsonable(submodelReference));
-        }
-        await putAas(aas);
-
-        // Update AAS in Store
-        aasStore.dispatchSelectedAAS(localAAS);
+      }
+      const descriptor = createDescriptorFromSubmodel(jsonSubmodel, endpoints)
+      descriptorSuccess = await upsertDescriptor(
+        isCreate,
+        () => postSubmodelDescriptor(descriptor),
+        () => putSubmodelDescriptor(descriptor),
+      )
+    } catch (error) {
+      console.error('Failed to synchronize Submodel descriptor:', error)
     }
 
-    function closeDialog(): void {
-        clearForm();
-        editSMDialog.value = false;
+    if (!descriptorSuccess) {
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 8000,
+        color: 'warning',
+        btnColor: 'buttonText',
+        baseError: 'Submodel saved with synchronization warning.',
+        extendedError: `Failed to synchronize Submodel descriptor for '${submodel.id}'.`,
+      })
+    }
+  }
+
+  function createEndpoints (href: string, type: string): Array<Endpoint> {
+    let protocol: string | null = null
+    try {
+      const url = new URL(href)
+      protocol = url.protocol.replace(/:$/, '')
+    } catch {
+      // If href is not a valid absolute URL, keep protocol null.
     }
 
-    function clearForm(): void {
-        // Reset all values
-        submodelId.value = generateUUID();
-        submodelIdShort.value = null;
-        submodelKind.value = aasTypes.ModellingKind.Instance;
-        displayName.value = null;
-        description.value = null;
-        submodelCategory.value = null;
-        version.value = null;
-        revision.value = null;
-        creator.value = null;
-        templateId.value = null;
-        semanticId.value = null;
-        qualifiers.value = null;
-        embeddedDataSpecifications.value = null;
-        // Reset state of expansion panels
-        openPanels.value = [0];
+    const protocolInformation = new ProtocolInformation(href, null, protocol)
+    return [new Endpoint(type, protocolInformation)]
+  }
+
+  async function addSubmodelReferenceToAas (submodel: aasTypes.Submodel): Promise<void> {
+    if (selectedAAS.value === null) return
+    const localAAS = { ...selectedAAS.value }
+    const instanceOrError = jsonization.assetAdministrationShellFromJsonable(localAAS)
+    if (instanceOrError.error !== null) {
+      console.error('Error parsing AAS:', instanceOrError.error)
+      return
     }
+    const aas = instanceOrError.mustValue()
+    // Create new SubmodelReference
+    const submodelReference = new aasTypes.Reference(aasTypes.ReferenceTypes.ModelReference, [
+      new aasTypes.Key(aasTypes.KeyTypes.Submodel, submodel.id),
+    ])
+    // Check if Submodels are null
+    if (aas.submodels === null || aas.submodels === undefined) {
+      aas.submodels = [submodelReference]
+      localAAS.submodels = [jsonization.toJsonable(submodelReference)]
+    } else {
+      aas.submodels.push(submodelReference)
+      localAAS.submodels.push(jsonization.toJsonable(submodelReference))
+    }
+    await putAas(aas)
+
+    // Update AAS in Store
+    aasStore.dispatchSelectedAAS(localAAS)
+  }
+
+  function closeDialog (): void {
+    clearForm()
+    editSMDialog.value = false
+  }
+
+  function clearForm (): void {
+    // Reset all values
+    submodelId.value = generateUUID()
+    submodelIdShort.value = null
+    submodelKind.value = aasTypes.ModellingKind.Instance
+    displayName.value = null
+    description.value = null
+    submodelCategory.value = null
+    version.value = null
+    revision.value = null
+    creator.value = null
+    templateId.value = null
+    semanticId.value = null
+    qualifiers.value = null
+    embeddedDataSpecifications.value = null
+    // Reset state of expansion panels
+    openPanels.value = [0]
+  }
 </script>

@@ -8,6 +8,9 @@
 # The configuration will be loaded at application startup and merged with user settings.
 # When VITE_ENDPOINT_CONFIG_AVAILABLE=false, this configuration takes full precedence.
 # When VITE_ENDPOINT_CONFIG_AVAILABLE=true, users can edit these infrastructures.
+# Optional component flags:
+# - hasRegistryIntegration: Backend repository creates/updates/deletes descriptors automatically.
+# - hasDiscoveryIntegration: Backend AAS registry creates/updates/deletes discovery asset links automatically.
 
 infrastructures:
   # Specify which infrastructure should be selected by default
@@ -21,12 +24,15 @@ infrastructures:
         baseUrl: "http://localhost:9084"
       aasRegistry:
         baseUrl: "http://localhost:9082"
+        hasDiscoveryIntegration: true
       submodelRegistry:
         baseUrl: "http://localhost:9083"
       aasRepository:
         baseUrl: "http://localhost:9081"
+        hasRegistryIntegration: true
       submodelRepository:
         baseUrl: "http://localhost:9081"
+        hasRegistryIntegration: true
       conceptDescriptionRepository:
         baseUrl: "http://localhost:9081"
     security:
