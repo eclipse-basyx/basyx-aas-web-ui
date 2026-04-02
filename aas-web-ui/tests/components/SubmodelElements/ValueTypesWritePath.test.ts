@@ -136,11 +136,11 @@ describe('ValueTypes write path regression', () => {
     patchRequestMock.mockResolvedValue({ success: true })
   })
 
-  it.each(cases)('%s uses the latest prop path for update', async testCase => {
-    const wrapper = mount(testCase.component, {
+  it.each(cases)('$name uses the latest prop path for update', async ({ component, propName, initialValue, nextValue }) => {
+    const wrapper = mount(component, {
       props: {
         isEditable: true,
-        [testCase.propName]: testCase.initialValue,
+        [propName]: initialValue,
       },
       global: {
         stubs: {
@@ -158,12 +158,12 @@ describe('ValueTypes write path regression', () => {
     })
 
     await wrapper.setProps({
-      [testCase.propName]: testCase.nextValue,
+      [propName]: nextValue,
     })
 
     await (wrapper.vm as any).updateValue()
 
     expect(patchRequestMock).toHaveBeenCalledTimes(1)
-    expect(patchRequestMock.mock.calls[0][0]).toBe(`${testCase.nextValue.path}/$value`)
+    expect(patchRequestMock.mock.calls[0][0]).toBe(`${nextValue.path}/$value`)
   })
 })

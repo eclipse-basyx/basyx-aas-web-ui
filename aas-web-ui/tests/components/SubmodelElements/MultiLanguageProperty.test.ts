@@ -68,7 +68,7 @@ describe('MultiLanguageProperty.vue', () => {
       },
     })
 
-    await (wrapper.vm as any).updateMLP()
+    ;(wrapper.vm as any).updateMLP()
 
     expect(patchRequestMock).toHaveBeenCalledTimes(1)
     expect(patchRequestMock.mock.calls[0][0]).toBe(
@@ -105,7 +105,8 @@ describe('MultiLanguageProperty.vue', () => {
       },
     })
 
-    await (wrapper.vm as any).updateMLP()
+    ;(wrapper.vm as any).updateMLP()
+    await Promise.resolve()
 
     expect(fetchAndDispatchSmeMock).toHaveBeenCalledWith(
       'https://example.test/submodels/sm/submodel-elements/mlp-b',
