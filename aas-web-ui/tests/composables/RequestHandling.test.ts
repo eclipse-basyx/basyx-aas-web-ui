@@ -217,4 +217,30 @@ describe('RequestHandling.ts', () => {
     expect(response).toEqual({ success: false, status: 409 })
     expect(consumeLastRequestFailureStatus()).toBe(409)
   })
+
+  it('keeps empty text payload as valid response data in getRequest', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      new Response('', {
+        status: 200,
+        statusText: 'OK',
+        headers: {
+          'Content-Type': 'text/plain',
+          'Content-Length': '1',
+        },
+      }),
+    ) as unknown as typeof fetch
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const { getRequest } = useRequestHandling()
+
+    const response = await getRequest('/api/plain', 'retrieving text', true)
+
+    expect(response).toEqual(
+      expect.objectContaining({
+        success: true,
+        data: '',
+        status: 200,
+      }),
+    )
+  })
 })

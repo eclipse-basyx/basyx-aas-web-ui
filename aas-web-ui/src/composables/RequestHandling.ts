@@ -276,7 +276,7 @@ export function useRequestHandling () {
             errorHandler(data, context)
           } // Call the error handler
           return { success: false, status: payloadStatus, raw: response }
-        } else if (data) {
+        } else if (data !== undefined) {
           setLastRequestFailureStatus(undefined)
           setLastRequestFailureDetails(undefined)
           // Successful response from the server

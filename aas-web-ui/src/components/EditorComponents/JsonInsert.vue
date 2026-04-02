@@ -212,7 +212,7 @@
 
     if (props.parentElement.modelType === 'Submodel') {
       // Create the property on the parent Submodel
-      const created = await postSubmodelElement(submodelElement, props.parentElement.id)
+      const created = await postSubmodelElement(submodelElement, props.parentElement.id, undefined, true)
       if (!created) {
         const failureStatus = consumeSmRequestFailureStatus()
         const failureDetails = consumeSmRequestFailureDetails()
@@ -245,7 +245,7 @@
       const idShortPath = splitted[1]
 
       // Create the property on the parent element
-      const created = await postSubmodelElement(submodelElement, submodelId, idShortPath)
+      const created = await postSubmodelElement(submodelElement, submodelId, idShortPath, true)
       if (!created) {
         const failureStatus = consumeSmRequestFailureStatus()
         const failureDetails = consumeSmRequestFailureDetails()
