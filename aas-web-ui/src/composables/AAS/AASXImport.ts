@@ -586,7 +586,7 @@ export function useAASXImport (): {
         type: attachment.contentType,
       })
 
-      let success = false
+      let success: boolean
       try {
         success = await putAttachmentFile(attachmentFile, smePath)
       } catch {
