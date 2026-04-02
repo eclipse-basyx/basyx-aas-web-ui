@@ -306,26 +306,26 @@ export function useRequestHandling () {
       headers = addAuthorizationHeader(headers) // Add the Authorization header
     }
     return fetch(path, { method: 'POST', body, headers })
-      .then(response => {
+      .then(async response => {
         // Check if the Server responded with content
         if (
           response.headers.get('Content-Type')?.split(';')[0] === 'application/json'
           && response.headers.get('Content-Length') !== '0'
         ) {
-          return parseJsonIfPresent(response) // Return the response as JSON
+          return { response, data: await parseJsonIfPresent(response) } // Return the response as JSON
         } else if (
           response.headers.get('Content-Type')?.split(';')[0] === 'text/csv'
           && response.headers.get('Content-Length') !== '0'
         ) {
-          return response.text() // Return the response as text
+          return { response, data: await response.text() } // Return the response as text
         } else if (response.ok) {
-          return // Return without content
+          return { response, data: undefined } // Return without content
         } else {
           // No content but received an HTTP error status
           throw new Error('Error status: ' + response.status)
         }
       })
-      .then(data => {
+      .then(({ response, data }) => {
         // Check if the Server responded with an error
         const payloadStatus = extractErrorStatusFromPayload(data)
         if (payloadStatus !== undefined) {
@@ -336,6 +336,13 @@ export function useRequestHandling () {
             errorHandler(data, context)
           } // Call the error handler
           return { success: false, status: payloadStatus }
+        } else if (!response.ok) {
+          setLastRequestFailureStatus(response.status)
+          setLastRequestFailureDetails(buildErrorDetailsFromPayload(data) || undefined)
+          if (!disableMessage && data) {
+            errorHandler(data, context)
+          }
+          return { success: false, status: response.status }
         } else if (data) {
           setLastRequestFailureStatus(undefined)
           setLastRequestFailureDetails(undefined)

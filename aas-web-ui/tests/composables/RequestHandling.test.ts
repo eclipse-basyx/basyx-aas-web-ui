@@ -193,4 +193,28 @@ describe('RequestHandling.ts', () => {
     expect(details).toContain('Correlation ID: Middleware-403-Rules-Forbidden-Denied')
     expect(consumeLastRequestFailureDetails()).toBeUndefined()
   })
+
+  it('treats HTTP 409 JSON response without payload code as failure', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      Response.json(
+        { message: 'Submodel already exists' },
+        {
+          status: 409,
+          statusText: 'Conflict',
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': '37',
+          },
+        },
+      ),
+    ) as unknown as typeof fetch
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const { postRequest, consumeLastRequestFailureStatus } = useRequestHandling()
+
+    const response = await postRequest('/api/submodels', '{}', new Headers(), 'creating Submodel', true)
+
+    expect(response).toEqual({ success: false, status: 409 })
+    expect(consumeLastRequestFailureStatus()).toBe(409)
+  })
 })
