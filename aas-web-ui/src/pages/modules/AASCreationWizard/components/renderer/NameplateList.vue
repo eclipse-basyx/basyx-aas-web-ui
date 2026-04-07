@@ -46,7 +46,15 @@
     import type { SubmodelElementListElement } from '../../types/template';
     import { computed, ref } from 'vue';
     import { asFormStateObjectArray, formatLabel } from '../../utils/formFieldUtils';
-    import { createSubmodelListTemplate, getListItemCollectionTemplate } from '../../utils/subModelListUtils';
+    import {
+        addopenPanelIndex,
+        appendListItem,
+        createSubmodelListTemplate,
+        getListItemCollectionTemplate,
+        removeAndReindexOpenPanels,
+        removeListItem,
+        updateListItem,
+    } from '../../utils/subModelListUtils';
     import NameplateRenderer from './NamePlateRenderer.vue';
 
     const props = defineProps<{
@@ -70,27 +78,25 @@
 
     function onAddItem(): void {
         const newItem = createSubmodelListTemplate(props.element);
-        const updated = [...items.value, newItem];
-
+        const updated = appendListItem(items.value, newItem);
         emit('update:modelValue', updated);
 
         const newIndex = updated.length - 1;
-        openPanels.value = [...openPanels.value, newIndex];
+        // openPanels.value = [...openPanels.value, newIndex];
+        openPanels.value = addopenPanelIndex(openPanels.value, newIndex);
     }
 
     function onRemoveItem(index: number): void {
-        const updated = [...items.value];
-        updated.splice(index, 1);
+        // const updated = [...items.value];
+        // updated.splice(index, 1);
+        const updated = removeListItem(items.value, index);
         emit('update:modelValue', updated);
 
-        openPanels.value = openPanels.value
-            .filter((panelIndex) => panelIndex !== index)
-            .map((panelIndex) => (panelIndex > index ? panelIndex - 1 : panelIndex));
+        openPanels.value = removeAndReindexOpenPanels(openPanels.value, index);
     }
 
     function onUpdateItem(index: number, value: FormStateObject): void {
-        const updated = [...items.value];
-        updated[index] = value;
+        const updated = updateListItem(items.value, index, value);
         emit('update:modelValue', updated);
     }
 </script>

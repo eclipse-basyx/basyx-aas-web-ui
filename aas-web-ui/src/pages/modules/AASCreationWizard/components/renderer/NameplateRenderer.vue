@@ -39,9 +39,9 @@
         isSubmodelElementListElement,
     } from '../../utils/checkTemplateFields';
     // import { formatLabel } from '../../utils/formFieldUtils';
-    import NamePlateCollection from './NamePlateCollection.vue';
-    import NameplateField from './NamePlateField.vue';
-    import NamePlateList from './NamePlateList.vue';
+    import NamePlateCollection from './NameplateCollection.vue';
+    import NameplateField from './NameplateField.vue';
+    import NamePlateList from './NameplateList.vue';
 
     const props = defineProps<{
         elements: TemplateElement[];
