@@ -41,7 +41,9 @@
 : "${START_PAGE_ROUTE_NAME:=}"
 
 # Replace ${BASE_PATH} in the NGINX config template (without trailing slash)
-envsubst '${BASE_PATH}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+BASE_PATH_NGINX_PREFIX=$(echo "$BASE_PATH" | sed 's|/*$||')
+export BASE_PATH_NGINX_PREFIX
+envsubst '${BASE_PATH_NGINX_PREFIX}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 
 # Add a trailing slash to BASE_PATH for the replacement in files
 BASE_PATH_WITH_SLASH=$(echo "$BASE_PATH" | sed 's|/*$|/|')

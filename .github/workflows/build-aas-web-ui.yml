@@ -2,9 +2,9 @@ name: Build AAS Web UI
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - 'aas-web-ui/**'
+      - "aas-web-ui/**"
 
 permissions:
   contents: read
@@ -14,26 +14,124 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
-    - name: Set up pnpm
-      uses: pnpm/action-setup@v5
-      with:
-        version: 9
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v5
+        with:
+          version: 9
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v6
-      with:
-        node-version: '22'
-        cache: 'pnpm'
-        cache-dependency-path: 'aas-web-ui/pnpm-lock.yaml'
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: "aas-web-ui/pnpm-lock.yaml"
 
-    - name: Install Dependencies
-      run: |
-        cd aas-web-ui
-        pnpm install --frozen-lockfile
+      - name: Install Dependencies
+        run: |
+          cd aas-web-ui
+          pnpm install --frozen-lockfile
 
-    - name: Build (with lint/tests/type-check)
-      run: |
-        cd aas-web-ui
-        pnpm build
+      - name: Build (with lint/tests/type-check)
+        run: |
+          cd aas-web-ui
+          pnpm build
+
+  integration-preview:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v5
+        with:
+          version: 9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: "aas-web-ui/pnpm-lock.yaml"
+
+      - name: Install Dependencies
+        run: |
+          cd aas-web-ui
+          pnpm install --frozen-lockfile
+
+      - name: Install Playwright Browser
+        run: |
+          cd aas-web-ui
+          pnpm exec playwright install --with-deps chromium
+
+      - name: Run Preview Integration Tests
+        run: |
+          cd aas-web-ui
+          IT_TARGET=preview IT_BASE_PATH=/ui/ IT_PORT=4273 pnpm test:integration
+          IT_TARGET=preview IT_BASE_PATH=/ui IT_PORT=4274 pnpm test:integration
+          IT_TARGET=preview IT_BASE_PATH=/ui/ IT_LOGO_MODE=env IT_PORT=4275 pnpm test:integration
+          IT_TARGET=preview IT_BASE_PATH=/ui/ IT_LOGO_MODE=replace-default IT_PORT=4276 pnpm test:integration
+
+      - name: Upload Preview Integration Artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-preview-artifacts
+          path: |
+            aas-web-ui/playwright-report
+            aas-web-ui/test-results
+
+  integration-docker:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v5
+        with:
+          version: 9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: "aas-web-ui/pnpm-lock.yaml"
+
+      - name: Install Dependencies
+        run: |
+          cd aas-web-ui
+          pnpm install --frozen-lockfile
+
+      - name: Install Playwright Browser
+        run: |
+          cd aas-web-ui
+          pnpm exec playwright install --with-deps chromium
+
+      - name: Build Docker Image for Integration Tests
+        run: docker build -t aas-web-ui-integration:local -f aas-web-ui/Dockerfile aas-web-ui
+
+      - name: Run Docker Integration Tests
+        run: |
+          cd aas-web-ui
+          IT_TARGET=docker IT_DOCKER_IMAGE_TAG=aas-web-ui-integration:local IT_BASE_PATH=/ IT_PORT=4373 pnpm test:integration
+          IT_TARGET=docker IT_DOCKER_IMAGE_TAG=aas-web-ui-integration:local IT_BASE_PATH=/ui/ IT_PORT=4374 pnpm test:integration
+          IT_TARGET=docker IT_DOCKER_IMAGE_TAG=aas-web-ui-integration:local IT_BASE_PATH=/ui IT_PORT=4375 pnpm test:integration
+          IT_TARGET=docker IT_DOCKER_IMAGE_TAG=aas-web-ui-integration:local IT_BASE_PATH=/ui/ IT_LOGO_MODE=env IT_PORT=4376 pnpm test:integration
+          IT_TARGET=docker IT_DOCKER_IMAGE_TAG=aas-web-ui-integration:local IT_BASE_PATH=/ui/ IT_LOGO_MODE=replace-default IT_PORT=4377 pnpm test:integration
+
+      - name: Upload Docker Integration Artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-docker-artifacts
+          path: |
+            aas-web-ui/playwright-report
+            aas-web-ui/test-results
