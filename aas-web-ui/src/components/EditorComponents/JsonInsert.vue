@@ -1,242 +1,314 @@
 <template>
-    <v-dialog v-model="jsonInsertDialog" width="860" persistent>
+  <v-dialog v-model="jsonInsertDialog" persistent width="860">
+    <v-card>
+      <v-card-title>Insert {{ type }} from JSON</v-card-title>
+      <v-divider />
+      <v-card-text class="bg-card pa-3">
         <v-card>
-            <v-card-title>Insert {{ type }} from JSON</v-card-title>
-            <v-divider></v-divider>
-            <v-card-text class="bg-card pa-3">
-                <v-card>
-                    <v-textarea
-                        v-model="jsonInput"
-                        :error-messages="jsonInputErrors"
-                        variant="outlined"
-                        rows="10"
-                        hide-details
-                        @update:model-value="clearErrorMessages" />
-                </v-card>
-            </v-card-text>
-            <v-divider></v-divider>
-            <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn @click="closeDialog">Cancel</v-btn>
-                <v-btn color="primary" @click="insertJson">Save</v-btn>
-            </v-card-actions>
+          <v-textarea
+            v-model="jsonInput"
+            :error-messages="jsonInputErrors"
+            hide-details
+            rows="10"
+            variant="outlined"
+            @update:model-value="clearErrorMessages"
+          />
         </v-card>
-    </v-dialog>
+      </v-card-text>
+      <v-divider />
+      <v-card-actions>
+        <v-spacer />
+        <v-btn @click="closeDialog">Cancel</v-btn>
+        <v-btn color="primary" @click="insertJson">Save</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
-    import type { JsonValue } from '@aas-core-works/aas-core3.1-typescript/jsonization';
-    import { jsonization, types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
-    import { computed, ref, watch } from 'vue';
-    import { useRoute, useRouter } from 'vue-router';
-    import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient';
-    import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient';
-    import { useAASStore } from '@/store/AASDataStore';
-    import { useInfrastructureStore } from '@/store/InfrastructureStore';
-    import { useNavigationStore } from '@/store/NavigationStore';
-    import { getCreatedSubmodelElementPath, isDataElementModelType } from '@/utils/AAS/SubmodelElementPathUtils';
-    import { base64Decode, base64Encode } from '@/utils/EncodeDecodeUtils';
+  import type { JsonValue } from '@aas-core-works/aas-core3.1-typescript/jsonization'
+  import { types as aasTypes, jsonization } from '@aas-core-works/aas-core3.1-typescript'
+  import { computed, ref, watch } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
+  import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient'
+  import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
+  import { upsertDescriptor } from '@/composables/DescriptorSync'
+  import { useAASStore } from '@/store/AASDataStore'
+  import { useInfrastructureStore } from '@/store/InfrastructureStore'
+  import { useNavigationStore } from '@/store/NavigationStore'
+  import { Endpoint, ProtocolInformation } from '@/types/Descriptors'
+  import { getCreatedSubmodelElementPath, isDataElementModelType } from '@/utils/AAS/SubmodelElementPathUtils'
+  import { base64Decode } from '@/utils/EncodeDecodeUtils'
 
-    const props = defineProps<{
-        modelValue: boolean;
-        type: 'Submodel' | 'SubmodelElement';
-        parentElement?: any;
-    }>();
+  const props = defineProps<{
+    modelValue: boolean
+    type: 'Submodel' | 'SubmodelElement'
+    parentElement?: any
+  }>()
 
-    const emit = defineEmits<{
-        (event: 'update:modelValue', value: boolean): void;
-    }>();
+  const emit = defineEmits<{
+    (event: 'update:modelValue', value: boolean): void
+  }>()
 
-    // Vue Router
-    const route = useRoute();
-    const router = useRouter();
+  // Vue Router
+  const route = useRoute()
+  const router = useRouter()
 
-    // Stores
-    const aasStore = useAASStore();
-    const navigationStore = useNavigationStore();
-    const infrastructureStore = useInfrastructureStore();
+  // Stores
+  const aasStore = useAASStore()
+  const navigationStore = useNavigationStore()
+  const infrastructureStore = useInfrastructureStore()
 
-    // Composables
-    const { postSubmodel, postSubmodelElement } = useSMRepositoryClient();
-    const { putAas } = useAASRepositoryClient();
+  // Composables
+  const { postSubmodel, postSubmodelElement, getSmEndpointById } = useSMRepositoryClient()
+  const { postSubmodelDescriptor, putSubmodelDescriptor, createDescriptorFromSubmodel } = useSMRegistryClient()
+  const { putAas } = useAASRepositoryClient()
 
-    // Data
-    const jsonInsertDialog = ref(false);
-    const jsonInput = ref<string | null>(null);
-    const jsonInputErrors = ref<string[]>([]);
+  // Data
+  const jsonInsertDialog = ref(false)
+  const jsonInput = ref<string | null>(null)
+  const jsonInputErrors = ref<string[]>([])
 
-    // Computed Properties
-    const selectedAAS = computed(() => aasStore.getSelectedAAS); // Get the selected AAS from Store
-    const submodelRepoUrl = computed(() => infrastructureStore.getSubmodelRepoURL);
+  // Computed Properties
+  const selectedAAS = computed(() => aasStore.getSelectedAAS) // Get the selected AAS from Store
+  const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
+  const submodelRepoHasRegistryIntegration = computed(
+    () => selectedInfrastructure.value?.components?.SubmodelRepo?.hasRegistryIntegration ?? true,
+  )
 
-    watch(
-        () => props.modelValue,
-        (value) => {
-            jsonInsertDialog.value = value;
-        }
-    );
+  watch(
+    () => props.modelValue,
+    value => {
+      jsonInsertDialog.value = value
+    },
+  )
 
-    watch(
-        () => jsonInsertDialog.value,
-        (value) => {
-            emit('update:modelValue', value);
-        }
-    );
+  watch(
+    () => jsonInsertDialog.value,
+    value => {
+      emit('update:modelValue', value)
+    },
+  )
 
-    function insertJson(): void {
-        if (!jsonInput.value || !isValidJson(jsonInput.value)) {
-            jsonInputErrors.value = ['Invalid JSON input'];
-            return;
-        }
-
-        // Parse JSON to Submodel/SubmodelElement
-        if (props.type === 'Submodel') {
-            insertSubmodel(JSON.parse(jsonInput.value));
-        } else {
-            insertSubmodelElement(JSON.parse(jsonInput.value));
-        }
+  function insertJson (): void {
+    if (!jsonInput.value || !isValidJson(jsonInput.value)) {
+      jsonInputErrors.value = ['Invalid JSON input']
+      return
     }
 
-    async function insertSubmodel(json: JsonValue): Promise<void> {
-        // Parse JSON to Submodel
-        const instanceOrError = jsonization.submodelFromJsonable(json);
-        if (instanceOrError.error !== null) {
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 20000,
-                color: 'error',
-                btnColor: 'buttonText',
-                baseError: instanceOrError.error?.message || String(instanceOrError.error),
-                extendedError: instanceOrError.error.path ? JSON.stringify(instanceOrError.error.path, null, 2) : '',
-            });
-            return;
-        }
-        const submodel = instanceOrError.mustValue();
+    // Parse JSON to Submodel/SubmodelElement
+    if (props.type === 'Submodel') {
+      insertSubmodel(JSON.parse(jsonInput.value))
+    } else {
+      insertSubmodelElement(JSON.parse(jsonInput.value))
+    }
+  }
 
-        // Create Submodel
-        await postSubmodel(submodel);
-        // Add Submodel Reference to AAS
-        await addSubmodelReferenceToAas(submodel);
-        // Fetch and dispatch Submodel
-        const query = structuredClone(route.query);
-        query.path = submodelRepoUrl.value + '/' + base64Encode(submodel.id);
+  async function insertSubmodel (json: JsonValue): Promise<void> {
+    // Parse JSON to Submodel
+    const instanceOrError = jsonization.submodelFromJsonable(json)
+    if (instanceOrError.error !== null) {
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 20_000,
+        color: 'error',
+        btnColor: 'buttonText',
+        baseError: instanceOrError.error?.message || String(instanceOrError.error),
+        extendedError: instanceOrError.error.path ? JSON.stringify(instanceOrError.error.path, null, 2) : '',
+      })
+      return
+    }
+    const submodel = instanceOrError.mustValue()
 
-        router.push({ query: query });
-
-        closeDialog();
-        navigationStore.dispatchTriggerTreeviewReload();
+    // Create Submodel
+    const created = await postSubmodel(submodel)
+    if (!created) {
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 8000,
+        color: 'error',
+        btnColor: 'buttonText',
+        baseError: 'Failed to create Submodel.',
+        extendedError: `Submodel '${submodel.id}' was not created in the repository.`,
+      })
+      return
+    }
+    await syncSubmodelDescriptor(submodel, true)
+    // Add Submodel Reference to AAS
+    await addSubmodelReferenceToAas(submodel)
+    // Fetch and dispatch Submodel
+    const query = structuredClone(route.query)
+    const path = getSmEndpointById(submodel.id)
+    if (path.trim() === '') {
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 8000,
+        color: 'warning',
+        btnColor: 'buttonText',
+        baseError: 'Submodel inserted with navigation warning.',
+        extendedError: `Could not resolve endpoint for '${submodel.id}'.`,
+      })
+    } else {
+      query.path = path
+      router.push({ query: query })
     }
 
-    async function insertSubmodelElement(json: JsonValue): Promise<void> {
-        const instanceOrError = jsonization.submodelElementFromJsonable(json);
-        if (instanceOrError.error !== null) {
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 20000,
-                color: 'error',
-                btnColor: 'buttonText',
-                baseError: instanceOrError.error?.message || String(instanceOrError.error),
-                extendedError: instanceOrError.error.path ? JSON.stringify(instanceOrError.error.path, null, 2) : '',
-            });
-            return;
-        }
-        const submodelElement = instanceOrError.mustValue();
+    closeDialog()
+    navigationStore.dispatchTriggerTreeviewReload()
+  }
 
-        if (
-            props.parentElement.modelType === 'AnnotatedRelationshipElement' &&
-            !isDataElementModelType(submodelElement.modelType)
-        ) {
-            navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 4000,
-                color: 'error',
-                btnColor: 'buttonText',
-                text: 'Only DataElement types are allowed as AnnotatedRelationshipElement annotations.',
-            });
-            return;
-        }
+  async function insertSubmodelElement (json: JsonValue): Promise<void> {
+    const instanceOrError = jsonization.submodelElementFromJsonable(json)
+    if (instanceOrError.error !== null) {
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 20_000,
+        color: 'error',
+        btnColor: 'buttonText',
+        baseError: instanceOrError.error?.message || String(instanceOrError.error),
+        extendedError: instanceOrError.error.path ? JSON.stringify(instanceOrError.error.path, null, 2) : '',
+      })
+      return
+    }
+    const submodelElement = instanceOrError.mustValue()
 
-        if (props.parentElement.modelType === 'Submodel') {
-            // Create the property on the parent Submodel
-            await postSubmodelElement(submodelElement, props.parentElement.id);
-
-            // Navigate to the new property
-            const query = structuredClone(route.query);
-            query.path = props.parentElement.path + '/submodel-elements/' + submodelElement.idShort;
-
-            router.push({
-                query: query,
-            });
-        } else {
-            // Extract the submodel ID and the idShortPath from the parentElement path
-            const splitted = props.parentElement.path.split('/submodel-elements/');
-            const submodelId = base64Decode(splitted[0].split('/submodels/')[1]);
-            const idShortPath = splitted[1];
-
-            // Create the property on the parent element
-            await postSubmodelElement(submodelElement, submodelId, idShortPath);
-
-            const createdPath = getCreatedSubmodelElementPath(props.parentElement, submodelElement.idShort);
-            if (createdPath) {
-                const query = structuredClone(route.query);
-                query.path = createdPath;
-
-                router.push({
-                    query: query,
-                });
-            }
-        }
-
-        closeDialog();
-        navigationStore.dispatchTriggerTreeviewReload();
+    if (
+      props.parentElement.modelType === 'AnnotatedRelationshipElement'
+      && !isDataElementModelType(submodelElement.modelType)
+    ) {
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 4000,
+        color: 'error',
+        btnColor: 'buttonText',
+        text: 'Only DataElement types are allowed as AnnotatedRelationshipElement annotations.',
+      })
+      return
     }
 
-    async function addSubmodelReferenceToAas(submodel: aasTypes.Submodel): Promise<void> {
-        if (selectedAAS.value === null) return;
-        const localAAS = { ...selectedAAS.value };
-        const instanceOrError = jsonization.assetAdministrationShellFromJsonable(localAAS);
-        if (instanceOrError.error !== null) {
-            console.error('Error parsing AAS: ', instanceOrError.error);
-            return;
-        }
-        const aas = instanceOrError.mustValue();
-        // Create new SubmodelReference
-        const submodelReference = new aasTypes.Reference(aasTypes.ReferenceTypes.ModelReference, [
-            new aasTypes.Key(aasTypes.KeyTypes.Submodel, submodel.id),
-        ]);
-        // Check if Submodels are null
-        if (aas.submodels === null || aas.submodels === undefined) {
-            aas.submodels = [submodelReference];
-            localAAS.submodels = [jsonization.toJsonable(submodelReference)];
-        } else {
-            aas.submodels.push(submodelReference);
-            localAAS.submodels.push(jsonization.toJsonable(submodelReference));
-        }
-        await putAas(aas);
+    if (props.parentElement.modelType === 'Submodel') {
+      // Create the property on the parent Submodel
+      await postSubmodelElement(submodelElement, props.parentElement.id)
 
-        // Update AAS in Store
-        aasStore.dispatchSelectedAAS(localAAS);
+      // Navigate to the new property
+      const query = structuredClone(route.query)
+      query.path = props.parentElement.path + '/submodel-elements/' + submodelElement.idShort
+
+      router.push({
+        query: query,
+      })
+    } else {
+      // Extract the submodel ID and the idShortPath from the parentElement path
+      const splitted = props.parentElement.path.split('/submodel-elements/')
+      const submodelId = base64Decode(splitted[0].split('/submodels/')[1])
+      const idShortPath = splitted[1]
+
+      // Create the property on the parent element
+      await postSubmodelElement(submodelElement, submodelId, idShortPath)
+
+      const createdPath = getCreatedSubmodelElementPath(props.parentElement, submodelElement.idShort)
+      if (createdPath) {
+        const query = structuredClone(route.query)
+        query.path = createdPath
+
+        router.push({
+          query: query,
+        })
+      }
     }
 
-    function isValidJson(jsonString: string): boolean {
-        try {
-            JSON.parse(jsonString);
-            return true;
-        } catch {
-            return false;
-        }
+    closeDialog()
+    navigationStore.dispatchTriggerTreeviewReload()
+  }
+
+  async function addSubmodelReferenceToAas (submodel: aasTypes.Submodel): Promise<void> {
+    if (selectedAAS.value === null) return
+    const localAAS = { ...selectedAAS.value }
+    const instanceOrError = jsonization.assetAdministrationShellFromJsonable(localAAS)
+    if (instanceOrError.error !== null) {
+      console.error('Error parsing AAS:', instanceOrError.error)
+      return
+    }
+    const aas = instanceOrError.mustValue()
+    // Create new SubmodelReference
+    const submodelReference = new aasTypes.Reference(aasTypes.ReferenceTypes.ModelReference, [
+      new aasTypes.Key(aasTypes.KeyTypes.Submodel, submodel.id),
+    ])
+    // Check if Submodels are null
+    if (aas.submodels === null || aas.submodels === undefined) {
+      aas.submodels = [submodelReference]
+      localAAS.submodels = [jsonization.toJsonable(submodelReference)]
+    } else {
+      aas.submodels.push(submodelReference)
+      localAAS.submodels.push(jsonization.toJsonable(submodelReference))
+    }
+    await putAas(aas)
+
+    // Update AAS in Store
+    aasStore.dispatchSelectedAAS(localAAS)
+  }
+
+  async function syncSubmodelDescriptor (submodel: aasTypes.Submodel, isCreate: boolean): Promise<void> {
+    if (submodelRepoHasRegistryIntegration.value) {
+      return
     }
 
-    function closeDialog(): void {
-        clearForm();
-        jsonInsertDialog.value = false;
+    const submodelHref = getSmEndpointById(submodel.id)
+    const descriptor = createDescriptorFromSubmodel(
+      jsonization.toJsonable(submodel),
+      createEndpoints(submodelHref, 'SUBMODEL-3.0'),
+    )
+
+    const success = await upsertDescriptor(
+      isCreate,
+      () => postSubmodelDescriptor(descriptor),
+      () => putSubmodelDescriptor(descriptor),
+    )
+    if (!success) {
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 8000,
+        color: 'warning',
+        btnColor: 'buttonText',
+        baseError: 'Submodel inserted with synchronization warning.',
+        extendedError: `Failed to synchronize Submodel descriptor for '${submodel.id}'.`,
+      })
+    }
+  }
+
+  function createEndpoints (href: string, type: string): Array<Endpoint> {
+    let protocol: string | null = null
+    try {
+      const url = new URL(href)
+      protocol = url.protocol.replace(/:$/, '')
+    } catch {
+      // If href is not a valid absolute URL, keep protocol null.
     }
 
-    function clearForm(): void {
-        jsonInput.value = null;
-    }
+    const protocolInformation = new ProtocolInformation(href, null, protocol)
+    return [new Endpoint(type, protocolInformation)]
+  }
 
-    function clearErrorMessages(): void {
-        jsonInputErrors.value = [];
+  function isValidJson (jsonString: string): boolean {
+    try {
+      JSON.parse(jsonString)
+      return true
+    } catch {
+      return false
     }
+  }
+
+  function closeDialog (): void {
+    clearForm()
+    jsonInsertDialog.value = false
+  }
+
+  function clearForm (): void {
+    jsonInput.value = null
+  }
+
+  function clearErrorMessages (): void {
+    jsonInputErrors.value = []
+  }
 </script>

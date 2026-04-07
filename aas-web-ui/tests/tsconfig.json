@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig.test.json",
+  "compilerOptions": {
+    "composite": false
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.vue"
+  ]
+}

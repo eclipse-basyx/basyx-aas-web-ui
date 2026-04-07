@@ -9,6 +9,6 @@
  * console.log(padTo2Digits(5));  // "05"
  * console.log(padTo2Digits(12)); // "12"
  */
-export function padTo2Digits(num: number): string {
-    return num.toString().padStart(2, '0');
+export function padTo2Digits (num: number): string {
+  return num.toString().padStart(2, '0')
 }

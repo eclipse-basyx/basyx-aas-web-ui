@@ -1,300 +1,295 @@
 <template>
-    <v-container fluid class="pa-0">
-        <v-list-item v-if="!isOperationVariable" class="px-1 pb-1 pt-0">
-            <!-- Title of the ReferenceElement Value -->
-            <v-list-item-title class="text-subtitle-2 mt-2">{{
-                (reference?.type ? reference.type : 'Reference') + ':'
-            }}</v-list-item-title>
-        </v-list-item>
-        <v-card v-if="props.referenceElementObject" color="elevatedCard">
-            <!-- Value of the ReferenceElement -->
-            <v-list nav class="pt-0" :class="isOperationVariable ? '' : 'bg-elevatedCard'">
-                <!-- Reference Representation -->
-                <template v-if="hasReferenceKeys()">
-                    <template v-for="(key, i) in reference?.keys" :key="i">
-                        <v-list-item>
-                            <!-- Tooltip with Reference ID -->
-                            <v-tooltip
-                                v-if="!isOperationVariable || isOutputVariable"
-                                activator="parent"
-                                open-delay="600"
-                                transition="slide-x-transition">
-                                <div class="text-caption">
-                                    <span class="font-weight-bold">{{ '(' + key.type + ') ' }}</span
-                                    >{{ key.value }}
-                                </div>
-                            </v-tooltip>
-                            <!-- Reference Title -->
-                            <!-- <template v-if="IsOperationVariable" #title>
-                                <div class="text-subtitle-2 mt-2">
+  <v-container class="pa-0" fluid>
+    <v-list-item v-if="!isOperationVariable" class="px-1 pb-1 pt-0">
+      <!-- Title of the ReferenceElement Value -->
+      <v-list-item-title class="text-title-small mt-2">{{
+        (reference?.type ? reference.type : 'Reference') + ':'
+      }}</v-list-item-title>
+    </v-list-item>
+    <v-card v-if="props.referenceElementObject" color="elevatedCard">
+      <!-- Value of the ReferenceElement -->
+      <v-list class="pt-0" :class="isOperationVariable ? '' : 'bg-elevatedCard'" nav>
+        <!-- Reference Representation -->
+        <template v-if="hasReferenceKeys()">
+          <template v-for="(key, i) in reference?.keys" :key="i">
+            <v-list-item>
+              <!-- Tooltip with Reference ID -->
+              <v-tooltip
+                v-if="!isOperationVariable || isOutputVariable"
+                activator="parent"
+                open-delay="600"
+                transition="slide-x-transition"
+              >
+                <div class="text-body-small">
+                  <span class="font-weight-bold">{{ '(' + key.type + ') ' }}</span>{{ key.value }}
+                </div>
+              </v-tooltip>
+              <!-- Reference Title -->
+              <!-- <template v-if="IsOperationVariable" #title>
+                                <div class="text-title-small mt-2">
                                     {{ IsOperationVariable ? 'Reference:' : 'Description:' }}
                                 </div>
                             </template> -->
-                            <!-- Reference Representation -->
-                            <template #subtitle>
-                                <div v-if="!isOperationVariable || isOutputVariable" class="pt-2">
-                                    <v-chip label size="x-small" border class="mr-2">{{ key?.type }}</v-chip>
-                                    <span> {{ key.value }}</span>
-                                </div>
-                                <!-- Input Field containing the Variable Value -->
-                                <v-text-field
-                                    v-else
-                                    v-model="key.value"
-                                    variant="outlined"
-                                    density="compact"
-                                    hide-details
-                                    :clearable="isEditable"
-                                    :readonly="!isEditable"
-                                    append-icon="mdi-delete"
-                                    @click:append="removeReferenceKey(i as number)"
-                                    @update:focused="setFocus($event)"
-                                    @keydown.enter="updateReferenceElementObject()">
-                                    <template #prepend-inner>
-                                        <!-- Reference Entry -->
-                                        <v-chip label size="x-small" border>
-                                            <span>{{ key.type ? key.type : 'no-selection' }}</span>
-                                            <v-icon site="x-small" style="margin-right: -3px">mdi-chevron-down</v-icon>
-                                            <!-- Menu to select the Type of Element -->
-                                            <v-menu v-if="isEditable" activator="parent">
-                                                <v-list density="compact" class="pa-0">
-                                                    <v-list-item
-                                                        v-for="keyType in keyTypes"
-                                                        :key="keyType.id"
-                                                        @click="selectKeyType(keyType, key)">
-                                                        <v-list-item-title class="py-0">{{
-                                                            keyType.text
-                                                        }}</v-list-item-title>
-                                                    </v-list-item>
-                                                </v-list>
-                                            </v-menu>
-                                        </v-chip>
-                                    </template>
-                                    <!-- Update Value Button -->
-                                    <template #append-inner>
-                                        <v-btn
-                                            v-if="key.isFocused && isEditable"
-                                            size="small"
-                                            variant="elevated"
-                                            color="primary"
-                                            class="text-buttonText"
-                                            style="right: -4px"
-                                            @click.stop="updateReferenceElementObject()">
-                                            <v-icon>mdi-upload</v-icon>
-                                        </v-btn>
-                                    </template>
-                                </v-text-field>
-                            </template>
-                        </v-list-item>
-                        <v-divider v-if="(i as number) < reference?.keys.length - 1" class="mt-3"></v-divider>
-                    </template>
-                </template>
-                <template v-else-if="hasReferenceObject()">
-                    <v-list-item class="px-1">
-                        <v-alert
-                            text="No reference keys set"
-                            density="compact"
-                            type="info"
-                            variant="outlined"
-                            class="mt-2">
-                        </v-alert>
-                    </v-list-item>
-                </template>
-                <template v-else>
-                    <v-list-item class="px-1">
-                        <v-alert
-                            text="No reference value set"
-                            density="compact"
-                            type="info"
-                            variant="outlined"
-                            class="mt-2">
-                        </v-alert>
-                    </v-list-item>
-                </template>
-            </v-list>
-            <v-divider v-if="hasReferenceKeys()"></v-divider>
-            <!-- Action Buttons -->
-            <v-list
-                v-if="hasReferenceKeys() || (isEditable && isOperationVariable && !isOutputVariable)"
-                nav
-                class="pa-0"
-                :class="isOperationVariable ? '' : 'bg-elevatedCard'">
-                <v-list-item>
-                    <template #append>
-                        <!-- Jump-Button -->
-                        <v-btn
-                            v-if="!isOperationVariable || isOutputVariable"
-                            size="small"
-                            class="text-buttonText"
-                            color="primary"
-                            :loading="loading"
-                            :disabled="disabled"
-                            @click="jumpToReference(reference)"
-                            >Jump</v-btn
-                        >
-                        <!-- Add new Reference Key -->
-                        <v-btn
-                            v-if="isEditable && isOperationVariable && !isOutputVariable"
-                            size="small"
-                            class="text-buttonText"
-                            color="primary"
-                            :loading="loading"
-                            @click="addReferenceKey()">
-                            <div>Add Entry</div>
-                            <v-icon class="ml-2">mdi-plus</v-icon>
-                        </v-btn>
-                    </template>
-                </v-list-item>
-            </v-list>
-        </v-card>
-    </v-container>
+              <!-- Reference Representation -->
+              <template #subtitle>
+                <div v-if="!isOperationVariable || isOutputVariable" class="pt-2">
+                  <v-chip border class="mr-2" label size="x-small">{{ key?.type }}</v-chip>
+                  <span> {{ key.value }}</span>
+                </div>
+                <!-- Input Field containing the Variable Value -->
+                <v-text-field
+                  v-else
+                  v-model="key.value"
+                  append-icon="mdi-delete"
+                  :clearable="isEditable"
+                  density="compact"
+                  hide-details
+                  :readonly="!isEditable"
+                  variant="outlined"
+                  @click:append="removeReferenceKey(i as number)"
+                  @keydown.enter="updateReferenceElementObject()"
+                  @update:focused="setFocus($event)"
+                >
+                  <template #prepend-inner>
+                    <!-- Reference Entry -->
+                    <v-chip border label size="x-small">
+                      <span>{{ key.type ? key.type : 'no-selection' }}</span>
+                      <v-icon site="x-small" style="margin-right: -3px">mdi-chevron-down</v-icon>
+                      <!-- Menu to select the Type of Element -->
+                      <v-menu v-if="isEditable" activator="parent">
+                        <v-list class="pa-0" density="compact">
+                          <v-list-item
+                            v-for="keyType in keyTypes"
+                            :key="keyType.id"
+                            @click="selectKeyType(keyType, key)"
+                          >
+                            <v-list-item-title class="py-0">{{
+                              keyType.text
+                            }}</v-list-item-title>
+                          </v-list-item>
+                        </v-list>
+                      </v-menu>
+                    </v-chip>
+                  </template>
+                  <!-- Update Value Button -->
+                  <template #append-inner>
+                    <v-btn
+                      v-if="key.isFocused && isEditable"
+                      class="text-buttonText"
+                      color="primary"
+                      size="small"
+                      style="right: -4px"
+                      variant="elevated"
+                      @click.stop="updateReferenceElementObject()"
+                    >
+                      <v-icon>mdi-upload</v-icon>
+                    </v-btn>
+                  </template>
+                </v-text-field>
+              </template>
+            </v-list-item>
+            <v-divider v-if="(i as number) < reference?.keys.length - 1" class="mt-3" />
+          </template>
+        </template>
+        <template v-else-if="hasReferenceObject()">
+          <v-list-item class="px-1">
+            <v-alert
+              class="mt-2"
+              density="compact"
+              text="No reference keys set"
+              type="info"
+              variant="outlined"
+            />
+          </v-list-item>
+        </template>
+        <template v-else>
+          <v-list-item class="px-1">
+            <v-alert
+              class="mt-2"
+              density="compact"
+              text="No reference value set"
+              type="info"
+              variant="outlined"
+            />
+          </v-list-item>
+        </template>
+      </v-list>
+      <v-divider v-if="hasReferenceKeys()" />
+      <!-- Action Buttons -->
+      <v-list
+        v-if="hasReferenceKeys() || (isEditable && isOperationVariable && !isOutputVariable)"
+        class="pa-0"
+        :class="isOperationVariable ? '' : 'bg-elevatedCard'"
+        nav
+      >
+        <v-list-item>
+          <template #append>
+            <!-- Jump-Button -->
+            <v-btn
+              v-if="!isOperationVariable || isOutputVariable"
+              class="text-buttonText"
+              color="primary"
+              :disabled="disabled"
+              :loading="loading"
+              size="small"
+              @click="jumpToReference(reference)"
+            >Jump</v-btn>
+            <!-- Add new Reference Key -->
+            <v-btn
+              v-if="isEditable && isOperationVariable && !isOutputVariable"
+              class="text-buttonText"
+              color="primary"
+              :loading="loading"
+              size="small"
+              @click="addReferenceKey()"
+            >
+              <div>Add Entry</div>
+              <v-icon class="ml-2">mdi-plus</v-icon>
+            </v-btn>
+          </template>
+        </v-list-item>
+      </v-list>
+    </v-card>
+  </v-container>
 </template>
 
 <script lang="ts" setup>
-    import { computed, ref, watch } from 'vue';
-    import { useReferenceComposable } from '@/composables/AAS/ReferenceComposable';
-    import { useJumpHandling } from '@/composables/JumpHandling';
+  import { computed, ref, watch } from 'vue'
+  import { useReferenceComposable } from '@/composables/AAS/ReferenceComposable'
+  import { useJumpHandling } from '@/composables/JumpHandling'
 
-    const props = defineProps({
-        referenceElementObject: {
-            type: Object as any,
-            default: {} as any,
-        },
-        isOperationVariable: {
-            type: Boolean,
-            default: false,
-        },
-        variableType: {
-            type: String,
-            default: 'number',
-        },
-        isEditable: {
-            type: Boolean,
-            default: true,
-        },
-    });
+  const props = defineProps({
+    referenceElementObject: {
+      type: Object as any,
+      default: {} as any,
+    },
+    isOperationVariable: {
+      type: Boolean,
+      default: false,
+    },
+    variableType: {
+      type: String,
+      default: 'number',
+    },
+    isEditable: {
+      type: Boolean,
+      default: true,
+    },
+  })
 
-    const emit = defineEmits<{
-        (e: 'updateValue', submodelElement: any): void;
-    }>();
+  const emit = defineEmits<{
+    (e: 'update-value', submodelElement: any): void
+  }>()
 
-    const { checkReference } = useReferenceComposable();
-    const { jumpToReference } = useJumpHandling();
+  const { checkReference } = useReferenceComposable()
+  const { jumpToReference } = useJumpHandling()
 
-    const reference = ref<any>({});
-    const loading = ref<boolean>(false); // Loading State of the Jump-Button (loading when checking if referenced element exists in one of the registered AAS)
-    const disabled = ref<boolean>(true); // Disabled State of the Jump-Button (disabled when referenced element does not exist in one of the registered AAS)
-    const keyTypes = ref<Array<any>>([
-        { id: 1, text: 'AssetAdministrationShell' },
-        { id: 2, text: 'Submodel' },
-        { id: 3, text: 'SubmodelElement' },
-        { id: 4, text: 'SubmodelElementCollection' },
-        { id: 5, text: 'SubmodelElementList' },
-        { id: 6, text: 'Property' },
-        { id: 7, text: 'MultilanguageProperty' },
-        { id: 8, text: 'Entity' },
-        { id: 9, text: 'File' },
-        { id: 10, text: 'Blob' },
-        { id: 11, text: 'Range' },
-        { id: 12, text: 'Operation' },
-        { id: 13, text: 'Capability' },
-        { id: 14, text: 'EventElement' },
-        { id: 15, text: 'BasicEventElement' },
-        { id: 16, text: 'ReferenceElement' },
-        { id: 17, text: 'RelationshipElement' },
-        { id: 18, text: 'AnnotatedRelationshipElement' },
-        { id: 19, text: 'ConceptDescription' },
-        { id: 20, text: 'DataElement' },
-        { id: 21, text: 'FragmentReference' },
-        { id: 22, text: 'GlobalReference' },
-        { id: 23, text: 'Identifiable' },
-        { id: 24, text: 'Referable' },
-    ]); // Array of Element types
+  const reference = ref<any>({})
+  const loading = ref<boolean>(false) // Loading State of the Jump-Button (loading when checking if referenced element exists in one of the registered AAS)
+  const disabled = ref<boolean>(true) // Disabled State of the Jump-Button (disabled when referenced element does not exist in one of the registered AAS)
+  const keyTypes = ref<Array<any>>([
+    { id: 1, text: 'AssetAdministrationShell' },
+    { id: 2, text: 'Submodel' },
+    { id: 3, text: 'SubmodelElement' },
+    { id: 4, text: 'SubmodelElementCollection' },
+    { id: 5, text: 'SubmodelElementList' },
+    { id: 6, text: 'Property' },
+    { id: 7, text: 'MultilanguageProperty' },
+    { id: 8, text: 'Entity' },
+    { id: 9, text: 'File' },
+    { id: 10, text: 'Blob' },
+    { id: 11, text: 'Range' },
+    { id: 12, text: 'Operation' },
+    { id: 13, text: 'Capability' },
+    { id: 14, text: 'EventElement' },
+    { id: 15, text: 'BasicEventElement' },
+    { id: 16, text: 'ReferenceElement' },
+    { id: 17, text: 'RelationshipElement' },
+    { id: 18, text: 'AnnotatedRelationshipElement' },
+    { id: 19, text: 'ConceptDescription' },
+    { id: 20, text: 'DataElement' },
+    { id: 21, text: 'FragmentReference' },
+    { id: 22, text: 'GlobalReference' },
+    { id: 23, text: 'Identifiable' },
+    { id: 24, text: 'Referable' },
+  ]) // Array of Element types
 
-    const isOperationVariable = computed(() => {
-        // check if isOperationVariable is not undefined
-        if (props.isOperationVariable != undefined) {
-            return props.isOperationVariable;
-        } else {
-            return false;
-        }
-    });
+  const isOperationVariable = computed(() => {
+    // check if isOperationVariable is not undefined
+    return props.isOperationVariable == undefined ? false : props.isOperationVariable
+  })
 
-    const isOutputVariable = computed(() => {
-        // check if isOperationVariable is not undefined
-        if (props.isOperationVariable != undefined) {
-            return props.variableType == 'outputVariables';
-        } else {
-            return false;
-        }
-    });
+  const isOutputVariable = computed(() => {
+    // check if isOperationVariable is not undefined
+    return props.isOperationVariable == undefined ? false : props.variableType == 'outputVariables'
+  })
 
-    watch(
-        () => props.referenceElementObject,
-        () => {
-            reference.value = props.referenceElementObject?.value ?? null;
-            validateReference();
-        },
-        { deep: true, immediate: true }
-    );
+  watch(
+    () => props.referenceElementObject,
+    () => {
+      reference.value = props.referenceElementObject?.value ?? null
+      validateReference()
+    },
+    { deep: true, immediate: true },
+  )
 
-    function hasReferenceObject(): boolean {
-        return !!reference.value && typeof reference.value.type === 'string' && Array.isArray(reference.value.keys);
+  function hasReferenceObject (): boolean {
+    return !!reference.value && typeof reference.value.type === 'string' && Array.isArray(reference.value.keys)
+  }
+
+  function hasReferenceKeys (): boolean {
+    return hasReferenceObject() && (reference.value?.keys.length ?? 0) > 0
+  }
+
+  function validateReference (): void {
+    if (!hasReferenceKeys()) {
+      disabled.value = true
+      loading.value = false
+      return
     }
 
-    function hasReferenceKeys(): boolean {
-        return hasReferenceObject() && (reference.value?.keys.length ?? 0) > 0;
+    loading.value = true
+
+    checkReference(reference.value)
+      .then(success => {
+        disabled.value = !success
+        loading.value = false
+      })
+      .catch(error => {
+        // Handle any errors
+        console.error('Error:', error)
+        loading.value = false
+      })
+  }
+
+  function updateReferenceElementObject (): void {
+    const referenceElementObject = { ...props.referenceElementObject, value: reference.value }
+    // Emit the updated ReferenceElement Object
+    emit('update-value', referenceElementObject.value)
+  }
+
+  function addReferenceKey (): void {
+    if (!hasReferenceObject()) {
+      reference.value = { type: 'ExternalReference', keys: [] }
     }
+    reference.value.keys.push({ type: '', value: '' })
+    updateReferenceElementObject()
+  }
 
-    function validateReference(): void {
-        if (!hasReferenceKeys()) {
-            disabled.value = true;
-            loading.value = false;
-            return;
-        }
+  function removeReferenceKey (index: number): void {
+    // console.log('removeReferenceKey', index);
+    reference.value.keys.splice(index, 1)
+    updateReferenceElementObject()
+  }
 
-        loading.value = true;
+  function selectKeyType (keyType: any, key: any): void {
+    // console.log('selectKeyType: ', keyType, key);
+    key.type = keyType.text
+  }
 
-        checkReference(reference.value)
-            .then((success) => {
-                disabled.value = !success;
-                loading.value = false;
-            })
-            .catch((error) => {
-                // Handle any errors
-                console.error('Error:', error);
-                loading.value = false;
-            });
+  function setFocus (e: boolean): void {
+    if (!e) {
+      updateReferenceElementObject()
     }
-
-    function updateReferenceElementObject(): void {
-        let referenceElementObject = { ...props.referenceElementObject };
-        referenceElementObject.value = reference.value;
-        // Emit the updated ReferenceElement Object
-        emit('updateValue', referenceElementObject.value);
-    }
-
-    function addReferenceKey(): void {
-        if (!hasReferenceObject()) {
-            reference.value = { type: 'ExternalReference', keys: [] };
-        }
-        reference.value.keys.push({ type: '', value: '' });
-        updateReferenceElementObject();
-    }
-
-    function removeReferenceKey(index: number): void {
-        // console.log('removeReferenceKey', index);
-        reference.value.keys.splice(index, 1);
-        updateReferenceElementObject();
-    }
-
-    function selectKeyType(keyType: any, key: any): void {
-        // console.log('selectKeyType: ', keyType, key);
-        key.type = keyType.text;
-    }
-
-    function setFocus(e: boolean): void {
-        if (!e) {
-            updateReferenceElementObject();
-        }
-    }
+  }
 </script>

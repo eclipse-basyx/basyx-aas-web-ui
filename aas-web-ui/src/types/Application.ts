@@ -1,47 +1,47 @@
 export interface SnackbarType {
-    status: boolean;
-    timeout?: number;
-    color?: string;
-    btnColor?: string;
-    text?: string;
-    baseError?: string;
-    extendedError?: string;
-    actionText?: string;
-    actionCallback?: () => void | Promise<void>;
+  status: boolean
+  timeout?: number
+  color?: string
+  btnColor?: string
+  text?: string
+  baseError?: string
+  extendedError?: string
+  actionText?: string
+  actionCallback?: () => void | Promise<void>
 }
 
 export interface AutoSyncType {
-    state: boolean;
-    interval: number;
+  state: boolean
+  interval: number
 }
 
 export interface StatusCheckType {
-    state: boolean;
-    interval: number;
+  state: boolean
+  interval: number
 }
 
 export interface PlatformType {
-    android: boolean;
-    chrome: boolean;
-    cordova: boolean;
-    edge: boolean;
-    electron: boolean;
-    firefox: boolean;
-    ios: boolean;
-    linux: boolean;
-    mac: boolean;
-    opera: boolean;
-    ssr: boolean;
-    touch: boolean;
-    win: boolean;
+  android: boolean
+  chrome: boolean
+  cordova: boolean
+  edge: boolean
+  electron: boolean
+  firefox: boolean
+  ios: boolean
+  linux: boolean
+  mac: boolean
+  opera: boolean
+  ssr: boolean
+  touch: boolean
+  win: boolean
 }
 
 export interface PluginType {
-    name: string;
-    semanticId: string;
+  name: string
+  semanticId: string
 }
 
 export interface RegisteredQueryParamType {
-    paramName: string;
-    semanticId: string; // The semanticId of the plugin that registered this param
+  paramName: string
+  semanticId: string // The semanticId of the plugin that registered this param
 }

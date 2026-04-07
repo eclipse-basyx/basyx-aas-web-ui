@@ -4,18 +4,18 @@
  * @param {any} multiLanguageProperty - The multi-language property object to check.
  * @returns {boolean} True if the object is a MultiLanguageProperty model, otherwise false.
  */
-export function isMultiLanguageProperty(multiLanguageProperty: any): boolean {
-    if (
-        multiLanguageProperty &&
-        typeof multiLanguageProperty === 'object' &&
-        Object.keys(multiLanguageProperty).length > 0 &&
-        multiLanguageProperty.modelType &&
-        typeof multiLanguageProperty.modelType === 'string' &&
-        multiLanguageProperty.modelType.trim() === 'MultiLanguageProperty'
-    ) {
-        return true;
-    }
-    return false;
+export function isMultiLanguageProperty (multiLanguageProperty: any): boolean {
+  if (
+    multiLanguageProperty
+    && typeof multiLanguageProperty === 'object'
+    && Object.keys(multiLanguageProperty).length > 0
+    && multiLanguageProperty.modelType
+    && typeof multiLanguageProperty.modelType === 'string'
+    && multiLanguageProperty.modelType.trim() === 'MultiLanguageProperty'
+  ) {
+    return true
+  }
+  return false
 }
 
 /**
@@ -24,21 +24,21 @@ export function isMultiLanguageProperty(multiLanguageProperty: any): boolean {
  * @param {any} multiLanguageProperty - The multi-language property object to check.
  * @returns {boolean} True if the multiLanguageProperty has a non-empty value, otherwise false.
  */
-export function hasValue(multiLanguageProperty: any): boolean {
-    if (
-        isMultiLanguageProperty(multiLanguageProperty) &&
-        multiLanguageProperty?.value &&
-        Array.isArray(multiLanguageProperty?.value) &&
-        multiLanguageProperty.value.length > 0
-    ) {
-        for (let index = 0; index < multiLanguageProperty.value.length; index++) {
-            const langStringSet = multiLanguageProperty.value[index];
-            if (langStringSet && langStringSet?.text && langStringSet.text.trim() !== '') {
-                return true;
-            }
-        }
+export function hasValue (multiLanguageProperty: any): boolean {
+  if (
+    isMultiLanguageProperty(multiLanguageProperty)
+    && multiLanguageProperty?.value
+    && Array.isArray(multiLanguageProperty?.value)
+    && multiLanguageProperty.value.length > 0
+  ) {
+    for (let index = 0; index < multiLanguageProperty.value.length; index++) {
+      const langStringSet = multiLanguageProperty.value[index]
+      if (langStringSet && langStringSet?.text && langStringSet.text.trim() !== '') {
+        return true
+      }
     }
-    return false;
+  }
+  return false
 }
 
 /**
@@ -49,18 +49,18 @@ export function hasValue(multiLanguageProperty: any): boolean {
  * @param {string} [defaultValueToDisplay=''] - The default value to return if no appropriate value is found.
  * @returns {string} The text value in the specified language, or the default value if not found.
  */
-export function valueToDisplay(
-    multiLanguageProperty: any,
-    language: string = 'en',
-    defaultValueToDisplay: string = ''
+export function valueToDisplay (
+  multiLanguageProperty: any,
+  language = 'en',
+  defaultValueToDisplay = '',
 ): string {
-    if (isMultiLanguageProperty(multiLanguageProperty) && hasValue(multiLanguageProperty)) {
-        const langStringSet = multiLanguageProperty.value.find((value: any) => value?.language === language);
-        if (langStringSet && langStringSet?.text && langStringSet.text.trim() !== '') {
-            return langStringSet.text;
-        }
+  if (isMultiLanguageProperty(multiLanguageProperty) && hasValue(multiLanguageProperty)) {
+    const langStringSet = multiLanguageProperty.value.find((value: any) => value?.language === language)
+    if (langStringSet && langStringSet?.text && langStringSet.text.trim() !== '') {
+      return langStringSet.text
     }
-    return defaultValueToDisplay;
+  }
+  return defaultValueToDisplay
 }
 
 /**
@@ -69,13 +69,13 @@ export function valueToDisplay(
  * @param {any} multiLanguageProperty - The multi-language property object.
  * @returns {string} The first non-empty text string or an empty string if none found.
  */
-export function firstLangStringSetText(multiLanguageProperty: any): string {
-    if (isMultiLanguageProperty(multiLanguageProperty) && hasValue(multiLanguageProperty)) {
-        for (const { text } of multiLanguageProperty.value) {
-            if (text.trim() !== '') {
-                return text;
-            }
-        }
+export function firstLangStringSetText (multiLanguageProperty: any): string {
+  if (isMultiLanguageProperty(multiLanguageProperty) && hasValue(multiLanguageProperty)) {
+    for (const { text } of multiLanguageProperty.value) {
+      if (text.trim() !== '') {
+        return text
+      }
     }
-    return '';
+  }
+  return ''
 }
