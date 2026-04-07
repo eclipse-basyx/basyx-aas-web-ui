@@ -1,14 +1,14 @@
 <template>
-    <div>test HandoverDocumentation Form</div>
-    <div class="d-flex justify-space-between">
-        <v-btn color="primary" @click="props.prev">Back</v-btn>
-        <v-btn color="primary" @click="props.next">Submit</v-btn>
-    </div>
+  <div>test HandoverDocumentation Form</div>
+  <div class="d-flex justify-space-between">
+    <v-btn color="primary" @click="props.prev">Back</v-btn>
+    <v-btn color="primary" @click="props.next">Submit</v-btn>
+  </div>
 </template>
 <script lang="ts" setup>
-    const props = defineProps<{
-        next: () => void;
-        prev: () => void;
-        isActiveComponent: boolean;
-    }>();
+  const props = defineProps<{
+    next: () => void
+    prev: () => void
+    isActiveComponent: boolean
+  }>()
 </script>
