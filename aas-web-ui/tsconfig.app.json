@@ -21,7 +21,6 @@
       "leaflet",
       "qrcode"
     ],
-    "baseUrl": ".",
     "paths": {
       "@/*": [
         "./src/*"
