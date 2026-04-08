@@ -1,6 +1,6 @@
 <template>
   <v-row>
-    <v-col v-for="element in elements" :key="element.idShort" cols="12">
+    <v-col v-for="element in elements" :key="element.idShort" cols="12" :md="getMdCols(element)">
       <!-- Leaf fields -->
       <NameplateField
         v-if="isLeafElement(element)"
@@ -66,5 +66,12 @@
       ...props.formState,
       [idShort]: value,
     })
+  }
+
+  function getMdCols (element: TemplateElement): number {
+    if (element.modelType === 'Property' || element.modelType === 'File') {
+      return 6
+    }
+    return 12
   }
 </script>
