@@ -1,41 +1,9 @@
 import { expect, test } from '@playwright/test'
+import { getPathCandidates, normalizeBasePath, toBaseScopedPath } from './basePath'
 
 const runtimeTarget = process.env.IT_TARGET ?? 'preview'
 const logoMode = process.env.IT_LOGO_MODE ?? 'none'
 const basePathInput = process.env.IT_BASE_PATH ?? '/ui/'
-
-function normalizeBasePath (value: string): string {
-  const trimmed = value.trim()
-  if (!trimmed) {
-    return '/'
-  }
-
-  const withLeadingSlash = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
-  if (withLeadingSlash === '/') {
-    return '/'
-  }
-
-  return withLeadingSlash.endsWith('/') ? withLeadingSlash : `${withLeadingSlash}/`
-}
-
-function getPathCandidates (input: string, normalized: string): string[] {
-  if (normalized === '/') {
-    return ['/']
-  }
-
-  const candidates = [normalized]
-  if (!input.endsWith('/')) {
-    candidates.push(normalized.slice(0, -1))
-  }
-  return candidates
-}
-
-function toBaseScopedPath (basePath: string, suffix: string): string {
-  if (basePath === '/') {
-    return `/${suffix}`
-  }
-  return `${basePath}${suffix}`
-}
 
 const normalizedBasePath = normalizeBasePath(basePathInput)
 const pathCandidates = getPathCandidates(basePathInput, normalizedBasePath)

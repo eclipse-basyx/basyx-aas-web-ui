@@ -1,23 +1,10 @@
 import { defineConfig } from '@playwright/test'
+import { normalizeBasePath } from './tests/integration/basePath'
 
 const runtimeTarget = process.env.IT_TARGET ?? 'preview'
 const basePathInput = process.env.IT_BASE_PATH ?? '/ui/'
 const port = Number(process.env.IT_PORT ?? '4173')
 const isCI = !!process.env.CI
-
-function normalizeBasePath (value: string): string {
-  const trimmed = value.trim()
-  if (!trimmed) {
-    return '/'
-  }
-
-  const withLeadingSlash = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
-  if (withLeadingSlash === '/') {
-    return '/'
-  }
-
-  return withLeadingSlash.endsWith('/') ? withLeadingSlash : `${withLeadingSlash}/`
-}
 
 const normalizedBasePath = normalizeBasePath(basePathInput)
 

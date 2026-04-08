@@ -55,7 +55,7 @@ if [ "$TARGET" = "preview" ]; then
     export VITE_LOGO_DARK_PATH="custom-logo.svg"
   fi
 
-  BASE="$BASE_PATH_INPUT" pnpm build-only
+  BASE="$NORMALIZED_BASE_PATH" pnpm build-only
 
   if [ "$LOGO_MODE" = "env" ]; then
     cp "$FIXTURE_LOGO_PATH" "$ROOT_DIR/dist/Logo/custom-logo.svg"
@@ -66,7 +66,7 @@ if [ "$TARGET" = "preview" ]; then
     cp "$FIXTURE_LOGO_PATH" "$ROOT_DIR/dist/Logo/Logo_dark.svg"
   fi
 
-  exec env BASE="$BASE_PATH_INPUT" pnpm preview --host 127.0.0.1 --port "$PORT" --strictPort
+  exec env BASE="$NORMALIZED_BASE_PATH" pnpm preview --host 127.0.0.1 --port "$PORT" --strictPort
 fi
 
 if [ "$TARGET" = "docker" ]; then
