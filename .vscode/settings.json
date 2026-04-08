@@ -1,5 +1,7 @@
 {
   "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": false,
   "editor.detectIndentation": false,
   "editor.insertSpaces": true,
   "editor.tabSize": 2,
@@ -13,8 +15,15 @@
     "javascriptreact",
     "typescript",
     "typescriptreact",
-    "vue"
+    "vue",
+    "json",
+    "jsonc"
   ],
+  "[json]": {
+    "editor.formatOnSave": false,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2
+  },
   "[vue]": {
     "editor.formatOnSave": false,
     "editor.insertSpaces": true,
