@@ -17,7 +17,7 @@
         :key="`$element.idShort}-${index}`"
         class="align-center"
       >
-        <v-col cols="4">
+        <v-col cols="3">
           <v-text-field
             density="comfortable"
             hide-details="auto"
@@ -27,7 +27,7 @@
             @update:model-value="onLanguageChange(index, $event)"
           />
         </v-col>
-        <v-col cols="6">
+        <v-col cols="8">
           <v-text-field
             density="comfortable"
             hide-details="auto"
@@ -37,7 +37,7 @@
             @update:model-value="onTextChange(index, $event)"
           />
         </v-col>
-        <v-col class="d-flex justify-end" cols="2">
+        <v-col class="d-flex justify-end" cols="1">
           <v-btn
             color="error"
             :disabled="multiLanguageValue.length === 1"

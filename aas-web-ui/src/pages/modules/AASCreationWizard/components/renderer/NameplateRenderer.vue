@@ -1,6 +1,6 @@
 <template>
   <v-row>
-    <v-col v-for="element in elements" :key="element.idShort" cols="12" :md="getMdCols(element)">
+    <v-col v-for="(element, index) in visibleElements" :key="element.idShort" cols="12" :md="getMdCols(element, index, elements)">
       <!-- Leaf fields -->
       <NameplateField
         v-if="isLeafElement(element)"
@@ -54,6 +54,9 @@
     (e: 'update:formState', value: FormStateObject): void
   }>()
 
+  const visibleElements = computed(() => {
+    return props.elements.filter(element => !shouldHideElement(element))
+  })
   // function isLeafElement(element: TemplateElement): boolean {
   //     return (
   //         element.modelType === 'Property' ||
@@ -68,10 +71,28 @@
     })
   }
 
-  function getMdCols (element: TemplateElement): number {
-    if (element.modelType === 'Property' || element.modelType === 'File') {
-      return 6
+  function isHalfWidthElement (element: TemplateElement): boolean {
+    return element.modelType === 'Property' || element.modelType === 'File'
+  }
+
+  function getMdCols (element: TemplateElement, index: number, elements: TemplateElement[]): number {
+    if (!isHalfWidthElement(element)) {
+      return 12
     }
-    return 12
+
+    const prevElement = elements[index - 1]
+    const nextElement = elements[index + 1]
+
+    const nextIsFullWidth = nextElement && !isHalfWidthElement(nextElement)
+    const prevIsFullWidth = prevElement && !isHalfWidthElement(prevElement)
+
+    if (nextIsFullWidth || prevIsFullWidth) {
+      return 12
+    }
+
+    return 6
+  }
+  function shouldHideElement (element: TemplateElement): boolean {
+    return element.idShort === 'AssetSpecificProperties'
   }
 </script>

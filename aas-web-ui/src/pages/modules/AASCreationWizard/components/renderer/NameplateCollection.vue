@@ -1,21 +1,23 @@
 <template>
-  <v-expansion-panels v-model="openPanel" multiple>
-    <v-expansion-panel :value="0">
-      <v-expansion-panel-title>
-        <div class="text-subtitle-1 font-weight-medium">
-          {{ formatLabel(element.idShort) }}
-        </div>
-      </v-expansion-panel-title>
+  <v-card class="pa-4" variant="outlined">
+    <v-expansion-panels v-model="openPanel" multiple>
+      <v-expansion-panel :value="0">
+        <v-expansion-panel-title>
+          <div class="text-subtitle-1 font-weight-medium">
+            {{ formatLabel(element.idShort) }}
+          </div>
+        </v-expansion-panel-title>
 
-      <v-expansion-panel-text>
-        <NameplateRenderer
-          :elements="element.value"
-          :form-state="collectionValue"
-          @update:form-state="onCollectionUpdate"
-        />
-      </v-expansion-panel-text>
-    </v-expansion-panel>
-  </v-expansion-panels>
+        <v-expansion-panel-text>
+          <NameplateRenderer
+            :elements="element.value"
+            :form-state="collectionValue"
+            @update:form-state="onCollectionUpdate"
+          />
+        </v-expansion-panel-text>
+      </v-expansion-panel>
+    </v-expansion-panels>
+  </v-card>
 </template>
 
 <script lang="ts" setup>
@@ -23,7 +25,7 @@
   import type { SubmodelElementCollectionElement } from '../../types/template'
   import { computed, ref } from 'vue'
   import { asFormStateObject, formatLabel } from '../../utils/formFieldUtils'
-  import NameplateRenderer from './NamePlateRenderer.vue'
+  import NameplateRenderer from './NameplateRenderer.vue'
 
   const props = defineProps<{
     element: SubmodelElementCollectionElement

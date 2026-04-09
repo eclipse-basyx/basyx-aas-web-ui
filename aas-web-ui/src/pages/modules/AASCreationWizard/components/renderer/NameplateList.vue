@@ -62,7 +62,7 @@
     removeListItem,
     updateListItem,
   } from '../../utils/subModelListUtils'
-  import NameplateRenderer from './NamePlateRenderer.vue'
+  import NameplateRenderer from './NameplateRenderer.vue'
 
   const props = defineProps<{
     element: SubmodelElementListElement

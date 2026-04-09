@@ -3,24 +3,14 @@
     <v-sheet border class="pa-6" elevation="4" rounded="lg">
       <v-form ref="formRef" @submit.prevent="saveAndNext">
         <v-row>
-          <v-col cols="12">
+          <!-- <v-col cols="12">
             <div class="mb-6">
               <div class="text-h6 font-weight-bold">Digital Nameplate</div>
               <div class="text-body-2 text-medium-emphasis">
                 Nameplate information attached to the product
               </div>
             </div>
-          </v-col>
-          <!-- <v-col v-for="element in template.submodelElements" :key="element.idShort" cols="12">
-                        <FormField :label="formatLabel(element.idShort)">
-                            <v-text-field
-                                v-if="element.modelType === 'Property' && element.valueType === 'string'"
-                                v-model="formValues[element.idShort]"
-                                variant="outlined"
-                                density="comfortable"
-                                hide-details="auto" />
-                        </FormField>
-                    </v-col> -->
+          </v-col> -->
           <v-col>
             <NameplateRenderer
               :elements="templateData.submodelElements"
@@ -46,7 +36,8 @@
   // import { useAASCreationStore } from '../stores/aasCreationForm';
   import template from '../templates/digital-nameplate.json'
   import { createInitialFormState } from '../utils/createInitialFormState'
-  import NameplateRenderer from './renderer/NamePlateRenderer.vue'
+  import { normalizeTemplate } from '../utils/normalizeTemplate'
+  import NameplateRenderer from './renderer/NameplateRenderer.vue'
 
   const props = defineProps<{
     next: () => void
@@ -57,8 +48,9 @@
   // const store = useAASCreationStore();
   const formRef = ref()
 
-  const templateData = template as DigitalNameplateTemplate
-
+  // const templateData = template as DigitalNameplateTemplate
+  const rawTemplate = template as DigitalNameplateTemplate
+  const templateData = normalizeTemplate(rawTemplate)
   const formValues = ref<FormStateObject>(createInitialFormState(templateData))
 
   onMounted(() => {
