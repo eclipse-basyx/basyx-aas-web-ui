@@ -51,8 +51,8 @@ importers:
         specifier: ^5.10.5
         version: 5.10.5
       basyx-typescript-sdk:
-        specifier: ^2.2.1
-        version: 2.2.1(@aas-core-works/aas-core3.1-typescript@1.0.0)
+        specifier: ^2.2.2
+        version: 2.2.2(@aas-core-works/aas-core3.1-typescript@1.0.0)
       i18n-iso-countries:
         specifier: ^7.14.0
         version: 7.14.0
@@ -1125,8 +1125,8 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
-  basyx-typescript-sdk@2.2.1:
-    resolution: {integrity: sha512-k9AaVbdFukqjRIO03xDAQ4B+krAA8sH0o3EvUMzU2EPsWMMlQ+huF3EVhOOhCrcYq1otMoTnT5GW7+u9qaDyrg==}
+  basyx-typescript-sdk@2.2.2:
+    resolution: {integrity: sha512-LxQe7njx1CbOh72bHYJLYgFAXqkB8lnjnlNFedqOaiwREn0rAlRHHXimNbUcZnIeQIxdRXhzlTuLpDCiBZcogQ==}
     peerDependencies:
       '@aas-core-works/aas-core3.1-typescript': ^1.0.0
 
@@ -4105,7 +4105,7 @@ snapshots:
 
   baseline-browser-mapping@2.10.13: {}
 
-  basyx-typescript-sdk@2.2.1(@aas-core-works/aas-core3.1-typescript@1.0.0):
+  basyx-typescript-sdk@2.2.2(@aas-core-works/aas-core3.1-typescript@1.0.0):
     dependencies:
       '@aas-core-works/aas-core3.1-typescript': 1.0.0
       xml-sax-ts: 0.4.1
