@@ -1,6 +1,6 @@
 import * as aasCore from '@aas-core-works/aas-core3.1-typescript'
 import { NewPackaging, type Part } from 'aasx-package-ts'
-import { deserializeXml } from 'basyx-typescript-sdk/dist/lib/aas-dataformat-xml/xmlization.js'
+import { deserializeXml } from 'basyx-typescript-sdk'
 import mime from 'mime'
 import { useSMEFile } from '@/composables/AAS/SubmodelElements/File'
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'

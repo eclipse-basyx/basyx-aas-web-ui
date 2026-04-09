@@ -1,7 +1,6 @@
 import * as aasCore from '@aas-core-works/aas-core3.1-typescript'
 import { NewPackaging, type ReadWriteSeeker } from 'aasx-package-ts'
-import { serializeXml } from 'basyx-typescript-sdk/dist/lib/aas-dataformat-xml/xmlization.js'
-import { BaSyxEnvironment } from 'basyx-typescript-sdk/dist/models/BaSyxEnvironment.js'
+import { BaSyxEnvironment, serializeXml } from 'basyx-typescript-sdk'
 import mime from 'mime'
 import { useAASHandling } from '@/composables/AAS/AASHandling'
 import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling'
