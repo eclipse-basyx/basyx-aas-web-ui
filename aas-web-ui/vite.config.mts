@@ -47,9 +47,6 @@ export default defineConfig(({ mode }) => {
   process.env = { ...process.env, ...loadEnv(mode, process.cwd()) }
   const isProduction = mode === 'production'
   const base = isProduction ? process.env.BASE || '/__BASE_PATH_PLACEHOLDER__/' : '/'
-  const basyxXmlizationModule = fileURLToPath(new URL('node_modules/basyx-typescript-sdk/dist/lib/aas-dataformat-xml/xmlization.js', import.meta.url))
-  const basyxEnvironmentModule = fileURLToPath(new URL('node_modules/basyx-typescript-sdk/dist/models/BaSyxEnvironment.js', import.meta.url))
-
   const version = process.env.VITE_APP_VERSION || 'dev'
   const commitSha = process.env.VITE_APP_COMMIT_SHA || getCommitSha()
   const buildDate = process.env.VITE_APP_BUILD_DATE || new Date().toISOString()
@@ -102,8 +99,6 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('src', import.meta.url)),
-        'basyx-typescript-sdk/dist/lib/aas-dataformat-xml/xmlization.js': basyxXmlizationModule,
-        'basyx-typescript-sdk/dist/models/BaSyxEnvironment.js': basyxEnvironmentModule,
       },
       extensions: [
         '.js',
