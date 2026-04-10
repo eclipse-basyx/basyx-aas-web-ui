@@ -1,0 +1,32 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.eclipse.digitaltwin.basyx</groupId>
+		<artifactId>basyx.parent</artifactId>
+		<version>${revision}</version>
+	</parent>
+
+	<artifactId>basyx.submodelrepository</artifactId>
+	<name>BaSyx submodelrepository</name>
+	<description>BaSyx submodelrepository</description>
+	<packaging>pom</packaging>
+
+	<modules>
+		<module>basyx.submodelrepository-core</module>
+		<module>basyx.submodelrepository-http</module>
+		<module>basyx.submodelrepository-backend</module>
+		<module>basyx.submodelrepository-backend-inmemory</module>
+		<module>basyx.submodelrepository-feature-mqtt</module>
+		<module>basyx.submodelrepository-feature-kafka</module>
+		<module>basyx.submodelrepository-feature-registry-integration</module>
+		<module>basyx.submodelrepository-feature-authorization</module>
+		<module>basyx.submodelrepository-feature-operation-delegation</module>
+		<module>basyx.submodelrepository-tck</module>
+		<module>basyx.submodelrepository.component</module>
+		<module>basyx.submodelrepository-backend-mongodb</module>
+		<module>basyx.submodelrepository-client</module>
+        <module>basyx.submodelrepository-feature-search</module>
+    </modules>
+</project>

@@ -1,0 +1,33 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.eclipse.digitaltwin.basyx</groupId>
+		<artifactId>basyx.parent</artifactId>
+		<version>${revision}</version>
+	</parent>
+
+	<artifactId>basyx.common</artifactId>
+	<name>BaSyx common</name>
+	<description>BaSyx common</description>
+	<packaging>pom</packaging>
+
+	<modules>
+		<module>basyx.core</module>
+		<module>basyx.http</module>
+		<module>basyx.mqttcore</module>
+		<module>basyx.mongocore</module>
+		<module>basyx.authorization</module>
+		<module>basyx.kafka</module>
+		<module>basyx.hierarchy</module>
+		<module>basyx.client</module>
+		<module>basyx.backend.inmemory.core</module>
+		<module>basyx.filerepository-backend</module>
+		<module>basyx.filerepository-backend-inmemory</module>
+		<module>basyx.filerepository-backend-mongodb</module>
+		<module>basyx.authorization.rules.rbac.backend.inmemory</module>
+		<module>basyx.authorization.rules.rbac.backend.submodel</module>
+        <module>basyx.querycore</module>
+    </modules>
+</project>

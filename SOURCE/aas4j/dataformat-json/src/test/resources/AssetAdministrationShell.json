@@ -1,0 +1,65 @@
+{
+  "idShort": "TestAssetAdministrationShell",
+  "description": [
+      {
+        "language": "en-us",
+        "text": "An Example Asset Administration Shell for the test application"
+      },
+      {
+        "language": "de",
+        "text": "Ein Beispiel-Verwaltungsschale für eine Test-Anwendung"
+      }
+  ],
+  "modelType": "AssetAdministrationShell",
+  "id": "https://acplt.org/Test_AssetAdministrationShell",
+  "administration": {
+    "version": "0",
+    "revision": "9",
+    "createdAt": "2024-03-22T09:30:00Z",
+    "updatedAt": "2024-03-22T09:30:00Z"
+  },
+  "derivedFrom":
+  {
+    "keys": [
+      {
+        "type": "AssetAdministrationShell",
+        "value": "https://acplt.org/TestAssetAdministrationShell2"
+      }
+    ],
+    "type": "ExternalReference"
+  },
+  "assetInformation":
+  {
+    "assetKind": "Instance",
+    "globalAssetId":"https://acplt.org/Test_Asset"
+  },
+  "submodels": [
+    {
+      "keys": [
+        {
+          "type": "Submodel",
+          "value": "https://acplt.org/Test_Submodel"
+        }
+      ],
+      "type": "ExternalReference"
+    },
+    {
+      "keys": [
+        {
+          "type": "Submodel",
+          "value": "http://acplt.org/Submodels/Assets/TestAsset/BillOfMaterial"
+        }
+      ],
+      "type": "ExternalReference"
+    },
+    {
+      "keys": [
+        {
+          "type": "Submodel",
+          "value": "http://acplt.org/Submodels/Assets/TestAsset/Identification"
+        }
+      ],
+      "type": "ExternalReference"
+    }
+  ]
+}
