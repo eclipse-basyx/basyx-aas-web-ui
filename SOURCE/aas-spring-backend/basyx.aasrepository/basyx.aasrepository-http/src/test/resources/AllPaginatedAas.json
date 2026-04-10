@@ -1,0 +1,33 @@
+{
+	"paging_metadata": {},
+	"result": [
+		{
+			"modelType": "AssetAdministrationShell",
+			"assetInformation": {
+				"assetKind": "Instance",
+				"globalAssetId": "AasNumber3AssetId"
+			},
+			"id": "AasNumber3Identifier",
+			"idShort": "AasNumber3"
+		},
+		{
+			"modelType": "AssetAdministrationShell",
+			"assetInformation": {
+				"assetKind": "Instance",
+				"globalAssetId": "globalAssetId",
+				"specificAssetIds":[{"name":"testId","value":"testValue"}]
+			},
+			"id": "customIdentifier",
+			"idShort": "ExampleMotor"
+		},
+		{
+			"modelType": "AssetAdministrationShell",
+			"assetInformation": {
+				"assetKind": "Instance",
+				"globalAssetId": "dummyAasAssetId"
+			},
+			"id": "dummyAasIdentifier",
+			"idShort": "DummyAas"
+		}
+	]
+}

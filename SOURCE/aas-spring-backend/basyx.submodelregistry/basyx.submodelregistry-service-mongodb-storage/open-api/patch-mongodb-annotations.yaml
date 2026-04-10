@@ -1,0 +1,9 @@
+- op: add
+  path: /components/schemas/SubmodelDescriptor/allOf/1/properties/id/x-field-extra-annotation
+  value: '@org.springframework.data.annotation.Id'
+- op: add
+  path: /components/schemas/Endpoint/properties/interface/x-field-extra-annotation
+  value: '@org.springframework.data.mongodb.core.mapping.Field(name="interface")@JsonProperty("interface")'
+- op: add
+  path: /components/schemas/PagedResult_paging_metadata/x-field-extra-annotation
+  value: '@org.springframework.data.mongodb.core.mapping.Field(name="paging_metadata")@JsonProperty("paging_metadata")'

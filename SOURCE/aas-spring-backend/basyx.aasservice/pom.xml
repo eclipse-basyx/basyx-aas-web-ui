@@ -1,0 +1,24 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.eclipse.digitaltwin.basyx</groupId>
+		<artifactId>basyx.parent</artifactId>
+		<version>${revision}</version>
+	</parent>
+
+	<artifactId>basyx.aasservice</artifactId>
+	<name>BaSyx aasservice</name>
+	<description>BaSyx aasservice</description>
+	<packaging>pom</packaging>
+
+	<modules>
+		<module>basyx.aasservice-core</module>
+		<module>basyx.aasservice-backend</module>
+		<module>basyx.aasservice-backend-inmemory</module>
+		<module>basyx.aasservice-backend-mongodb</module>
+		<module>basyx.aasservice-feature-mqtt</module>
+		<module>basyx.aasservice-client</module>
+	</modules>
+</project>
