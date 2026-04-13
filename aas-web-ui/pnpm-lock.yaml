@@ -48,8 +48,8 @@ importers:
         specifier: ^0.1.5
         version: 0.1.5
       apexcharts:
-        specifier: ^5.10.5
-        version: 5.10.5
+        specifier: ^5.10.6
+        version: 5.10.6
       basyx-typescript-sdk:
         specifier: ^2.2.3
         version: 2.2.3(@aas-core-works/aas-core3.1-typescript@1.0.0)
@@ -94,7 +94,7 @@ importers:
         version: 5.0.4(@vue/compiler-sfc@3.5.32)(pinia@3.0.4(typescript@6.0.2)(vue@3.5.32(typescript@6.0.2)))(vue@3.5.32(typescript@6.0.2))
       vue3-apexcharts:
         specifier: ^1.11.1
-        version: 1.11.1(apexcharts@5.10.5)(vue@3.5.32(typescript@6.0.2))
+        version: 1.11.1(apexcharts@5.10.6)(vue@3.5.32(typescript@6.0.2))
       vuetify:
         specifier: ^4.0.5
         version: 4.0.5(typescript@6.0.2)(vite-plugin-vuetify@2.1.3)(vue@3.5.32(typescript@6.0.2))
@@ -1079,8 +1079,8 @@ packages:
     resolution: {integrity: sha512-4Dj6M28JB+oAH8kFkTLUo+a2jwOFkuqb3yucU0CANcRRUbxS0cP0nZYCGjcc3BNXwRIsUVmDGgzawme7zvJHvg==}
     engines: {node: '>=12'}
 
-  apexcharts@5.10.5:
-    resolution: {integrity: sha512-RirosfLQLqYpWBdn4Pdv9B1M0M2FepzVxPRpcuXQPTilvuZvKt02vgVlEexhCVu2p4fApDIV/3yC9voAIK+qjw==}
+  apexcharts@5.10.6:
+    resolution: {integrity: sha512-FJQGbso3iRuOwUYnj0yUhkWeKeJE6aboVol+ae09lsc+lbLMWZqSRbrAWVa/qishLiaeG2icxdvmVkm+9n6kOQ==}
 
   are-docs-informative@0.0.2:
     resolution: {integrity: sha512-ixiS0nLNNG5jNQzgZJNoUpBKdo9yTYZMGJ+QgT2jmjR7G7+QHRCc4v6LQ3NgE7EBJq+o0ams3waJwkrlBom8Ig==}
@@ -4058,7 +4058,7 @@ snapshots:
 
   ansi-styles@6.2.3: {}
 
-  apexcharts@5.10.5: {}
+  apexcharts@5.10.6: {}
 
   are-docs-informative@0.0.2: {}
 
@@ -5813,9 +5813,9 @@ snapshots:
       '@vue/language-core': 3.2.6
       typescript: 6.0.2
 
-  vue3-apexcharts@1.11.1(apexcharts@5.10.5)(vue@3.5.32(typescript@6.0.2)):
+  vue3-apexcharts@1.11.1(apexcharts@5.10.6)(vue@3.5.32(typescript@6.0.2)):
     dependencies:
-      apexcharts: 5.10.5
+      apexcharts: 5.10.6
       vue: 3.5.32(typescript@6.0.2)
 
   vue@3.5.32(typescript@6.0.2):
