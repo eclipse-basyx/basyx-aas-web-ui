@@ -77,6 +77,9 @@
       templateData.submodelElements,
       formValues.value,
     )
+    if (validationResult.isValid) {
+      console.log('validation passed successfully')
+    }
 
     if (!validationResult.isValid) {
       console.log('Digital Nameplate validation failed:', validationResult.issues)

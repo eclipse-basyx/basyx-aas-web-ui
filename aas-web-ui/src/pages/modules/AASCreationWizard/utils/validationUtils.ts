@@ -106,6 +106,7 @@ export function validateTemplateElements (
 
     issues.push(...validateElementValue(element, value, currentPath))
 
+    // Single-state SMC: value stored as object
     if (element.modelType === 'SubmodelElementCollection'
       && value
       && typeof value === 'object'
@@ -120,7 +121,30 @@ export function validateTemplateElements (
       )
       issues.push(...nestedResult.issues)
     }
+    // Repeatable SMC: value stored as array
+    if (
+      element.modelType === 'SubmodelElementCollection'
+      && Array.isArray(value)
+    ) {
+      for (const [index, item] of value.entries()) {
+        if (
+          item
+          && typeof item === 'object'
+          && !Array.isArray(item)
+          && !(item instanceof File)
+        ) {
+          const itemState = item as FormStateObject
+          const itemPath = `${currentPath}[${index}]`
 
+          const nestedResult = validateTemplateElements(
+            element.value,
+            itemState,
+            itemPath,
+          )
+          issues.push(...nestedResult.issues)
+        }
+      }
+    }
     if (element.modelType === 'SubmodelElementList' && Array.isArray(value)) {
       for (const [index, item] of value.entries()) {
         if (

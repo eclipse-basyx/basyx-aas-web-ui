@@ -40,3 +40,19 @@ export function asFormStateObjectArray (value: FormStateValue): FormStateObject[
 
   return result
 }
+
+export function asStringArray (value: FormStateValue): string[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  const result: string[] = []
+
+  for (const entry of value) {
+    if (typeof entry === 'string') {
+      result.push(entry)
+    }
+  }
+
+  return result
+}

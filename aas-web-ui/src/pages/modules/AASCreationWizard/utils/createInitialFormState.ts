@@ -28,9 +28,6 @@ function createInitialValueForElement (element: TemplateElement): FormStateValue
     return []
   }
 
-  if (isOptionalSingleElement(element)) {
-    return null
-  }
   switch (element.modelType) {
     case 'Property': {
       return ''
@@ -45,6 +42,9 @@ function createInitialValueForElement (element: TemplateElement): FormStateValue
     }
 
     case 'SubmodelElementCollection': {
+      if (isOptionalSingleElement(element)) {
+        return null
+      }
       const collection = element as SubmodelElementCollectionElement
       return Array.isArray(collection.value) ? createInitialFormState(collection.value) : {}
     }

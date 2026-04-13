@@ -1,20 +1,62 @@
 <template>
-  <FormField :label="formatLabel(element.idShort)">
+  <FormField :label="getDisplayLabel()">
     <!-- Property -->
-    <v-text-field
-      v-if="checkTemplateFields.isPropertyElement(element)"
-      density="comfortable"
-      hide-details="auto"
-      :model-value="propertyValue"
-      :type="propertyInputType"
-      variant="outlined"
-      @update:model-value="onPropertyInput"
-    />
+    <div v-if="checkTemplateFields.isPropertyElement(element)">
+      <div v-if="isRepeatableElement(element)" class="d-flex flex-column ga-3">
+        <v-row
+          v-for="(entry, index) in repeatableStringValue"
+          :key="`${element.idShort}-${index}`"
+          class="align-center"
+        >
+          <v-col cols="11">
+            <v-text-field
+              density="comfortable"
+              hide-details="auto"
+              :label="formatLabel(element.idShort)"
+              :model-value="entry"
+              :type="propertyInputType"
+              variant="outlined"
+              @update:model-value="onRepeatablePropertyInput(index, $event)"
+            />
+          </v-col>
+
+          <v-col class="d-flex justify-end" cols="1">
+            <v-btn
+              color="error"
+              icon="mdi-delete"
+              variant="text"
+              @click="onRemovePropertyRow(index)"
+            />
+          </v-col>
+        </v-row>
+
+        <div>
+          <v-btn
+            color="primary"
+            prepend-icon="mdi-plus"
+            variant="text"
+            @click="onAddPropertyRow"
+          >
+            Add entry
+          </v-btn>
+        </div>
+      </div>
+
+      <v-text-field
+        v-else
+        density="comfortable"
+        hide-details="auto"
+        :model-value="propertyValue"
+        :type="propertyInputType"
+        variant="outlined"
+        @update:model-value="onPropertyInput"
+      />
+    </div>
     <!-- MultiLanguageProperty -->
     <div v-else-if="checkTemplateFields.isMultiLanguagePropertyElement(element)" class="d-flex flex-column ga-3">
       <v-row
         v-for="(entry, index) in multiLanguageValue"
-        :key="`$element.idShort}-${index}`"
+        :key="`{$element.idShort}-${index}`"
         class="align-center"
       >
         <v-col cols="3">
@@ -69,8 +111,11 @@
   import type { FormStateValue } from '../../types/form'
   import type { TemplateElement } from '../../types/template'
   import { computed } from 'vue'
+  import {
+    isRepeatableElement, isRequiredElement,
+  } from '../../utils/cardinalityUtils'
   import * as checkTemplateFields from '../../utils/checkTemplateFields'
-  import { asFile, asLangStrings, asString, formatLabel } from '../../utils/formFieldUtils'
+  import { asFile, asLangStrings, asString, asStringArray, formatLabel } from '../../utils/formFieldUtils'
   import {
     addLangStringRow,
     removeLangStringRow,
@@ -78,6 +123,11 @@
     updateLangStringText,
   } from '../../utils/langStringFormUtils'
   import { getPropertyInputType } from '../../utils/propertyInputUtils'
+  import {
+    addStringRow,
+    removeStringRow,
+    updateStringRow,
+  } from '../../utils/repeatableStringFormUtils'
   import FormField from '../FormField.vue'
 
   const props = defineProps<{
@@ -136,5 +186,24 @@
     }
 
     emit('update:modelValue', value ?? null)
+  }
+  const repeatableStringValue = computed<string[]>(() => {
+    return asStringArray(props.modelValue)
+  })
+  function onAddPropertyRow (): void {
+    emit('update:modelValue', addStringRow(repeatableStringValue.value))
+  }
+
+  function onRemovePropertyRow (index: number): void {
+    emit('update:modelValue', removeStringRow(repeatableStringValue.value, index))
+  }
+
+  function onRepeatablePropertyInput (index: number, value: string | null): void {
+    emit('update:modelValue', updateStringRow(repeatableStringValue.value, index, value ?? ''))
+  }
+  function getDisplayLabel (): string {
+    return isRequiredElement(props.element)
+      ? `${formatLabel(props.element.idShort)} *`
+      : formatLabel(props.element.idShort)
   }
 </script>
