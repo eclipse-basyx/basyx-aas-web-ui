@@ -39,6 +39,7 @@ export type BaseTemplateElement = {
   semanticId?: Reference
   supplementalSemanticIds?: Reference[]
   qualifiers?: Record<string, unknown>[]
+  _cardinality?: CardinalityInfo
 }
 
 export type PropertyElement = BaseTemplateElement & {
@@ -85,6 +86,16 @@ export type SubmodelTemplate = {
   displayName?: LangString[]
   idShort: string
   submodelElements: TemplateElement[]
+}
+
+export type CardinalityKind = 'One' | 'ZeroToOne' | 'ZeroToMany' | 'OneToMany' | 'Unknown'
+
+export type CardinalityInfo = {
+  raw: CardinalityKind
+  required: boolean
+  repeatable: boolean
+  minOccurs: number
+  maxOccurs: number | null
 }
 
 export type DigitalNameplateTemplate = SubmodelTemplate

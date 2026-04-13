@@ -1,3 +1,4 @@
+import type { FormStateObject } from '../types/form'
 import type { DigitalNameplateTemplate } from '../types/template'
 import { defineStore } from 'pinia'
 
@@ -29,6 +30,7 @@ export const useAASCreationStore = defineStore('aasCreationForm', {
     digitalNameplateData: null as DigitalNameplateTemplate | null,
     technicalDataData: null as Record<string, any> | null,
     handoverDocumentationData: null as Record<string, any> | null,
+    digitalNameplateFormState: null as FormStateObject | null,
   }),
 
   actions: {
@@ -50,6 +52,9 @@ export const useAASCreationStore = defineStore('aasCreationForm', {
 
     saveHandoverDocumentationData (data: Record<string, any>) {
       this.handoverDocumentationData = data
+    },
+    saveDigitalNameplateFormState (data: FormStateObject) {
+      this.digitalNameplateFormState = structuredClone(data)
     },
   },
   getters: {

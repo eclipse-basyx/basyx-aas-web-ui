@@ -5,6 +5,11 @@ import type {
   SubmodelTemplate,
   TemplateElement,
 } from '../types/template'
+import {
+  isOptionalSingleElement,
+  isRepeatableElement,
+  isRequiredElement,
+} from './cardinalityUtils'
 
 export function createInitialFormState (templateOrElements: SubmodelTemplate | TemplateElement[]): FormStateObject {
   const elements = Array.isArray(templateOrElements) ? templateOrElements : templateOrElements.submodelElements
@@ -19,6 +24,13 @@ export function createInitialFormState (templateOrElements: SubmodelTemplate | T
 }
 
 function createInitialValueForElement (element: TemplateElement): FormStateValue {
+  if (isRepeatableElement(element)) {
+    return []
+  }
+
+  if (isOptionalSingleElement(element)) {
+    return null
+  }
   switch (element.modelType) {
     case 'Property': {
       return ''
@@ -34,7 +46,7 @@ function createInitialValueForElement (element: TemplateElement): FormStateValue
 
     case 'SubmodelElementCollection': {
       const collection = element as SubmodelElementCollectionElement
-      return collection.value ? createInitialFormState(collection.value) : {}
+      return Array.isArray(collection.value) ? createInitialFormState(collection.value) : {}
     }
 
     case 'SubmodelElementList': {

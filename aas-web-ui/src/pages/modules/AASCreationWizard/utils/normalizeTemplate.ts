@@ -1,10 +1,10 @@
 import type {
   DigitalNameplateTemplate,
   SubmodelElementCollectionElement,
-  SubmodelTemplate,
   TemplateElement,
 } from '../types/template'
 import contactInformationSmc from '../templates/contact-information-smc.json'
+import { parseCardinality } from './cardinalityUtils'
 
 function deepClone<T> (value: T): T {
   return structuredClone(value) as T
@@ -36,6 +36,7 @@ function normalizeElement (element: TemplateElement): TemplateElement | null {
     return {
       ...element,
       value: reusableSmc.value,
+      _cardinality: parseCardinality(element),
     }
   }
 
@@ -45,6 +46,7 @@ function normalizeElement (element: TemplateElement): TemplateElement | null {
       value: element.value
         .map(child => normalizeElement(child))
         .filter((child): child is TemplateElement => child !== null),
+      _cardinality: parseCardinality(element),
     }
   }
 
@@ -54,10 +56,14 @@ function normalizeElement (element: TemplateElement): TemplateElement | null {
       value: element.value
         .map(child => normalizeElement(child))
         .filter((child): child is TemplateElement => child !== null),
+      _cardinality: parseCardinality(element),
     }
   }
 
-  return element
+  return {
+    ...element,
+    _cardinality: parseCardinality(element),
+  }
 }
 
 export function normalizeTemplate (template: DigitalNameplateTemplate): DigitalNameplateTemplate {

@@ -32,11 +32,12 @@
   import type { FormStateObject } from '../types/form'
   import type { DigitalNameplateTemplate } from '../types/template'
   import { onMounted, ref } from 'vue'
-  // import { buildDigitalNameplate } from '../builders/buildDigitalNameplate';
-  // import { useAASCreationStore } from '../stores/aasCreationForm';
+  import { buildDigitalNameplate } from '../builders/buildDigitalNameplate'
+  import { useAASCreationStore } from '../stores/aasCreationForm'
   import template from '../templates/digital-nameplate.json'
   import { createInitialFormState } from '../utils/createInitialFormState'
   import { normalizeTemplate } from '../utils/normalizeTemplate'
+  import { validateTemplateElements } from '../utils/validationUtils'
   import NameplateRenderer from './renderer/NameplateRenderer.vue'
 
   const props = defineProps<{
@@ -45,7 +46,7 @@
     isActiveComponent: boolean
   }>()
 
-  // const store = useAASCreationStore();
+  const store = useAASCreationStore()
   const formRef = ref()
 
   // const templateData = template as DigitalNameplateTemplate
@@ -67,19 +68,30 @@
   // Function to save form values from UI into central store
   async function saveAndNext (): Promise<void> {
     console.log('saveAndNext clicked')
+
     if (!props.isActiveComponent) {
       return
     }
 
-    // store.saveDigitalNameplateData({ ...formValues });
-    // const builtDigitalNameplate = buildDigitalNameplate({ ...formValues });
+    const validationResult = validateTemplateElements(
+      templateData.submodelElements,
+      formValues.value,
+    )
 
-    // store.saveDigitalNameplateData(builtDigitalNameplate);
+    if (!validationResult.isValid) {
+      console.log('Digital Nameplate validation failed:', validationResult.issues)
+      return
+    }
 
-    // console.log('digital nameplate data is', store.digitalNameplateData);
-    // console.log('built data is', builtDigitalNameplate);
+    const savedFormState = structuredClone(formValues.value)
+    store.saveDigitalNameplateFormState(savedFormState)
+
+    const builtDigitalNameplate = buildDigitalNameplate(structuredClone(formValues.value))
+    store.saveDigitalNameplateData(builtDigitalNameplate)
+
     props.next()
   }
+
   function onFormStateUpdate (value: FormStateObject): void {
     formValues.value = value
   }
