@@ -61,6 +61,7 @@
           <NameplateRenderer
             :elements="element.value"
             :form-state="item"
+            :show-validation="props.showValidation"
             @update:form-state="onUpdateRepeatableCollection(index, $event)"
           />
         </v-expansion-panel-text>
@@ -113,6 +114,7 @@
         <NameplateRenderer
           :elements="element.value"
           :form-state="collectionValue"
+          :show-validation="props.showValidation"
           @update:form-state="onCollectionUpdate"
         />
       </v-expansion-panel-text>
@@ -136,6 +138,7 @@
   const props = defineProps<{
     element: SubmodelElementCollectionElement
     modelValue: FormStateValue
+    showValidation?: boolean
   }>()
 
   const emit = defineEmits<{

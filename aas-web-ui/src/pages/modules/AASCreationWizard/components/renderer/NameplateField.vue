@@ -1,6 +1,7 @@
 <template>
   <FormField :label="getDisplayLabel()">
     <!-- Property -->
+    <!-- Repeatable Property -->
     <div v-if="checkTemplateFields.isPropertyElement(element)">
       <div v-if="isRepeatableElement(element)" class="d-flex flex-column ga-3">
         <v-row
@@ -11,6 +12,8 @@
           <v-col cols="11">
             <v-text-field
               density="comfortable"
+              :error="hasRequiredError"
+              :error-messages="errorMessages"
               hide-details="auto"
               :label="formatLabel(element.idShort)"
               :model-value="entry"
@@ -41,10 +44,12 @@
           </v-btn>
         </div>
       </div>
-
+      <!-- Non Repeatable Property -->
       <v-text-field
         v-else
         density="comfortable"
+        :error="hasRequiredError"
+        :error-messages="errorMessages"
         hide-details="auto"
         :model-value="propertyValue"
         :type="propertyInputType"
@@ -72,6 +77,8 @@
         <v-col cols="8">
           <v-text-field
             density="comfortable"
+            :error="hasRequiredError"
+            :error-messages="errorMessages"
             hide-details="auto"
             label="Text"
             :model-value="entry.text"
@@ -99,6 +106,8 @@
     <v-file-input
       v-else-if="checkTemplateFields.isFileElement(element)"
       density="comfortable"
+      :error="hasRequiredError"
+      :error-messages="errorMessages"
       hide-details="auto"
       :model-value="fileValue"
       variant="outlined"
@@ -128,11 +137,13 @@
     removeStringRow,
     updateStringRow,
   } from '../../utils/repeatableStringFormUtils'
+  import { isEmptyFormValue } from '../../utils/validationUtils'
   import FormField from '../FormField.vue'
 
   const props = defineProps<{
     element: TemplateElement
     modelValue: FormStateValue
+    showValidation?: boolean
   }>()
 
   const emit = defineEmits<{
@@ -157,6 +168,22 @@
     }
 
     return getPropertyInputType(props.element)
+  })
+
+  const errorMessages = computed<string[]>(() => {
+    return hasRequiredError.value ? ['This field is required.'] : []
+  })
+
+  const hasRequiredError = computed<boolean>(() => {
+    if (!props.showValidation) {
+      return false
+    }
+
+    if (!isRequiredElement(props.element)) {
+      return false
+    }
+
+    return isEmptyFormValue(props.modelValue)
   })
 
   function onPropertyInput (value: string | null): void {
@@ -187,9 +214,11 @@
 
     emit('update:modelValue', value ?? null)
   }
+
   const repeatableStringValue = computed<string[]>(() => {
     return asStringArray(props.modelValue)
   })
+
   function onAddPropertyRow (): void {
     emit('update:modelValue', addStringRow(repeatableStringValue.value))
   }
@@ -201,9 +230,11 @@
   function onRepeatablePropertyInput (index: number, value: string | null): void {
     emit('update:modelValue', updateStringRow(repeatableStringValue.value, index, value ?? ''))
   }
+
   function getDisplayLabel (): string {
     return isRequiredElement(props.element)
       ? `${formatLabel(props.element.idShort)} *`
       : formatLabel(props.element.idShort)
   }
+
 </script>

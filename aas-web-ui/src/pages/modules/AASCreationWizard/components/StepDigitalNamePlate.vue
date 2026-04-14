@@ -15,6 +15,7 @@
             <NameplateRenderer
               :elements="templateData.submodelElements"
               :form-state="formValues"
+              :show-validation="hasAttemptedSubmit"
               @update:form-state="onFormStateUpdate"
             />
           </v-col>
@@ -48,6 +49,7 @@
 
   const store = useAASCreationStore()
   const formRef = ref()
+  const hasAttemptedSubmit = ref(false)
 
   // const templateData = template as DigitalNameplateTemplate
   const rawTemplate = template as DigitalNameplateTemplate
@@ -72,6 +74,8 @@
     if (!props.isActiveComponent) {
       return
     }
+
+    hasAttemptedSubmit.value = true
 
     const validationResult = validateTemplateElements(
       templateData.submodelElements,

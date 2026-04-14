@@ -40,6 +40,7 @@
             v-if="itemTemplate"
             :elements="itemTemplate.value"
             :form-state="item"
+            :show-validation="props.showValidation"
             @update:form-state="onUpdateItem(index, $event)"
           />
         </v-expansion-panel-text>
@@ -67,6 +68,7 @@
   const props = defineProps<{
     element: SubmodelElementListElement
     modelValue: FormStateValue
+    showValidation?: boolean
   }>()
 
   const emit = defineEmits<{

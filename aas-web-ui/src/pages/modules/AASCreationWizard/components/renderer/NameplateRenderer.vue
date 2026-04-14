@@ -6,6 +6,7 @@
         v-if="isLeafElement(element)"
         :element="element"
         :model-value="props.formState[element.idShort]"
+        :show-validation="props.showValidation"
         @update:model-value="updateFieldValue(element.idShort, $event)"
       />
 
@@ -14,6 +15,7 @@
         v-else-if="isSubmodelElementCollectionElement(element)"
         :element="element"
         :model-value="props.formState[element.idShort]"
+        :show-validation="props.showValidation"
         @update:model-value="updateFieldValue(element.idShort, $event)"
       />
 
@@ -26,6 +28,7 @@
         v-else-if="isSubmodelElementListElement(element)"
         :element="element"
         :model-value="props.formState[element.idShort]"
+        :show-validation="props.showValidation"
         @update:model-value="updateFieldValue(element.idShort, $event)"
       />
     </v-col>
@@ -48,6 +51,7 @@
   const props = defineProps<{
     elements: TemplateElement[]
     formState: FormStateObject
+    showValidation?: boolean
   }>()
   console.log('these are the props received', props.elements, props.formState)
   const emit = defineEmits<{
