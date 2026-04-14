@@ -4,7 +4,8 @@
 
 | Version | Date | Author | Comment |
 | :-- | :-- | :-- | :-- |
-| 0.1 | 18.03.2026 | Mattis Weigold | Rough Structure and Introduction |
+| 0.1.0 | 18.03.2026 | Mattis Weigold | Rough Structure and Introduction |
+| 0.1.1 | 14.04.2026 | Mattis Weigold | Add Req. ID Links to SRS |
 
 ## Table of Contents
 
@@ -41,17 +42,17 @@ The tests verify that both functional and non-functional requirements are adequa
 
 | Req. ID / Name | Functionality | Priority | Testsuit |
 | :-- | :-- | :-- | :-- |
-| FR.001 / Preserve existing functionality | All existing viewer functions must remain intact after enhancement. |  | TODO |
-| FR.002 / Sorting | Implement dynamic sorting of shells by key attributes. |  | TODO |
-| FR.003 / Search | Extend search functionality recursively through AAS content. |  | TODO |
-| FR.004 / Nameplate generator integration | Integrate submodule into digital nameplate plugin. |  | TODO |
-| FR.005 / API enhancements | Extend JSON output for `/shells` endpoint. |  | TODO |
-| FR.006 / Improved labeling | Add extra labels for Boolean values. |  | TODO |
-| NFR.001 / Usability | UI improvements must reduce average task time. |  | TODO |
-| NFR.002 / Performance | No significant delay from enhancements. |  | TODO |
-| NFR.003 / Stability | Application should not crash under standard or rapid usage. |  | TODO |
-| NFR.004 / Maintainability | Clear documentation and readable code. |  | *no testing* |
-| NFR.005 / Licensing | Maintain current open-source license. |  | *no testing* |
+| [FR.001 / Preserve existing functionality](SRS.md#41-fr001--preserve-existing-functionality) | All existing viewer functions must remain intact after enhancement. |  | TODO |
+| [FR.002 / Sorting](SRS.md#42-fr002--sorting) | Implement dynamic sorting of shells by key attributes. |  | TODO |
+| [FR.003 / Search](SRS.md#43-fr003--search) | Extend search functionality recursively through AAS content. |  | TODO |
+| [FR.004 / Nameplate generator integration](SRS.md#44-fr004--nameplate-generator-integration) | Integrate submodule into digital nameplate plugin. |  | TODO |
+| [FR.005 / API enhancements](SRS.md#45-fr005--api-enhancements) | Extend JSON output for `/shells` endpoint. |  | TODO |
+| [FR.006 / Improved labeling](SRS.md#46-fr006--improved-labeling) | Add extra labels for Boolean values. |  | TODO |
+| [NFR.001 / Usability](SRS.md#51-nfr001--usability) | UI improvements must reduce average task time. |  | TODO |
+| [NFR.002 / Performance](SRS.md#52-nfr002--performance) | No significant delay from enhancements. |  | TODO |
+| [NFR.003 / Stability](SRS.md#53-nfr003--stability) | Application should not crash under standard or rapid usage. |  | TODO |
+| [NFR.004 / Maintainability](SRS.md#54-nfr004--maintainability) | Clear documentation and readable code. |  | *no testing* |
+| [NFR.005 / Licensing](SRS.md#55-nfr005--licensing) | Maintain current open-source license. |  | *no testing* |
 
 ## 4. Test Preparation Strategy
 
