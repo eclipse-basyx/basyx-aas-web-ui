@@ -1,0 +1,5 @@
+{
+		"assetKind":"Instance",
+		"globalAssetId":"globalAssetId",
+		"specificAssetIds":[{"name":"testId","value":"testValue"}]
+}

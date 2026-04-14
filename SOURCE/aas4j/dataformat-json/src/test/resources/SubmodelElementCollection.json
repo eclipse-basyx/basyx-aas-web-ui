@@ -1,0 +1,82 @@
+{
+  "idShort": "ExampleSubmodelElementCollection",
+  "category": "PARAMETER",
+  "description": [
+    {
+      "language": "en-us",
+      "text": "Example SubmodelElementCollection object"
+    },
+    {
+      "language": "de",
+      "text": "Beispiel SubmodelElementCollection Element"
+    }
+  ],
+  "modelType": "SubmodelElementCollection",
+  "semanticId":
+  {
+    "keys": [
+      {
+        "type": "GlobalReference",
+        "value": "http://acplt.org/SubmodelElementCollections/ExampleSubmodelElementCollection"
+      }
+    ],
+    "type": "ExternalReference"
+  },
+  "value": [ {
+    "modelType" : "Blob",
+    "contentType" : "application/pdf",
+    "semanticId" : {
+      "keys" : [ {
+        "type" : "GlobalReference",
+        "value" : "http://acplt.org/Blobs/ExampleBlob"
+      } ],
+      "type": "ExternalReference"
+    },
+    "category" : "PARAMETER",
+    "description" : [ {
+      "language" : "en-us",
+      "text" : "Example Blob object"
+    }, {
+      "language" : "de",
+      "text" : "Beispiel Blob Element"
+    } ],
+    "idShort" : "ExampleBlob"
+  }, {
+    "modelType" : "File",
+    "contentType" : "application/pdf",
+    "semanticId" : {
+      "keys" : [ {
+        "type" : "GlobalReference",
+        "value" : "http://acplt.org/Files/ExampleFile"
+      } ],
+      "type": "ExternalReference"
+    },
+    "category" : "PARAMETER",
+    "description" : [ {
+      "language" : "en-us",
+      "text" : "Example File object"
+    }, {
+      "language" : "de",
+      "text" : "Beispiel File Element"
+    } ],
+    "idShort" : "ExampleFile"
+  }, {
+    "modelType" : "ReferenceElement",
+    "semanticId" : {
+      "keys" : [ {
+        "type" : "GlobalReference",
+        "value" : "http://acplt.org/ReferenceElements/ExampleReferenceElement"
+      } ],
+      "type": "ExternalReference"
+    },
+    "category" : "PARAMETER",
+    "description" : [ {
+      "language" : "en-us",
+      "text" : "Example Reference Element object"
+    }, {
+      "language" : "de",
+      "text" : "Beispiel Reference Element Element"
+    } ],
+    "idShort" : "ExampleReferenceElement"
+  } ]
+}

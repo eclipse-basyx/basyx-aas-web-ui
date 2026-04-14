@@ -1,0 +1,13 @@
+{
+	"success": true,
+	"outputArguments": [
+		{
+		    "value": {
+		        "modelType": "Property",
+		        "valueType": "xs:int",
+		        "value": "25",
+		        "idShort": "result"
+		    }
+	 	}
+	]
+}

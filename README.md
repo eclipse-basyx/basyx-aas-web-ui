@@ -1,5 +1,5 @@
 # Team 2 SWE
-![alt text](https://github.com/user-attachments/assets/5401a4c2-23e4-4d54-8362-cf95a31ca3f6 "Banner")
+<img width="770" height="369" alt="image" src="https://github.com/user-attachments/assets/a1483679-34d0-40be-aed6-3f5daf40dffb" />
 
 This project aims to improve the web UI of the BaSyx tool, with a primary focus on enhancing the usability of the search function.
 

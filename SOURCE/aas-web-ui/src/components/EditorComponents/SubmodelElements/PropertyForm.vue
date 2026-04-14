@@ -89,7 +89,7 @@
                                     <BooleanInput
                                         v-if="valueTypeString === 'Boolean'"
                                         v-model="propertyValue"
-                                        :label="propertyValue ? propertyValue : 'false'" />
+                                        label="Value" />
                                     <TextInput
                                         v-else
                                         v-model="propertyValue"

@@ -1,0 +1,33 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.eclipse.digitaltwin.basyx</groupId>
+		<artifactId>basyx.parent</artifactId>
+		<version>${revision}</version>
+	</parent>
+
+	<artifactId>basyx.submodelservice</artifactId>
+	<name>BaSyx submodelservice</name>
+	<description>BaSyx submodelservice</description>
+	<packaging>pom</packaging>
+
+	<modules>
+		<module>basyx.submodelservice-core</module>
+		<module>basyx.submodelservice-http</module>
+		<module>basyx.submodelservice-backend</module>
+		<module>basyx.submodelservice-backend-inmemory</module>
+		<module>basyx.submodelservice-backend-mongodb</module>
+		<module>basyx.submodelservice-feature-mqtt</module>
+		<module>basyx.submodelservice-feature-registry-integration</module>
+		<module>basyx.submodelservice-feature-operation-dispatching</module>		
+		<module>basyx.submodelservice-feature-authorization</module>
+		<module>basyx.submodelservice-feature-kafka</module>
+		<module>basyx.submodelservice.example</module>
+		<module>basyx.submodelservice.component</module>
+		<module>basyx.submodelservice-client</module>
+	</modules>
+
+</project>
