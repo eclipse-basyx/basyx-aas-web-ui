@@ -1,7 +1,34 @@
 <template>
     <v-list-item class="pt-0">
         <v-list-item-title :class="isOperationVariable ? 'pt-2' : ''">
+            <!-- Operation variable: bordered container with badge, name AND input inside -->
+            <div
+                v-if="isOperationVariable"
+                class="d-flex align-center gap-8 px-3 py-2"
+                style="border: 1px solid #cccccc; border-radius: 4px;">
+                <v-chip label size="small" color="#fb8c00" text-color="#ffffff" variant="flat" class="font-weight-bold flex-shrink-0">
+                    {{ dateValue.valueType }}
+                </v-chip>
+                <span class="text-body-2 font-weight-bold flex-shrink-0" style="color: #999;">
+                    {{ dateValue.idShort }}
+                </span>
+                <v-text-field
+                    v-model="newDateValue"
+                    type="text"
+                    variant="outlined"
+                    density="compact"
+                    class="flex-grow-1"
+                    :clearable="isEditable"
+                    :readonly="!isEditable"
+                    :hide-details="true"
+                    @keydown.enter="updateValue()"
+                    @click:clear="clearDate"
+                    @update:focused="setFocus">
+                </v-text-field>
+            </div>
+            <!-- Non-operation variable: original layout -->
             <v-text-field
+                v-else
                 v-model="newDateValue"
                 type="text"
                 variant="outlined"
@@ -9,16 +36,15 @@
                 :clearable="isEditable"
                 :readonly="!isEditable"
                 :color="dateValue.value == newDateValue ? '' : 'warning'"
-                :persistent-hint="!isOperationVariable"
+                :persistent-hint="true"
                 :hint="dateValue.value == newDateValue ? '' : 'Current value not yet saved.'"
-                :hide-details="isOperationVariable ? true : false"
+                :hide-details="false"
                 @keydown.enter="updateValue()"
                 @click:clear="clearDate"
                 @update:focused="setFocus">
-                <!-- Update Value Button -->
                 <template #append-inner>
                     <v-btn
-                        v-if="!isOperationVariable && isEditable"
+                        v-if="isEditable"
                         size="small"
                         variant="elevated"
                         color="primary"
@@ -31,7 +57,6 @@
             </v-text-field>
         </v-list-item-title>
         <v-row v-if="!isOutputVariable" class="mt-0">
-            <!-- Date Picker -->
             <v-col cols="auto">
                 <v-date-picker
                     v-model="newDate"
@@ -52,10 +77,7 @@
     import { useAASStore } from '@/store/AASDataStore';
     import { dateRegex } from '@/utils/DateUtils';
 
-    // Stores
     const aasStore = useAASStore();
-
-    // Composables
     const { patchRequest } = useRequestHandling();
     const { fetchAndDispatchSme } = useSMEHandling();
 
@@ -82,11 +104,9 @@
         (event: 'updateValue', updatedDateValue: any): void;
     }>();
 
-    // Data
     const newDateValue = ref<string>('');
     const newDate = ref<any>(new Date());
 
-    // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode);
     const isOperationVariable = computed(() => {
         return props.isOperationVariable != undefined ? props.isOperationVariable : false;
@@ -95,7 +115,6 @@
         return props.isOperationVariable != undefined ? props.variableType == 'outputVariables' : false;
     });
 
-    // Watchers
     watch(
         () => selectedNode.value,
         () => {
@@ -122,7 +141,6 @@
             if (matches) {
                 newDateValue.value = dateString;
                 const numbers = matches ? matches.map(Number) : [];
-
                 const year: number = numbers[1];
                 const month: number = numbers[2];
                 const day: number = numbers[3];
@@ -134,13 +152,11 @@
         newDate.value = new Date();
     }
 
-    // Methods
     function updateValue(): void {
         if (isOperationVariable.value) {
             emit('updateValue', newDateValue.value);
             return;
         }
-
         const path = `${props.dateValue.path}/$value`;
         const content = JSON.stringify(newDateValue.value);
         const headers = new Headers();
@@ -149,35 +165,24 @@
         const disableMessage = false;
         patchRequest(path, content, headers, context, disableMessage).then((response: any) => {
             if (response.success) {
-                // After successful patch request fetch and dispatch updated SME
                 fetchAndDispatchSme(selectedNode.value.path, false);
             }
         });
     }
 
-    // Function to apply the selected date to the newDateTimeStampValue
     function applyDate(date: any): void {
         if (!date) return;
-
-        // convert date to string (format: YYYY-MM-DD)
         const year = date.getFullYear();
-        const month = (1 + date.getMonth()).toString().padStart(2, '0'); // Months are zero indexed, hence the +1. padStart will add a 0 in front if it's a single digit
-        const day = date.getDate().toString().padStart(2, '0'); // padStart will add a 0 in front if it's a single digit
-        const dateString = year + '-' + month + '-' + day;
-
-        newDateValue.value = dateString;
-
-        if (isOperationVariable.value) {
-            updateValue();
-        }
+        const month = (1 + date.getMonth()).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        newDateValue.value = year + '-' + month + '-' + day;
+        if (isOperationVariable.value) updateValue();
     }
 
-    // Function to clear the Date
     function clearDate(): void {
         newDateValue.value = '';
     }
 
-    // Function to set the focus on the input field
     function setFocus(isFocusedToSet: boolean): void {
         if (isOperationVariable.value && !isFocusedToSet) {
             updateValue();

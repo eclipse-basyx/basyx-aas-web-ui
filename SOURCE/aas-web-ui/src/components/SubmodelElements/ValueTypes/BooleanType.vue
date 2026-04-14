@@ -1,17 +1,20 @@
 <template>
     <v-list-item class="pt-0" :class="isOperationVariable ? '' : 'pb-2'">
         <v-list-item-title :class="isOperationVariable ? 'pt-2' : ''">
-            <div class="d-flex align-center justify-space-between">
-                <!-- Label with switch and value -->
+            <!-- Operation variable: bordered container with badge, name AND switch inside -->
+            <div
+                v-if="isOperationVariable"
+                class="d-flex align-center gap-8 px-3 py-2"
+                style="border: 1px solid #cccccc; border-radius: 4px;">
+                <v-chip label size="small" color="#fb8c00" text-color="#ffffff" variant="flat" class="font-weight-bold flex-shrink-0">
+                    {{ booleanValue.valueType }}
+                </v-chip>
+                <span class="text-body-2 font-weight-bold flex-shrink-0" style="color: #999;">
+                    {{ displayName || booleanValue.idShort }}
+                </span>
+                <v-spacer></v-spacer>
+                <!-- Switch + true/false indicator inside the box -->
                 <div class="d-flex align-center gap-1">
-                    <span v-if="isOperationVariable" class="text-body-2 font-weight-bold">
-                        {{ displayName || booleanValue.idShort }}:
-                    </span>
-                    <!-- Property label for non-operation variables -->
-                    <span v-else class="text-caption font-weight-bold">
-                        {{ displayLabel }}:
-                    </span>
-                    <!-- Switch control -->
                     <v-switch
                         v-model="newBooleanValue"
                         inset
@@ -21,17 +24,36 @@
                         :hide-details="true"
                         @update:model-value="changeState">
                     </v-switch>
-                    <!-- Current value indicator right after switch -->
-                    <span :class="newBooleanValue ? 'text-success' : 'text-warning'" style="font-weight: 500">
+                    <span
+                        :class="newBooleanValue ? 'text-success' : 'text-warning'"
+                        style="font-weight: 500; min-width: 36px;">
                         {{ newBooleanValue ? 'true' : 'false' }}
                     </span>
                 </div>
             </div>
+            <!-- Non-operation variable: label + switch -->
+            <template v-else>
+                <span class="text-caption font-weight-bold">{{ displayLabel }}:</span>
+                <div class="d-flex align-center gap-1">
+                    <v-switch
+                        v-model="newBooleanValue"
+                        inset
+                        density="compact"
+                        :readonly="IsOutputVariable || !isEditable"
+                        color="primary"
+                        :hide-details="true"
+                        @update:model-value="changeState">
+                    </v-switch>
+                    <span :class="newBooleanValue ? 'text-success' : 'text-warning'" style="font-weight: 500;">
+                        {{ newBooleanValue ? 'true' : 'false' }}
+                    </span>
+                </div>
+            </template>
         </v-list-item-title>
-        <!-- Update Value Button -->
+        <!-- Update Value Button (only for non-operation variables) -->
         <template #append>
             <v-btn
-                v-if="!IsOperationVariable && isEditable"
+                v-if="!isOperationVariable && isEditable"
                 size="small"
                 variant="elevated"
                 color="primary"
@@ -39,9 +61,7 @@
                 style="right: -4px"
                 @click.stop="updateValue()">
                 <v-icon>mdi-upload</v-icon>
-                <v-tooltip activator="parent" location="top">
-                    Save changes to the AAS backend
-                </v-tooltip>
+                <v-tooltip activator="parent" location="top">Save changes to the AAS backend</v-tooltip>
             </v-btn>
         </template>
     </v-list-item>
@@ -53,10 +73,7 @@
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
-    // Stores
     const aasStore = useAASStore();
-
-    // Composables
     const { patchRequest } = useRequestHandling();
     const { fetchAndDispatchSme } = useSMEHandling();
 
@@ -83,10 +100,8 @@
         (event: 'updateValue', updatedBooleanValue: any): void;
     }>();
 
-    // Data
     const newBooleanValue = ref<boolean>(false);
 
-    // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode);
     const IsOperationVariable = computed(() => {
         return props.isOperationVariable != undefined ? props.isOperationVariable : false;
@@ -95,18 +110,15 @@
         return props.isOperationVariable != undefined ? props.variableType == 'outputVariables' : false;
     });
     const displayName = computed(() => {
-        // Display the displayName if available (for multi-language support)
         if (props.booleanValue.displayName && props.booleanValue.displayName.length > 0) {
             return props.booleanValue.displayName[0]?.text || props.booleanValue.idShort;
         }
         return null;
     });
     const displayLabel = computed(() => {
-        // Show displayName (if available) or idShort as the property label
         return displayName.value || props.booleanValue.idShort || 'Value';
     });
 
-    // Watchers
     watch(
         () => selectedNode.value,
         () => {
@@ -139,7 +151,6 @@
             emit('updateValue', newBooleanValue.value);
             return;
         }
-
         const path = `${props.booleanValue.path}/$value`;
         const content = JSON.stringify(newBooleanValue.value.toString());
         const headers = new Headers();
@@ -148,7 +159,6 @@
         const disableMessage = false;
         patchRequest(path, content, headers, context, disableMessage).then((response: any) => {
             if (response.success) {
-                // After successful patch request fetch and dispatch updated SME
                 fetchAndDispatchSme(selectedNode.value.path, false);
             }
         });
