@@ -1,4 +1,9 @@
 <template>
+  <v-btn
+    icon="mdi-arrow-down"
+    style="position: fixed; top: 70px; right: 16px; z-index: 999999999"
+    @click="scrollToBottom"
+  />
   <v-container>
     <v-stepper v-model="step">
       <v-stepper-header>
@@ -32,6 +37,11 @@
       <!-- <v-stepper-actions @click:next="step < 4 ? step++ : null" @click:prev="step > 1 ? step-- : null" /> -->
     </v-stepper>
   </v-container>
+  <v-btn
+    icon="mdi-arrow-up"
+    style="position: fixed; bottom: 64px; right: 16px; z-index: 999999999"
+    @click="scrollToTop"
+  />
 </template>
 
 <script lang="ts" setup>
@@ -58,5 +68,11 @@
     if (step.value > 1) {
       step.value--
     }
+  }
+  function scrollToTop (): void {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+  function scrollToBottom (): void {
+    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })
   }
 </script>

@@ -56,3 +56,10 @@ export function asStringArray (value: FormStateValue): string[] {
 
   return result
 }
+export function formatRepeatedElementBaseLabel (idShort: string): string {
+  const indexedPattern = /__\d{2}__$/
+
+  const baseIdShort = idShort.replace(indexedPattern, '')
+
+  return formatLabel(baseIdShort)
+}

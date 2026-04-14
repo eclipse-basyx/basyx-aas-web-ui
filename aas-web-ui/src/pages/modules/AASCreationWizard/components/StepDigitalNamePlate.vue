@@ -1,16 +1,24 @@
 <template>
+  <v-col v-if="validationIssues.length >0" cols="12">
+    <v-alert
+      closable
+      density="compact"
+      type="error"
+      variant="tonal"
+    >
+      Please fill all required fields:
+      <span v-for="(issue, index) in validationIssues.slice(0, 5)" :key="issue.path">
+        {{ issue.idShort }}<span v-if="index < validationIssues.slice(0, 5).length - 1">, </span>
+      </span>
+      <span v-if="validationIssues.length > 5">
+        and {{ validationIssues.length - 5 }} more...
+      </span>
+    </v-alert>
+  </v-col>
   <v-container class="py-6">
     <v-sheet border class="pa-6" elevation="4" rounded="lg">
       <v-form ref="formRef" @submit.prevent="saveAndNext">
         <v-row>
-          <!-- <v-col cols="12">
-            <div class="mb-6">
-              <div class="text-h6 font-weight-bold">Digital Nameplate</div>
-              <div class="text-body-2 text-medium-emphasis">
-                Nameplate information attached to the product
-              </div>
-            </div>
-          </v-col> -->
           <v-col>
             <NameplateRenderer
               :elements="templateData.submodelElements"
@@ -32,6 +40,7 @@
 <script lang="ts" setup>
   import type { FormStateObject } from '../types/form'
   import type { DigitalNameplateTemplate } from '../types/template'
+  import type { ValidationIssue } from '../types/validation'
   import { onMounted, ref } from 'vue'
   import { buildDigitalNameplate } from '../builders/buildDigitalNameplate'
   import { useAASCreationStore } from '../stores/aasCreationForm'
@@ -55,6 +64,7 @@
   const rawTemplate = template as DigitalNameplateTemplate
   const templateData = normalizeTemplate(rawTemplate)
   const formValues = ref<FormStateObject>(createInitialFormState(templateData))
+  const validationIssues = ref<ValidationIssue[]>([])
 
   onMounted(() => {
     console.log('templatedata is', templateData)
@@ -86,7 +96,9 @@
     }
 
     if (!validationResult.isValid) {
+      validationIssues.value = validationResult.issues
       console.log('Digital Nameplate validation failed:', validationResult.issues)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
 

@@ -7,7 +7,7 @@
     <div class="d-flex justify-space-between align-center mb-4">
       <div>
         <div class="text-subtitle-1 font-weight-medium">
-          {{ formatLabel(element.idShort) }}
+          {{ getDisplayLabel() }}
         </div>
         <div class="text-body-2 text-medium-emphasis">
           {{ repeatableItems.length }} item<span v-if="repeatableItems.length !== 1">s</span>
@@ -43,7 +43,7 @@
         <v-expansion-panel-title>
           <div class="d-flex justify-space-between align-center w-100 pr-2">
             <div class="text-subtitle-2 font-weight-medium">
-              {{ formatLabel(element.idShort) }} {{ index + 1 }}
+              {{ getDisplayLabel() }} {{ index + 1 }}
             </div>
 
             <v-btn
@@ -76,7 +76,7 @@
   >
     <div class="d-flex justify-space-between align-center">
       <div class="text-subtitle-1 font-weight-medium">
-        {{ formatLabel(element.idShort) }}
+        {{ getDisplayLabel() }}
       </div>
 
       <v-btn
@@ -95,7 +95,7 @@
       <v-expansion-panel-title>
         <div class="d-flex justify-space-between align-center w-100 pr-2">
           <div class="text-subtitle-1 font-weight-medium">
-            {{ formatLabel(element.idShort) }}
+            {{ getDisplayLabel() }}
           </div>
 
           <v-btn
@@ -131,7 +131,7 @@
     isRepeatableElement,
   } from '../../utils/cardinalityUtils'
   import { createInitialFormState } from '../../utils/createInitialFormState'
-  import { asFormStateObject, asFormStateObjectArray, formatLabel } from '../../utils/formFieldUtils'
+  import { asFormStateObject, asFormStateObjectArray, formatLabel, formatRepeatedElementBaseLabel } from '../../utils/formFieldUtils'
   import { addopenPanelIndex, appendListItem, removeAndReindexOpenPanels, removeListItem, updateListItem } from '../../utils/subModelListUtils'
   import NameplateRenderer from './NameplateRenderer.vue'
 
@@ -206,5 +206,13 @@
   function onUpdateRepeatableCollection (index: number, value: FormStateObject): void {
     const updated = updateListItem(repeatableItems.value, index, value)
     emit('update:modelValue', updated)
+  }
+
+  function getDisplayLabel (): string {
+    if (isRepeatable.value) {
+      return formatRepeatedElementBaseLabel(props.element.idShort)
+    }
+
+    return formatLabel(props.element.idShort)
   }
 </script>

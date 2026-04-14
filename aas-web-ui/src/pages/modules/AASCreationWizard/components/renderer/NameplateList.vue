@@ -3,7 +3,7 @@
     <div class="d-flex justify-space-between align-center mb-4">
       <div>
         <div class="text-subtitle-1 font-weight-medium">
-          {{ formatLabel(element.idShort) }}
+          {{ getDisplayLabel() }}
         </div>
         <div class="text-body-2 text-medium-emphasis">
           {{ items.length }} item<span v-if="items.length !== 1">s</span>
@@ -26,7 +26,7 @@
         <v-expansion-panel-title>
           <div class="d-flex justify-space-between align-center w-100 pr-2">
             <div class="text-subtitle-2 font-weight-medium">
-              {{ formatLabel(element.idShort) }} {{ index + 1 }}
+              {{ getDisplayLabel() }} {{ index + 1 }}
             </div>
 
             <v-btn color="error" prepend-icon="mdi-delete" variant="text" @click.stop="onRemoveItem(index)">
@@ -53,7 +53,7 @@
   import type { FormStateObject, FormStateValue } from '../../types/form'
   import type { SubmodelElementListElement } from '../../types/template'
   import { computed, ref } from 'vue'
-  import { asFormStateObjectArray, formatLabel } from '../../utils/formFieldUtils'
+  import { asFormStateObjectArray, formatLabel, formatRepeatedElementBaseLabel } from '../../utils/formFieldUtils'
   import {
     addopenPanelIndex,
     appendListItem,
@@ -107,5 +107,8 @@
   function onUpdateItem (index: number, value: FormStateObject): void {
     const updated = updateListItem(items.value, index, value)
     emit('update:modelValue', updated)
+  }
+  function getDisplayLabel (): string {
+    return formatRepeatedElementBaseLabel(props.element.idShort)
   }
 </script>
