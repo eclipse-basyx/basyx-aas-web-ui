@@ -120,18 +120,8 @@
 </template>
 
 <script setup lang="ts">
+    import type { AASAttributeFilters } from '@/types/AASFilters';
     import { reactive, ref, watch } from 'vue';
-
-    interface AASAttributeFilters {
-        manufacturerName: string;
-        manufacturerProductDesignation: string;
-        manufacturerProductFamily: string;
-        manufacturerProductType: string;
-        orderCodeOfManufacturer: string;
-        productArticleNumberOfManufacturer: string;
-        productClassificationSystem: string;
-        productClassId: string;
-    }
 
     const emit = defineEmits<{
         (event: 'update:filters', value: AASAttributeFilters): void;

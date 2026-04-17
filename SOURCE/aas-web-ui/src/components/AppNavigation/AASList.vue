@@ -313,6 +313,7 @@
 
 <script lang="ts" setup>
     import type { ComponentPublicInstance } from 'vue';
+    import type { AASAttributeFilters } from '@/types/AASFilters';
     import { computed, onActivated, onBeforeUnmount, onMounted, Ref, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
@@ -328,17 +329,6 @@
     // Extend the ComponentPublicInstance type to include scrollToIndex
     interface VirtualScrollInstance extends ComponentPublicInstance {
         scrollToIndex: (index: number) => void;
-    }
-
-    interface AASAttributeFilters {
-        manufacturerName: string;
-        manufacturerProductDesignation: string;
-        manufacturerProductFamily: string;
-        manufacturerProductType: string;
-        orderCodeOfManufacturer: string;
-        productArticleNumberOfManufacturer: string;
-        productClassificationSystem: string;
-        productClassId: string;
     }
 
     // Vue Router
