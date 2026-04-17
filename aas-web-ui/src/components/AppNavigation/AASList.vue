@@ -345,6 +345,7 @@
   import { useAASHandling } from '@/composables/AAS/AASHandling'
   import { appendOrMergeSortedAasById, compareAasById } from '@/composables/AAS/AASListAccumulation'
   import { useAASListPagination } from '@/composables/AAS/AASListPagination'
+  import { useAASListStatusChecks } from '@/composables/AAS/AASListStatusChecks'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { useAASStore } from '@/store/AASDataStore'
@@ -404,7 +405,6 @@
   const newShell = ref(false) // Variable to store if a new Shell should be created
   const aasToEdit = ref<any | undefined>(undefined) // Variable to store the AAS to be edited
   const statusCheckInterval = ref<number | undefined>(undefined)
-  const statusCheckInProgress = ref(false)
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
   const instanceDialog = ref(false) // Variable to store if the Instance Creation Dialog should be shown
   const aasToInstantiate = ref({}) // Variable to store the AAS to be instantiated
@@ -446,6 +446,16 @@
         applyCurrentFilter()
       }
     },
+  })
+
+  const { updateStatus } = useAASListStatusChecks({
+    aasList,
+    getVirtualScrollContainer,
+    itemHeight,
+    viewportBufferRows: statusCheckViewportBufferRows,
+    fallbackLimit: statusCheckFallbackLimit,
+    concurrency: statusCheckConcurrency,
+    aasIsAvailableById,
   })
 
   // Computed Properties
@@ -527,11 +537,11 @@
     statusCheckValue => {
       window.clearInterval(statusCheckInterval.value) // clear old interval
       if (statusCheckValue.state === true) {
-        void updateStatus()
+        void updateStatus(statusCheckValue.state)
 
         // create new interval
         statusCheckInterval.value = window.setInterval(() => {
-          void updateStatus()
+          void updateStatus(statusCheck.value.state)
         }, statusCheck.value.interval)
       } else {
         for (const aasDescriptor of allLoadedAas.value) {
@@ -575,7 +585,7 @@
 
       // create new interval
       statusCheckInterval.value = window.setInterval(() => {
-        void updateStatus()
+        void updateStatus(statusCheck.value.state)
       }, statusCheck.value.interval)
     }
 
@@ -652,37 +662,6 @@
     })
   }
 
-  function getStatusCheckTargets (): Array<any> {
-    if (!Array.isArray(aasList.value) || aasList.value.length === 0) {
-      return []
-    }
-
-    const container = getVirtualScrollContainer()
-    let candidates: Array<any>
-
-    if (container) {
-      const visibleRows = Math.max(1, Math.ceil(container.clientHeight / itemHeight))
-      const firstVisibleIndex = Math.max(0, Math.floor(container.scrollTop / itemHeight) - statusCheckViewportBufferRows)
-      const endIndex = Math.min(
-        aasList.value.length,
-        firstVisibleIndex + visibleRows + statusCheckViewportBufferRows * 2,
-      )
-      candidates = aasList.value.slice(firstVisibleIndex, endIndex)
-    } else {
-      candidates = aasList.value.slice(0, statusCheckFallbackLimit)
-    }
-
-    const seenIds = new Set<string>()
-    return candidates.filter(item => {
-      const id = item?.id
-      if (!id || seenIds.has(id)) {
-        return false
-      }
-      seenIds.add(id)
-      return true
-    })
-  }
-
   function resetAASListState (enablePagination = true): void {
     aasList.value = []
     allLoadedAas.value = []
@@ -695,59 +674,6 @@
   async function initialize (): Promise<void> {
     resetAASListState(true)
     await initializePagination(scrollToSelectedAAS)
-  }
-
-  /**
-   * Updates the status of each AAS descriptor in the descriptor list.
-   *
-   * This function checks the availability of the AAS in the repository
-   * and updates its status based on the result.
-   *
-   * @param {boolean} [init=false] Indicates whether to initialize descriptor
-   * status. If true, sets status to an empty string; otherwise sets it based
-   * on availability checks.
-   */
-  async function updateStatus (init = false): Promise<void> {
-    if (statusCheckInProgress.value) {
-      return
-    }
-
-    const statusTargets = getStatusCheckTargets()
-    if (statusTargets.length === 0) {
-      return
-    }
-
-    statusCheckInProgress.value = true
-
-    try {
-      const queue = [...statusTargets]
-      const workerCount = Math.min(statusCheckConcurrency, queue.length)
-
-      // Limit concurrent availability requests to keep UI responsive and avoid request bursts.
-      const workers = Array.from({ length: workerCount }, async () => {
-        while (queue.length > 0) {
-          const aasOrAasDescriptor = queue.shift()
-
-          if (!aasOrAasDescriptor || Object.keys(aasOrAasDescriptor).length === 0) {
-            continue
-          }
-
-          const aasIsAvailable = await aasIsAvailableById(aasOrAasDescriptor.id)
-
-          if (aasIsAvailable) {
-            aasOrAasDescriptor.status
-              = statusCheck.value.state === true ? 'online' : (init ? '' : 'check disabled')
-          } else {
-            aasOrAasDescriptor.status
-              = statusCheck.value.state === true ? 'offline' : (init ? '' : 'check disabled')
-          }
-        }
-      })
-
-      await Promise.all(workers)
-    } finally {
-      statusCheckInProgress.value = false
-    }
   }
 
   function filterAasList (value: string | null): void {
