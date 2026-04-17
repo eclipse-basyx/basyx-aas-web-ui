@@ -1,12 +1,17 @@
 import type { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
 import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
 import { computed } from 'vue'
+import { appendQueryParams, normalizeLimit, type PaginationPageOptions, type PaginationPageResult, parseNextCursor } from '@/composables/Client/PaginationUtils'
 import { useIDUtils } from '@/composables/IDUtils'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import { downloadFile } from '@/utils/generalUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
+
+export type AasListPageOptions = PaginationPageOptions
+
+export type AasListPageResult<T> = PaginationPageResult<T>
 
 export function useAASRepositoryClient () {
   // Stores
@@ -24,6 +29,7 @@ export function useAASRepositoryClient () {
   const { generateUUIDFromString } = useIDUtils()
 
   const endpointPath = '/shells'
+  const compatibilityFetchLimit = 1000
 
   // Computed Properties
   const aasRepositoryUrl = computed(() => infrastructureStore.getAASRepoURL)
@@ -42,14 +48,17 @@ export function useAASRepositoryClient () {
   })
 
   /**
-   * Fetches a list of all available Asset Administration Shells (AAS).
+   * Fetches one page of AAS from repository.
    *
    * @async
-   * @returns {Promise<Array<any>>} A promise that resolves to an array of AAS.
-   * An empty array is returned if the request fails or no AAS are found.
+   * @param {AasListPageOptions} [options] - Pagination options.
+   * @returns {Promise<AasListPageResult<any>>} Paged AAS list including continuation cursor.
    */
-  async function fetchAasList (): Promise<Array<any>> {
-    const failResponse = [] as Array<any>
+  async function fetchAasListPage (options: AasListPageOptions = {}): Promise<AasListPageResult<any>> {
+    const failResponse: AasListPageResult<any> = {
+      items: [],
+      hasMore: false,
+    }
 
     let aasRepoUrl = aasRepositoryUrl.value.trim()
     if (aasRepoUrl === '') {
@@ -62,20 +71,70 @@ export function useAASRepositoryClient () {
       aasRepoUrl += endpointPath
     }
 
-    const aasRepoPath = aasRepoUrl
-    const aasRepoContext = 'retrieving all AAS'
+    const queryParams = new URLSearchParams()
+    const normalizedLimit = normalizeLimit(options.limit)
+    if (normalizedLimit !== undefined) {
+      queryParams.set('limit', String(normalizedLimit))
+    }
+    if (options.cursor && options.cursor.trim() !== '') {
+      queryParams.set('cursor', options.cursor.trim())
+    }
+
+    const aasRepoPath = appendQueryParams(aasRepoUrl, queryParams)
+    const aasRepoContext = 'retrieving AAS page'
     const disableMessage = false
+
     try {
       const aasRepoResponse = await getRequest(aasRepoPath, aasRepoContext, disableMessage)
-      if (aasRepoResponse?.success && aasRepoResponse.data.result && aasRepoResponse.data.result.length > 0) {
-        const aasList = aasRepoResponse.data.result
-        return aasList
+      const resultItems = Array.isArray(aasRepoResponse?.data?.result)
+        ? aasRepoResponse.data.result
+        : []
+      const nextCursor = parseNextCursor(aasRepoResponse?.data)
+
+      return {
+        items: resultItems,
+        nextCursor,
+        hasMore: nextCursor !== undefined,
+        pagingMetadata: aasRepoResponse?.data?.paging_metadata ?? aasRepoResponse?.data?.pagingMetadata,
       }
     } catch (error) {
       console.warn(error)
       return failResponse
     }
-    return failResponse
+  }
+
+  /**
+   * Fetches a list of all available Asset Administration Shells (AAS).
+   *
+   * @async
+   * @returns {Promise<Array<any>>} A promise that resolves to an array of AAS.
+   * An empty array is returned if the request fails or no AAS are found.
+   */
+  async function fetchAasList (): Promise<Array<any>> {
+    const failResponse = [] as Array<any>
+    const aasList: Array<any> = []
+    const seenCursors = new Set<string>()
+    let cursor: string | undefined
+
+    while (true) {
+      const page = await fetchAasListPage({
+        limit: compatibilityFetchLimit,
+        cursor,
+      })
+
+      if (page.items.length > 0) {
+        aasList.push(...page.items)
+      }
+
+      if (!page.hasMore || !page.nextCursor || seenCursors.has(page.nextCursor)) {
+        break
+      }
+
+      seenCursors.add(page.nextCursor)
+      cursor = page.nextCursor
+    }
+
+    return aasList.length > 0 ? aasList : failResponse
   }
 
   /**
@@ -728,6 +787,7 @@ export function useAASRepositoryClient () {
 
   return {
     endpointPath,
+    fetchAasListPage,
     fetchAasList,
     fetchAasById,
     fetchAas,

@@ -1,5 +1,6 @@
 import type { jsonization } from '@aas-core-works/aas-core3.1-typescript'
 import { computed } from 'vue'
+import { appendQueryParams, normalizeLimit, type PaginationPageOptions, type PaginationPageResult, parseNextCursor } from '@/composables/Client/PaginationUtils'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import * as descriptorTypes from '@/types/Descriptors'
@@ -7,6 +8,10 @@ import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils'
 import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import { removeNullValues } from '@/utils/generalUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
+
+export type AasListPageOptions = PaginationPageOptions
+
+export type AasListPageResult<T> = PaginationPageResult<T>
 
 export function useAASRegistryClient () {
   // Stores
@@ -16,6 +21,7 @@ export function useAASRegistryClient () {
   const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling()
 
   const endpointPath = '/shell-descriptors'
+  const compatibilityFetchLimit = 1000
 
   // Computed Properties
   const aasRegistryUrl = computed(() => infrastructureStore.getAASRegistryURL)
@@ -36,14 +42,17 @@ export function useAASRegistryClient () {
   }
 
   /**
-   * Fetches a list of all available Asset Administration Shell (AAS) Descriptors.
+   * Fetches one page of AAS descriptors from registry.
    *
    * @async
-   * @returns {Promise<Array<any>>} A promise that resolves to an array of AAS Descriptors.
-   * An empty array is returned if the request fails or no AAS Descriptors are found.
+   * @param {AasListPageOptions} [options] - Pagination options.
+   * @returns {Promise<AasListPageResult<any>>} Paged descriptor list including continuation cursor.
    */
-  async function fetchAasDescriptorList (): Promise<Array<any>> {
-    const failResponse = [] as Array<any>
+  async function fetchAasDescriptorListPage (options: AasListPageOptions = {}): Promise<AasListPageResult<any>> {
+    const failResponse: AasListPageResult<any> = {
+      items: [],
+      hasMore: false,
+    }
 
     let aasRegUrl = getEffectiveAasRegistryUrl()
     if (aasRegUrl === '') {
@@ -56,24 +65,70 @@ export function useAASRegistryClient () {
       aasRegUrl += endpointPath
     }
 
-    const aasRegistryPath = aasRegUrl
-    const aasRegistryContext = 'retrieving all AAS Descriptors'
+    const queryParams = new URLSearchParams()
+    const normalizedLimit = normalizeLimit(options.limit)
+    if (normalizedLimit !== undefined) {
+      queryParams.set('limit', String(normalizedLimit))
+    }
+    if (options.cursor && options.cursor.trim() !== '') {
+      queryParams.set('cursor', options.cursor.trim())
+    }
+
+    const aasRegistryPath = appendQueryParams(aasRegUrl, queryParams)
+    const aasRegistryContext = 'retrieving AAS Descriptors page'
     const disableMessage = false
+
     try {
       const aasRegistryResponse = await getRequest(aasRegistryPath, aasRegistryContext, disableMessage)
-      if (
-        aasRegistryResponse.success
-        && aasRegistryResponse.data.result
-        && aasRegistryResponse.data.result.length > 0
-      ) {
-        const aasDescriptors = aasRegistryResponse.data.result
-        return aasDescriptors
+      const resultItems = Array.isArray(aasRegistryResponse?.data?.result)
+        ? aasRegistryResponse.data.result
+        : []
+      const nextCursor = parseNextCursor(aasRegistryResponse?.data)
+
+      return {
+        items: resultItems,
+        nextCursor,
+        hasMore: nextCursor !== undefined,
+        pagingMetadata: aasRegistryResponse?.data?.paging_metadata ?? aasRegistryResponse?.data?.pagingMetadata,
       }
     } catch (error) {
       console.warn(error)
       return failResponse
     }
-    return failResponse
+  }
+
+  /**
+   * Fetches a list of all available Asset Administration Shell (AAS) Descriptors.
+   *
+   * @async
+   * @returns {Promise<Array<any>>} A promise that resolves to an array of AAS Descriptors.
+   * An empty array is returned if the request fails or no AAS Descriptors are found.
+   */
+  async function fetchAasDescriptorList (): Promise<Array<any>> {
+    const failResponse = [] as Array<any>
+    const descriptors: Array<any> = []
+    const seenCursors = new Set<string>()
+    let cursor: string | undefined
+
+    while (true) {
+      const page = await fetchAasDescriptorListPage({
+        limit: compatibilityFetchLimit,
+        cursor,
+      })
+
+      if (page.items.length > 0) {
+        descriptors.push(...page.items)
+      }
+
+      if (!page.hasMore || !page.nextCursor || seenCursors.has(page.nextCursor)) {
+        break
+      }
+
+      seenCursors.add(page.nextCursor)
+      cursor = page.nextCursor
+    }
+
+    return descriptors.length > 0 ? descriptors : failResponse
   }
 
   /**
@@ -290,6 +345,7 @@ export function useAASRegistryClient () {
   return {
     endpointPath,
     getAasEndpointById,
+    fetchAasDescriptorListPage,
     fetchAasDescriptorList,
     fetchAasDescriptorById,
     aasDescriptorIsAvailableById,

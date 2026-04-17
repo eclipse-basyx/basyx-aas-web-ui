@@ -1,3 +1,5 @@
+import type { AasListPageOptions as RegistryPageOptions, AasListPageResult as RegistryPageResult } from '@/composables/Client/AASRegistryClient'
+import type { AasListPageOptions as RepoPageOptions, AasListPageResult as RepoPageResult } from '@/composables/Client/AASRepositoryClient'
 import { useSMEHandling } from '@/composables/AAS/SMEHandling'
 import { useSMHandling } from '@/composables/AAS/SMHandling'
 import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient'
@@ -7,14 +9,31 @@ import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils'
 import { extractId as extractIdFromReference } from '@/utils/AAS/ReferenceUtil'
 import { formatDate } from '@/utils/DateUtils'
 
+export type AasListSource = 'registry' | 'repository'
+
+export interface AasShellListPageOptions {
+  limit?: number
+  cursor?: string
+  source?: AasListSource
+}
+
+export interface AasShellListPageResult {
+  items: Array<any>
+  nextCursor?: string
+  hasMore: boolean
+  source: AasListSource
+}
+
 export function useAASHandling () {
   // Composables
   const {
     fetchAasDescriptorById: fetchAasDescriptorByIdFromRegistry,
+    fetchAasDescriptorListPage: fetchAasDescriptorListPageFromRegistry,
     fetchAasDescriptorList: fetchAasDescriptorListFromRegistry,
     getAasEndpointById: getAasEndpointByIdFromRegistry,
   } = useAASRegistryClient()
   const {
+    fetchAasListPage: fetchAasListPageFromRepo,
     fetchAasList: fetchAasListFromRepo,
     fetchAas: fetchAasFromRepo,
     getAasEndpointById: getAasEndpointByIdFromRepo,
@@ -27,6 +46,69 @@ export function useAASHandling () {
 
   // Stores
   const aasStore = useAASStore()
+
+  function enrichDescriptorListItems (items: Array<any>): Array<any> {
+    return items.map((aasDescriptor: any) => {
+      aasDescriptor.timestamp = formatDate(new Date())
+      aasDescriptor.path = extractEndpointHref(aasDescriptor, 'AAS-3.0')
+      return aasDescriptor
+    })
+  }
+
+  function enrichRepositoryListItems (items: Array<any>): Array<any> {
+    return items.map((aas: any) => {
+      aas.timestamp = formatDate(new Date())
+      aas.path = getAasEndpointByIdFromRepo(aas.id)
+      return aas
+    })
+  }
+
+  async function fetchRegistryShellPage (
+    options: RegistryPageOptions,
+  ): Promise<AasShellListPageResult> {
+    const response: RegistryPageResult<any> = await fetchAasDescriptorListPageFromRegistry(options)
+    return {
+      items: enrichDescriptorListItems(response.items),
+      nextCursor: response.nextCursor,
+      hasMore: response.hasMore,
+      source: 'registry',
+    }
+  }
+
+  async function fetchRepositoryShellPage (
+    options: RepoPageOptions,
+  ): Promise<AasShellListPageResult> {
+    const response: RepoPageResult<any> = await fetchAasListPageFromRepo(options)
+    return {
+      items: enrichRepositoryListItems(response.items),
+      nextCursor: response.nextCursor,
+      hasMore: response.hasMore,
+      source: 'repository',
+    }
+  }
+
+  /**
+   * Fetches one page of shells and normalizes registry/repository behavior.
+   *
+   * Registry is preferred on the first request and repository is used as fallback
+   * when registry returns no list items.
+   */
+  async function fetchAasShellListPage (options: AasShellListPageOptions = {}): Promise<AasShellListPageResult> {
+    if (options.source === 'registry') {
+      return fetchRegistryShellPage(options)
+    }
+
+    if (options.source === 'repository') {
+      return fetchRepositoryShellPage(options)
+    }
+
+    const registryResult = await fetchRegistryShellPage(options)
+    if (registryResult.items.length > 0 || registryResult.hasMore) {
+      return registryResult
+    }
+
+    return fetchRepositoryShellPage(options)
+  }
 
   /**
    * Fetches an Asset Administration Shell (AAS) by the provided AAS endpoint
@@ -101,20 +183,35 @@ export function useAASHandling () {
    */
   async function fetchAasDescriptorList (): Promise<Array<any>> {
     const failResponse = [] as Array<any>
+    const compatibilityFetchLimit = 1000
+    const descriptors: Array<any> = []
+    const seenCursors = new Set<string>()
+    let cursor: string | undefined
 
-    let aasDescriptorList = await fetchAasDescriptorListFromRegistry()
+    while (true) {
+      const page = await fetchRegistryShellPage({
+        limit: compatibilityFetchLimit,
+        cursor,
+      })
 
-    if (!aasDescriptorList || !Array.isArray(aasDescriptorList) || aasDescriptorList.length === 0) {
-      return failResponse
+      if (page.items.length > 0) {
+        descriptors.push(...page.items)
+      }
+
+      if (!page.hasMore || !page.nextCursor || seenCursors.has(page.nextCursor)) {
+        break
+      }
+
+      seenCursors.add(page.nextCursor)
+      cursor = page.nextCursor
     }
 
-    aasDescriptorList = aasDescriptorList.map((aasDescriptor: any) => {
-      aasDescriptor.timestamp = formatDate(new Date())
-      aasDescriptor.path = extractEndpointHref(aasDescriptor, 'AAS-3.0')
-      return aasDescriptor
-    })
+    if (descriptors.length === 0) {
+      const fallbackDescriptors = await fetchAasDescriptorListFromRegistry()
+      return enrichDescriptorListItems(fallbackDescriptors)
+    }
 
-    return aasDescriptorList
+    return descriptors.length > 0 ? descriptors : failResponse
   }
 
   /**
@@ -126,20 +223,35 @@ export function useAASHandling () {
    */
   async function fetchAasList (): Promise<Array<any>> {
     const failResponse = [] as Array<any>
+    const compatibilityFetchLimit = 1000
+    const aasList: Array<any> = []
+    const seenCursors = new Set<string>()
+    let cursor: string | undefined
 
-    let aasList = await fetchAasListFromRepo()
+    while (true) {
+      const page = await fetchRepositoryShellPage({
+        limit: compatibilityFetchLimit,
+        cursor,
+      })
 
-    if (!aasList || !Array.isArray(aasList) || aasList.length === 0) {
-      return failResponse
+      if (page.items.length > 0) {
+        aasList.push(...page.items)
+      }
+
+      if (!page.hasMore || !page.nextCursor || seenCursors.has(page.nextCursor)) {
+        break
+      }
+
+      seenCursors.add(page.nextCursor)
+      cursor = page.nextCursor
     }
 
-    aasList = aasList.map((aas: any) => {
-      aas.timestamp = formatDate(new Date())
-      aas.path = getAasEndpointByIdFromRepo(aas.id)
-      return aas
-    })
+    if (aasList.length === 0) {
+      const fallbackAasList = await fetchAasListFromRepo()
+      return enrichRepositoryListItems(fallbackAasList)
+    }
 
-    return aasList
+    return aasList.length > 0 ? aasList : failResponse
   }
 
   /**
@@ -504,6 +616,7 @@ export function useAASHandling () {
     aasByEndpointHasSmeByPath,
     fetchAndDispatchAas,
     fetchAndDispatchAasById,
+    fetchAasShellListPage,
     fetchAasDescriptorList,
     fetchAasDescriptor,
     fetchAasList,
