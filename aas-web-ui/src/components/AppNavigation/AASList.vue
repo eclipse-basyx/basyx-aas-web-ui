@@ -122,7 +122,6 @@
             class="pb-2 bg-card"
             :item-height="56"
             :items="aasList"
-            @scroll.passive="onVirtualScroll"
           >
             <template #default="{ item }">
               <!-- Single AAS -->
@@ -524,8 +523,11 @@
 
   watch(
     () => clearAASList.value,
-    () => {
-      resetPaginationState()
+    clearAasListValue => {
+      if (clearAasListValue === true) {
+        resetPaginationState(false)
+        unbindVirtualScrollListener()
+      }
     },
   )
 
@@ -569,6 +571,57 @@
     }
   }
 
+  function compareAasById (a: any, b: any): number {
+    if (a.id === b.id) {
+      return 0
+    }
+
+    return a.id > b.id ? 1 : -1
+  }
+
+  function mergeSortedAasById (existingItems: Array<any>, incomingItems: Array<any>): Array<any> {
+    if (existingItems.length === 0) {
+      return incomingItems
+    }
+
+    if (incomingItems.length === 0) {
+      return existingItems
+    }
+
+    const mergedItems: Array<any> = []
+    let existingIndex = 0
+    let incomingIndex = 0
+
+    while (existingIndex < existingItems.length && incomingIndex < incomingItems.length) {
+      const comparison = compareAasById(existingItems[existingIndex], incomingItems[incomingIndex])
+
+      if (comparison <= 0) {
+        mergedItems.push(existingItems[existingIndex])
+        existingIndex += 1
+
+        // Skip duplicate IDs if they ever occur despite upstream de-duplication.
+        if (comparison === 0) {
+          incomingIndex += 1
+        }
+      } else {
+        mergedItems.push(incomingItems[incomingIndex])
+        incomingIndex += 1
+      }
+    }
+
+    while (existingIndex < existingItems.length) {
+      mergedItems.push(existingItems[existingIndex])
+      existingIndex += 1
+    }
+
+    while (incomingIndex < incomingItems.length) {
+      mergedItems.push(incomingItems[incomingIndex])
+      incomingIndex += 1
+    }
+
+    return mergedItems
+  }
+
   function applyCurrentFilter (): void {
     const trimmedSearch = searchValue.value.trim().toLowerCase()
     const filteredItems = trimmedSearch === ''
@@ -581,39 +634,27 @@
           || aasOrAasDescriptor.descLower.includes(trimmedSearch),
       )
 
-    const selectedFallbackItem = createSelectedFallbackItem()
-    if (selectedFallbackItem && matchesSearch(selectedFallbackItem, trimmedSearch)) {
-      aasList.value = [selectedFallbackItem, ...filteredItems]
+    const pinnedSelectedItem = createPinnedSelectedItem()
+    if (pinnedSelectedItem) {
+      aasList.value = [
+        pinnedSelectedItem,
+        ...filteredItems.filter(item => item?.id !== pinnedSelectedItem.id),
+      ]
       return
     }
 
     aasList.value = filteredItems
   }
 
-  function matchesSearch (item: any, trimmedSearch: string): boolean {
-    if (trimmedSearch === '') {
-      return true
-    }
-
-    return item.idLower.includes(trimmedSearch)
-      || item.idShortLower.includes(trimmedSearch)
-      || item.nameLower.includes(trimmedSearch)
-      || item.descLower.includes(trimmedSearch)
-  }
-
-  function createSelectedFallbackItem (): any | undefined {
+  function createPinnedSelectedItem (): any | undefined {
     if (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0 || !selectedAAS.value.id) {
       return undefined
     }
 
     const selectedId = selectedAAS.value.id
-    if (loadedIds.value.has(selectedId)) {
-      return undefined
-    }
-
-    const hasSelectedInLoadedItems = allLoadedAas.value.some(item => item?.id === selectedId)
-    if (hasSelectedInLoadedItems) {
-      return undefined
+    const selectedLoadedItem = allLoadedAas.value.find(item => item?.id === selectedId)
+    if (selectedLoadedItem) {
+      return selectedLoadedItem
     }
 
     const aasPathFromQuery = typeof route.query.aas === 'string' ? route.query.aas : ''
@@ -697,12 +738,12 @@
     debouncedTryLoadNextPageIfNeeded()
   }
 
-  function resetPaginationState (): void {
+  function resetPaginationState (enablePagination = true): void {
     aasList.value = []
     allLoadedAas.value = []
     loadedIds.value.clear()
     nextCursor.value = undefined
-    hasMorePages.value = true
+    hasMorePages.value = enablePagination
     activeSource.value = undefined
     searchValue.value = ''
     isLoadingInitialPage.value = false
@@ -735,7 +776,7 @@
 
       if (Array.isArray(page.items) && page.items.length > 0) {
         const incomingItems = page.items
-          .toSorted((a, b) => (a.id > b.id ? 1 : -1))
+          .toSorted(compareAasById)
           .filter(item => {
             if (!item?.id || loadedIds.value.has(item.id)) {
               return false
@@ -746,7 +787,7 @@
           .map(item => preprocessListItem(item))
 
         if (incomingItems.length > 0) {
-          allLoadedAas.value = allLoadedAas.value.concat(incomingItems).toSorted((a, b) => (a.id > b.id ? 1 : -1))
+          allLoadedAas.value = mergeSortedAasById(allLoadedAas.value, incomingItems)
           applyCurrentFilter()
         }
       }
@@ -757,7 +798,7 @@
 
   // Function to get the AAS Data from the Registry Server
   async function initialize (): Promise<void> {
-    resetPaginationState()
+    resetPaginationState(true)
     isLoadingInitialPage.value = true
 
     try {
