@@ -3,14 +3,14 @@ import type { ComponentPublicInstance, Ref } from 'vue'
 import { nextTick, ref } from 'vue'
 import { debounce } from '@/utils/generalUtils'
 
-export interface AasListPagePayload {
-  items: Array<any>
+export interface AasListPagePayload<TItem = unknown> {
+  items: Array<TItem>
   nextCursor?: string
   hasMore: boolean
   source?: AasListSource
 }
 
-export interface UseAASListPaginationOptions {
+export interface UseAASListPaginationOptions<TItem = unknown> {
   virtualScrollRef: Ref<ComponentPublicInstance | null>
   itemHeight: number
   minPageLimit: number
@@ -23,11 +23,11 @@ export interface UseAASListPaginationOptions {
     limit: number
     cursor?: string
     source?: AasListSource
-  }) => Promise<AasListPagePayload>
-  onPageItems: (items: Array<any>) => void | Promise<void>
+  }) => Promise<AasListPagePayload<TItem>>
+  onPageItems: (items: Array<TItem>) => void | Promise<void>
 }
 
-export function useAASListPagination (options: UseAASListPaginationOptions) {
+export function useAASListPagination<TItem = unknown> (options: UseAASListPaginationOptions<TItem>) {
   const nextCursor = ref<string | undefined>(undefined)
   const hasMorePages = ref(true)
   const activeSource = ref<AasListSource | undefined>(undefined)
@@ -104,7 +104,9 @@ export function useAASListPagination (options: UseAASListPaginationOptions) {
         return
       }
 
-      activeSource.value = page.source
+      if (page.source !== undefined) {
+        activeSource.value = page.source
+      }
       nextCursor.value = page.nextCursor
       hasMorePages.value = page.hasMore
 
@@ -158,6 +160,8 @@ export function useAASListPagination (options: UseAASListPaginationOptions) {
 
   function invalidatePaginationGeneration (): void {
     paginationGeneration.value += 1
+    isLoadingInitialPage.value = false
+    pageLoading.value = false
   }
 
   function resetPaginationState (enablePagination = true): void {

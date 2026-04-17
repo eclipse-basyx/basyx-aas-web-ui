@@ -72,6 +72,60 @@ describe('AASListPagination.ts', () => {
     expect(pagination.hasMorePages.value).toBe(false)
   })
 
+  it('preserves previously selected source when a later page omits source', async () => {
+    const fetchPage = vi
+      .fn()
+      .mockResolvedValueOnce({
+        items: [],
+        nextCursor: 'cursor-1',
+        hasMore: true,
+        source: 'registry',
+      })
+      .mockResolvedValueOnce({
+        items: [],
+        nextCursor: 'cursor-2',
+        hasMore: true,
+      })
+      .mockResolvedValueOnce({
+        items: [],
+        nextCursor: undefined,
+        hasMore: false,
+      })
+
+    const pagination = useAASListPagination({
+      virtualScrollRef: createVirtualScrollRef(560),
+      itemHeight: 56,
+      minPageLimit: 1,
+      maxPageLimit: 300,
+      pageSizeMultiplier: 3,
+      prefetchThresholdInRows: 8,
+      scrollLoadDebounceMs: 50,
+      minPageLoadIntervalMs: 0,
+      fetchPage,
+      onPageItems: vi.fn(),
+    })
+
+    await pagination.fetchNextPage()
+    await pagination.fetchNextPage()
+    await pagination.fetchNextPage()
+
+    expect(fetchPage).toHaveBeenNthCalledWith(1, {
+      limit: 30,
+      cursor: undefined,
+      source: undefined,
+    })
+    expect(fetchPage).toHaveBeenNthCalledWith(2, {
+      limit: 30,
+      cursor: 'cursor-1',
+      source: 'registry',
+    })
+    expect(fetchPage).toHaveBeenNthCalledWith(3, {
+      limit: 30,
+      cursor: 'cursor-2',
+      source: 'registry',
+    })
+  })
+
   it('ignores stale in-flight page results after generation invalidation', async () => {
     let resolvePage: (value: { items: Array<any>, nextCursor?: string, hasMore: boolean }) => void
     const fetchPage = vi.fn().mockImplementation(
@@ -96,7 +150,6 @@ describe('AASListPagination.ts', () => {
 
     const inFlightFetch = pagination.fetchNextPage()
     pagination.invalidatePaginationGeneration()
-    pagination.resetPaginationState(false)
 
     resolvePage!({
       items: [{ id: 'aas-1' }],
@@ -107,8 +160,44 @@ describe('AASListPagination.ts', () => {
     await inFlightFetch
 
     expect(onPageItems).not.toHaveBeenCalled()
-    expect(pagination.hasMorePages.value).toBe(false)
     expect(pagination.pageLoading.value).toBe(false)
+  })
+
+  it('clears initial loading flag when invalidation happens during initialize', async () => {
+    let resolvePage: (value: { items: Array<any>, nextCursor?: string, hasMore: boolean }) => void
+    const fetchPage = vi.fn().mockImplementation(
+      () => new Promise(resolve => {
+        resolvePage = resolve
+      }),
+    )
+
+    const pagination = useAASListPagination({
+      virtualScrollRef: createVirtualScrollRef(560),
+      itemHeight: 56,
+      minPageLimit: 1,
+      maxPageLimit: 300,
+      pageSizeMultiplier: 3,
+      prefetchThresholdInRows: 8,
+      scrollLoadDebounceMs: 50,
+      minPageLoadIntervalMs: 0,
+      fetchPage,
+      onPageItems: vi.fn(),
+    })
+
+    const initializePromise = pagination.initialize()
+    expect(pagination.isLoadingInitialPage.value).toBe(true)
+
+    pagination.invalidatePaginationGeneration()
+    expect(pagination.isLoadingInitialPage.value).toBe(false)
+
+    resolvePage!({
+      items: [],
+      nextCursor: undefined,
+      hasMore: false,
+    })
+
+    await initializePromise
+    expect(pagination.isLoadingInitialPage.value).toBe(false)
   })
 
   it('initializes first page and invokes completion callback', async () => {
