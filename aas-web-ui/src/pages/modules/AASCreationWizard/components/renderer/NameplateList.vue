@@ -53,7 +53,7 @@
   import type { FormStateObject, FormStateValue } from '../../types/form'
   import type { SubmodelElementListElement } from '../../types/template'
   import { computed, ref } from 'vue'
-  import { asFormStateObjectArray, formatLabel, formatRepeatedElementBaseLabel } from '../../utils/formFieldUtils'
+  import { asFormStateObjectArray, formatRepeatedElementBaseLabel } from '../../utils/formFieldUtils'
   import {
     addopenPanelIndex,
     appendListItem,

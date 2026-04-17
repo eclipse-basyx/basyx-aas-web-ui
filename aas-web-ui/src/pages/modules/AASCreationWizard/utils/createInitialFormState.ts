@@ -8,7 +8,6 @@ import type {
 import {
   isOptionalSingleElement,
   isRepeatableElement,
-  isRequiredElement,
 } from './cardinalityUtils'
 
 export function createInitialFormState (templateOrElements: SubmodelTemplate | TemplateElement[]): FormStateObject {
