@@ -3,9 +3,14 @@ import { ref } from 'vue'
 
 import { useAASListStatusChecks } from '@/composables/AAS/AASListStatusChecks'
 
+type TestAasStatusItem = {
+  id: string
+  status?: string
+}
+
 describe('AASListStatusChecks.ts', () => {
   it('uses fallback targets, de-duplicates by id, and updates online/offline status', async () => {
-    const aasList = ref([
+    const aasList = ref<Array<TestAasStatusItem>>([
       { id: 'aas-1' },
       { id: 'aas-1' },
       { id: 'aas-2' },
@@ -35,7 +40,7 @@ describe('AASListStatusChecks.ts', () => {
   })
 
   it('limits checks to current visible virtual-scroll slice', async () => {
-    const aasList = ref([
+    const aasList = ref<Array<TestAasStatusItem>>([
       { id: 'aas-1' },
       { id: 'aas-2' },
       { id: 'aas-3' },
@@ -70,14 +75,14 @@ describe('AASListStatusChecks.ts', () => {
     await updateStatus(true)
 
     expect(aasIsAvailableById).toHaveBeenCalledTimes(4)
-    expect(aasIsAvailableById).toHaveBeenNthCalledWith(1, 'aas-1')
-    expect(aasIsAvailableById).toHaveBeenNthCalledWith(2, 'aas-2')
-    expect(aasIsAvailableById).toHaveBeenNthCalledWith(3, 'aas-3')
-    expect(aasIsAvailableById).toHaveBeenNthCalledWith(4, 'aas-4')
+    expect(aasIsAvailableById).toHaveBeenCalledWith('aas-1')
+    expect(aasIsAvailableById).toHaveBeenCalledWith('aas-2')
+    expect(aasIsAvailableById).toHaveBeenCalledWith('aas-3')
+    expect(aasIsAvailableById).toHaveBeenCalledWith('aas-4')
   })
 
   it('prevents overlapping update runs while one is in progress', async () => {
-    const aasList = ref([{ id: 'aas-1' }])
+    const aasList = ref<Array<TestAasStatusItem>>([{ id: 'aas-1' }])
     let resolveAvailability!: (value: boolean) => void
     const aasIsAvailableById = vi.fn(() => new Promise<boolean>(resolve => {
       resolveAvailability = resolve
@@ -105,8 +110,28 @@ describe('AASListStatusChecks.ts', () => {
     expect(aasList.value[0].status).toBe('online')
   })
 
+  it('processes targets when configured concurrency is 0', async () => {
+    const aasList = ref<Array<TestAasStatusItem>>([{ id: 'aas-1' }])
+    const aasIsAvailableById = vi.fn(async () => true)
+
+    const { updateStatus } = useAASListStatusChecks({
+      aasList,
+      getVirtualScrollContainer: () => null,
+      itemHeight: 56,
+      viewportBufferRows: 1,
+      fallbackLimit: 1,
+      concurrency: 0,
+      aasIsAvailableById,
+    })
+
+    await updateStatus(true)
+
+    expect(aasIsAvailableById).toHaveBeenCalledTimes(1)
+    expect(aasList.value[0].status).toBe('online')
+  })
+
   it('writes disabled status when checks are disabled', async () => {
-    const aasList = ref([{ id: 'aas-1' }])
+    const aasList = ref<Array<TestAasStatusItem>>([{ id: 'aas-1' }])
     const aasIsAvailableById = vi.fn(async () => true)
 
     const { updateStatus } = useAASListStatusChecks({
@@ -121,6 +146,7 @@ describe('AASListStatusChecks.ts', () => {
 
     await updateStatus(false)
 
+    expect(aasIsAvailableById).not.toHaveBeenCalled()
     expect(aasList.value[0].status).toBe('check disabled')
   })
 })

@@ -62,11 +62,21 @@ export function useAASListStatusChecks<TItem extends AasStatusCheckItem = AasSta
       return
     }
 
+    if (!statusCheckEnabled) {
+      for (const aasOrAasDescriptor of statusTargets) {
+        aasOrAasDescriptor.status = init ? '' : 'check disabled'
+      }
+      return
+    }
+
     statusCheckInProgress.value = true
 
     try {
       const queue = [...statusTargets]
-      const workerCount = Math.min(options.concurrency, queue.length)
+      const normalizedConcurrency = Number.isFinite(options.concurrency)
+        ? Math.max(1, Math.floor(options.concurrency))
+        : 1
+      const workerCount = Math.min(normalizedConcurrency, queue.length)
 
       const workers = Array.from({ length: workerCount }, async () => {
         while (queue.length > 0) {
