@@ -70,5 +70,8 @@
     }
 
     console.log('AAS post succeeded')
+
+    window.alert('Submission was successful.')
+    props.finish()
   }
 </script>
