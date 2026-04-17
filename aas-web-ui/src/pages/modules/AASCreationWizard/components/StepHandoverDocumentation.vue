@@ -72,6 +72,7 @@
     console.log('AAS post succeeded')
 
     window.alert('Submission was successful.')
+    store.resetCreationState()
     props.finish()
   }
 </script>

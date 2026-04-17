@@ -16,16 +16,20 @@ export type AssetDataForm = {
   thumbnailFile: File | null
 }
 
+function createInitialAssetData (): AssetDataForm {
+  return {
+    aasId: '',
+    displayName: '',
+    description: '',
+    assetKind: 'Instance' as 'Instance' | 'Type',
+    globalAssetId: '',
+    thumbnailFile: null as File | null,
+  }
+}
+
 export const useAASCreationStore = defineStore('aasCreationForm', {
   state: () => ({
-    assetData: {
-      aasId: '',
-      displayName: '',
-      description: '',
-      assetKind: 'Instance' as 'Instance' | 'Type',
-      globalAssetId: '',
-      thumbnailFile: null as File | null,
-    } as AssetDataForm,
+    assetData: createInitialAssetData(),
 
     digitalNameplateData: null as DigitalNameplateTemplate | null,
     technicalDataData: null as Record<string, any> | null,
@@ -55,6 +59,13 @@ export const useAASCreationStore = defineStore('aasCreationForm', {
     },
     saveDigitalNameplateFormState (data: FormStateObject) {
       this.digitalNameplateFormState = structuredClone(data)
+    },
+    resetCreationState () {
+      this.assetData = createInitialAssetData()
+      this.digitalNameplateData = null
+      this.technicalDataData = null
+      this.handoverDocumentationData = null
+      this.digitalNameplateFormState = null
     },
   },
   getters: {
