@@ -41,13 +41,15 @@
   import type { FormStateObject } from '../types/form'
   import type { DigitalNameplateTemplate } from '../types/template'
   import type { ValidationIssue } from '../types/validation'
-  import { onMounted, ref } from 'vue'
+  // import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
+  import { onMounted, ref, toRaw } from 'vue'
   import { buildDigitalNameplate } from '../builders/buildDigitalNameplate'
   import { useAASCreationStore } from '../stores/aasCreationForm'
   import template from '../templates/digital-nameplate.json'
   import { createInitialFormState } from '../utils/createInitialFormState'
   import { normalizeTemplate } from '../utils/normalizeTemplate'
   import { validateTemplateElements } from '../utils/validationUtils'
+  // import { useSMRepositoryClient } from './../../../../composables/Client/SMRepositoryClient'
   import NameplateRenderer from './renderer/NameplateRenderer.vue'
 
   const props = defineProps<{
@@ -59,6 +61,7 @@
   const store = useAASCreationStore()
   const formRef = ref()
   const hasAttemptedSubmit = ref(false)
+  // const { postSubmodel } = useSMRepositoryClient()
 
   // const templateData = template as DigitalNameplateTemplate
   const rawTemplate = template as DigitalNameplateTemplate
@@ -101,17 +104,55 @@
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
-
-    const savedFormState = structuredClone(formValues.value)
+    const rawFormState = deepCopyFormState(formValues.value)
+    const savedFormState = structuredClone(rawFormState)
     store.saveDigitalNameplateFormState(savedFormState)
 
-    const builtDigitalNameplate = buildDigitalNameplate(structuredClone(formValues.value))
+    const builtDigitalNameplate = buildDigitalNameplate(rawFormState)
+    console.log('builtDigitalNameplate', builtDigitalNameplate)
     store.saveDigitalNameplateData(builtDigitalNameplate)
 
+    // const instanceOrError = jsonization.submodelFromJsonable(builtDigitalNameplate as any)
+
+    // if (instanceOrError.error !== null) {
+    //   console.error('Error parsing Submodel:', instanceOrError.error)
+    //   return
+    // }
+    // const submodelInstance = instanceOrError.mustValue()
+
+    // const success = await postSubmodel(submodelInstance)
+
+    // console.log('post was a success', success)
+
+    // if (!success) {
+    //   console.log('post function failed')
+    // }
     props.next()
   }
 
   function onFormStateUpdate (value: FormStateObject): void {
     formValues.value = value
+  }
+  function deepCopyFormState<T> (value: T): T {
+    if (value === null || typeof value !== 'object') {
+      return value
+    }
+
+    if (value instanceof File) {
+      return value
+    }
+
+    if (Array.isArray(value)) {
+      return value.map(item => deepCopyFormState(item)) as T
+    }
+
+    const rawObject = toRaw(value) as Record<string, unknown>
+    const result: Record<string, unknown> = {}
+
+    for (const [key, nestedValue] of Object.entries(rawObject)) {
+      result[key] = deepCopyFormState(nestedValue)
+    }
+
+    return result as T
   }
 </script>

@@ -71,6 +71,13 @@ export function validateElementValue (
   const optionalSingle = isOptionalSingleElement(element)
 
   if (repeatable) {
+    if (value === undefined || value === null) {
+      if (required) {
+        issues.push(buildIssue(path, element, 'At least one entry is required.'))
+      }
+      return issues
+    }
+
     if (!Array.isArray(value)) {
       issues.push(buildIssue(path, element, 'Expected a repeatable value.'))
       return issues

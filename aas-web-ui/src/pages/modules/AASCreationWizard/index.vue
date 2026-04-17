@@ -30,7 +30,7 @@
         </v-stepper-window-item>
 
         <v-stepper-window-item :value="4">
-          <StepHandoverDocumentation :is-active-component="step === 4" :next="goNext" :prev="goPrev" />
+          <StepHandoverDocumentation :finish="resetToFirstStep" :is-active-component="step === 4" :next="goNext" :prev="goPrev" />
         </v-stepper-window-item>
       </v-stepper-window>
 
@@ -74,5 +74,8 @@
   }
   function scrollToBottom (): void {
     window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })
+  }
+  function resetToFirstStep (): void {
+    step.value = 1
   }
 </script>
