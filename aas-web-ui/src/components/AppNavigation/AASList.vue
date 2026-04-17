@@ -344,6 +344,7 @@
   import { useRoute, useRouter } from 'vue-router'
   import { useTheme } from 'vuetify'
   import { useAASHandling } from '@/composables/AAS/AASHandling'
+  import { appendOrMergeSortedAasById, compareAasById } from '@/composables/AAS/AASListAccumulation'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { useAASStore } from '@/store/AASDataStore'
@@ -382,6 +383,9 @@
   const pageSizeMultiplier = 3
   const scrollLoadDebounceMs = 200
   const minPageLoadIntervalMs = 350
+  const statusCheckConcurrency = 4
+  const statusCheckViewportBufferRows = 6
+  const statusCheckFallbackLimit = 60
 
   // Data
   const aasList = ref([] as Array<any>) as Ref<Array<any>> // Variable to store currently displayed AAS Data
@@ -393,6 +397,7 @@
   const pageLoading = ref(false)
   const searchValue = ref('')
   const loadedIds = ref(new Set<string>())
+  const paginationGeneration = ref(0)
   const lastPageLoadAt = ref(0)
   let scrollContainerEl: HTMLElement | null = null
   const debouncedFilterAasList = debounce(filterAasList, 300) // Debounced function to filter the AAS List
@@ -407,6 +412,7 @@
   const newShell = ref(false) // Variable to store if a new Shell should be created
   const aasToEdit = ref<any | undefined>(undefined) // Variable to store the AAS to be edited
   const statusCheckInterval = ref<number | undefined>(undefined)
+  const statusCheckInProgress = ref(false)
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
   const instanceDialog = ref(false) // Variable to store if the Instance Creation Dialog should be shown
   const aasToInstantiate = ref({}) // Variable to store the AAS to be instantiated
@@ -525,6 +531,7 @@
     () => clearAASList.value,
     clearAasListValue => {
       if (clearAasListValue === true) {
+        paginationGeneration.value += 1
         resetPaginationState(false)
         unbindVirtualScrollListener()
       }
@@ -569,57 +576,6 @@
       nameLower: nameToDisplay(item).toLowerCase(),
       descLower: descriptionToDisplay(item).toLowerCase(),
     }
-  }
-
-  function compareAasById (a: any, b: any): number {
-    if (a.id === b.id) {
-      return 0
-    }
-
-    return a.id > b.id ? 1 : -1
-  }
-
-  function mergeSortedAasById (existingItems: Array<any>, incomingItems: Array<any>): Array<any> {
-    if (existingItems.length === 0) {
-      return incomingItems
-    }
-
-    if (incomingItems.length === 0) {
-      return existingItems
-    }
-
-    const mergedItems: Array<any> = []
-    let existingIndex = 0
-    let incomingIndex = 0
-
-    while (existingIndex < existingItems.length && incomingIndex < incomingItems.length) {
-      const comparison = compareAasById(existingItems[existingIndex], incomingItems[incomingIndex])
-
-      if (comparison <= 0) {
-        mergedItems.push(existingItems[existingIndex])
-        existingIndex += 1
-
-        // Skip duplicate IDs if they ever occur despite upstream de-duplication.
-        if (comparison === 0) {
-          incomingIndex += 1
-        }
-      } else {
-        mergedItems.push(incomingItems[incomingIndex])
-        incomingIndex += 1
-      }
-    }
-
-    while (existingIndex < existingItems.length) {
-      mergedItems.push(existingItems[existingIndex])
-      existingIndex += 1
-    }
-
-    while (incomingIndex < incomingItems.length) {
-      mergedItems.push(incomingItems[incomingIndex])
-      incomingIndex += 1
-    }
-
-    return mergedItems
   }
 
   function applyCurrentFilter (): void {
@@ -683,6 +639,37 @@
     return null
   }
 
+  function getStatusCheckTargets (): Array<any> {
+    if (!Array.isArray(aasList.value) || aasList.value.length === 0) {
+      return []
+    }
+
+    const container = getVirtualScrollContainer()
+    let candidates: Array<any>
+
+    if (container) {
+      const visibleRows = Math.max(1, Math.ceil(container.clientHeight / itemHeight))
+      const firstVisibleIndex = Math.max(0, Math.floor(container.scrollTop / itemHeight) - statusCheckViewportBufferRows)
+      const endIndex = Math.min(
+        aasList.value.length,
+        firstVisibleIndex + visibleRows + statusCheckViewportBufferRows * 2,
+      )
+      candidates = aasList.value.slice(firstVisibleIndex, endIndex)
+    } else {
+      candidates = aasList.value.slice(0, statusCheckFallbackLimit)
+    }
+
+    const seenIds = new Set<string>()
+    return candidates.filter(item => {
+      const id = item?.id
+      if (!id || seenIds.has(id)) {
+        return false
+      }
+      seenIds.add(id)
+      return true
+    })
+  }
+
   function getDynamicLimit (): number {
     const container = getVirtualScrollContainer()
     const viewportHeight = container?.clientHeight ?? 0
@@ -738,6 +725,11 @@
     debouncedTryLoadNextPageIfNeeded()
   }
 
+  function beginPaginationGeneration (): number {
+    paginationGeneration.value += 1
+    return paginationGeneration.value
+  }
+
   function resetPaginationState (enablePagination = true): void {
     aasList.value = []
     allLoadedAas.value = []
@@ -751,6 +743,8 @@
   }
 
   async function fetchNextPage (): Promise<void> {
+    const expectedGeneration = paginationGeneration.value
+
     if (!hasMorePages.value || pageLoading.value) {
       return
     }
@@ -765,6 +759,10 @@
         cursor: nextCursor.value,
         source: activeSource.value,
       })
+
+      if (expectedGeneration !== paginationGeneration.value) {
+        return
+      }
 
       activeSource.value = page.source
       nextCursor.value = page.nextCursor
@@ -787,24 +785,36 @@
           .map(item => preprocessListItem(item))
 
         if (incomingItems.length > 0) {
-          allLoadedAas.value = mergeSortedAasById(allLoadedAas.value, incomingItems)
+          allLoadedAas.value = appendOrMergeSortedAasById(allLoadedAas.value, incomingItems)
           applyCurrentFilter()
         }
       }
     } finally {
-      pageLoading.value = false
+      if (expectedGeneration === paginationGeneration.value) {
+        pageLoading.value = false
+      }
     }
   }
 
   // Function to get the AAS Data from the Registry Server
   async function initialize (): Promise<void> {
+    const generation = beginPaginationGeneration()
     resetPaginationState(true)
     isLoadingInitialPage.value = true
 
     try {
       await fetchNextPage()
+
+      if (generation !== paginationGeneration.value) {
+        return
+      }
+
       scrollToSelectedAAS()
     } finally {
+      if (generation !== paginationGeneration.value) {
+        return
+      }
+
       isLoadingInitialPage.value = false
 
       void nextTick(() => {
@@ -824,10 +834,29 @@
    * on availability checks.
    */
   async function updateStatus (init = false): Promise<void> {
-    if (Array.isArray(allLoadedAas.value) && allLoadedAas.value.length > 0)
-      for (const aasOrAasDescriptor of allLoadedAas.value) {
-        if (aasOrAasDescriptor && Object.keys(aasOrAasDescriptor).length > 0) {
-          await new Promise(resolve => setTimeout(resolve, 600)) // Give the UI the chance to refresh status icons
+    if (statusCheckInProgress.value) {
+      return
+    }
+
+    const statusTargets = getStatusCheckTargets()
+    if (statusTargets.length === 0) {
+      return
+    }
+
+    statusCheckInProgress.value = true
+
+    try {
+      const queue = [...statusTargets]
+      const workerCount = Math.min(statusCheckConcurrency, queue.length)
+
+      // Limit concurrent availability requests to keep UI responsive and avoid request bursts.
+      const workers = Array.from({ length: workerCount }, async () => {
+        while (queue.length > 0) {
+          const aasOrAasDescriptor = queue.shift()
+
+          if (!aasOrAasDescriptor || Object.keys(aasOrAasDescriptor).length === 0) {
+            continue
+          }
 
           const aasIsAvailable = await aasIsAvailableById(aasOrAasDescriptor.id)
 
@@ -839,7 +868,12 @@
               = statusCheck.value.state === true ? 'offline' : (init ? '' : 'check disabled')
           }
         }
-      }
+      })
+
+      await Promise.all(workers)
+    } finally {
+      statusCheckInProgress.value = false
+    }
   }
 
   function filterAasList (value: string | null): void {

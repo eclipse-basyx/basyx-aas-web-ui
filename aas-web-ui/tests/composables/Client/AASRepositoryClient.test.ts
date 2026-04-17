@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockState = vi.hoisted(() => ({
-  aasRegistryUrl: 'https://example.test/shell-descriptors',
+  aasRepoUrl: 'https://example.test/shells',
 }))
 
 const mockDeps = vi.hoisted(() => ({
@@ -9,18 +9,14 @@ const mockDeps = vi.hoisted(() => ({
   postRequest: vi.fn(),
   putRequest: vi.fn(),
   deleteRequest: vi.fn(),
+  consumeLastRequestFailureStatus: vi.fn(),
+  consumeLastRequestFailureDetails: vi.fn(),
+  generateUUIDFromString: vi.fn((value: string) => value),
 }))
 
 vi.mock('@/store/InfrastructureStore', () => ({
   useInfrastructureStore: () => ({
-    getAASRegistryURL: mockState.aasRegistryUrl,
-    getSelectedInfrastructure: {
-      components: {
-        AASRegistry: {
-          url: mockState.aasRegistryUrl,
-        },
-      },
-    },
+    getAASRepoURL: mockState.aasRepoUrl,
   }),
 }))
 
@@ -30,13 +26,21 @@ vi.mock('@/composables/RequestHandling', () => ({
     postRequest: mockDeps.postRequest,
     putRequest: mockDeps.putRequest,
     deleteRequest: mockDeps.deleteRequest,
+    consumeLastRequestFailureStatus: mockDeps.consumeLastRequestFailureStatus,
+    consumeLastRequestFailureDetails: mockDeps.consumeLastRequestFailureDetails,
   }),
 }))
 
-describe('AASRegistryClient pagination', () => {
+vi.mock('@/composables/IDUtils', () => ({
+  useIDUtils: () => ({
+    generateUUIDFromString: mockDeps.generateUUIDFromString,
+  }),
+}))
+
+describe('AASRepositoryClient.ts pagination contract', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockState.aasRegistryUrl = 'https://example.test/shell-descriptors'
+    mockState.aasRepoUrl = 'https://example.test/shells'
   })
 
   it('passes limit and cursor query params and parses next cursor', async () => {
@@ -50,14 +54,14 @@ describe('AASRegistryClient pagination', () => {
       },
     })
 
-    const { useAASRegistryClient } = await import('@/composables/Client/AASRegistryClient')
-    const { fetchAasDescriptorListPage } = useAASRegistryClient()
+    const { useAASRepositoryClient } = await import('@/composables/Client/AASRepositoryClient')
+    const { fetchAasListPage } = useAASRepositoryClient()
 
-    const result = await fetchAasDescriptorListPage({ limit: 100, cursor: 'cursor-1' })
+    const result = await fetchAasListPage({ limit: 100, cursor: 'cursor-1' })
 
     expect(mockDeps.getRequest).toHaveBeenCalledWith(
-      'https://example.test/shell-descriptors?limit=100&cursor=cursor-1',
-      'retrieving AAS Descriptors page',
+      'https://example.test/shells?limit=100&cursor=cursor-1',
+      'retrieving AAS page',
       false,
     )
     expect(result.items).toEqual([{ id: 'aas-1' }])
@@ -73,10 +77,10 @@ describe('AASRegistryClient pagination', () => {
       },
     })
 
-    const { useAASRegistryClient } = await import('@/composables/Client/AASRegistryClient')
-    const { fetchAasDescriptorListPage } = useAASRegistryClient()
+    const { useAASRepositoryClient } = await import('@/composables/Client/AASRepositoryClient')
+    const { fetchAasListPage } = useAASRepositoryClient()
 
-    const result = await fetchAasDescriptorListPage({ limit: 50 })
+    const result = await fetchAasListPage({ limit: 50 })
 
     expect(result.items).toEqual([{ id: 'aas-1' }])
     expect(result.nextCursor).toBeUndefined()

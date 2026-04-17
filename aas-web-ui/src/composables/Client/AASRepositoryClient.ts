@@ -1,6 +1,7 @@
 import type { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
 import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
 import { computed } from 'vue'
+import { appendQueryParams, normalizeLimit, type PaginationPageOptions, type PaginationPageResult, parseNextCursor } from '@/composables/Client/PaginationUtils'
 import { useIDUtils } from '@/composables/IDUtils'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
@@ -8,17 +9,9 @@ import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import { downloadFile } from '@/utils/generalUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
 
-export interface AasListPageOptions {
-  limit?: number
-  cursor?: string
-}
+export type AasListPageOptions = PaginationPageOptions
 
-export interface AasListPageResult<T> {
-  items: Array<T>
-  nextCursor?: string
-  hasMore: boolean
-  pagingMetadata?: Record<string, any>
-}
+export type AasListPageResult<T> = PaginationPageResult<T>
 
 export function useAASRepositoryClient () {
   // Stores
@@ -53,36 +46,6 @@ export function useAASRepositoryClient () {
     // TODO: This is a workaround, as the AAS Repository does not provide an upload endpoint but rather the AAS Environment. This should be changed in the future.
     return aasRepoUrl.replace(endpointPath, '') + '/upload'
   })
-
-  function normalizeLimit (limit?: number): number | undefined {
-    if (typeof limit !== 'number' || Number.isNaN(limit)) {
-      return undefined
-    }
-    return Math.max(1, Math.floor(limit))
-  }
-
-  function appendQueryParams (path: string, queryParams: URLSearchParams): string {
-    const query = queryParams.toString()
-    if (query === '') {
-      return path
-    }
-    return path + (path.includes('?') ? '&' : '?') + query
-  }
-
-  function parseNextCursor (data: any): string | undefined {
-    const rawCursor = (
-      data?.paging_metadata?.cursor
-      ?? data?.pagingMetadata?.cursor
-      ?? data?.nextCursor
-      ?? data?.next_cursor
-      ?? data?.cursor
-    )
-    if (rawCursor === undefined || rawCursor === null) {
-      return undefined
-    }
-    const trimmed = String(rawCursor).trim()
-    return trimmed === '' ? undefined : trimmed
-  }
 
   /**
    * Fetches one page of AAS from repository.
