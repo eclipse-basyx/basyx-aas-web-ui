@@ -9,6 +9,7 @@
             density="compact"
             hide-details
             label="Search for AAS..."
+            :model-value="searchValue"
             persistent-placeholder
             :placeholder="aasList.length.toString() + ' Shells'"
             variant="outlined"
@@ -79,6 +80,12 @@
           </v-text-field>
         </v-card-title>
         <v-divider />
+        <v-progress-linear
+          v-if="pageLoading && !listLoading"
+          color="primary"
+          height="2"
+          indeterminate
+        />
       </template>
       <!-- AAS List -->
       <v-list
@@ -110,7 +117,13 @@
           </v-list-item>
         </template>
         <template v-else>
-          <v-virtual-scroll ref="virtualScrollRef" class="pb-2 bg-card" :item-height="56" :items="aasList">
+          <v-virtual-scroll
+            ref="virtualScrollRef"
+            class="pb-2 bg-card"
+            :item-height="56"
+            :items="aasList"
+            @scroll.passive="onVirtualScroll"
+          >
             <template #default="{ item }">
               <!-- Single AAS -->
               <v-list-item
@@ -277,6 +290,25 @@
               </v-list-item>
             </template>
           </v-virtual-scroll>
+          <v-list-item
+            v-if="isSearchLimited"
+            class="px-4 py-1"
+            density="compact"
+          >
+            <v-list-item-subtitle class="text-listItemText">
+              Searching loaded shells only. Scroll down to load more.
+            </v-list-item-subtitle>
+          </v-list-item>
+          <v-list-item
+            v-if="pageLoading && !listLoading"
+            class="px-4 py-0"
+            density="compact"
+          >
+            <template #prepend>
+              <v-progress-circular class="mr-2" indeterminate size="16" width="2" />
+            </template>
+            <v-list-item-subtitle class="text-listItemText ml-1">Loading more shells...</v-list-item-subtitle>
+          </v-list-item>
         </template>
       </v-list>
       <!-- AAS Details (only visible if the Information Button is pressed on an AAS) -->
@@ -307,8 +339,9 @@
 </template>
 
 <script lang="ts" setup>
+  import type { AasListSource } from '@/composables/AAS/AASHandling'
   import type { ComponentPublicInstance, Ref } from 'vue'
-  import { computed, onActivated, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+  import { computed, nextTick, onActivated, onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useTheme } from 'vuetify'
   import { useAASHandling } from '@/composables/AAS/AASHandling'
@@ -330,7 +363,7 @@
   const router = useRouter()
 
   // Composables
-  const { fetchAasDescriptorList, fetchAasList, aasIsAvailableById } = useAASHandling()
+  const { fetchAasShellListPage, aasIsAvailableById } = useAASHandling()
   const { nameToDisplay, descriptionToDisplay } = useReferableUtils()
   const { copyToClipboard } = useClipboardUtil()
 
@@ -343,11 +376,28 @@
   // Vuetify
   const theme = useTheme()
 
+  const itemHeight = 56
+  const minPageLimit = 100
+  const maxPageLimit = 300
+  const prefetchThresholdInRows = 8
+  const pageSizeMultiplier = 3
+  const scrollLoadDebounceMs = 200
+  const minPageLoadIntervalMs = 350
+
   // Data
-  const aasList = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the AAS Data (AAS or AAS Descriptors)
-  const aasListUnfiltered = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the AAS Data before filtering
+  const aasList = ref([] as Array<any>) as Ref<Array<any>> // Variable to store currently displayed AAS Data
+  const allLoadedAas = ref([] as Array<any>) as Ref<Array<any>> // Variable to store all loaded AAS Data
+  const nextCursor = ref<string | undefined>(undefined)
+  const hasMorePages = ref(true)
+  const activeSource = ref<AasListSource | undefined>(undefined)
+  const isLoadingInitialPage = ref(false)
+  const pageLoading = ref(false)
+  const searchValue = ref('')
+  const loadedIds = ref(new Set<string>())
+  const lastPageLoadAt = ref(0)
+  let scrollContainerEl: HTMLElement | null = null
   const debouncedFilterAasList = debounce(filterAasList, 300) // Debounced function to filter the AAS List
-  const listLoading = ref(false) // Variable to store if the AAS List is loading
+  const listLoading = computed(() => isLoadingInitialPage.value) // Variable to store if the AAS List is loading
   const deleteDialog = ref(false) // Variable to store if the Delete Dialog should be shown
   const downloadAASDialog = ref(false) // Variable to store if the DownloadAAS Dialog should be shown
   const aasToDelete = ref({}) // Variable to store the AAS to be deleted
@@ -390,19 +440,22 @@
   const isAuthenticating = computed(() => infrastructureStore.getIsAuthenticating) // Check if authentication is in progress
   const isTestingConnections = computed(() => infrastructureStore.getIsTestingConnections) // Check if testing connections
   const selectedInfrastructureId = computed(() => infrastructureStore.getSelectedInfrastructureId) // Get selected infrastructure ID
+  const isSearchLimited = computed(() => searchValue.value.trim() !== '' && hasMorePages.value)
 
   // Watchers
   // Reload when AAS Registry URL or selected infrastructure changes
   watch(
-    [() => aasRegistryURL.value, () => selectedInfrastructureId.value],
-    ([newUrl, newId], [oldUrl, oldId]) => {
-      // Only reload when URL is valid and not authenticating and not testing connections
+    [() => aasRegistryURL.value, () => aasRepoURL.value, () => selectedInfrastructureId.value],
+    ([newRegistryUrl, newRepoUrl, newId], [oldRegistryUrl, oldRepoUrl, oldId]) => {
+      const hasValidSourceUrl
+        = (newRegistryUrl && newRegistryUrl.trim() !== '') || (newRepoUrl && newRepoUrl.trim() !== '')
+
+      // Only reload when one source URL is valid and not authenticating and not testing connections
       if (
-        newUrl
-        && newUrl.trim() !== ''
+        hasValidSourceUrl
         && !isAuthenticating.value
         && !isTestingConnections.value
-        && (newUrl !== oldUrl || newId !== oldId)
+        && (newRegistryUrl !== oldRegistryUrl || newRepoUrl !== oldRepoUrl || newId !== oldId)
       ) {
         initialize()
       }
@@ -413,9 +466,24 @@
   watch(
     () => selectedAAS.value,
     () => {
+      applyCurrentFilter()
       scrollToSelectedAAS()
     },
     { deep: true },
+  )
+
+  watch(
+    () => listLoading.value,
+    loading => {
+      if (loading) {
+        unbindVirtualScrollListener()
+        return
+      }
+
+      void nextTick(() => {
+        bindVirtualScrollListener()
+      })
+    },
   )
 
   watch(
@@ -430,13 +498,13 @@
           void updateStatus()
         }, statusCheck.value.interval)
       } else {
-        for (const aasDescriptor of aasList.value) {
+        for (const aasDescriptor of allLoadedAas.value) {
           aasDescriptor.status = 'check disabled'
         }
 
         // Reset status icon after 2 seconds
         setTimeout(() => {
-          for (const aasDescriptor of aasList.value) {
+          for (const aasDescriptor of allLoadedAas.value) {
             aasDescriptor.status = ''
           }
         }, 2000)
@@ -457,8 +525,7 @@
   watch(
     () => clearAASList.value,
     () => {
-      aasList.value = []
-      aasListUnfiltered.value = []
+      resetPaginationState()
     },
   )
 
@@ -471,10 +538,17 @@
         void updateStatus()
       }, statusCheck.value.interval)
     }
+
+    if (!listLoading.value) {
+      void nextTick(() => {
+        bindVirtualScrollListener()
+      })
+    }
   })
 
   onBeforeUnmount(() => {
     window.clearInterval(statusCheckInterval.value)
+    unbindVirtualScrollListener()
   })
 
   onActivated(() => {
@@ -485,29 +559,217 @@
     navigationStore.dispatchDrawerState(false)
   }
 
+  function preprocessListItem (item: any): any {
+    return {
+      ...item,
+      idLower: item?.id?.toLowerCase() || '',
+      idShortLower: item?.idShort?.toLowerCase() || '',
+      nameLower: nameToDisplay(item).toLowerCase(),
+      descLower: descriptionToDisplay(item).toLowerCase(),
+    }
+  }
+
+  function applyCurrentFilter (): void {
+    const trimmedSearch = searchValue.value.trim().toLowerCase()
+    const filteredItems = trimmedSearch === ''
+      ? allLoadedAas.value
+      : allLoadedAas.value.filter(
+        aasOrAasDescriptor =>
+          aasOrAasDescriptor.idLower.includes(trimmedSearch)
+          || aasOrAasDescriptor.idShortLower.includes(trimmedSearch)
+          || aasOrAasDescriptor.nameLower.includes(trimmedSearch)
+          || aasOrAasDescriptor.descLower.includes(trimmedSearch),
+      )
+
+    const selectedFallbackItem = createSelectedFallbackItem()
+    if (selectedFallbackItem && matchesSearch(selectedFallbackItem, trimmedSearch)) {
+      aasList.value = [selectedFallbackItem, ...filteredItems]
+      return
+    }
+
+    aasList.value = filteredItems
+  }
+
+  function matchesSearch (item: any, trimmedSearch: string): boolean {
+    if (trimmedSearch === '') {
+      return true
+    }
+
+    return item.idLower.includes(trimmedSearch)
+      || item.idShortLower.includes(trimmedSearch)
+      || item.nameLower.includes(trimmedSearch)
+      || item.descLower.includes(trimmedSearch)
+  }
+
+  function createSelectedFallbackItem (): any | undefined {
+    if (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0 || !selectedAAS.value.id) {
+      return undefined
+    }
+
+    const selectedId = selectedAAS.value.id
+    if (loadedIds.value.has(selectedId)) {
+      return undefined
+    }
+
+    const hasSelectedInLoadedItems = allLoadedAas.value.some(item => item?.id === selectedId)
+    if (hasSelectedInLoadedItems) {
+      return undefined
+    }
+
+    const aasPathFromQuery = typeof route.query.aas === 'string' ? route.query.aas : ''
+    const selectedPath = selectedAAS.value.path || aasPathFromQuery
+    return preprocessListItem({
+      ...selectedAAS.value,
+      path: selectedPath,
+    })
+  }
+
+  function getVirtualScrollContainer (): HTMLElement | null {
+    const rootEl = virtualScrollRef.value?.$el
+    if (!rootEl) {
+      return null
+    }
+
+    if (rootEl instanceof HTMLElement && rootEl.classList.contains('v-virtual-scroll')) {
+      return rootEl
+    }
+
+    if (rootEl instanceof HTMLElement) {
+      const nestedContainer = rootEl.querySelector('.v-virtual-scroll')
+      return nestedContainer instanceof HTMLElement ? nestedContainer : null
+    }
+
+    return null
+  }
+
+  function getDynamicLimit (): number {
+    const container = getVirtualScrollContainer()
+    const viewportHeight = container?.clientHeight ?? 0
+    const visibleRows = Math.max(1, Math.ceil(viewportHeight / itemHeight))
+    const calculatedLimit = visibleRows * pageSizeMultiplier
+    return Math.min(maxPageLimit, Math.max(minPageLimit, calculatedLimit))
+  }
+
+  function unbindVirtualScrollListener (): void {
+    if (scrollContainerEl) {
+      scrollContainerEl.removeEventListener('scroll', onVirtualScroll)
+      scrollContainerEl = null
+    }
+  }
+
+  function bindVirtualScrollListener (): void {
+    const container = getVirtualScrollContainer()
+    if (!container || container === scrollContainerEl) {
+      return
+    }
+
+    unbindVirtualScrollListener()
+    scrollContainerEl = container
+    scrollContainerEl.addEventListener('scroll', onVirtualScroll, { passive: true })
+  }
+
+  async function tryLoadNextPageIfNeeded (): Promise<void> {
+    if (!hasMorePages.value || pageLoading.value || isLoadingInitialPage.value) {
+      return
+    }
+
+    const now = Date.now()
+    if (now - lastPageLoadAt.value < minPageLoadIntervalMs) {
+      return
+    }
+
+    const container = getVirtualScrollContainer()
+    if (!container) {
+      return
+    }
+
+    const remainingDistance = container.scrollHeight - container.scrollTop - container.clientHeight
+    if (remainingDistance <= itemHeight * prefetchThresholdInRows) {
+      await fetchNextPage()
+    }
+  }
+
+  const debouncedTryLoadNextPageIfNeeded = debounce(() => {
+    void tryLoadNextPageIfNeeded()
+  }, scrollLoadDebounceMs)
+
+  function onVirtualScroll (): void {
+    debouncedTryLoadNextPageIfNeeded()
+  }
+
+  function resetPaginationState (): void {
+    aasList.value = []
+    allLoadedAas.value = []
+    loadedIds.value.clear()
+    nextCursor.value = undefined
+    hasMorePages.value = true
+    activeSource.value = undefined
+    searchValue.value = ''
+    isLoadingInitialPage.value = false
+    pageLoading.value = false
+  }
+
+  async function fetchNextPage (): Promise<void> {
+    if (!hasMorePages.value || pageLoading.value) {
+      return
+    }
+
+    lastPageLoadAt.value = Date.now()
+    pageLoading.value = true
+
+    try {
+      const previousCursor = nextCursor.value
+      const page = await fetchAasShellListPage({
+        limit: getDynamicLimit(),
+        cursor: nextCursor.value,
+        source: activeSource.value,
+      })
+
+      activeSource.value = page.source
+      nextCursor.value = page.nextCursor
+      hasMorePages.value = page.hasMore
+
+      if (page.hasMore && page.nextCursor === previousCursor) {
+        hasMorePages.value = false
+      }
+
+      if (Array.isArray(page.items) && page.items.length > 0) {
+        const incomingItems = page.items
+          .toSorted((a, b) => (a.id > b.id ? 1 : -1))
+          .filter(item => {
+            if (!item?.id || loadedIds.value.has(item.id)) {
+              return false
+            }
+            loadedIds.value.add(item.id)
+            return true
+          })
+          .map(item => preprocessListItem(item))
+
+        if (incomingItems.length > 0) {
+          allLoadedAas.value = allLoadedAas.value.concat(incomingItems).toSorted((a, b) => (a.id > b.id ? 1 : -1))
+          applyCurrentFilter()
+        }
+      }
+    } finally {
+      pageLoading.value = false
+    }
+  }
+
   // Function to get the AAS Data from the Registry Server
   async function initialize (): Promise<void> {
-    listLoading.value = true
-    fetchAasDescriptorList().then(async (aasDescriptorList: Array<any>) => {
-      const sortedList
-        = aasDescriptorList.length > 0
-          ? aasDescriptorList.toSorted((a, b) => (a.id > b.id ? 1 : -1))
-          : (await fetchAasList()).toSorted((a, b) => (a.id > b.id ? 1 : -1))
+    resetPaginationState()
+    isLoadingInitialPage.value = true
 
-      // Precompute lowercase search fields
-      const processedList = sortedList.map(item => ({
-        ...item,
-        idLower: item?.id?.toLowerCase() || '',
-        idShortLower: item?.idShort?.toLowerCase() || '',
-        nameLower: nameToDisplay(item).toLowerCase(),
-        descLower: descriptionToDisplay(item).toLowerCase(),
-      }))
-
-      aasList.value = processedList
-      aasListUnfiltered.value = processedList
+    try {
+      await fetchNextPage()
       scrollToSelectedAAS()
-      listLoading.value = false
-    })
+    } finally {
+      isLoadingInitialPage.value = false
+
+      void nextTick(() => {
+        bindVirtualScrollListener()
+      })
+    }
   }
 
   /**
@@ -521,8 +783,8 @@
    * on availability checks.
    */
   async function updateStatus (init = false): Promise<void> {
-    if (Array.isArray(aasList.value) && aasList.value.length > 0)
-      for (const aasOrAasDescriptor of aasList.value) {
+    if (Array.isArray(allLoadedAas.value) && allLoadedAas.value.length > 0)
+      for (const aasOrAasDescriptor of allLoadedAas.value) {
         if (aasOrAasDescriptor && Object.keys(aasOrAasDescriptor).length > 0) {
           await new Promise(resolve => setTimeout(resolve, 600)) // Give the UI the chance to refresh status icons
 
@@ -539,19 +801,9 @@
       }
   }
 
-  function filterAasList (value: string): void {
-    if (!value || value.trim() === '') {
-      aasList.value = aasListUnfiltered.value
-    } else {
-      const search = value.toLowerCase()
-      aasList.value = aasListUnfiltered.value.filter(
-        aasOrAasDescriptor =>
-          aasOrAasDescriptor.idLower.includes(search)
-          || aasOrAasDescriptor.idShortLower.includes(search)
-          || aasOrAasDescriptor.nameLower.includes(search)
-          || aasOrAasDescriptor.descLower.includes(search),
-      )
-    }
+  function filterAasList (value: string | null): void {
+    searchValue.value = value?.trim() ?? ''
+    applyCurrentFilter()
     scrollToSelectedAAS()
   }
 
