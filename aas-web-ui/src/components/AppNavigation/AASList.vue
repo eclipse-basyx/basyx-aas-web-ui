@@ -338,13 +338,13 @@
 </template>
 
 <script lang="ts" setup>
-  import type { AasListSource } from '@/composables/AAS/AASHandling'
   import type { ComponentPublicInstance, Ref } from 'vue'
   import { computed, nextTick, onActivated, onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useTheme } from 'vuetify'
   import { useAASHandling } from '@/composables/AAS/AASHandling'
   import { appendOrMergeSortedAasById, compareAasById } from '@/composables/AAS/AASListAccumulation'
+  import { useAASListPagination } from '@/composables/AAS/AASListPagination'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { useAASStore } from '@/store/AASDataStore'
@@ -390,16 +390,8 @@
   // Data
   const aasList = ref([] as Array<any>) as Ref<Array<any>> // Variable to store currently displayed AAS Data
   const allLoadedAas = ref([] as Array<any>) as Ref<Array<any>> // Variable to store all loaded AAS Data
-  const nextCursor = ref<string | undefined>(undefined)
-  const hasMorePages = ref(true)
-  const activeSource = ref<AasListSource | undefined>(undefined)
-  const isLoadingInitialPage = ref(false)
-  const pageLoading = ref(false)
   const searchValue = ref('')
   const loadedIds = ref(new Set<string>())
-  const paginationGeneration = ref(0)
-  const lastPageLoadAt = ref(0)
-  let scrollContainerEl: HTMLElement | null = null
   const debouncedFilterAasList = debounce(filterAasList, 300) // Debounced function to filter the AAS List
   const listLoading = computed(() => isLoadingInitialPage.value) // Variable to store if the AAS List is loading
   const deleteDialog = ref(false) // Variable to store if the Delete Dialog should be shown
@@ -416,6 +408,45 @@
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
   const instanceDialog = ref(false) // Variable to store if the Instance Creation Dialog should be shown
   const aasToInstantiate = ref({}) // Variable to store the AAS to be instantiated
+
+  const {
+    hasMorePages,
+    isLoadingInitialPage,
+    pageLoading,
+    getVirtualScrollContainer,
+    bindVirtualScrollListener,
+    unbindVirtualScrollListener,
+    invalidatePaginationGeneration,
+    resetPaginationState: resetPaginationStateInternal,
+    initialize: initializePagination,
+  } = useAASListPagination({
+    virtualScrollRef,
+    itemHeight,
+    minPageLimit,
+    maxPageLimit,
+    pageSizeMultiplier,
+    prefetchThresholdInRows,
+    scrollLoadDebounceMs,
+    minPageLoadIntervalMs,
+    fetchPage: params => fetchAasShellListPage(params),
+    onPageItems: items => {
+      const incomingItems = items
+        .toSorted(compareAasById)
+        .filter(item => {
+          if (!item?.id || loadedIds.value.has(item.id)) {
+            return false
+          }
+          loadedIds.value.add(item.id)
+          return true
+        })
+        .map(item => preprocessListItem(item))
+
+      if (incomingItems.length > 0) {
+        allLoadedAas.value = appendOrMergeSortedAasById(allLoadedAas.value, incomingItems)
+        applyCurrentFilter()
+      }
+    },
+  })
 
   // Computed Properties
   const isMobile = computed(() => navigationStore.getIsMobile) // Check if the current Device is a Mobile Device
@@ -531,8 +562,8 @@
     () => clearAASList.value,
     clearAasListValue => {
       if (clearAasListValue === true) {
-        paginationGeneration.value += 1
-        resetPaginationState(false)
+        invalidatePaginationGeneration()
+        resetAASListState(false)
         unbindVirtualScrollListener()
       }
     },
@@ -621,24 +652,6 @@
     })
   }
 
-  function getVirtualScrollContainer (): HTMLElement | null {
-    const rootEl = virtualScrollRef.value?.$el
-    if (!rootEl) {
-      return null
-    }
-
-    if (rootEl instanceof HTMLElement && rootEl.classList.contains('v-virtual-scroll')) {
-      return rootEl
-    }
-
-    if (rootEl instanceof HTMLElement) {
-      const nestedContainer = rootEl.querySelector('.v-virtual-scroll')
-      return nestedContainer instanceof HTMLElement ? nestedContainer : null
-    }
-
-    return null
-  }
-
   function getStatusCheckTargets (): Array<any> {
     if (!Array.isArray(aasList.value) || aasList.value.length === 0) {
       return []
@@ -670,157 +683,18 @@
     })
   }
 
-  function getDynamicLimit (): number {
-    const container = getVirtualScrollContainer()
-    const viewportHeight = container?.clientHeight ?? 0
-    const visibleRows = Math.max(1, Math.ceil(viewportHeight / itemHeight))
-    const calculatedLimit = visibleRows * pageSizeMultiplier
-    return Math.min(maxPageLimit, Math.max(minPageLimit, calculatedLimit))
-  }
-
-  function unbindVirtualScrollListener (): void {
-    if (scrollContainerEl) {
-      scrollContainerEl.removeEventListener('scroll', onVirtualScroll)
-      scrollContainerEl = null
-    }
-  }
-
-  function bindVirtualScrollListener (): void {
-    const container = getVirtualScrollContainer()
-    if (!container || container === scrollContainerEl) {
-      return
-    }
-
-    unbindVirtualScrollListener()
-    scrollContainerEl = container
-    scrollContainerEl.addEventListener('scroll', onVirtualScroll, { passive: true })
-  }
-
-  async function tryLoadNextPageIfNeeded (): Promise<void> {
-    if (!hasMorePages.value || pageLoading.value || isLoadingInitialPage.value) {
-      return
-    }
-
-    const now = Date.now()
-    if (now - lastPageLoadAt.value < minPageLoadIntervalMs) {
-      return
-    }
-
-    const container = getVirtualScrollContainer()
-    if (!container) {
-      return
-    }
-
-    const remainingDistance = container.scrollHeight - container.scrollTop - container.clientHeight
-    if (remainingDistance <= itemHeight * prefetchThresholdInRows) {
-      await fetchNextPage()
-    }
-  }
-
-  const debouncedTryLoadNextPageIfNeeded = debounce(() => {
-    void tryLoadNextPageIfNeeded()
-  }, scrollLoadDebounceMs)
-
-  function onVirtualScroll (): void {
-    debouncedTryLoadNextPageIfNeeded()
-  }
-
-  function beginPaginationGeneration (): number {
-    paginationGeneration.value += 1
-    return paginationGeneration.value
-  }
-
-  function resetPaginationState (enablePagination = true): void {
+  function resetAASListState (enablePagination = true): void {
     aasList.value = []
     allLoadedAas.value = []
     loadedIds.value.clear()
-    nextCursor.value = undefined
-    hasMorePages.value = enablePagination
-    activeSource.value = undefined
+    resetPaginationStateInternal(enablePagination)
     searchValue.value = ''
-    isLoadingInitialPage.value = false
-    pageLoading.value = false
-  }
-
-  async function fetchNextPage (): Promise<void> {
-    const expectedGeneration = paginationGeneration.value
-
-    if (!hasMorePages.value || pageLoading.value) {
-      return
-    }
-
-    lastPageLoadAt.value = Date.now()
-    pageLoading.value = true
-
-    try {
-      const previousCursor = nextCursor.value
-      const page = await fetchAasShellListPage({
-        limit: getDynamicLimit(),
-        cursor: nextCursor.value,
-        source: activeSource.value,
-      })
-
-      if (expectedGeneration !== paginationGeneration.value) {
-        return
-      }
-
-      activeSource.value = page.source
-      nextCursor.value = page.nextCursor
-      hasMorePages.value = page.hasMore
-
-      if (page.hasMore && page.nextCursor === previousCursor) {
-        hasMorePages.value = false
-      }
-
-      if (Array.isArray(page.items) && page.items.length > 0) {
-        const incomingItems = page.items
-          .toSorted(compareAasById)
-          .filter(item => {
-            if (!item?.id || loadedIds.value.has(item.id)) {
-              return false
-            }
-            loadedIds.value.add(item.id)
-            return true
-          })
-          .map(item => preprocessListItem(item))
-
-        if (incomingItems.length > 0) {
-          allLoadedAas.value = appendOrMergeSortedAasById(allLoadedAas.value, incomingItems)
-          applyCurrentFilter()
-        }
-      }
-    } finally {
-      if (expectedGeneration === paginationGeneration.value) {
-        pageLoading.value = false
-      }
-    }
   }
 
   // Function to get the AAS Data from the Registry Server
   async function initialize (): Promise<void> {
-    const generation = beginPaginationGeneration()
-    resetPaginationState(true)
-    isLoadingInitialPage.value = true
-
-    try {
-      await fetchNextPage()
-
-      if (generation !== paginationGeneration.value) {
-        return
-      }
-
-      scrollToSelectedAAS()
-    } finally {
-      if (generation !== paginationGeneration.value) {
-        return
-      }
-
-      isLoadingInitialPage.value = false
-
-      void nextTick(() => {
-        bindVirtualScrollListener()
-      })
-    }
+    resetAASListState(true)
+    await initializePagination(scrollToSelectedAAS)
   }
 
   /**
