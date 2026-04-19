@@ -1,25 +1,50 @@
 <template>
     <v-list-item class="pt-0">
         <v-list-item-title :class="isOperationVariable ? 'pt-2' : ''">
+            <!-- Operation variable: bordered container with badge, name AND input inside -->
+            <div
+                v-if="isOperationVariable"
+                class="d-flex align-center gap-8 px-3 py-2"
+                style="border: 1px solid #cccccc; border-radius: 4px;">
+                <v-chip label size="small" color="#fb8c00" text-color="#ffffff" variant="flat" class="font-weight-bold flex-shrink-0">
+                    {{ stringValue.valueType }}
+                </v-chip>
+                <span class="text-body-2 font-weight-bold flex-shrink-0" style="color: #999;">
+                    {{ stringValue.idShort }}
+                </span>
+                <v-text-field
+                    v-model="newStringValue"
+                    variant="outlined"
+                    density="compact"
+                    class="flex-grow-1"
+                    :readonly="isOutputVariable || !isEditable"
+                    :hide-details="true"
+                    auto-grow
+                    :rows="1"
+                    @keydown.enter="updateValue()"
+                    @update:focused="setFocus(!isFocused)"
+                    @update:model-value="setFocus(true)">
+                </v-text-field>
+            </div>
+            <!-- Non-operation variable: original layout -->
             <v-text-field
+                v-else
                 v-model="newStringValue"
                 variant="outlined"
                 density="compact"
-                :clearable="(isFocused || stringValue.value != newStringValue) && !isOperationVariable && isEditable"
+                :clearable="(isFocused || stringValue.value != newStringValue) && isEditable"
                 :readonly="isOutputVariable || !isEditable"
                 :hint="stringValue.value == newStringValue ? '' : 'Current value not yet saved.'"
                 auto-grow
                 :rows="1"
-                :label="isOperationVariable ? stringValue.idShort : ''"
-                :hide-details="isOperationVariable ? true : false"
+                :hide-details="false"
                 :focused="isFocused"
                 @keydown.enter="updateValue()"
                 @update:focused="setFocus(!isFocused)"
                 @update:model-value="setFocus(true)">
-                <!-- Update Value Button -->
                 <template #append-inner>
                     <v-btn
-                        v-if="(isFocused || stringValue.value != newStringValue) && !isOperationVariable && isEditable"
+                        v-if="(isFocused || stringValue.value != newStringValue) && isEditable"
                         size="small"
                         variant="elevated"
                         color="primary"
@@ -40,10 +65,7 @@
     import { useRequestHandling } from '@/composables/RequestHandling';
     import { useAASStore } from '@/store/AASDataStore';
 
-    // Stores
     const aasStore = useAASStore();
-
-    // Composables
     const { patchRequest } = useRequestHandling();
     const { fetchAndDispatchSme } = useSMEHandling();
 
@@ -70,11 +92,9 @@
         (event: 'updateValue', updatedStringValue: any): void;
     }>();
 
-    // Data
     const newStringValue = ref<string>('');
     const isFocused = ref<boolean>(false);
 
-    // Computed Properties
     const selectedNode = computed(() => aasStore.getSelectedNode);
     const isOperationVariable = computed(() => {
         return props.isOperationVariable != undefined ? props.isOperationVariable : false;
@@ -83,7 +103,6 @@
         return props.isOperationVariable != undefined ? props.variableType == 'outputVariables' : false;
     });
 
-    // Watchers
     watch(
         () => selectedNode.value,
         (selectedNodeValue) => {
@@ -113,7 +132,6 @@
             emit('updateValue', newStringValue.value);
             return;
         }
-
         const path = `${props.stringValue.path}/$value`;
         const content = JSON.stringify(newStringValue.value);
         const headers = new Headers();
@@ -122,7 +140,6 @@
         const disableMessage = false;
         patchRequest(path, content, headers, context, disableMessage).then((response: any) => {
             if (response.success) {
-                // After successful patch request fetch and dispatch updated SME
                 fetchAndDispatchSme(selectedNode.value.path, false);
             }
         });
@@ -133,6 +150,6 @@
             updateValue();
         }
         isFocused.value = isFocusedToSet;
-        if (!isFocusedToSet) newStringValue.value = props.stringValue.value; // set input to current value in the AAS if the input field is not focused
+        if (!isFocusedToSet) newStringValue.value = props.stringValue.value;
     }
 </script>
