@@ -186,7 +186,6 @@
 
         <v-btn
           append-icon="custom:aasIcon"
-
           color="primary"
           href="https://basyx.org"
           target="_blank"
