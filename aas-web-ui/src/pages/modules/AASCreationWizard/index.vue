@@ -18,19 +18,25 @@
 
       <v-stepper-window>
         <v-stepper-window-item :value="1">
-          <StepAssetInformation :is-active-component="step === 1" :next="goNext" :prev="goPrev" />
+          <StepAssetInformation :key="`asset-${resetForm}`" :is-active-component="step === 1" :next="goNext" :prev="goPrev" />
         </v-stepper-window-item>
 
         <v-stepper-window-item :value="2">
-          <StepDigitalNamePlate :is-active-component="step === 2" :next="goNext" :prev="goPrev" />
+          <StepDigitalNamePlate :key="`nameplate-${resetForm}`" :is-active-component="step === 2" :next="goNext" :prev="goPrev" />
         </v-stepper-window-item>
 
         <v-stepper-window-item :value="3">
-          <StepTechnicalData :is-active-component="step === 3" :next="goNext" :prev="goPrev" />
+          <StepTechnicalData :key="`technical-${resetForm}`" :is-active-component="step === 3" :next="goNext" :prev="goPrev" />
         </v-stepper-window-item>
 
         <v-stepper-window-item :value="4">
-          <StepHandoverDocumentation :finish="resetToFirstStep" :is-active-component="step === 4" :next="goNext" :prev="goPrev" />
+          <StepHandoverDocumentation
+            :key="`handover-${resetForm}`"
+            :finish="resetToFirstStep"
+            :is-active-component="step === 4"
+            :next="goNext"
+            :prev="goPrev"
+          />
         </v-stepper-window-item>
       </v-stepper-window>
 
@@ -57,6 +63,7 @@
   import StepTechnicalData from './components/StepTechnicalData.vue'
 
   const step = ref(1)
+  const resetForm = ref(0)
 
   function goNext (): void {
     if (step.value < 4) {
@@ -76,6 +83,7 @@
     window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })
   }
   function resetToFirstStep (): void {
+    resetForm.value++
     step.value = 1
   }
 </script>
