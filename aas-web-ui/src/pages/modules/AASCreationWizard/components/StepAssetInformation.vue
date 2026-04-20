@@ -3,12 +3,6 @@
     <v-sheet border class="pa-6" elevation="4" rounded="lg">
       <v-form ref="formRef" @submit.prevent="saveAndNext">
         <v-row>
-          <!-- <v-col cols="12">
-            <div class="mb-6">
-              <div class="text-h6 font-weight-bold">Asset Information</div>
-              <div class="text-body-2 text-medium-emphasis">Basic information about the asset</div>
-            </div>
-          </v-col> -->
 
           <v-col cols="12" md="6">
             <FormField
@@ -120,7 +114,6 @@
     thumbnailFile: null as File | null,
   })
 
-  // const assetKindOptions = ['Instance', 'Type'];
   const assetKindOptions: AssetDataForm['assetKind'][] = ['Instance', 'Type']
 
   const aasIdRules = [(v: string) => !!(v && v.trim()) || 'AAS ID is required.']

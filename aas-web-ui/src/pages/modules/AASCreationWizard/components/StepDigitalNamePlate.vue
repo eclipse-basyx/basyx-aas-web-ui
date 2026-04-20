@@ -41,7 +41,6 @@
   import type { FormStateObject } from '../types/form'
   import type { DigitalNameplateTemplate } from '../types/template'
   import type { ValidationIssue } from '../types/validation'
-  // import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
   import { onMounted, ref, toRaw } from 'vue'
   import { buildDigitalNameplate } from '../builders/buildDigitalNameplate'
   import { useAASCreationStore } from '../stores/aasCreationForm'
@@ -49,7 +48,6 @@
   import { createInitialFormState } from '../utils/createInitialFormState'
   import { normalizeTemplate } from '../utils/normalizeTemplate'
   import { validateTemplateElements } from '../utils/validationUtils'
-  // import { useSMRepositoryClient } from './../../../../composables/Client/SMRepositoryClient'
   import NameplateRenderer from './renderer/NameplateRenderer.vue'
 
   const props = defineProps<{
@@ -61,7 +59,6 @@
   const store = useAASCreationStore()
   const formRef = ref()
   const hasAttemptedSubmit = ref(false)
-  // const { postSubmodel } = useSMRepositoryClient()
 
   // const templateData = template as DigitalNameplateTemplate
   const rawTemplate = template as DigitalNameplateTemplate
@@ -72,13 +69,8 @@
   onMounted(() => {
     console.log('templatedata is', templateData)
     console.log('formvalues is', formValues)
-    // const existingData = store.digitalNameplateData;
     const initialState = createInitialFormState(templateData)
     console.log('initial digital nameplate form state:', initialState)
-    // for (const element of templateData.submodelElements) {
-    //     const storedElement = existingData?.submodelElements?.find((item) => item.idShort === element.idShort);
-    //     formValues[element.idShort] = storedElement?.value ?? '';
-    // }
   })
   // Function to save form values from UI into central store
   async function saveAndNext (): Promise<void> {
@@ -111,22 +103,6 @@
     const builtDigitalNameplate = buildDigitalNameplate(rawFormState)
     console.log('builtDigitalNameplate', builtDigitalNameplate)
     store.saveDigitalNameplateData(builtDigitalNameplate)
-
-    // const instanceOrError = jsonization.submodelFromJsonable(builtDigitalNameplate as any)
-
-    // if (instanceOrError.error !== null) {
-    //   console.error('Error parsing Submodel:', instanceOrError.error)
-    //   return
-    // }
-    // const submodelInstance = instanceOrError.mustValue()
-
-    // const success = await postSubmodel(submodelInstance)
-
-    // console.log('post was a success', success)
-
-    // if (!success) {
-    //   console.log('post function failed')
-    // }
     props.next()
   }
 

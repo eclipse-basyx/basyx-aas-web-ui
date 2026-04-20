@@ -40,7 +40,6 @@
         </v-stepper-window-item>
       </v-stepper-window>
 
-      <!-- <v-stepper-actions @click:next="step < 4 ? step++ : null" @click:prev="step > 1 ? step-- : null" /> -->
     </v-stepper>
   </v-container>
   <v-btn
@@ -51,11 +50,6 @@
 </template>
 
 <script lang="ts" setup>
-    // const props = defineOptions({
-    //     inheritAttrs: false,
-    //     isDesktopModule: true,
-    //     isMobileModule: false,
-    // });
   import { ref } from 'vue'
   import StepAssetInformation from './components/StepAssetInformation.vue'
   import StepDigitalNamePlate from './components/StepDigitalNamePlate.vue'

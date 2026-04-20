@@ -10,7 +10,7 @@
         @update:model-value="updateFieldValue(element.idShort, $event)"
       />
 
-      <!-- Collection placeholder -->
+      <!-- Collection  -->
       <NamePlateCollection
         v-else-if="isSubmodelElementCollectionElement(element)"
         :element="element"
@@ -18,12 +18,7 @@
         :show-validation="props.showValidation"
         @update:model-value="updateFieldValue(element.idShort, $event)"
       />
-
-      <!-- List placeholder -->
-      <!-- <v-card v-else-if="element.modelType === 'SubmodelElementList'" variant="outlined" class="pa-4">
-                <div class="text-subtitle-1 font-weight-medium">List: {{ formatLabel(element.idShort) }}</div>
-                <div class="text-body-2 text-medium-emphasis">List rendering will be added in a later step.</div>
-            </v-card> -->
+      <!-- List elements -->
       <NamePlateList
         v-else-if="isSubmodelElementListElement(element)"
         :element="element"
@@ -43,7 +38,6 @@
     isSubmodelElementCollectionElement,
     isSubmodelElementListElement,
   } from '../../utils/checkTemplateFields'
-  // import { formatLabel } from '../../utils/formFieldUtils';
   import NamePlateCollection from './NameplateCollection.vue'
   import NameplateField from './NameplateField.vue'
   import NamePlateList from './NameplateList.vue'
@@ -61,13 +55,7 @@
   const visibleElements = computed(() => {
     return props.elements.filter(element => !shouldHideElement(element))
   })
-  // function isLeafElement(element: TemplateElement): boolean {
-  //     return (
-  //         element.modelType === 'Property' ||
-  //         element.modelType === 'MultiLanguageProperty' ||
-  //         element.modelType === 'File'
-  //     );
-  // }
+
   function updateFieldValue (idShort: string, value: FormStateValue): void {
     emit('update:formState', {
       ...props.formState,

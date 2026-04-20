@@ -91,13 +91,10 @@
     emit('update:modelValue', updated)
 
     const newIndex = updated.length - 1
-    // openPanels.value = [...openPanels.value, newIndex];
     openPanels.value = addopenPanelIndex(openPanels.value, newIndex)
   }
 
   function onRemoveItem (index: number): void {
-    // const updated = [...items.value];
-    // updated.splice(index, 1);
     const updated = removeListItem(items.value, index)
     emit('update:modelValue', updated)
 
