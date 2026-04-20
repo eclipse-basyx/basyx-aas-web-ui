@@ -57,6 +57,8 @@ export default defineConfig(({ mode }) => {
     const commitSha = process.env.VITE_APP_COMMIT_SHA || getCommitSha();
     const buildDate = process.env.VITE_APP_BUILD_DATE || new Date().toISOString();
 
+    const isTest = mode === 'test';
+
     return {
         plugins: [
             copyWebIfcWasmPlugin(),
@@ -74,14 +76,16 @@ export default defineConfig(({ mode }) => {
             Vue({
                 template: { transformAssetUrls },
             }),
+
             // https://github.com/vuetifyjs/vuetify-loader/tree/next/packages/vite-plugin
-            Vuetify({
+            // Don't include Vuetify plugin in test mode to avoid css loading issues
+            !isTest && Vuetify({
                 autoImport: true,
                 styles: {
                     configFile: 'src/styles/settings.scss',
                 },
             }),
-        ],
+        ].filter(Boolean),
         base: base,
         define: {
             'import.meta.env.VITE_APP_VERSION': JSON.stringify(version),

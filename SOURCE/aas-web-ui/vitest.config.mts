@@ -13,10 +13,7 @@ export default defineConfig(({ mode }) => {
                 provider: 'istanbul',
                 reporter: ['text', 'json', 'html'],
                 reportsDirectory: './coverage',
-            },
-            css: {
-              include: /.+/,
-            },
+            }
         },
     };
 });
