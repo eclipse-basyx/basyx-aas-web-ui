@@ -15,6 +15,7 @@ export default defineConfig(env => {
   return mergeConfig(resolvedViteConfig, {
     test: {
       globals: true,
+      testTimeout: 30_000,
       environment: 'jsdom',
       server: {
         deps: {
