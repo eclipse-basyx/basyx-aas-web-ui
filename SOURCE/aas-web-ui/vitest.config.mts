@@ -14,6 +14,9 @@ export default defineConfig(({ mode }) => {
                 reporter: ['text', 'json', 'html'],
                 reportsDirectory: './coverage',
             },
+            css: {
+              include: /.+/,
+            },
         },
     };
 });
