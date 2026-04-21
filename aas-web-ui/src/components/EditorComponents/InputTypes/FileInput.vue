@@ -113,6 +113,8 @@
     'application/xml',
     'text/xml',
     'application/pdf',
+    'application/kbl+xml',
+    'application/vec+xml',
   ])
 
   watch(pathValue, newValue => {

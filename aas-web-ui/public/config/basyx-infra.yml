@@ -21,20 +21,20 @@ infrastructures:
     name: Local BaSyx
     components:
       aasDiscovery:
-        baseUrl: "http://localhost:9084"
+        baseUrl: "http://localhost:8084"
       aasRegistry:
-        baseUrl: "http://localhost:9082"
+        baseUrl: "http://localhost:8082"
         hasDiscoveryIntegration: true
       submodelRegistry:
-        baseUrl: "http://localhost:9083"
+        baseUrl: "http://localhost:8083"
       aasRepository:
-        baseUrl: "http://localhost:9081"
+        baseUrl: "http://localhost:8081"
         hasRegistryIntegration: true
       submodelRepository:
-        baseUrl: "http://localhost:9081"
+        baseUrl: "http://localhost:8081"
         hasRegistryIntegration: true
       conceptDescriptionRepository:
-        baseUrl: "http://localhost:9081"
+        baseUrl: "http://localhost:8081"
     security:
       type: none
 
