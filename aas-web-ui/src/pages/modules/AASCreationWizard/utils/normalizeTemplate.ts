@@ -1,6 +1,7 @@
 import type {
   DigitalNameplateTemplate,
   SubmodelElementCollectionElement,
+  TechnicalDataTemplate,
   TemplateElement,
 } from '../types/template'
 import contactInformationSmc from '../templates/contact-information-smc.json'
@@ -66,7 +67,16 @@ function normalizeElement (element: TemplateElement): TemplateElement | null {
   }
 }
 
-export function normalizeTemplate (template: DigitalNameplateTemplate): DigitalNameplateTemplate {
+export function normalizeDigitalNameplateTemplate (template: DigitalNameplateTemplate): DigitalNameplateTemplate {
+  return {
+    ...template,
+    submodelElements: template.submodelElements
+      .map(element => normalizeElement(element))
+      .filter((element): element is TemplateElement => element !== null),
+  }
+}
+
+export function normalizeTechnicalDataTemplate (template: TechnicalDataTemplate): TechnicalDataTemplate {
   return {
     ...template,
     submodelElements: template.submodelElements

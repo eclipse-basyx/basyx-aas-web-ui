@@ -2,7 +2,7 @@
   <v-row>
     <v-col v-for="(element, index) in visibleElements" :key="element.idShort" cols="12" :md="getMdCols(element, index, elements)">
       <!-- Leaf fields -->
-      <NameplateField
+      <SubmodelField
         v-if="isLeafElement(element)"
         :element="element"
         :model-value="props.formState[element.idShort]"
@@ -11,15 +11,16 @@
       />
 
       <!-- Collection  -->
-      <NamePlateCollection
+      <SubmodelCollection
         v-else-if="isSubmodelElementCollectionElement(element)"
         :element="element"
         :model-value="props.formState[element.idShort]"
         :show-validation="props.showValidation"
         @update:model-value="updateFieldValue(element.idShort, $event)"
       />
+
       <!-- List elements -->
-      <NamePlateList
+      <SubmodelList
         v-else-if="isSubmodelElementListElement(element)"
         :element="element"
         :model-value="props.formState[element.idShort]"
@@ -38,9 +39,9 @@
     isSubmodelElementCollectionElement,
     isSubmodelElementListElement,
   } from '../../utils/checkTemplateFields'
-  import NamePlateCollection from './NameplateCollection.vue'
-  import NameplateField from './NameplateField.vue'
-  import NamePlateList from './NameplateList.vue'
+  import SubmodelCollection from './SubmodelCollection.vue'
+  import SubmodelField from './SubmodelField.vue'
+  import SubmodelList from './SubmodelList.vue'
 
   const props = defineProps<{
     elements: TemplateElement[]

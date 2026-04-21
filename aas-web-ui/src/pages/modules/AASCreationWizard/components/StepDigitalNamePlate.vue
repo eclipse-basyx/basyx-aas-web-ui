@@ -1,7 +1,6 @@
 <template>
   <v-col v-if="validationIssues.length >0" cols="12">
     <v-alert
-      closable
       density="compact"
       type="error"
       variant="tonal"
@@ -20,7 +19,7 @@
       <v-form ref="formRef" @submit.prevent="saveAndNext">
         <v-row>
           <v-col>
-            <NameplateRenderer
+            <SubmodelRenderer
               :elements="templateData.submodelElements"
               :form-state="formValues"
               :show-validation="hasAttemptedSubmit"
@@ -46,9 +45,9 @@
   import { useAASCreationStore } from '../stores/aasCreationForm'
   import template from '../templates/digital-nameplate.json'
   import { createInitialFormState } from '../utils/createInitialFormState'
-  import { normalizeTemplate } from '../utils/normalizeTemplate'
+  import { normalizeDigitalNameplateTemplate } from '../utils/normalizeTemplate'
   import { validateTemplateElements } from '../utils/validationUtils'
-  import NameplateRenderer from './renderer/NameplateRenderer.vue'
+  import SubmodelRenderer from './renderer/SubmodelRenderer.vue'
 
   const props = defineProps<{
     next: () => void
@@ -62,7 +61,7 @@
 
   // const templateData = template as DigitalNameplateTemplate
   const rawTemplate = template as DigitalNameplateTemplate
-  const templateData = normalizeTemplate(rawTemplate)
+  const templateData = normalizeDigitalNameplateTemplate(rawTemplate)
   const formValues = ref<FormStateObject>(createInitialFormState(templateData))
   const validationIssues = ref<ValidationIssue[]>([])
 

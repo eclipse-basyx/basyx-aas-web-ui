@@ -1,5 +1,5 @@
 import type { FormStateObject } from '../types/form'
-import type { DigitalNameplateTemplate } from '../types/template'
+import type { DigitalNameplateTemplate, TechnicalDataTemplate } from '../types/template'
 import { defineStore } from 'pinia'
 
 export type LangText = {
@@ -32,7 +32,7 @@ export const useAASCreationStore = defineStore('aasCreationForm', {
     assetData: createInitialAssetData(),
 
     digitalNameplateData: null as DigitalNameplateTemplate | null,
-    technicalDataData: null as Record<string, any> | null,
+    technicalDataData: null as TechnicalDataTemplate | null,
     handoverDocumentationData: null as Record<string, any> | null,
     digitalNameplateFormState: null as FormStateObject | null,
   }),
@@ -50,7 +50,7 @@ export const useAASCreationStore = defineStore('aasCreationForm', {
       this.digitalNameplateData = data
     },
 
-    saveTechnicalDataData (data: Record<string, any>) {
+    saveTechnicalDataData (data: TechnicalDataTemplate) {
       this.technicalDataData = data
     },
 

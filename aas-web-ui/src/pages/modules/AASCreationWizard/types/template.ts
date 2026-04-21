@@ -1,14 +1,3 @@
-// export type TemplateElement_1 = {
-//     idShort: string;
-//     modelType: string;
-//     valueType?: string;
-//     value?: string;
-// };
-
-// export type DigitalNameplateTemplate_1 = {
-//     idShort: string;
-//     submodelElements: TemplateElement[];
-// };
 export type LangString = {
   language: string
   text: string
@@ -99,3 +88,5 @@ export type CardinalityInfo = {
 }
 
 export type DigitalNameplateTemplate = SubmodelTemplate
+export type TechnicalDataTemplate = SubmodelTemplate
+export type HandoverDocumentationTemplate = SubmodelTemplate

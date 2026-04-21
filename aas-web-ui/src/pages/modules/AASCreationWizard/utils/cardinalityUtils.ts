@@ -1,14 +1,3 @@
-// export function templateDataCardinality (templateData: DigitalNameplateTemplate): CardinalityInfo {
-//   console.log(templateData)
-//   const CardinalityInfo = something as CardinalityInfo
-//   for (item of templateData){
-//     if(Item.qualifiers){
-//       Item.qualifiers.array.forEach(element => {
-//         cardinalityInfo[item]
-//       });
-//     }
-//   }
-// }
 import type { CardinalityInfo, CardinalityKind, TemplateElement } from '../types/template'
 
 function isQualifierRecord (value: unknown): value is Record<string, unknown> {

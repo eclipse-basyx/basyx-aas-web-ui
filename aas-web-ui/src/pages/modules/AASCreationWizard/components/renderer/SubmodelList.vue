@@ -36,7 +36,7 @@
         </v-expansion-panel-title>
 
         <v-expansion-panel-text>
-          <NameplateRenderer
+          <SubmodelRenderer
             v-if="itemTemplate"
             :elements="itemTemplate.value"
             :form-state="item"
@@ -63,7 +63,7 @@
     removeListItem,
     updateListItem,
   } from '../../utils/subModelListUtils'
-  import NameplateRenderer from './NameplateRenderer.vue'
+  import SubmodelRenderer from './SubmodelRenderer.vue'
 
   const props = defineProps<{
     element: SubmodelElementListElement

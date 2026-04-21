@@ -58,7 +58,7 @@
         </v-expansion-panel-title>
 
         <v-expansion-panel-text>
-          <NameplateRenderer
+          <SubmodelRenderer
             :elements="element.value"
             :form-state="item"
             :show-validation="props.showValidation"
@@ -111,7 +111,7 @@
       </v-expansion-panel-title>
 
       <v-expansion-panel-text>
-        <NameplateRenderer
+        <SubmodelRenderer
           :elements="element.value"
           :form-state="collectionValue"
           :show-validation="props.showValidation"
@@ -133,7 +133,7 @@
   import { createInitialFormState } from '../../utils/createInitialFormState'
   import { asFormStateObject, asFormStateObjectArray, formatLabel, formatRepeatedElementBaseLabel } from '../../utils/formFieldUtils'
   import { addopenPanelIndex, appendListItem, removeAndReindexOpenPanels, removeListItem, updateListItem } from '../../utils/subModelListUtils'
-  import NameplateRenderer from './NameplateRenderer.vue'
+  import SubmodelRenderer from './SubmodelRenderer.vue'
 
   const props = defineProps<{
     element: SubmodelElementCollectionElement

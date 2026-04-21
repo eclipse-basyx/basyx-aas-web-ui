@@ -16,10 +16,10 @@ import {
   asString,
   asStringArray,
 } from '../utils/formFieldUtils'
-import { normalizeTemplate } from '../utils/normalizeTemplate'
+import { normalizeDigitalNameplateTemplate } from '../utils/normalizeTemplate'
 
 const rawTemplate = template as DigitalNameplateTemplate
-const templateData = normalizeTemplate(rawTemplate)
+const templateData = normalizeDigitalNameplateTemplate(rawTemplate)
 
 // Composables
 const { generateIri } = useIDUtils()
