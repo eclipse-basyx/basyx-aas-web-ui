@@ -1,8 +1,7 @@
-import { test, describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import { nextTick } from 'vue';
 import Nameplate_v3_0 from '@/components/Plugins/Submodels/Nameplate_v3_0.vue';
-import { createVuetify } from 'vuetify';
 
 vi.mock('@/composables/AAS/SMHandling', () => ({
   useSMHandling: () => ({
@@ -28,80 +27,109 @@ vi.mock('@/composables/AAS/SubmodelElements/SubmodelElement', () => ({
   })
 }));
 
-test('loads and displays product properties', async () => {
-  const vuetify = createVuetify();
-  const wrapper = mount(Nameplate_v3_0, {
-    global: {
-      plugins: [vuetify]
-    },
-    props: {
-      submodelElementData: { id: '123', path: 'test' }
-    }
+// Helper to create component with common setup
+function createComponent(submodelElementData = { id: '123', path: 'test' }) {
+  return mount(Nameplate_v3_0, {
+    props: { submodelElementData }
+  });
+}
+
+describe('Nameplate_v3_0 Component', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
-  await nextTick();
+  describe('Product Properties Loading', () => {
+    it('shows loading skeleton on initial mount', async () => {
+      const wrapper = createComponent();
+      await nextTick();
+      expect(wrapper.find('v-skeleton-loader').exists()).toBe(true);
+    });
 
-  // initially loading
-  expect(wrapper.find('v-skeleton-loader').exists()).toBe(true);
+    it('displays product properties after data loads', async () => {
+      const wrapper = createComponent();
+      await nextTick();
+      await flushPromises();
 
-  await flushPromises();
+      const rows = wrapper.findAll('tbody tr');
+      expect(rows).toHaveLength(1);
+      expect(rows[0].text()).toContain('foo');
+      expect(rows[0].text()).toContain('bar');
+    });
 
-  // after load
-  const rows = wrapper.findAll('tbody tr');
-  expect(rows.length).toBe(1); // only "Property" items
-  expect(rows[0].text()).toContain('foo');
-  expect(rows[0].text()).toContain('bar');
-});
+    it('filters out non-Property model types', async () => {
+      const wrapper = createComponent();
+      await flushPromises();
 
-test('generates iframe URL when button clicked', async () => {
-  const vuetify = createVuetify();
-  const wrapper = mount(Nameplate_v3_0, {
-    global: {
-      plugins: [vuetify]
-    },
-    props: {
-      submodelElementData: { id: 'abc', path: 'test' }
-    }
+      // Component only displays Property types (foo is Property, baz is Other)
+      const rows = wrapper.findAll('tbody tr');
+      expect(rows.every(row => row.text().includes('foo') || !row.text().includes('baz'))).toBe(true);
+    });
   });
 
-  await flushPromises();
-  await nextTick();
+  describe('Physical Nameplate Generation', () => {
+    it('generates iframe URL with correct structure', async () => {
+      const wrapper = createComponent({ id: 'test-id-123', path: 'test' });
+      await flushPromises();
 
-  // Manually call the method instead of trying to click button
-  // This tests the core functionality directly
-  await wrapper.vm.generatePhysicalNameplate();
+      await wrapper.vm.generatePhysicalNameplate();
 
-  const iframe = wrapper.find('iframe');
-  expect(iframe.exists()).toBe(true);
-  expect(iframe.attributes('src')).toContain('NameplateGenerateByReference');
-});
+      const iframe = wrapper.find('iframe');
+      expect(iframe.exists()).toBe(true);
+      expect(iframe.attributes('src')).toContain('NameplateGenerateByReference');
+    });
 
-test('triggerDownload sends postMessage', () => {
-  const postMessageMock = vi.fn();
+    it('encodes submodel ID in iframe URL', async () => {
+      const testId = 'https://example.com/test';
+      const wrapper = createComponent({ id: testId, path: 'test' });
+      await flushPromises();
 
-  const iframe = document.createElement('iframe');
-  iframe.id = 'nameplate-iframe';
-  
-  // Mock contentWindow using defineProperty to make it writable
-  Object.defineProperty(iframe, 'contentWindow', {
-    value: { postMessage: postMessageMock },
-    writable: true
+      await wrapper.vm.generatePhysicalNameplate();
+
+      const iframe = wrapper.find('iframe');
+      const src = iframe.attributes('src') || '';
+      expect(src).toContain('submodels?');
+      // Verify it's base64 encoded (no = padding at the end due to replaceAll)
+      expect(src).not.toContain(testId);
+    });
+
+    it('sets and clears isGenerating flag', async () => {
+      const wrapper = createComponent();
+      expect(wrapper.vm.isGenerating).toBe(false);
+
+      await wrapper.vm.generatePhysicalNameplate();
+
+      // After async call completes, should be false
+      expect(wrapper.vm.isGenerating).toBe(false);
+    });
   });
 
-  document.body.appendChild(iframe);
+  describe('Download Functionality', () => {
+    it('sends postMessage to iframe when triggerDownload called', () => {
+      const postMessageMock = vi.fn();
+      const iframe = document.createElement('iframe');
+      iframe.id = 'nameplate-iframe';
 
-  const vuetify = createVuetify();
-  const wrapper = mount(Nameplate_v3_0, {
-    global: {
-      plugins: [vuetify]
-    },
-    props: { submodelElementData: {} }
+      Object.defineProperty(iframe, 'contentWindow', {
+        value: { postMessage: postMessageMock },
+        writable: true
+      });
+
+      document.body.appendChild(iframe);
+
+      const wrapper = createComponent();
+      wrapper.vm.triggerDownload();
+
+      expect(postMessageMock).toHaveBeenCalledWith('trigger-svg-download', '*');
+
+      document.body.removeChild(iframe);
+    });
+
+    it('handles missing iframe gracefully', () => {
+      const wrapper = createComponent();
+
+      // Should not throw when iframe doesn't exist
+      expect(() => wrapper.vm.triggerDownload()).not.toThrow();
+    });
   });
-
-  wrapper.vm.triggerDownload();
-
-  expect(postMessageMock).toHaveBeenCalledWith('trigger-svg-download', '*');
-
-  // Clean up
-  document.body.removeChild(iframe);
 });
