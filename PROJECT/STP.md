@@ -7,6 +7,7 @@
 | 0.1.0 | 18.03.2026 | Mattis Weigold | Rough Structure and Introduction |
 | 0.1.1 | 14.04.2026 | Mattis Weigold | Add Req. ID Links to SRS |
 | 0.2.0 | 22.04.2026 | Mattis Weigold | Add Test Cases 1-4 |
+| 0.3.0 | 23.04.2026 | Mattis Weigold | Add Test Cases 5-6 |
 
 ## Table of Contents
 
@@ -43,10 +44,10 @@ The tests verify that both functional and non-functional requirements are adequa
 | [FR.003 / Search](SRS.md#43-fr003--search) | Extend search functionality recursively through AAS content. | A | [TC.001](#41-tc001-aas-sorting-and-filtering-validation) |
 | [FR.004 / Nameplate generator integration](SRS.md#44-fr004--nameplate-generator-integration) | Integrate submodule into digital nameplate plugin. | A | [TC.002](#42-tc002-correct-frontend-communication-for-nameplate-generator); [TC.003](#43-tc003-correct-backend-communication-for-nameplate-generator) |
 | [FR.005 / API enhancements](SRS.md#45-fr005--api-enhancements) | Extend JSON output for `/shells` endpoint. | A | [TC.004](#44-tc004-json-conversion) |
-| [FR.006 / Improved labeling](SRS.md#46-fr006--improved-labeling) | Add extra labels for Boolean values. | B | TODO |
+| [FR.006 / Improved labeling](SRS.md#46-fr006--improved-labeling) | Add extra labels for Boolean values. | B | [TC.005](#45-tc005-boolean-input-reading); [TC.006](#46-tc006-boolean-input-setting) |
 | [NFR.001 / Usability](SRS.md#51-nfr001--usability) | UI improvements must reduce average task time. | -- | *no testing* |
-| [NFR.002 / Performance](SRS.md#52-nfr002--performance) | No significant delay from enhancements. | D | TODO |
-| [NFR.003 / Stability](SRS.md#53-nfr003--stability) | Application should not crash under standard or rapid usage. | C | TODO |
+| [NFR.002 / Performance](SRS.md#52-nfr002--performance) | No significant delay from enhancements. | D | *no testing* |
+| [NFR.003 / Stability](SRS.md#53-nfr003--stability) | Application should not crash under standard or rapid usage. | C | *no testing* |
 | [NFR.004 / Maintainability](SRS.md#54-nfr004--maintainability) | Clear documentation and readable code. | -- | *no testing* |
 | [NFR.005 / Licensing](SRS.md#55-nfr005--licensing) | Maintain current open-source license. | -- | *no testing* |
 
@@ -202,6 +203,88 @@ The tests verify that both functional and non-functional requirements are adequa
     <td style="border:1px solid black; padding:8px;"><strong>Description:</strong></td>
     <td colspan="3" style="border:1px solid black; padding:8px;">
       The test case verifies that the api correctly converts AAS into JSON.
+    </td>
+  </tr>
+
+  <tr>
+    <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
+      Unit test
+    </th>
+  </tr>
+  <tr>
+    <th style="border:1px solid black; padding:8px; text-align:center;">Found in:</th>
+    <td colspan="2" style="border:1px solid black; padding:8px; text-align:center;">src/........</td>
+  </tr>
+</table>
+
+### 4.5 <TC.005> Boolean Input Reading
+<table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
+  <tr>
+    <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
+      Test case
+    </th>
+  </tr>
+  <tr>
+    <td style="border:1px solid black; padding:8px;"><strong>ID:</strong></td>
+    <td colspan="3" style="border:1px solid black; padding:8px; ">&lt;TC.005&gt;</td>
+  </tr>
+  <tr>
+    <td style="border:1px solid black; padding:8px;"><strong>Name:</strong></td>
+    <td colspan="3" style="border:1px solid black; padding:8px;">
+      Boolean Input Reading
+    </td>
+  </tr>
+  <tr>
+    <td style="border:1px solid black; padding:8px;"><strong>Req.-ID:</strong></td>
+    <td colspan="3" style="border:1px solid black; padding:8px;">
+      FR.006
+    </td>
+  </tr>
+  <tr>
+    <td style="border:1px solid black; padding:8px;"><strong>Description:</strong></td>
+    <td colspan="3" style="border:1px solid black; padding:8px;">
+      The test case verifies that the BooleanInput correctly reads its values from an AAS.
+    </td>
+  </tr>
+
+  <tr>
+    <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
+      Unit test
+    </th>
+  </tr>
+  <tr>
+    <th style="border:1px solid black; padding:8px; text-align:center;">Found in:</th>
+    <td colspan="2" style="border:1px solid black; padding:8px; text-align:center;">src/........</td>
+  </tr>
+</table>
+
+### 4.6 <TC.006> Boolean Input Setting
+<table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
+  <tr>
+    <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
+      Test case
+    </th>
+  </tr>
+  <tr>
+    <td style="border:1px solid black; padding:8px;"><strong>ID:</strong></td>
+    <td colspan="3" style="border:1px solid black; padding:8px; ">&lt;TC.006&gt;</td>
+  </tr>
+  <tr>
+    <td style="border:1px solid black; padding:8px;"><strong>Name:</strong></td>
+    <td colspan="3" style="border:1px solid black; padding:8px;">
+      Boolean Input Setting
+    </td>
+  </tr>
+  <tr>
+    <td style="border:1px solid black; padding:8px;"><strong>Req.-ID:</strong></td>
+    <td colspan="3" style="border:1px solid black; padding:8px;">
+      FR.006
+    </td>
+  </tr>
+  <tr>
+    <td style="border:1px solid black; padding:8px;"><strong>Description:</strong></td>
+    <td colspan="3" style="border:1px solid black; padding:8px;">
+      The test case verifies that the BooleanInput correctly writes its values to the AAS.
     </td>
   </tr>
 
