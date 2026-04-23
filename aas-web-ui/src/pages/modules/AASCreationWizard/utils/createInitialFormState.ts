@@ -52,6 +52,10 @@ function createInitialValueForElement (element: TemplateElement): FormStateValue
       return []
     }
 
+    case 'Range': {
+      return { min: '', max: '' }
+    }
+
     default: {
       return ''
     }

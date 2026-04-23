@@ -1,4 +1,4 @@
-import type { FormStateObject, FormStateValue } from '../types/form'
+import type { FormStateObject, FormStateValue, RangeFormValue } from '../types/form'
 import type { LangString } from '../types/template'
 import { ensurelangStrings } from './langStringFormUtils'
 
@@ -63,3 +63,34 @@ export function formatRepeatedElementBaseLabel (idShort: string): string {
 
   return formatLabel(baseIdShort)
 }
+
+// helper for supproting the types in Technical Data
+
+export function isRangeFormValue (value: unknown): value is RangeFormValue {
+  return (
+    !!value && typeof value === 'object'
+    && !Array.isArray(value)
+    && 'min' in value
+    && 'max' in value
+  )
+}
+
+export function asRangeFormValue (value: FormStateValue): RangeFormValue {
+  return isRangeFormValue (value) ? value : { min: '', max: '' }
+}
+
+// export function isReference (value: unknown): value is Reference {
+//   return (
+//     && typeof value === 'object'
+//     && !Array.isArray(value)
+//     && !(value instanceof File)
+//     && 'keys' in value
+//     && 'type' in value
+//     && typeof (value as { type: unknown }).type === 'string'
+//     && Array.isArray((value as { keys: unknown }).keys)
+//   )
+// }
+
+// export function asReference (value: FormStateValue): Reference | null {
+//   return isReference(value) ? value : null
+// }

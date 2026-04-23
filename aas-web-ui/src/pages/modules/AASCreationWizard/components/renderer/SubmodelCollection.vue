@@ -1,4 +1,5 @@
 <template>
+
   <v-card
     v-if="isRepeatable"
     class="pa-4"
@@ -20,7 +21,7 @@
         variant="tonal"
         @click="onAddRepeatableCollection"
       >
-        Add
+        Add New
       </v-btn>
     </div>
 
@@ -85,41 +86,43 @@
         variant="tonal"
         @click="onAddCollection"
       >
-        Add
+        Add New
       </v-btn>
     </div>
   </v-card>
 
-  <v-expansion-panels v-else v-model="openPanel" multiple>
-    <v-expansion-panel :value="0">
-      <v-expansion-panel-title>
-        <div class="d-flex justify-space-between align-center w-100 pr-2">
-          <div class="text-subtitle-1 font-weight-medium">
-            {{ getDisplayLabel() }}
+  <v-card v-else class="pa-4" variant="outlined">
+    <v-expansion-panels v-model="openPanel" multiple>
+      <v-expansion-panel :value="0">
+        <v-expansion-panel-title>
+          <div class="d-flex justify-space-between align-center w-100 pr-2">
+            <div class="text-subtitle-1 font-weight-medium">
+              {{ getDisplayLabel() }}
+            </div>
+
+            <v-btn
+              v-if="isOptionalSingle"
+              color="error"
+              prepend-icon="mdi-delete"
+              variant="text"
+              @click.stop="onRemoveCollection"
+            >
+              Remove
+            </v-btn>
           </div>
+        </v-expansion-panel-title>
 
-          <v-btn
-            v-if="isOptionalSingle"
-            color="error"
-            prepend-icon="mdi-delete"
-            variant="text"
-            @click.stop="onRemoveCollection"
-          >
-            Remove
-          </v-btn>
-        </div>
-      </v-expansion-panel-title>
-
-      <v-expansion-panel-text>
-        <SubmodelRenderer
-          :elements="element.value"
-          :form-state="collectionValue"
-          :show-validation="props.showValidation"
-          @update:form-state="onCollectionUpdate"
-        />
-      </v-expansion-panel-text>
-    </v-expansion-panel>
-  </v-expansion-panels>
+        <v-expansion-panel-text>
+          <SubmodelRenderer
+            :elements="element.value"
+            :form-state="collectionValue"
+            :show-validation="props.showValidation"
+            @update:form-state="onCollectionUpdate"
+          />
+        </v-expansion-panel-text>
+      </v-expansion-panel>
+    </v-expansion-panels>
+  </v-card>
 </template>
 
 <script lang="ts" setup>

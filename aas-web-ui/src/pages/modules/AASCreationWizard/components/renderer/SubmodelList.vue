@@ -10,7 +10,7 @@
         </div>
       </div>
 
-      <v-btn color="primary" prepend-icon="mdi-plus" variant="tonal" @click="onAddItem"> Add new </v-btn>
+      <v-btn color="primary" prepend-icon="mdi-plus" variant="tonal" @click="onAddItem"> Add New </v-btn>
     </div>
 
     <div v-if="items.length === 0" class="text-body-2 text-medium-emphasis">No entries added yet.</div>

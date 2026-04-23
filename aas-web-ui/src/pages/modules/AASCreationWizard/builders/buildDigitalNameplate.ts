@@ -153,6 +153,13 @@ function buildElement (element: TemplateElement, value: FormStateValue): Templat
         value: builtItems,
       }]
     }
+    case 'ReferenceElement': {
+      return [] // unused in digitalNameplate
+    }
+
+    case 'Range': {
+      return [] // unused in digitalNameplate
+    }
   }
 }
 

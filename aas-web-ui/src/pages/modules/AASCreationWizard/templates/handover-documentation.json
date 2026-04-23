@@ -35,10 +35,6 @@
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Übergabedokumentation"
-},
-{
 "language": "en",
 "text": "Handover Documentation"
 }
@@ -80,23 +76,24 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "One",
 "valueType": "xs:string"
 }
 ],
 "description": [
 {
 "language": "en",
-"text": "Documents"
+"text": "Information for a document identity"
 }
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Dokumente"
+"language": "en",
+"text": "Documents (handover documentation)"
 },
 {
-"language": "en",
-"text": "Documents"
+"language": "de",
+"text": "Dokumente (Übergabedokumentation)"
 }
 ],
 "idShort": "Documents",
@@ -151,6 +148,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "OneToMany",
 "valueType": "xs:string"
 }
 ],
@@ -196,23 +194,24 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "One",
 "valueType": "xs:string"
 }
 ],
 "description": [
 {
 "language": "en",
-"text": "Document Ids"
+"text": "Set of document identifiers for the document. One ID in this collection should be used as a preferred ID"
 }
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Dokument-IDs"
+"language": "en",
+"text": "Document identifyers"
 },
 {
-"language": "en",
-"text": "Document Ids"
+"language": "de",
+"text": "Dokumentidentifikatoren"
 }
 ],
 "idShort": "DocumentIds",
@@ -267,6 +266,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "OneToMany",
 "valueType": "xs:string"
 }
 ],
@@ -323,6 +323,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "One",
 "valueType": "xs:string"
 },
 {
@@ -337,6 +338,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "ExampleValue",
+"value": "https://domain.com/...",
 "valueType": "xs:string"
 }
 ],
@@ -349,12 +351,12 @@
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Dokument Domain Identifikator"
+"language": "en",
+"text": "document domain identificator"
 },
 {
-"language": "en",
-"text": "Document Domain Id"
+"language": "de",
+"text": "Document Domain Identifikator"
 }
 ],
 "idShort": "DocumentDomainId"
@@ -395,6 +397,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "One",
 "valueType": "xs:string"
 },
 {
@@ -409,6 +412,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "ExampleValue",
+"value": "XF90-884",
 "valueType": "xs:string"
 }
 ],
@@ -416,17 +420,17 @@
 "description": [
 {
 "language": "en",
-"text": "Identification number of the Document within a given domain, e.g. the providing organisation."
+"text": "alphanumeric character sequence uniquely identifying a document"
 }
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Dokument-ID"
+"language": "en",
+"text": "Document Identifyer"
 },
 {
-"language": "en",
-"text": "Document Identifier"
+"language": "de",
+"text": "Dokumentennummer"
 }
 ],
 "idShort": "DocumentIdentifier"
@@ -467,6 +471,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "ZeroToOne",
 "valueType": "xs:string"
 },
 {
@@ -481,6 +486,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "ExampleValue",
+"value": "true",
 "valueType": "xs:string"
 }
 ],
@@ -493,12 +499,12 @@
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Dokument ist primär"
+"language": "en",
+"text": "Document is primary"
 },
 {
-"language": "en",
-"text": "Document Is Primary"
+"language": "de",
+"text": "Dokument ist primär"
 }
 ],
 "idShort": "DocumentIsPrimary"
@@ -542,23 +548,24 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "One",
 "valueType": "xs:string"
 }
 ],
 "description": [
 {
 "language": "en",
-"text": "Document Classifications"
+"text": "Set of information for describing the classification of the Document according to ClassificationSystems"
 }
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Dokumentenklassifizierungen"
+"language": "en",
+"text": "Document classifications"
 },
 {
-"language": "en",
-"text": "Document Classifications"
+"language": "de",
+"text": "Dokumentklassifikationen"
 }
 ],
 "idShort": "DocumentClassifications",
@@ -613,6 +620,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "OneToMany",
 "valueType": "xs:string"
 }
 ],
@@ -669,6 +677,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "One",
 "valueType": "xs:string"
 },
 {
@@ -683,6 +692,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "ExampleValue",
+"value": "03-02",
 "valueType": "xs:string"
 }
 ],
@@ -690,17 +700,17 @@
 "description": [
 {
 "language": "en",
-"text": "Unique ID of the document class within a classficationsystem. Constraint: If ClassificationSystem is set to “VDI2770:2018”, the given IDs of VDI2770:2018 shall be used"
+"text": "Unique ID of the document class within a classficationsystem"
 }
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Klassen-ID"
+"language": "en",
+"text": "Class identificator"
 },
 {
-"language": "en",
-"text": "Class Id"
+"language": "de",
+"text": "Klassenidentifikator"
 }
 ],
 "idShort": "ClassId"
@@ -740,6 +750,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "One",
 "valueType": "xs:string"
 },
 {
@@ -754,6 +765,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "ExampleValue",
+"value": "Operation@en",
 "valueType": "xs:string"
 }
 ],
@@ -761,17 +773,17 @@
 "description": [
 {
 "language": "en",
-"text": "List of language-dependent names of the selected ClassID. Constraint: If ClassificationSystem is set to “VDI2770:2018” then the given names of VDI2770:2018 need be used. Constraint: languages shall match at least the language specifications of the included DocumentVersions (below)."
+"text": "Name of the class in the classification system"
 }
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Klassenname"
-},
-{
 "language": "en",
 "text": "Class Name"
+},
+{
+"language": "de",
+"text": "Klassenname"
 }
 ],
 "idShort": "ClassName"
@@ -812,6 +824,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "One",
 "valueType": "xs:string"
 },
 {
@@ -826,6 +839,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "ExampleValue",
+"value": "VDI2770:2020",
 "valueType": "xs:string"
 }
 ],
@@ -833,17 +847,17 @@
 "description": [
 {
 "language": "en",
-"text": "Identification of the classification system. For classifications according VDI 2270 always set to \"VDI2770:2018\". Further classification systems are commonly used, such as \"IEC61355-1:2008\"."
+"text": "Identification of the classification system"
 }
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Klassifikationssystem"
+"language": "en",
+"text": "Classification system"
 },
 {
-"language": "en",
-"text": "Classification System"
+"language": "de",
+"text": "Klassifizierungssystem"
 }
 ],
 "idShort": "ClassificationSystem"
@@ -887,23 +901,24 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "One",
 "valueType": "xs:string"
 }
 ],
 "description": [
 {
 "language": "en",
-"text": "Document Versions"
+"text": "Information elements of individual Document Version entities"
 }
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Dokumentenversionen"
+"language": "en",
+"text": "Document versions"
 },
 {
-"language": "en",
-"text": "Document Versions"
+"language": "de",
+"text": "Dokumentenversionen"
 }
 ],
 "idShort": "DocumentVersions",
@@ -958,18 +973,17 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "OneToMany",
 "valueType": "xs:string"
-}
-],
-"description": [
-{
-"language": "en",
-"text": "This SubmodelElementCollection holds information about Document version."
 }
 ],
 "displayName": [
 {
 "language": "en",
+"text": "Document version"
+},
+{
+"language": "de",
 "text": "Document version"
 }
 ],
@@ -1009,6 +1023,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "One",
 "valueType": "xs:string"
 }
 ],
@@ -1020,12 +1035,12 @@
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Sprache"
-},
-{
 "language": "en",
 "text": "Language"
+},
+{
+"language": "de",
+"text": "Sprache"
 }
 ],
 "idShort": "Language",
@@ -1043,6 +1058,7 @@
 ],
 "type": "ExternalReference"
 },
+"value": "en",
 "valueId": {
 "keys": [
 {
@@ -1066,6 +1082,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "OneToMany",
 "valueType": "xs:string"
 },
 {
@@ -1080,13 +1097,8 @@
 },
 "kind": "ConceptQualifier",
 "type": "ExampleValue",
+"value": "en",
 "valueType": "xs:string"
-}
-],
-"description": [
-{
-"language": "en",
-"text": "This Property provides en (English)."
 }
 ],
 "displayName": [
@@ -1139,6 +1151,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "One",
 "valueType": "xs:string"
 },
 {
@@ -1153,6 +1166,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "ExampleValue",
+"value": "V1.2",
 "valueType": "xs:string"
 }
 ],
@@ -1165,12 +1179,12 @@
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Version"
+"language": "en",
+"text": "Document version"
 },
 {
-"language": "en",
-"text": "Version"
+"language": "de",
+"text": "Dokumentenversion"
 }
 ],
 "idShort": "Version"
@@ -1210,6 +1224,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "One",
 "valueType": "xs:string"
 },
 {
@@ -1224,6 +1239,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "ExampleValue",
+"value": "Examplary title@en",
 "valueType": "xs:string"
 }
 ],
@@ -1231,17 +1247,17 @@
 "description": [
 {
 "language": "en",
-"text": "Denotes the focus of the document and has a referential or communicative function, which is to refer to the content, subject matter or theme of the document"
+"text": "Name of the document"
 }
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Titel"
+"language": "en",
+"text": "Document title"
 },
 {
-"language": "en",
-"text": "Title"
+"language": "de",
+"text": "Dokumententitel"
 }
 ],
 "idShort": "Title"
@@ -1281,6 +1297,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "ZeroToOne",
 "valueType": "xs:string"
 },
 {
@@ -1295,6 +1312,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "ExampleValue",
+"value": "Examplary subtitle@en",
 "valueType": "xs:string"
 }
 ],
@@ -1302,17 +1320,17 @@
 "description": [
 {
 "language": "en",
-"text": "List of language-dependent subtitles of the Document"
+"text": "List of language-dependent subtitles of the document"
 }
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Untertitel"
-},
-{
 "language": "en",
 "text": "Subtitle"
+},
+{
+"language": "de",
+"text": "Untertitel"
 }
 ],
 "idShort": "Subtitle"
@@ -1352,6 +1370,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "One",
 "valueType": "xs:string"
 },
 {
@@ -1366,6 +1385,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "ExampleValue",
+"value": "Abstract@en",
 "valueType": "xs:string"
 }
 ],
@@ -1373,17 +1393,17 @@
 "description": [
 {
 "language": "en",
-"text": "text note"
+"text": "Plain text characterizing the content of the document"
 }
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Beschreibung"
+"language": "en",
+"text": "Document description"
 },
 {
-"language": "en",
-"text": "Description"
+"language": "de",
+"text": "Dokumentenbeschreibung"
 }
 ],
 "idShort": "Description"
@@ -1423,6 +1443,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "ZeroToOne",
 "valueType": "xs:string"
 },
 {
@@ -1437,6 +1458,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "ExampleValue",
+"value": "Examplary keywords@en",
 "valueType": "xs:string"
 }
 ],
@@ -1444,17 +1466,17 @@
 "description": [
 {
 "language": "en",
-"text": "List of language-dependent keywords of the Document. Note: Mutiple keywords are given as comma separated list for each language. Constraint: For each language-depended KeyWord a Title and Summary shall exist for the given language. Note: This can be intentionally a blank."
+"text": "List of language-dependent keywords of the document"
 }
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Schlüsselwörter"
+"language": "en",
+"text": "Keywords"
 },
 {
-"language": "en",
-"text": "Key Words"
+"language": "de",
+"text": "Stichworte"
 }
 ],
 "idShort": "KeyWords"
@@ -1495,6 +1517,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "One",
 "valueType": "xs:string"
 },
 {
@@ -1509,6 +1532,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "ExampleValue",
+"value": "2020-02-06",
 "valueType": "xs:string"
 }
 ],
@@ -1516,17 +1540,17 @@
 "description": [
 {
 "language": "en",
-"text": "Date when the document status was set. Format is YYYY-MM-DD."
+"text": "Date when the document status was set"
 }
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Datum der Statuseinstellung"
+"language": "en",
+"text": "Document status set date"
 },
 {
-"language": "en",
-"text": "Status Set Date"
+"language": "de",
+"text": "Datum der Einstellung des Dokumentenstatus"
 }
 ],
 "idShort": "StatusSetDate"
@@ -1567,6 +1591,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "One",
 "valueType": "xs:string"
 },
 {
@@ -1581,6 +1606,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "ExampleValue",
+"value": "Released",
 "valueType": "xs:string"
 }
 ],
@@ -1593,12 +1619,12 @@
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Statuswert"
+"language": "en",
+"text": "Document status"
 },
 {
-"language": "en",
-"text": "Status Value"
+"language": "de",
+"text": "Dokumentstatus"
 }
 ],
 "idShort": "StatusValue"
@@ -1628,6 +1654,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "One",
 "valueType": "xs:string"
 },
 {
@@ -1642,6 +1669,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "ExampleValue",
+"value": "Example company",
 "valueType": "xs:string"
 }
 ],
@@ -1649,17 +1677,17 @@
 "description": [
 {
 "language": "en",
-"text": "Organiziation short name of the author of the document"
+"text": "Short name of the organization"
 }
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Kurzname der Organisation"
+"language": "en",
+"text": "Organization short name"
 },
 {
-"language": "en",
-"text": "Organization Short Name"
+"language": "de",
+"text": "Kurzname der Organisation"
 }
 ],
 "idShort": "OrganizationShortName"
@@ -1700,6 +1728,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "One",
 "valueType": "xs:string"
 },
 {
@@ -1714,6 +1743,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "ExampleValue",
+"value": "Example company Ltd.",
 "valueType": "xs:string"
 }
 ],
@@ -1721,17 +1751,17 @@
 "description": [
 {
 "language": "en",
-"text": "Official name of the organization of author of the document"
+"text": "Official name of the organization of the author of the document"
 }
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Offizieller Name der Organisation"
+"language": "en",
+"text": "Organization official name"
 },
 {
-"language": "en",
-"text": "Organization Official Name"
+"language": "de",
+"text": "Offizieller Name der Organisation"
 }
 ],
 "idShort": "OrganizationOfficialName"
@@ -1771,6 +1801,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "ZeroToOne",
 "valueType": "xs:string"
 }
 ],
@@ -1782,12 +1813,12 @@
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Bezieht sich auf Entitäten"
+"language": "en",
+"text": "Reference to other documents"
 },
 {
-"language": "en",
-"text": "Refers To Entities"
+"language": "de",
+"text": "Referenz zu anderen Dokumenten"
 }
 ],
 "idShort": "RefersToEntities",
@@ -1818,6 +1849,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "OneToMany",
 "valueType": "xs:string"
 },
 {
@@ -1832,26 +1864,11 @@
 },
 "kind": "ConceptQualifier",
 "type": "AllowedIdShort",
+"value": "RefersTo[\\d{2,3}]",
 "valueType": "xs:string"
 }
 ],
-"category": "PARAMETER",
-"description": [
-{
-"language": "en",
-"text": "This ReferenceElement references PARAMETER."
-}
-],
-"displayName": [
-{
-"language": "de",
-"text": "PARAMETER"
-},
-{
-"language": "en",
-"text": "PARAMETER"
-}
-]
+"category": "PARAMETER"
 }
 ]
 },
@@ -1890,6 +1907,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "ZeroToOne",
 "valueType": "xs:string"
 }
 ],
@@ -1901,12 +1919,12 @@
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Basierend auf Referenzen"
+"language": "en",
+"text": "Based on other documents"
 },
 {
-"language": "en",
-"text": "Based On References"
+"language": "de",
+"text": "Basiert auf anderen Dokumenten"
 }
 ],
 "idShort": "BasedOnReferences",
@@ -1937,6 +1955,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "OneToMany",
 "valueType": "xs:string"
 },
 {
@@ -1951,26 +1970,11 @@
 },
 "kind": "ConceptQualifier",
 "type": "AllowedIdShort",
+"value": "BasedOn[\\d{2,3}]",
 "valueType": "xs:string"
 }
 ],
-"category": "PARAMETER",
-"description": [
-{
-"language": "en",
-"text": "This ReferenceElement references PARAMETER."
-}
-],
-"displayName": [
-{
-"language": "de",
-"text": "PARAMETER"
-},
-{
-"language": "en",
-"text": "PARAMETER"
-}
-]
+"category": "PARAMETER"
 }
 ]
 },
@@ -2009,6 +2013,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "ZeroToOne",
 "valueType": "xs:string"
 }
 ],
@@ -2020,12 +2025,12 @@
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Übersetzung von Entitäten"
+"language": "en",
+"text": "Translation of other documents"
 },
 {
-"language": "en",
-"text": "Translation Of Entities"
+"language": "de",
+"text": "Übersetzung von anderen Elementen"
 }
 ],
 "idShort": "TranslationOfEntities",
@@ -2056,6 +2061,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "OneToMany",
 "valueType": "xs:string"
 },
 {
@@ -2070,16 +2076,11 @@
 },
 "kind": "ConceptQualifier",
 "type": "AllowedIdShort",
+"value": "TranslationOf[\\d{2,3}]",
 "valueType": "xs:string"
 }
 ],
 "category": "PARAMETER",
-"description": [
-{
-"language": "en",
-"text": "This ReferenceElement references Translation of documents."
-}
-],
 "displayName": [
 {
 "language": "en",
@@ -2128,6 +2129,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "One",
 "valueType": "xs:string"
 }
 ],
@@ -2139,12 +2141,12 @@
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Digitale Dateien"
+"language": "en",
+"text": "Digital files"
 },
 {
-"language": "en",
-"text": "Digital Files"
+"language": "de",
+"text": "Digitale Dateien"
 }
 ],
 "idShort": "DigitalFiles",
@@ -2176,6 +2178,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "OneToMany",
 "valueType": "xs:string"
 },
 {
@@ -2190,6 +2193,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "ExampleValue",
+"value": "docu_cecc_fullmanual_DE.PDF",
 "valueType": "xs:string"
 },
 {
@@ -2204,13 +2208,8 @@
 },
 "kind": "ConceptQualifier",
 "type": "AllowedIdShort",
+"value": "DigitalFile[\\d{2,3}]",
 "valueType": "xs:string"
-}
-],
-"description": [
-{
-"language": "en",
-"text": "This File provides Name of the specific digital file@en."
 }
 ],
 "displayName": [
@@ -2262,6 +2261,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "ZeroToOne",
 "valueType": "xs:string"
 },
 {
@@ -2276,6 +2276,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "ExampleValue",
+"value": "docu_cecc_fullmanual_DE.jpg",
 "valueType": "xs:string"
 },
 {
@@ -2290,6 +2291,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "AllowedIdShort",
+"value": "PreviewFile[\\d{2,3}]",
 "valueType": "xs:string"
 }
 ],
@@ -2297,17 +2299,17 @@
 "description": [
 {
 "language": "en",
-"text": "Provides a preview image of the DocumentVersion, e.g. first page, in a commonly used image format and low resolution. Note: low resolution e.g. < 512 x 512 pixels. Constraint: the MIME type needs to match the file type. Allowed file types are JPG, PNG, BMP."
+"text": "Provides a preview image of the Document Version, e.g. first page, in a commonly used image format and low resolution"
 }
 ],
 "displayName": [
 {
-"language": "de",
-"text": "Vorschaudatei"
+"language": "en",
+"text": "Preview file"
 },
 {
-"language": "en",
-"text": "Preview File"
+"language": "de",
+"text": "Vorschaudatei"
 }
 ],
 "idShort": "PreviewFile"
@@ -2340,6 +2342,7 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "ZeroToOne",
 "valueType": "xs:string"
 }
 ],
@@ -2350,10 +2353,6 @@
 }
 ],
 "displayName": [
-{
-"language": "de",
-"text": "Dokumentierte Entitäten"
-},
 {
 "language": "en",
 "text": "Documented Entities"
@@ -2387,26 +2386,11 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "OneToMany",
 "valueType": "xs:string"
 }
 ],
-"category": "PARAMETER",
-"description": [
-{
-"language": "en",
-"text": "This ReferenceElement references PARAMETER."
-}
-],
-"displayName": [
-{
-"language": "de",
-"text": "PARAMETER"
-},
-{
-"language": "en",
-"text": "PARAMETER"
-}
-]
+"category": "PARAMETER"
 }
 ]
 }
@@ -2438,20 +2422,17 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "ZeroToOne",
 "valueType": "xs:string"
 }
 ],
 "description": [
 {
 "language": "en",
-"text": "Entities"
+"text": "Entities for documentation"
 }
 ],
 "displayName": [
-{
-"language": "de",
-"text": "Entitäten"
-},
 {
 "language": "en",
 "text": "Entities"
@@ -2486,26 +2467,11 @@
 },
 "kind": "ConceptQualifier",
 "type": "SMT/Cardinality",
+"value": "OneToMany",
 "valueType": "xs:string"
 }
 ],
-"category": "PARAMETER",
-"description": [
-{
-"language": "en",
-"text": "This Entity describes PARAMETER."
-}
-],
-"displayName": [
-{
-"language": "de",
-"text": "PARAMETER"
-},
-{
-"language": "en",
-"text": "PARAMETER"
-}
-]
+"category": "PARAMETER"
 }
 ]
 }

@@ -1,3 +1,4 @@
+// describes the template/ model structure from the AAS template json files
 export type LangString = {
   language: string
   text: string
@@ -8,8 +9,8 @@ export type ReferenceKey = {
 }
 
 export type Reference = {
-  type?: string
-  keys?: ReferenceKey[]
+  type: string
+  keys: ReferenceKey[]
 }
 export type ModelType
   = | 'Property'
@@ -17,6 +18,8 @@ export type ModelType
     | 'File'
     | 'SubmodelElementCollection'
     | 'SubmodelElementList'
+    | 'ReferenceElement'
+    | 'Range'
 
 export type BaseTemplateElement = {
   [key: string]: unknown
@@ -47,12 +50,27 @@ export type FileElement = BaseTemplateElement & {
   value?: string
 }
 
+// type support for Technical data
+type ReferenceElement = BaseTemplateElement & {
+  modelType: 'ReferenceElement'
+  value?: Reference
+}
+// type support for Technical data
+type RangeElement = BaseTemplateElement & {
+  modelType: 'Range'
+  valueType?: string
+  min?: string
+  max?: string
+}
+
 export type TemplateElement
   = | PropertyElement
     | MultiLanguagePropertyElement
     | FileElement
     | SubmodelElementCollectionElement
     | SubmodelElementListElement
+    | ReferenceElement
+    | RangeElement
 
 export type SubmodelElementCollectionElement = BaseTemplateElement & {
   modelType: 'SubmodelElementCollection'
