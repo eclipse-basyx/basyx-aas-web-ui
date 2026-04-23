@@ -76,7 +76,7 @@
     "eslint": "^10.2.0",
     "eslint-config-vuetify": "^4.6.0",
     "eslint-plugin-jsdoc": "^62.9.0",
-    "eslint-plugin-vue": "^10.8.0",
+    "eslint-plugin-vue": "^10.9.0",
     "jsdom": "^29.0.2",
     "npm-run-all2": "^8.0.4",
     "sass-embedded": "^1.99.0",
