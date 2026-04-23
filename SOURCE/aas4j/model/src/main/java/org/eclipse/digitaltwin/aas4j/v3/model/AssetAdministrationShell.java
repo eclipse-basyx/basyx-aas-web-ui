@@ -85,8 +85,10 @@ public interface AssetAdministrationShell extends HasDataSpecification, Identifi
   void setSubmodels(List<Reference> submodels);
 
   OffsetDateTime getCreatedAt();
+
   void setCreatedAt(OffsetDateTime createdAt);
 
   OffsetDateTime getUpdatedAt();
+
   void setUpdatedAt(OffsetDateTime updatedAt);
 }
