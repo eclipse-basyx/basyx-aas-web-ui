@@ -10,10 +10,11 @@
 
                 <v-list-item>
                     <v-radio-group v-model="sortField" density="compact" hide-details>
-                        <v-radio label="Name" value="nameLower" />
+                        <v-radio label="Name" value="name" />
                         <v-radio label="ID" value="id" />
-                        <v-radio disabled label="Last Updated" value="updated" />
-                        <v-radio disabled label="Date Created" value="created" />
+                        <v-radio label="ID Short" value="idShort" />
+                        <v-radio label="Date Created" value="createdAt" />
+                        <v-radio label="Last Updated" value="updatedAt" />
                     </v-radio-group>
                 </v-list-item>
 
@@ -145,7 +146,7 @@
         (event: 'update:filters', value: AASAttributeFilters): void;
     }>();
 
-    const sortField = ref('nameLower');
+    const sortField = ref('name');
     const sortDirection = ref(1);
 
     const filters = reactive<AASAttributeFilters>({

@@ -1001,7 +1001,7 @@ const hasGlobalMatch = (searchTerm: string) => {
                 enrichAttributeFields(processedList);
             }
 
-            sortAasList({ sortField: 'nameLower', sortDirection: 1 });
+            sortAasList({ sortField: 'name', sortDirection: 1 });
             applyListFilters();
             scrollToSelectedAAS();
             listLoading.value = false;
@@ -1040,7 +1040,15 @@ const hasGlobalMatch = (searchTerm: string) => {
     }
 
     function sortAasList({ sortField, sortDirection }) {
-        const sortFunction = (a: any, b: any) => a[sortField].localeCompare(b[sortField]) * sortDirection;
+        const compareFunctions = {
+            name: (a, b) => nameToDisplay(a).toLowerCase().localeCompare(nameToDisplay(b).toLowerCase()),
+            id: (a, b) => (a.idLower ?? "").localeCompare(b.idLower ?? ""),
+            idShort: (a, b) => (a.idShortLower ?? "").localeCompare(b.idShortLower ?? ""),
+            updatedAt: (a, b) => Date.parse(a.administration.updatedAt ?? 0) - Date.parse(b.administration.updatedAt ?? 0),
+            createdAt: (a, b) => Date.parse(a.administration.createdAt ?? 0) - Date.parse(b.administration.createdAt ?? 0),
+        };
+
+        const sortFunction = (a, b) => compareFunctions[sortField](a, b) * sortDirection;
 
         aasList.value = [...aasList.value].sort(sortFunction);
         aasListUnfiltered.value = [...aasListUnfiltered.value].sort(sortFunction);
