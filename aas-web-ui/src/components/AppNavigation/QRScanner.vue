@@ -1,4 +1,55 @@
 <template>
+  <!-- AAS selection dialog (shown after successful scan + discovery) -->
+  <v-dialog v-model="showSelectionDialog" :max-width="400" persistent>
+    <v-card>
+      <v-card-title class="d-flex align-center">
+        <span>Select AAS</span>
+        <v-spacer />
+        <v-btn icon size="small" variant="text" @click="closeSelectionDialog">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </v-card-title>
+      <v-divider />
+
+      <v-card-text class="pa-4">
+        <v-alert
+          v-if="discoveryError"
+          class="mb-4"
+          density="compact"
+          type="error"
+        >
+          {{ discoveryError }}
+        </v-alert>
+
+        <v-radio-group
+          v-if="discoveredAasIds.length > 0"
+          v-model="selectedAasId"
+          hide-details
+        >
+          <v-radio
+            v-for="aasId in discoveredAasIds"
+            :key="aasId"
+            :label="aasId"
+            :value="aasId"
+          />
+        </v-radio-group>
+      </v-card-text>
+
+      <v-card-actions>
+        <v-spacer />
+        <v-btn variant="text" @click="closeSelectionDialog">Cancel</v-btn>
+        <v-btn
+          color="primary"
+          :disabled="!selectedAasId"
+          variant="flat"
+          @click="submitAasSelection"
+        >
+          Select
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
   <v-dialog v-model="dialogModel" :max-width="400" persistent>
     <v-card>
       <v-card-title class="d-flex align-center">
@@ -27,24 +78,21 @@
         <div class="scanner-container" style="position: relative; min-height: 300px">
           <!-- Loading overlay -->
           <div
-            v-if="isInitializing"
+            v-if="isInitializing || isDiscovering"
             class="text-center py-8"
             style="position: absolute; width: 100%; z-index: 10"
           >
             <v-progress-circular color="primary" indeterminate />
-            <p class="mt-4 text-caption">Initializing camera...</p>
+            <p class="mt-4 text-caption">
+              {{ isDiscovering ? 'Looking up AAS...' : 'Initializing camera...' }}
+            </p>
           </div>
           <!-- QR reader element -->
           <div id="qr-reader" style="width: 100%; min-height: 300px" />
         </div>
 
-        <!-- Success message -->
-        <v-alert v-if="scanSuccess" class="mb-4" density="compact" type="success">
-          QR code scanned successfully!
-        </v-alert>
-
         <!-- Action buttons -->
-        <div v-if="!isInitializing" class="mt-4">
+        <div v-if="!isInitializing && !isDiscovering" class="mt-4">
           <!-- Flashlight toggle button (only show when torch is available) -->
           <v-btn
             v-if="isScanning && hasTorch"
@@ -91,7 +139,7 @@
 <script setup lang="ts">
   import { Html5Qrcode } from 'html5-qrcode'
   import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-  import { useRoute, useRouter } from 'vue-router'
+  import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient'
 
   interface CameraInfo {
     id: string
@@ -105,10 +153,10 @@
 
   const emit = defineEmits<{
     'update:modelValue': [value: boolean]
+    'select-aas': [aasId: string]
   }>()
 
-  const router = useRouter()
-  const route = useRoute()
+  const { getAasIds } = useAASDiscoveryClient()
 
   const dialogModel = computed({
     get: () => props.modelValue,
@@ -117,8 +165,12 @@
 
   const isInitializing = ref(false)
   const isScanning = ref(false)
-  const scanSuccess = ref(false)
+  const isDiscovering = ref(false)
   const errorMessage = ref('')
+  const showSelectionDialog = ref(false)
+  const discoveredAasIds = ref<string[]>([])
+  const selectedAasId = ref('')
+  const discoveryError = ref('')
   const fileInput = ref<HTMLInputElement | null>(null)
   const allCameras = ref<CameraInfo[]>([])
   const switchableCameras = ref<CameraInfo[]>([])
@@ -185,7 +237,6 @@
     } else {
       await stopScanning()
       // Reset state
-      scanSuccess.value = false
       errorMessage.value = ''
       currentSwitchIndex.value = 0
     }
@@ -351,28 +402,49 @@
     }
   }
 
-  function onScanSuccess (decodedText: string): void {
-    console.log('QR Code scanned:', decodedText)
+  async function onScanSuccess (decodedText: string): Promise<void> {
+    await stopScanning()
+    isDiscovering.value = true
+    discoveryError.value = ''
 
-    // Show success state
-    scanSuccess.value = true
+    try {
+      const aasIds = await getAasIds(decodedText)
+      dialogModel.value = false
 
-    // Update URL query parameter with the scanned asset ID
-    router.push({
-      path: route.path,
-      query: { ...route.query, assetId: decodedText },
-    })
-
-    // Close dialog after a short delay
-    setTimeout(() => {
-      closeDialog()
-    }, 500)
+      if (aasIds.length === 0) {
+        discoveryError.value = `No AAS found for asset ID: ${decodedText}`
+      } else {
+        discoveredAasIds.value = aasIds
+        selectedAasId.value = aasIds[0]
+      }
+      showSelectionDialog.value = true
+    } catch {
+      dialogModel.value = false
+      discoveryError.value = 'Failed to look up AAS. Please try again.'
+      showSelectionDialog.value = true
+    } finally {
+      isDiscovering.value = false
+    }
   }
 
   function onScanError (): void {
     // This is called very frequently during scanning, so we don't show these errors
     // Only log to console for debugging
     // console.debug('QR scan error:', errorMessage);
+  }
+
+  function submitAasSelection (): void {
+    if (selectedAasId.value) {
+      emit('select-aas', selectedAasId.value)
+    }
+    closeSelectionDialog()
+  }
+
+  function closeSelectionDialog (): void {
+    showSelectionDialog.value = false
+    discoveredAasIds.value = []
+    selectedAasId.value = ''
+    discoveryError.value = ''
   }
 
   function triggerFileInput (): void {
@@ -400,7 +472,7 @@
 
       // Scan the uploaded file
       const decodedText = await html5QrCode.scanFile(file, true)
-      onScanSuccess(decodedText)
+      await onScanSuccess(decodedText)
     } catch (error) {
       console.error('Error scanning file:', error)
       errorMessage.value = 'Failed to scan QR code from image. Please try again.'

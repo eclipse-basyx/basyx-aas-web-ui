@@ -348,7 +348,7 @@
   <!-- Dialog for Instance Creation from Type -->
   <AASToInstance v-model="instanceDialog" :aas="aasToInstantiate" />
   <!-- Dialog for QR Scanner -->
-  <QRScanner v-model="qrScannerDialog" />
+  <QRScanner v-model="qrScannerDialog" @select-aas="handleAasSelected" />
 </template>
 
 <script lang="ts" setup>
@@ -787,6 +787,10 @@
   function createInstanceFromType (aasDescriptor: any): void {
     instanceDialog.value = true
     aasToInstantiate.value = aasDescriptor
+  }
+
+  function handleAasSelected (aasId: string): void {
+    filterAasList(aasId)
   }
 </script>
 
