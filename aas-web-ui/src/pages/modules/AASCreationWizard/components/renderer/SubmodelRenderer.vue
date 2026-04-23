@@ -2,7 +2,7 @@
   <v-row>
     <v-col v-for="(element, index) in visibleElements" :key="element.idShort" cols="12" :md="getMdCols(element, index, elements)">
       <!-- Leaf fields -->
-      <SubmodelField
+      <SubmodelDataElement
         v-if="isLeafElement(element)"
         :element="element"
         :model-value="props.formState[element.idShort]"
@@ -40,7 +40,7 @@
     isSubmodelElementListElement,
   } from '../../utils/checkTemplateFields'
   import SubmodelCollection from './SubmodelCollection.vue'
-  import SubmodelField from './SubmodelField.vue'
+  import SubmodelDataElement from './SubmodelDataElement.vue'
   import SubmodelList from './SubmodelList.vue'
 
   const props = defineProps<{
