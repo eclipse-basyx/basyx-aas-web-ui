@@ -2,25 +2,38 @@
 setlocal enabledelayedexpansion
 
 set "ROOT=%~dp0"
-if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
+
+set /p clean_install=Do a clean install? (y/N)
+if /i "%clean_install%"=="y" (
+    echo Installing dependencies...
+    
+    cd /d "%ROOT%aas4j"
+    call mvn clean install -DskipTests
+
+    cd /d "%ROOT%aas-spring-backend"
+    call mvn clean install -DskipTests
+
+    cd /d "%ROOT%aas-spring-backend\basyx.aasenvironment\basyx.aasenvironment.component"
+    call mvn clean install -DskipTests
+
+    cd /d "%ROOT%aas-web-ui"
+    rmdir /s /q node_modules 2>nul
+    call yarn install
+)
 
 echo Starting backend...
 cd "%ROOT%\aas-test-backend"
 docker compose up -d
 
+cd /d "%ROOT%aas-spring-backend\basyx.aasenvironment\basyx.aasenvironment.component"
+echo Starting Maven Spring Boot...
+start "BaSyxMaven" /b cmd /c "mvn spring-boot:run >nul 2>&1"
+
 cd "%ROOT%\aas-web-ui"
-
-set /p clean_install=Do a clean install? (y/N)
-if /i "%clean_install%"=="y" (
-  echo Installing dependencies...
-  if exist node_modules rmdir /s /q node_modules
-  call yarn install
-) else (
-  if not exist node_modules (
-    echo Installing dependencies...
-    call yarn install
-  )
-)
-
 echo Starting frontend...
 yarn dev
+
+echo Stopping backend services...
+taskkill /FI "WINDOWTITLE eq BaSyxMaven*" /T /F
+cd /d "%ROOT%aas-test-backend"
+docker compose down

@@ -31,22 +31,22 @@ services:
       start_period: 1s
       timeout: 10s   
       
-  aas-env:
-    image: eclipsebasyx/aas-environment:2.0.0-SNAPSHOT
-    volumes:
-      - ./aas-env.properties:/application/application.properties
-      - ./aas:/application/aas
-    ports:
-        - 8081:8081
-    depends_on:
-        mongo:
-            condition: service_healthy
-        mqtt:
-            condition: service_healthy
-        aas-registry:
-            condition: service_healthy
-        sm-registry:
-            condition: service_healthy
+  # aas-env:
+  #   image: eclipsebasyx/aas-environment:2.0.0-SNAPSHOT
+  #   volumes:
+  #     - ./aas-env.properties:/application/application.properties
+  #     - ./aas:/application/aas
+  #   ports:
+  #       - 8081:8081
+  #   depends_on:
+  #       mongo:
+  #           condition: service_healthy
+  #       mqtt:
+  #           condition: service_healthy
+  #       aas-registry:
+  #           condition: service_healthy
+  #       sm-registry:
+  #           condition: service_healthy
             
   aas-registry:
     image: eclipsebasyx/aas-registry-log-mongodb:2.0.0-SNAPSHOT

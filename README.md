@@ -42,6 +42,7 @@ requirements:
 - Yarn
 - Node.js: version 20 LTS or newer
 - Docker
+- Maven
 - Git
 
-To build the backend and frontend simultaneously, use the `Team2-BaSyx-Viewer-Plugin-Erweiterung/SOURCE/start.sh` (for Linux/macOS) or `Team2-BaSyx-Viewer-Plugin-Erweiterung/SOURCE/start.bat` (for Windows). This starts a Docker image. To stop it again, use `docker-compose down`.
+To start the backend and frontend simultaneously, use the `Team2-BaSyx-Viewer-Plugin-Erweiterung/SOURCE/start.sh` (for Linux/macOS) or `Team2-BaSyx-Viewer-Plugin-Erweiterung/SOURCE/start.bat` (for Windows).
