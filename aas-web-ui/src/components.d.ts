@@ -147,6 +147,7 @@ declare module 'vue' {
     TimeSeries_v1_1: typeof import('./components/Plugins/Submodels/TimeSeries_v1_1.vue')['default']
     Treeview: typeof import('./components/UIComponents/Treeview.vue')['default']
     UploadAAS: typeof import('./components/AppNavigation/UploadAAS.vue')['default']
+    UploadAASKblVec: typeof import('./components/UploadAASKblVec.vue')['default']
     UploadDialog: typeof import('./components/Plugins/Submodels/FileSystem/components/dialogs/UploadDialog.vue')['default']
     User: typeof import('./components/AppNavigation/User.vue')['default']
     VersionAttachments: typeof import('./components/Plugins/Submodels/HandoverDocumentation_v2_0/components/VersionAttachments.vue')['default']
