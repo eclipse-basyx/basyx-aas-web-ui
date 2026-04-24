@@ -279,7 +279,7 @@
         toggleRowSelection as toggleRowSelectionUtil,
         toggleSelection as toggleSelectionUtil,
     } from '@/utils/KblVecUtils/KblVecSelectionStateUtils';
-    import { parseXmlFile, uploadHandler } from '@/utils/XmlValidator';
+    import { uploadHandler } from '@/utils/XmlValidator';
 
     type StructuredConversionResult = {
         success: boolean;
@@ -953,12 +953,8 @@
                 return;
             }
 
-            const parsed = await parseXmlFile(file);
-            if (!parsed.ok || !parsed.document) {
-                extractionError.value = parsed.error ?? 'Could not parse KBL/VEC file for data point extraction.';
-                return;
-            }
-            const doc = parsed.document;
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(await file.text(), "text/xml");
 
             const dataPoints = await collectDataPointsProgressive(doc.documentElement, (processedNodes) => {
                 if (runId !== extractionRunId.value) return false;
