@@ -2,7 +2,9 @@ import { execSync } from 'node:child_process'
 import { copyFileSync, existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath, URL } from 'node:url'
-import basicSsl from '@vitejs/plugin-basic-ssl'
+// Uncomment the line below to enable HTTPS on the dev server.
+// Requires the BaSyx infrastructure to also serve over HTTPS to avoid mixed content errors.
+// import basicSsl from '@vitejs/plugin-basic-ssl'
 import Vue from '@vitejs/plugin-vue'
 import AutoImport from 'unplugin-auto-import/vite'
 import Fonts from 'unplugin-fonts/vite'
@@ -54,7 +56,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
-      basicSsl(),
+      // basicSsl(), // Uncomment to enable HTTPS — requires BaSyx infrastructure to also support HTTPS
       copyWebIfcWasmPlugin(),
       AutoImport({
         imports: ['vue'],
