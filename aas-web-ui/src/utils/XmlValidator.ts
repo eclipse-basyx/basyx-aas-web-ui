@@ -21,6 +21,12 @@ const allowedVecRoots: string[] = [
   "VecContent_Base",
 ].flatMap((str) => [str, str.toLowerCase()]);
 
+const ioddNamespace = "http://www.io-link.com/IODD/2010/10";
+
+/* =========================
+   XML base validation
+========================= */
+
 async function validateWellFormedXML(f: File): Promise<ValidatorResult> {
   errorMessage = "";
   resultMessage = "";
@@ -28,7 +34,7 @@ async function validateWellFormedXML(f: File): Promise<ValidatorResult> {
   try {
     const text = await f.text();
 
-    if (!text.trim().startsWith('<?xml')) {
+    if (!text.trim().startsWith("<?xml")) {
       errorMessage = "XML header is missing.";
       return { ok: false, doc: null };
     }
@@ -52,6 +58,110 @@ async function validateWellFormedXML(f: File): Promise<ValidatorResult> {
   }
 }
 
+/* =========================
+   Generic XML helpers
+========================= */
+
+function hasElement(doc: Document, tagName: string): boolean {
+  return doc.getElementsByTagNameNS("*", tagName).length > 0;
+}
+
+function getFirstElement(doc: Document, tagName: string): Element | null {
+  return doc.getElementsByTagNameNS("*", tagName)[0] || null;
+}
+
+function hasDirectChildElement(parent: Element | null, tagName: string): boolean {
+  if (!parent) return false;
+
+  return Array.from(parent.children).some(
+    (child) => child.localName === tagName
+  );
+}
+
+/* =========================
+   IODD detection
+========================= */
+
+function isIoddDoc(doc: Document): boolean {
+  const root = doc.documentElement;
+  if (!root) return false;
+
+  const ns = root.namespaceURI || "";
+  return ns === ioddNamespace;
+}
+
+/* =========================
+   IODD detail checks
+========================= */
+
+function hasDeviceNameOrVariantProductName(doc: Document): boolean {
+  const deviceIdentity = getFirstElement(doc, "DeviceIdentity");
+  const deviceVariant = getFirstElement(doc, "DeviceVariant");
+
+  const hasDeviceName = hasDirectChildElement(deviceIdentity, "DeviceName");
+  const hasVariantProductName = hasDirectChildElement(deviceVariant, "ProductName");
+
+  return hasDeviceName || hasVariantProductName;
+}
+
+function hasPrimaryLanguageInExternalTextCollection(doc: Document): boolean {
+  const collections = doc.getElementsByTagNameNS("*", "ExternalTextCollection");
+
+  if (collections.length === 0) return false;
+
+  for (const collection of Array.from(collections)) {
+    const hasPrimaryLanguage = Array.from(collection.children).some(
+      (child) => child.localName === "PrimaryLanguage"
+    );
+
+    if (hasPrimaryLanguage) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function validateIoddCore(doc: Document): boolean {
+  if (!hasElement(doc, "DeviceIdentity")) {
+    errorMessage = "IODD element 'DeviceIdentity' is missing.";
+    resultMessage = "";
+    return false;
+  }
+
+  if (!hasElement(doc, "DeviceFunction")) {
+    errorMessage = "IODD element 'DeviceFunction' is missing.";
+    resultMessage = "";
+    return false;
+  }
+
+  if (!hasDeviceNameOrVariantProductName(doc)) {
+    errorMessage =
+      "IODD element 'DeviceIdentity/DeviceName' is missing, and fallback 'DeviceVariant/ProductName' is also missing.";
+    resultMessage = "";
+    return false;
+  }
+
+  const hasExternalTextCollection = hasElement(doc, "ExternalTextCollection");
+  if (
+    hasExternalTextCollection &&
+    !hasPrimaryLanguageInExternalTextCollection(doc)
+  ) {
+    errorMessage =
+      "IODD element 'ExternalTextCollection' exists, but 'PrimaryLanguage' is missing.";
+    resultMessage = "";
+    return false;
+  }
+
+  errorMessage = "";
+  resultMessage = "Valid IODD file (basic structure detected).";
+  return true;
+}
+
+/* =========================
+   Format-specific validators
+========================= */
+
 async function validateVecFile(f: File): Promise<boolean> {
   if (!f.name.toLowerCase().endsWith(".vec")) {
     errorMessage = "Only .vec files are allowed.";
@@ -65,6 +175,7 @@ async function validateVecFile(f: File): Promise<boolean> {
   const root = doc.documentElement;
   if (!root) {
     errorMessage = "No root element found.";
+    resultMessage = "";
     return false;
   }
 
@@ -93,6 +204,7 @@ async function validateKBLFile(f: File): Promise<boolean> {
   const root = doc.documentElement;
   if (!root) {
     errorMessage = "No root element found.";
+    resultMessage = "";
     return false;
   }
 
@@ -107,6 +219,23 @@ async function validateKBLFile(f: File): Promise<boolean> {
   resultMessage = `Valid KBL file (root: ${localName}).`;
   return true;
 }
+
+async function validateXmlFile(f: File): Promise<boolean> {
+  const { ok, doc } = await validateWellFormedXML(f);
+  if (!ok || !doc) return false;
+
+  if (isIoddDoc(doc)) {
+    return validateIoddCore(doc);
+  }
+
+  errorMessage = "";
+  resultMessage = "Valid XML file (well-formed, no IODD namespace detected).";
+  return true;
+}
+
+/* =========================
+   Public entry point
+========================= */
 
 export async function uploadHandler(fileInput: any | null): Promise<string> {
   if (!fileInput) {
@@ -126,12 +255,7 @@ export async function uploadHandler(fileInput: any | null): Promise<string> {
   } else if (lowerName.endsWith(".kbl")) {
     ok = await validateKBLFile(f);
   } else if (lowerName.endsWith(".xml")) {
-    const { ok: okXml } = await validateWellFormedXML(f);
-    ok = okXml;
-    if (okXml) {
-      errorMessage = "";
-      resultMessage = "Valid XML file (well-formed, without KBL/VEC-specific validation).";
-    }
+    ok = await validateXmlFile(f);
   } else {
     errorMessage = "";
     resultMessage = "";
@@ -140,6 +264,8 @@ export async function uploadHandler(fileInput: any | null): Promise<string> {
 
   return errorMessage;
 }
+<<<<<<< HEAD
+=======
 
 export interface XmlValidationResult {
   ok: boolean;
@@ -177,3 +303,4 @@ export async function parseXmlFile(file: File): Promise<XmlValidationResult> {
     return { ok: false, error: 'Error while parsing the XML file.' };
   }
 }
+>>>>>>> 056973caf2cfbd0a55cd406915053e8fd5540029
