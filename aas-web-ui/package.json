@@ -55,7 +55,7 @@
     "vue": "^3.5.33",
     "vue-router": "^5.0.4",
     "vue3-apexcharts": "^1.11.1",
-    "vuetify": "^4.0.5",
+    "vuetify": "^4.0.6",
     "web-ifc": "^0.0.77"
   },
   "devDependencies": {
