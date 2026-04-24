@@ -96,7 +96,7 @@
                         </v-col>
                         <!-- AAS Filter -->
                         <v-col cols="auto" class="px-0">
-                            <FilterAAS @update:filters="onAttributeFiltersChange" />
+                            <FilterAAS @update:sort="setSortOptions" @update:filters="onAttributeFiltersChange" />
                         </v-col>
                     </v-row>
                 </v-card-title>
@@ -373,6 +373,8 @@
     // Data
     const aasList = ref([] as Array<any>) as Ref<Array<any>>; // Variable to store the AAS Data (AAS or AAS Descriptors)
     const aasListUnfiltered = ref([] as Array<any>) as Ref<Array<any>>; // Variable to store the AAS Data before filtering
+    const sortField = ref('name');
+    const sortDirection = ref(1);
     const searchInput = ref('');
     const attributeFilters = ref<AASAttributeFilters>({
         manufacturerName: '',
@@ -960,13 +962,10 @@ const hasGlobalMatch = (searchTerm: string) => {
         listLoading.value = true;
         resetAttributeHydrationState();
         fetchAasDescriptorList().then(async (aasDescriptorList: Array<any>) => {
-            let sortedList =
-                aasDescriptorList.length > 0
-                    ? aasDescriptorList.sort((a, b) => (a.id > b.id ? 1 : -1))
-                    : (await fetchAasList()).sort((a, b) => (a.id > b.id ? 1 : -1));
+            let fetchedList = aasDescriptorList.length > 0 ? aasDescriptorList : await fetchAasList();
 
             // Precompute lowercase search fields
-            const processedList = sortedList.map((item) => ({
+            const processedList = fetchedList.map((item) => ({
                 ...item,
                 idLower: item?.id?.toLowerCase() || '',
                 idShortLower: item?.idShort?.toLowerCase() || '',
@@ -1004,9 +1003,10 @@ const hasGlobalMatch = (searchTerm: string) => {
                 enrichAttributeFields(processedList);
             }
 
+            sortAasList();
             applyListFilters();
+            scrollToSelectedAAS();
             listLoading.value = false;
-
             preloadAttributeDataInBackground();
         });
     }
@@ -1039,6 +1039,43 @@ const hasGlobalMatch = (searchTerm: string) => {
                     }
                 }
             });
+    }
+
+    function setSortOptions(sortOptions) {
+        sortField.value = sortOptions.sortField;
+        sortDirection.value = sortOptions.sortDirection;
+        sortAasList();
+    }
+
+    function sortAasList() {
+        const compareFunctions = {
+            name: (a, b) => nameToDisplay(a).toLowerCase().localeCompare(nameToDisplay(b).toLowerCase()),
+            id: (a, b) => (a.idLower ?? "").localeCompare(b.idLower ?? ""),
+            idShort: (a, b) => (a.idShortLower ?? "").localeCompare(b.idShortLower ?? ""),
+            updatedAt: (a, b) => Date.parse(a.administration.updatedAt ?? 0) - Date.parse(b.administration.updatedAt ?? 0),
+            createdAt: (a, b) => Date.parse(a.administration.createdAt ?? 0) - Date.parse(b.administration.createdAt ?? 0),
+        };
+
+        const sortFunction = (a, b) => compareFunctions[sortField.value](a, b) * sortDirection.value;
+
+        aasList.value = [...aasList.value].sort(sortFunction);
+        aasListUnfiltered.value = [...aasListUnfiltered.value].sort(sortFunction);
+    }
+
+    function filterAasList(value: string): void {
+        if (!value || value.trim() === '') {
+            aasList.value = aasListUnfiltered.value;
+        } else {
+            const search = value.toLowerCase();
+            aasList.value = aasListUnfiltered.value.filter(
+                (aasOrAasDescriptor) =>
+                    aasOrAasDescriptor.idLower.includes(search) ||
+                    aasOrAasDescriptor.idShortLower.includes(search) ||
+                    aasOrAasDescriptor.nameLower.includes(search) ||
+                    aasOrAasDescriptor.descLower.includes(search)
+            );
+        }
+        scrollToSelectedAAS();
     }
 
     // Function to select an AAS

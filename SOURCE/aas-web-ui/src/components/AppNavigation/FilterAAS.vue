@@ -11,8 +11,10 @@
                 <v-list-item>
                     <v-radio-group v-model="sortField" density="compact" hide-details>
                         <v-radio label="Name" value="name" />
-                        <v-radio label="Last Updated" value="updated" />
-                        <v-radio label="Date Created" value="created" />
+                        <v-radio label="ID" value="id" />
+                        <v-radio label="ID Short" value="idShort" />
+                        <v-radio label="Date Created" value="createdAt" />
+                        <v-radio label="Last Updated" value="updatedAt" />
                     </v-radio-group>
                 </v-list-item>
 
@@ -21,13 +23,14 @@
                     color="primary"
                     variant="outlined"
                     divided
+                    mandatory
                     density="compact"
                     class="mx-2 mt-1">
-                    <v-btn value="asc">
+                    <v-btn :value="1">
                         <span>Asc</span>
                         <v-icon class="ml-1">mdi-arrow-up</v-icon>
                     </v-btn>
-                    <v-btn value="desc">
+                    <v-btn :value="-1">
                         <span>Desc</span>
                         <v-icon class="ml-1">mdi-arrow-down</v-icon>
                     </v-btn>
@@ -122,6 +125,11 @@
 <script setup lang="ts">
     import { reactive, ref, watch } from 'vue';
 
+    interface AASAttributeSortValues {
+        sortField: number;
+        sortDirection: string;
+    }
+
     interface AASAttributeFilters {
         manufacturerName: string;
         manufacturerProductDesignation: string;
@@ -134,11 +142,12 @@
     }
 
     const emit = defineEmits<{
+        (event: 'update:sort', value: AASAttributeSortValues): void;
         (event: 'update:filters', value: AASAttributeFilters): void;
     }>();
 
     const sortField = ref('name');
-    const sortDirection = ref('asc');
+    const sortDirection = ref(1);
 
     const filters = reactive<AASAttributeFilters>({
         manufacturerName: '',
@@ -156,6 +165,17 @@
             filters[key as keyof AASAttributeFilters] = '';
         });
     };
+
+    watch(
+        [sortField, sortDirection, filters],
+        () => {
+            emit('update:sort', {
+                sortField: sortField.value,
+                sortDirection: sortDirection.value,
+            });
+        },
+        { deep: true }
+    );
 
     watch(
         () => ({ ...filters }),
