@@ -50,6 +50,18 @@
                         <span>Upload AAS File to Environment</span>
                       </v-tooltip>
                       <v-divider />
+                      <v-tooltip :disabled="isMobile" :location="editMode ? 'end' : 'bottom'" open-delay="600">
+                        <template #activator="{ props }">
+                          <v-list-item prepend-icon="mdi-file-cog-outline" slim v-bind="props" @click="uploadAASKblVecDialog = true">
+                            <template #prepend>
+                              <v-icon size="small">mdi-file-cog-outline</v-icon>
+                            </template>
+                            Create AAS from KBL/VEC
+                          </v-list-item>
+                        </template>
+                        <span>Create AAS from KBL/VEC file</span>
+                      </v-tooltip>
+                      <v-divider />
                     </template>
                     <!-- Open AAS create dialog -->
                     <v-tooltip location="end" open-delay="600">
@@ -329,6 +341,8 @@
   <AASForm v-model="editDialog" :aas="aasToEdit" :new-shell="newShell" />
   <!-- Dialog for uploading AAS -->
   <UploadAAS v-model="uploadAASDialog" />
+  <!-- Dialog for creating AAS from KBL/VEC -->
+  <UploadAASKblVec v-model="uploadAASKblVecDialog" />
   <!-- Dialog for deleting AAS -->
   <DeleteAAS v-model="deleteDialog" :aas="aasToDelete" :list-loading-state="listLoading" />
   <!-- Dialog for downloading AAS -->
@@ -401,6 +415,7 @@
   const aasToDownload = ref({}) // Variable to store the AAS to be downloaded
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null) // Reference to the Virtual Scroll Component
   const uploadAASDialog = ref(false) // Variable to store if the Upload AAS Dialog should be shown
+  const uploadAASKblVecDialog = ref(false) // Variable to store if the Upload KBL/VEC Dialog should be shown
   const editDialog = ref(false) // Variable to store if the Edit Dialog should be shown
   const newShell = ref(false) // Variable to store if a new Shell should be created
   const aasToEdit = ref<any | undefined>(undefined) // Variable to store the AAS to be edited
