@@ -19,7 +19,6 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
 import org.eclipse.digitaltwin.aas4j.v3.model.AdministrativeInformation;
 import org.eclipse.digitaltwin.aas4j.v3.model.AssetAdministrationShell;
 import org.eclipse.digitaltwin.aas4j.v3.model.AssetInformation;
@@ -75,25 +74,24 @@ public class DefaultAssetAdministrationShell implements AssetAdministrationShell
   protected OffsetDateTime createdAt;
   protected OffsetDateTime updatedAt;
 
-  public DefaultAssetAdministrationShell() {
-  }
+  public DefaultAssetAdministrationShell() {}
 
   @Override
   public int hashCode() {
     return Objects.hash(
-            this.derivedFrom,
-            this.assetInformation,
-            this.submodels,
-            this.embeddedDataSpecifications,
-            this.administration,
-            this.id,
-            this.category,
-            this.idShort,
-            this.displayName,
-            this.description,
-            this.extensions,
-            this.createdAt,
-            this.updatedAt);
+        this.derivedFrom,
+        this.assetInformation,
+        this.submodels,
+        this.embeddedDataSpecifications,
+        this.administration,
+        this.id,
+        this.category,
+        this.idShort,
+        this.displayName,
+        this.description,
+        this.extensions,
+        this.createdAt,
+        this.updatedAt);
   }
 
   @Override
@@ -107,18 +105,18 @@ public class DefaultAssetAdministrationShell implements AssetAdministrationShell
     } else {
       DefaultAssetAdministrationShell other = (DefaultAssetAdministrationShell) obj;
       return Objects.equals(this.derivedFrom, other.derivedFrom)
-              && Objects.equals(this.assetInformation, other.assetInformation)
-              && Objects.equals(this.submodels, other.submodels)
-              && Objects.equals(this.embeddedDataSpecifications, other.embeddedDataSpecifications)
-              && Objects.equals(this.administration, other.administration)
-              && Objects.equals(this.id, other.id)
-              && Objects.equals(this.category, other.category)
-              && Objects.equals(this.idShort, other.idShort)
-              && Objects.equals(this.displayName, other.displayName)
-              && Objects.equals(this.description, other.description)
-              && Objects.equals(this.extensions, other.extensions)
-              && Objects.equals(this.createdAt, other.createdAt)
-              && Objects.equals(this.updatedAt, other.updatedAt);
+          && Objects.equals(this.assetInformation, other.assetInformation)
+          && Objects.equals(this.submodels, other.submodels)
+          && Objects.equals(this.embeddedDataSpecifications, other.embeddedDataSpecifications)
+          && Objects.equals(this.administration, other.administration)
+          && Objects.equals(this.id, other.id)
+          && Objects.equals(this.category, other.category)
+          && Objects.equals(this.idShort, other.idShort)
+          && Objects.equals(this.displayName, other.displayName)
+          && Objects.equals(this.description, other.description)
+          && Objects.equals(this.extensions, other.extensions)
+          && Objects.equals(this.createdAt, other.createdAt)
+          && Objects.equals(this.updatedAt, other.updatedAt);
     }
   }
 
@@ -179,7 +177,7 @@ public class DefaultAssetAdministrationShell implements AssetAdministrationShell
 
   @Override
   public void setEmbeddedDataSpecifications(
-          List<EmbeddedDataSpecification> embeddedDataSpecifications) {
+      List<EmbeddedDataSpecification> embeddedDataSpecifications) {
     this.embeddedDataSpecifications = embeddedDataSpecifications;
   }
 
@@ -255,21 +253,19 @@ public class DefaultAssetAdministrationShell implements AssetAdministrationShell
 
   public String toString() {
     return String.format(
-            "DefaultAssetAdministrationShell ("
-                    + "derivedFrom=%s,"
-                    + "assetInformation=%s,"
-                    + "submodels=%s,"
-                    + "createdAt=%s,"
-                    + "updatedAt=%s"
-                    + ")",
-            this.derivedFrom, this.assetInformation, this.submodels, this.createdAt, this.updatedAt);
+        "DefaultAssetAdministrationShell ("
+            + "derivedFrom=%s,"
+            + "assetInformation=%s,"
+            + "submodels=%s,"
+            + "createdAt=%s,"
+            + "updatedAt=%s"
+            + ")",
+        this.derivedFrom, this.assetInformation, this.submodels, this.createdAt, this.updatedAt);
   }
 
-  /**
-   * This builder class can be used to construct a DefaultAssetAdministrationShell bean.
-   */
+  /** This builder class can be used to construct a DefaultAssetAdministrationShell bean. */
   public static class Builder
-          extends AssetAdministrationShellBuilder<DefaultAssetAdministrationShell, Builder> {
+      extends AssetAdministrationShellBuilder<DefaultAssetAdministrationShell, Builder> {
 
     @Override
     protected Builder getSelf() {

@@ -79,13 +79,27 @@
                                 </template>
                             </v-list-item-title>
                         </v-list-item>
+                        <v-list-item v-if="administrativeInformationObject?.createdAt" class="ma-0">
+                            <v-list-item-title>
+                                <span class="text-subtitle-2 mt-2 mr-2">{{ 'Created At:' }}</span>
+                                <span class="text-caption">{{ new Date(administrativeInformationObject.createdAt).toLocaleString() }}</span>
+                            </v-list-item-title>
+                        </v-list-item>
+                        <v-list-item v-if="administrativeInformationObject?.updatedAt" class="ma-0">
+                            <v-list-item-title>
+                                <span class="text-subtitle-2 mt-2 mr-2">{{ 'Updated At:' }}</span>
+                                <span class="text-caption">{{ new Date(administrativeInformationObject.updatedAt).toLocaleString() }}</span>
+                            </v-list-item-title>
+                        </v-list-item>
                     </v-list>
                     <v-divider
                         v-if="
                             ((Array.isArray(administrativeInformationObject?.creator?.keys) &&
                                 administrativeInformationObject?.creator?.keys.length > 0) ||
                                 administrativeInformationObject?.version ||
-                                administrativeInformationObject?.revision) &&
+                                administrativeInformationObject?.revision ||
+                                administrativeInformationObject?.createdAt ||
+                                administrativeInformationObject?.updatedAt) &&
                             administrativeInformationObject?.templateId
                         "
                         opacity="0.05"></v-divider>
@@ -124,6 +138,8 @@
                                 administrativeInformationObject?.creator?.keys.length > 0) ||
                                 administrativeInformationObject?.version ||
                                 administrativeInformationObject?.revision ||
+                                administrativeInformationObject?.createdAt ||
+                                administrativeInformationObject?.updatedAt ||
                                 administrativeInformationObject?.templateId) &&
                             Array.isArray(administrativeInformationObject?.embeddedDataSpecifications) &&
                             administrativeInformationObject?.embeddedDataSpecifications.length > 0

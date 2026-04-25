@@ -89,7 +89,7 @@
                                                 <span class="font-weight-bold"> {{ 'semanticId: ' }}</span>
                                                 {{ item.semanticId.keys[0].value }}
                                             </div>
-                                            <v-divider v-if="item.administration?.version" class="my-1" />
+                                            <v-divider v-if="item.administration?.version || item.administration?.createdAt || item.administration?.updatedAt" class="my-1" />
                                             <!-- Submodel administrative information -->
                                             <div v-if="item.administration?.version" class="text-caption">
                                                 <span class="font-weight-bold">{{ 'Version: ' }}</span>
@@ -99,6 +99,16 @@
                                                         ? '.' + item.administration.revision
                                                         : '')
                                                 }}
+                                            </div>
+                                            <!-- Submodel createdAt -->
+                                            <div v-if="item.administration?.createdAt" class="text-caption">
+                                                <span class="font-weight-bold">{{ 'Created at: ' }}</span>
+                                                {{ formatDate(item.administration.createdAt) }}
+                                            </div>
+                                            <!-- Submodel updatedAt -->
+                                            <div v-if="item.administration?.updatedAt" class="text-caption">
+                                                <span class="font-weight-bold">{{ 'Updated at: ' }}</span>
+                                                {{ formatDate(item.administration.updatedAt) }}
                                             </div>
                                             <v-divider
                                                 v-if="
@@ -143,7 +153,6 @@
                                                     )?.version
                                                 }}
                                             </div>
-                                            <!-- Submodel Template version extracted from semanticId -->
                                             <div
                                                 v-else-if="
                                                     item?.semanticId?.keys[0]?.value &&
@@ -191,8 +200,7 @@
 </template>
 
 <script lang="ts" setup>
-    import type { ComponentPublicInstance } from 'vue';
-    import { computed, onActivated, onMounted, Ref, ref, watch } from 'vue';
+    import { computed, onActivated, onBeforeUnmount, onMounted, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { useTheme } from 'vuetify';
     import { useAASHandling } from '@/composables/AAS/AASHandling';
@@ -428,4 +436,11 @@
 
         return '';
     }
+
+    // Format date string
+    const formatDate = (dateString: string): string => {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        return date.toLocaleString();
+    };
 </script>
