@@ -8,6 +8,7 @@
 | 0.1.1 | 14.04.2026 | Mattis Weigold | Add Req. ID Links to SRS |
 | 0.2.0 | 22.04.2026 | Mattis Weigold | Add Test Cases 1-4 |
 | 0.3.0 | 23.04.2026 | Mattis Weigold | Add Test Cases 5-6 |
+| 0.4.0 | 24.04.2026 | Mattis Weigold | Add Test Methodology |
 
 ## Table of Contents
 
@@ -16,8 +17,9 @@
     1.2 [Scope](#12-scope)
 2. [Product Names and Attributes](#2-product-names-and-attributes)
 3. [Requirements](#3-requirements)
-4. [Test Cases](#4-test-cases)
-9. [References](#5-references)
+4. [Test Methodology](#4-test-methodology)
+5. [Test Cases](#5-test-cases)
+6. [References](#6-references)
 
 ## 1. Introduction
 
@@ -40,20 +42,91 @@ The tests verify that both functional and non-functional requirements are adequa
 | Req. ID / Name | Functionality | Priority | Testsuit ID or TCS Link |
 | :-- | :-- | :-- | :-- |
 | [FR.001 / Preserve existing functionality](SRS.md#41-fr001--preserve-existing-functionality) | All existing viewer functions must remain intact after enhancement. | -- | *automatically tested via existing unit tests* |
-| [FR.002 / Sorting](SRS.md#42-fr002--sorting) | Implement dynamic sorting of shells by key attributes. | A | [TC.001](#41-tc001-aas-sorting-and-filtering-validation) |
-| [FR.003 / Search](SRS.md#43-fr003--search) | Extend search functionality recursively through AAS content. | A | [TC.001](#41-tc001-aas-sorting-and-filtering-validation) |
-| [FR.004 / Nameplate generator integration](SRS.md#44-fr004--nameplate-generator-integration) | Integrate submodule into digital nameplate plugin. | A | [TC.002](#42-tc002-correct-frontend-communication-for-nameplate-generator); [TC.003](#43-tc003-correct-backend-communication-for-nameplate-generator) |
-| [FR.005 / API enhancements](SRS.md#45-fr005--api-enhancements) | Extend JSON output for `/shells` endpoint. | A | [TC.004](#44-tc004-json-conversion) |
-| [FR.006 / Improved labeling](SRS.md#46-fr006--improved-labeling) | Add extra labels for Boolean values. | B | [TC.005](#45-tc005-boolean-input-reading); [TC.006](#46-tc006-boolean-input-setting) |
+| [FR.002 / Sorting](SRS.md#42-fr002--sorting) | Implement dynamic sorting of shells by key attributes. | A | [TC.001](#51-tc001-aas-sorting-and-filtering-validation) |
+| [FR.003 / Search](SRS.md#43-fr003--search) | Extend search functionality recursively through AAS content. | A | [TC.001](#51-tc001-aas-sorting-and-filtering-validation) |
+| [FR.004 / Nameplate generator integration](SRS.md#44-fr004--nameplate-generator-integration) | Integrate submodule into digital nameplate plugin. | A | [TC.002](#52-tc002-correct-frontend-communication-for-nameplate-generator); [TC.003](#53-tc003-correct-backend-communication-for-nameplate-generator) |
+| [FR.005 / API enhancements](SRS.md#45-fr005--api-enhancements) | Extend JSON output for `/shells` endpoint. | A | [TC.004](#54-tc004-json-conversion) |
+| [FR.006 / Improved labeling](SRS.md#46-fr006--improved-labeling) | Add extra labels for Boolean values. | B | [TC.005](#55-tc005-boolean-input-reading); [TC.006](#56-tc006-boolean-input-setting) |
 | [NFR.001 / Usability](SRS.md#51-nfr001--usability) | UI improvements must reduce average task time. | -- | *no testing* |
 | [NFR.002 / Performance](SRS.md#52-nfr002--performance) | No significant delay from enhancements. | D | *no testing* |
 | [NFR.003 / Stability](SRS.md#53-nfr003--stability) | Application should not crash under standard or rapid usage. | C | *no testing* |
 | [NFR.004 / Maintainability](SRS.md#54-nfr004--maintainability) | Clear documentation and readable code. | -- | *no testing* |
 | [NFR.005 / Licensing](SRS.md#55-nfr005--licensing) | Maintain current open-source license. | -- | *no testing* |
 
-## 4. Test Cases
+## 4. Test Methodology
 
-### 4.1 <TC.001> AAS Sorting and Filtering Validation
+### 4.1 Test Approach
+
+The testing strategy for the **BaSyx Viewer Plugin Extensions** follows a combination of automated and manual testing approaches. The goal is to ensure that all functional requirements are fulfilled while maintaining system stability and performance.
+
+Testing is structured into different levels:
+- **Unit Testing** for validating isolated functions and components  
+- **Integration Testing** for verifying correct interaction between frontend and backend components  
+- **System Testing** for validating complete workflows from a user perspective  
+
+Automated tests are primarily used for repeatable and regression-relevant functionality, while manual tests are used for UI-related validation.
+
+### 4.2 Test Types
+
+The following test types are applied:
+
+- **Functional Testing**  
+  Verifies that implemented features behave according to the requirements defined in the SRS.
+
+- **Integration Testing**  
+  Ensures correct communication between system components (frontend to backend, API calls).
+
+- **API Testing**  
+  Validates correctness and structure of JSON responses.
+
+- **UI Testing (Manual)**  
+  Verifies correct rendering and interaction behavior.
+
+### 4.3 Test Environment
+
+Tests are executed in the following environment:
+
+- Web browser (e.g., Firefox)  
+- Local or test deployment of the BaSyx AAS Web UI  
+- Backend services in a local or test setup  
+- Predefined AAS datasets  
+
+### 4.4 Test Data
+
+Test data includes:
+
+- AAS Shells with known attributes  
+- Nested structures for search validation  
+- Boolean values for input/output tests  
+
+Edge cases:
+- Empty fields  
+- Large datasets  
+- Special characters  
+
+### 4.5 Test Execution
+
+Tests are executed:
+
+- Automatically via unit and integration tests  
+- Manually for UI validation  
+
+A test is successful if the observed behavior matches the expected requirement.
+
+### 4.6 Entry and Exit Criteria
+
+**Entry Criteria:**
+- Features are implemented  
+- Test environment is ready  
+
+**Exit Criteria:**
+- All test cases executed  
+- No critical defects remain  
+- Results documented in the STR  
+
+## 5. Test Cases
+
+### 5.1 <TC.001> AAS Sorting and Filtering Validation
 <table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
   <tr>
     <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
@@ -94,7 +167,7 @@ The tests verify that both functional and non-functional requirements are adequa
   </tr>
 </table>
 
-### 4.2 <TC.002> Correct Frontend Communication for Nameplate Generator
+### 5.2 <TC.002> Correct Frontend Communication for Nameplate Generator
 <table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
   <tr>
     <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
@@ -135,7 +208,7 @@ The tests verify that both functional and non-functional requirements are adequa
   </tr>
 </table>
 
-### 4.3 <TC.003> Correct Backend Communication for Nameplate Generator
+### 5.3 <TC.003> Correct Backend Communication for Nameplate Generator
 <table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
   <tr>
     <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
@@ -176,7 +249,7 @@ The tests verify that both functional and non-functional requirements are adequa
   </tr>
 </table>
 
-### 4.4 <TC.004> JSON Conversion
+### 5.4 <TC.004> JSON Conversion
 <table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
   <tr>
     <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
@@ -217,7 +290,7 @@ The tests verify that both functional and non-functional requirements are adequa
   </tr>
 </table>
 
-### 4.5 <TC.005> Boolean Input Reading
+### 5.5 <TC.005> Boolean Input Reading
 <table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
   <tr>
     <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
@@ -258,7 +331,7 @@ The tests verify that both functional and non-functional requirements are adequa
   </tr>
 </table>
 
-### 4.6 <TC.006> Boolean Input Setting
+### 5.6 <TC.006> Boolean Input Setting
 <table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
   <tr>
     <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
@@ -299,6 +372,6 @@ The tests verify that both functional and non-functional requirements are adequa
   </tr>
 </table>
 
-## 5. References
+## 6. References
 
 - [Software Requirements Specification (SRS)](SRS.md)
