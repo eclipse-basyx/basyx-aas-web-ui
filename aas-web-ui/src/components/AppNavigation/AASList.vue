@@ -272,18 +272,6 @@
                     >
                       <v-icon size="x-small">mdi-download</v-icon>
                     </v-btn>
-                    <!-- Remove from AAS Registry Button -->
-                    <v-btn
-                      class="ml-n2"
-                      color="listItemText"
-                      icon
-                      size="x-small"
-                      style="z-index: 9000"
-                      variant="plain"
-                      @click.stop="openDeleteDialog(item)"
-                    >
-                      <v-icon size="x-small">mdi-delete</v-icon>
-                    </v-btn>
                   </template>
                 </template>
               </v-list-item>
