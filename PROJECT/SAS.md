@@ -3,7 +3,7 @@
 ## for [BaSyx Viewer Extension(Team II)]
 
 **Prepared by:** [Jakob Pauls]
-**Date:** [1.11.2025]
+**Version** 1.2 – 1.11.2025 
 
 ## Table of contents
 
@@ -12,11 +12,11 @@
 - 1.2 [Scope](#12-scope)
 - 2 [Architectural Goals](#2-architectural-goals-and-constraints)
 - 2.1 [Architectural Drivers](#21-architectural-drivers)
-- 2.2 [Constrains](#22-constrains)
+- 2.2 [Constraints](#22-constraints)
 - 3 [Whitebox](#3-architectural-views-white-box)
 - 3.1 [Component Diagram](#31-component-diagram-logical-view)
 - 3.2 [Class Diagrams](#32-class-diagrams-detailed-view)
-- 4 [Key Design Decsions](#4-key-design-decisions)
+- 4 [Key Design Decisions](#4-key-design-decisions)
 
 
 ## Revision History
@@ -32,7 +32,7 @@
 
 ### 1.1 Purpose
 
-This Software Architecture Specification (SAS) describes the White Box conceptual solution for The **BaSyx Viewer Extension** project. it details the internal components, their interactions and the key design descisions made to fulfill waht is outlined in the Software Requirements Specification (SRS).
+This Software Architecture Specification (SAS) describes the White Box conceptual solution for The **BaSyx Viewer Extension** project. it details the internal components, their interactions and the key design decisions made to fulfill what is outlined in the Software Requirements Specification (SRS).
 
 ### 1.2 Scope 
 
@@ -71,7 +71,7 @@ The architecture must support complex user interactions, specifically:
 The architecture must allow for injecting a new component (`NameplateGenerator`) into an existing, third-party plugin (*Digital Nameplate*)
 
 
-### 2.2 Constrains
+### 2.2 Constraints
 - **Technology Stack**: The solution *must* be developed using **Vue.js** and **TypeScript** 
 - **Preserved Functionality (FR.001)**: The new components *must* not alter or break any existing functionality of the core BaSyx Viewer
 - **API Dependency (FR.005)**: The components rely on the capabilities of the BaSyx REST API. Performance of the UI search is dependent on the performance of the backend API
