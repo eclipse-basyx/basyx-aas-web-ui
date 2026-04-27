@@ -28,9 +28,9 @@
                 <span>Reload AAS List</span>
               </v-tooltip>
             </template>
-            <template #append>
+            <template v-if="editMode" #append>
               <!-- Add AAS -->
-              <v-menu v-if="editMode">
+              <v-menu>
                 <template #activator="{ props }">
                   <v-icon icon="mdi-dots-vertical" variant="plain" v-bind="props" />
                 </template>
@@ -66,16 +66,6 @@
                   </v-list>
                 </v-sheet>
               </v-menu>
-              <v-tooltip v-else-if="allowUploading" :disabled="isMobile" :location="editMode ? 'end' : 'bottom'" open-delay="600">
-                <template #activator="{ props }">
-                  <v-icon
-                    v-bind="props"
-                    icon="mdi-upload"
-                    @click="uploadAASDialog = true"
-                  />
-                </template>
-                <span>Upload AAS File to Environment</span>
-              </v-tooltip>
             </template>
           </v-text-field>
         </v-card-title>
@@ -271,18 +261,6 @@
                       @click.stop="openDownloadDialog(item)"
                     >
                       <v-icon size="x-small">mdi-download</v-icon>
-                    </v-btn>
-                    <!-- Remove from AAS Registry Button -->
-                    <v-btn
-                      class="ml-n2"
-                      color="listItemText"
-                      icon
-                      size="x-small"
-                      style="z-index: 9000"
-                      variant="plain"
-                      @click.stop="openDeleteDialog(item)"
-                    >
-                      <v-icon size="x-small">mdi-delete</v-icon>
                     </v-btn>
                   </template>
                 </template>
