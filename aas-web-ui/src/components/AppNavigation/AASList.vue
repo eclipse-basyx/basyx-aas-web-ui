@@ -19,6 +19,7 @@
               <v-tooltip :disabled="isMobile" location="bottom" open-delay="600">
                 <template #activator="{ props }">
                   <v-icon
+                    aria-label="Reload AAS List"
                     v-bind="props"
                     icon="mdi-reload"
                     :loading="listLoading"
@@ -76,6 +77,7 @@
               <v-tooltip v-else-if="allowUploading" :disabled="isMobile" :location="editMode ? 'end' : 'bottom'" open-delay="600">
                 <template #activator="{ props }">
                   <v-icon
+                    aria-label="Upload AAS"
                     v-bind="props"
                     icon="mdi-upload"
                     @click="uploadAASDialog = true"
@@ -88,6 +90,7 @@
               <v-tooltip :disabled="isMobile" location="bottom" open-delay="600">
                 <template #activator="{ props }">
                   <v-icon
+                    aria-label="Scan QR Code"
                     class="ml-2"
                     v-bind="props"
                     icon="mdi-qrcode-scan"

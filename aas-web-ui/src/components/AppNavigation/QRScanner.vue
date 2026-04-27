@@ -148,6 +148,7 @@
   import { Html5Qrcode } from 'html5-qrcode'
   import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
   import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient'
+  import { useInfrastructureStore } from '@/store/InfrastructureStore'
 
   interface CameraInfo {
     id: string
@@ -165,6 +166,7 @@
   }>()
 
   const { getAasIds } = useAASDiscoveryClient()
+  const infrastructureStore = useInfrastructureStore()
 
   const dialogModel = computed({
     get: () => props.modelValue,
@@ -180,7 +182,6 @@
   const selectedAasId = ref('')
   const discoveryError = ref('')
   const fileInput = ref<HTMLInputElement | null>(null)
-  const allCameras = ref<CameraInfo[]>([])
   const switchableCameras = ref<CameraInfo[]>([])
   const currentSwitchIndex = ref(0)
   const hasCameraToggle = ref(false)
@@ -189,6 +190,18 @@
 
   let html5QrCode: Html5Qrcode | null = null
   let currentVideoTrack: MediaStreamTrack | null = null
+  let facingProbeCache: {
+    cameraSignature: string
+    backDeviceId: string | null
+    frontDeviceId: string | null
+  } | null = null
+
+  function getCameraSignature (rawCameras: Array<{ id: string, label: string }>): string {
+    return rawCameras
+      .map(camera => camera.id)
+      .toSorted()
+      .join('|')
+  }
 
   // Probe which deviceId the browser selects for a given facingMode.
   // This is language-independent — facingMode is a WebRTC standard constraint.
@@ -207,9 +220,21 @@
   }
 
   async function buildCameraLists (rawCameras: Array<{ id: string, label: string }>): Promise<void> {
-    // Probe browser for front/back deviceIds (language-independent)
-    const backDeviceId = await probeDeviceIdForFacingMode('environment')
-    const frontDeviceId = await probeDeviceIdForFacingMode('user')
+    const cameraSignature = getCameraSignature(rawCameras)
+
+    // Cache probing results and only re-probe when camera deviceIds change.
+    if (!facingProbeCache || facingProbeCache.cameraSignature !== cameraSignature) {
+      const backDeviceId = await probeDeviceIdForFacingMode('environment')
+      const frontDeviceId = await probeDeviceIdForFacingMode('user')
+      facingProbeCache = {
+        cameraSignature,
+        backDeviceId,
+        frontDeviceId,
+      }
+    }
+
+    const backDeviceId = facingProbeCache.backDeviceId
+    const frontDeviceId = facingProbeCache.frontDeviceId
     const hasRecognizedFacing = backDeviceId !== null || frontDeviceId !== null
 
     const classified: CameraInfo[] = rawCameras.map(cam => {
@@ -218,7 +243,6 @@
       else if (cam.id === frontDeviceId) facing = 'front'
       return { id: cam.id, label: cam.label, facing }
     })
-    allCameras.value = classified
 
     if (hasRecognizedFacing) {
       // Mobile-style: use only the probed front/back cameras for switching
@@ -314,7 +338,7 @@
         errorMessage.value = `Failed to start camera: ${message}. Try using "Upload QR Image" instead.`
       }
 
-      console.error('[QRScanner] Full error object:', JSON.stringify(error, null, 2))
+      console.error('[QRScanner] Full error object:', error)
       isInitializing.value = false
       isScanning.value = false
     }
@@ -414,6 +438,15 @@
     await stopScanning()
     isDiscovering.value = true
     discoveryError.value = ''
+
+    const discoveryUrl = infrastructureStore.getAASDiscoveryURL.trim()
+    if (discoveryUrl === '') {
+      dialogModel.value = false
+      discoveryError.value = 'AAS Discovery service is not configured. Please configure it and try again.'
+      showSelectionDialog.value = true
+      isDiscovering.value = false
+      return
+    }
 
     try {
       const aasIds = await getAasIds(decodedText)
