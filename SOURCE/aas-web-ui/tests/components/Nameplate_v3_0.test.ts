@@ -27,14 +27,13 @@ vi.mock('@/composables/AAS/SubmodelElements/SubmodelElement', () => ({
   })
 }));
 
-// Helper to create component with common setup
 function createComponent(submodelElementData = { id: '123', path: 'test' }) {
   return mount(Nameplate_v3_0, {
     props: { submodelElementData }
   });
 }
 
-describe('Nameplate_v3_0 Component', () => {
+describe('Nameplate_v3_0', () => {
   afterEach(() => {
     vi.clearAllMocks();
   });

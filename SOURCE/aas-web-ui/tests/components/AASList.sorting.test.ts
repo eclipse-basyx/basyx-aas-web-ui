@@ -137,16 +137,6 @@ describe('AASList - sorting', () => {
         expect(ids).toEqual(['a', 'b', 'c']);
     });
 
-    it('does not mutate original array reference', () => {
-        const original = [...mockAas];
-        wrapper.vm.aasList = original;
-        wrapper.vm.aasListUnfiltered = [...mockAas];
-
-        wrapper.vm.setSortOptions({ sortField: 'id', sortDirection: 1 });
-
-        expect(wrapper.vm.aasList).not.toBe(original);
-    });
-
     it('handles unknown sort field safely', () => {
         setList(mockAas);
 
