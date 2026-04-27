@@ -51,8 +51,8 @@ importers:
         specifier: ^5.10.6
         version: 5.10.6
       basyx-typescript-sdk:
-        specifier: ^2.2.3
-        version: 2.2.3(@aas-core-works/aas-core3.1-typescript@1.0.0)
+        specifier: ^2.2.4
+        version: 2.2.4(@aas-core-works/aas-core3.1-typescript@1.0.0)
       i18n-iso-countries:
         specifier: ^7.14.0
         version: 7.14.0
@@ -1118,8 +1118,8 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
-  basyx-typescript-sdk@2.2.3:
-    resolution: {integrity: sha512-9f/NKqGmyijsmDuEVIgRcbBlWbTQ4rcE8D2rQg3LtM//f3KI2QfR2rgJNy1ySPZFlstPOjNPMVf8YRB/3mGJPA==}
+  basyx-typescript-sdk@2.2.4:
+    resolution: {integrity: sha512-iUxxBUOoRsoQwb19yIn7qQ23xqYbJsj3SMk18KKONKOmakg4eqMdihcVilykCrApizSV3Oah2NeUK+8Vt+86yA==}
     peerDependencies:
       '@aas-core-works/aas-core3.1-typescript': ^1.0.0
 
@@ -3043,6 +3043,10 @@ packages:
   xmlchars@2.2.0:
     resolution: {integrity: sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==}
 
+  xmlsax-typescript@1.0.0-rc.2:
+    resolution: {integrity: sha512-6eoT6BVhCsX7F3KI3FFyr0C5aDwSMfyUsw4g5yUIsf4zp7yRZ5kTDWrM+QHRzQkjNUoJpGEGnUbUT/UcKsorXQ==}
+    engines: {node: '>=20'}
+
   y18n@4.0.3:
     resolution: {integrity: sha512-JKhqTOwSrqNA1NY5lSztJ1GrBiUodLMmIZuLiDaMRJ+itFd+ABVE8XBjOvIWL+rSqNDC74LCSFmlb/U4UZ4hJQ==}
 
@@ -4091,10 +4095,10 @@ snapshots:
 
   baseline-browser-mapping@2.10.20: {}
 
-  basyx-typescript-sdk@2.2.3(@aas-core-works/aas-core3.1-typescript@1.0.0):
+  basyx-typescript-sdk@2.2.4(@aas-core-works/aas-core3.1-typescript@1.0.0):
     dependencies:
       '@aas-core-works/aas-core3.1-typescript': 1.0.0
-      xml-sax-ts: 0.4.1
+      xmlsax-typescript: 1.0.0-rc.2
 
   bidi-js@1.0.3:
     dependencies:
@@ -5915,6 +5919,8 @@ snapshots:
   xml-sax-ts@0.4.1: {}
 
   xmlchars@2.2.0: {}
+
+  xmlsax-typescript@1.0.0-rc.2: {}
 
   y18n@4.0.3: {}
 
