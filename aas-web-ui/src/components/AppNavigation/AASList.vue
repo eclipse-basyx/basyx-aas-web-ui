@@ -87,13 +87,14 @@
               <!-- QR Scanner -->
               <v-tooltip :disabled="isMobile" location="bottom" open-delay="600">
                 <template #activator="{ props }">
-                  <v-btn
+                  <v-icon
+                    class="ml-2"
                     v-bind="props"
                     icon="mdi-qrcode-scan"
-                    variant="plain"
                     @click="qrScannerDialog = true"
                   />
                 </template>
+
                 <span>Scan QR Code</span>
               </v-tooltip>
             </template>

@@ -1,14 +1,16 @@
 <template>
   <!-- AAS selection dialog (shown after successful scan + discovery) -->
   <v-dialog v-model="showSelectionDialog" :max-width="400" persistent>
-    <v-card>
-      <v-card-title class="d-flex align-center">
+    <v-sheet rounded="lg" border>
+      <v-card-title class="d-flex align-center bg-cardHeader">
         <span>Select AAS</span>
         <v-spacer />
+
         <v-btn icon size="small" variant="text" @click="closeSelectionDialog">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-card-title>
+
       <v-divider />
 
       <v-card-text class="pa-4">
@@ -37,28 +39,32 @@
 
       <v-card-actions>
         <v-spacer />
-        <v-btn variant="text" @click="closeSelectionDialog">Cancel</v-btn>
+        <v-btn text="Cancel" rounded="lg" @click="closeSelectionDialog" />
+
         <v-btn
+          class="text-buttonText"
           color="primary"
+          rounded="lg"
+          text="Select"
           :disabled="!selectedAasId"
           variant="flat"
           @click="submitAasSelection"
-        >
-          Select
-        </v-btn>
+        />
       </v-card-actions>
-    </v-card>
+    </v-sheet>
   </v-dialog>
 
   <v-dialog v-model="dialogModel" :max-width="400" persistent>
-    <v-card>
-      <v-card-title class="d-flex align-center">
+    <v-sheet rounded="lg" border>
+      <v-card-title class="d-flex align-center bg-cardHeader">
         <span>Scan QR Code</span>
         <v-spacer />
+
         <v-btn icon size="small" variant="text" @click="closeDialog">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-card-title>
+
       <v-divider />
 
       <v-card-text class="pa-4">
@@ -83,6 +89,7 @@
             style="position: absolute; width: 100%; z-index: 10"
           >
             <v-progress-circular color="primary" indeterminate />
+
             <p class="mt-4 text-caption">
               {{ isDiscovering ? 'Looking up AAS...' : 'Initializing camera...' }}
             </p>
@@ -123,6 +130,7 @@
             <v-icon start>mdi-upload</v-icon>
             Upload QR Image
           </v-btn>
+
           <input
             ref="fileInput"
             accept="image/*"
@@ -132,7 +140,7 @@
           >
         </div>
       </v-card-text>
-    </v-card>
+    </v-sheet>
   </v-dialog>
 </template>
 
@@ -347,7 +355,7 @@
       // Get the video element created by html5-qrcode
       const videoElement = document.querySelector('#qr-reader video') as HTMLVideoElement
       if (!videoElement?.srcObject) {
-        console.log('[QRScanner] No video stream found for torch check')
+        console.warn('[QRScanner] No video stream found for torch check')
         hasTorch.value = false
         return
       }
@@ -356,7 +364,7 @@
       const track = stream.getVideoTracks()[0]
 
       if (!track) {
-        console.log('[QRScanner] No video track found for torch check')
+        console.warn('[QRScanner] No video track found for torch check')
         hasTorch.value = false
         return
       }
@@ -366,7 +374,7 @@
       // Check if torch is supported
       const capabilities = track.getCapabilities() as unknown as { torch?: boolean }
       hasTorch.value = capabilities.torch === true
-      console.log('[QRScanner] Torch capability:', hasTorch.value)
+      // console.log('[QRScanner] Torch capability:', hasTorch.value)
     } catch (error) {
       console.error('[QRScanner] Error checking torch capability:', error)
       hasTorch.value = false
@@ -382,7 +390,7 @@
     try {
       await currentVideoTrack.applyConstraints({ advanced: [{ torch: enabled } as any] })
       isTorchOn.value = enabled
-      console.log('[QRScanner] Torch set to:', enabled)
+      // console.log('[QRScanner] Torch set to:', enabled)
     } catch (error) {
       console.error('[QRScanner] Error setting torch:', error)
       // Reset torch state if it fails
@@ -397,7 +405,7 @@
   // Handle visibility change (browser minimized or tab switched)
   function handleVisibilityChange (): void {
     if (document.hidden && isTorchOn.value) {
-      console.log('[QRScanner] Browser hidden, turning off torch')
+      console.warn('[QRScanner] Browser hidden, turning off torch')
       setTorch(false)
     }
   }
