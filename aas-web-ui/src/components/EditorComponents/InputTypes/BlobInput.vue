@@ -11,6 +11,7 @@
     <v-btn value="none">
       <span>None</span>
     </v-btn>
+
     <v-btn value="blob">
       <span>Blob</span>
     </v-btn>
@@ -50,6 +51,7 @@
       :src="blobPreviewPath"
       @error="errorLoadingImage = true"
     />
+
     <v-alert
       v-else
       density="compact"
@@ -63,6 +65,7 @@
     <v-card-text>
       <div class="d-flex align-center justify-space-between">
         <div><strong>Blob Size:</strong> {{ formatFileSize(contentValue.length) }}</div>
+
         <v-btn
           v-if="!showFullContent"
           color="primary"
@@ -72,6 +75,7 @@
         >
           Show Content
         </v-btn>
+
         <v-btn v-else color="primary" variant="text" @click="showFullContent = false"> Hide Content </v-btn>
       </div>
 

@@ -9,6 +9,7 @@
             '): '
         }}</v-list-item-title>
       </v-list-item>
+
       <v-card v-if="relationshipElementObject" color="elevatedCard">
         <!-- Value of the Property -->
         <v-list class="bg-elevatedCard pt-0" nav>
@@ -29,6 +30,7 @@
                   </div>
                 </template>
               </v-list-item>
+
               <v-divider
                 v-if="
                   (i as number) <
@@ -38,6 +40,7 @@
               />
             </template>
           </template>
+
           <template v-else>
             <v-list-item class="px-1">
               <v-alert
@@ -50,6 +53,7 @@
             </v-list-item>
           </template>
         </v-list>
+
         <v-divider v-if="hasReferenceKeysByKey(referenceKey as 'first' | 'second')" />
         <!-- Action Buttons for Reference Jump -->
         <v-list

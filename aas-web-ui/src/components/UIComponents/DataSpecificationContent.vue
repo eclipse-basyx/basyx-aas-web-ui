@@ -11,6 +11,7 @@
         <span class="text-body-small">DataType: </span>
         <span class="text-primary">{{ dataSpecificationObject.dataType }}</span>
       </v-list-item-title>
+
       <v-divider
         v-if="dataSpecificationObject.definition && dataSpecificationObject.definition.length > 0"
         class="mt-2"
@@ -22,6 +23,7 @@
         :description-title="'Definition'"
         :small="true"
       />
+
       <v-divider
         v-if="dataSpecificationObject.levelTypes && dataSpecificationObject.levelTypes.length > 0"
         class="mt-2"
@@ -33,10 +35,12 @@
         class="pt-2 pl-2"
       >
         <div class="text-body-small">LevelTypes:</div>
+
         <span v-for="(levelType, i) in dataSpecificationObject.levelTypes" :key="i" class="text-primary">{{
           levelType
         }}</span>
       </v-list-item-title>
+
       <v-divider
         v-if="dataSpecificationObject.preferredName && dataSpecificationObject.preferredName.length > 0"
         class="mt-2"
@@ -48,6 +52,7 @@
         :description-title="'Preferred Name'"
         :small="true"
       />
+
       <v-divider
         v-if="dataSpecificationObject.shortName && dataSpecificationObject.shortName.length > 0"
         class="mt-2"
@@ -59,12 +64,14 @@
         :description-title="'Short Name'"
         :small="true"
       />
+
       <v-divider v-if="dataSpecificationObject.unit" class="mt-2" />
       <!-- unit -->
       <v-list-item-title v-if="dataSpecificationObject.unit" class="pt-2 pl-2">
         <span class="text-body-small">Unit: </span>
         <span class="text-primary">{{ dataSpecificationObject.unit }}</span>
       </v-list-item-title>
+
       <v-list-item v-if="dataSpecificationObject.unitId" class="pb-0">
         <v-tooltip activator="parent" open-delay="600" transition="slide-x-transition">
           <div v-for="(unitId, i) in dataSpecificationObject.unitId.keys" :key="i" class="text-body-small">
@@ -72,9 +79,11 @@
             {{ unitId.value }}
           </div>
         </v-tooltip>
+
         <template #title>
           <span class="text-body-small">{{ 'Unit Id: ' }}</span>
         </template>
+
         <template #subtitle>
           <v-list-item-subtitle v-for="(unitId, i) in dataSpecificationObject.unitId.keys" :key="i">
             <div class="pt-1">
@@ -84,6 +93,7 @@
           </v-list-item-subtitle>
         </template>
       </v-list-item>
+
       <v-divider
         v-if="dataSpecificationObject.valueList && dataSpecificationObject.valueList.length > 0"
         class="mt-2"
@@ -95,6 +105,7 @@
         class="pt-2 pl-2"
       >
         <div class="text-body-small">ValueList:</div>
+
         <span v-for="(valueList, i) in dataSpecificationObject.valueList" :key="i" class="text-primary">{{
           valueList
         }}</span>

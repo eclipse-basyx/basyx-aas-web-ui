@@ -8,8 +8,10 @@
         icon="mdi-chevron-up"
         @click="$emit('go-up')"
       />
+
       <v-divider vertical />
     </template>
+
     <v-breadcrumbs class="ma-0 pa-0 ml-2" divider="/" :items="breadcrumbs" />
   </v-list-item>
 </template>

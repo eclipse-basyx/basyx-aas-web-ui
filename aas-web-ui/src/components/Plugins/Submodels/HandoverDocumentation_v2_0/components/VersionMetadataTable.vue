@@ -20,6 +20,7 @@
               <div v-if="valueToDisplay(child)" class="text-body-small text-subtitleText">
                 {{ valueToDisplay(child) }}
               </div>
+
               <div v-else>
                 <div v-for="(langStringSet, k) in getLangSets(child)" :key="k" class="text-body-small">
                   <v-chip class="mr-1" label size="x-small">

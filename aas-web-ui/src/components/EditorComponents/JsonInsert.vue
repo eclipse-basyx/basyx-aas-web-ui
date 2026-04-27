@@ -3,6 +3,7 @@
     <v-card>
       <v-card-title>Insert {{ type }} from JSON</v-card-title>
       <v-divider />
+
       <v-card-text class="bg-card pa-3">
         <v-card>
           <v-textarea
@@ -15,7 +16,9 @@
           />
         </v-card>
       </v-card-text>
+
       <v-divider />
+
       <v-card-actions>
         <v-spacer />
         <v-btn @click="closeDialog">Cancel</v-btn>

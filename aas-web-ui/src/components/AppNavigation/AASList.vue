@@ -25,15 +25,18 @@
                     @click="initialize()"
                   />
                 </template>
+
                 <span>Reload AAS List</span>
               </v-tooltip>
             </template>
+
             <template #append>
               <!-- Add AAS -->
               <v-menu v-if="editMode">
                 <template #activator="{ props }">
                   <v-icon icon="mdi-dots-vertical" variant="plain" v-bind="props" />
                 </template>
+
                 <v-sheet border>
                   <v-list class="py-0" density="compact">
                     <!-- Open Upload Dialog -->
@@ -47,8 +50,10 @@
                             Upload AAS
                           </v-list-item>
                         </template>
+
                         <span>Upload AAS File to Environment</span>
                       </v-tooltip>
+
                       <v-divider />
                     </template>
                     <!-- Open AAS create dialog -->
@@ -61,11 +66,13 @@
                           Create AAS
                         </v-list-item>
                       </template>
+
                       <span>Create a new AAS</span>
                     </v-tooltip>
                   </v-list>
                 </v-sheet>
               </v-menu>
+
               <v-tooltip v-else-if="allowUploading" :disabled="isMobile" :location="editMode ? 'end' : 'bottom'" open-delay="600">
                 <template #activator="{ props }">
                   <v-icon
@@ -74,12 +81,15 @@
                     @click="uploadAASDialog = true"
                   />
                 </template>
+
                 <span>Upload AAS File to Environment</span>
               </v-tooltip>
             </template>
           </v-text-field>
         </v-card-title>
+
         <v-divider />
+
         <v-progress-linear
           v-if="pageLoading && !listLoading"
           color="primary"
@@ -111,11 +121,13 @@
             <v-list-item-title>
               <v-skeleton-loader type="list-item" :width="300" />
             </v-list-item-title>
+
             <template #append>
               <v-skeleton-loader type="list-item" :width="50" />
             </template>
           </v-list-item>
         </template>
+
         <template v-else>
           <v-virtual-scroll
             ref="virtualScrollRef"
@@ -161,6 +173,7 @@
                     <span class="font-weight-bold"> {{ 'idShort: ' }}</span>
                     {{ item.idShort }}
                   </div>
+
                   <v-divider v-if="item.administration?.version" class="my-1" />
                   <!-- AAS administrative information -->
                   <div v-if="item.administration?.version" class="text-body-small">
@@ -171,9 +184,11 @@
                     }}
                   </div>
                 </v-tooltip>
+
                 <v-list-item-title class="text-primary" style="z-index: 9999">
                   {{ nameToDisplay(item) }}
                 </v-list-item-title>
+
                 <v-list-item-subtitle class="text-listItemText">{{ item.id }}</v-list-item-subtitle>
                 <!-- open Details Button (with Status Badge) -->
                 <template #append>
@@ -188,6 +203,7 @@
                     "
                     text-color="buttonText"
                   />
+
                   <v-menu v-if="editMode">
                     <template #activator="{ props }">
                       <v-btn
@@ -201,20 +217,24 @@
                         <v-icon size="x-small">mdi-dots-vertical</v-icon>
                       </v-btn>
                     </template>
+
                     <v-sheet border>
                       <v-list class="py-0" dense density="compact" slim>
                         <v-list-item @click="openDownloadDialog(item)">
                           <template #prepend>
                             <v-icon size="x-small">mdi-download</v-icon>
                           </template>
+
                           <v-list-item-subtitle>Download AAS</v-list-item-subtitle>
                         </v-list-item>
+
                         <v-divider />
                         <!-- Open AAS edit dialog -->
                         <v-list-item @click="openEditDialog(false, item)">
                           <template #prepend>
                             <v-icon size="x-small">mdi-pencil</v-icon>
                           </template>
+
                           <v-list-item-subtitle>Edit AAS</v-list-item-subtitle>
                         </v-list-item>
                         <!-- Delete AAS -->
@@ -222,8 +242,10 @@
                           <template #prepend>
                             <v-icon size="x-small">mdi-delete</v-icon>
                           </template>
+
                           <v-list-item-subtitle>Delete AAS</v-list-item-subtitle>
                         </v-list-item>
+
                         <v-divider
                           v-if="
                             item.assetKind === 'Type' ||
@@ -241,8 +263,10 @@
                           <template #prepend>
                             <v-icon size="x-small">mdi-file-plus</v-icon>
                           </template>
+
                           <v-list-item-subtitle>Create Instance from Type</v-list-item-subtitle>
                         </v-list-item>
+
                         <v-divider />
                         <!-- Copy AAS Endpoint to clipboard -->
                         <v-list-item
@@ -253,11 +277,13 @@
                           <template #prepend>
                             <v-icon size="x-small">{{ copyIcon }} </v-icon>
                           </template>
+
                           <v-list-item-subtitle>Copy AAS Endpoint</v-list-item-subtitle>
                         </v-list-item>
                       </v-list>
                     </v-sheet>
                   </v-menu>
+
                   <template v-else>
                     <!-- Download AAS -->
                     <v-btn
@@ -289,6 +315,7 @@
               </v-list-item>
             </template>
           </v-virtual-scroll>
+
           <v-list-item
             v-if="isSearchLimited"
             class="px-4 py-1"
@@ -298,6 +325,7 @@
               Searching loaded shells only. Scroll down to load more.
             </v-list-item-subtitle>
           </v-list-item>
+
           <v-list-item
             v-if="pageLoading && !listLoading"
             class="px-4 py-0"
@@ -306,6 +334,7 @@
             <template #prepend>
               <v-progress-circular class="mr-2" indeterminate size="16" width="2" />
             </template>
+
             <v-list-item-subtitle class="text-listItemText ml-1">Loading more shells...</v-list-item-subtitle>
           </v-list-item>
         </template>
@@ -320,6 +349,7 @@
           <template #prepend>
             <v-icon class="ml-2">mdi-chevron-double-left</v-icon>
           </template>
+
           <v-list-item-title class="text-body-small">Close Sidebar</v-list-item-title>
         </v-list-item>
       </v-list>

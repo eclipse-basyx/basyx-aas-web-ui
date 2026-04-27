@@ -5,7 +5,9 @@
         <v-icon icon="mdi-swap-vertical" />
         <span class="ml-3">AAS Importer</span>
       </v-card-title>
+
       <v-divider />
+
       <v-card-text>
         <v-btn-toggle
           v-model="importMode"
@@ -17,6 +19,7 @@
           <v-btn value="assetId">Asset ID</v-btn>
           <v-btn value="aasId">AAS ID</v-btn>
         </v-btn-toggle>
+
         <v-text-field
           id="asset-id-input"
           v-model="importIdentifier"
@@ -27,6 +30,7 @@
           prepend-inner-icon="mdi-qrcode"
           variant="outlined"
         />
+
         <v-select
           v-model="selectedInfrastructureId"
           clearable
@@ -49,6 +53,7 @@
             </v-list-item>
           </template>
         </v-select>
+
         <v-checkbox
           v-model="sourceUseSuperpath"
           class="mt-n2 mb-2"
@@ -56,6 +61,7 @@
           hide-details
           label="Use AAS superpath endpoints for source Submodels"
         />
+
         <v-select
           v-if="isAssetIdMode && discoveredAasIds.length > 1"
           v-model="selectedDiscoveredAasId"
@@ -70,6 +76,7 @@
           prepend-inner-icon="mdi-format-list-bulleted"
           variant="outlined"
         />
+
         <v-row>
           <v-col align="center" class="mt-n5" cols="12">
             <v-icon color="grey" size="48">mdi-arrow-down-thick</v-icon>
@@ -99,6 +106,7 @@
             </v-list-item>
           </template>
         </v-select>
+
         <v-checkbox
           v-model="destinationUseSuperpath"
           class="mt-n2 mb-4"
@@ -121,6 +129,7 @@
           </template>
           {{ inputEmptyErrorText }}
         </v-alert>
+
         <v-alert
           v-if="isAssetIdMode && discoveredAasIds.length > 1 && selectedDiscoveredAasId === null"
           border="start"
@@ -131,12 +140,14 @@
           </template>
           Multiple AAS IDs were found for the provided Asset ID. Please select one AAS ID.
         </v-alert>
+
         <v-alert v-if="isSourceSameAsDestination()" border="start" class="mb-6">
           <template #prepend>
             <v-icon color="error" size="x-small">mdi-information</v-icon>
           </template>
           Source and Destination Infrastructure cannot be the same. Please select different infrastructures.
         </v-alert>
+
         <v-btn
           block
           class="text-buttonText"

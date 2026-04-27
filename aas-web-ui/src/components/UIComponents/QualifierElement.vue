@@ -10,8 +10,10 @@
             {{ qualifierTitle }}
           </span>
         </v-expansion-panel-title>
+
         <v-expansion-panel-text class="mx-2 mb-2">
           <v-divider class="mb-1" opacity="0.05" />
+
           <v-list>
             <v-list-item
               v-for="(qualifier, index) in qualifierArray"
@@ -32,6 +34,7 @@
                   {{ 'Semantic Id: ' }}
                 </span>
               </v-list-item-subtitle>
+
               <SemanticID
                 v-if="
                   qualifier.semanticId &&
@@ -43,6 +46,7 @@
                 :semantic-title="''"
                 :small="true"
               />
+
               <v-divider
                 v-if="
                   qualifier.semanticId &&
@@ -56,6 +60,7 @@
                 <span class="text-body-small">
                   {{ 'Type: ' }}
                 </span>
+
                 <v-chip border color="primary" label size="x-small">
                   {{ qualifier.type }}
                 </v-chip>
@@ -68,6 +73,7 @@
                 <span class="text-body-small">
                   {{ 'Value Type: ' }}
                 </span>
+
                 <v-chip border color="primary" label size="x-small">
                   {{ qualifier.valueType }}
                 </v-chip>
@@ -83,6 +89,7 @@
                   variant="outlined"
                 />
               </v-list-item-subtitle>
+
               <template #append>
                 <!-- Qualifier Kind -->
                 <v-chip

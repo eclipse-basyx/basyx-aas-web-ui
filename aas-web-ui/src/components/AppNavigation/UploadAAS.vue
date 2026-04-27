@@ -3,6 +3,7 @@
     <v-sheet border :loading="loadingUpload" rounded="lg">
       <v-card-title class="bg-cardHeader">Upload Shells</v-card-title>
       <v-divider />
+
       <v-card-text class="overflow-y-auto" style="max-height: calc(100vh - 296px)">
         <v-file-upload
           v-model="aasFiles"
@@ -14,6 +15,7 @@
         />
         <!-- Options -->
         <v-label class="mt-5">Options</v-label>
+
         <v-radio-group v-model="uploadMode" class="mt-4" density="compact" hide-details>
           <v-radio
             v-for="mode in uploadModes"
@@ -23,6 +25,7 @@
             :value="mode.value"
           />
         </v-radio-group>
+
         <v-checkbox
           v-if="uploadMode === 'server'"
           v-model="ignoreDuplicates"
@@ -30,6 +33,7 @@
           hide-details
           label="Ignore Duplicates"
         />
+
         <v-alert
           v-if="manualDescriptorSyncRequired && !descriptorsAvailable"
           class="mt-3"
@@ -39,6 +43,7 @@
           Manual descriptor sync is required by infrastructure settings, but AAS and Submodel registries are
           not connected.
         </v-alert>
+
         <v-alert
           v-if="manualDiscoverySyncRequired && !discoveryAvailable"
           class="mt-2"
@@ -47,6 +52,7 @@
         >
           Manual discovery sync is required by infrastructure settings, but AAS discovery is not connected.
         </v-alert>
+
         <v-progress-linear
           v-if="loadingUpload"
           class="mt-4"
@@ -59,14 +65,18 @@
             <strong>{{ Math.round(uploadProgress) }}%</strong>
           </template>
         </v-progress-linear>
+
         <div v-if="loadingUpload && currentFileLabel.trim() !== ''" class="text-body-small mt-2">
           Processing: {{ currentFileLabel }}
         </div>
       </v-card-text>
+
       <v-divider />
+
       <v-card-actions>
         <v-spacer />
         <v-btn :disabled="loadingUpload" rounded="lg" text="Cancel" @click="uploadAASDialog = false" />
+
         <v-btn
           class="text-buttonText"
           color="primary"

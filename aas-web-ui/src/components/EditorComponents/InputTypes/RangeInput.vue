@@ -8,6 +8,7 @@
       label="min"
       variant="outlined"
     />
+
     <v-text-field
       v-model="maxValue"
       bg-color="surface"

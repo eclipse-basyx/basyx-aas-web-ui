@@ -8,6 +8,7 @@
     <v-card v-if="loading" class="mb-4">
       <v-skeleton-loader type="list-item-avatar, divider, table-heading@8, actions" />
     </v-card>
+
     <template v-else-if="Object.keys(submodelElementData).length > 0">
       <v-expansion-panels v-if="contactInformations.length > 0" v-model="panel">
         <v-expansion-panel v-for="(contactInformation, index) in contactInformations" :key="index">
@@ -16,13 +17,16 @@
               <template #prepend>
                 <v-icon size="small">mdi-card-account-phone</v-icon>
               </template>
+
               <v-list-item-title>
                 {{ nameToDisplay(contactInformation, 'en', 'Contact Information') }}
                 <DescriptionTooltip :description-array="contactInformation?.description" />
               </v-list-item-title>
             </v-list-item>
           </v-expansion-panel-title>
+
           <v-divider v-if="panel === index" />
+
           <v-expansion-panel-text class="pt-4">
             <v-sheet border rounded>
               <v-table>
@@ -38,11 +42,13 @@
                       <td>
                         <div class="text-subtitleText text-body-small">
                           <span>{{ nameToDisplay(contactInformationProperty) }}</span>
+
                           <DescriptionTooltip
                             :description-array="contactInformationProperty?.description"
                           />
                         </div>
                       </td>
+
                       <td>
                         <!-- Address of Additional Link -->
                         <template
@@ -65,6 +71,7 @@
                           >
                             {{ valueToDisplay(contactInformationProperty) }}
                           </a>
+
                           <span v-else class="text-body-small">{{
                             valueToDisplay(contactInformationProperty)
                           }}</span>
@@ -92,6 +99,7 @@
                               }}
                               ({{ valueToDisplay(contactInformationProperty) }})
                             </template>
+
                             <template v-else>
                               {{ valueToDisplay(contactInformationProperty) }}
                             </template>
@@ -173,6 +181,7 @@
                           >
                             {{ contactInformationProperty.typeOfValue }}
                           </v-chip>
+
                           <template
                             v-if="
                               checkIdShort(contactInformationProperty, 'TelephoneNumber')
@@ -185,6 +194,7 @@
                               {{ valueToDisplay(contactInformationProperty) }}
                             </a>
                           </template>
+
                           <template
                             v-else-if="checkIdShort(contactInformationProperty, 'Email')"
                           >
@@ -195,6 +205,7 @@
                               {{ valueToDisplay(contactInformationProperty) }}
                             </a>
                           </template>
+
                           <template v-else>
                             {{ valueToDisplay(contactInformationProperty) }}
                           </template>
@@ -236,11 +247,13 @@
                 </tbody>
               </v-table>
             </v-sheet>
+
             <v-card-actions
               v-if="contactInformation.vCard && contactInformation.vCard.trim() !== ''"
               class="pt-4 pb-0 pr-0"
             >
               <v-spacer />
+
               <v-btn
                 class="text-buttonText"
                 color="primary"

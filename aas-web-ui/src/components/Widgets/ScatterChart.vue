@@ -8,6 +8,7 @@
         </template>
       </v-list-item>
     </v-list>
+
     <v-row align="center">
       <v-col cols="auto">
         <v-text-field
@@ -23,6 +24,7 @@
         />
       </v-col>
     </v-row>
+
     <div class="chart-container">
       <div ref="scatterChart" />
     </div>

@@ -10,15 +10,18 @@
         <v-skeleton-loader type="subtitle" />
         <v-skeleton-loader type="image" />
       </v-card>
+
       <v-card>
         <v-skeleton-loader type="subtitle" />
         <v-skeleton-loader type="image" />
       </v-card>
     </v-sheet>
+
     <template v-else-if="Object.keys(carbonFootprintData).length > 0">
       <!-- Pie Chart -->
       <v-card v-if="showPieChart && pieChartData && pieChartData.length > 0" class="mb-4">
         <v-card-title class="text-body-large">Carbon Footprint Distribution</v-card-title>
+
         <v-card-text>
           <PieChart :chart-data="pieChartData" />
         </v-card-text>
@@ -36,6 +39,7 @@
         <v-card-title class="text-body-large">
           {{ 'Product Carbon Footprint' + (Object.keys(productCarbonFootprints).length > 1 ? 's' : '') }}
         </v-card-title>
+
         <v-card-text>
           <v-timeline class="border rounded" direction="vertical" side="start">
             <v-timeline-item
@@ -54,6 +58,7 @@
                   <p>{{ formatLifeCyclePhaseLabel(pcfLifeCyclePhase) }}</p>
                 </div>
               </template>
+
               <div class="pl-6">
                 <div class="text-h6">
                   {{
@@ -67,6 +72,7 @@
                   }}
                   <span class="">CO<sub>2</sub>eq</span>
                 </div>
+
                 <p class="text-body-small opacity-60">
                   <span> per </span>
                   {{
@@ -128,9 +134,11 @@
                       }}
                     </span> </template>)
                 </p>
+
                 <p class="text-body-small opacity-60">
                   <v-icon class="mr-1" size="small">mdi-calendar</v-icon>
                   <span>valid from </span>
+
                   <span>
                     {{
                       valueToDisplay(
@@ -145,6 +153,7 @@
                       )
                     }}
                   </span>
+
                   <span
                     v-if="
                       pcfSMC.value.some(
@@ -172,6 +181,7 @@
                     }}
                   </span>
                 </p>
+
                 <p
                   v-if="
                     pcfSMC.value.some(
@@ -186,6 +196,7 @@
                   class="text-body-small opacity-60"
                 >
                   <v-icon class="mr-1" size="small">mdi-map-marker-outline</v-icon>
+
                   <span>
                     {{
                       determineAddress(

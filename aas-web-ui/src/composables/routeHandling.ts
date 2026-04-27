@@ -63,9 +63,8 @@ export function useRouteHandling () {
     possibleGloBalAssetIdQueryParameter: string[],
   ): Promise<RouteLocationRaw | null> {
     if (possibleGloBalAssetIdQueryParameter.some(queryParamater => Object.hasOwn(to.query, queryParamater))) {
-      const globalAssetIdBase64Encoded = to.query[possibleGloBalAssetIdQueryParameter[0]]
-        ? (to.query[possibleGloBalAssetIdQueryParameter[0]] as string)
-        : (to.query[possibleGloBalAssetIdQueryParameter[1]] as string)
+      const globalAssetIdBase64Encoded = (to.query[possibleGloBalAssetIdQueryParameter[0]] as string)
+        || (to.query[possibleGloBalAssetIdQueryParameter[1]] as string)
       const globalAssetId = base64Decode(globalAssetIdBase64Encoded)
       const aasId = await getAasId(globalAssetId)
       const aasEndpoint = await getAasEndpointById(aasId)
@@ -103,16 +102,14 @@ export function useRouteHandling () {
       let smEndpoint = ''
 
       if (to.query.aasId) {
-        const aasIdBase64Encoded = to.query[possibleAasIdQueryParameter[0]]
-          ? (to.query[possibleAasIdQueryParameter[0]] as string)
-          : (to.query[possibleAasIdQueryParameter[1]] as string)
+        const aasIdBase64Encoded = (to.query[possibleAasIdQueryParameter[0]] as string)
+          || (to.query[possibleAasIdQueryParameter[1]] as string)
         const aasId = base64Decode(aasIdBase64Encoded)
         aasEndpoint = await getAasEndpointById(aasId)
       }
       if (to.query.smId) {
-        const smIdBase64Encoded = to.query[possibleSmIdQueryParameter[0]]
-          ? (to.query[possibleSmIdQueryParameter[0]] as string)
-          : (to.query[possibleSmIdQueryParameter[1]] as string)
+        const smIdBase64Encoded = (to.query[possibleSmIdQueryParameter[0]] as string)
+          || (to.query[possibleSmIdQueryParameter[1]] as string)
         const smId = base64Decode(smIdBase64Encoded)
         smEndpoint = await getSmEndpointById(smId)
       }

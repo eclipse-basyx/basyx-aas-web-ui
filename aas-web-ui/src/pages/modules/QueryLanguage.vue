@@ -1,6 +1,7 @@
 <template>
   <v-container class="pa-md-12">
     <h1 class="mb-5">Query Language Test Module</h1>
+
     <v-menu>
       <template #activator="{ props }">
         <v-btn
@@ -14,6 +15,7 @@
           <v-icon end>mdi-chevron-down</v-icon>
         </v-btn>
       </template>
+
       <v-list border nav rounded slim>
         <v-list-item
           v-for="endpoint in availableEndpoints"
@@ -26,6 +28,7 @@
         </v-list-item>
       </v-list>
     </v-menu>
+
     <v-textarea
       v-model="queryText"
       bg-color="surface"
@@ -37,8 +40,10 @@
       rows="15"
       variant="outlined"
     />
+
     <v-card-actions class="pa-0">
       <v-spacer />
+
       <v-btn
         class="text-buttonText"
         color="primary"

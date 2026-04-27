@@ -10,6 +10,7 @@
           <v-img class="my-15" src="@/assets/BaSyx_Logo.svg" />
         </a>
       </template>
+
       <v-row class="mt-3">
         <v-col class="d-flex justify-center" cols="12" md="auto">
           <v-btn
@@ -21,7 +22,9 @@
             variant="outlined"
           />
         </v-col>
+
         <v-spacer v-if="mdAndDown" />
+
         <v-col class="d-flex justify-center" cols="12" md="auto">
           <v-btn
 
@@ -33,7 +36,9 @@
             text="https://basyx.org"
           />
         </v-col>
+
         <v-spacer v-if="mdAndDown" />
+
         <v-col class="d-flex justify-center" cols="12" md="auto">
           <v-btn
 

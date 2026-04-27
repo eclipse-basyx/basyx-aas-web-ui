@@ -36,6 +36,7 @@
             }}
           </v-icon>
         </template>
+
         <template #append-inner>
           <v-btn
             :disabled="!components[componentKey].url"

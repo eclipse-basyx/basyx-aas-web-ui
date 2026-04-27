@@ -72,6 +72,7 @@
                 <v-expansion-panel-title>
                   Certification #{{ index + 1 }}
                   <v-spacer />
+
                   <v-btn
                     color="error"
                     icon="mdi-delete"
@@ -79,6 +80,7 @@
                     @click.stop="form.certifications.splice(index, 1)"
                   />
                 </v-expansion-panel-title>
+
                 <v-expansion-panel-text>
                   <FormField
                     label="Certification Standard"
@@ -91,6 +93,7 @@
                       variant="outlined"
                     />
                   </FormField>
+
                   <FormField
                     label="Approval Agency"
                     tip="The organization which granted the certification"
@@ -102,6 +105,7 @@
                       variant="outlined"
                     />
                   </FormField>
+
                   <FormField label="Certificate Number" tip="The identifier of the certification">
                     <v-text-field
                       v-model="cert.certificateNumber"
@@ -110,6 +114,7 @@
                       variant="outlined"
                     />
                   </FormField>
+
                   <FormField label="Issue Date" tip="The date on which the certification was granted">
                     <v-text-field
                       v-model="cert.issueDate"
@@ -119,6 +124,7 @@
                       variant="outlined"
                     />
                   </FormField>
+
                   <FormField label="Expiry Date" tip="The date on which the certification expires">
                     <v-text-field
                       v-model="cert.expiryDate"
@@ -128,6 +134,7 @@
                       variant="outlined"
                     />
                   </FormField>
+
                   <FormField
                     label="Certification URL"
                     tip="The web address where the certification details can be verified"
@@ -140,6 +147,7 @@
                       variant="outlined"
                     />
                   </FormField>
+
                   <FormField
                     label="Certification Documents"
                     tip="Optional list of links to official certification documents"
@@ -203,6 +211,7 @@
               variant="outlined"
             />
           </FormField>
+
           <FormField
             label="Data Protection Policy"
             tip="Indicate if the company has implemented a data protection policy."
@@ -218,6 +227,7 @@
               variant="outlined"
             />
           </FormField>
+
           <FormField label="Password Policy" tip="Flag if the company enforces a password policy for users.">
             <v-select
               v-model="form.securityPolicies.passwordPolicy"
@@ -230,6 +240,7 @@
               variant="outlined"
             />
           </FormField>
+
           <FormField
             label="Authorization Concept"
             tip="Flag if the company has a defined concept for user authorizations."
@@ -245,6 +256,7 @@
               variant="outlined"
             />
           </FormField>
+
           <FormField
             label="Access Control Process"
             tip="Flag if access to systems or data is controlled through formal processes."
@@ -260,6 +272,7 @@
               variant="outlined"
             />
           </FormField>
+
           <FormField label="User Access Inventory" tip="Flag if there is an inventory of user access rights.">
             <v-select
               v-model="form.securityPolicies.userAccessInventory"
@@ -272,6 +285,7 @@
               variant="outlined"
             />
           </FormField>
+
           <FormField
             label="Permission Documentation"
             tip="Flag if permission grants are documented systematically."
@@ -287,6 +301,7 @@
               variant="outlined"
             />
           </FormField>
+
           <FormField label="Locking System" tip="Flag if physical access is controlled by a locking system.">
             <v-select
               v-model="form.securityPolicies.lockingSystem"
@@ -299,6 +314,7 @@
               variant="outlined"
             />
           </FormField>
+
           <FormField label="Key Allocation" tip="Flag if a key management system is in place.">
             <v-select
               v-model="form.securityPolicies.keyAllocation"
@@ -311,6 +327,7 @@
               variant="outlined"
             />
           </FormField>
+
           <FormField label="Visitor Log" tip="Flag if visitors are logged during their stay on premises.">
             <v-select
               v-model="form.securityPolicies.visitorLog"
@@ -323,6 +340,7 @@
               variant="outlined"
             />
           </FormField>
+
           <FormField label="Visitor Escort" tip="Flag if visitors are always escorted in secured areas.">
             <v-select
               v-model="form.securityPolicies.visitorEscort"
@@ -335,6 +353,7 @@
               variant="outlined"
             />
           </FormField>
+
           <FormField label="Visitor Badge" tip="Flag if the company issues visitor badges during visits.">
             <v-select
               v-model="form.securityPolicies.visitorBadge"
@@ -347,6 +366,7 @@
               variant="outlined"
             />
           </FormField>
+
           <FormField
             label="Customer Audits"
             tip="Specify if customer audits are accepted (e.g., 'upon request', 'scheduled', 'not allowed')."
@@ -362,6 +382,7 @@
 
           <!-- Insurances -->
           <div class="mb-2 text-body-large font-weight-bold">Insurances</div>
+
           <v-slide-y-transition group>
             <div v-for="(insurance, index) in form.insurances" :key="index" class="mb-3">
               <v-card class="pa-4" elevation="0" variant="tonal">
@@ -376,6 +397,7 @@
                       />
                     </FormField>
                   </v-col>
+
                   <v-col cols="12" md="4">
                     <FormField label="Insurance Type" tip="Specify the type of insurance">
                       <v-text-field
@@ -386,6 +408,7 @@
                       />
                     </FormField>
                   </v-col>
+
                   <v-col cols="12" md="4">
                     <FormField label="Insurance Sum" tip="Specify the insurance sum">
                       <v-text-field
@@ -398,6 +421,7 @@
                     </FormField>
                   </v-col>
                 </v-row>
+
                 <div class="d-flex justify-end">
                   <v-btn color="error" variant="tonal" @click="form.insurances.splice(index, 1)">
                     <v-icon start>mdi-delete</v-icon> Remove
@@ -406,6 +430,7 @@
               </v-card>
             </div>
           </v-slide-y-transition>
+
           <v-btn
             class="mt-1"
             color="primary"
@@ -419,6 +444,7 @@
 
           <!-- Employee Trainings -->
           <div class="mb-2 text-body-large font-weight-bold">Employee Trainings</div>
+
           <v-slide-y-transition group>
             <div v-for="(training, index) in form.employeeTrainings" :key="index" class="mb-2">
               <v-row dense>
@@ -432,6 +458,7 @@
                     />
                   </FormField>
                 </v-col>
+
                 <v-col cols="12" md="6">
                   <FormField label="Training Documentation" tip="Specify the training documentation">
                     <v-text-field
@@ -446,6 +473,7 @@
               </v-row>
             </div>
           </v-slide-y-transition>
+
           <v-btn
             color="primary"
             variant="tonal"
@@ -458,11 +486,13 @@
 
           <!-- Legal Compliance -->
           <div class="mb-2 text-body-large font-weight-bold">Legal Compliance</div>
+
           <v-expansion-panels variant="accordion">
             <v-expansion-panel v-for="(reg, index) in form.legalCompliance" :key="index">
               <v-expansion-panel-title>
                 Regulation #{{ index + 1 }}
                 <v-spacer />
+
                 <v-btn
                   color="error"
                   icon="mdi-delete"
@@ -470,6 +500,7 @@
                   @click.stop="form.legalCompliance.splice(index, 1)"
                 />
               </v-expansion-panel-title>
+
               <v-expansion-panel-text>
                 <FormField
                   label="Compliance Status"
@@ -500,6 +531,7 @@
                           variant="outlined"
                         />
                       </v-col>
+
                       <v-col cols="12" md="9">
                         <v-textarea
                           v-model="entry.text"
@@ -513,6 +545,7 @@
                       </v-col>
                     </v-row>
                   </div>
+
                   <v-btn
                     color="primary"
                     size="small"
@@ -555,6 +588,7 @@
               </v-expansion-panel-text>
             </v-expansion-panel>
           </v-expansion-panels>
+
           <v-btn class="mt-2" color="primary" variant="tonal" @click="addRegulation">
             <v-icon start>mdi-plus</v-icon> Add Regulation
           </v-btn>
@@ -564,6 +598,7 @@
             <v-col cols="auto">
               <v-btn class="text-buttonText" color="grey" variant="elevated" @click="props.prev">Previous</v-btn>
             </v-col>
+
             <v-col cols="auto">
               <v-btn class="text-buttonText" color="green" type="submit">Save</v-btn>
             </v-col>
@@ -571,6 +606,7 @@
         </v-form>
       </v-sheet>
     </v-container>
+
     <SaveModal
       :close-dialog="
         () => {

@@ -1,5 +1,6 @@
 <template>
   <v-divider v-if="!noHeader" />
+
   <v-list-item v-if="!noHeader" class="pl-0 pt-0">
     <template #title>
       <div class="text-title-small">{{ label }}</div>
@@ -42,6 +43,7 @@
         @update:model-value="updateKeyType(key, $event)"
       />
     </template>
+
     <v-text-field
       v-model="key.value"
       append-icon="mdi-delete"
@@ -52,6 +54,7 @@
       @click:append="deleteReferenceKey(key)"
     />
   </v-list-item>
+
   <div class="d-flex ga-2 mt-1 mb-4">
     <v-btn
       color="primary"
@@ -60,6 +63,7 @@
       variant="outlined"
       @click="addReferenceKey"
     />
+
     <v-btn
       v-if="showRemoveButton && referenceValue !== null"
       color="error"

@@ -3,7 +3,9 @@
     <h2 class="text-xl font-semibold text-gray-700">
       {{ index === 0 ? 'Main Bank Account' : `Additional Bank Account ${index}` }}
     </h2>
+
     <v-divider class="my-2 mx-n4 mb-4" />
+
     <v-row>
       <v-col>
         <FormField
@@ -13,6 +15,7 @@
           <input v-model="formData.idShort" class="w-full border rounded px-3 py-2" type="text">
         </FormField>
       </v-col>
+
       <v-col>
         <FormField
           label="Account Holder *"
@@ -23,11 +26,13 @@
             :class="['w-full border rounded px-3 py-2', errors?.accountHolder ? 'border-red-500' : '']"
             type="text"
           >
+
           <p v-if="errors?.accountHolder" class="text-sm text-red-600 mt-1">
             {{ errors.accountHolder }}
           </p>
         </FormField>
       </v-col>
+
       <v-col>
         <FormField
           label="Bank Account Type"
@@ -36,6 +41,7 @@
           <input v-model="formData.accountType" class="w-full border rounded px-3 py-2" type="text">
         </FormField>
       </v-col>
+
       <v-col>
         <FormField
           label="IBAN *"
@@ -46,11 +52,13 @@
             :class="['w-full border rounded px-3 py-2', errors?.iban ? 'border-red-500' : '']"
             type="text"
           >
+
           <p v-if="errors?.iban" class="text-sm text-red-600 mt-1">
             {{ errors.iban }}
           </p>
         </FormField>
       </v-col>
+
       <v-col>
         <FormField
           label="BIC *"
@@ -61,6 +69,7 @@
             :class="['w-full border rounded px-3 py-2', errors?.bic ? 'border-red-500' : '']"
             type="text"
           >
+
           <p v-if="errors?.bic" class="text-sm text-red-600 mt-1">
             {{ errors.bic }}
           </p>

@@ -3,6 +3,7 @@
     <v-sheet border rounded="lg">
       <v-card-title class="bg-cardHeader">Manage Infrastructures</v-card-title>
       <v-divider />
+
       <v-card-text style="max-height: 600px">
         <InfrastructureListTable
           v-model:default-infrastructure-id="defaultInfrastructure"
@@ -26,6 +27,7 @@
           variant="flat"
           @click="resetDialogOpen = true"
         />
+
         <v-spacer />
         <v-btn rounded="lg" text="close" @click="close" />
       </v-card-actions>
@@ -41,6 +43,7 @@
           <v-form ref="formRef">
             <!-- Infrastructure Name -->
             <v-list-subheader class="mb-1">Infrastructure Name</v-list-subheader>
+
             <v-text-field
               v-model="editingInfrastructure.name"
               bg-color="surface-light"
@@ -52,6 +55,7 @@
               single-line
               variant="outlined"
             />
+
             <v-divider />
             <v-list-subheader class="mb-3">Component Endpoints</v-list-subheader>
             <!-- Component Configurations -->
@@ -68,6 +72,7 @@
             <!-- Security Configuration -->
             <v-divider />
             <v-list-subheader class="mb-3">Security Configuration</v-list-subheader>
+
             <SecurityConfigPanel
               :auth="editingInfrastructure.auth!"
               :auth-flow-options="authFlowOptions"
@@ -110,8 +115,10 @@
             variant="flat"
             @click="testAllConnections"
           />
+
           <v-spacer />
           <v-btn rounded="lg" text="Cancel" @click="cancelEdit" />
+
           <v-btn
             class="text-buttonText"
             color="primary"
@@ -128,9 +135,11 @@
     <v-dialog v-model="deleteDialogOpen" max-width="400px">
       <v-card>
         <v-card-title>Confirm Delete</v-card-title>
+
         <v-card-text>
           Are you sure you want to delete the infrastructure "{{ infrastructureToDelete?.name }}"?
         </v-card-text>
+
         <v-card-actions>
           <v-spacer />
           <v-btn @click="deleteDialogOpen = false">Cancel</v-btn>
@@ -143,10 +152,12 @@
     <v-dialog v-model="resetDialogOpen" max-width="400px">
       <v-card>
         <v-card-title>Confirm Reset to Defaults</v-card-title>
+
         <v-card-text>
           Are you sure you want to reset all infrastructures to their default settings? This action cannot be
           undone.
         </v-card-text>
+
         <v-card-actions>
           <v-spacer />
           <v-btn @click="resetDialogOpen = false">Cancel</v-btn>

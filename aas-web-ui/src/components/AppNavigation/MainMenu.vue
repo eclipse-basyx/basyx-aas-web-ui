@@ -31,8 +31,10 @@
                 value="modules"
               />
             </v-tabs>
+
             <v-divider />
           </template>
+
           <div class="pa-2">
             <v-list-item
               v-if="currentTab === 'aas'"
@@ -51,6 +53,7 @@
                 </v-avatar>
               </template>
             </v-list-item>
+
             <v-list-item
               v-if="allowEditing && currentTab === 'aas'"
               :active="false"
@@ -68,6 +71,7 @@
                 </v-avatar>
               </template>
             </v-list-item>
+
             <v-list-item
               v-if="currentTab === 'aas'"
               :active="false"
@@ -85,6 +89,7 @@
                 </v-avatar>
               </template>
             </v-list-item>
+
             <v-list-item
               v-if="smViewerEditor && currentTab === 'submodel'"
               :active="false"
@@ -102,6 +107,7 @@
                 </v-avatar>
               </template>
             </v-list-item>
+
             <v-list-item
               v-if="smViewerEditor && allowEditing && currentTab === 'submodel'"
               :active="false"
@@ -119,6 +125,7 @@
                 </v-avatar>
               </template>
             </v-list-item>
+
             <v-list-item
               v-if="selectedNode && Object.keys(selectedNode).length > 0 && currentTab === 'submodel'"
               :active="false"
@@ -136,6 +143,7 @@
                 </v-avatar>
               </template>
             </v-list-item>
+
             <v-list
               v-if="currentTab === 'modules'"
               class="pa-0 overflow-y-auto"
@@ -173,6 +181,7 @@
           </div>
         </v-sheet>
       </v-container>
+
       <template #actions>
         <v-btn
 

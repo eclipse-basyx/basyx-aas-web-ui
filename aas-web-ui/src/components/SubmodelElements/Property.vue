@@ -3,6 +3,7 @@
     <v-list-item v-if="!isOperationVariable" class="px-1 pb-1 pt-0">
       <v-list-item-title class="text-title-small mt-2">{{ 'Value: ' }}</v-list-item-title>
     </v-list-item>
+
     <v-card v-if="propertyObject" color="elevatedCard">
       <!-- Value of the Property -->
       <v-list class="pt-0" :class="isOperationVariable ? '' : 'bg-elevatedCard'" nav>
@@ -22,9 +23,11 @@
               {{ valueId.value }}
             </div>
           </v-tooltip>
+
           <template #title>
             <span class="text-body-small">{{ 'ValueId: ' }}</span>
           </template>
+
           <template #subtitle>
             <v-list-item-subtitle v-for="(valueId, i) in propertyObject.valueId.keys" :key="i">
               <div class="pt-2">
@@ -50,6 +53,7 @@
           :variable-type="variableType"
           @update-value="updateValue"
         />
+
         <BooleanType
           v-else-if="propertyObject.valueType == 'xs:boolean'"
           :boolean-value="propertyObject"
@@ -58,6 +62,7 @@
           :variable-type="variableType"
           @update-value="updateValue"
         />
+
         <DateType
           v-else-if="propertyObject.valueType == 'xs:date'"
           :date-value="propertyObject"
@@ -66,6 +71,7 @@
           :variable-type="variableType"
           @update-value="updateValue"
         />
+
         <DateTimeStampType
           v-else-if="propertyObject.valueType == 'xs:dateTime'"
           :date-time-stamp-value="propertyObject"
@@ -74,6 +80,7 @@
           :variable-type="variableType"
           @update-value="updateValue"
         />
+
         <StringType
           v-else
           :is-editable="isEditable"

@@ -1,6 +1,7 @@
 <template>
   <v-container class="px-2 pt-2 pb-0" fluid>
     <v-list-subheader class="mb-3">Infrastructures</v-list-subheader>
+
     <v-select
       v-model="selectedInfraId"
       density="compact"
@@ -15,6 +16,7 @@
       <template #prepend-inner>
         <v-icon :color="connectionStatus.color" :icon="connectionStatus.icon" size="x-small" />
       </template>
+
       <template v-if="endpointConfigAvailable" #append>
         <v-btn icon="mdi-cog" size="small" variant="text" @click="openManageDialog">
           <v-icon>mdi-cog</v-icon>

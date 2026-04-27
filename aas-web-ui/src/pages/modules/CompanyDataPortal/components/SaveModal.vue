@@ -2,6 +2,7 @@
   <v-dialog v-model="dialog" max-width="500px" persistent>
     <v-card>
       <v-card-title>Save AAS</v-card-title>
+
       <v-card-text>
         <v-combobox
           v-if="endpointConfigAvailable"
@@ -13,6 +14,7 @@
           :rules="[(v: any) => !!v || 'Server URL is required']"
           variant="outlined"
         />
+
         <v-text-field
           v-model="aasId"
           density="compact"
@@ -21,6 +23,7 @@
           :rules="[(v: any) => !!v || 'AAS ID is required']"
           variant="outlined"
         />
+
         <v-text-field
           v-model="smId"
           density="compact"
@@ -29,6 +32,7 @@
           :rules="[(v: any) => !!v || 'Submodel ID Prefix is required']"
           variant="outlined"
         />
+
         <FormField
           label="Homepage URL"
           tip="Web address of the company's official website, for customers and interested parties"
@@ -45,6 +49,7 @@
                     variant="outlined"
                   />
                 </v-col>
+
                 <v-col cols="12" md="9">
                   <v-text-field
                     v-model="entry.text"
@@ -55,6 +60,7 @@
                     variant="outlined"
                   />
                 </v-col>
+
                 <v-col class="mt-1" cols="12">
                   <v-btn
                     color="error"
@@ -79,6 +85,7 @@
           </v-btn>
         </FormField>
       </v-card-text>
+
       <v-card-actions>
         <v-btn color="error" variant="tonal" @click="close">Cancel</v-btn>
         <v-spacer />

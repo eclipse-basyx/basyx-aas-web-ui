@@ -6,6 +6,7 @@
           {{ 'Specific Asset IDs:' }}
         </div>
       </template>
+
       <div v-for="(specificAssetId, index) in specificAssetIds" :key="index">
         <div class="px-2">
           <v-list-item-title>
@@ -19,16 +20,19 @@
                 "
               >
                 <span class="text-title-small">{{ specificAssetId.name + ': ' }}</span>
+
                 <v-icon
                   v-if="isHovering"
                   class="mr-1"
                   color="subtitleText"
                   size="x-small"
                 >mdi-clipboard-file-outline</v-icon>
+
                 <span>{{ specificAssetId.value }}</span>
               </div>
             </v-hover>
           </v-list-item-title>
+
           <SemanticID
             v-if="
               Array.isArray(specificAssetId?.semanticId?.keys) &&
@@ -39,6 +43,7 @@
             :small="true"
           />
         </div>
+
         <v-divider v-if="index < specificAssetIds.length - 1" class="my-2" />
       </div>
     </v-list-item>

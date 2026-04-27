@@ -7,18 +7,22 @@
             <BankAccountForm v-model="forms[index]" :errors="formErrors[index]" :index="index" />
           </v-sheet>
         </div>
+
         <v-row align="center" :class="forms.length > 0 ? 'pt-6' : ''" justify="space-between">
           <v-col cols="auto">
             <v-btn class="text-buttonText" color="grey" variant="elevated" @click="props.prev">
               Previous
             </v-btn>
           </v-col>
+
           <v-col cols="auto">
             <div v-if="forms.length === 0">Add a bank account (optional) to proceed.</div>
+
             <div v-else>
               You can add more bank accounts by pressing the "+ Add New" button in the top right.
             </div>
           </v-col>
+
           <v-col cols="auto">
             <v-btn class="text-buttonText" color="green" type="submit">Next</v-btn>
           </v-col>

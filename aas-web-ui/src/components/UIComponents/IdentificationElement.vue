@@ -16,6 +16,7 @@
             >
               <span class="font-weight-bold">{{ identificationTitle + ': ' }}</span>{{ identificationObject['id'] }}
             </div>
+
             <div
               v-if="
                 identificationObject?.idShort &&
@@ -26,6 +27,7 @@
               <span class="font-weight-bold">{{ idShortTitle + ': ' }}</span>{{ identificationObject['idShort'] }}
             </div>
           </v-tooltip>
+
           <template v-if="identificationObject.modelType !== 'ConceptDescription'">
             <v-list-item-title>
               <div class="text-primary text-body-large">
@@ -34,6 +36,7 @@
             </v-list-item-title>
             <!-- modelType -->
             <v-chip v-if="vChipContent" color="primary" size="x-small">{{ vChipContent }}</v-chip>
+
             <v-chip
               v-else-if="identificationObject?.modelType && identificationObject.modelType.trim() !== ''"
               color="primary"
@@ -65,6 +68,7 @@
                 {{ identificationTitle + ':' }}
               </div>
             </v-list-item-title>
+
             <v-list-item-subtitle>
               <span
                 v-bind="props"
@@ -76,6 +80,7 @@
                 <v-icon v-if="isHovering" class="mr-1" color="subtitleText" size="x-small">{{
                   copyIcon
                 }}</v-icon>
+
                 <span>{{ identificationObject.id }}</span>
               </span>
             </v-list-item-subtitle>
@@ -93,6 +98,7 @@
             <v-list-item-title>
               <div>{{ idShortTitle + ':' }}</div>
             </v-list-item-title>
+
             <v-list-item-subtitle>
               <span
                 v-bind="props"
@@ -104,6 +110,7 @@
                 <v-icon v-if="isHovering" class="mr-1" color="subtitleText" size="x-small">{{
                   copyIcon
                 }}</v-icon>
+
                 <span>{{ identificationObject.idShort }}</span>
               </span>
             </v-list-item-subtitle>

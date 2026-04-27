@@ -7,6 +7,7 @@
             {{ administrativeInformationTitle }}
           </span>
         </v-expansion-panel-title>
+
         <v-expansion-panel-text :class="'bg-' + backgroundColor">
           <v-divider
             v-if="
@@ -16,6 +17,7 @@
             class="mb-1"
             opacity="0.05"
           />
+
           <v-list class="pa-0" nav>
             <!-- Creator -->
             <v-list-item
@@ -36,6 +38,7 @@
                   }}</span>{{ creator.value }}
                 </div>
               </v-tooltip>
+
               <template #title>
                 <span class="text-title-small">
                   {{
@@ -45,6 +48,7 @@
                   }}
                 </span>
               </template>
+
               <v-list-item-subtitle
                 v-for="(creator, i) in administrativeInformationObject.creator.keys"
                 :key="i"
@@ -55,6 +59,7 @@
                 </div>
               </v-list-item-subtitle>
             </v-list-item>
+
             <v-divider
               v-if="
                 Array.isArray(administrativeInformationObject?.creator?.keys) &&
@@ -71,18 +76,24 @@
             >
               <v-list-item-title>
                 <template v-if="administrativeInformationObject?.version">
-                  <span class="text-title-small mt-2 mr-2">{{ 'Version:' }}</span><v-chip border class="mr-5" label size="x-small">{{
+                  <span class="text-title-small mt-2 mr-2">{{ 'Version:' }}</span>
+
+                  <v-chip border class="mr-5" label size="x-small">{{
                     administrativeInformationObject.version
                   }}</v-chip>
                 </template>
+
                 <template v-if="administrativeInformationObject?.revision">
-                  <span class="text-title-small mt-2 mr-2">{{ 'Revision:' }}</span><v-chip border class="mr-5" label size="x-small">{{
+                  <span class="text-title-small mt-2 mr-2">{{ 'Revision:' }}</span>
+
+                  <v-chip border class="mr-5" label size="x-small">{{
                     administrativeInformationObject.revision
                   }}</v-chip>
                 </template>
               </v-list-item-title>
             </v-list-item>
           </v-list>
+
           <v-divider
             v-if="
               ((Array.isArray(administrativeInformationObject?.creator?.keys) &&
@@ -93,6 +104,7 @@
             "
             opacity="0.05"
           />
+
           <v-list class="pa-0" nav>
             <v-hover v-slot="{ isHovering, props }">
               <v-list-item v-if="administrativeInformationObject?.templateId" class="ma-0">
@@ -101,6 +113,7 @@
                     {{ 'Template ID:' }}
                   </span>
                 </template>
+
                 <template #subtitle>
                   <div
                     v-if="administrativeInformationObject.templateId"
@@ -117,12 +130,14 @@
                     <v-icon v-if="isHovering" class="mr-1" color="subtitleText" size="x-small">{{
                       copyIcon
                     }}</v-icon>
+
                     <span>{{ administrativeInformationObject.templateId }}</span>
                   </div>
                 </template>
               </v-list-item>
             </v-hover>
           </v-list>
+
           <v-divider
             v-if="
               ((Array.isArray(administrativeInformationObject?.creator?.keys) &&
@@ -163,6 +178,7 @@
                   :semantic-id-object="embeddedDataSpecification.dataSpecification"
                   :semantic-title="'Data Specification'"
                 />
+
                 <v-divider v-if="embeddedDataSpecification?.dataSpecificationContent" />
                 <!-- dataSpecificationContent -->
                 <DataSpecificationContent

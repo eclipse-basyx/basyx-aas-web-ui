@@ -6,6 +6,7 @@
         (reference?.type ? reference.type : 'Reference') + ':'
       }}</v-list-item-title>
     </v-list-item>
+
     <v-card v-if="props.referenceElementObject" color="elevatedCard">
       <!-- Value of the ReferenceElement -->
       <v-list class="pt-0" :class="isOperationVariable ? '' : 'bg-elevatedCard'" nav>
@@ -88,9 +89,11 @@
                 </v-text-field>
               </template>
             </v-list-item>
+
             <v-divider v-if="(i as number) < reference?.keys.length - 1" class="mt-3" />
           </template>
         </template>
+
         <template v-else-if="hasReferenceObject()">
           <v-list-item class="px-1">
             <v-alert
@@ -102,6 +105,7 @@
             />
           </v-list-item>
         </template>
+
         <template v-else>
           <v-list-item class="px-1">
             <v-alert
@@ -114,6 +118,7 @@
           </v-list-item>
         </template>
       </v-list>
+
       <v-divider v-if="hasReferenceKeys()" />
       <!-- Action Buttons -->
       <v-list

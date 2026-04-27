@@ -10,12 +10,15 @@
       <v-card-title>
         {{ props.newBlob ? 'Create a new Blob Element' : 'Edit Blob Element' }}
       </v-card-title>
+
       <v-divider />
+
       <v-card-text class="pa-3 bg-card" style="overflow-y: auto">
         <v-expansion-panels v-model="openPanels" multiple>
           <!-- Details -->
           <v-expansion-panel class="border-t-thin border-s-thin border-e-thin" :class="bordersToShow(0)">
             <v-expansion-panel-title>Details</v-expansion-panel-title>
+
             <v-expansion-panel-text>
               <v-row align="center">
                 <v-col class="py-0">
@@ -27,10 +30,12 @@
                     :rules="isParentSubmodelElementList ? [] : [rules.required]"
                   />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="idShort" />
                 </v-col>
               </v-row>
+
               <v-row align="center">
                 <v-col class="py-0">
                   <MultiLanguageTextInput
@@ -40,10 +45,12 @@
                     type="displayName"
                   />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="displayName" />
                 </v-col>
               </v-row>
+
               <v-row align="center">
                 <v-col class="py-0">
                   <MultiLanguageTextInput
@@ -53,10 +60,12 @@
                     type="description"
                   />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="description" />
                 </v-col>
               </v-row>
+
               <v-row align="center">
                 <v-col class="py-0">
                   <SelectInput
@@ -66,6 +75,7 @@
                     type="category"
                   />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="category" />
                 </v-col>
@@ -75,6 +85,7 @@
           <!-- Blob Value -->
           <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(1)">
             <v-expansion-panel-title>Value</v-expansion-panel-title>
+
             <v-expansion-panel-text>
               <v-row align="center">
                 <v-col class="py-0">
@@ -85,6 +96,7 @@
                     @update:blob="handleBlob"
                   />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="blob-content" />
                 </v-col>
@@ -94,11 +106,13 @@
           <!-- Semantic ID -->
           <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(2)">
             <v-expansion-panel-title>Semantic ID</v-expansion-panel-title>
+
             <v-expansion-panel-text>
               <v-row align="center">
                 <v-col class="py-0">
                   <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" :show-remove-button="true" />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="semanticId" />
                 </v-col>
@@ -108,6 +122,7 @@
           <!-- Qualifiers -->
           <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
             <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
+
             <v-expansion-panel-text>
               <QualifierInput v-model="qualifiers" />
             </v-expansion-panel-text>
@@ -115,13 +130,16 @@
           <!-- Data Specification -->
           <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
             <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
+
             <v-expansion-panel-text>
               <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
             </v-expansion-panel-text>
           </v-expansion-panel>
         </v-expansion-panels>
       </v-card-text>
+
       <v-divider />
+
       <v-card-actions>
         <v-spacer />
         <v-btn @click="closeDialog">Cancel</v-btn>

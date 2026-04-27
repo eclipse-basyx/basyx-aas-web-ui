@@ -3,6 +3,7 @@
     <v-sheet border rounded="lg">
       <v-card-title class="bg-cardHeader">Download AAS File</v-card-title>
       <v-divider />
+
       <v-card-text class="pb-0">
         <v-alert border="start" variant="tonal">
           <span>You selected the AAS with the ID </span>
@@ -11,6 +12,7 @@
         </v-alert>
         <!-- Submodel Selection -->
         <v-label class="mt-5">Submodel Selection</v-label>
+
         <SubmodelSelection
           :selected="selected"
           :submodel-ids="submodelIds"
@@ -18,6 +20,7 @@
         />
         <!-- Download Options -->
         <v-label class="mt-5">Options</v-label>
+
         <v-radio-group v-model="downloadMode" class="mt-4" density="compact" hide-details>
           <v-radio
             v-for="mode in downloadModes"
@@ -27,6 +30,7 @@
             :value="mode.value"
           />
         </v-radio-group>
+
         <v-radio-group v-model="downloadFormat" class="mt-4" density="compact" hide-details>
           <v-radio
             v-for="format in downloadFormats"
@@ -36,6 +40,7 @@
             :value="format.value"
           />
         </v-radio-group>
+
         <v-alert
           v-if="isPlainFormatSelected"
           border="start"
@@ -45,12 +50,16 @@
         >
           Plain downloads do not include attached files.
         </v-alert>
+
         <v-checkbox v-model="downloadCDs" class="ml-0" hide-details label="Include Concept Descriptions" />
       </v-card-text>
+
       <v-divider />
+
       <v-card-actions>
         <v-spacer />
         <v-btn rounded="lg" text="Cancel" @click="downloadDialog = false" />
+
         <v-btn
           class="text-buttonText"
           color="primary"
