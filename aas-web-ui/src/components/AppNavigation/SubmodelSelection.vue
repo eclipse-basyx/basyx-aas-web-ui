@@ -13,10 +13,12 @@
       <template #[`header.smId`]>
         <div class="font-weight-bold">Submodel</div>
       </template>
+
       <template #[`item.smId`]="{ item }">
         <div>
           {{ nameToDisplay(item.submodel) }}
         </div>
+
         <div class="opacity-60">
           {{ item.smId }}
         </div>

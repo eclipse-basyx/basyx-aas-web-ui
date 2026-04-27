@@ -10,12 +10,15 @@
       <v-card-title>
         {{ props.newEntity ? 'Create a new Entity Element' : 'Edit Entity Element' }}
       </v-card-title>
+
       <v-divider />
+
       <v-card-text class="pa-3 bg-card" style="overflow-y: auto">
         <v-expansion-panels v-model="openPanels" multiple>
           <!-- Details -->
           <v-expansion-panel class="border-t-thin border-s-thin border-e-thin" :class="bordersToShow(0)">
             <v-expansion-panel-title>Details</v-expansion-panel-title>
+
             <v-expansion-panel-text>
               <v-row align="center">
                 <v-col class="py-0">
@@ -27,10 +30,12 @@
                     :rules="isParentSubmodelElementList ? [] : [rules.required]"
                   />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="idShort" />
                 </v-col>
               </v-row>
+
               <v-row align="center">
                 <v-col class="py-0">
                   <MultiLanguageTextInput
@@ -40,10 +45,12 @@
                     type="displayName"
                   />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="displayName" />
                 </v-col>
               </v-row>
+
               <v-row align="center">
                 <v-col class="py-0">
                   <MultiLanguageTextInput
@@ -53,10 +60,12 @@
                     type="description"
                   />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="description" />
                 </v-col>
               </v-row>
+
               <v-row align="center">
                 <v-col class="py-0">
                   <SelectInput
@@ -66,6 +75,7 @@
                     type="category"
                   />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="category" />
                 </v-col>
@@ -75,15 +85,18 @@
           <!-- Value -->
           <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(1)">
             <v-expansion-panel-title>Value</v-expansion-panel-title>
+
             <v-expansion-panel-text>
               <v-row align="center" class="mb-3">
                 <v-col class="py-0">
                   <SelectInput v-model="entityType" label="Entity Type" type="entityType" />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="entityType" />
                 </v-col>
               </v-row>
+
               <AssetIdInput
                 v-model:global-asset-id="globalAssetId"
                 v-model:specific-asset-ids="specificAssetIds"
@@ -95,11 +108,13 @@
           <!-- Semantic ID -->
           <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(2)">
             <v-expansion-panel-title>Semantic ID</v-expansion-panel-title>
+
             <v-expansion-panel-text>
               <v-row align="center">
                 <v-col class="py-0">
                   <ReferenceInput v-model="semanticId" label="Semantic ID" :no-header="true" :show-remove-button="true" />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="semanticId" />
                 </v-col>
@@ -109,6 +124,7 @@
           <!-- Qualifiers -->
           <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
             <v-expansion-panel-title>Qualifiers</v-expansion-panel-title>
+
             <v-expansion-panel-text>
               <QualifierInput v-model="qualifiers" />
             </v-expansion-panel-text>
@@ -116,13 +132,16 @@
           <!-- Data Specification -->
           <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
             <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
+
             <v-expansion-panel-text>
               <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
             </v-expansion-panel-text>
           </v-expansion-panel>
         </v-expansion-panels>
       </v-card-text>
+
       <v-divider />
+
       <v-card-actions>
         <v-spacer />
         <v-btn @click="closeDialog">Cancel</v-btn>
@@ -145,13 +164,16 @@
   import { keyDown, keyUp } from '@/utils/EditorUtils'
   import { base64Decode } from '@/utils/EncodeDecodeUtils'
 
-  const props = defineProps<{
+  const props = withDefaults(defineProps<{
     modelValue: boolean
     newEntity: boolean
     parentElement: any
     path?: string
     entity?: any
-  }>()
+    selectCreatedEntity?: boolean
+  }>(), {
+    selectCreatedEntity: true,
+  })
 
   // Stores
   const navigationStore = useNavigationStore()
@@ -329,9 +351,11 @@
         const query = structuredClone(route.query)
         query.path = props.parentElement.path + '/submodel-elements/' + entityObject.value.idShort
 
-        router.push({
-          query: query,
-        })
+        if (props.selectCreatedEntity) {
+          router.push({
+            query: query,
+          })
+        }
       } else {
         // Extract the submodel ID and the idShortPath from the parentElement path
         const splitted = props.parentElement.path.split('/submodel-elements/')
@@ -346,9 +370,11 @@
           const query = structuredClone(route.query)
           query.path = createdPath
 
-          router.push({
-            query: query,
-          })
+          if (props.selectCreatedEntity) {
+            router.push({
+              query: query,
+            })
+          }
         }
       }
     } else {

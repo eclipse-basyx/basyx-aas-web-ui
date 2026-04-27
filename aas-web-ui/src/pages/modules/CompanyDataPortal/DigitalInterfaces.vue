@@ -52,6 +52,7 @@
         <v-divider class="my-4" />
 
         <div class="text-title-small font-weight-bold mb-2">CAD Tools</div>
+
         <FormField label="CAD Tools" tip="Computer-aided design tool">
           <v-combobox
             v-model="form.cadTools"
@@ -140,6 +141,7 @@
               @click="props.prev"
             >Previous</v-btn>
           </v-col>
+
           <v-col cols="auto">
             <v-btn class="text-buttonText" color="green" type="submit">Next</v-btn>
           </v-col>

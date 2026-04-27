@@ -20,6 +20,7 @@
   >
     <v-icon>mdi-autorenew</v-icon>
     <v-icon>mdi-menu-down</v-icon>
+
     <v-menu activator="parent" :close-on-content-click="false" width="300px">
       <v-list border class="py-0 bg-navigationMenu" nav rounded="lg">
         <!-- Switch to activate/deactive auto-sync -->
@@ -42,6 +43,7 @@
           <v-list-item-subtitle class="ml-1">
             {{ 'Selected AAS & SM/SME (incl. CDs) are synced' }}
           </v-list-item-subtitle>
+
           <v-list-item-subtitle class="ml-1">
             <!-- TODO Auto-Sync feature for ComponentVisualization -->
             <!-- TODO Auto-Sync feature for Submodel list/tree -->
@@ -62,6 +64,7 @@
             <template #prepend-inner>
               <v-icon>mdi-timer</v-icon>
             </template>
+
             <template #append-inner>
               <span>ms</span>
             </template>
@@ -70,15 +73,18 @@
         <!-- Hint -->
         <v-list-item class="py-0 mt-n2">
           <v-list-item-subtitle class="ml-1">{{ 'Be careful decreasing the time!' }}</v-list-item-subtitle>
+
           <v-list-item-subtitle class="ml-1">{{
             'A smaller time means more requests.'
           }}</v-list-item-subtitle>
         </v-list-item>
+
         <v-divider />
         <!-- Switch to enable/disable AAS Status Checks -->
         <StatusSwitch />
       </v-list>
     </v-menu>
+
     <v-badge :color="autoSync.state ? 'success' : 'rgba(0,0,0,0)'" dot :offset-x="16" :offset-y="-10" />
   </v-btn>
 </template>

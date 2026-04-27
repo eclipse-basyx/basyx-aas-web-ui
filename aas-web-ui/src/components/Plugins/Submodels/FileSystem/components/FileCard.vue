@@ -11,6 +11,7 @@
   >
     <v-toolbar class="cursor-pointer" color="transparent" density="compact" @click="handlePreview">
       <v-toolbar-title class="text-truncate text-title-small ml-2">{{ fullFileName }}</v-toolbar-title>
+
       <template #prepend>
         <v-checkbox-btn
           class="ml-1"
@@ -20,9 +21,11 @@
           @update:model-value="handleToggleSelection"
         />
       </template>
+
       <template #append>
         <v-btn icon size="x-small" variant="text">
           <v-icon icon="mdi-dots-vertical" />
+
           <v-menu activator="parent" :close-on-content-click="false" location="top end" origin="overlap">
             <v-sheet border>
               <v-list class="py-0" dense density="compact" slim>
@@ -30,12 +33,15 @@
                   <template #prepend>
                     <v-icon size="x-small">mdi-download</v-icon>
                   </template>
+
                   <v-list-item-subtitle>Download File</v-list-item-subtitle>
                 </v-list-item>
+
                 <v-list-item @click="handleDelete">
                   <template #prepend>
                     <v-icon size="x-small">mdi-delete</v-icon>
                   </template>
+
                   <v-list-item-subtitle>Delete File</v-list-item-subtitle>
                 </v-list-item>
               </v-list>
@@ -44,6 +50,7 @@
         </v-btn>
       </template>
     </v-toolbar>
+
     <v-card-item class="px-2 pb-2 pt-0 cursor-pointer" @click="handlePreview">
       <v-card border class="media-card" flat rounded="lg">
         <v-img v-if="contentTypeCategory === 'image'" block cover :src="fileUrl">
@@ -53,17 +60,20 @@
             </div>
           </template>
         </v-img>
+
         <video
           v-else-if="contentTypeCategory === 'video'"
           class="video-element"
           controls
           :src="fileUrl"
         />
+
         <v-icon
           v-else-if="file.contentType === 'application/pdf'"
           color="red"
           size="large"
         >mdi-file-pdf-box</v-icon>
+
         <v-icon v-else color="grey" size="large">mdi-file</v-icon>
       </v-card>
     </v-card-item>

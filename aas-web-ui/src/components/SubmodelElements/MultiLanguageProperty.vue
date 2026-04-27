@@ -26,6 +26,7 @@
                 <!-- language -->
                 <v-chip border label size="x-small">
                   <span>{{ value.language ? value.language : 'no-lang' }}</span>
+
                   <v-icon v-if="isEditable" site="x-small" style="margin-right: -3px">
                     mdi-chevron-down
                   </v-icon>
@@ -74,6 +75,7 @@
           </v-list-item-title>
         </v-list-item>
       </v-list>
+
       <v-divider />
       <!-- Edit the MultiLanguageProperty -->
       <v-list v-if="isEditable" class="bg-elevatedCard py-0" nav>

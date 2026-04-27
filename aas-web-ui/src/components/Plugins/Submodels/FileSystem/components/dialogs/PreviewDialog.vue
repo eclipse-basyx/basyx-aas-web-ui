@@ -3,9 +3,11 @@
     <v-card class="d-flex flex-column" color="transparent">
       <v-toolbar class="pl-3" color="transparent">
         <v-icon :color="fileTypeIcon.color">{{ fileTypeIcon.icon }}</v-icon>
+
         <v-toolbar-title class="text-title-medium text-white">
           {{ fileName }}
         </v-toolbar-title>
+
         <v-spacer />
         <v-btn v-if="!loading && !error" color="white" icon="mdi-download" @click="handleDownload" />
         <v-btn color="white" icon="mdi-close" @click="closeDialog" />

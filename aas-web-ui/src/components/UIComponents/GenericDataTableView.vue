@@ -10,11 +10,13 @@
             </p>
           </td>
         </tr>
+
         <GenericDataTableView
           :level="Number(level) + 1"
           :submodel-element-data="submodelElement.value"
         />
       </template>
+
       <template v-else-if="['Property', 'MultiLanguageProperty'].includes(submodelElement.modelType)">
         <tr>
           <td>
@@ -22,12 +24,15 @@
               {{ nameToDisplay(submodelElement) }}
             </p>
           </td>
+
           <td>
             <p class="text-body-small" style="min-width: 100px">{{ descriptionToDisplay(submodelElement) }}</p>
           </td>
+
           <td>
             <p class="text-body-small" style="min-width: 200px">{{ cdDefinition(submodelElement) }}</p>
           </td>
+
           <td>
             <p class="text-body-small">
               {{ valueToDisplay(submodelElement) }}
@@ -37,6 +42,7 @@
       </template>
     </template>
   </template>
+
   <template v-else>
     <tr style="border: 0 !important'">
       <td colspan="4" style="border: 0 !important">-</td>

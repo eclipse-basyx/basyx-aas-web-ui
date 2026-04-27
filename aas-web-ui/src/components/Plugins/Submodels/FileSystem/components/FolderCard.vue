@@ -17,6 +17,7 @@
   >
     <v-toolbar class="cursor-pointer" color="transparent" density="compact" @click="handleClick">
       <v-toolbar-title class="text-truncate text-title-small ml-2">{{ displayName }}</v-toolbar-title>
+
       <template #prepend>
         <v-checkbox-btn
           class="ml-1"
@@ -26,9 +27,11 @@
           @update:model-value="handleToggleSelection"
         />
       </template>
+
       <template #append>
         <v-btn icon size="x-small" variant="text">
           <v-icon icon="mdi-dots-vertical" />
+
           <v-menu activator="parent">
             <v-sheet border>
               <v-list class="py-0" dense density="compact" slim>
@@ -36,12 +39,15 @@
                   <template #prepend>
                     <v-icon size="x-small">mdi-folder-edit</v-icon>
                   </template>
+
                   <v-list-item-subtitle>Rename Folder</v-list-item-subtitle>
                 </v-list-item>
+
                 <v-list-item @click="handleDelete">
                   <template #prepend>
                     <v-icon size="x-small">mdi-delete</v-icon>
                   </template>
+
                   <v-list-item-subtitle>Delete Folder</v-list-item-subtitle>
                 </v-list-item>
               </v-list>

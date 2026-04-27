@@ -36,8 +36,10 @@
                 </template>
               </v-btn>
             </template>
+
             <span>Reload Submodel tree</span>
           </v-tooltip>
+
           <span
             v-if="
               !['SMViewer', 'SMEditor'].includes(route.name as string) &&
@@ -47,12 +49,15 @@
           >
             Submodel tree
           </span>
+
           <template v-else-if="!['SMViewer', 'SMEditor'].includes(route.name as string) && !singleAas">
             <v-icon class="" color="primary" icon="custom:aasIcon" size="small" />
+
             <span class="text-truncate ml-2">
               {{ nameToDisplay(selectedAAS) }}
             </span>
           </template>
+
           <template
             v-if="
               ['SMViewer', 'SMEditor'].includes(route.name as string) ||
@@ -74,6 +79,7 @@
                 @update:model-value="debouncedFilterSubmodelTree"
               />
             </v-col>
+
             <v-tooltip :disabled="isMobile" location="bottom" open-delay="600">
               <template #activator="{ props }">
                 <v-btn
@@ -85,8 +91,10 @@
                   @click="expandTree()"
                 />
               </template>
+
               <span>Expand Submodel tree with selected element</span>
             </v-tooltip>
+
             <v-tooltip :disabled="isMobile" location="bottom" open-delay="600">
               <template #activator="{ props }">
                 <v-btn
@@ -98,12 +106,15 @@
                   @click="collapseTree()"
                 />
               </template>
+
               <span>Collapse Submodel trees</span>
             </v-tooltip>
+
             <v-menu v-if="editorMode">
               <template #activator="{ props }">
                 <v-btn v-bind="props" class="mr-2" icon="mdi-dots-vertical" variant="plain" />
               </template>
+
               <v-sheet border>
                 <v-list class="py-0" density="compact">
                   <!-- Open SM dialog -->
@@ -116,6 +127,7 @@
                         Create Submodel
                       </v-list-item>
                     </template>
+
                     <span>Create a new Submodel</span>
                   </v-tooltip>
                   <!-- Open JSON insert dialog -->
@@ -128,8 +140,10 @@
                         Submodel from JSON
                       </v-list-item>
                     </template>
+
                     <span>Create a new Submodel from JSON</span>
                   </v-tooltip>
+
                   <v-divider />
                   <!-- Paste Submodel from internal clipboard -->
                   <v-tooltip location="end" open-delay="600">
@@ -151,6 +165,7 @@
                         }}
                       </v-list-item>
                     </template>
+
                     <span>
                       {{
                         `Paste ${!clipboardElementContentType || clipboardElementContentType !== 'Submodel' ? '' : 'copied ' + clipboardElementContentType}`
@@ -163,7 +178,9 @@
           </template>
         </div>
       </v-card-title>
+
       <v-divider />
+
       <v-card-text style="overflow-y: auto; height: calc(100svh - 170px)">
         <!-- Show Skeleton Loader when the tree is loading -->
         <template v-if="treeLoading">
@@ -177,9 +194,11 @@
             <template #prepend>
               <v-skeleton-loader type="list-item" :width="50" />
             </template>
+
             <v-list-item-title>
               <v-skeleton-loader type="list-item" :width="240" />
             </v-list-item-title>
+
             <template #append>
               <v-skeleton-loader type="list-item" :width="90" />
             </template>
@@ -214,12 +233,14 @@
                 @show-delete-dialog="openDeleteDialog"
               />
             </template>
+
             <v-empty-state
               v-else-if="['SMViewer', 'SMEditor'].includes(route.name as string)"
               class="text-divider"
               text="The specified Submodel Repository does not contain any Submodels"
               title="No existing Submodels"
             />
+
             <v-empty-state
               v-else
               :action-text="editorMode ? 'Create Submodel' : undefined"
@@ -229,6 +250,7 @@
               @click:action="openEditDialog(true)"
             />
           </template>
+
           <v-empty-state
             v-else
             class="text-divider"

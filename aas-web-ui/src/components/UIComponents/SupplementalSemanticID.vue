@@ -28,6 +28,7 @@
             :small="false"
           />
         </v-container>
+
         <v-divider
           v-if="supplementalSemanticIdIndex < supplementalSemanticIdsArray.length - 1"
           class="mt-2 mb-0"

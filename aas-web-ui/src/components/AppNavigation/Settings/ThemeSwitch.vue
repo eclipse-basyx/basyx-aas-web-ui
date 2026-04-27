@@ -1,6 +1,7 @@
 <template>
   <v-container class="px-2 pt-2 pb-0">
     <v-list-subheader>Theme</v-list-subheader>
+
     <v-list-item class="px-0">
       <!-- Button toggle to switch theme -->
       <v-btn-toggle
@@ -14,10 +15,12 @@
           <span>System</span>
           <v-icon class="ml-2">mdi-desktop-tower-monitor</v-icon>
         </v-btn>
+
         <v-btn value="light" @click="toggleTheme">
           <span>Light</span>
           <v-icon class="ml-2">mdi-white-balance-sunny</v-icon>
         </v-btn>
+
         <v-btn value="dark" @click="toggleTheme">
           <span>Dark</span>
           <v-icon class="ml-2">mdi-weather-night</v-icon>

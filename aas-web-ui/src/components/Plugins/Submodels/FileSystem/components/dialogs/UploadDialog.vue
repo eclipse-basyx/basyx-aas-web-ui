@@ -5,6 +5,7 @@
         <v-card-title class="bg-cardHeader">Upload Images/Videos</v-card-title>
         <v-divider />
         <v-progress-linear v-if="loading" color="primary" indeterminate />
+
         <v-card-text>
           <v-file-input
             v-model="selectedFiles"
@@ -17,10 +18,13 @@
             variant="outlined"
           />
         </v-card-text>
+
         <v-divider />
+
         <v-card-actions>
           <v-spacer />
           <v-btn rounded="lg" text="Cancel" @click="handleCancel" />
+
           <v-btn
             class="text-buttonText"
             color="primary"

@@ -1,6 +1,7 @@
 <template>
   <v-card border rounded="lg">
     <v-card-title class="text-h6 mt-1">Product Carbon Footprint</v-card-title>
+
     <v-card-text class="pt-2">
       <v-sheet v-if="isLoading" color="transparent">
         <v-skeleton-loader class="mb-2" type="subtitle" />

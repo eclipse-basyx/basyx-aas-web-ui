@@ -11,9 +11,11 @@
     <v-btn value="none">
       <span>None</span>
     </v-btn>
+
     <v-btn value="file">
       <span>File</span>
     </v-btn>
+
     <v-btn value="url">
       <span>URL</span>
     </v-btn>
@@ -32,6 +34,7 @@
         :width="200"
       />
     </template>
+
     <v-text-field
       v-model="pathValue"
       class="mt-2"
@@ -60,6 +63,7 @@
       :src="filePreviewPath"
       @error="errorLoadingImage = true"
     />
+
     <v-alert
       v-else
       density="compact"
@@ -68,6 +72,7 @@
       variant="outlined"
     />
   </v-sheet>
+
   <v-file-upload v-if="toggle === 'file'" v-model="file" clearable density="default" />
 </template>
 

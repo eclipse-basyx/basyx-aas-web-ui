@@ -34,6 +34,7 @@
                 :description-title="'Description'"
                 :small="true"
               />
+
               <v-divider v-if="variable.value && variable.value.description" class="mt-1" />
               <!-- Variable Value -->
               <v-list-item class="px-0 pb-0">
@@ -48,6 +49,7 @@
                     :variable-type="variableType.type"
                     @update-value="updateOperationVariable($event, variable.value)"
                   />
+
                   <ReferenceElement
                     v-else-if="variable.value.modelType === 'ReferenceElement'"
                     :is-editable="isEditable"
@@ -58,6 +60,7 @@
                       updateOperationVariable($event, variable.value)
                     "
                   />
+
                   <InvalidElement
                     v-else
                     :invalid-element-object="variable.value"
@@ -86,6 +89,7 @@
           </v-list-item-title>
         </v-list-item>
       </v-list>
+
       <v-divider />
       <!-- Action Buttons for the Operation -->
       <v-list class="bg-elevatedCard pa-0" nav>

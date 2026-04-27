@@ -9,6 +9,7 @@
     <v-card-actions class="bg-cardHeader">
       <div class="ml-2">Qualifier {{ index + 1 }}</div>
       <v-spacer />
+
       <v-btn
 
         prepend-icon="mdi-delete"
@@ -17,7 +18,9 @@
         @click="removeQualifier(index)"
       />
     </v-card-actions>
+
     <v-divider />
+
     <v-card-text class="pt-7">
       <v-row align="center">
         <v-col class="py-0">
@@ -46,11 +49,13 @@
       <v-row align="center">
         <v-col class="py-0">
           <v-divider />
+
           <v-list-item class="pl-0 pt-0">
             <template #title>
               <div class="text-title-small">Semantic ID</div>
             </template>
           </v-list-item>
+
           <v-btn
             v-if="qualifier.semanticId === null"
             class="mt-1 mb-4"
@@ -60,6 +65,7 @@
             variant="outlined"
             @click="addSemanticId(index)"
           />
+
           <ReferenceInput v-else v-model="qualifier.semanticId" label="Semantic ID" :no-header="true" />
         </v-col>
       </v-row>
@@ -67,11 +73,13 @@
       <v-row align="center">
         <v-col class="py-0">
           <v-divider />
+
           <v-list-item class="pl-0 pt-0">
             <template #title>
               <div class="text-title-small">Value ID</div>
             </template>
           </v-list-item>
+
           <v-btn
             v-if="qualifier.valueId === null"
             class="mt-1 mb-4"
@@ -81,6 +89,7 @@
             variant="outlined"
             @click="addValueId(index)"
           />
+
           <ReferenceInput v-else v-model="qualifier.valueId" label="Value ID" :no-header="true" />
         </v-col>
       </v-row>

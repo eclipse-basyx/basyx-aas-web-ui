@@ -19,6 +19,7 @@
             "
           >
             <v-list-item-title>{{ displayNameWithIndex(item) }}</v-list-item-title>
+
             <template #prepend>
               <!-- Button to show/hide children -->
               <v-btn
@@ -30,6 +31,7 @@
                 variant="plain"
                 @click.stop="toggleTree(item)"
               />
+
               <div v-else style="width: 40px; height: 40px" />
               <!-- Lock Icon for Authorization Errors -->
               <v-icon v-if="item.authorizationError" color="error"> mdi-folder-lock </v-icon>
@@ -100,6 +102,7 @@
               <!-- Icon for every other SubmodelElement (like Property) -->
               <v-icon v-else color="primary">mdi-file-code</v-icon>
             </template>
+
             <template #append>
               <div class="d-flex align-center" style="position: relative; min-height: 24px">
                 <v-chip
@@ -179,6 +182,7 @@
                     v-bind="contextMenuProps"
                   />
                 </template>
+
                 <template #default="{ isActive }">
                   <v-sheet border>
                     <v-list class="py-0" dense density="compact" slim>
@@ -187,6 +191,7 @@
                         <template #prepend>
                           <v-icon size="x-small">mdi-plus</v-icon>
                         </template>
+
                         <v-list-item-subtitle>Add Submodel Element</v-list-item-subtitle>
                       </v-list-item>
                       <!-- Open Insert SubmodelElement from JSON dialog -->
@@ -194,14 +199,17 @@
                         <template #prepend>
                           <v-icon size="x-small">mdi-code-json</v-icon>
                         </template>
+
                         <v-list-item-subtitle>Submodel Element from JSON</v-list-item-subtitle>
                       </v-list-item>
+
                       <v-divider />
                       <!-- Open Submodel edit dialog -->
                       <v-list-item @click="openEditDialog(item, isActive)">
                         <template #prepend>
                           <v-icon size="x-small">mdi-pencil</v-icon>
                         </template>
+
                         <v-list-item-subtitle>Edit Submodel</v-list-item-subtitle>
                       </v-list-item>
                       <!-- Delete Submodel -->
@@ -209,8 +217,10 @@
                         <template #prepend>
                           <v-icon size="x-small">mdi-delete</v-icon>
                         </template>
+
                         <v-list-item-subtitle>Delete Submodel</v-list-item-subtitle>
                       </v-list-item>
+
                       <v-divider />
                       <!-- Copy SM to internal clipboard -->
                       <v-list-item
@@ -219,6 +229,7 @@
                         <template #prepend>
                           <v-icon size="x-small">{{ copyInternalIcon }} </v-icon>
                         </template>
+
                         <v-list-item-subtitle>Copy Submodel</v-list-item-subtitle>
                       </v-list-item>
                       <!-- Copy SM Endpoint to clipboard -->
@@ -228,6 +239,7 @@
                         <template #prepend>
                           <v-icon size="x-small">{{ copyIcon }} </v-icon>
                         </template>
+
                         <v-list-item-subtitle>Copy Submodel Endpoint</v-list-item-subtitle>
                       </v-list-item>
                       <!-- Copy SM as JSON -->
@@ -237,8 +249,10 @@
                         <template #prepend>
                           <v-icon size="x-small">{{ copyJsonIcon }} </v-icon>
                         </template>
+
                         <v-list-item-subtitle>Copy Submodel as JSON</v-list-item-subtitle>
                       </v-list-item>
+
                       <v-divider />
                       <!-- Paste SubmodelElement from internal clipboard -->
                       <v-list-item
@@ -251,6 +265,7 @@
                         <template #prepend>
                           <v-icon size="x-small">{{ pasteIcon }} </v-icon>
                         </template>
+
                         <v-list-item-subtitle>
                           {{
                             `Paste ${!clipboardElementContentType || clipboardElementContentType === 'Submodel' ? '' : clipboardElementContentType}`
@@ -272,6 +287,7 @@
                     v-bind="contextMenuProps"
                   />
                 </template>
+
                 <template #default="{ isActive }">
                   <v-sheet border>
                     <v-list class="py-0" dense density="compact" slim>
@@ -288,6 +304,7 @@
                         <template #prepend>
                           <v-icon size="x-small">mdi-plus</v-icon>
                         </template>
+
                         <v-list-item-subtitle>Add Submodel Element</v-list-item-subtitle>
                       </v-list-item>
                       <!-- Open Insert SubmodelElement from JSON dialog -->
@@ -303,8 +320,10 @@
                         <template #prepend>
                           <v-icon size="x-small">mdi-code-json</v-icon>
                         </template>
+
                         <v-list-item-subtitle>Submodel Element from JSON</v-list-item-subtitle>
                       </v-list-item>
+
                       <v-divider
                         v-if="
                           item.modelType === 'SubmodelElementCollection' ||
@@ -318,6 +337,7 @@
                         <template #prepend>
                           <v-icon size="x-small">mdi-pencil</v-icon>
                         </template>
+
                         <v-list-item-subtitle>Edit {{ item.modelType }}</v-list-item-subtitle>
                       </v-list-item>
                       <!-- Delete Submodel Element -->
@@ -325,8 +345,10 @@
                         <template #prepend>
                           <v-icon size="x-small">mdi-delete</v-icon>
                         </template>
+
                         <v-list-item-subtitle>Delete {{ item.modelType }}</v-list-item-subtitle>
                       </v-list-item>
+
                       <v-divider />
                       <!-- Copy SME to internal clipboard -->
                       <v-list-item
@@ -335,6 +357,7 @@
                         <template #prepend>
                           <v-icon size="x-small">{{ copyInternalIcon }} </v-icon>
                         </template>
+
                         <v-list-item-subtitle>Copy {{ item.modelType }}</v-list-item-subtitle>
                       </v-list-item>
                       <!-- Copy SME endpoint to clipboard -->
@@ -342,6 +365,7 @@
                         <template #prepend>
                           <v-icon size="x-small">{{ copyIcon }} </v-icon>
                         </template>
+
                         <v-list-item-subtitle>Copy {{ item.modelType }} Endpoint</v-list-item-subtitle>
                       </v-list-item>
                       <!-- Copy SME as JSON -->
@@ -353,8 +377,10 @@
                         <template #prepend>
                           <v-icon size="x-small">{{ copyJsonIcon }} </v-icon>
                         </template>
+
                         <v-list-item-subtitle>Copy {{ item.modelType }} as JSON</v-list-item-subtitle>
                       </v-list-item>
+
                       <v-divider
                         v-if="
                           item.modelType === 'SubmodelElementCollection' ||
@@ -377,6 +403,7 @@
                         <template #prepend>
                           <v-icon size="x-small">{{ pasteIcon }} </v-icon>
                         </template>
+
                         <v-list-item-subtitle>
                           {{
                             `Paste ${!clipboardElementContentType || clipboardElementContentType === 'Submodel' ? '' : clipboardElementContentType}`
@@ -387,6 +414,7 @@
                   </v-sheet>
                 </template>
               </v-menu>
+
               <template v-else-if="editorMode" />
             </template>
           </v-list-item>

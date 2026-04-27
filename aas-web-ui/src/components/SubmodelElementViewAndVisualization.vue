@@ -19,10 +19,12 @@
               <v-icon start>mdi-folder-edit-outline</v-icon>
               <span class="hidden-sm-and-down">Element Details</span>
             </v-btn>
+
             <v-btn class="ma-0" value="Visualization">
               <v-icon start>mdi-folder-star-outline</v-icon>
               <span class="hidden-sm-and-down">Visualization</span>
             </v-btn>
+
             <v-btn class="ma-0" value="JSONView">
               <v-icon start>mdi-code-block-braces</v-icon>
               <span class="hidden-sm-and-down">JSON</span>
@@ -30,7 +32,9 @@
           </v-btn-toggle>
         </div>
       </v-card-title>
+
       <v-divider />
+
       <v-card-text style="overflow-y: auto; height: calc(100svh - 170px)">
         <template
           v-if="
@@ -44,6 +48,7 @@
           <SubmodelElementVisualization v-else-if="componentToShow === 'Visualization'" />
           <SubmodelElementJSONView v-if="componentToShow === 'JSONView'" />
         </template>
+
         <v-empty-state
           v-else-if="
             !['SMViewer', 'SMEditor'].includes(route.name as string) &&
@@ -52,6 +57,7 @@
           class="text-divider"
           title="No selected AAS"
         />
+
         <v-empty-state
           v-else-if="!selectedNode || Object.keys(selectedNode).length === 0"
           class="text-divider"

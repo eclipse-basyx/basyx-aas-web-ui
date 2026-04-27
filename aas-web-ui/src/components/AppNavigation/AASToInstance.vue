@@ -3,10 +3,12 @@
     <v-card>
       <v-card-title>Create Instance from Type</v-card-title>
       <v-divider />
+
       <v-card-text>
         <div>You selected the AAS with the ID</div>
         <span class="text-primary font-weight-bold">{{ aas.id }}</span>
         <span> for instantiation.</span><br>
+
         <SubmodelSelection
           :selected="selected"
           :submodel-ids="submodelIds"
@@ -22,7 +24,9 @@
           variant="outlined"
         />
       </v-card-text>
+
       <v-divider />
+
       <v-card-actions>
         <v-spacer />
         <v-btn @click="instanceDialog = false">Cancel</v-btn>

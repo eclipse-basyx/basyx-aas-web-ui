@@ -39,6 +39,7 @@
                   <template #prepend>
                     <v-icon size="small">mdi-attachment</v-icon>
                   </template>
+
                   <v-list-item-title>
                     {{ nameToDisplay(fileEl) || fileEl.idShort || `Digital file ${f + 1}` }}
                   </v-list-item-title>
@@ -51,6 +52,7 @@
                   download-label="Download Digital File"
                   :file="fileEl"
                 />
+
                 <v-alert
                   v-else
                   class="w-100"
@@ -63,6 +65,7 @@
             </v-expansion-panel>
           </v-expansion-panels>
         </template>
+
         <v-alert
           v-else
           class="w-100"

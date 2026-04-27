@@ -16,10 +16,12 @@
           v-if="submodelElementData?.contentType && submodelElementData.contentType.includes('image')"
           :submodel-element-data="submodelElementData"
         />
+
         <PDFPreview
           v-if="submodelElementData?.contentType && submodelElementData.contentType.includes('pdf')"
           :submodel-element-data="submodelElementData"
         />
+
         <CADPreview
           v-if="
             submodelElementData?.contentType &&
@@ -31,14 +33,17 @@
           "
           :submodel-element-data="submodelElementData"
         />
+
         <XMLPreview
           v-if="submodelElementData?.contentType && submodelElementData.contentType.includes('xml')"
           :submodel-element-data="submodelElementData"
         />
+
         <JSONPreview
           v-if="submodelElementData?.contentType && submodelElementData.contentType.includes('json')"
           :submodel-element-data="submodelElementData"
         />
+
         <IfcPreview
           v-if="submodelElementData?.contentType && submodelElementData.contentType.includes('x-step')"
           :submodel-element-data="submodelElementData"
@@ -63,11 +68,13 @@
             {{ plugin.name }}
           </component>
         </template>
+
         <template v-else>
           <GenericDataVisu
             v-if="visualizationMode"
             :submodel-element-data="submodelElementData.submodelElements"
           />
+
           <v-container
             v-else
             class="pa-0 ma-0 d-flex justify-center align-center"

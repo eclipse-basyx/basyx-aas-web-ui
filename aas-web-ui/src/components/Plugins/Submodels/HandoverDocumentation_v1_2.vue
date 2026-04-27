@@ -8,6 +8,7 @@
     <v-card v-if="isLoading" class="mb-4">
       <v-skeleton-loader :height="144" type="list-item-avatar, divider, list-item-avatar" />
     </v-card>
+
     <v-expansion-panels v-else-if="documents.length > 0" v-model="panel">
       <!-- Documents -->
       <v-expansion-panel v-for="(document, i) in documents" :key="document.idShort">
@@ -16,13 +17,16 @@
             <template #prepend>
               <v-icon size="small">mdi-file-outline</v-icon>
             </template>
+
             <v-list-item-title>
               {{ nameToDisplay(document) }}
               <DescriptionTooltip :description-array="document?.description" />
             </v-list-item-title>
           </v-list-item>
         </v-expansion-panel-title>
+
         <v-divider v-if="panel === i" />
+
         <v-expansion-panel-text class="pt-4">
           <template v-for="documentVersion in document.documentVersions" :key="documentVersion.idShort">
             <!-- General Document Information (DocumentVersion) -->
@@ -40,11 +44,13 @@
                       <td>
                         <div class="text-subtitleText text-body-small">
                           <span>{{ nameToDisplay(metaProperty) }}</span>
+
                           <DescriptionTooltip
                             :description-array="metaProperty?.description"
                           />
                         </div>
                       </td>
+
                       <td>
                         <!-- Language -->
                         <template v-if="checkIdShort(metaProperty, 'Language')">
@@ -54,6 +60,7 @@
                               {{ getLanguageName(valueToDisplay(metaProperty)) }}
                               ({{ valueToDisplay(metaProperty) }})
                             </template>
+
                             <template v-else>{{ valueToDisplay(metaProperty) }}</template>
                           </div>
                           <!-- Otherwise show all available values -->
@@ -113,6 +120,7 @@
                   <v-btn value="preview">
                     <span>Preview File</span>
                   </v-btn>
+
                   <v-btn value="digital">
                     <span>Digital File</span>
                   </v-btn>
@@ -129,6 +137,7 @@
                   "
                   :submodel-element-data="documentVersion.previewFile"
                 />
+
                 <PDFPreview
                   v-else-if="
                     documentVersion.previewFile.contentType &&
@@ -136,6 +145,7 @@
                   "
                   :submodel-element-data="documentVersion.previewFile"
                 />
+
                 <CADPreview
                   v-else-if="
                     documentVersion.previewFile.contentType &&
@@ -147,6 +157,7 @@
                   "
                   :submodel-element-data="documentVersion.previewFile"
                 />
+
                 <v-alert
                   v-else
                   class="mt-3"
@@ -159,6 +170,7 @@
               <!-- Download Button -->
               <v-card-actions class="pt-4 pb-0 pr-0">
                 <v-spacer />
+
                 <v-btn
                   v-if="documentVersion.previewFile"
                   class="text-buttonText"
@@ -170,6 +182,7 @@
                 >
                   Download Preview File
                 </v-btn>
+
                 <v-alert
                   v-else
                   class="mt-3"
@@ -190,6 +203,7 @@
                   "
                   :submodel-element-data="documentVersion.digitalFile"
                 />
+
                 <PDFPreview
                   v-else-if="
                     documentVersion.digitalFile.contentType &&
@@ -197,6 +211,7 @@
                   "
                   :submodel-element-data="documentVersion.digitalFile"
                 />
+
                 <CADPreview
                   v-else-if="
                     documentVersion.digitalFile.contentType &&
@@ -208,6 +223,7 @@
                   "
                   :submodel-element-data="documentVersion.digitalFile"
                 />
+
                 <v-alert
                   v-else
                   class="mt-3"
@@ -220,6 +236,7 @@
               <!-- Download Button -->
               <v-card-actions class="pt-4 pb-0 pr-0">
                 <v-spacer />
+
                 <v-btn
                   v-if="documentVersion.digitalFile"
                   class="text-buttonText"
@@ -231,6 +248,7 @@
                 >
                   Download Digital File
                 </v-btn>
+
                 <v-alert
                   v-else
                   class="mt-3"
@@ -255,6 +273,7 @@
                     >
                       <div class="text-body-small">
                         <span>{{ nameToDisplay(classificationProperty) }}</span>
+
                         <DescriptionTooltip
                           :description-array="classificationProperty?.description"
                         />
@@ -262,6 +281,7 @@
                     </th>
                   </tr>
                 </thead>
+
                 <tbody>
                   <template
                     v-for="(documentClassificationSMC, j) in document.documentClassificationSMCs"
@@ -328,6 +348,7 @@
                     </th>
                   </tr>
                 </thead>
+
                 <tbody>
                   <template
                     v-for="(documentIdSMC, j) in document.documentIds"

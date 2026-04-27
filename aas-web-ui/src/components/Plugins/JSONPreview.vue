@@ -59,11 +59,13 @@
           <v-icon>{{ hasCopied ? 'mdi-check' : 'mdi-content-copy' }}</v-icon>
         </v-btn>
       </v-card-title>
+
       <v-divider />
       <!-- Search results indicator -->
       <v-card-subtitle v-if="searchResults.length > 0" class="d-flex align-center">
         <span>{{ searchResults.length }} results found</span>
         <v-spacer />
+
         <v-btn-group density="comfortable" variant="outlined">
           <v-btn
             :disabled="currentSearchIndex <= 0"
@@ -73,6 +75,7 @@
           >
             <v-icon>mdi-chevron-up</v-icon>
           </v-btn>
+
           <v-btn
             :disabled="currentSearchIndex >= searchResults.length - 1"
             size="small"
@@ -82,17 +85,22 @@
             <v-icon>mdi-chevron-down</v-icon>
           </v-btn>
         </v-btn-group>
+
         <span class="ml-2">{{ currentSearchIndex + 1 }} of {{ searchResults.length }}</span>
       </v-card-subtitle>
+
       <v-card-text>
         <div v-if="loading" class="d-flex justify-center align-center" style="min-height: 200px">
           <v-progress-circular color="primary" indeterminate />
         </div>
+
         <div v-else-if="error" class="error-message pa-4 text-center">
           <v-icon class="mb-2" color="error" size="28">mdi-alert-circle</v-icon>
           <div>{{ error }}</div>
         </div>
+
         <div v-else-if="!jsonContent" class="no-content pa-4 text-center">No JSON content available</div>
+
         <div v-else class="json-container" :class="{ 'word-wrap-enabled': wordWrapEnabled }">
           <!-- Line numbers column -->
           <div v-if="showLineNumbers" ref="lineNumbersContainer" class="line-numbers">

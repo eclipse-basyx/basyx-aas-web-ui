@@ -2,19 +2,24 @@
   <v-container class="pa-0" fluid>
     <v-card class="mb-4" title="3D Viewer">
       <v-divider />
+
       <v-card-text>
         <div id="ifcContainer" class="border rounded" style="min-height: 400px; width: 100%" />
       </v-card-text>
     </v-card>
+
     <v-card>
       <v-card-title class="d-flex align-center">
         <span>Element Properties</span>
       </v-card-title>
+
       <v-divider />
+
       <v-card-text>
         <v-alert v-if="selectedElementInfo" class="mb-4" color="info" density="compact">
           Selected: {{ selectedElementInfo }}
         </v-alert>
+
         <v-text-field
           v-model="propertySearchQuery"
           class="mb-4"
@@ -24,6 +29,7 @@
           variant="outlined"
           @input="filterProperties"
         />
+
         <v-btn
           class="mb-4 me-2"
           color="primary"
@@ -33,6 +39,7 @@
         >
           {{ propertiesExpanded ? 'Collapse' : 'Expand' }}
         </v-btn>
+
         <v-btn
           class="mb-4"
           color="primary"
@@ -42,6 +49,7 @@
         >
           Copy as TSV
         </v-btn>
+
         <div id="properties-container" ref="propertiesTableContainer" class="properties-table-container" />
       </v-card-text>
     </v-card>

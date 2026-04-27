@@ -30,6 +30,7 @@
       <template #prepend-inner>
         <v-icon>mdi-timer</v-icon>
       </template>
+
       <template #append-inner>
         <span>ms</span>
       </template>
