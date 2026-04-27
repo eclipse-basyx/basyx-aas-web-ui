@@ -1,7 +1,7 @@
 <template>
   <!-- AAS selection dialog (shown after successful scan + discovery) -->
   <v-dialog v-model="showSelectionDialog" :max-width="400" persistent>
-    <v-sheet rounded="lg" border>
+    <v-sheet border rounded="lg">
       <v-card-title class="d-flex align-center bg-cardHeader">
         <span>Select AAS</span>
         <v-spacer />
@@ -39,14 +39,14 @@
 
       <v-card-actions>
         <v-spacer />
-        <v-btn text="Cancel" rounded="lg" @click="closeSelectionDialog" />
+        <v-btn rounded="lg" text="Cancel" @click="closeSelectionDialog" />
 
         <v-btn
           class="text-buttonText"
           color="primary"
+          :disabled="!selectedAasId"
           rounded="lg"
           text="Select"
-          :disabled="!selectedAasId"
           variant="flat"
           @click="submitAasSelection"
         />
@@ -55,7 +55,7 @@
   </v-dialog>
 
   <v-dialog v-model="dialogModel" :max-width="400" persistent>
-    <v-sheet rounded="lg" border>
+    <v-sheet border rounded="lg">
       <v-card-title class="d-flex align-center bg-cardHeader">
         <span>Scan QR Code</span>
         <v-spacer />
