@@ -3,7 +3,7 @@
 ## for [BaSyx Viewer]
 
 **Prepared by:** [Amon Rizzo]
-**Date:** [01.11.2025]
+**Version** 1.3 – 25.04.2026
 
 ## Table of contents
 
@@ -15,12 +15,11 @@
     - 3.3 [UC03: Generate a Digital Nameplate](#uc03)
 4. [User Requirements](#requirements)
     - 4.1 [Functional Requirements](#fr)
-        - 4.1.1 [FR01: Preserve Existing Functionality](#fr01)
-        - 4.1.2 [FR02: Sort AAS by Properties](#fr02)
-        - 4.1.3 [FR03: Enhanced Search Functionality](#fr03)
-        - 4.1.4 [FR04: Integrate Nameplate Generator](#fr04)
-        - 4.1.5 [FR05: API Enhancements](#fr05)
-        - 4.1.6 [FR06: Improve Labeling of Input Variables](#fr06)
+        - 4.1.1 [FR02: Sort AAS by Properties](#fr02)
+        - 4.1.2 [FR03: Enhanced Search Functionality](#fr03)
+        - 4.1.3 [FR04: Integrate Nameplate Generator](#fr04)
+        - 4.1.4 [FR05: API Enhancements](#fr05)
+        - 4.1.5 [FR06: Improve Labeling of Input Variables](#fr06)
     - 4.2 [Non-functional Requirements](#nfr)
         - 4.2.1 [NFR01: User-Friendliness](#nfr01)
         - 4.2.2 [NFR02: Performance](#nfr02)
@@ -35,6 +34,7 @@
 | Amon Rizzo | 18.10.2025 | first version | 1.0 |
 | Amon Rizzo | 01.11.2025 | Restructured use cases and requirements | 1.1 |
 | Amon Rizzo | 20.04.2026 | Improved description of FR.05 | 1.2 |
+| Amon Rizzo | 25.04.2026 | Consistency updates | 1.3 |
 
 ***
 ## 1 Scope <a name="scope"></a>
@@ -92,46 +92,39 @@ These requirements are the basis of the contract with the customer and form, dep
 
 ## 4.1  Functional Requirements <a name="fr"></a>
 
-### 4.1.1 FR01: Preserve Existing Functionality <a name="fr01"></a>
-
-| Requirement ID | FR01 - Priority: 1 |
-| :-- | :-- |
-| Overview | All existing functionality of the BaSyx AAS Web UI must be preserved. |
-| Fit criterion | The building and deployment process for the AAS viewer must not change. All data that can currently be found through the UI or API must be accessible through similar methods at the end of the project. |
-
-### 4.1.2 FR02: Sort AAS by Properties <a name="fr02"></a>
+### 4.1.1 FR02: Sort AAS by Properties <a name="fr02"></a>
 
 | Requirement ID | FR02 - Priority: 1 |
 | :-- | :-- |
 | Overview | To improve usability, the user must be able to sort the list of loaded AAS. |
 | Fit Criterion | The shells seen in the left sidebar must be sortable by the following properties: !createdAt! and  if available: ManufacturerName, ProductDesignation, OrderCode, ManufacturerCode, globalAssetId. |
 
-### 4.1.3 FR03: Enhanced Search Functionality <a name="fr03"></a>
+### 4.1.2 FR03: Enhanced Search Functionality <a name="fr03"></a>
 
 | Requirement ID | FR03 - Priority: 1 |
 | :-- | :-- |
 | Overview | The user must be able to search for AAS based on a wider range of information. |
 | Fit Criterion | The "search for AAS" input field must recursively search through all file content for matching strings. The search depth can be adjusted to meet performance requirements. This should also resolve the issue described in [GitHub issue #209](https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/209). |
 
-### 4.1.4 FR04: Integrate Nameplate Generator <a name="fr04"></a>
+### 4.1.3 FR04: Integrate Nameplate Generator <a name="fr04"></a>
 
 | Requirement ID | FR04 - Priority: 1 |
 | :-- | :-- |
 | Overview | The "Nameplate generator" submodule must be integrated into the "Digital Nameplate" plugin. |
 | Fit criterion | The "Nameplate generator" functionality must be accessible and fully functional from within the "Digital Nameplate" plugin. |
 
-### 4.1.5 FR05: API Enhancements <a name="fr05"></a>
+### 4.1.4 FR05: API Enhancements <a name="fr05"></a>
 
 | Requirement ID | FR05 - Priority: 2 |
 | :-- | :-- |
 | Overview | The API must provide the createdAt and updatedAt information for each component that inherits from the AdministrativeInformation class as per the standard https://industrialdigitaltwin.io/aas-specifications/IDTA-01001/v3.2/spec-metamodel/common.html. |
 | Fit Criterion | The API endpoint `localhost:8081/shells/{aasIdentifier}` must return the information createdAt and updatedAt. In addition to that, when a shell is updated, the information should be propagated correctly|
 
-### 4.1.6 FR06: Improve Labeling of Input Variables <a name="fr06"></a>
+### 4.1.5 FR06: Improve Labeling of Input Variables <a name="fr06"></a>
 
 | Requirement ID | FR06 - Priority: 3 |
 | :-- | :-- |
-| Overview | The labeling of boolean input variables should be improved for better clarity. |
+| Overview | The labeling of boolean input variables in the "Operations" submodules should be improved for better clarity. |
 | Fit Criterion | Boolean values should have an extra label to clarify their meaning, resolving [GitHub issue #538](https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/538). |
 
 ## 4.2  Non-functional Requirements <a name="nfr"></a>
@@ -141,28 +134,28 @@ These requirements are the basis of the contract with the customer and form, dep
 | Requirement ID | NFR01 |
 | :-- | :-- |
 | Overview | The UI should be intuitive and easy to use. |
-| Fit Criterion | An experienced user should be able to find all existing features within 10 minutes. A user inexperienced with the BaSyx AAS Viewer (but familiar with the AAS data structure) should be able to find the desired information within 20 minutes and with at most 5 clicks. |
+| Fit Criterion | the added features should be easy to find and their functionality should be intuitive. |
 
 ### 4.2.2 NFR02: Performance <a name="nfr02"></a>
 
 | Requirement ID | NFR02 |
 | :-- | :-- |
 | Overview | The new features should not negatively impact the performance of the application. |
-| Fit Criterion | The general speed of the UI (e.g., opening submenus) and API request times should not increase by more than 0.2 seconds compared to the current version. The search functionality should return at least one result within 30 seconds. |
+| Fit Criterion | The general speed of the UI (e.g., opening submenus) and API request times should not increase drastically compared to the version without the enhancements |
 
 ### 4.2.3 NFR03: Stability <a name="nfr03"></a>
 
 | Requirement ID | NFR03 |
 | :-- | :-- |
 | Overview | The application must be stable and reliable. |
-| Fit Criterion | The software must not crash under expected usage and must be resistant to high user input frequency. This must be verified with automated tests. |
+| Fit Criterion | The software must not crash under expected usage and must be resistant to high, but realistic, user input frequency.|
 
 ### 4.2.4 NFR04: Maintainability <a name="nfr04"></a>
 
 | Requirement ID | NFR04 |
 | :-- | :-- |
 | Overview | The software should be easy to maintain and extend. |
-| Fit Criterion | The documentation must be comprehensive enough for a new developer to understand the changes within one hour and for a user to use the new features within 10 minutes. |
+| Fit Criterion | The documentation must be comprehensive.|
 
 ### 4.2.5 NFR05: License <a name="nfr05"></a>
 

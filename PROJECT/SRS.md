@@ -2,10 +2,9 @@
 
 **Project:** BaSyx Viewer Plugin Extension
 **Customer:** Markus Rentschler / Pawel Wojcik
-**Prepared by:** Matti Frey & Laszlo Engemann
+**Prepared by:** Matti Frey & László Engemann
 **Team:** DHBW Stuttgart – Team 2
-**Date:** 24.10.2025
-**Version:** 1.0
+**Version** 1.2 – 25.04.2026 
 
 ---
 
@@ -27,6 +26,18 @@
 7. [Constraints and Dependencies](#7-constraints-and-dependencies)
 8. [Glossary](#8-glossary)
 9. [Revision History](#9-revision-history)
+
+---
+
+## Revision History
+
+| Version | Date       | Author                       | Comment                                                          |
+| ------- | ---------- | ---------------------------- | ---------------------------------------------------------------- |
+| 0.1     | 20.10.2025 | Matti Frey & László Engemann | Initial draft based on CRS                                       |
+| 0.9     | 22.10.2025 | Matti Frey  | Extended with structure and examples from previous SRS documents |
+| 1.0     | 24.10.2025 | Matti Frey  | Final version for submission                                     |
+| 1.1     | 23.03.2026 | Matti Frey  | Added linkable functions                                         |
+| 1.2     | 25.04.2026 | Amon Rizzo  | Refinement of the requirement structure and added links          |
 
 ---
 
@@ -67,9 +78,9 @@ The system provides:
 * **Search Enhancements** – recursive AAS data search.
 * **Sorting Options** – dynamic sorting by key attributes.
 * **Integrated Nameplate Generator** – automatic generation via the Digital Nameplate plugin.
-* **API Extensions** – JSON output of complete AAS data.
-* **Improved Input Labeling** – clearer identification of Boolean fields.
-
+* **API Extensions** – Extension of the Administrative Information Attributes in the API.
+* **Improved Input Labeling** – clearer identification of Boolean fields in "Operations" submodules.
+  
 ### 2.3 User Characteristics <a name="23-user-characteristics"></a>
 
 | User Type | Description                                     | Technical Expertise |
@@ -102,7 +113,7 @@ The system provides:
 
 ---
 
-### UC02 – Provide AAS Data as JSON via API
+### UC02 – Provide AAS createdAt and updatedAt Data as JSON via API
 
 | Field          | Description                               |
 | -------------- | ----------------------------------------- |
@@ -111,6 +122,7 @@ The system provides:
 | Postcondition  | JSON data returned.                       |
 | Trigger        | API request (`/shells`).                  |
 | Involved Roles | API consumer, user                        |
+| System Boundary | Browser-based BaSyx Viewer and API       |
 
 ---
 
@@ -122,6 +134,8 @@ The system provides:
 | Precondition  | Plugin “Digital Nameplate” is active.                 |
 | Postcondition | Nameplate generated and displayed.                    |
 | Trigger       | User action or system event.                          |
+| Involved Roles  | User                                                        |
+| System Boundary | Browser-based BaSyx Viewer                                  |
 
 ---
 
@@ -133,6 +147,8 @@ The system provides:
 | Precondition  | Multiple AASX shells loaded.                                       |
 | Postcondition | Sorted list displayed.                                             |
 | Trigger       | User selects sorting option.                                       |
+| Involved Roles  | User                                                             |
+| System Boundary | Browser-based BaSyx Viewer                                       |
 
 ---
 
@@ -143,54 +159,59 @@ The system provides:
 | Objective     | Improve visibility of Boolean input fields. |
 | Precondition  | AAS structure loaded.                       |
 | Postcondition | Clearer labeling for user comprehension.    |
+| Trigger       | A "Operations" Submodule is present         |
+| Involved Roles  | User                                      |
+| System Boundary | Browser-based BaSyx Viewer                |
 
 ---
 
 ## 4. Functional Requirements
 
-### 4.1 FR.001 – Preserve existing functionality
+### 4.1 FR.002 – Sorting of AAS Shells
 
-All existing viewer functions must remain intact after enhancement.
+Implement dynamic sorting of shells by key attributes. This should include: The ID, the created date and the last updated date
 
-**Priority:** Must
-
----
-
-### 4.2 FR.002 – Sorting
-
-Implement dynamic sorting of shells by key attributes.
+Reference issue: https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/1204
 
 **Priority:** Must
 
 ---
 
-### 4.3 FR.003 – Search
+### 4.2 FR.003 – Search
 
-Extend search functionality recursively through AAS content.
+Extend search functionality recursively through AAS content with more supported fields.
+
+Reference issue: https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/209
 
 **Priority:** Must
 
 ---
 
-### 4.4 FR.004 – Nameplate generator integration
+### 4.3 FR.004 – Nameplate generator integration
 
 Integrate submodule into digital nameplate plugin.
 
+Reference issue: https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/1205
+
 **Priority:** Must
 
 ---
 
-### 4.5 FR.005 – API enhancements
+### 4.4 FR.005 – CreatedAt and UpdatedAt support
 
-Extend JSON output for `/shells` endpoint.
+Extend the API to include createdAt and updatedAt under Administrative Information Attributes. These fields should also be visible in the AAS viewer. This Feature requirement is a precondition for FR.002
+The Administrative Information Attributes are defined here: https://industrialdigitaltwin.io/aas-specifications/IDTA-01001/v3.2/spec-metamodel/common.html
 
-**Priority:** Should
+Reference issue: https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/1206
+
+**Priority:** Must
 
 ---
 
-### 4.6 FR.006 – Improved labeling
+### 4.5 FR.006 – Improved labeling
 
-Add extra labels for Boolean values.
+Add extra labels for Boolean values in "Operations" submodules to a visual switch instead of text.
+Reference issue: https://github.com/eclipse-basyx/basyx-aas-web-ui/issues/538
 
 **Priority:** Could
 
@@ -202,7 +223,7 @@ Add extra labels for Boolean values.
 
 UI improvements must reduce average task time.
 
-**Fit Criterion:** Experienced users locate functions <10 min; new users <20 min.
+**Fit Criterion:** Finding a shell or submodule with a specific value. Like a creation time should be faster than before.
 
 ---
 
@@ -210,27 +231,19 @@ UI improvements must reduce average task time.
 
 No significant delay from enhancements.
 
-**Fit Criterion:** API calls ≤ 0.2s slower than current baseline.
+**Fit Criterion:** The performance of the application should not be significantly reduced compared to before the enhancements.
 
 ---
 
 ### 5.3 NFR.003 – Stability
 
-Application should not crash under standard or rapid usage.
+Application should not crash under standard usage.
 
-**Fit Criterion:** 0 critical failures in 10 test runs.
-
----
-
-### 5.4 NFR.004 – Maintainability
-
-Clear documentation and readable code.
-
-**Fit Criterion:** New dev understands within 1 hour.
+**Fit Criterion:** No stability test should fail.
 
 ---
 
-### 5.5 NFR.005 – Licensing
+### 5.4 NFR.004 – Licensing
 
 Maintain current open-source license.
 
@@ -273,12 +286,3 @@ Key components:
 | Nameplate | Digital representation of a product label |
 
 ---
-
-## 9. Revision History
-
-| Version | Date       | Author                       | Comment                                                          |
-| ------- | ---------- | ---------------------------- | ---------------------------------------------------------------- |
-| 0.1     | 20.10.2025 | Matti Frey & Laszlo Engemann | Initial draft based on CRS                                       |
-| 0.9     | 22.10.2025 | Matti Frey  | Extended with structure and examples from previous SRS documents |
-| 1.0     | 24.10.2025 | Matti Frey  | Final version for submission                                     |
-| 1.1     | 23.03.2026 | Matti Frey  | Added linkable functions                                         |
