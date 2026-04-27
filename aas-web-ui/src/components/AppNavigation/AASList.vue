@@ -19,6 +19,7 @@
               <v-tooltip :disabled="isMobile" location="bottom" open-delay="600">
                 <template #activator="{ props }">
                   <v-icon
+                    aria-label="Reload AAS List"
                     v-bind="props"
                     icon="mdi-reload"
                     :loading="listLoading"
@@ -76,6 +77,7 @@
               <v-tooltip v-else-if="allowUploading" :disabled="isMobile" :location="editMode ? 'end' : 'bottom'" open-delay="600">
                 <template #activator="{ props }">
                   <v-icon
+                    aria-label="Upload AAS"
                     v-bind="props"
                     icon="mdi-upload"
                     @click="uploadAASDialog = true"
@@ -83,6 +85,20 @@
                 </template>
 
                 <span>Upload AAS File to Environment</span>
+              </v-tooltip>
+              <!-- QR Scanner -->
+              <v-tooltip :disabled="isMobile" location="bottom" open-delay="600">
+                <template #activator="{ props }">
+                  <v-icon
+                    aria-label="Scan QR Code"
+                    class="ml-2"
+                    v-bind="props"
+                    icon="mdi-qrcode-scan"
+                    @click="qrScannerDialog = true"
+                  />
+                </template>
+
+                <span>Scan QR Code</span>
               </v-tooltip>
             </template>
           </v-text-field>
@@ -365,6 +381,8 @@
   <DownloadAAS v-model="downloadAASDialog" :aas="aasToDownload" />
   <!-- Dialog for Instance Creation from Type -->
   <AASToInstance v-model="instanceDialog" :aas="aasToInstantiate" />
+  <!-- Dialog for QR Scanner -->
+  <QRScanner v-model="qrScannerDialog" @select-aas="handleAasSelected" />
 </template>
 
 <script lang="ts" setup>
@@ -438,6 +456,7 @@
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
   const instanceDialog = ref(false) // Variable to store if the Instance Creation Dialog should be shown
   const aasToInstantiate = ref({}) // Variable to store the AAS to be instantiated
+  const qrScannerDialog = ref(false)
 
   const {
     hasMorePages,
@@ -802,6 +821,10 @@
   function createInstanceFromType (aasDescriptor: any): void {
     instanceDialog.value = true
     aasToInstantiate.value = aasDescriptor
+  }
+
+  function handleAasSelected (aasId: string): void {
+    filterAasList(aasId)
   }
 </script>
 
