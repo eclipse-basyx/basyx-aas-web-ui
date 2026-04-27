@@ -164,13 +164,16 @@
   import { keyDown, keyUp } from '@/utils/EditorUtils'
   import { base64Decode } from '@/utils/EncodeDecodeUtils'
 
-  const props = defineProps<{
+  const props = withDefaults(defineProps<{
     modelValue: boolean
     newEntity: boolean
     parentElement: any
     path?: string
     entity?: any
-  }>()
+    selectCreatedEntity?: boolean
+  }>(), {
+    selectCreatedEntity: true,
+  })
 
   // Stores
   const navigationStore = useNavigationStore()
@@ -348,9 +351,11 @@
         const query = structuredClone(route.query)
         query.path = props.parentElement.path + '/submodel-elements/' + entityObject.value.idShort
 
-        router.push({
-          query: query,
-        })
+        if (props.selectCreatedEntity) {
+          router.push({
+            query: query,
+          })
+        }
       } else {
         // Extract the submodel ID and the idShortPath from the parentElement path
         const splitted = props.parentElement.path.split('/submodel-elements/')
@@ -365,9 +370,11 @@
           const query = structuredClone(route.query)
           query.path = createdPath
 
-          router.push({
-            query: query,
-          })
+          if (props.selectCreatedEntity) {
+            router.push({
+              query: query,
+            })
+          }
         }
       }
     } else {

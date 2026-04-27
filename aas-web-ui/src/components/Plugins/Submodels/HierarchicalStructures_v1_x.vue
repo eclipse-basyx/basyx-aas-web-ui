@@ -88,6 +88,7 @@
       :new-entity="newEntity"
       :parent-element="elementToAddSME"
       :path="submodelElementPath"
+      :select-created-entity="false"
       @update:model-value="onDialogClosed"
     />
     <!-- Dialog for deleting SM/SME -->
