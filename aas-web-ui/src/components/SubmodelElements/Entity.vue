@@ -4,6 +4,7 @@
     <v-list-item class="px-1 pb-1 pt-2">
       <v-list-item-title>
         <span class="text-title-small mr-2">{{ 'Entity Type: ' }}</span>
+
         <v-chip
           border
           color="primary"
@@ -15,6 +16,7 @@
         }}</v-chip>
       </v-list-item-title>
     </v-list-item>
+
     <v-divider v-if="entityObject?.globalAssetId" />
     <!-- globalAssetId -->
     <v-hover v-slot="{ isHovering, props: hoverProps }">
@@ -22,6 +24,7 @@
         <template #title>
           <div class="text-title-small mt-2">{{ 'Global Asset ID: ' }}</div>
         </template>
+
         <template #append>
           <v-btn
             class="mr-2 text-buttonText"
@@ -32,6 +35,7 @@
             @click="jump(entityObject.globalAssetId)"
           >Jump</v-btn>
         </template>
+
         <template #subtitle>
           <div
             v-if="entityObject.globalAssetId"
@@ -42,11 +46,13 @@
             <v-icon v-if="isHovering" class="mr-1" color="subtitleText" size="x-small">{{
               copyIcon
             }}</v-icon>
+
             <span>{{ entityObject.globalAssetId ? entityObject.globalAssetId : '' }}</span>
           </div>
         </template>
       </v-list-item>
     </v-hover>
+
     <v-divider v-if="entityObject.specificAssetIds && entityObject.specificAssetIds.length > 0" />
     <!-- specificAssetIds -->
     <v-list-item
@@ -56,6 +62,7 @@
       <template #title>
         <div class="text-title-small mt-2">{{ 'Specific Asset IDs: ' }}</div>
       </template>
+
       <template #subtitle>
         <div v-for="specificAssetId in entityObject.specificAssetIds" :key="specificAssetId.name" class="pt-2">
           <v-btn
@@ -66,6 +73,7 @@
             size="small"
             @click="jump(specificAssetId.value)"
           >Jump</v-btn>
+
           <v-chip
             border
             class="mr-2"
@@ -76,6 +84,7 @@
           >{{
             specificAssetId.name
           }}</v-chip>
+
           <span>{{ specificAssetId.value }}</span>
         </div>
       </template>

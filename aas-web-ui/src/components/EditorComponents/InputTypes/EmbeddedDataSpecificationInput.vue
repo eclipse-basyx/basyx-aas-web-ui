@@ -9,6 +9,7 @@
     <v-card-actions class="bg-cardHeader">
       <div class="ml-2">Embedded Data Specification {{ index + 1 }}</div>
       <v-spacer />
+
       <v-btn
 
         prepend-icon="mdi-delete"
@@ -17,7 +18,9 @@
         @click="removeEmbeddedDataSpecification(index)"
       />
     </v-card-actions>
+
     <v-divider />
+
     <v-card-text class="pt-7">
       <!-- Data Specification (Reference) -->
       <v-row align="center">
@@ -96,11 +99,13 @@
         <v-row align="center">
           <v-col class="py-0">
             <v-divider />
+
             <v-list-item class="pl-0 pt-0">
               <template #title>
                 <div class="text-title-small">Unit ID</div>
               </template>
             </v-list-item>
+
             <v-btn
               v-if="embeddedDataSpecification.dataSpecificationContent.unitId === null"
               class="mt-1 mb-4"
@@ -110,6 +115,7 @@
               variant="outlined"
               @click="addUnitId(index)"
             />
+
             <ReferenceInput
               v-else
               v-model="embeddedDataSpecification.dataSpecificationContent.unitId"
@@ -163,11 +169,13 @@
         <v-row align="center">
           <v-col class="py-0">
             <v-divider />
+
             <v-list-item class="pl-0 pt-0">
               <template #title>
                 <div class="text-title-small">Value List</div>
               </template>
             </v-list-item>
+
             <v-btn
               v-if="embeddedDataSpecification.dataSpecificationContent.valueList === null"
               class="mt-1 mb-4"
@@ -177,6 +185,7 @@
               variant="outlined"
               @click="initializeValueList(index)"
             />
+
             <template v-else>
               <v-sheet
                 v-for="(valueReferencePair, valueReferencePairIndex) in embeddedDataSpecification
@@ -193,6 +202,7 @@
                     :show-delete-button="true"
                     @click:delete="removeValueReferencePair(index, valueReferencePairIndex)"
                   />
+
                   <v-row align="center">
                     <v-col class="py-0">
                       <v-btn
@@ -206,6 +216,7 @@
                           addValueReferencePairValueId(index, valueReferencePairIndex)
                         "
                       />
+
                       <ReferenceInput
                         v-else
                         v-model="valueReferencePair.valueId"
@@ -216,6 +227,7 @@
                   </v-row>
                 </v-card-text>
               </v-sheet>
+
               <v-btn
                 class="mt-1 mb-4"
                 color="primary"
@@ -231,11 +243,13 @@
         <v-row align="center">
           <v-col class="py-0">
             <v-divider />
+
             <v-list-item class="pl-0 pt-0">
               <template #title>
                 <div class="text-title-small">Level Type</div>
               </template>
             </v-list-item>
+
             <v-btn
               v-if="embeddedDataSpecification.dataSpecificationContent.levelType === null"
               class="mt-1 mb-4"
@@ -245,6 +259,7 @@
               variant="outlined"
               @click="initializeLevelType(index)"
             />
+
             <v-row v-else class="mb-3 mx-n1" no-gutters>
               <v-col class="pa-1" cols="6">
                 <v-sheet border class="pl-1" rounded>
@@ -255,6 +270,7 @@
                   />
                 </v-sheet>
               </v-col>
+
               <v-col class="pa-1" cols="6">
                 <v-sheet border class="pl-1" rounded>
                   <v-checkbox
@@ -264,6 +280,7 @@
                   />
                 </v-sheet>
               </v-col>
+
               <v-col class="pa-1" cols="6">
                 <v-sheet border class="pl-1" rounded>
                   <v-checkbox
@@ -273,6 +290,7 @@
                   />
                 </v-sheet>
               </v-col>
+
               <v-col class="pa-1" cols="6">
                 <v-sheet border class="pl-1" rounded>
                   <v-checkbox

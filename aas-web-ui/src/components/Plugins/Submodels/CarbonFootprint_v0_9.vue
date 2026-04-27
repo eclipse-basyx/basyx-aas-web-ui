@@ -10,16 +10,19 @@
         <v-skeleton-loader type="subtitle" />
         <v-skeleton-loader type="image" />
       </v-card>
+
       <v-card>
         <v-skeleton-loader type="subtitle" />
         <v-skeleton-loader type="image" />
       </v-card>
     </v-sheet>
+
     <template v-else-if="Object.keys(carbonFootprintData).length > 0">
       <v-card v-if="productCarbonFootprints && Object.keys(productCarbonFootprints).length > 0" class="mb-4">
         <v-card-title class="text-body-large">
           {{ 'Product Carbon Footprint' + (Object.keys(productCarbonFootprints).length > 1 ? 's' : '') }}
         </v-card-title>
+
         <v-card-text>
           <v-timeline class="border rounded" direction="vertical" side="start">
             <v-timeline-item
@@ -53,11 +56,13 @@
                       )?.value.replaceAll(', ', '\n')
                     }}
                   </p>
+
                   <p v-else>
                     {{ valueToDisplay(pcfLifeCyclePhase).replaceAll(', ', '\n') }}
                   </p>
                 </div>
               </template>
+
               <div class="pl-6">
                 <div class="text-h6">
                   {{
@@ -71,6 +76,7 @@
                   }}
                   <span class="">CO<sub>2</sub>eq</span>
                 </div>
+
                 <p class="text-body-small opacity-60">
                   <span> per </span>
                   {{
@@ -114,9 +120,11 @@
                       }}
                     </span> </template>)
                 </p>
+
                 <p class="text-body-small opacity-60">
                   <v-icon class="mr-1" size="small">mdi-calendar</v-icon>
                   <span>valid from </span>
+
                   <span>
                     {{
                       valueToDisplay(
@@ -131,6 +139,7 @@
                       )
                     }}
                   </span>
+
                   <span
                     v-if="
                       pcfSMC.value.some(
@@ -158,6 +167,7 @@
                     }}
                   </span>
                 </p>
+
                 <p
                   v-if="
                     pcfSMC.value.some(
@@ -169,6 +179,7 @@
                   class="text-body-small opacity-60"
                 >
                   <v-icon class="mr-1" size="small">mdi-map-marker-outline</v-icon>
+
                   <span>
                     {{
                       determineAddress(
@@ -191,6 +202,7 @@
         <v-card-title class="text-body-large">
           {{ 'Transport Carbon Footprint' + (Object.keys(productCarbonFootprints).length > 1 ? 's' : '') }}
         </v-card-title>
+
         <v-card-text>
           <v-timeline
             v-if="transportCarbonFootprints"
@@ -235,6 +247,7 @@
                       )?.value.replaceAll(', ', '\n')
                     }}
                   </p>
+
                   <p v-else style="white-space: pre-wrap">
                     {{
                       valueToDisplay(
@@ -244,6 +257,7 @@
                   </p>
                 </template>
               </template>
+
               <div>
                 <div class="text-h6">
                   {{
@@ -257,6 +271,7 @@
                   }}
                   <span class="">CO<sub>2</sub>eq</span>
                 </div>
+
                 <p class="text-body-small opacity-60">
                   <span> per </span>
                   {{
@@ -300,9 +315,11 @@
                       }}
                     </span> </template>)
                 </p>
+
                 <p class="text-body-small opacity-60">
                   <v-icon class="mr-1" size="small">mdi-calendar</v-icon>
                   <span>valid from </span>
+
                   <span>
                     {{
                       valueToDisplay(
@@ -317,6 +334,7 @@
                       )
                     }}
                   </span>
+
                   <span
                     v-if="
                       tcfSMC.value.some(
@@ -344,6 +362,7 @@
                     }}
                   </span>
                 </p>
+
                 <p
                   v-if="
                     tcfSMC.value.some(
@@ -355,6 +374,7 @@
                   class="text-body-small opacity-60"
                 >
                   <v-icon class="mr-1" size="small">mdi-map-marker-outline</v-icon>
+
                   <span>
                     {{
                       determineAddress(
@@ -367,6 +387,7 @@
                     }}
                   </span>
                 </p>
+
                 <p
                   v-if="
                     tcfSMC.value.some(
@@ -378,6 +399,7 @@
                   class="text-body-small opacity-60"
                 >
                   <v-icon size="small">mdi-map-marker-outline</v-icon>
+
                   <span>
                     {{
                       determineAddress(

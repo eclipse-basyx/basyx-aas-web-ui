@@ -12,6 +12,7 @@
         <v-list-item>
           <v-list-item-title>
             <span class="text-title-small mr-2">Archetype:</span>
+
             <v-chip
               border
               :class="{ 'cursor-pointer': editorMode }"
@@ -27,6 +28,7 @@
         </v-list-item>
         <!-- <v-btn color="primary" size="small" @click="exportToXML">Export to XML</v-btn> -->
         <v-spacer />
+
         <v-tooltip location="left" :text="editorMode ? 'Exit edit mode' : 'Enter edit mode'">
           <template #activator="{ props: tooltipProps }">
             <v-btn
@@ -39,7 +41,9 @@
           </template>
         </v-tooltip>
       </v-toolbar>
+
       <v-divider />
+
       <v-card-text class="pa-0">
         <!-- Export Button -->
         <div class="rounded-b" style="height: 600px">
@@ -70,12 +74,14 @@
                 </marker>
               </defs>
             </template>
+
             <Background :gap="16" pattern-color="#aaa" />
             <Controls />
           </VueFlow>
         </div>
       </v-card-text>
     </v-card>
+
     <EntityForm
       v-model="entityDialog"
       :entity="submodelElementToEdit"
@@ -96,7 +102,9 @@
         <v-card-title class="text-body-large">{{
           existingRelationship ? 'Edit Relationship Element' : 'Add Relationship Element'
         }}</v-card-title>
+
         <v-divider />
+
         <v-card-text>
           <p class="text-body-medium mb-4">
             {{ existingRelationship ? 'Edit the' : 'Create a' }} relationship between
@@ -104,6 +112,7 @@
             and
             <v-chip class="mx-1" label size="small">{{ selectedEdge?.targetNode }}</v-chip>
           </p>
+
           <v-select
             v-model="selectedRelationshipType"
             density="compact"
@@ -123,10 +132,13 @@
             </template>
           </v-select>
         </v-card-text>
+
         <v-divider />
+
         <v-card-actions>
           <v-spacer />
           <v-btn @click="closeRelationshipDialog">Cancel</v-btn>
+
           <v-btn color="primary" :disabled="!selectedRelationshipType" @click="saveRelationship">{{
             existingRelationship ? 'Save' : 'Create'
           }}</v-btn>
@@ -138,8 +150,10 @@
       <v-card>
         <v-card-title class="text-body-large">Edit Archetype</v-card-title>
         <v-divider />
+
         <v-card-text>
           <p class="text-body-medium mb-4">Select the archetype for this hierarchical structure.</p>
+
           <v-select
             v-model="selectedArchetype"
             density="compact"
@@ -159,7 +173,9 @@
             </template>
           </v-select>
         </v-card-text>
+
         <v-divider />
+
         <v-card-actions>
           <v-spacer />
           <v-btn @click="closeArchetypeDialog">Cancel</v-btn>
@@ -177,16 +193,20 @@
         <v-list class="py-0" density="compact">
           <v-list-item slim @click="addChildEntity">
             <v-list-item-title>Add Child Entity</v-list-item-title>
+
             <template #prepend>
               <v-icon size="small">mdi-plus</v-icon>
             </template>
           </v-list-item>
+
           <v-list-item slim @click="editEntity">
             <v-list-item-title>Edit Entity</v-list-item-title>
+
             <template #prepend>
               <v-icon size="small">mdi-pencil</v-icon>
             </template>
           </v-list-item>
+
           <v-list-item
             v-if="
               contextMenu.node && contextMenu.node.data && contextMenu.node.data.modelElement != entryNode
@@ -195,6 +215,7 @@
             @click="deleteEntity"
           >
             <v-list-item-title>Delete Entity</v-list-item-title>
+
             <template #prepend>
               <v-icon size="small">mdi-delete</v-icon>
             </template>

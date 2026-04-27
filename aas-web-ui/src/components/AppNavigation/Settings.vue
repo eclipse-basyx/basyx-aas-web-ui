@@ -12,6 +12,7 @@
         <v-icon>mdi-menu-down</v-icon>
       </v-btn>
     </template>
+
     <v-card
       :border="!isMobile"
       :color="isMobile ? 'card' : 'navigationMenu'"
@@ -25,12 +26,15 @@
         <!-- Backend Configuration (infrastructure selection) -->
         <InfrastructureSelector @open-manage="openInfrastructureManagement" />
         <v-divider class="mt-3" />
+
         <v-list-item class="py-0" density="compact" nav>
           <v-list-item-title class="text-body-small opacity-60 pb-0">
             <span>Version: </span>
+
             <span v-if="versionDisplay.showVersion" class="font-weight-medium">
               {{ versionDisplay.versionText }}
             </span>
+
             <span v-if="versionDisplay.showVersion && versionDisplay.showSnapshot" class="mx-1">·</span>
             <span v-if="versionDisplay.showSnapshot">{{ versionDisplay.snapshotText }}</span>
           </v-list-item-title>

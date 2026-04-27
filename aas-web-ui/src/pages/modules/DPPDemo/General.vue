@@ -4,6 +4,7 @@
       <span class="text-h6">General Product Passport Information</span>
       <v-chip color="primary" size="small" variant="tonal">Digital Nameplate v3.0</v-chip>
     </v-card-title>
+
     <v-card-text class="pt-0 px-0 px-sm-4 pb-4">
       <v-sheet v-if="isLoading" class="px-4 pt-2" color="transparent">
         <v-skeleton-loader type="table-heading@3, table-row-divider@8" />
@@ -35,6 +36,7 @@
               <th class="text-left text-body-small">Value</th>
             </tr>
           </thead>
+
           <tbody>
             <tr
               v-for="(row, index) in generalRows"
@@ -42,6 +44,7 @@
               :class="index % 2 === 0 ? 'bg-tableEven' : 'bg-tableOdd'"
             >
               <td class="text-body-small">{{ row.label }}</td>
+
               <td class="text-body-small">
                 <v-img
                   v-if="row.type === 'logo' && logoSrc"
@@ -51,6 +54,7 @@
                   :src="logoSrc"
                   width="140"
                 />
+
                 <span v-else>{{ getDisplayValue(row.value) }}</span>
               </td>
             </tr>

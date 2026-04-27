@@ -42,6 +42,7 @@
               @update:search="applySearch"
             />
           </v-list-item>
+
           <v-divider />
           <!-- List of Product Types -->
           <v-virtual-scroll
@@ -74,6 +75,7 @@
                   <div class="text-body-small">
                     <span class="font-weight-bold">{{ 'idShort: ' }}</span>{{ item['idShort'] }}
                   </div>
+
                   <div class="text-body-small">
                     <span class="font-weight-bold">{{ 'ID: ' }}</span>{{ item['id'] }}
                   </div>
@@ -105,6 +107,7 @@
           </v-virtual-scroll>
         </v-list>
       </v-sheet>
+
       <div
         class="pa-4 d-flex flex-column"
         :class="mdAndDown ? 'border-t-thin' : 'flex-grow-1'"
@@ -121,20 +124,25 @@
             <v-icon size="64" />
           </template>
         </v-empty-state>
+
         <template v-else>
           <v-list-item class="pl-0 pt-0">
             <template #title>
               <div class="text-title-small">Display Name for the product</div>
             </template>
           </v-list-item>
+
           <MultiLanguageTextInput v-model="displayName" :show-label="false" type="displayName" />
         </template>
       </div>
     </v-card-text>
+
     <v-divider />
+
     <v-card-actions :class="mdAndDown ? 'justify-center' : ''">
       <div v-if="!mdAndDown" style="width: 340px" />
       <v-spacer v-if="!mdAndDown" />
+
       <v-btn
         class="text-buttonText"
         color="success"
@@ -143,6 +151,7 @@
         variant="flat"
         @click="produce"
       />
+
       <v-spacer v-if="!mdAndDown" />
     </v-card-actions>
   </v-card>

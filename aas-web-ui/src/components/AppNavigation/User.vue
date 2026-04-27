@@ -8,13 +8,16 @@
         size="small"
         variant="tonal"
       />
+
       <v-tooltip v-else location="bottom" :open-delay="600" text="Authorization Status">
         <template #activator="{ props: tooltipProps }">
           <v-icon v-bind="tooltipProps" class="mx-3">mdi-lock-off</v-icon>
         </template>
+
         <span>Authentication disabled</span>
       </v-tooltip>
     </template>
+
     <v-card
       v-if="isAuthEnabled"
       color="navigationMenu"
@@ -37,13 +40,17 @@
           </template>
         </v-list-item>
       </v-list>
+
       <template #actions>
         <v-icon class="ml-2" size="small">
           {{ authStatusIcon }}
         </v-icon>
+
         <span class="text-subtitleText text-title-small">{{ authStatus }}</span>
+
         <template v-if="showAuthButtons">
           <v-spacer />
+
           <v-btn
             v-if="currentInfrastructure?.token?.accessToken"
             append-icon="mdi-logout"
@@ -52,6 +59,7 @@
             text="Logout"
             @click="logout"
           />
+
           <v-btn
             v-else
             append-icon="mdi-login"

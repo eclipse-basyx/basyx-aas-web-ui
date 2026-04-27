@@ -4,6 +4,7 @@
       <ImagePreview v-if="isImageFile(props.file)" :submodel-element-data="props.file" />
       <PDFPreview v-else-if="isPdfFile(props.file)" :submodel-element-data="props.file" />
       <CADPreview v-else-if="isCADFile(props.file)" :submodel-element-data="props.file" />
+
       <v-alert
         v-else
         class="mt-3"
@@ -15,6 +16,7 @@
 
       <v-card-actions v-if="showDownloadButton(props.file)" class="pt-4 pb-0 pr-0">
         <v-spacer />
+
         <v-btn
           class="text-buttonText"
           color="primary"
@@ -27,6 +29,7 @@
         </v-btn>
       </v-card-actions>
     </template>
+
     <v-alert
       v-else
       density="compact"

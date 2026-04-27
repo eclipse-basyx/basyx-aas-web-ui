@@ -1,10 +1,12 @@
 <template>
   <v-divider v-if="showLabel" />
+
   <v-list-item v-if="showLabel" class="pl-0 pt-0">
     <template #title>
       <div class="text-title-small">{{ label }}</div>
     </template>
   </v-list-item>
+
   <v-list-item v-for="(langStringElement, i) in langStringValue" :key="i" class="px-0">
     <template #prepend>
       <v-combobox
@@ -25,6 +27,7 @@
         <template #selection="{ item }">
           <span>{{ item.code }}</span>
         </template>
+
         <template #item="{ props: itemProps, item }">
           <v-list-item v-bind="itemProps">
             <template #append>
@@ -34,6 +37,7 @@
         </template>
       </v-combobox>
     </template>
+
     <v-text-field
       v-model="langStringElement.text"
       append-icon="mdi-delete"
@@ -42,6 +46,7 @@
       @click:append="deleteLangStringElement(langStringElement)"
     />
   </v-list-item>
+
   <v-btn
     class="mt-1 mb-4"
     color="primary"

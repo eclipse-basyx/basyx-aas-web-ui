@@ -4,12 +4,15 @@
       <v-card-title>
         <span class="text-body-large">{{ newShell ? 'Create a new AAS' : 'Edit AAS' }}</span>
       </v-card-title>
+
       <v-divider />
+
       <v-card-text class="pa-3 bg-card" style="overflow-y: auto">
         <v-expansion-panels v-model="openPanels" multiple>
           <!-- Details -->
           <v-expansion-panel class="border-t-thin border-s-thin border-e-thin" :class="bordersToShow(0)">
             <v-expansion-panel-title>Details</v-expansion-panel-title>
+
             <v-expansion-panel-text>
               <v-row align="center">
                 <v-col class="py-0">
@@ -21,18 +24,22 @@
                     type="AssetAdministrationShell"
                   />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="identifier" />
                 </v-col>
               </v-row>
+
               <v-row align="center">
                 <v-col class="py-0">
                   <TextInput v-model="AASIdShort" label="IdShort" />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="idShort" />
                 </v-col>
               </v-row>
+
               <v-row align="center">
                 <v-col class="py-0">
                   <MultiLanguageTextInput
@@ -42,10 +49,12 @@
                     type="displayName"
                   />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="displayName" />
                 </v-col>
               </v-row>
+
               <v-row align="center">
                 <v-col class="py-0">
                   <MultiLanguageTextInput
@@ -55,10 +64,12 @@
                     type="description"
                   />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="description" />
                 </v-col>
               </v-row>
+
               <v-row align="center">
                 <v-col class="py-0">
                   <SelectInput
@@ -68,6 +79,7 @@
                     type="category"
                   />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="category" />
                 </v-col>
@@ -77,35 +89,43 @@
           <!-- Administrative Information -->
           <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(1)">
             <v-expansion-panel-title>Administrative Information</v-expansion-panel-title>
+
             <v-expansion-panel-text>
               <v-row align="center">
                 <v-col class="py-0">
                   <TextInput v-model="version" label="Version" />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="version" />
                 </v-col>
               </v-row>
+
               <v-row align="center">
                 <v-col class="py-0">
                   <TextInput v-model="revision" label="Revision" />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="revision" />
                 </v-col>
               </v-row>
+
               <v-row align="center">
                 <v-col class="py-0">
                   <ReferenceInput v-model="creator" label="Creator" />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="creator" />
                 </v-col>
               </v-row>
+
               <v-row align="center">
                 <v-col class="py-0">
                   <TextInput v-model="templateId" label="Template ID" />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="templateId" />
                 </v-col>
@@ -115,6 +135,7 @@
           <!-- Derivation -->
           <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(2)">
             <v-expansion-panel-title>Derivation</v-expansion-panel-title>
+
             <v-expansion-panel-text>
               <v-row align="center">
                 <v-col class="py-0">
@@ -124,6 +145,7 @@
                     label="Derived From"
                   />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="derivedFrom" />
                 </v-col>
@@ -133,15 +155,18 @@
           <!-- Asset -->
           <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(3)">
             <v-expansion-panel-title>Asset</v-expansion-panel-title>
+
             <v-expansion-panel-text>
               <v-row align="center" class="mb-3">
                 <v-col class="py-0">
                   <SelectInput v-model="assetKind" label="Asset Kind" type="assetKind" />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="assetKind" />
                 </v-col>
               </v-row>
+
               <AssetIdInput
                 v-model:global-asset-id="globalAssetId"
                 v-model:specific-asset-ids="specificAssetIds"
@@ -149,14 +174,17 @@
                 :show-generate-iri-for-specific="true"
                 :show-specific-asset-ids="true"
               />
+
               <v-row align="center" class="mt-0">
                 <v-col class="py-0">
                   <TextInput v-model="assetType" label="Asset Type" />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="assetType" />
                 </v-col>
               </v-row>
+
               <v-row align="center">
                 <v-col class="py-0">
                   <ResourceInput
@@ -167,6 +195,7 @@
                     @update:file-thumbnail="handleFileThumbnail"
                   />
                 </v-col>
+
                 <v-col class="px-0" cols="auto">
                   <HelpInfoButton help-type="defaultThumbnail" />
                 </v-col>
@@ -176,13 +205,16 @@
           <!-- Data Specification -->
           <v-expansion-panel class="border-b-thin border-s-thin border-e-thin" :class="bordersToShow(4)">
             <v-expansion-panel-title>Data Specification</v-expansion-panel-title>
+
             <v-expansion-panel-text>
               <EmbeddedDataSpecificationInput v-model="embeddedDataSpecifications" />
             </v-expansion-panel-text>
           </v-expansion-panel>
         </v-expansion-panels>
       </v-card-text>
+
       <v-divider />
+
       <v-card-actions>
         <v-spacer />
         <v-btn @click="closeDialog">Cancel</v-btn>

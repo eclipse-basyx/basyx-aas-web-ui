@@ -3,6 +3,7 @@
     <v-card>
       <v-card-title> Confirm Delete </v-card-title>
       <v-divider />
+
       <v-card-text v-if="element" class="pb-0">
         <span>Are you sure you want to delete the </span>
         <span class="font-weight-bold">{{ element.modelType }}</span>
@@ -11,11 +12,14 @@
         <span class="text-primary font-weight-bold">
           {{ element.modelType === 'Submodel' ? element.id : element.idShort }}
         </span>
+
         <span> ?</span>
       </v-card-text>
+
       <v-card-actions>
         <v-spacer />
         <v-btn @click="deleteDialog = false">Cancel</v-btn>
+
         <v-btn
           color="error"
           :loading="deleteLoading"

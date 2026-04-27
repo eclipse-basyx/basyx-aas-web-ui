@@ -6,13 +6,16 @@
         :identification-title="'Global Asset ID'"
         :v-chip-content="assetObject.assetKind"
       />
+
       <v-divider v-if="assetInfo.id && assetInfo.id.trim() !== '' && urlRegex.test(assetInfo.id)" />
+
       <v-expansion-panels v-if="assetInfo.id && assetInfo.id.trim() !== '' && urlRegex.test(assetInfo.id)">
         <v-expansion-panel color="detailsCard" elevation="0" static tile>
           <v-expansion-panel-title class="px-2">
             <v-icon class="mr-2" icon="mdi-qrcode" size="small" />
             <span class="text-title-small"> Global Asset ID QR-Code </span>
           </v-expansion-panel-title>
+
           <v-expansion-panel-text class="py-2 bg-detailsCard">
             <div class="qr-container">
               <div v-if="assetInfo.id.includes('?.') && qrCodeUrl" class="qr-61406-2-container">
@@ -22,6 +25,7 @@
                   </div>
                 </div>
               </div>
+
               <div v-else class="qr-61406-1-container">
                 <img v-if="qrCodeUrl" class="qr-61406-1" :src="qrCodeUrl">
               </div>
@@ -29,6 +33,7 @@
           </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
+
       <v-divider
         v-if="
           assetObject.specificAssetIds &&
@@ -39,6 +44,7 @@
       <!-- Specific Asset IDs -->
       <SpecificAssetIds :specific-asset-ids="assetObject.specificAssetIds" />
       <v-divider v-if="thumbnailSrc" />
+
       <v-img
         v-if="thumbnailSrc"
         class="mt-2 rounded"
@@ -47,6 +53,7 @@
         max-width="100%"
         :src="thumbnailSrc"
       />
+
       <span
         v-if="thumbnailSrc && thumbnailCaption !== ''"
         class="font-weight-light opacity-60"

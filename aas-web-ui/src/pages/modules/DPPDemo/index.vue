@@ -3,6 +3,7 @@
     <div class="mx-auto" style="max-width: 1280px">
       <v-card border class="pa-4 mb-4" rounded="lg">
         <v-card-title class="text-h5">Digital Product Passport</v-card-title>
+
         <v-card-text>
           <v-row align="center" class="ma-0" justify="space-between">
             <v-col class="pa-2" cols="12" md="3">
@@ -19,6 +20,7 @@
                   style="max-width: 300px"
                   @error="onProductImageError"
                 />
+
                 <v-sheet
                   v-else
                   class="w-100 mx-auto border rounded-lg d-flex justify-center align-center"
@@ -29,11 +31,13 @@
                 </v-sheet>
               </v-sheet>
             </v-col>
+
             <v-col class="pa-2" cols="12" md="6">
               <div class="text-body-large font-weight-medium mb-2">{{ selectedAasTitle }}</div>
               <div class="text-body-small opacity-60">DPP ID</div>
               <div class="text-body-medium text-break">{{ dppIdToDisplay }}</div>
             </v-col>
+
             <v-col class="pa-2 d-flex justify-center justify-md-end" cols="12" md="3">
               <v-sheet border class="pa-2" min-width="132" rounded="lg">
                 <v-img
@@ -43,11 +47,13 @@
                   :src="qrCodeSrc"
                   width="116"
                 />
+
                 <v-icon v-else class="ma-8" color="medium-emphasis" size="36">mdi-qrcode-off</v-icon>
               </v-sheet>
             </v-col>
           </v-row>
         </v-card-text>
+
         <v-card-actions class="pt-0">
           <v-tabs
             color="primary"

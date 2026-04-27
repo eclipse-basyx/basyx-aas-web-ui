@@ -8,6 +8,7 @@
         </template>
       </v-list-item>
     </v-list>
+
     <v-row align="center">
       <v-col cols="auto">
         <v-text-field
@@ -22,6 +23,7 @@
           @keydown.enter="changeRange()"
         />
       </v-col>
+
       <v-col cols="auto">
         <v-select
           v-model="interpolation"
@@ -34,6 +36,7 @@
         />
       </v-col>
     </v-row>
+
     <div class="chart-container">
       <div ref="lineChart" />
     </div>

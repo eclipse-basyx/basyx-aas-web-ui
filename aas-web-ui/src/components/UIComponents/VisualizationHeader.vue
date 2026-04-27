@@ -4,6 +4,7 @@
     <v-card-title class="text-body-large">{{
       nameToDisplay(submodelElementData, 'en', defaultTitle)
     }}</v-card-title>
+
     <v-card-subtitle v-if="descriptionToDisplay(submodelElementData)" class="mb-2 text-body-small">
       {{ descriptionToDisplay(submodelElementData) }}
     </v-card-subtitle>

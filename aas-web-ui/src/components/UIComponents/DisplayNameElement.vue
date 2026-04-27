@@ -19,6 +19,7 @@
           <v-chip border class="mr-2" label size="x-small">{{
             displayName.language ? displayName.language : 'no-lang'
           }}</v-chip>
+
           <span>{{ displayName.text }}</span>
         </div>
       </v-list-item-subtitle>

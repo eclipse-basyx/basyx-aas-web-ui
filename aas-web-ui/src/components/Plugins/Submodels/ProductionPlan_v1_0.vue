@@ -5,11 +5,13 @@
         <div class="d-flex align-center w-100 ga-2">
           <span>{{ nameToDisplay(submodelElementData, 'en', 'Production Plan') }}</span>
           <v-spacer />
+
           <v-chip :color="isFinishedChipColor" size="small" variant="tonal">
             {{ isFinishedLabel }}
           </v-chip>
         </div>
       </v-card-title>
+
       <v-card-subtitle v-if="descriptionToDisplay(submodelElementData)" class="mb-2 text-body-small">
         {{ descriptionToDisplay(submodelElementData) }}
       </v-card-subtitle>
@@ -31,6 +33,7 @@
 
     <v-card v-else class="pt-2 pb-3">
       <v-card-title class="text-body-large">Production Steps</v-card-title>
+
       <v-card-text class="pt-0 pb-2">
         <v-stepper-vertical
           v-model="expandedSteps"
@@ -55,6 +58,7 @@
                 <div class="d-flex align-center w-100 ga-2">
                   <span class="font-weight-medium">{{ step.title }}</span>
                   <v-spacer />
+
                   <v-chip :color="statusChipColor(step.statusKind)" size="x-small" variant="tonal">
                     {{ step.status }}
                   </v-chip>
@@ -71,6 +75,7 @@
                   >
                     <v-list-item-title>{{ action.title }}</v-list-item-title>
                     <v-list-item-subtitle>{{ action.machineName }}</v-list-item-subtitle>
+
                     <template #append>
                       <v-chip :color="statusChipColor(action.statusKind)" size="x-small" variant="tonal">
                         {{ action.status }}
@@ -78,6 +83,7 @@
                     </template>
                   </v-list-item>
                 </template>
+
                 <v-list-item v-else density="compact">
                   <v-list-item-subtitle>No actions available for this step.</v-list-item-subtitle>
                 </v-list-item>

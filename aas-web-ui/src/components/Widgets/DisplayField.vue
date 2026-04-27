@@ -16,6 +16,7 @@
         style="text-align: center"
       >
         <v-card-subtitle>{{ nameToDisplay(displayElement) + ': ' }}</v-card-subtitle>
+
         <v-card-title>
           <span class="text-h5 text-primary">{{ formatValue(displayElement) }}</span>
           <span class="ml-2 text-h5">{{ unitSuffix(displayElement) }}</span>

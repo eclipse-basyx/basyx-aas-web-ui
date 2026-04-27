@@ -3,13 +3,16 @@
     <v-sheet border rounded="lg">
       <v-card-title class="bg-cardHeader">Confirm Delete</v-card-title>
       <v-divider />
+
       <v-card-text class="overflow-y-auto" style="max-height: calc(100vh - 296px)">
         <v-alert border="start" variant="tonal">
           <span>Are you sure you want to delete the AAS with the id </span>
           <span class="text-primary font-weight-bold">{{ aas?.id }}</span>
           <span>?</span>
         </v-alert>
+
         <v-checkbox v-model="deleteSubmodels" hide-details label="Also delete Submodels" />
+
         <v-alert
           v-if="deleteSubmodels"
           border
@@ -19,6 +22,7 @@
         >
           Warning: If other shells refer to the same submodels, those references are not deleted!
         </v-alert>
+
         <SubmodelSelection
           v-if="deleteSubmodels"
           :selected="selected"
@@ -26,10 +30,13 @@
           @update:selected="updateSelectedSubmodels"
         />
       </v-card-text>
+
       <v-divider />
+
       <v-card-actions>
         <v-spacer />
         <v-btn rounded="lg" text="Cancel" @click="deleteDialog = false" />
+
         <v-btn
           class="text-buttonText"
           color="error"

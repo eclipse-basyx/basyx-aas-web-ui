@@ -32,6 +32,7 @@
         </template>
       </v-text-field>
     </v-list-item-title>
+
     <v-row v-if="!isOutputVariable" class="mt-0">
       <!-- Date Picker -->
       <v-col cols="auto">

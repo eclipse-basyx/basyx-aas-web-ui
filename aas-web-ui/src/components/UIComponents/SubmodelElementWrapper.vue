@@ -7,33 +7,41 @@
           :is-editable="isEditable"
           :multi-language-property-object="submodelElementObject"
         />
+
         <Property
           v-if="submodelElementObject.modelType == 'Property'"
           :is-editable="isEditable"
           :property-object="submodelElementObject"
           @update-value="updatePropertyValue"
         />
+
         <File
           v-if="submodelElementObject.modelType == 'File'"
           :file-object="submodelElementObject"
           :is-editable="isEditable"
         />
+
         <Blob v-if="submodelElementObject.modelType == 'Blob'" :blob-object="submodelElementObject" />
+
         <Operation
           v-if="submodelElementObject.modelType == 'Operation'"
           :is-editable="isEditable"
           :operation-object="submodelElementObject"
         />
+
         <ReferenceElement
           v-if="submodelElementObject.modelType == 'ReferenceElement'"
           :is-editable="isEditable"
           :reference-element-object="submodelElementObject"
         />
+
         <Range v-if="submodelElementObject.modelType == 'Range'" :range-object="submodelElementObject" />
+
         <RelationshipElement
           v-if="submodelElementObject.modelType == 'RelationshipElement'"
           :relationship-element-object="submodelElementObject"
         />
+
         <AnnotatedRelationshipElement
           v-if="submodelElementObject.modelType == 'AnnotatedRelationshipElement'"
           :annotated-relationship-element-object="submodelElementObject"
