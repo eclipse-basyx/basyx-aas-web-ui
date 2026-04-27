@@ -232,7 +232,7 @@
   import { Background } from '@vue-flow/background'
   import { Controls } from '@vue-flow/controls'
   import { MarkerType, useVueFlow, VueFlow } from '@vue-flow/core'
-  import { computed, h, onMounted, ref, watch } from 'vue'
+  import { computed, h, nextTick, onMounted, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useTheme } from 'vuetify'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
@@ -303,6 +303,7 @@
   const nodeMap = ref<Map<string, unknown>>(new Map())
   const hasSelfLoopEdges = ref(false)
   const entryNode = ref<Record<string, unknown> | undefined>(undefined)
+  let visualizationUpdateId = 0
 
   const entityDialog = ref(false)
   const newEntity = ref(false)
@@ -452,19 +453,26 @@
   })
 
   async function initializeVisualization (): Promise<void> {
+    const updateId = ++visualizationUpdateId
     isLoading.value = true
 
-    if (hasNoSubmodelData()) {
-      resetVisualization()
-      isLoading.value = false
-      return
+    try {
+      if (hasNoSubmodelData()) {
+        resetVisualization()
+        return
+      }
+
+      const nextBomData = await setData({ ...props.submodelElementData }, props.submodelElementData.path)
+      if (updateId !== visualizationUpdateId) return
+
+      bomData.value = nextBomData
+      archetype.value = getArchetype(bomData.value)
+      await buildFlowGraph(bomData.value, updateId)
+    } finally {
+      if (updateId === visualizationUpdateId) {
+        isLoading.value = false
+      }
     }
-
-    bomData.value = await setData({ ...props.submodelElementData }, props.submodelElementData.path)
-    archetype.value = getArchetype(bomData.value)
-    buildFlowGraph(bomData.value)
-
-    isLoading.value = false
   }
 
   function hasNoSubmodelData (): boolean {
@@ -473,11 +481,14 @@
 
   function resetVisualization (): void {
     bomData.value = {}
+    entryNode.value = undefined
+    nodeMap.value.clear()
+    hasSelfLoopEdges.value = false
     nodes.value = []
     edges.value = []
   }
 
-  function buildFlowGraph (bomData: Record<string, unknown>): void {
+  async function buildFlowGraph (bomData: Record<string, unknown>, updateId: number): Promise<void> {
     entryNode.value = findEntryNode(bomData)
 
     if (!canBuildGraph(entryNode.value)) {
@@ -495,7 +506,18 @@
     // Check if there are self-loop edges
     hasSelfLoopEdges.value = tempEdges.some(e => e.type === 'selfloop')
 
+    await publishFlowGraph(tempNodes, tempEdges, updateId)
+  }
+
+  async function publishFlowGraph (tempNodes: Node[], tempEdges: Edge[], updateId: number): Promise<void> {
+    // Vue Flow validates edges against its internal node lookup as soon as edges change.
+    // Publish nodes one tick earlier so first render has all edge endpoints available.
+    edges.value = []
     nodes.value = tempNodes
+
+    await nextTick()
+    if (updateId !== visualizationUpdateId) return
+
     edges.value = tempEdges
   }
 
