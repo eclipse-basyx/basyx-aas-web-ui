@@ -10,6 +10,7 @@
 | 0.3.0 | 23.04.2026 | Mattis Weigold | Add Test Cases 5-6 |
 | 0.4.0 | 24.04.2026 | Mattis Weigold | Add Test Methodology |
 | 0.5.0 | 27.04.2026 | Mattis Weigold | Split Case 1 into Filtering and Sorting |
+| 0.6.0 | 28.04.2026 | Mattis Weigold | Redo Boolean Input Section |
 
 ## Table of Contents
 
@@ -19,8 +20,9 @@
 2. [Product Names and Attributes](#2-product-names-and-attributes)
 3. [Requirements](#3-requirements)
 4. [Test Methodology](#4-test-methodology)
-5. [Test Cases](#5-test-cases)
-6. [References](#6-references)
+5. [Test Naming Convention](#5-test-naming-convention)
+6. [Test Cases](#6-test-cases)
+7. [References](#7-references)
 
 ## 1. Introduction
 
@@ -42,11 +44,11 @@ The tests verify that both functional and non-functional requirements are adequa
 
 | Req. ID / Name | Functionality | Priority | Testsuit ID or TCS Link |
 | :-- | :-- | :-- | :-- |
-| [FR.002 / Sorting](SRS.md#42-fr002--sorting) | Dynamic sorting of shells by key attributes. | A | [TC.001](#51-tc001-aas-sorting-and-filtering-validation) |
-| [FR.003 / Filtering](SRS.md#43-fr003--search) | Add Filters for searching shells. | A | [TC.002](#52-tc002-aas-filtering-validation) |
-| [FR.004 / Nameplate generator integration](SRS.md#44-fr004--nameplate-generator-integration) | Integrate submodule into digital nameplate plugin. | A | [TC.003](#53-tc002-correct-frontend-communication-for-nameplate-generator); [TC.004](#54-tc003-correct-backend-communication-for-nameplate-generator) |
-| [FR.005 / CreatedAt and UpdatedAt support](SRS.md#45-fr005--api-enhancements) | Adds two datetime fields to be recieved from the API | A | [TC.005](#55-tc004-json-conversion) |
-| [FR.006 / Improved labeling](SRS.md#46-fr006--improved-labeling) | Add extra labels for Boolean values in "Operations" submodules to a visual switch instead of text. | B | [TC.006](#56-tc005-boolean-input-reading); [TC.007](#57-tc006-boolean-input-setting) |
+| [FR.002 / Sorting (SORT)](SRS.md#42-fr002--sorting) | Dynamic sorting of shells by key attributes. | A | [TS.SORT.001.FAS](#61-tssort001fas-aas-sorting-validation) |
+| [FR.003 / Filtering (FLTR)](SRS.md#43-fr003--search) | Add Filters for searching shells. | A | [TS.FLTR.001.FAS](#62-tsfltr001fas-aas-filtering-validation) |
+| [FR.004 / Nameplate generator integration (GEN)](SRS.md#44-fr004--nameplate-generator-integration) | Integrate submodule into digital nameplate plugin. | A | [TS.GEN.001.FAS](#63-tsgen001fas-correct-frontend-communication-for-nameplate-generator); [TC.004](#64-tc004-correct-backend-communication-for-nameplate-generator) |
+| [FR.005 / CreatedAt and UpdatedAt support](SRS.md#45-fr005--api-enhancements) | Adds two datetime fields to be recieved from the API | A | [TC.005](#65-tc005-json-conversion) |
+| [FR.006 / Improved labeling](SRS.md#46-fr006--improved-labeling) | Add extra labels for Boolean values in "Operations" submodules to a visual switch instead of text. | B | [TS.BOOL.001.FAS](#66-tsbool001fas-boolean-input-validation) |
 | [NFR.001 / Usability](SRS.md#51-nfr001--usability) | UI improvements must reduce average task time. | -- | *no testing* |
 | [NFR.002 / Performance](SRS.md#52-nfr002--performance) | No significant delay from enhancements. | D | *no testing* |
 | [NFR.003 / Stability](SRS.md#53-nfr003--stability) | Application should not crash under standard or rapid usage. | C | *no testing* |
@@ -122,11 +124,22 @@ A test is successful if the observed behavior matches the expected requirement.
 **Exit Criteria:**
 - All test cases executed  
 - No critical defects remain  
-- Results documented in the STR  
+- Results documented in the STR
 
-## 5. Test Cases
+## 5. Test Naming Convention
 
-### 5.1 <TC.001> AAS Sorting Validation
+Test cases and Test Suits will be named in the following way:
+
+TCT.FUNC.SQNR.TT
+
+– TCT = Testcase Type (TS = Test Suite TC = Testcase)
+– FUNC = Abbreviation for the related requirement functionality
+– SEQNR = sequential numbering of testcase (001)
+– TT = Test type (C = Conformance, F = Functional, L = Load/Stress, combined with A = Automated and/or S = Smoke/Regression)
+
+## 6. Test Cases/Suits
+
+### 6.1 <TS.SORT.001.FAS> AAS Sorting Validation
 <table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
   <tr>
     <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
@@ -135,7 +148,7 @@ A test is successful if the observed behavior matches the expected requirement.
   </tr>
   <tr>
     <td style="border:1px solid black; padding:8px;"><strong>ID:</strong></td>
-    <td colspan="3" style="border:1px solid black; padding:8px; ">&lt;TC.001&gt;</td>
+    <td colspan="3" style="border:1px solid black; padding:8px; ">&lt;TS.SORT.001.FAS&gt;</td>
   </tr>
   <tr>
     <td style="border:1px solid black; padding:8px;"><strong>Name:</strong></td>
@@ -167,7 +180,7 @@ A test is successful if the observed behavior matches the expected requirement.
   </tr>
 </table>
 
-### 5.2 <TC.002> AAS Filtering Validation
+### 6.2 <TS.FLTR.001.FAS> AAS Filtering Validation
 <table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
   <tr>
     <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
@@ -176,7 +189,7 @@ A test is successful if the observed behavior matches the expected requirement.
   </tr>
   <tr>
     <td style="border:1px solid black; padding:8px;"><strong>ID:</strong></td>
-    <td colspan="3" style="border:1px solid black; padding:8px; ">&lt;TC.002&gt;</td>
+    <td colspan="3" style="border:1px solid black; padding:8px; ">&lt;TS.FLTR.001.FAS&gt;</td>
   </tr>
   <tr>
     <td style="border:1px solid black; padding:8px;"><strong>Name:</strong></td>
@@ -208,7 +221,7 @@ A test is successful if the observed behavior matches the expected requirement.
   </tr>
 </table>
 
-### 5.3 <TC.003> Correct Frontend Communication for Nameplate Generator
+### 6.3 <TS.GEN.001.FAS> Correct Frontend Communication for Nameplate Generator
 <table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
   <tr>
     <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
@@ -217,7 +230,7 @@ A test is successful if the observed behavior matches the expected requirement.
   </tr>
   <tr>
     <td style="border:1px solid black; padding:8px;"><strong>ID:</strong></td>
-    <td colspan="3" style="border:1px solid black; padding:8px; ">&lt;TC.003&gt;</td>
+    <td colspan="3" style="border:1px solid black; padding:8px; ">&lt;TS.GEN.001.FAS&gt;</td>
   </tr>
   <tr>
     <td style="border:1px solid black; padding:8px;"><strong>Name:</strong></td>
@@ -245,11 +258,11 @@ A test is successful if the observed behavior matches the expected requirement.
   </tr>
   <tr>
     <th style="border:1px solid black; padding:8px; text-align:center;">Found in:</th>
-    <td colspan="2" style="border:1px solid black; padding:8px; text-align:center;">src/........</td>
+    <td colspan="2" style="border:1px solid black; padding:8px; text-align:center;">SOURCE/aas-web-ui/tests/components/Nameplate_v3_0.text.ts</td>
   </tr>
 </table>
 
-### 5.4 <TC.004> Correct Backend Communication for Nameplate Generator
+### 6.4 <TC.004> Correct Backend Communication for Nameplate Generator
 <table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
   <tr>
     <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
@@ -290,7 +303,7 @@ A test is successful if the observed behavior matches the expected requirement.
   </tr>
 </table>
 
-### 5.5 <TC.005> JSON Conversion
+### 6.5 <TC.005> JSON Conversion
 <table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
   <tr>
     <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
@@ -331,88 +344,38 @@ A test is successful if the observed behavior matches the expected requirement.
   </tr>
 </table>
 
-### 5.6 <TC.006> Boolean Input Reading
+### 6.6 <TS.BOOL.001.FAS> Boolean Input Validation
 <table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
   <tr>
-    <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
-      Test case
-    </th>
+    <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;"> Test Suite </th>
   </tr>
   <tr>
     <td style="border:1px solid black; padding:8px;"><strong>ID:</strong></td>
-    <td colspan="3" style="border:1px solid black; padding:8px; ">&lt;TC.006&gt;</td>
+    <td colspan="3" style="border:1px solid black; padding:8px;"> &lt;TS.BOOL.001.FAS&gt; </td>
   </tr>
   <tr>
     <td style="border:1px solid black; padding:8px;"><strong>Name:</strong></td>
-    <td colspan="3" style="border:1px solid black; padding:8px;">
-      Boolean Input Reading
-    </td>
+    <td colspan="3" style="border:1px solid black; padding:8px;"> Boolean Input Validation </td>
   </tr>
   <tr>
     <td style="border:1px solid black; padding:8px;"><strong>Req.-ID:</strong></td>
-    <td colspan="3" style="border:1px solid black; padding:8px;">
-      FR.006
-    </td>
+    <td colspan="3" style="border:1px solid black; padding:8px;"> FR.006 </td>
   </tr>
   <tr>
     <td style="border:1px solid black; padding:8px;"><strong>Description:</strong></td>
     <td colspan="3" style="border:1px solid black; padding:8px;">
-      The test case verifies that the BooleanInput correctly reads its values from an AAS.
+      This test suite verifies that the BooleanInput component correctly handles boolean values within the AAS UI. It includes validation of input normalization (string to boolean), correct visual representation (labels and styling), event emission on user interaction, and reactivity to prop changes.
     </td>
   </tr>
-
   <tr>
-    <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
-      Unit test
-    </th>
+    <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;"> Unit test </th>
   </tr>
   <tr>
     <th style="border:1px solid black; padding:8px; text-align:center;">Found in:</th>
-    <td colspan="2" style="border:1px solid black; padding:8px; text-align:center;">src/........</td>
+    <td colspan="2" style="border:1px solid black; padding:8px; text-align:center;"> SOURCE/aas-web-ui/tests/components/BooleanInput.test.ts </td>
   </tr>
 </table>
 
-### 5.7 <TC.007> Boolean Input Setting
-<table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
-  <tr>
-    <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
-      Test case
-    </th>
-  </tr>
-  <tr>
-    <td style="border:1px solid black; padding:8px;"><strong>ID:</strong></td>
-    <td colspan="3" style="border:1px solid black; padding:8px; ">&lt;TC.007&gt;</td>
-  </tr>
-  <tr>
-    <td style="border:1px solid black; padding:8px;"><strong>Name:</strong></td>
-    <td colspan="3" style="border:1px solid black; padding:8px;">
-      Boolean Input Setting
-    </td>
-  </tr>
-  <tr>
-    <td style="border:1px solid black; padding:8px;"><strong>Req.-ID:</strong></td>
-    <td colspan="3" style="border:1px solid black; padding:8px;">
-      FR.006
-    </td>
-  </tr>
-  <tr>
-    <td style="border:1px solid black; padding:8px;"><strong>Description:</strong></td>
-    <td colspan="3" style="border:1px solid black; padding:8px;">
-      The test case verifies that the BooleanInput correctly writes its values to the AAS.
-    </td>
-  </tr>
-
-  <tr>
-    <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
-      Unit test
-    </th>
-  </tr>
-  <tr>
-    <th style="border:1px solid black; padding:8px; text-align:center;">Found in:</th>
-    <td colspan="2" style="border:1px solid black; padding:8px; text-align:center;">src/........</td>
-  </tr>
-</table>
-
-## 6. References
+## 7. References
 
 - [Software Requirements Specification (SRS)](SRS.md)

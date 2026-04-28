@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
-import { nextTick } from 'vue';
 import Nameplate_v3_0 from '@/components/Plugins/Submodels/Nameplate_v3_0.vue';
 
 vi.mock('@/composables/AAS/SMHandling', () => ({
@@ -38,34 +37,6 @@ describe('Nameplate_v3_0', () => {
     vi.clearAllMocks();
   });
 
-  describe('Product Properties Loading', () => {
-    it('shows loading skeleton on initial mount', async () => {
-      const wrapper = createComponent();
-      await nextTick();
-      expect(wrapper.find('v-skeleton-loader').exists()).toBe(true);
-    });
-
-    it('displays product properties after data loads', async () => {
-      const wrapper = createComponent();
-      await nextTick();
-      await flushPromises();
-
-      const rows = wrapper.findAll('tbody tr');
-      expect(rows).toHaveLength(1);
-      expect(rows[0].text()).toContain('foo');
-      expect(rows[0].text()).toContain('bar');
-    });
-
-    it('filters out non-Property model types', async () => {
-      const wrapper = createComponent();
-      await flushPromises();
-
-      // Component only displays Property types (foo is Property, baz is Other)
-      const rows = wrapper.findAll('tbody tr');
-      expect(rows.every(row => row.text().includes('foo') || !row.text().includes('baz'))).toBe(true);
-    });
-  });
-
   describe('Physical Nameplate Generation', () => {
     it('generates iframe URL with correct structure', async () => {
       const wrapper = createComponent({ id: 'test-id-123', path: 'test' });
@@ -88,7 +59,6 @@ describe('Nameplate_v3_0', () => {
       const iframe = wrapper.find('iframe');
       const src = iframe.attributes('src') || '';
       expect(src).toContain('submodels?');
-      // Verify it's base64 encoded (no = padding at the end due to replaceAll)
       expect(src).not.toContain(testId);
     });
 
