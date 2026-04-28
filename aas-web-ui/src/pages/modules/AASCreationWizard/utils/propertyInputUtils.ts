@@ -1,6 +1,6 @@
-import type { PropertyElement } from '../types/template'
+import type { PropertyElement, RangeElement } from '../types/template'
 
-export function getPropertyInputType (element: PropertyElement): string {
+export function getPropertyInputType (element: PropertyElement | RangeElement): string {
   const valueType = element.valueType?.toLowerCase()
 
   if (!valueType) {

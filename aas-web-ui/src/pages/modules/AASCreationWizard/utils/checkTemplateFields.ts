@@ -2,6 +2,7 @@ import type {
   FileElement,
   MultiLanguagePropertyElement,
   PropertyElement,
+  RangeElement,
   SubmodelElementCollectionElement,
   SubmodelElementListElement,
   TemplateElement,
@@ -19,8 +20,12 @@ export function isFileElement (element: TemplateElement): element is FileElement
   return element.modelType === 'File'
 }
 
+export function isRangeElement (element: TemplateElement): element is RangeElement {
+  return element.modelType === 'Range'
+}
+
 export function isLeafElement (element: TemplateElement): boolean {
-  return isPropertyElement(element) || isMultiLanguagePropertyElement(element) || isFileElement(element)
+  return isPropertyElement(element) || isMultiLanguagePropertyElement(element) || isFileElement(element) || isRangeElement(element)
 }
 
 export function isSubmodelElementCollectionElement (

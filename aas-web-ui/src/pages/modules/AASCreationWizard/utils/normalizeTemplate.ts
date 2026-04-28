@@ -105,11 +105,24 @@ function normalizeElement (element: TemplateElement): TemplateElement | null {
  * - adds cardinality recursively
  */
 
+function isTechnicalDataArbitraryElement (element: TemplateElement): boolean {
+  return [
+    'Section',
+    'ArbitrarySMC',
+    'ArbitrarySML',
+    'ArbitraryProperty',
+    'ArbitraryMLP',
+    'ArbitraryRange',
+  ].includes(element.idShort)
+}
+
 function normalizeTechnicaldataElement (element: TemplateElement): TemplateElement | null {
   if (element.modelType === 'ReferenceElement') {
     return null
   }
-
+  if (isTechnicalDataArbitraryElement(element)) {
+    return null
+  }
   if (hasChildElementArray(element)) {
     return {
       ...element,

@@ -113,18 +113,53 @@
       variant="outlined"
       @update:model-value="onFileInput"
     />
+    <!-- Range Element -->
+    <div
+      v-else-if="checkTemplateFields.isRangeElement(element)"
+      class="d-flex flex-column ga-3"
+    >
+      <v-row>
+        <v-col cols="6">
+          <v-text-field
+            density="comfortable"
+            :error="hasRequiredError"
+            :error-messages="errorMessages"
+            hide-details="auto"
+            label="Min"
+            :model-value="rangeValue.min"
+            :type="propertyInputType"
+            variant="outlined"
+            @update:model-value="onRangeMinInput"
+          />
+        </v-col>
+
+        <v-col cols="6">
+          <v-text-field
+            density="comfortable"
+            :error="hasRequiredError"
+            :error-messages="errorMessages"
+            hide-details="auto"
+            label="Max"
+            :model-value="rangeValue.max"
+            :type="propertyInputType"
+            variant="outlined"
+            @update:model-value="onRangeMaxInput"
+          />
+        </v-col>
+      </v-row>
+    </div>
   </FormField>
 </template>
 
 <script lang="ts" setup>
-  import type { FormStateValue } from '../../types/form'
+  import type { FormStateValue, RangeFormValue } from '../../types/form'
   import type { TemplateElement } from '../../types/template'
   import { computed } from 'vue'
   import {
     isRepeatableElement, isRequiredElement,
   } from '../../utils/cardinalityUtils'
   import * as checkTemplateFields from '../../utils/checkTemplateFields'
-  import { asFile, asLangStrings, asString, asStringArray, formatLabel } from '../../utils/formFieldUtils'
+  import { asFile, asLangStrings, asRangeFormValue, asString, asStringArray, formatLabel } from '../../utils/formFieldUtils'
   import {
     addLangStringRow,
     removeLangStringRow,
@@ -149,7 +184,7 @@
   const emit = defineEmits<{
     (e: 'update:modelValue', value: FormStateValue): void
   }>()
-
+  // computed values
   const propertyValue = computed<string>(() => {
     return asString(props.modelValue)
   })
@@ -163,7 +198,7 @@
   })
 
   const propertyInputType = computed<string>(() => {
-    if (!checkTemplateFields.isPropertyElement(props.element)) {
+    if (!checkTemplateFields.isPropertyElement(props.element) && !checkTemplateFields.isRangeElement(props.element)) {
       return 'text'
     }
 
@@ -184,6 +219,10 @@
     }
 
     return isEmptyFormValue(props.modelValue)
+  })
+
+  const rangeValue = computed<RangeFormValue>(() => {
+    return asRangeFormValue(props.modelValue)
   })
 
   function onPropertyInput (value: string | null): void {
@@ -236,5 +275,16 @@
       ? `${formatLabel(props.element.idShort)} *`
       : formatLabel(props.element.idShort)
   }
-
+  function onRangeMinInput (value: string | null): void {
+    emit('update:modelValue', {
+      ...rangeValue.value,
+      min: value ?? '',
+    })
+  }
+  function onRangeMaxInput (value: string | null): void {
+    emit('update:modelValue', {
+      ...rangeValue.value,
+      max: value ?? '',
+    })
+  }
 </script>

@@ -56,7 +56,7 @@ type ReferenceElement = BaseTemplateElement & {
   value?: Reference
 }
 // type support for Technical data
-type RangeElement = BaseTemplateElement & {
+export type RangeElement = BaseTemplateElement & {
   modelType: 'Range'
   valueType?: string
   min?: string
