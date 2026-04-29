@@ -11,6 +11,7 @@
 | 0.4.0 | 24.04.2026 | Mattis Weigold | Add Test Methodology |
 | 0.5.0 | 27.04.2026 | Mattis Weigold | Split Case 1 into Filtering and Sorting |
 | 0.6.0 | 28.04.2026 | Mattis Weigold | Redo Boolean Input Section |
+| 0.7.0 | 29.04.2026 | Mattis Weigold | Add Nameplate Backend Test |
 
 ## Table of Contents
 
@@ -46,7 +47,7 @@ The tests verify that both functional and non-functional requirements are adequa
 | :-- | :-- | :-- | :-- |
 | [FR.002 / Sorting (SORT)](SRS.md#42-fr002--sorting) | Dynamic sorting of shells by key attributes. | A | [TS.SORT.001.FAS](#61-tssort001fas-aas-sorting-validation) |
 | [FR.003 / Filtering (FLTR)](SRS.md#43-fr003--search) | Add Filters for searching shells. | A | [TS.FLTR.001.FAS](#62-tsfltr001fas-aas-filtering-validation) |
-| [FR.004 / Nameplate generator integration (GEN)](SRS.md#44-fr004--nameplate-generator-integration) | Integrate submodule into digital nameplate plugin. | A | [TS.GEN.001.FAS](#63-tsgen001fas-correct-frontend-communication-for-nameplate-generator); [TC.004](#64-tc004-correct-backend-communication-for-nameplate-generator) |
+| [FR.004 / Nameplate generator integration (GEN)](SRS.md#44-fr004--nameplate-generator-integration) | Integrate submodule into digital nameplate plugin. | A | [TS.GEN.001.FAS](#63-tsgen001fas-correct-frontend-communication-for-nameplate-generator); [TS.GEN.002.FAS](#64-tsgen002fas-correct-backend-communication-for-nameplate-generator) |
 | [FR.005 / CreatedAt and UpdatedAt support](SRS.md#45-fr005--api-enhancements) | Adds two datetime fields to be recieved from the API | A | [TC.005](#65-tc005-json-conversion) |
 | [FR.006 / Improved labeling](SRS.md#46-fr006--improved-labeling) | Add extra labels for Boolean values in "Operations" submodules to a visual switch instead of text. | B | [TS.BOOL.001.FAS](#66-tsbool001fas-boolean-input-validation) |
 | [NFR.001 / Usability](SRS.md#51-nfr001--usability) | UI improvements must reduce average task time. | -- | *no testing* |
@@ -262,7 +263,7 @@ TCT.FUNC.SQNR.TT
   </tr>
 </table>
 
-### 6.4 <TC.004> Correct Backend Communication for Nameplate Generator
+### 6.4 <TS.GEN.002.FAS> Correct Backend Communication for Nameplate Generator
 <table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
   <tr>
     <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
@@ -271,7 +272,7 @@ TCT.FUNC.SQNR.TT
   </tr>
   <tr>
     <td style="border:1px solid black; padding:8px;"><strong>ID:</strong></td>
-    <td colspan="3" style="border:1px solid black; padding:8px; ">&lt;TC.004&gt;</td>
+    <td colspan="3" style="border:1px solid black; padding:8px; ">&lt;TS.GEN.002.FAS&gt;</td>
   </tr>
   <tr>
     <td style="border:1px solid black; padding:8px;"><strong>Name:</strong></td>
@@ -288,18 +289,23 @@ TCT.FUNC.SQNR.TT
   <tr>
     <td style="border:1px solid black; padding:8px;"><strong>Description:</strong></td>
     <td colspan="3" style="border:1px solid black; padding:8px;">
-      The test case verifies that the Nameplate Generator api correctly handles calls and returns valid data.
+      The test case verifies that the Nameplate Generator api correctly handles calls and returns valid data by
+      accepting and parsing the request,
+      calling an external API and
+      returning generated HTML (or an error)
     </td>
   </tr>
 
   <tr>
     <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
-      Unit test
+      Integration test
     </th>
   </tr>
   <tr>
     <th style="border:1px solid black; padding:8px; text-align:center;">Found in:</th>
-    <td colspan="2" style="border:1px solid black; padding:8px; text-align:center;">src/........</td>
+    <td colspan="2" style="border:1px solid black; padding:8px; text-align:center;">
+      SOURCE/aas-test-backend/nameplate-generator-backend/tests/nameplate.test.js
+    </td>
   </tr>
 </table>
 
@@ -372,7 +378,9 @@ TCT.FUNC.SQNR.TT
   </tr>
   <tr>
     <th style="border:1px solid black; padding:8px; text-align:center;">Found in:</th>
-    <td colspan="2" style="border:1px solid black; padding:8px; text-align:center;"> SOURCE/aas-web-ui/tests/components/BooleanInput.test.ts </td>
+    <td colspan="2" style="border:1px solid black; padding:8px; text-align:center;">
+      SOURCE/aas-web-ui/tests/components/BooleanInput.test.ts
+    </td>
   </tr>
 </table>
 
