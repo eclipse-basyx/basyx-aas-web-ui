@@ -42,6 +42,6 @@ export type ArbitraryNode
     | ArbitraryRangeNode
 
 export type TechnicalPropertyAreaEditorItem = {
-  id: string
+  editorId: string
   arbitraryNodes: ArbitraryNode[]
 }

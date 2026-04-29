@@ -94,3 +94,26 @@ export function asRangeFormValue (value: FormStateValue): RangeFormValue {
 // export function asReference (value: FormStateValue): Reference | null {
 //   return isReference(value) ? value : null
 // }
+
+export function deepCopyFormState<T> (value: T): T {
+  if (value === null || typeof value !== 'object') {
+    return value
+  }
+
+  if (value instanceof File) {
+    return value
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(item => deepCopyFormState(item)) as T
+  }
+
+  const rawObject = toRaw(value) as Record<string, unknown>
+  const result: Record<string, unknown> = {}
+
+  for (const [key, nestedValue] of Object.entries(rawObject)) {
+    result[key] = deepCopyFormState(nestedValue)
+  }
+
+  return result as T
+}

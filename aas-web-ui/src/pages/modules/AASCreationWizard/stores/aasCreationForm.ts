@@ -1,3 +1,4 @@
+import type { TechnicalPropertyAreaEditorItem } from '../types/arbitrary'
 import type { FormStateObject } from '../types/form'
 import type { DigitalNameplateTemplate, HandoverDocumentationTemplate, TechnicalDataTemplate } from '../types/template'
 import { defineStore } from 'pinia'
@@ -34,7 +35,10 @@ export const useAASCreationStore = defineStore('aasCreationForm', {
     digitalNameplateData: null as DigitalNameplateTemplate | null,
     technicalDataData: null as TechnicalDataTemplate | null,
     handoverDocumentationData: null as HandoverDocumentationTemplate | null,
+
     digitalNameplateFormState: null as FormStateObject | null,
+    technicalDataFormState: null as FormStateObject | null,
+    technicalPropertyAreas: [] as TechnicalPropertyAreaEditorItem[],
   }),
 
   actions: {
@@ -60,12 +64,21 @@ export const useAASCreationStore = defineStore('aasCreationForm', {
     saveDigitalNameplateFormState (data: FormStateObject) {
       this.digitalNameplateFormState = structuredClone(data)
     },
+    saveTechnicalDataFormState (data: FormStateObject) {
+      this.technicalDataFormState = structuredClone(data)
+    },
+    saveTechnicalPropertyAreas (data: TechnicalPropertyAreaEditorItem[]) {
+      this.technicalPropertyAreas = structuredClone(data)
+    },
+
     resetCreationState () {
       this.assetData = createInitialAssetData()
       this.digitalNameplateData = null
       this.technicalDataData = null
       this.handoverDocumentationData = null
       this.digitalNameplateFormState = null
+      this.technicalDataFormState = null
+      this.technicalPropertyAreas = [] as TechnicalPropertyAreaEditorItem[]
     },
   },
   getters: {

@@ -33,7 +33,7 @@
           </v-col> -->
           <v-col cols="12">
             <v-card class="pa-4" variant="outlined">
-              <div class="d-flex justify-space-between aligh-center mb-4">
+              <div class="d-flex justify-space-between align-center mb-4">
                 <div>
                   <div class="text-subtitle-1 font-weight-medium">
                     Technical Property Areas
@@ -58,11 +58,11 @@
               <div v-else class="d-flex flex-column ga-4">
                 <v-card
                   v-for="(area,index) in technicalPropertyAreas"
-                  :key="area.id"
+                  :key="area.editorId"
                   class="pa-4"
                   variant="flat"
                 >
-                  <div class="d-flex justify-space-between aligh-center mb-4">
+                  <div class="d-flex justify-space-between align-center mb-4">
                     <div class="text-subtitle-2 font-weight-medium">
                       Technical Property Area {{ index + 1 }}
                     </div>
@@ -71,7 +71,7 @@
                       color="error"
                       icon="mdi-delete"
                       variant="text"
-                      @click="removeTechnicalPropertyArea(area.id)"
+                      @click="removeTechnicalPropertyArea(area.editorId)"
                     />
                   </div>
 
@@ -79,7 +79,7 @@
                     is-nested
                     :model-value="area.arbitraryNodes"
                     title="Custom Structure"
-                    @update:model-value="updateTechnicalPropertyAreaNodes(area.id, $event)"
+                    @update:model-value="updateTechnicalPropertyAreaNodes(area.editorId, $event)"
                   />
                 </v-card>
               </div>
@@ -100,9 +100,15 @@
   import type { FormStateObject } from '../types/form'
   import type { TechnicalDataTemplate } from '../types/template'
   import type { ValidationIssue } from '../types/validation'
+  import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
   import { computed, onMounted, ref } from 'vue'
+  import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
+  import { buildTechnicalData, buildTechnicalPropertyAreas } from '../builders/buildTechnicalData'
+  import { useAASCreationStore } from '../stores/aasCreationForm'
   import template from '../templates/technical-data.json'
   import { createInitialFormState } from '../utils/createInitialFormState'
+  import { deepCopyFormState } from '../utils/formFieldUtils'
+  import { createUniqueIdShort, labelToIdShort } from '../utils/idShortUtils'
   import { normalizeTechnicalDataTemplate } from '../utils/normalizeTemplate'
   import ArbitraryStructureEditor from './ArbitraryStructureEditor.vue'
   import SubmodelRenderer from './renderer/SubmodelRenderer.vue'
@@ -120,24 +126,103 @@
   const validationIssues = ref<ValidationIssue[]>([])
   const technicalPropertyAreas = ref<TechnicalPropertyAreaEditorItem[]>([])
 
+  const { postSubmodel } = useSMRepositoryClient()
+  const isPostingTechnicalData = ref(false)
+
   // computed
   const rendererElements = computed(() => {
     return templateData.submodelElements.filter(
       element => element.idShort !== 'TechnicalPropertyAreas',
     )
   })
+  // store
+  const store = useAASCreationStore()
+
+  const usedIdShorts = new Set<string>()
 
   onMounted(() => {
+    if (store.technicalDataFormState) {
+      formValues.value = deepCopyFormState(store.technicalDataFormState)
+    }
+    if (store.technicalPropertyAreas.length > 0) {
+      technicalPropertyAreas.value = deepCopyFormState(store.technicalPropertyAreas)
+    }
     console.log('Technical Data templatedata is', templateData)
     console.log('Technical Data formvalues is', formValues)
     const initialState = createInitialFormState(templateData)
     console.log('initial technical data form state:', initialState)
+
+    console.log('idShort test 1:', labelToIdShort('Rated motor power', 'UnnamedProperty'))
+    console.log('idShort test 2:', labelToIdShort('Voltage (AC)', 'UnnamedProperty'))
+    console.log('idShort test 3:', labelToIdShort('motor-speed_max', 'UnnamedProperty'))
+
+    console.log('unique idShort 1:', createUniqueIdShort('Power', usedIdShorts, 'UnnamedProperty'))
+    console.log('unique idShort 2:', createUniqueIdShort('Power', usedIdShorts, 'UnnamedProperty'))
+    console.log('unique idShort 3:', createUniqueIdShort('Power', usedIdShorts, 'UnnamedProperty'))
   })
 
-  function saveAndNext (): void {
+  async function saveAndNext (): Promise<void> {
     console.log('technical data fixed formValues', formValues.value)
     console.log('technical property areas', technicalPropertyAreas.value)
-    props.next()
+
+    if (!props.isActiveComponent) {
+      return
+    }
+    if (isPostingTechnicalData.value) {
+      return
+    }
+
+    isPostingTechnicalData.value = true
+
+    try {
+      const rawFormState = deepCopyFormState(formValues.value)
+      const rawTechnicalPropertyAreas = deepCopyFormState(technicalPropertyAreas.value)
+
+      store.saveTechnicalDataFormState(rawFormState)
+      store.saveTechnicalPropertyAreas(rawTechnicalPropertyAreas)
+
+      // const builtTechnicalPropertyAreas = rawTechnicalPropertyAreas.map((area, index) => ({
+      //   editorId: area.editorId,
+      //   idShort: `TechnicalPropertyArea_${String(index).padStart(2, '0')}`,
+      //   value: buildArbitrarySubmodelElements(area.arbitraryNodes),
+      // }))
+      const builtTechnicalPropertyAreas = buildTechnicalPropertyAreas(rawTechnicalPropertyAreas)
+      console.log('built technical property areas', builtTechnicalPropertyAreas)
+
+      const builtTechnicalData = buildTechnicalData(rawFormState, rawTechnicalPropertyAreas)
+      console.log('builtTechnicalData', builtTechnicalData)
+
+      const technicalDataParseResult = jsonization.submodelFromJsonable(builtTechnicalData as any)
+
+      if (technicalDataParseResult.error !== null) {
+        console.error('Error parsing Technical Data submodel:', technicalDataParseResult.error)
+        window.alert('Technical Data submodel could not be parsed. Check console.')
+        return
+      }
+
+      const technicalDataSubmodelInstance = technicalDataParseResult.mustValue()
+      console.log('Technical Data parse success:', technicalDataSubmodelInstance)
+
+      const postSuccess = await postSubmodel(technicalDataSubmodelInstance)
+
+      console.log('Technical Data post success:', postSuccess)
+
+      if (!postSuccess) {
+        window.alert('Technical Data submodel post failed. Check console.')
+        return
+      }
+
+      store.saveTechnicalDataData(builtTechnicalData)
+
+      window.alert('Technical data submodel post failed. Check console')
+
+      props.next()
+    } catch (error) {
+      console.error('Unexpected technical data post error:', error)
+      window.alert('unexpected technical data post error: ${String(error)}')
+    } finally {
+      isPostingTechnicalData.value = false
+    }
   }
 
   function onFormStateUpdate (value: FormStateObject): void {
@@ -146,18 +231,18 @@
 
   function addTechnicalPropertyArea (): void {
     technicalPropertyAreas.value.push({
-      id: createTechnicalPropertyAreaId(),
+      editorId: createTechnicalPropertyAreaEditorId(),
       arbitraryNodes: [],
     })
   }
-  function createTechnicalPropertyAreaId (): string {
+  function createTechnicalPropertyAreaEditorId (): string {
     return `technical-property-area-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
   }
-  function removeTechnicalPropertyArea (areaId: string): void {
-    technicalPropertyAreas.value = technicalPropertyAreas.value.filter(area => area.id !== areaId)
+  function removeTechnicalPropertyArea (editorId: string): void {
+    technicalPropertyAreas.value = technicalPropertyAreas.value.filter(area => area.editorId !== editorId)
   }
-  function updateTechnicalPropertyAreaNodes (id: string, nodes: ArbitraryNode[]): void {
-    technicalPropertyAreas.value = technicalPropertyAreas.value.map(area => area.id == id ? { ...area, arbitraryNodes: nodes } : area)
+  function updateTechnicalPropertyAreaNodes (editorId: string, nodes: ArbitraryNode[]): void {
+    technicalPropertyAreas.value = technicalPropertyAreas.value.map(area => area.editorId === editorId ? { ...area, arbitraryNodes: nodes } : area)
   }
 
 </script>
