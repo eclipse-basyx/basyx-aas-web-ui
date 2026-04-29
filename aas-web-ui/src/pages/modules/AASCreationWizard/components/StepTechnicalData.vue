@@ -23,6 +23,7 @@
             <SubmodelRenderer
               :elements="rendererElements"
               :form-state="formValues"
+              :show-validation="hasAttemptedSubmit"
               @update:form-state="onFormStateUpdate"
             />
           </v-col>
@@ -100,7 +101,7 @@
   import type { FormStateObject } from '../types/form'
   import type { TechnicalDataTemplate } from '../types/template'
   import type { ValidationIssue } from '../types/validation'
-  import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
+  // import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
   import { computed, onMounted, ref } from 'vue'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { buildTechnicalData, buildTechnicalPropertyAreas } from '../builders/buildTechnicalData'
@@ -108,8 +109,9 @@
   import template from '../templates/technical-data.json'
   import { createInitialFormState } from '../utils/createInitialFormState'
   import { deepCopyFormState } from '../utils/formFieldUtils'
-  import { createUniqueIdShort, labelToIdShort } from '../utils/idShortUtils'
+  // import { createUniqueIdShort, labelToIdShort } from '../utils/idShortUtils'
   import { normalizeTechnicalDataTemplate } from '../utils/normalizeTemplate'
+  import { validateTemplateElements } from '../utils/validationUtils'
   import ArbitraryStructureEditor from './ArbitraryStructureEditor.vue'
   import SubmodelRenderer from './renderer/SubmodelRenderer.vue'
 
@@ -139,6 +141,7 @@
   const store = useAASCreationStore()
 
   const usedIdShorts = new Set<string>()
+  const hasAttemptedSubmit = ref(false)
 
   onMounted(() => {
     if (store.technicalDataFormState) {
@@ -151,17 +154,9 @@
     console.log('Technical Data formvalues is', formValues)
     const initialState = createInitialFormState(templateData)
     console.log('initial technical data form state:', initialState)
-
-    console.log('idShort test 1:', labelToIdShort('Rated motor power', 'UnnamedProperty'))
-    console.log('idShort test 2:', labelToIdShort('Voltage (AC)', 'UnnamedProperty'))
-    console.log('idShort test 3:', labelToIdShort('motor-speed_max', 'UnnamedProperty'))
-
-    console.log('unique idShort 1:', createUniqueIdShort('Power', usedIdShorts, 'UnnamedProperty'))
-    console.log('unique idShort 2:', createUniqueIdShort('Power', usedIdShorts, 'UnnamedProperty'))
-    console.log('unique idShort 3:', createUniqueIdShort('Power', usedIdShorts, 'UnnamedProperty'))
   })
 
-  async function saveAndNext (): Promise<void> {
+  function saveAndNext (): void {
     console.log('technical data fixed formValues', formValues.value)
     console.log('technical property areas', technicalPropertyAreas.value)
 
@@ -171,58 +166,56 @@
     if (isPostingTechnicalData.value) {
       return
     }
+    hasAttemptedSubmit.value = true
+    const validationResult = validateTemplateElements(
+      rendererElements.value,
+      formValues.value,
+    )
+    if (!validationResult.isValid) {
+      validationIssues.value = validationResult.issues
+      console.log('Technical Data validation failed:', validationResult.issues)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
 
+    validationIssues.value = []
     isPostingTechnicalData.value = true
 
-    try {
-      const rawFormState = deepCopyFormState(formValues.value)
-      const rawTechnicalPropertyAreas = deepCopyFormState(technicalPropertyAreas.value)
+    const rawFormState = deepCopyFormState(formValues.value)
+    const rawTechnicalPropertyAreas = deepCopyFormState(technicalPropertyAreas.value)
 
-      store.saveTechnicalDataFormState(rawFormState)
-      store.saveTechnicalPropertyAreas(rawTechnicalPropertyAreas)
+    store.saveTechnicalDataFormState(rawFormState)
+    store.saveTechnicalPropertyAreas(rawTechnicalPropertyAreas)
 
-      // const builtTechnicalPropertyAreas = rawTechnicalPropertyAreas.map((area, index) => ({
-      //   editorId: area.editorId,
-      //   idShort: `TechnicalPropertyArea_${String(index).padStart(2, '0')}`,
-      //   value: buildArbitrarySubmodelElements(area.arbitraryNodes),
-      // }))
-      const builtTechnicalPropertyAreas = buildTechnicalPropertyAreas(rawTechnicalPropertyAreas)
-      console.log('built technical property areas', builtTechnicalPropertyAreas)
+    const builtTechnicalPropertyAreas = buildTechnicalPropertyAreas(rawTechnicalPropertyAreas)
+    console.log('built technical property areas', builtTechnicalPropertyAreas)
 
-      const builtTechnicalData = buildTechnicalData(rawFormState, rawTechnicalPropertyAreas)
-      console.log('builtTechnicalData', builtTechnicalData)
+    const builtTechnicalData = buildTechnicalData(rawFormState, rawTechnicalPropertyAreas)
+    console.log('builtTechnicalData', builtTechnicalData)
 
-      const technicalDataParseResult = jsonization.submodelFromJsonable(builtTechnicalData as any)
+    // const technicalDataParseResult = jsonization.submodelFromJsonable(builtTechnicalData as any)
 
-      if (technicalDataParseResult.error !== null) {
-        console.error('Error parsing Technical Data submodel:', technicalDataParseResult.error)
-        window.alert('Technical Data submodel could not be parsed. Check console.')
-        return
-      }
+    // if (technicalDataParseResult.error !== null) {
+    //   console.error('Error parsing Technical Data submodel:', technicalDataParseResult.error)
+    //   window.alert('Technical Data submodel could not be parsed. Check console.')
+    //   return
+    // }
 
-      const technicalDataSubmodelInstance = technicalDataParseResult.mustValue()
-      console.log('Technical Data parse success:', technicalDataSubmodelInstance)
+    // const technicalDataSubmodelInstance = technicalDataParseResult.mustValue()
+    // console.log('Technical Data parse success:', technicalDataSubmodelInstance)
 
-      const postSuccess = await postSubmodel(technicalDataSubmodelInstance)
+    // const postSuccess = await postSubmodel(technicalDataSubmodelInstance)
 
-      console.log('Technical Data post success:', postSuccess)
+    // console.log('Technical Data post success:', postSuccess)
 
-      if (!postSuccess) {
-        window.alert('Technical Data submodel post failed. Check console.')
-        return
-      }
+    // if (!postSuccess) {
+    //   window.alert('Technical Data submodel post failed. Check console.')
+    //   return
+    // }
 
-      store.saveTechnicalDataData(builtTechnicalData)
+    store.saveTechnicalDataData(builtTechnicalData)
 
-      window.alert('Technical data submodel post failed. Check console')
-
-      props.next()
-    } catch (error) {
-      console.error('Unexpected technical data post error:', error)
-      window.alert('unexpected technical data post error: ${String(error)}')
-    } finally {
-      isPostingTechnicalData.value = false
-    }
+    props.next()
   }
 
   function onFormStateUpdate (value: FormStateObject): void {

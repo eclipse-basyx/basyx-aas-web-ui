@@ -9,16 +9,12 @@ export function useAASCreationSubmission () {
   const { postSubmodel } = useSMRepositoryClient()
   const store = useAASCreationStore()
 
-  async function submitAll (): Promise<boolean> {
-    const assetData = store.assetData
-    const digitalNameplate = store.digitalNameplateData
-
-    if (!digitalNameplate) {
-      console.error('Digital Nameplate data is missing')
-      return false
-    }
+  async function postBuiltSubmodel (
+    submodelData: unknown,
+    label: string,
+  ): Promise<boolean> {
     try {
-      const submodelParseResult = jsonization.submodelFromJsonable(digitalNameplate as any)
+      const submodelParseResult = jsonization.submodelFromJsonable(submodelData as any)
 
       if (submodelParseResult.error !== null) {
         console.error('Error parsing Submodel:', submodelParseResult.error)
@@ -35,13 +31,44 @@ export function useAASCreationSubmission () {
 
         return false
       }
+      return true
     } catch (error) {
       console.log('unexpected submodel submission error', error)
-      window.alert('There was an error creating submodel: ${String(error)}')
+      window.alert(`There was an error creating submodel: ${String(error)}`)
+      return false
+    }
+  }
+
+  async function submitAll (): Promise<boolean> {
+    const assetData = store.assetData
+    const digitalNameplate = store.digitalNameplateData
+    const technicalData = store.technicalDataData
+
+    if (!digitalNameplate) {
+      console.error('Digital Nameplate data is missing')
+      return false
+    }
+    if (!technicalData) {
+      console.error('Technical Data is missing')
+      return false
+    }
+    const digitalNameplateSuccess = await postBuiltSubmodel(
+      digitalNameplate,
+      'Digital Nameplate',
+    )
+    if (!digitalNameplateSuccess) {
       return false
     }
 
-    const builtAas = buildAssetAdministrationShell(assetData, digitalNameplate)
+    const technicalDataSuccess = await postBuiltSubmodel(
+      technicalData,
+      'Technical Data',
+    )
+    if (!technicalDataSuccess) {
+      return false
+    }
+    // post the aas with submodels
+    const builtAas = buildAssetAdministrationShell(assetData, digitalNameplate, technicalData)
     console.log('builtAas', builtAas)
 
     try {
