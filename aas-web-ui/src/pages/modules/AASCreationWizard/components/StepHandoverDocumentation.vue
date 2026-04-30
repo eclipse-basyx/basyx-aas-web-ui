@@ -49,6 +49,7 @@
   import { useAASCreationStore } from '../stores/aasCreationForm'
   import template from '../templates/handover-documentation.json'
   import { createInitialFormState } from '../utils/createInitialFormState'
+  import { normalizeHandoverDocumentationTemplate } from '../utils/normalizeTemplate'
   import SubmodelRenderer from './renderer/SubmodelRenderer.vue'
 
   const props = defineProps<{
@@ -64,9 +65,9 @@
   const isSubmitting = ref(false)
 
   const formRef = ref()
-  // const rawTemplate = template as TechnicalDataTemplate
-  const templateData = template as unknown as HandoverDocumentationTemplate
-  // const templateData = normalizeTechnicalDataTemplate(rawTemplate)
+  const rawTemplate = template as HandoverDocumentationTemplate
+  // const templateData = template as unknown as HandoverDocumentationTemplate
+  const templateData = normalizeHandoverDocumentationTemplate(rawTemplate)
   const formValues = ref<FormStateObject>(createInitialFormState(templateData))
   const validationIssues = ref<ValidationIssue[]>([])
 

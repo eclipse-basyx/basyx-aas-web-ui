@@ -5,6 +5,7 @@ import type {
   TechnicalDataTemplate,
   TemplateElement,
 } from '../types/template'
+import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils'
 import contactInformationSmc from '../templates/contact-information-smc.json'
 import { parseCardinality } from './cardinalityUtils'
 
@@ -143,10 +144,39 @@ function normalizeTechnicaldataElement (element: TemplateElement): TemplateEleme
  * - removes ReferenceElement
  * - adds cardinality recursively
  */
+const EXCLUDED_HANDOVER_SEMANTIC_IDS = [
+  // idShort: Entities (SML)
+  'https://admin-shell.io/vdi/2770/1/0/EntitiesForDocumentation',
+  // idShort: Entity element of the Entities
+  'https://admin-shell.io/vdi/2770/1/0/EntityForDocumentation',
+  // idShort: RefersToEntities
+  '0173-1#02-ABK288#002',
+  // idShort: BasedOnReferences
+  '0173-1#02-ABK289#002',
+  // TranslationOfEntities
+  '0173-1#02-ABK290#002',
+  // idShort: DocumentedEntities
+  'https://admin-shell.io/vdi/2770/1/0/Document/DocumentedEntities',
+  // Documented Entitiy Reference
+  'https://adminshell.io/vdi/2770/1/0/Document/DocumentedEntity',
+]
+
+function shouldExcludeHandoverDocumentationElement (
+  element: TemplateElement,
+): boolean {
+  return EXCLUDED_HANDOVER_SEMANTIC_IDS.some(semanticId =>
+    checkSemanticId(element, semanticId),
+  )
+}
+
 function normalizeHandoverDocumentationElement (element: TemplateElement): TemplateElement | null {
-  if (element.modelType === 'ReferenceElement') {
+  // if (element.modelType === 'ReferenceElement') {
+  //   return null
+  // }
+  if (shouldExcludeHandoverDocumentationElement(element)) {
     return null
   }
+
   if (hasChildElementArray(element)) {
     return {
       ...element,
