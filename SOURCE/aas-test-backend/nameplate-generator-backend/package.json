@@ -5,12 +5,14 @@
   "main": "./src/index.js",
   "scripts": {
     "start": "node ./src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "jest": "^30.3.0",
     "jsdom": "^24.0.0",
-    "qrcode": "^1.5.3"
+    "qrcode": "^1.5.3",
+    "supertest": "^7.2.2"
   }
 }
