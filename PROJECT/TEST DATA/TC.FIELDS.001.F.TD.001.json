@@ -1,0 +1,30 @@
+{
+  "assetAdministrationShells": [
+    {
+      "modelType": "AssetAdministrationShell",
+      "id": "aas-001",
+      "idShort": "AAS001",
+      "administration": {
+        "version": "1",
+        "revision": "0",
+        "createdAt": "2024-01-01T10:00:00Z",
+        "updatedAt": "2024-06-01T15:30:00Z"
+      },
+      "assetInformation": {
+        "assetKind": "Instance",
+        "assetType": "SensorType"
+      },
+      "submodels": [
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "dummy-submodel"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

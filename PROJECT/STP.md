@@ -12,18 +12,19 @@
 | 0.5.0 | 27.04.2026 | Mattis Weigold | Split Case 1 into Filtering and Sorting |
 | 0.6.0 | 28.04.2026 | Mattis Weigold | Redo Boolean Input Section |
 | 0.7.0 | 29.04.2026 | Mattis Weigold | Add Nameplate Backend Test |
+| 1.0.0 | 01.05.2026 | Mattis Weigold | Add manual Fields Test | 
 
 ## Table of Contents
 
-1. [Introduction](#1-introduction)
-    1.1 [Purpose](#11-purpose)
-    1.2 [Scope](#12-scope)
-2. [Product Names and Attributes](#2-product-names-and-attributes)
-3. [Requirements](#3-requirements)
-4. [Test Methodology](#4-test-methodology)
-5. [Test Naming Convention](#5-test-naming-convention)
-6. [Test Cases](#6-test-cases)
-7. [References](#7-references)
+1. [Introduction](#1-introduction)  
+    1.1 [Purpose](#11-purpose)  
+    1.2 [Scope](#12-scope)  
+2. [Product Names and Attributes](#2-product-names-and-attributes)  
+3. [Requirements](#3-requirements)  
+4. [Test Methodology](#4-test-methodology)  
+5. [Test Naming Convention](#5-test-naming-convention)  
+6. [Test Cases](#6-test-cases)  
+7. [References](#7-references)  
 
 ## 1. Introduction
 
@@ -47,9 +48,9 @@ The tests verify that both functional and non-functional requirements are adequa
 | :-- | :-- | :-- | :-- |
 | [FR.002 / Sorting (SORT)](SRS.md#42-fr002--sorting) | Dynamic sorting of shells by key attributes. | A | [TS.SORT.001.FAS](#61-tssort001fas-aas-sorting-validation) |
 | [FR.003 / Filtering (FLTR)](SRS.md#43-fr003--search) | Add Filters for searching shells. | A | [TS.FLTR.001.FAS](#62-tsfltr001fas-aas-filtering-validation) |
-| [FR.004 / Nameplate generator integration (GEN)](SRS.md#44-fr004--nameplate-generator-integration) | Integrate submodule into digital nameplate plugin. | A | [TS.GEN.001.FAS](#63-tsgen001fas-correct-frontend-communication-for-nameplate-generator); [TS.GEN.002.FAS](#64-tsgen002fas-correct-backend-communication-for-nameplate-generator) |
-| [FR.005 / CreatedAt and UpdatedAt support](SRS.md#45-fr005--api-enhancements) | Adds two datetime fields to be recieved from the API | A | [TC.005](#65-tc005-json-conversion) |
-| [FR.006 / Improved labeling](SRS.md#46-fr006--improved-labeling) | Add extra labels for Boolean values in "Operations" submodules to a visual switch instead of text. | B | [TS.BOOL.001.FAS](#66-tsbool001fas-boolean-input-validation) |
+| [FR.004 / Nameplate generator integration (GEN)](SRS.md#44-fr004--nameplate-generator-integration) | Integrate submodule into digital nameplate plugin. | B | [TS.GEN.001.FAS](#63-tsgen001fas-correct-frontend-communication-for-nameplate-generator); [TS.GEN.002.FAS](#64-tsgen002fas-correct-backend-communication-for-nameplate-generator) |
+| [FR.005 / CreatedAt and UpdatedAt support (FIELDS)](SRS.md#45-fr005--api-enhancements) | Adds two datetime fields to be recieved from the API | D | [TC.FIELDS.001.F](#65-tcfields001f-display-and-integrity-of-datetime-fields) |
+| [FR.006 / Improved labeling](SRS.md#46-fr006--improved-labeling) | Add extra labels for Boolean values in "Operations" submodules to a visual switch instead of text. | C | [TS.BOOL.001.FAS](#66-tsbool001fas-boolean-input-validation) |
 | [NFR.001 / Usability](SRS.md#51-nfr001--usability) | UI improvements must reduce average task time. | -- | *no testing* |
 | [NFR.002 / Performance](SRS.md#52-nfr002--performance) | No significant delay from enhancements. | D | *no testing* |
 | [NFR.003 / Stability](SRS.md#53-nfr003--stability) | Application should not crash under standard or rapid usage. | C | *no testing* |
@@ -79,11 +80,8 @@ The following test types are applied:
 - **Integration Testing**  
   Ensures correct communication between system components (frontend to backend, API calls).
 
-- **API Testing**  
-  Validates correctness and structure of JSON responses.
-
 - **UI Testing (Manual)**  
-  Verifies correct rendering and interaction behavior.09
+  Verifies correct rendering and interaction behavior.
 
 ### 4.3 Test Environment
 
@@ -92,20 +90,7 @@ Tests are executed in the following environment:
 - Web browser (e.g., Firefox)  
 - Local or test deployment of the BaSyx AAS Web UI  
 - Backend services in a local or test setup  
-- Predefined AAS datasets  
-
-### 4.4 Test Data
-
-Test data includes:
-
-- AAS Shells with known attributes  
-- Nested structures for search validation  
-- Boolean values for input/output tests  
-
-Edge cases:
-- Empty fields  
-- Large datasets  
-- Special characters  
+- Predefined test data  
 
 ### 4.5 Test Execution
 
@@ -144,7 +129,7 @@ TCT.FUNC.SQNR.TT
 <table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
   <tr>
     <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
-      Test case
+      Test Suite
     </th>
   </tr>
   <tr>
@@ -185,7 +170,7 @@ TCT.FUNC.SQNR.TT
 <table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
   <tr>
     <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
-      Test case
+      Test Suite
     </th>
   </tr>
   <tr>
@@ -226,7 +211,7 @@ TCT.FUNC.SQNR.TT
 <table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
   <tr>
     <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
-      Test case
+      Test Suite
     </th>
   </tr>
   <tr>
@@ -267,7 +252,7 @@ TCT.FUNC.SQNR.TT
 <table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
   <tr>
     <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
-      Test case
+      Test Suite
     </th>
   </tr>
   <tr>
@@ -309,21 +294,21 @@ TCT.FUNC.SQNR.TT
   </tr>
 </table>
 
-### 6.5 <TC.005> JSON Conversion
+### 6.5 <TC.FIELDS.001.F> Display and Integrity of Datetime Fields
 <table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
   <tr>
     <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
-      Test case
+      Test Case
     </th>
   </tr>
   <tr>
     <td style="border:1px solid black; padding:8px;"><strong>ID:</strong></td>
-    <td colspan="3" style="border:1px solid black; padding:8px; ">&lt;TC.005&gt;</td>
+    <td colspan="3" style="border:1px solid black; padding:8px; ">&lt;TC.FIELDS.001.F&gt;</td>
   </tr>
   <tr>
     <td style="border:1px solid black; padding:8px;"><strong>Name:</strong></td>
     <td colspan="3" style="border:1px solid black; padding:8px;">
-      JSON Conversion
+      Display and Integrity of Datetime Fields
     </td>
   </tr>
   <tr>
@@ -335,18 +320,65 @@ TCT.FUNC.SQNR.TT
   <tr>
     <td style="border:1px solid black; padding:8px;"><strong>Description:</strong></td>
     <td colspan="3" style="border:1px solid black; padding:8px;">
-      The test case verifies that the api correctly converts AAS into JSON.
+      The test case verifies that AAS Files containing 'createdAt' and 'updatedAt' Fields can be uploaded and will be correctly displayed in the AAS Web UI.
+    </td>
+  </tr>
+  <tr>
+    <td style="border:1px solid black; padding:8px;"><strong>Preconditions:</strong></td>
+    <td colspan="3" style="border:1px solid black; padding:8px;">
+      <ul>
+        <li>System is running</li>
+        <li>Test dataset is available</li>
+        <li>Backend reachable</li>
+      </ul>
     </td>
   </tr>
 
   <tr>
     <th colspan="3" style="border:1px solid black; padding:8px; text-align:center;">
-      Unit test
+      Test Steps
     </th>
   </tr>
   <tr>
-    <th style="border:1px solid black; padding:8px; text-align:center;">Found in:</th>
-    <td colspan="2" style="border:1px solid black; padding:8px; text-align:center;">src/........</td>
+    <th style="border:1px solid black; padding:8px; text-align:center;">1</th>
+    <td colspan="2" style="border:1px solid black; padding:8px;">
+      Upload AAS file with 'createdAt' and/or 'updatedAt' to the backend
+    </td>
+  </tr>
+  <tr>
+    <th style="border:1px solid black; padding:8px; text-align:center;">2</th>
+    <td colspan="2" style="border:1px solid black; padding:8px;">
+      Refresh AAS list
+    </td>
+  </tr>
+  <tr>
+    <th style="border:1px solid black; padding:8px; text-align:center;">3</th>
+    <td colspan="2" style="border:1px solid black; padding:8px;">
+      Open uploaded AAS entry
+    </td>
+  </tr>
+  <tr>
+    <th style="border:1px solid black; padding:8px; text-align:center;">4</th>
+    <td colspan="2" style="border:1px solid black; padding:8px;">
+      Verify displayed datetime fields on the bottom metadata panel
+    </td>
+  </tr>
+  <tr>
+    <th style="border:1px solid black; padding:8px; text-align:center;"><strong>Expected Results:</strong></th>
+    <td colspan="2" style="border:1px solid black; padding:8px;">
+      <ul>
+        <li>Fields are displayed only if present in input</li>
+        <li>Values match backend JSON exactly</li>
+        <li>Format is correctly rendered</li>
+        <li>No UI errors occur</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <th style="border:1px solid black; padding:8px; text-align:center;"><strong>Pass Criteria:</strong></th>
+    <td colspan="2" style="border:1px solid black; padding:8px;">
+      All validations succeed for all datasets
+    </td>
   </tr>
 </table>
 

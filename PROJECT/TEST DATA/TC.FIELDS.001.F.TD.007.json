@@ -1,0 +1,29 @@
+{
+  "assetAdministrationShells": [
+    {
+      "modelType": "AssetAdministrationShell",
+      "id": "aas-007",
+      "idShort": "AAS007",
+      "administration": {
+        "version": "1",
+        "revision": "0",
+        "createdAt": "2100-12-31T23:59:59Z",
+        "updatedAt": "1900-01-01T00:00:00Z"
+      },
+      "assetInformation": {
+        "assetKind": "Instance"
+      },
+      "submodels": [
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "dummy-submodel"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
