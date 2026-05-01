@@ -22,6 +22,11 @@
 2. [Product Names and Attributes](#2-product-names-and-attributes)  
 3. [Requirements](#3-requirements)  
 4. [Test Methodology](#4-test-methodology)  
+    4.1 [Test Approach](#41-test-approach)   
+    4.2 [Test Types](#42-test-types)   
+    4.3 [Test Environment](#43-test-environment)    
+    4.4 [Test Execution](#44-test-execution)  
+    4.5 [Entry and Exit Criteria](#45-entry-and-exit-criteria)  
 5. [Test Naming Convention](#5-test-naming-convention)  
 6. [Test Cases](#6-test-cases)  
 7. [References](#7-references)  
@@ -92,7 +97,7 @@ Tests are executed in the following environment:
 - Backend services in a local or test setup  
 - Predefined test data  
 
-### 4.5 Test Execution
+### 4.4 Test Execution
 
 Tests are executed:
 
@@ -101,7 +106,7 @@ Tests are executed:
 
 A test is successful if the observed behavior matches the expected requirement.
 
-### 4.6 Entry and Exit Criteria
+### 4.5 Entry and Exit Criteria
 
 **Entry Criteria:**
 - Features are implemented  
