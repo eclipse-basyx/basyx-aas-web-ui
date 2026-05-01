@@ -128,7 +128,7 @@ TCT.FUNC.SQNR.TT
 – SEQNR = sequential numbering of testcase (001)
 – TT = Test type (C = Conformance, F = Functional, L = Load/Stress, combined with A = Automated and/or S = Smoke/Regression)
 
-## 6. Test Cases/Suits
+## 6. Test Cases/Suites
 
 ### 6.1 <TS.SORT.001.FAS> AAS Sorting Validation
 <table style="width:100%; border-collapse:collapse; font-family:Arial, sans-serif;">
@@ -156,7 +156,7 @@ TCT.FUNC.SQNR.TT
   <tr>
     <td style="border:1px solid black; padding:8px;"><strong>Description:</strong></td>
     <td colspan="3" style="border:1px solid black; padding:8px;">
-      The test case verifies that with a given input, AAS Shells are correctly sorted in the search list.
+      The test suite verifies that with a given input, AAS Shells are correctly sorted in the search list.
     </td>
   </tr>
 
@@ -197,7 +197,7 @@ TCT.FUNC.SQNR.TT
   <tr>
     <td style="border:1px solid black; padding:8px;"><strong>Description:</strong></td>
     <td colspan="3" style="border:1px solid black; padding:8px;">
-      The test case verifies that with a given input, AAS Shells are correctly filtered in the search list.
+      The test suite verifies that with a given input, AAS Shells are correctly filtered in the search list.
     </td>
   </tr>
 
@@ -238,7 +238,7 @@ TCT.FUNC.SQNR.TT
   <tr>
     <td style="border:1px solid black; padding:8px;"><strong>Description:</strong></td>
     <td colspan="3" style="border:1px solid black; padding:8px;">
-      The test case verifies that the Nameplate Generator api gets correctly called from the frontend and responses get handled appropriately.
+      The test suite verifies that the Nameplate Generator api gets correctly called from the frontend and responses get handled appropriately.
     </td>
   </tr>
 
@@ -279,7 +279,7 @@ TCT.FUNC.SQNR.TT
   <tr>
     <td style="border:1px solid black; padding:8px;"><strong>Description:</strong></td>
     <td colspan="3" style="border:1px solid black; padding:8px;">
-      The test case verifies that the Nameplate Generator api correctly handles calls and returns valid data by
+      The test suite verifies that the Nameplate Generator api correctly handles calls and returns valid data by
       accepting and parsing the request,
       calling an external API and
       returning generated HTML (or an error)
