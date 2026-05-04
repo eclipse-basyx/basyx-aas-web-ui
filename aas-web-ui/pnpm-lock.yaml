@@ -106,8 +106,8 @@ importers:
         version: 0.0.77
     devDependencies:
       '@intellectronica/ruler':
-        specifier: ^0.3.39
-        version: 0.3.39
+        specifier: ^0.3.40
+        version: 0.3.40
       '@playwright/test':
         specifier: ^1.59.1
         version: 1.59.1
@@ -465,8 +465,8 @@ packages:
   '@iconify/types@2.0.0':
     resolution: {integrity: sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg==}
 
-  '@intellectronica/ruler@0.3.39':
-    resolution: {integrity: sha512-l6pZLpMon/cZAOSLujK5FZNo/E4VWSh7lySfsmGGEEnb7ibshzaVCJQeFqEfq7unw2Wx19UlyWDM8RNZp2HCSA==}
+  '@intellectronica/ruler@0.3.40':
+    resolution: {integrity: sha512-67WZG6RNI/VFqPvqDkM6JQXRh57wde/PrL22yMmpjT0iOUHOS1cDHksTTvGffovvt7Posb6jv3P9F3s7H35wuA==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=23}
     hasBin: true
 
@@ -3137,8 +3137,8 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  zod@4.4.1:
-    resolution: {integrity: sha512-a6ENMBBGZBsnlSebQ/eKCguSBeGKSf4O7BPnqVPmYGtpBYI7VSqoVqw+QcB7kPRjbqPwhYTpFbVj/RqNz/CT0Q==}
+  zod@4.4.2:
+    resolution: {integrity: sha512-IynmDyxsEsb9RKzO3J9+4SxXnl2FTFSzNBaKKaMV6tsSk0rw9gYw9gs+JFCq/qk2LCZ78KDwyj+Z289TijSkUw==}
 
 snapshots:
 
@@ -3437,12 +3437,12 @@ snapshots:
 
   '@iconify/types@2.0.0': {}
 
-  '@intellectronica/ruler@0.3.39':
+  '@intellectronica/ruler@0.3.40':
     dependencies:
       '@iarna/toml': 2.2.5
       js-yaml: 4.1.1
       yargs: 18.0.0
-      zod: 4.4.1
+      zod: 4.4.2
 
   '@isaacs/cliui@8.0.2':
     dependencies:
@@ -6068,4 +6068,4 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  zod@4.4.1: {}
+  zod@4.4.2: {}
