@@ -165,9 +165,9 @@
                                                 <v-icon :icon="item.icon" class="mr-1"></v-icon>
                                                 <v-checkbox-btn
                                                     v-if="item.selectable || item.hasChildren"
-                                                    :model-value="isRowFullySelected(item)"
-                                                    :indeterminate="isRowPartiallySelected(item)"
-                                                    @click.stop="toggleRowSelection(item)"></v-checkbox-btn>
+                                                    :model-value="isRowFullySelected(selectedDataPointKeys, getSelectableKeysForRow(item))"
+                                                    :indeterminate="isRowPartiallySelected(selectedDataPointKeys, getSelectableKeysForRow(item))"
+                                                    @click.stop="selectedDataPointKeys = toggleRowSelection(selectedDataPointKeys, getSelectableKeysForRow(item))"></v-checkbox-btn>
                                             </template>
                                             <v-list-item-title
                                                 class="text-body-2"
@@ -272,12 +272,12 @@
         splitIdAndSuffix,
         stringifyUnknown,
     } from '@/utils/KblVecUtils/KblVecUploadUtils';
-    import { buildSubmodelsFromSelection as buildSubmodelsFromSelectionUtil } from '@/utils/KblVecUtils/KblVecSubmodelGenerationUtils';
+    import { buildSubmodelsFromSelection } from '@/utils/KblVecUtils/KblVecSubmodelGenerationUtils';
     import {
-        isRowFullySelected as isRowFullySelectedUtil,
-        isRowPartiallySelected as isRowPartiallySelectedUtil,
-        toggleRowSelection as toggleRowSelectionUtil,
-        toggleSelection as toggleSelectionUtil,
+        isRowFullySelected,
+        isRowPartiallySelected,
+        toggleRowSelection,
+        toggleSelection,
     } from '@/utils/KblVecUtils/KblVecSelectionStateUtils';
     import { uploadHandler } from '@/utils/XmlValidator';
 
@@ -624,7 +624,14 @@
             }
 
             // Step 2: Generate Submodels from the selected tree nodes grouped by top-level tag.
-            const generated = buildSubmodelsFromSelection(aasId, file);
+            const generated = buildSubmodelsFromSelection(
+                aasId,
+                file,
+                dataPointTree.value,
+                selectedDataPointKeys.value,
+                isVecFile.value,
+                determineContentType
+            );
 
             for (const submodel of generated.submodels) {
                 const submodelPersisted = await persistSubmodelFromConversion(submodel);
@@ -1057,7 +1064,7 @@
 
     function handleRowClick(row: DataPointTreeNode): void {
         if (row.selectable) {
-            toggleSelection(row.key);
+            selectedDataPointKeys.value = toggleSelection(selectedDataPointKeys.value, row.key);
             return;
         }
 
@@ -1066,41 +1073,11 @@
         }
     }
 
-    function toggleSelection(key: string): void {
-        selectedDataPointKeys.value = toggleSelectionUtil(selectedDataPointKeys.value, key);
-    }
-
-    function toggleRowSelection(row: DataPointTreeNode): void {
-        const selectableKeys = getSelectableKeysForRow(row);
-        selectedDataPointKeys.value = toggleRowSelectionUtil(selectedDataPointKeys.value, selectableKeys);
-    }
-
-    function isRowFullySelected(row: DataPointTreeNode): boolean {
-        const selectableKeys = getSelectableKeysForRow(row);
-        return isRowFullySelectedUtil(selectedDataPointKeys.value, selectableKeys);
-    }
-
-    function isRowPartiallySelected(row: DataPointTreeNode): boolean {
-        const selectableKeys = getSelectableKeysForRow(row);
-        return isRowPartiallySelectedUtil(selectedDataPointKeys.value, selectableKeys);
-    }
-
     function toggleRowExpanded(key: string): void {
         const next = new Set(expandedRowKeys.value);
         if (next.has(key)) next.delete(key);
         else next.add(key);
         expandedRowKeys.value = next;
-    }
-
-    function buildSubmodelsFromSelection(aasId: string, sourceFile: File): { submodels: aasTypes.Submodel[]; dataPointCount: number } {
-        return buildSubmodelsFromSelectionUtil(
-            aasId,
-            sourceFile,
-            dataPointTree.value,
-            selectedDataPointKeys.value,
-            isVecFile.value,
-            determineContentType
-        );
     }
 
     function selectAllDataPoints(): void {
