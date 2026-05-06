@@ -1,6 +1,7 @@
 import type { FormStateObject, FormStateValue } from '../types/form'
 import type { LangString, TemplateElement } from '../types/template'
 import type { ValidationIssue, ValidationResult } from '../types/validation'
+import { getListItemRendererElements } from '../utils/subModelListUtils'
 import {
   isOptionalSingleElement,
   isRepeatableElement,
@@ -153,6 +154,7 @@ export function validateTemplateElements (
       }
     }
     if (element.modelType === 'SubmodelElementList' && Array.isArray(value)) {
+      const itemRendererElements = getListItemRendererElements(element)
       for (const [index, item] of value.entries()) {
         if (
           item
@@ -163,18 +165,24 @@ export function validateTemplateElements (
           const itemState = item as FormStateObject
           const itemPath = `${currentPath}[${index}]`
 
-          const itemTemplate = element.value[0]
-          if (
-            itemTemplate
-            && itemTemplate.modelType === 'SubmodelElementCollection'
-          ) {
-            const nestedResult = validateTemplateElements(
-              itemTemplate.value,
-              itemState,
-              itemPath,
-            )
-            issues.push(...nestedResult.issues)
-          }
+          // const itemTemplate = element.value[0]
+          // if (
+          //   itemTemplate
+          //   && itemTemplate.modelType === 'SubmodelElementCollection'
+          // ) {
+          //   const nestedResult = validateTemplateElements(
+          //     itemTemplate.value,
+          //     itemState,
+          //     itemPath,
+          //   )
+          //   issues.push(...nestedResult.issues)
+          // }
+          const nestedResult = validateTemplateElements (
+            itemRendererElements,
+            itemState,
+            itemPath,
+          )
+          issues.push(...nestedResult.issues)
         }
       }
     }

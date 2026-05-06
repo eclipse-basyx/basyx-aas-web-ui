@@ -37,12 +37,15 @@
 
         <v-expansion-panel-text>
           <SubmodelRenderer
-            v-if="itemTemplate"
-            :elements="itemTemplate.value"
+            v-if="itemRendererElements.length > 0"
+            :elements="itemRendererElements"
             :form-state="item"
             :show-validation="props.showValidation"
             @update:form-state="onUpdateItem(index, $event)"
           />
+          <div v-else class="text-body-2 text-medium-emphasis">
+            This list item type is not supported yet.
+          </div>
         </v-expansion-panel-text>
       </v-expansion-panel>
     </v-expansion-panels>
@@ -51,14 +54,14 @@
 
 <script lang="ts" setup>
   import type { FormStateObject, FormStateValue } from '../../types/form'
-  import type { SubmodelElementListElement } from '../../types/template'
+  import type { SubmodelElementListElement, TemplateElement } from '../../types/template'
   import { computed, ref } from 'vue'
   import { asFormStateObjectArray, formatRepeatedElementBaseLabel } from '../../utils/formFieldUtils'
   import {
     addopenPanelIndex,
     appendListItem,
-    createSubmodelListTemplate,
-    getListItemCollectionTemplate,
+    createSubmodelListItem,
+    getListItemRendererElements,
     removeAndReindexOpenPanels,
     removeListItem,
     updateListItem,
@@ -81,12 +84,12 @@
     return asFormStateObjectArray(props.modelValue)
   })
 
-  const itemTemplate = computed(() => {
-    return getListItemCollectionTemplate(props.element)
+  const itemRendererElements = computed<TemplateElement[]>(() => {
+    return getListItemRendererElements(props.element)
   })
 
   function onAddItem (): void {
-    const newItem = createSubmodelListTemplate(props.element)
+    const newItem = createSubmodelListItem(props.element)
     const updated = appendListItem(items.value, newItem)
     emit('update:modelValue', updated)
 

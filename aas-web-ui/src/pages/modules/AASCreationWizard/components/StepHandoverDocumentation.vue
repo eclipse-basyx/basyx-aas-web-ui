@@ -1,5 +1,4 @@
 <template>
-  <div> HandoverDocumentation Form</div>
   <v-col v-if="validationIssues.length >0" cols="12">
     <v-alert
       density="compact"
@@ -23,6 +22,7 @@
             <SubmodelRenderer
               :elements="templateData.submodelElements"
               :form-state="formValues"
+              :show-validation="hasAttemptedSubmit"
               @update:form-state="onFormStateUpdate"
             />
           </v-col>
@@ -44,12 +44,16 @@
   import type { FormStateObject } from '../types/form'
   import type { HandoverDocumentationTemplate } from '../types/template'
   import type { ValidationIssue } from '../types/validation'
+  import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
   import { onMounted, ref } from 'vue'
+  import { buildHandoverDocumentation } from '../builders/buildHandoverDocumentation'
   import { useAASCreationSubmission } from '../composables/useAASCreationSubmission'
   import { useAASCreationStore } from '../stores/aasCreationForm'
   import template from '../templates/handover-documentation.json'
   import { createInitialFormState } from '../utils/createInitialFormState'
+  import { deepCopyFormState } from '../utils/formFieldUtils'
   import { normalizeHandoverDocumentationTemplate } from '../utils/normalizeTemplate'
+  import { validateTemplateElements } from '../utils/validationUtils'
   import SubmodelRenderer from './renderer/SubmodelRenderer.vue'
 
   const props = defineProps<{
@@ -65,6 +69,7 @@
   const isSubmitting = ref(false)
 
   const formRef = ref()
+  const hasAttemptedSubmit = ref(false)
   const rawTemplate = template as HandoverDocumentationTemplate
   // const templateData = template as unknown as HandoverDocumentationTemplate
   const templateData = normalizeHandoverDocumentationTemplate(rawTemplate)
@@ -72,6 +77,9 @@
   const validationIssues = ref<ValidationIssue[]>([])
 
   onMounted(() => {
+    if (store.handoverDocumentationFormState) {
+      formValues.value = deepCopyFormState(store.handoverDocumentationFormState)
+    }
     console.log('Handover Documentation Data templatedata is', templateData)
     console.log('Handover Documentation formvalues is', formValues)
     const initialState = createInitialFormState(templateData)
@@ -85,7 +93,50 @@
     if (isSubmitting.value) {
       return
     }
+    hasAttemptedSubmit.value = true
+
+    const validationResult = validateTemplateElements(
+      templateData.submodelElements,
+      formValues.value,
+    )
+
+    if (!validationResult.isValid) {
+      validationIssues.value = validationResult.issues
+      console.log('Handover Documentation validation failed:', validationResult.issues)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+
+    validationIssues.value = []
+
+    const rawFormState = deepCopyFormState(formValues.value)
+
+    const builtHandoverDocumentation = buildHandoverDocumentation(rawFormState)
+    console.log('builtHandoverDocumentation', builtHandoverDocumentation)
+
+    const handoverParseResult = jsonization.submodelFromJsonable(
+      builtHandoverDocumentation as any,
+    )
+
+    if (handoverParseResult.error !== null) {
+      console.error('Error parsing Handover Documentation submodel:', handoverParseResult.error)
+      window.alert('Handover Documentation submodel could not be parsed. Check console.')
+      return
+    }
+
+    console.log('Handover Documentation parse success:', handoverParseResult.mustValue())
+
+    store.saveHandoverDocumentationFormState(rawFormState)
+    store.saveHandoverDocumentationData(builtHandoverDocumentation)
+
+    // store.saveHandoverDocumentationFormState(rawFormState)
+
+    console.log('Handover Documentation validation passed')
+    console.log('raw handover form state:', rawFormState)
+    console.log('raw handover form state:', builtHandoverDocumentation)
+
     isSubmitting.value = true
+    console.log('must now call the submitAll()')
     try {
       const success = await submitAll()
       if (!success) {
@@ -102,5 +153,6 @@
   }
   function onFormStateUpdate (value: FormStateObject): void {
     formValues.value = value
+    console.log('handover documents updated:', value.Documents)
   }
 </script>

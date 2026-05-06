@@ -39,6 +39,7 @@ export const useAASCreationStore = defineStore('aasCreationForm', {
     digitalNameplateFormState: null as FormStateObject | null,
     technicalDataFormState: null as FormStateObject | null,
     technicalPropertyAreas: [] as TechnicalPropertyAreaEditorItem[],
+    handoverDocumentationFormState: null as FormStateObject | null,
   }),
 
   actions: {
@@ -70,6 +71,9 @@ export const useAASCreationStore = defineStore('aasCreationForm', {
     saveTechnicalPropertyAreas (data: TechnicalPropertyAreaEditorItem[]) {
       this.technicalPropertyAreas = structuredClone(data)
     },
+    saveHandoverDocumentationFormState (data: FormStateObject) {
+      this.handoverDocumentationFormState = structuredClone(data)
+    },
 
     resetCreationState () {
       this.assetData = createInitialAssetData()
@@ -79,6 +83,7 @@ export const useAASCreationStore = defineStore('aasCreationForm', {
       this.digitalNameplateFormState = null
       this.technicalDataFormState = null
       this.technicalPropertyAreas = [] as TechnicalPropertyAreaEditorItem[]
+      this.handoverDocumentationFormState = null
     },
   },
   getters: {

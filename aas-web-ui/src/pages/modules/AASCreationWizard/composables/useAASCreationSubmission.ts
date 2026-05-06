@@ -43,6 +43,7 @@ export function useAASCreationSubmission () {
     const assetData = store.assetData
     const digitalNameplate = store.digitalNameplateData
     const technicalData = store.technicalDataData
+    const handoverDocumentation = store.handoverDocumentationData
 
     if (!digitalNameplate) {
       console.error('Digital Nameplate data is missing')
@@ -52,23 +53,40 @@ export function useAASCreationSubmission () {
       console.error('Technical Data is missing')
       return false
     }
+    if (!handoverDocumentation) {
+      console.error('Hanover Documentation is missing')
+      return false
+    }
+    // build digital nameplate
     const digitalNameplateSuccess = await postBuiltSubmodel(
       digitalNameplate,
       'Digital Nameplate',
     )
     if (!digitalNameplateSuccess) {
+      console.log('digital nameplate creation failed')
       return false
     }
-
+    // build technical data
     const technicalDataSuccess = await postBuiltSubmodel(
       technicalData,
       'Technical Data',
     )
     if (!technicalDataSuccess) {
+      console.log('technical data creation failed')
+      return false
+    }
+
+    // build handover documentation
+    const handoverDocumentationSuccess = await postBuiltSubmodel(
+      handoverDocumentation,
+      'Hanover Documentation Data',
+    )
+    if (!handoverDocumentationSuccess) {
+      console.log('technical data creation failed')
       return false
     }
     // post the aas with submodels
-    const builtAas = buildAssetAdministrationShell(assetData, digitalNameplate, technicalData)
+    const builtAas = buildAssetAdministrationShell(assetData, digitalNameplate, technicalData, handoverDocumentation)
     console.log('builtAas', builtAas)
 
     try {

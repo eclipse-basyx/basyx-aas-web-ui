@@ -1,5 +1,5 @@
 import type { AssetDataForm } from '../stores/aasCreationForm'
-import type { DigitalNameplateTemplate, TechnicalDataTemplate } from '../types/template'
+import type { DigitalNameplateTemplate, HandoverDocumentationTemplate, TechnicalDataTemplate } from '../types/template'
 
 // export function buildAssetAdministrationShell (
 //   assetData: AssetDataForm,
@@ -71,6 +71,7 @@ export function buildAssetAdministrationShell (
   assetData: AssetDataForm,
   digitalNameplate: DigitalNameplateTemplate | null,
   technicalData: TechnicalDataTemplate | null,
+  handoverDocumentation: HandoverDocumentationTemplate | null,
 ) {
   const submodels = []
 
@@ -80,6 +81,9 @@ export function buildAssetAdministrationShell (
 
   if (technicalData?.id) {
     submodels.push(createSubmodelReference(technicalData))
+  }
+  if (handoverDocumentation?.id) {
+    submodels.push(createSubmodelReference(handoverDocumentation))
   }
 
   const aas: any = {
