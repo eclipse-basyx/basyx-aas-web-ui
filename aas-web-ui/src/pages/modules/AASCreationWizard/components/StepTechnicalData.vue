@@ -103,7 +103,6 @@
   import type { ValidationIssue } from '../types/validation'
   // import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
   import { computed, onMounted, ref } from 'vue'
-  import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { buildTechnicalData, buildTechnicalPropertyAreas } from '../builders/buildTechnicalData'
   import { useAASCreationStore } from '../stores/aasCreationForm'
   import template from '../templates/technical-data.json'
@@ -127,9 +126,6 @@
   const formValues = ref<FormStateObject>(createInitialFormState(templateData))
   const validationIssues = ref<ValidationIssue[]>([])
   const technicalPropertyAreas = ref<TechnicalPropertyAreaEditorItem[]>([])
-
-  const { postSubmodel } = useSMRepositoryClient()
-  const isPostingTechnicalData = ref(false)
 
   // computed
   const rendererElements = computed(() => {
@@ -163,9 +159,6 @@
     if (!props.isActiveComponent) {
       return
     }
-    if (isPostingTechnicalData.value) {
-      return
-    }
     hasAttemptedSubmit.value = true
     const validationResult = validateTemplateElements(
       rendererElements.value,
@@ -179,7 +172,6 @@
     }
 
     validationIssues.value = []
-    isPostingTechnicalData.value = true
 
     const rawFormState = deepCopyFormState(formValues.value)
     const rawTechnicalPropertyAreas = deepCopyFormState(technicalPropertyAreas.value)
