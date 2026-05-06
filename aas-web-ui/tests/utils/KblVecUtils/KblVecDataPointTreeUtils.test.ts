@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildDataPointTree } from '@/utils/KblVecUtils/KblVecDataPointTreeUtils'; // Pfad anpassen
+import { buildDataPointTree } from '@/utils/KblVecUtils/KblVecDataPointTreeUtils';
 
 function parseXml(xml: string): Document {
   return new DOMParser().parseFromString(xml, 'text/xml');
@@ -123,8 +123,8 @@ describe('buildDataPointTree', () => {
     const parentNode = result.find(g => g.label === 'parent')?.children[0];
     const leafNode = result.find(g => g.label === 'leaf')?.children[0];
 
-    expect(parentNode?.selectable).toBe(true);  // hat Kinder
-    expect(leafNode?.selectable).toBe(false);   // nur Text
+    expect(parentNode?.selectable).toBe(true);
+    expect(leafNode?.selectable).toBe(false);
   });
 
   it('sanitizes exportIdShort correctly', () => {

@@ -1,8 +1,7 @@
 import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript';
 import { describe, it, expect } from 'vitest';
-import { buildSubmodelsFromSelection } from '@/utils/KblVecUtils/KblVecSubmodelGenerationUtils'; // Pfad anpassen
+import { buildSubmodelsFromSelection } from '@/utils/KblVecUtils/KblVecSubmodelGenerationUtils';
 
-// Minimaler Fake für File (jsdom kann das, aber so ist es stabil)
 function createFile(name: string, content = 'test'): File {
   return new File([content], name, {
     type: 'text/xml',

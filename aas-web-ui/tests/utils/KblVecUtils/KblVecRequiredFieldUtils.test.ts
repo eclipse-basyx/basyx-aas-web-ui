@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { inferRequiredFieldValues } from '@/utils/KblVecUtils/KblVecRequiredFieldUtils'; // Pfad anpassen
+import { inferRequiredFieldValues } from '@/utils/KblVecUtils/KblVecRequiredFieldUtils';
 
 describe('inferRequiredFieldValues', () => {
   it('extracts values from XML document', () => {
@@ -21,7 +21,7 @@ describe('inferRequiredFieldValues', () => {
     const doc = parser.parseFromString(xml, 'text/xml');
 
     const result = inferRequiredFieldValues(
-      [], // keine points → nur DOM
+      [],
       doc,
       'my-file.xml',
       1000
@@ -59,7 +59,6 @@ describe('inferRequiredFieldValues', () => {
 
     expect(result.values.shortId).toBe('file');
     expect(result.paths.shortId).toBe('');
-    //fehler: während file als short_id beibehalten wird, wird der Path davon geändert
   });
 
   it('derives shortId correctly from filename', () => {
@@ -70,29 +69,6 @@ describe('inferRequiredFieldValues', () => {
 
     expect(result.values.shortId).toBe('E_123_test_file');
   });
-/*
-  it('correct maxElementScan limit', () => {
-    const xml = `
-            <root>
-                <ignored>
-                    <idShort>ShouldNotBeFound</idShort>
-                </ignored>
-                <identification>ShouldBeFound</identification>
-                <again>
-                    <hey>hi</hey>
-                </again>
-            </root>
-        `;
-
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(xml, 'text/xml');
-
-    const result = inferRequiredFieldValues([], doc, 'file.xml', 3);
-
-    expect(result.values.aasId).toBe('ShouldBeFound');
-  });
-  //Ergebnis: maxElementScan wird zwar nicht ignoriert, aber ist unaussagend, ich würde bei drei spätestens sagen, dass es gefunden werden sollte.
-  */
 
   it('interprets <aas>-tags correctly', () => {
     const parser = new DOMParser();
@@ -169,7 +145,6 @@ describe('inferRequiredFieldValues', () => {
 
     expect(result.values.shortId).toBe('file');
     expect(result.paths.shortId).toBe('');
-    //fehler: points werden auch vom Name überschrieben
   });
 
   it('reads description data point correctly', () => {
@@ -234,7 +209,6 @@ describe('inferRequiredFieldValues', () => {
     expect(result.paths.assetId).toBe('');
     expect(result.paths.assetKind).toBe('');
     expect(result.paths.shortId).toBe('');
-    //fehler: points überschreiben alles
   });
 
   it('prefers data points over XML', () => {
