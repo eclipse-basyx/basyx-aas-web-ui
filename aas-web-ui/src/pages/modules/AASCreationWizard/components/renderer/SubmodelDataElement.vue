@@ -3,7 +3,17 @@
     <!-- Property -->
     <!-- Repeatable Property -->
     <div v-if="checkTemplateFields.isPropertyElement(element)">
-      <div v-if="isRepeatableElement(element)" class="d-flex flex-column ga-3">
+      <!-- Boolean Property -->
+      <v-checkbox
+        v-if="isBooleanProperty"
+        density="comfortable"
+        :error="hasRequiredError"
+        :error-messages="errorMessages"
+        hide-details="auto"
+        :model-value="booleanValue"
+        @update:model-value="onBooleanInput"
+      />
+      <div v-else-if="isRepeatableElement(element)" class="d-flex flex-column ga-3">
         <v-row
           v-for="(entry, index) in repeatableStringValue"
           :key="`${element.idShort}-${index}`"
@@ -46,8 +56,8 @@
       </div>
       <!-- Non Repeatable Property -->
       <v-text-field
-        v-else
-        density="comfortable"
+        v-else-if="!isRepeatableElement(element)"
+        class="d-flex flex-column ga-3"
         :error="hasRequiredError"
         :error-messages="errorMessages"
         hide-details="auto"
@@ -225,6 +235,15 @@
     return asRangeFormValue(props.modelValue)
   })
 
+  const isBooleanProperty = computed<boolean>(() => {
+    return (
+      checkTemplateFields.isPropertyElement(props.element) && props.element.valueType === 'xs:boolean'
+    )
+  })
+  const booleanValue = computed<boolean>(() => {
+    return asString(props.modelValue) === 'true'
+  })
+
   function onPropertyInput (value: string | null): void {
     emit('update:modelValue', value ?? '')
   }
@@ -286,5 +305,8 @@
       ...rangeValue.value,
       max: value ?? '',
     })
+  }
+  function onBooleanInput (value: boolean | null): void {
+    emit('update:modelValue', value ? 'true' : 'false')
   }
 </script>

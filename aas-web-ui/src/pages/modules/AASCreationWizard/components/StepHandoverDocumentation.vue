@@ -34,11 +34,6 @@
       </v-form>
     </v-sheet>
   </v-container>
-
-  <!-- <div class="d-flex justify-space-between">
-    <v-btn color="primary" @click="props.prev">Back</v-btn>
-    <v-btn color="primary" :disabled="isSubmitting" @click="handleSubmit">Submit</v-btn>
-  </div> -->
 </template>
 <script lang="ts" setup>
   import type { FormStateObject } from '../types/form'
@@ -133,7 +128,7 @@
 
     console.log('Handover Documentation validation passed')
     console.log('raw handover form state:', rawFormState)
-    console.log('raw handover form state:', builtHandoverDocumentation)
+    console.log('builtHandoverDocumentation:', builtHandoverDocumentation)
 
     isSubmitting.value = true
     console.log('must now call the submitAll()')
