@@ -27,8 +27,8 @@ importers:
         specifier: ^3.4.5
         version: 3.4.5(three@0.184.0)(web-ifc@0.0.77)
       '@thatopen/ui':
-        specifier: ^3.4.0
-        version: 3.4.0
+        specifier: ^3.4.1
+        version: 3.4.1
       '@thatopen/ui-obc':
         specifier: ^3.4.2
         version: 3.4.2(@thatopen/components-front@3.4.3(@thatopen/fragments@3.4.5(three@0.184.0)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.184.0))(three@0.184.0)(web-ifc@0.0.77))(@thatopen/components@3.4.5(@thatopen/fragments@3.4.5(three@0.184.0)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.184.0))(three@0.184.0)(web-ifc@0.0.77))(@thatopen/fragments@3.4.5(three@0.184.0)(web-ifc@0.0.77))(three@0.184.0)(web-ifc@0.0.77)
@@ -773,8 +773,8 @@ packages:
       three: '>=0.182.0'
       web-ifc: '>=0.0.77'
 
-  '@thatopen/ui@3.4.0':
-    resolution: {integrity: sha512-m9t4SzUD0sRms8ktqLKTWreKj2eX3VtJ9mf6ED3b3ePDjN28VQl3qYwBzU6wD1r6J5I9dhcEbtJhfsTMvXEzTQ==}
+  '@thatopen/ui@3.4.1':
+    resolution: {integrity: sha512-00EBc/kxLqnYVnnk5YY7nRPYLrRacfN+/hB/jRpYFsmRwYg3ts0MU7nvkGWBr4PFbFV7sDpUCwlcpTRUdYksIQ==}
 
   '@tsconfig/node22@22.0.5':
     resolution: {integrity: sha512-hLf2ld+sYN/BtOJjHUWOk568dvjFQkHnLNa6zce25GIH+vxKfvTgm3qpaH6ToF5tu/NN0IH66s+Bb5wElHrLcw==}
@@ -3694,12 +3694,12 @@ snapshots:
       '@thatopen/components': 3.4.5(@thatopen/fragments@3.4.5(three@0.184.0)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.184.0))(three@0.184.0)(web-ifc@0.0.77)
       '@thatopen/components-front': 3.4.3(@thatopen/fragments@3.4.5(three@0.184.0)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.184.0))(three@0.184.0)(web-ifc@0.0.77)
       '@thatopen/fragments': 3.4.5(three@0.184.0)(web-ifc@0.0.77)
-      '@thatopen/ui': 3.4.0
+      '@thatopen/ui': 3.4.1
       lit: 3.3.1
       three: 0.184.0
       web-ifc: 0.0.77
 
-  '@thatopen/ui@3.4.0':
+  '@thatopen/ui@3.4.1':
     dependencies:
       '@floating-ui/dom': 1.6.3
       chart.js: 4.5.1
