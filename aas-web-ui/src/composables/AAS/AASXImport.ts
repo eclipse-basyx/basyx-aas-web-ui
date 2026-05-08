@@ -1,5 +1,5 @@
 import * as aasCore from '@aas-core-works/aas-core3.1-typescript'
-import { NewPackaging, type Part } from 'aasx-package-ts'
+import { NewPackaging, type Part } from 'aas-package3-typescript'
 import { deserializeXml } from 'basyx-typescript-sdk'
 import mime from 'mime'
 import { useSMEFile } from '@/composables/AAS/SubmodelElements/File'
