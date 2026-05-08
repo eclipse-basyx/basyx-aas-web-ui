@@ -121,8 +121,8 @@ importers:
         specifier: ^2.3.6
         version: 2.3.6
       '@types/node':
-        specifier: ^25.6.0
-        version: 25.6.0
+        specifier: ^25.6.2
+        version: 25.6.2
       '@types/prismjs':
         specifier: ^1.26.6
         version: 1.26.6
@@ -134,10 +134,10 @@ importers:
         version: 0.184.1
       '@vitejs/plugin-basic-ssl':
         specifier: ^2.1.4
-        version: 2.3.0(vite@8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))
+        version: 2.3.0(vite@8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))
       '@vitejs/plugin-vue':
         specifier: ^6.0.6
-        version: 6.0.6(vite@8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))(vue@3.5.34(typescript@6.0.3))
+        version: 6.0.6(vite@8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))(vue@3.5.34(typescript@6.0.3))
       '@vitest/coverage-istanbul':
         specifier: 4.1.5
         version: 4.1.5(vitest@4.1.5)
@@ -179,19 +179,19 @@ importers:
         version: 21.0.0(@vueuse/core@10.11.1(vue@3.5.34(typescript@6.0.3)))
       unplugin-fonts:
         specifier: ^2.0.0
-        version: 2.0.0(vite@8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))
+        version: 2.0.0(vite@8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))
       unplugin-vue-components:
         specifier: ^32.0.0
         version: 32.0.0(vue@3.5.34(typescript@6.0.3))
       vite:
         specifier: ^8.0.10
-        version: 8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3)
+        version: 8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3)
       vite-plugin-vuetify:
         specifier: ^2.1.3
-        version: 2.1.3(vite@8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))(vue@3.5.34(typescript@6.0.3))(vuetify@4.0.6)
+        version: 2.1.3(vite@8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))(vue@3.5.34(typescript@6.0.3))(vuetify@4.0.6)
       vitest:
         specifier: ^4.1.5
-        version: 4.1.5(@types/node@25.6.0)(@vitest/coverage-istanbul@4.1.5)(@vitest/ui@4.1.5)(jsdom@29.1.1)(vite@8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))
+        version: 4.1.5(@types/node@25.6.2)(@vitest/coverage-istanbul@4.1.5)(@vitest/ui@4.1.5)(jsdom@29.1.1)(vite@8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))
       vue-tsc:
         specifier: ^3.2.8
         version: 3.2.8(typescript@6.0.3)
@@ -814,8 +814,8 @@ packages:
   '@types/md5@2.3.6':
     resolution: {integrity: sha512-WD69gNXtRBnpknfZcb4TRQ0XJQbUPZcai/Qdhmka3sxUR3Et8NrXoeAoknG/LghYHTf4ve795rInVYHBTQdNVA==}
 
-  '@types/node@25.6.0':
-    resolution: {integrity: sha512-+qIYRKdNYJwY3vRCZMdJbPLJAtGjQBudzZzdzwQYkEPQd+PJGixUL5QfvCLDaULoLv+RhT3LDkwEfKaAkgSmNQ==}
+  '@types/node@25.6.2':
+    resolution: {integrity: sha512-sokuT28dxf9JT5Kady1fsXOvI4HVpjZa95NKT5y9PNTIrs2AsobR4GFAA90ZG8M+nxVRLysCXsVj6eGC7Vbrlw==}
 
   '@types/prismjs@1.26.6':
     resolution: {integrity: sha512-vqlvI7qlMvcCBbVe0AKAb4f97//Hy0EBTaiW8AalRnG/xAN5zOiWWyrNqNXeq8+KAuvRewjCVY1+IPxk4RdNYw==}
@@ -3755,7 +3755,7 @@ snapshots:
 
   '@types/md5@2.3.6': {}
 
-  '@types/node@25.6.0':
+  '@types/node@25.6.2':
     dependencies:
       undici-types: 7.19.2
 
@@ -3763,7 +3763,7 @@ snapshots:
 
   '@types/qrcode@1.5.6':
     dependencies:
-      '@types/node': 25.6.0
+      '@types/node': 25.6.2
 
   '@types/stats.js@0.17.4': {}
 
@@ -3926,14 +3926,14 @@ snapshots:
       '@typescript-eslint/types': 8.59.0
       eslint-visitor-keys: 5.0.1
 
-  '@vitejs/plugin-basic-ssl@2.3.0(vite@8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))':
+  '@vitejs/plugin-basic-ssl@2.3.0(vite@8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))':
     dependencies:
-      vite: 8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3)
+      vite: 8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3)
 
-  '@vitejs/plugin-vue@6.0.6(vite@8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))(vue@3.5.34(typescript@6.0.3))':
+  '@vitejs/plugin-vue@6.0.6(vite@8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))(vue@3.5.34(typescript@6.0.3))':
     dependencies:
       '@rolldown/pluginutils': 1.0.0-rc.13
-      vite: 8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3)
+      vite: 8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3)
       vue: 3.5.34(typescript@6.0.3)
 
   '@vitest/coverage-istanbul@4.1.5(vitest@4.1.5)':
@@ -3948,7 +3948,7 @@ snapshots:
       magicast: 0.5.2
       obug: 2.1.1
       tinyrainbow: 3.1.0
-      vitest: 4.1.5(@types/node@25.6.0)(@vitest/coverage-istanbul@4.1.5)(@vitest/ui@4.1.5)(jsdom@29.1.1)(vite@8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))
+      vitest: 4.1.5(@types/node@25.6.2)(@vitest/coverage-istanbul@4.1.5)(@vitest/ui@4.1.5)(jsdom@29.1.1)(vite@8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))
     transitivePeerDependencies:
       - supports-color
 
@@ -3961,13 +3961,13 @@ snapshots:
       chai: 6.2.2
       tinyrainbow: 3.1.0
 
-  '@vitest/mocker@4.1.5(vite@8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))':
+  '@vitest/mocker@4.1.5(vite@8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))':
     dependencies:
       '@vitest/spy': 4.1.5
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3)
+      vite: 8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3)
 
   '@vitest/pretty-format@4.1.5':
     dependencies:
@@ -3996,7 +3996,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.16
       tinyrainbow: 3.1.0
-      vitest: 4.1.5(@types/node@25.6.0)(@vitest/coverage-istanbul@4.1.5)(@vitest/ui@4.1.5)(jsdom@29.1.1)(vite@8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))
+      vitest: 4.1.5(@types/node@25.6.2)(@vitest/coverage-istanbul@4.1.5)(@vitest/ui@4.1.5)(jsdom@29.1.1)(vite@8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))
 
   '@vitest/utils@4.1.5':
     dependencies:
@@ -5813,7 +5813,7 @@ snapshots:
     optionalDependencies:
       '@vueuse/core': 10.11.1(vue@3.5.34(typescript@6.0.3))
 
-  unplugin-fonts@2.0.0(vite@8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3)):
+  unplugin-fonts@2.0.0(vite@8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3)):
     dependencies:
       css-tree: 3.2.1
       fast-glob: 3.3.3
@@ -5821,7 +5821,7 @@ snapshots:
       magic-string: 0.30.21
       pathe: 2.0.3
       unplugin: 3.0.0
-      vite: 8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3)
+      vite: 8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3)
 
   unplugin-utils@0.3.1:
     dependencies:
@@ -5872,18 +5872,18 @@ snapshots:
 
   varint@6.0.0: {}
 
-  vite-plugin-vuetify@2.1.3(vite@8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))(vue@3.5.34(typescript@6.0.3))(vuetify@4.0.6):
+  vite-plugin-vuetify@2.1.3(vite@8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))(vue@3.5.34(typescript@6.0.3))(vuetify@4.0.6):
     dependencies:
       '@vuetify/loader-shared': 2.1.2(vue@3.5.34(typescript@6.0.3))(vuetify@4.0.6)
       debug: 4.4.3
       upath: 2.0.1
-      vite: 8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3)
+      vite: 8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3)
       vue: 3.5.34(typescript@6.0.3)
       vuetify: 4.0.6(typescript@6.0.3)(vite-plugin-vuetify@2.1.3)(vue@3.5.34(typescript@6.0.3))
     transitivePeerDependencies:
       - supports-color
 
-  vite@8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3):
+  vite@8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3):
     dependencies:
       lightningcss: 1.32.0
       picomatch: 4.0.4
@@ -5891,16 +5891,16 @@ snapshots:
       rolldown: 1.0.0-rc.17
       tinyglobby: 0.2.16
     optionalDependencies:
-      '@types/node': 25.6.0
+      '@types/node': 25.6.2
       fsevents: 2.3.3
       sass: 1.99.0
       sass-embedded: 1.99.0
       yaml: 2.8.3
 
-  vitest@4.1.5(@types/node@25.6.0)(@vitest/coverage-istanbul@4.1.5)(@vitest/ui@4.1.5)(jsdom@29.1.1)(vite@8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3)):
+  vitest@4.1.5(@types/node@25.6.2)(@vitest/coverage-istanbul@4.1.5)(@vitest/ui@4.1.5)(jsdom@29.1.1)(vite@8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3)):
     dependencies:
       '@vitest/expect': 4.1.5
-      '@vitest/mocker': 4.1.5(vite@8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))
+      '@vitest/mocker': 4.1.5(vite@8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))
       '@vitest/pretty-format': 4.1.5
       '@vitest/runner': 4.1.5
       '@vitest/snapshot': 4.1.5
@@ -5917,10 +5917,10 @@ snapshots:
       tinyexec: 1.1.1
       tinyglobby: 0.2.16
       tinyrainbow: 3.1.0
-      vite: 8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3)
+      vite: 8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3)
       why-is-node-running: 2.3.0
     optionalDependencies:
-      '@types/node': 25.6.0
+      '@types/node': 25.6.2
       '@vitest/coverage-istanbul': 4.1.5(vitest@4.1.5)
       '@vitest/ui': 4.1.5(vitest@4.1.5)
       jsdom: 29.1.1
@@ -5997,7 +5997,7 @@ snapshots:
       vue: 3.5.34(typescript@6.0.3)
     optionalDependencies:
       typescript: 6.0.3
-      vite-plugin-vuetify: 2.1.3(vite@8.0.10(@types/node@25.6.0)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))(vue@3.5.34(typescript@6.0.3))(vuetify@4.0.6)
+      vite-plugin-vuetify: 2.1.3(vite@8.0.10(@types/node@25.6.2)(sass-embedded@1.99.0)(sass@1.99.0)(yaml@2.8.3))(vue@3.5.34(typescript@6.0.3))(vuetify@4.0.6)
 
   w3c-xmlserializer@5.0.0:
     dependencies:
