@@ -19,7 +19,7 @@ COPY scripts ./scripts
 RUN corepack enable
 # Install dependencies
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile
+  pnpm install --frozen-lockfile
 # Copy project files
 COPY . .
 # Build the application
@@ -38,7 +38,7 @@ RUN apk add --no-cache jq
 RUN apk add --no-cache gettext
 # Create a non-root user and group
 RUN addgroup -g 1000 -S mygroup && \
-    adduser -u 1000 -D -S -G mygroup myuser
+  adduser -u 1000 -D -S -G mygroup myuser
 # Copy the dist folder from the build stage to the production stage
 COPY --from=build-stage /app/dist /usr/src/app/dist
 # Replace the default Nginx configuration file with a custom one
