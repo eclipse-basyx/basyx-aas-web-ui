@@ -1,6 +1,6 @@
 <template>
   <v-container class="py-6">
-    <v-sheet border class="pa-6" elevation="4" rounded="lg">
+    <v-sheet class="pa-6" rounded="lg">
       <v-form ref="formRef" @submit.prevent="saveAndNext">
         <v-row>
 
@@ -11,7 +11,7 @@
             >
               <v-text-field
                 v-model="form.aasId"
-                density="comfortable"
+                density="compact"
                 hide-details="auto"
                 :rules="aasIdRules"
                 variant="outlined"
@@ -23,7 +23,7 @@
             <FormField label="Asset Kind *" tip="Asset Kind">
               <v-select
                 v-model="form.assetKind"
-                density="comfortable"
+                density="compact"
                 hide-details="auto"
                 :items="assetKindOptions"
                 :rules="assetKindRules"
@@ -36,7 +36,7 @@
             <FormField label="Display Name" tip="Name of the asset">
               <v-text-field
                 v-model="form.displayName"
-                density="comfortable"
+                density="compact"
                 hide-details="auto"
                 variant="outlined"
               />
@@ -48,7 +48,7 @@
               <v-textarea
                 v-model="form.description"
                 auto-grow
-                density="comfortable"
+                density="compact"
                 hide-details="auto"
                 rows="3"
                 variant="outlined"
@@ -60,7 +60,7 @@
             <FormField label="Global Asset ID *" tip="global asset id">
               <v-text-field
                 v-model="form.globalAssetId"
-                density="comfortable"
+                density="compact"
                 hide-details="auto"
                 :rules="globalAssetIdRules"
                 variant="outlined"
@@ -72,7 +72,7 @@
             <FormField label="Thumbnail" tip="attach a picture of image in common format (.png, .jpg)">
               <v-file-input
                 accept="image/*"
-                density="comfortable"
+                density="compact"
                 hide-details="auto"
                 placeholder="click or drag and drop"
                 prepend-icon="mdi-image"

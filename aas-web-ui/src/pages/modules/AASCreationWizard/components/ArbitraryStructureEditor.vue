@@ -1,13 +1,13 @@
 <template>
-  <v-sheet class="pa-4 rounded-lg border-thin" rounded="lg">
+  <v-sheet class="pa-4 rounded-lg" rounded="lg">
     <div class="arbitrary-editor-toolbar">
-      <div class="mb-4">
-        <div class="text-subtitle-1 font-weight-medium">
+      <!-- <div class="mb-4"> -->
+      <!-- <div class="text-subtitle-1 font-weight-medium">
           {{ title }}
-        </div>
-        <div v-if="!props.isNested" class="text-body-2 text-medium-emphasis mt-1">
-          Build your custom structure by adding sections, properties, multi-language properties, or ranges.
-        </div>
+        </div> -->
+      <div v-if="!props.isNested" class="text-body-2 text-medium-emphasis mt-1">
+        Build your custom structure by adding sections, properties, multi-language properties, or ranges.
+        <!-- </div> -->
       </div>
 
       <!-- Always-visible actions -->
@@ -62,14 +62,14 @@
           <v-expansion-panel class="arbitrary-section-panel" :value="0">
             <v-expansion-panel-title>
               <div class="d-flex justify-space-between align-center w-100 pr-2">
-                <div>
-                  <div class="text-subtitle-2 font-weight-medium">
-                    {{ getNodeTitle(node, index) }}
-                  </div>
-                  <div class="text-caption text-medium-emphasis">
-                    Section group
-                  </div>
-                </div>
+                <!-- <div> -->
+                <span class="text-subtitle-2 font-weight-medium">
+                  {{ getNodeTitle(node, index) }}
+                </span>
+                <!-- <div class="text-caption text-medium-emphasis">
+                  Section group
+                </div> -->
+                <!-- </div> -->
 
                 <v-btn
                   color="error"
@@ -83,7 +83,7 @@
             <v-expansion-panel-text class="arbitrary-section-body">
               <div class="d-flex flex-column ga-4">
                 <v-text-field
-                  density="comfortable"
+                  density="compact"
                   label="Section Title"
                   :model-value="node.label"
                   variant="outlined"
@@ -119,7 +119,7 @@
           <v-row>
             <v-col cols="6">
               <v-text-field
-                density="comfortable"
+                density="compact"
                 label="Property Label"
                 :model-value="node.label"
                 variant="outlined"
@@ -129,7 +129,7 @@
 
             <v-col cols="6">
               <v-text-field
-                density="comfortable"
+                density="compact"
                 label="Property Value"
                 :model-value="node.value"
                 variant="outlined"
@@ -156,7 +156,7 @@
           </div>
 
           <v-text-field
-            density="comfortable"
+            density="compact"
             label="Label"
             :model-value="node.label"
             variant="outlined"
@@ -170,7 +170,7 @@
           >
             <v-col cols="3">
               <v-text-field
-                density="comfortable"
+                density="compact"
                 label="Language"
                 :model-value="entry.language"
                 variant="outlined"
@@ -180,7 +180,7 @@
 
             <v-col cols="8">
               <v-text-field
-                density="comfortable"
+                density="compact"
                 label="Text"
                 :model-value="entry.text"
                 variant="outlined"
@@ -230,7 +230,7 @@
           <v-row>
             <v-col cols="4">
               <v-text-field
-                density="comfortable"
+                density="compact"
                 label="Range Label"
                 :model-value="node.label"
                 variant="outlined"
@@ -240,7 +240,7 @@
 
             <v-col cols="4">
               <v-text-field
-                density="comfortable"
+                density="compact"
                 label="Min"
                 :model-value="node.min"
                 variant="outlined"
@@ -250,7 +250,7 @@
 
             <v-col cols="4">
               <v-text-field
-                density="comfortable"
+                density="compact"
                 label="Max"
                 :model-value="node.max"
                 variant="outlined"
@@ -483,8 +483,10 @@
 
 <style scoped>
 .arbitrary-section-panel {
-  border: 1px solid rgba(var(--v-theme-primary), 0.45);
-  background: rgba(var(--v-theme-primary), 0.06);
+  border: none;
+  box-shadow: inset 3px 0 0 rgba(var(--v-theme-primary), 0.45);
+  background: rgba(var(--v-theme-primary), 0.045);
+  overflow: hidden;
 }
 
 .arbitrary-section-title {

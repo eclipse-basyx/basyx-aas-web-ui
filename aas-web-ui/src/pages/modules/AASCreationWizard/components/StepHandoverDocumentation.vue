@@ -15,7 +15,7 @@
     </v-alert>
   </v-col>
   <v-container class="py-6">
-    <v-sheet border class="pa-6" elevation="4" rounded="lg">
+    <v-sheet class="pa-6" rounded="lg">
       <v-form ref="formRef" @submit.prevent="handleSubmit">
         <v-row>
           <v-col>

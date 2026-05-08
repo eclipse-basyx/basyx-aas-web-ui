@@ -6,7 +6,7 @@
       <!-- Boolean Property -->
       <v-checkbox
         v-if="isBooleanProperty"
-        density="comfortable"
+        density="compact"
         :error="hasRequiredError"
         :error-messages="errorMessages"
         hide-details="auto"
@@ -21,7 +21,7 @@
         >
           <v-col cols="11">
             <v-text-field
-              density="comfortable"
+              density="compact"
               :error="hasRequiredError"
               :error-messages="errorMessages"
               hide-details="auto"
@@ -76,7 +76,7 @@
       >
         <v-col cols="3">
           <v-text-field
-            density="comfortable"
+            density="compact"
             hide-details="auto"
             label="Language"
             :model-value="entry.language"
@@ -86,7 +86,7 @@
         </v-col>
         <v-col cols="8">
           <v-text-field
-            density="comfortable"
+            density="compact"
             :error="hasRequiredError"
             :error-messages="errorMessages"
             hide-details="auto"
@@ -115,7 +115,7 @@
     <!-- file -->
     <v-file-input
       v-else-if="checkTemplateFields.isFileElement(element)"
-      density="comfortable"
+      density="compact"
       :error="hasRequiredError"
       :error-messages="errorMessages"
       hide-details="auto"
@@ -131,7 +131,7 @@
       <v-row>
         <v-col cols="6">
           <v-text-field
-            density="comfortable"
+            density="compact"
             :error="hasRequiredError"
             :error-messages="errorMessages"
             hide-details="auto"
@@ -145,7 +145,7 @@
 
         <v-col cols="6">
           <v-text-field
-            density="comfortable"
+            density="compact"
             :error="hasRequiredError"
             :error-messages="errorMessages"
             hide-details="auto"

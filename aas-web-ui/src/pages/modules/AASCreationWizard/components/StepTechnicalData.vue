@@ -16,7 +16,7 @@
   </v-col>
 
   <v-container class="py-6">
-    <v-sheet border class="pa-6" elevation="4" rounded="lg">
+    <v-sheet class="pa-6" rounded="lg">
       <v-form ref="formRef" @submit.prevent="saveAndNext">
         <v-row>
           <v-col>
@@ -31,7 +31,7 @@
           <!-- Specific Descriptions arbitrary Area -->
 
           <v-col cols="12">
-            <v-card class="pa-4" variant="outlined">
+            <v-card class="pa-4" variant="flat">
               <div class="d-flex justify-space-between align-center mb-4">
                 <div>
                   <div class="text-subtitle-1 font-weight-medium">
@@ -89,7 +89,7 @@
             <ArbitraryStructureEditor v-model="technicalPropertyAreaNodes" title="Technical Property Areas" />
           </v-col> -->
           <v-col cols="12">
-            <v-card class="pa-4" variant="outlined">
+            <v-card class="pa-4" variant="flat">
               <div class="d-flex justify-space-between align-center mb-4">
                 <div>
                   <div class="text-subtitle-1 font-weight-medium">

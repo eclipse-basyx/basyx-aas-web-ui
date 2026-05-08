@@ -1,5 +1,5 @@
 <template>
-  <v-card class="pa-4" variant="outlined">
+  <v-card class="pa-4" variant="flat">
     <div class="d-flex justify-space-between align-center mb-4">
       <div>
         <div class="text-subtitle-1 font-weight-medium">

@@ -24,7 +24,7 @@ export function useAASCreationSubmission () {
 
       const submodelSuccess = await postSubmodel(submodelInstance)
 
-      console.log('post was a success', submodelSuccess)
+      console.log('post was a success', submodelSuccess, label)
 
       if (!submodelSuccess) {
         console.log('post function failed')
