@@ -28,6 +28,62 @@
             />
           </v-col>
 
+          <!-- Specific Descriptions arbitrary Area -->
+
+          <v-col cols="12">
+            <v-card class="pa-4" variant="outlined">
+              <div class="d-flex justify-space-between align-center mb-4">
+                <div>
+                  <div class="text-subtitle-1 font-weight-medium">
+                    Specific Descriptions
+                  </div>
+                  <div class="text-body-2 text-medium-emphasis">
+                    Create one or more Specific Descriptions. Each area can contain its own custom structure
+                  </div>
+                </div>
+
+                <v-btn
+                  color="primary"
+                  prepend-icon="mdi-plus"
+                  variant="tonal"
+                  @click="addSpecificDescriptions"
+                >Add Specific Descriptions</v-btn>
+              </div>
+
+              <div v-if="specificDescriptions.length===0" class="text-body-2 text-medium-emphasis">
+                No Specific Descriptions added yet
+              </div>
+
+              <div v-else class="d-flex flex-column ga-4">
+                <v-card
+                  v-for="(area,index) in specificDescriptions"
+                  :key="area.editorId"
+                  class="pa-4"
+                  variant="flat"
+                >
+                  <div class="d-flex justify-space-between align-center mb-4">
+                    <div class="text-subtitle-2 font-weight-medium">
+                      Specific Descriptions {{ index + 1 }}
+                    </div>
+
+                    <v-btn
+                      color="error"
+                      icon="mdi-delete"
+                      variant="text"
+                      @click="removeSpecificDescriptionsNodes(area.editorId)"
+                    />
+                  </div>
+
+                  <ArbitraryStructureEditor
+                    is-nested
+                    :model-value="area.arbitraryNodes"
+                    title="Custom Structure"
+                    @update:model-value="updateSpecificDescriptionsNodes(area.editorId, $event)"
+                  />
+                </v-card>
+              </div>
+            </v-card>
+          </v-col>
           <!-- Temporary arbitrary structure prototype -->
           <!-- <v-col cols="12">
             <ArbitraryStructureEditor v-model="technicalPropertyAreaNodes" title="Technical Property Areas" />
@@ -97,13 +153,13 @@
   </v-container>
 </template>
 <script lang="ts" setup>
-  import type { ArbitraryNode, TechnicalPropertyAreaEditorItem } from '../types/arbitrary'
+  import type { ArbitraryNode, SpecificDescriptionsEditorItem, TechnicalPropertyAreaEditorItem } from '../types/arbitrary'
   import type { FormStateObject } from '../types/form'
   import type { TechnicalDataTemplate } from '../types/template'
   import type { ValidationIssue } from '../types/validation'
   // import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
   import { computed, onMounted, ref } from 'vue'
-  import { buildTechnicalData, buildTechnicalPropertyAreas } from '../builders/buildTechnicalData'
+  import { buildSpecificDescriptions, buildTechnicalData, buildTechnicalPropertyAreas } from '../builders/buildTechnicalData'
   import { useAASCreationStore } from '../stores/aasCreationForm'
   import template from '../templates/technical-data.json'
   import { createInitialFormState } from '../utils/createInitialFormState'
@@ -126,17 +182,17 @@
   const formValues = ref<FormStateObject>(createInitialFormState(templateData))
   const validationIssues = ref<ValidationIssue[]>([])
   const technicalPropertyAreas = ref<TechnicalPropertyAreaEditorItem[]>([])
+  const specificDescriptions = ref<SpecificDescriptionsEditorItem[]>([])
 
   // computed
   const rendererElements = computed(() => {
     return templateData.submodelElements.filter(
-      element => element.idShort !== 'TechnicalPropertyAreas',
+      element => element.idShort !== 'TechnicalPropertyAreas' && element.idShort !== 'SpecificDescriptions',
     )
   })
   // store
   const store = useAASCreationStore()
 
-  const usedIdShorts = new Set<string>()
   const hasAttemptedSubmit = ref(false)
 
   onMounted(() => {
@@ -145,6 +201,9 @@
     }
     if (store.technicalPropertyAreas.length > 0) {
       technicalPropertyAreas.value = deepCopyFormState(store.technicalPropertyAreas)
+    }
+    if (store.specificDescriptions.length > 0) {
+      specificDescriptions.value = deepCopyFormState(store.specificDescriptions)
     }
     console.log('Technical Data templatedata is', templateData)
     console.log('Technical Data formvalues is', formValues)
@@ -175,14 +234,19 @@
 
     const rawFormState = deepCopyFormState(formValues.value)
     const rawTechnicalPropertyAreas = deepCopyFormState(technicalPropertyAreas.value)
+    const rawSpecificDescriptions = deepCopyFormState(specificDescriptions.value)
 
     store.saveTechnicalDataFormState(rawFormState)
     store.saveTechnicalPropertyAreas(rawTechnicalPropertyAreas)
+    store.saveSpecificDescriptions(rawSpecificDescriptions)
 
     const builtTechnicalPropertyAreas = buildTechnicalPropertyAreas(rawTechnicalPropertyAreas)
     console.log('built technical property areas', builtTechnicalPropertyAreas)
 
-    const builtTechnicalData = buildTechnicalData(rawFormState, rawTechnicalPropertyAreas)
+    const builtSpecificDescriptions = buildSpecificDescriptions(rawSpecificDescriptions)
+    console.log('built technical property areas', builtSpecificDescriptions)
+
+    const builtTechnicalData = buildTechnicalData(rawFormState, rawTechnicalPropertyAreas, rawSpecificDescriptions)
     console.log('builtTechnicalData', builtTechnicalData)
 
     // const technicalDataParseResult = jsonization.submodelFromJsonable(builtTechnicalData as any)
@@ -220,14 +284,29 @@
       arbitraryNodes: [],
     })
   }
+  function addSpecificDescriptions (): void {
+    specificDescriptions.value.push({
+      editorId: createSpecificDescriptionsEditorId(),
+      arbitraryNodes: [],
+    })
+  }
   function createTechnicalPropertyAreaEditorId (): string {
     return `technical-property-area-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+  }
+  function createSpecificDescriptionsEditorId (): string {
+    return `specific-descriptions-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
   }
   function removeTechnicalPropertyArea (editorId: string): void {
     technicalPropertyAreas.value = technicalPropertyAreas.value.filter(area => area.editorId !== editorId)
   }
   function updateTechnicalPropertyAreaNodes (editorId: string, nodes: ArbitraryNode[]): void {
     technicalPropertyAreas.value = technicalPropertyAreas.value.map(area => area.editorId === editorId ? { ...area, arbitraryNodes: nodes } : area)
+  }
+  function removeSpecificDescriptionsNodes (editorId: string): void {
+    specificDescriptions.value = specificDescriptions.value.filter(description => description.editorId !== editorId)
+  }
+  function updateSpecificDescriptionsNodes (editorId: string, nodes: ArbitraryNode[]): void {
+    specificDescriptions.value = specificDescriptions.value.map(description => description.editorId === editorId ? { ...description, arbitraryNodes: nodes } : description)
   }
 
 </script>

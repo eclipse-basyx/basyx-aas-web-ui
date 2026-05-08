@@ -1,14 +1,19 @@
 import type { FormStateObject, FormStateValue } from '../types/form'
 import type {
   SubmodelElementCollectionElement,
-  // SubmodelElementListElement,
+  SubmodelElementListElement,
   SubmodelTemplate,
   TemplateElement,
 } from '../types/template'
 import {
   isOptionalSingleElement,
   isRepeatableElement,
+  isRequiredElement,
 } from './cardinalityUtils'
+import {
+  asSingleListItemElement,
+  getListItemTemplate,
+} from './submodelListTemplateUtils'
 
 export function createInitialFormState (templateOrElements: SubmodelTemplate | TemplateElement[]): FormStateObject {
   const elements = Array.isArray(templateOrElements) ? templateOrElements : templateOrElements.submodelElements
@@ -20,6 +25,24 @@ export function createInitialFormState (templateOrElements: SubmodelTemplate | T
   }
 
   return state
+}
+
+export function createInitialSubmodelListItem (
+  element: SubmodelElementListElement,
+): FormStateObject {
+  const itemTemplate = getListItemTemplate(element)
+
+  if (!itemTemplate) {
+    return {}
+  }
+
+  if (itemTemplate.modelType === 'SubmodelElementCollection') {
+    return createInitialFormState(itemTemplate.value)
+  }
+
+  return createInitialFormState([
+    asSingleListItemElement(element, itemTemplate),
+  ])
 }
 
 function createInitialValueForElement (element: TemplateElement): FormStateValue {
@@ -49,6 +72,9 @@ function createInitialValueForElement (element: TemplateElement): FormStateValue
     }
 
     case 'SubmodelElementList': {
+      if (isRequiredElement(element)) {
+        return [createInitialSubmodelListItem (element as SubmodelElementListElement)]
+      }
       return []
     }
 

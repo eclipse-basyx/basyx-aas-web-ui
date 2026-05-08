@@ -55,7 +55,8 @@
 <script lang="ts" setup>
   import type { FormStateObject, FormStateValue } from '../../types/form'
   import type { SubmodelElementListElement, TemplateElement } from '../../types/template'
-  import { computed, ref } from 'vue'
+  import { computed, onMounted, ref } from 'vue'
+  import { isRequiredElement } from '../../utils/cardinalityUtils'
   import { asFormStateObjectArray, formatRepeatedElementBaseLabel } from '../../utils/formFieldUtils'
   import {
     addopenPanelIndex,
@@ -73,7 +74,11 @@
     modelValue: FormStateValue
     showValidation?: boolean
   }>()
-
+  onMounted(() => {
+    if (isRequiredElement(props.element) && items.value.length > 0) {
+      openPanels.value = [0]
+    }
+  })
   const emit = defineEmits<{
     (e: 'update:modelValue', value: FormStateObject[]): void
   }>()

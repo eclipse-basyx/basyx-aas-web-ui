@@ -45,3 +45,7 @@ export type TechnicalPropertyAreaEditorItem = {
   editorId: string
   arbitraryNodes: ArbitraryNode[]
 }
+export type SpecificDescriptionsEditorItem = {
+  editorId: string
+  arbitraryNodes: ArbitraryNode[]
+}

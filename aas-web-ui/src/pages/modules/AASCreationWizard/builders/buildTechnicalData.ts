@@ -8,7 +8,7 @@ import type {
 import type {
   ArbitraryMultiLanguagePropertyNode, ArbitraryNode,
   ArbitraryPropertyNode, ArbitraryRangeNode,
-  ArbitrarySectionNode, TechnicalPropertyAreaEditorItem } from './../types/arbitrary'
+  ArbitrarySectionNode, SpecificDescriptionsEditorItem, TechnicalPropertyAreaEditorItem } from './../types/arbitrary'
 import { useIDUtils } from '@/composables/IDUtils'
 import template from '../templates/technical-data.json'
 import { formatIndexedIdShort, stripRuntimeMetadata } from '../utils/builderUtils'
@@ -66,6 +66,12 @@ type BuiltArbitraryCollection = {
 }
 
 type BuiltTechnicalPropertyArea = {
+  modelType: 'SubmodelElementCollection'
+  idShort: string
+  value: BuiltArbitrarySubmodelElement[]
+}
+
+type BuiltSpecificDescriptions = {
   modelType: 'SubmodelElementCollection'
   idShort: string
   value: BuiltArbitrarySubmodelElement[]
@@ -162,6 +168,16 @@ export function buildTechnicalPropertyAreas (
   return areas.map((area, index) => ({
     modelType: 'SubmodelElementCollection',
     idShort: `TechnicalPropertyArea_${String(index).padStart(2, '0')}`,
+    value: buildArbitrarySubmodelElements(area.arbitraryNodes),
+  }))
+}
+
+export function buildSpecificDescriptions (
+  areas: SpecificDescriptionsEditorItem[],
+): BuiltSpecificDescriptions[] {
+  return areas.map((area, index) => ({
+    modelType: 'SubmodelElementCollection',
+    idShort: `SpecificDescriptions_${String(index).padStart(2, '0')}`,
     value: buildArbitrarySubmodelElements(area.arbitraryNodes),
   }))
 }
@@ -339,19 +355,25 @@ function buildRepeatableCollectionItem (
 export function buildTechnicalData (
   rawData: FormStateObject | null = null,
   technicalPropertyAreas: TechnicalPropertyAreaEditorItem[] = [],
+  specificDescriptions: SpecificDescriptionsEditorItem[] = [],
 ): TechnicalDataTemplate {
   const existingData = rawData ?? {}
 
   const fixedElements = templateData.submodelElements
-    .filter(element => element.idShort !== 'TechnicalPropertyAreas')
+    .filter(element => element.idShort !== 'TechnicalPropertyAreas' && element.idShort !== 'SpecificDescriptions')
     .flatMap(element => buildElement(element, existingData[element.idShort]))
 
   const technicalPropertyAreasElement = buildTechnicalPropertyAreasElement(technicalPropertyAreas)
+  const specificDescriptionsElement = buildSpecificDescriptionsElement (specificDescriptions)
 
-  const submodelElements = technicalPropertyAreasElement
-    ? [...fixedElements, technicalPropertyAreasElement]
-    : fixedElements
+  // const submodelElements = technicalPropertyAreasElement   ? [...fixedElements, technicalPropertyAreasElement]
+  //   : fixedElements
 
+  const submodelElements = [
+    ...fixedElements,
+    ...(technicalPropertyAreasElement ? [technicalPropertyAreasElement] : []),
+    ...(specificDescriptionsElement ? [specificDescriptionsElement] : []),
+  ]
   return {
     ...stripRuntimeMetadata(templateData),
     id: generateIri('Submodel'),
@@ -371,6 +393,29 @@ function buildTechnicalPropertyAreasElement (
 
   const templateElement = templateData.submodelElements.find(
     element => element.idShort === 'TechnicalPropertyAreas',
+  )
+
+  if (!templateElement || templateElement.modelType !== 'SubmodelElementList') {
+    return null
+  }
+
+  return {
+    ...stripRuntimeMetadata(templateElement as SubmodelElementListElement),
+    value: builtAreas as unknown as SubmodelElementCollectionElement[],
+  }
+}
+
+function buildSpecificDescriptionsElement (
+  descriptions: SpecificDescriptionsEditorItem[],
+): SubmodelElementListElement | null {
+  const builtAreas = buildSpecificDescriptions(descriptions)
+
+  if (builtAreas.length === 0) {
+    return null
+  }
+
+  const templateElement = templateData.submodelElements.find(
+    element => element.idShort === 'SpecificDescriptions',
   )
 
   if (!templateElement || templateElement.modelType !== 'SubmodelElementList') {

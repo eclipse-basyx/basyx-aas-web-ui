@@ -72,9 +72,20 @@
   const validationIssues = ref<ValidationIssue[]>([])
 
   onMounted(() => {
+    console.log('handover template root elements:', templateData.submodelElements.map(element => ({
+      idShort: element.idShort,
+      modelType: element.modelType,
+      cardinality: element._cardinality,
+    })))
+
+    const freshInitialState = createInitialFormState(templateData)
+    console.log('fresh handover initial state:', freshInitialState)
+
+    console.log('stored handover form state:', store.handoverDocumentationFormState)
     if (store.handoverDocumentationFormState) {
       formValues.value = deepCopyFormState(store.handoverDocumentationFormState)
     }
+    console.log('actual handover formValues after restore:', formValues.value)
     console.log('Handover Documentation Data templatedata is', templateData)
     console.log('Handover Documentation formvalues is', formValues)
     const initialState = createInitialFormState(templateData)
