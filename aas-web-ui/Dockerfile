@@ -12,8 +12,8 @@ ENV VITE_APP_COMMIT_SHA=$VITE_APP_COMMIT_SHA
 ENV VITE_APP_BUILD_DATE=$VITE_APP_BUILD_DATE
 # Set working directory
 WORKDIR /app
-# Copy package manifests and install scripts
-COPY package.json pnpm-lock.yaml ./
+# Copy package manifests and pnpm config used during install
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY scripts ./scripts
 # Enable pnpm via Corepack
 RUN corepack enable
