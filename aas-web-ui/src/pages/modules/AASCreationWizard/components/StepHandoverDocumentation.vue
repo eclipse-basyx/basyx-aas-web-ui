@@ -35,12 +35,20 @@
 
           <v-col class="d-flex justify-space-between mt-4" cols="12">
             <v-btn color="primary" @click="props.prev">Back</v-btn>
-            <v-btn color="primary" :disabled="isSubmitting" @click="handleSubmit">Submit</v-btn>
+            <v-btn color="success" :disabled="isSubmitting" @click="handleSubmit">Submit</v-btn>
           </v-col>
         </v-row>
       </v-form>
     </v-sheet>
   </v-container>
+  <SubmissionDialog
+    v-model="submissionDialog.open"
+    :confirm-text="submissionDialog.confirmText"
+    :message="submissionDialog.message"
+    :title="submissionDialog.title"
+    :type="submissionDialog.type"
+    @confirm="onSubmissionDialogConfirm"
+  />
 </template>
 <script lang="ts" setup>
   import type { FormStateObject } from '../types/form'
@@ -57,6 +65,7 @@
   import { normalizeHandoverDocumentationTemplate } from '../utils/normalizeTemplate'
   import { validateTemplateElements } from '../utils/validationUtils'
   import SubmodelRenderer from './renderer/SubmodelRenderer.vue'
+  import SubmissionDialog from './SubmissionDialog.vue'
 
   const props = defineProps<{
     next: () => void
@@ -153,13 +162,13 @@
     try {
       const success = await submitAll()
       if (!success) {
-        window.alert('Submission failed')
+        // window.alert('Submission failed')
+        showSubmissionError()
         return
       }
 
-      window.alert('Submission was successful.')
-      store.resetCreationState()
-      props.finish()
+      showSubmissionSuccess()
+      // window.alert('Submission was successful.')
     } finally {
       isSubmitting.value = false
     }
@@ -180,5 +189,55 @@
     )
 
     validationIssues.value = validationResult.issues
+  }
+  type SubmissionDialogType = 'success' | 'error'
+
+  const submissionDialog = ref<{
+    open: boolean
+    type: SubmissionDialogType
+    title: string
+    message: string
+    confirmText: string
+  }>({
+    open: false,
+    type: 'success',
+    title: '',
+    message: '',
+    confirmText: 'OK',
+  })
+  const shouldFinishAfterDialog = ref(false)
+
+  function showSubmissionSuccess (): void {
+    shouldFinishAfterDialog.value = true
+
+    submissionDialog.value = {
+      open: true,
+      type: 'success',
+      title: 'Submission successful',
+      message: 'The Asset Administration Shell and all selected submodels were created successfully.',
+      confirmText: 'Finish',
+    }
+  }
+
+  function showSubmissionError (): void {
+    shouldFinishAfterDialog.value = false
+
+    submissionDialog.value = {
+      open: true,
+      type: 'error',
+      title: 'Submission failed',
+      message: 'The submission could not be completed. Please check the console for details and try again.',
+      confirmText: 'OK',
+    }
+  }
+
+  function onSubmissionDialogConfirm (): void {
+    if (!shouldFinishAfterDialog.value) {
+      return
+    }
+
+    shouldFinishAfterDialog.value = false
+    store.resetCreationState()
+    props.finish()
   }
 </script>
