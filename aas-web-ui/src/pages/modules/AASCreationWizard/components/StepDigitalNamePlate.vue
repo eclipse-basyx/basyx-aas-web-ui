@@ -113,6 +113,7 @@
 
   function onFormStateUpdate (value: FormStateObject): void {
     formValues.value = value
+    updateValidationIssues()
   }
   function deepCopyFormState<T> (value: T): T {
     if (value === null || typeof value !== 'object') {
@@ -135,5 +136,17 @@
     }
 
     return result as T
+  }
+  function updateValidationIssues (): void {
+    if (!hasAttemptedSubmit.value) {
+      return
+    }
+
+    const validationResult = validateTemplateElements(
+      templateData.submodelElements,
+      formValues.value,
+    )
+
+    validationIssues.value = validationResult.issues
   }
 </script>

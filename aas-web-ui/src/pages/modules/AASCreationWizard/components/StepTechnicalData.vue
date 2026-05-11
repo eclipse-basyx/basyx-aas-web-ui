@@ -279,6 +279,7 @@
 
   function onFormStateUpdate (value: FormStateObject): void {
     formValues.value = value
+    updateValidationIssues()
   }
 
   function addTechnicalPropertyArea (): void {
@@ -311,5 +312,16 @@
   function updateSpecificDescriptionsNodes (editorId: string, nodes: ArbitraryNode[]): void {
     specificDescriptions.value = specificDescriptions.value.map(description => description.editorId === editorId ? { ...description, arbitraryNodes: nodes } : description)
   }
+  function updateValidationIssues (): void {
+    if (!hasAttemptedSubmit.value) {
+      return
+    }
 
+    const validationResult = validateTemplateElements(
+      templateData.submodelElements,
+      formValues.value,
+    )
+
+    validationIssues.value = validationResult.issues
+  }
 </script>

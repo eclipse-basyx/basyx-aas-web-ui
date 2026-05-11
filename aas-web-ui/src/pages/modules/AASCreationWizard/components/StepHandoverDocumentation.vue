@@ -166,6 +166,19 @@
   }
   function onFormStateUpdate (value: FormStateObject): void {
     formValues.value = value
+    updateValidationIssues()
     console.log('handover documents updated:', value.Documents)
+  }
+  function updateValidationIssues (): void {
+    if (!hasAttemptedSubmit.value) {
+      return
+    }
+
+    const validationResult = validateTemplateElements(
+      templateData.submodelElements,
+      formValues.value,
+    )
+
+    validationIssues.value = validationResult.issues
   }
 </script>
