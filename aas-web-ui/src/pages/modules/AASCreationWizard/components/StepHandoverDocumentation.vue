@@ -8,6 +8,7 @@
       Please fill all required fields:
       <span v-for="(issue, index) in validationIssues.slice(0, 5)" :key="issue.path">
         {{ issue.idShort }}<span v-if="index < validationIssues.slice(0, 5).length - 1">, </span>
+
       </span>
 
       <span v-if="validationIssues.length > 5">
@@ -15,6 +16,7 @@
       </span>
 
     </v-alert>
+
   </v-col>
 
   <v-container class="py-6">
@@ -22,6 +24,7 @@
       <v-form ref="formRef" @submit.prevent="handleSubmit">
         <v-row>
           <v-col>
+
             <SubmodelRenderer
               :elements="templateData.submodelElements"
               :form-state="formValues"

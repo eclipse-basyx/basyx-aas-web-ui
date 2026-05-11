@@ -1,5 +1,4 @@
 <template>
-
   <v-card
     v-if="isRepeatable"
     class="collection-segment pa-4"
@@ -136,7 +135,11 @@
     isRepeatableElement,
   } from '../../utils/cardinalityUtils'
   import { createInitialFormState } from '../../utils/createInitialFormState'
-  import { asFormStateObject, asFormStateObjectArray, formatLabel, formatRepeatedElementBaseLabel } from '../../utils/formFieldUtils'
+  import { asFormStateObject,
+           asFormStateObjectArray,
+           formatLabel,
+           formatRepeatedElementBaseLabel,
+  } from '../../utils/formFieldUtils'
   import { addopenPanelIndex, appendListItem, removeAndReindexOpenPanels, removeListItem, updateListItem } from '../../utils/subModelListUtils'
   import SubmodelRenderer from './SubmodelRenderer.vue'
 
