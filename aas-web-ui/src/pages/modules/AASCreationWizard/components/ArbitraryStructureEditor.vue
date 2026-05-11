@@ -21,6 +21,7 @@
         >
           Section
         </v-btn>
+
         <v-btn
           color="primary"
           prepend-icon="mdi-plus"
@@ -30,6 +31,7 @@
         >
           Property
         </v-btn>
+
         <v-btn
           color="primary"
           prepend-icon="mdi-plus"
@@ -39,6 +41,7 @@
         >
           Multi-language
         </v-btn>
+
         <v-btn
           color="primary"
           prepend-icon="mdi-plus"
@@ -66,10 +69,6 @@
                 <span class="text-subtitle-2 font-weight-medium">
                   {{ getNodeTitle(node, index) }}
                 </span>
-                <!-- <div class="text-caption text-medium-emphasis">
-                  Section group
-                </div> -->
-                <!-- </div> -->
 
                 <v-btn
                   color="error"

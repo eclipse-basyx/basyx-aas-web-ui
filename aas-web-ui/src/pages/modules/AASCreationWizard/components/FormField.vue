@@ -11,6 +11,7 @@
             mdi-information-outline
           </v-icon>
         </template>
+
         <span>{{ tip }}</span>
       </v-tooltip>
     </div>

@@ -4,6 +4,7 @@
     style="position: fixed; top: 70px; right: 16px; z-index: 999999999"
     @click="scrollToBottom"
   />
+
   <v-container class="aas-wizard-container" fluid>
     <v-stepper v-model="step" class="aas-wizard-stepper" elevation="0">
       <v-stepper-header class="aas-stepper-header">
@@ -60,6 +61,7 @@
 
     </v-stepper>
   </v-container>
+
   <v-btn
     icon="mdi-arrow-up"
     style="position: fixed; bottom: 64px; right: 16px; z-index: 999999999"

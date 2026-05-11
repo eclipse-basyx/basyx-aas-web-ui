@@ -9,6 +9,7 @@
       <span v-for="(issue, index) in validationIssues.slice(0, 5)" :key="issue.path">
         {{ issue.idShort }}<span v-if="index < validationIssues.slice(0, 5).length - 1">, </span>
       </span>
+
       <span v-if="validationIssues.length > 5">
         and {{ validationIssues.length - 5 }} more...
       </span>
@@ -37,6 +38,7 @@
                   <div class="text-subtitle-1 font-weight-medium">
                     Specific Descriptions
                   </div>
+
                   <div class="text-body-2 text-medium-emphasis">
                     Create one or more Specific Descriptions. Each area can contain its own custom structure
                   </div>
@@ -95,6 +97,7 @@
                   <div class="text-subtitle-1 font-weight-medium">
                     Technical Property Areas
                   </div>
+
                   <div class="text-body-2 text-medium-emphasis">
                     Create one or more technical property areas. Each area can contain its own custom structure
                   </div>

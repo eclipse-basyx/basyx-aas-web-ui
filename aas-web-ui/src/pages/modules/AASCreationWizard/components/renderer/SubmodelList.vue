@@ -5,6 +5,7 @@
         <div class="text-subtitle-1 font-weight-medium">
           {{ getDisplayLabel() }}
         </div>
+
         <div class="text-body-2 text-medium-emphasis">
           {{ items.length }} item<span v-if="items.length !== 1">s</span>
         </div>
@@ -43,6 +44,7 @@
             :show-validation="props.showValidation"
             @update:form-state="onUpdateItem(index, $event)"
           />
+
           <div v-else class="text-body-2 text-medium-emphasis">
             This list item type is not supported yet.
           </div>

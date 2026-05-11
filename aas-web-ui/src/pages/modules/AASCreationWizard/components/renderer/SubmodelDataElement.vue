@@ -14,6 +14,7 @@
         @update:model-value="onBooleanInput"
       />
       <div v-else-if="isRepeatableElement(element)" class="d-flex flex-column ga-3">
+
         <v-row
           v-for="(entry, index) in repeatableStringValue"
           :key="`${element.idShort}-${index}`"
@@ -84,6 +85,7 @@
             @update:model-value="onLanguageChange(index, $event)"
           />
         </v-col>
+
         <v-col cols="8">
           <v-text-field
             density="compact"
@@ -95,7 +97,9 @@
             variant="outlined"
             @update:model-value="onTextChange(index, $event)"
           />
+
         </v-col>
+
         <v-col class="d-flex justify-end" cols="1">
           <v-btn
             color="error"
@@ -106,6 +110,7 @@
           />
         </v-col>
       </v-row>
+
       <div>
         <v-btn color="primary" prepend-icon="mdi-plus" variant="text" @click="onAddTranslation">
           Add translation
