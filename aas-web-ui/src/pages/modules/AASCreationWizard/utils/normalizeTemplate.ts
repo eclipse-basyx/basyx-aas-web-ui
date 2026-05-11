@@ -13,12 +13,19 @@ function deepClone<T> (value: T): T {
   return structuredClone(value) as T
 }
 
+function shouldExcludeSemanticId (element: TemplateElement, semanticId: string[]): boolean {
+  return semanticId.some(semanticId =>
+    checkSemanticId(element, semanticId),
+  )
+}
+
+const ADDRESS_INFORMATION_SEMANTIC_ID = 'https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/AddressInformation'
 function isAddressInformationElement (
   element: TemplateElement,
 ): element is SubmodelElementCollectionElement {
   return (
     element.modelType === 'SubmodelElementCollection'
-    && element.idShort === 'AddressInformation'
+    && checkSemanticId(element, ADDRESS_INFORMATION_SEMANTIC_ID)
   )
 }
 
@@ -37,8 +44,12 @@ function hasChildElementArray (element: TemplateElement): element is SubmodelEle
  * - injects ContactInformation children into AddressInformation
  * - adds cardinality recursively
  */
+const EXCLUDED_DIGITAL_NAMEPLATE_SEMANTIC_IDS = [
+  '0173-1#02-ABI218#003/0173-1#01-AGZ672#004',
+]
+
 function normalizeElement (element: TemplateElement): TemplateElement | null {
-  if (element.idShort === 'AssetSpecificProperties') {
+  if (shouldExcludeSemanticId(element, EXCLUDED_DIGITAL_NAMEPLATE_SEMANTIC_IDS)) {
     return null
   }
 
@@ -81,47 +92,33 @@ function normalizeElement (element: TemplateElement): TemplateElement | null {
 }
 
 /**
- * Generic normalization:
- * - only adds cardinality recursively
- * - no template-specific structural changes
- */
-// function addCardinality (element: TemplateElement): TemplateElement {
-//   if (hasChildElementArray(element)) {
-//     return {
-//       ...element,
-//       value: element.value.map(child => addCardinality(child)),
-//       _cardinality: parseCardinality(element),
-
-//     }
-//   }
-//   return {
-//     ...element,
-//     _cardinality: parseCardinality(element),
-//   }
-// }
-
-/**
  * Technical Data normalization:
  * - removes ReferenceElement
  * - adds cardinality recursively
  */
+const EXCLUDED_TECHNICAL_DATA_REFERENCE_SEMANTIC_IDS = [
+  '0173-1#02-ABL358#002',
+]
+const TECHNICAL_DATA_ARBITRARY_SEMANTIC_IDS = [
+  'https://admin-shell.io/SMT/General/Arbitrary',
+]
 
-function isTechnicalDataArbitraryElement (element: TemplateElement): boolean {
-  return [
-    'Section',
-    'ArbitrarySMC',
-    'ArbitrarySML',
-    'ArbitraryProperty',
-    'ArbitraryMLP',
-    'ArbitraryRange',
-  ].includes(element.idShort)
-}
+// function isTechnicalDataArbitraryElement (element: TemplateElement): boolean {
+//   return [
+//     'Section',
+//     'ArbitrarySMC',
+//     'ArbitrarySML',
+//     'ArbitraryProperty',
+//     'ArbitraryMLP',
+//     'ArbitraryRange',
+//   ].includes(element.idShort)
+// }
 
 function normalizeTechnicaldataElement (element: TemplateElement): TemplateElement | null {
-  if (element.modelType === 'ReferenceElement') {
+  if (shouldExcludeSemanticId(element, EXCLUDED_TECHNICAL_DATA_REFERENCE_SEMANTIC_IDS)) {
     return null
   }
-  if (isTechnicalDataArbitraryElement(element)) {
+  if (shouldExcludeSemanticId(element, TECHNICAL_DATA_ARBITRARY_SEMANTIC_IDS)) {
     return null
   }
   if (hasChildElementArray(element)) {
@@ -153,7 +150,7 @@ const EXCLUDED_HANDOVER_SEMANTIC_IDS = [
   '0173-1#02-ABK288#002',
   // idShort: BasedOnReferences
   '0173-1#02-ABK289#002',
-  // TranslationOfEntities
+  // idShort: TranslationOfEntities
   '0173-1#02-ABK290#002',
   // idShort: DocumentedEntities
   'https://admin-shell.io/vdi/2770/1/0/Document/DocumentedEntities',
@@ -161,19 +158,11 @@ const EXCLUDED_HANDOVER_SEMANTIC_IDS = [
   'https://adminshell.io/vdi/2770/1/0/Document/DocumentedEntity',
 ]
 
-function shouldExcludeHandoverDocumentationElement (
-  element: TemplateElement,
-): boolean {
-  return EXCLUDED_HANDOVER_SEMANTIC_IDS.some(semanticId =>
-    checkSemanticId(element, semanticId),
-  )
-}
-
 function normalizeHandoverDocumentationElement (element: TemplateElement): TemplateElement | null {
   // if (element.modelType === 'ReferenceElement') {
   //   return null
   // }
-  if (shouldExcludeHandoverDocumentationElement(element)) {
+  if (shouldExcludeSemanticId(element, EXCLUDED_HANDOVER_SEMANTIC_IDS)) {
     return null
   }
 
