@@ -9,11 +9,14 @@
       <span v-for="(issue, index) in validationIssues.slice(0, 5)" :key="issue.path">
         {{ issue.idShort }}<span v-if="index < validationIssues.slice(0, 5).length - 1">, </span>
       </span>
+
       <span v-if="validationIssues.length > 5">
         and {{ validationIssues.length - 5 }} more...
       </span>
+
     </v-alert>
   </v-col>
+
   <v-container class="py-6">
     <v-sheet class="pa-6" rounded="lg">
       <v-form ref="formRef" @submit.prevent="handleSubmit">
@@ -26,6 +29,7 @@
               @update:form-state="onFormStateUpdate"
             />
           </v-col>
+
           <v-col class="d-flex justify-space-between mt-4" cols="12">
             <v-btn color="primary" @click="props.prev">Back</v-btn>
             <v-btn color="primary" :disabled="isSubmitting" @click="handleSubmit">Submit</v-btn>

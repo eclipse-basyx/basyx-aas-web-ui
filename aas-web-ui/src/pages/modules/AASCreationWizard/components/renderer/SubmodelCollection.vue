@@ -11,6 +11,7 @@
         <div class="text-subtitle-1 font-weight-medium">
           {{ getDisplayLabel() }}
         </div>
+
         <div class="text-body-2 text-medium-emphasis">
           {{ repeatableItems.length }} item<span v-if="repeatableItems.length !== 1">s</span>
         </div>

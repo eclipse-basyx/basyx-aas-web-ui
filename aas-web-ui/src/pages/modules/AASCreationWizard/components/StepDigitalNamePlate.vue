@@ -28,11 +28,14 @@
               @update:form-state="onFormStateUpdate"
             />
           </v-col>
+
           <v-col class="d-flex justify-space-between mt-4" cols="12">
+
             <v-btn color="primary" @click="props.prev"> Back </v-btn>
 
             <v-btn color="primary" type="submit"> Next </v-btn>
           </v-col>
+
         </v-row>
       </v-form>
     </v-sheet>
