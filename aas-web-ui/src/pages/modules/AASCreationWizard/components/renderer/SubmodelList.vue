@@ -30,7 +30,13 @@
               {{ getDisplayLabel() }} {{ index + 1 }}
             </div>
 
-            <v-btn color="error" prepend-icon="mdi-delete" variant="text" @click.stop="onRemoveItem(index)">
+            <v-btn
+              v-if="canRemoveItem"
+              color="error"
+              prepend-icon="mdi-delete"
+              variant="text"
+              @click.stop="onRemoveItem(index)"
+            >
               Remove
             </v-btn>
           </div>
@@ -94,6 +100,12 @@
   const itemRendererElements = computed<TemplateElement[]>(() => {
     return getListItemRendererElements(props.element)
   })
+  const minimumItemCount = computed<number>(() => {
+    return isRequiredElement(props.element) ? 1 : 0
+  })
+  const canRemoveItem = computed<boolean>(() => {
+    return items.value.length > minimumItemCount.value
+  })
 
   function onAddItem (): void {
     const newItem = createSubmodelListItem(props.element)
@@ -105,6 +117,9 @@
   }
 
   function onRemoveItem (index: number): void {
+    if (!canRemoveItem.value) {
+      return
+    }
     const updated = removeListItem(items.value, index)
     emit('update:modelValue', updated)
 
