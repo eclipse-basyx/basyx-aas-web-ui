@@ -1,9 +1,9 @@
 import type { FormStateObject, FormStateValue, RangeFormValue } from '../types/form'
 import type { LangString } from '../types/template'
+import { toRaw } from 'vue'
 import { ensurelangStrings } from './langStringFormUtils'
 
 export function asString (value: FormStateValue): string {
-  console.log('value is', typeof value === 'string' ? value : '')
   return typeof value === 'string' ? value : ''
 }
 
@@ -64,7 +64,7 @@ export function formatRepeatedElementBaseLabel (idShort: string): string {
   return formatLabel(baseIdShort)
 }
 
-// helper for supproting the types in Technical Data
+// helper for supporting the types in Technical Data
 
 export function isRangeFormValue (value: unknown): value is RangeFormValue {
   return (

@@ -7,6 +7,7 @@ import {
   isRepeatableElement,
   isRequiredElement,
 } from './cardinalityUtils'
+import { isRangeFormValue } from './formFieldUtils'
 
 function isLangStringArray (value: unknown): value is LangString[] {
   return (
@@ -39,6 +40,9 @@ export function isEmptyFormValue (value: FormStateValue): boolean {
       const text = (entry as { text?: unknown }).text
       return typeof text === 'string' && text.trim() !== ''
     })
+  }
+  if (isRangeFormValue(value)) {
+    return value.min.trim() === '' && value.max.trim() === ''
   }
 
   if (Array.isArray(value)) {

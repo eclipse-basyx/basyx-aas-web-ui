@@ -54,7 +54,7 @@ export function useAASCreationSubmission () {
       return false
     }
     if (!handoverDocumentation) {
-      console.error('Hanover Documentation is missing')
+      console.error('Handover Documentation is missing')
       return false
     }
     // build digital nameplate
@@ -79,10 +79,10 @@ export function useAASCreationSubmission () {
     // build handover documentation
     const handoverDocumentationSuccess = await postBuiltSubmodel(
       handoverDocumentation,
-      'Hanover Documentation Data',
+      'Handover Documentation Data',
     )
     if (!handoverDocumentationSuccess) {
-      console.log('technical data creation failed')
+      console.log('Handover Documentation creation failed')
       return false
     }
     // post the aas with submodels

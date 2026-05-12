@@ -1,6 +1,6 @@
 <template>
   <v-row>
-    <v-col v-for="(element, index) in visibleElements" :key="element.idShort" cols="12" :md="getMdCols(element, index, elements)">
+    <v-col v-for="(element, index) in visibleElements" :key="element.idShort" cols="12" :md="getMdCols(element, index, visibleElements)">
       <!-- Leaf fields -->
       <SubmodelDataElement
         v-if="isLeafElement(element)"
@@ -34,6 +34,7 @@
 <script lang="ts" setup>
   import type { FormStateObject, FormStateValue } from '../../types/form'
   import type { TemplateElement } from '../../types/template'
+  import { computed } from 'vue'
   import {
     isLeafElement,
     isSubmodelElementCollectionElement,
@@ -48,7 +49,7 @@
     formState: FormStateObject
     showValidation?: boolean
   }>()
-  console.log('these are the props received', props.elements, props.formState)
+
   const emit = defineEmits<{
     (e: 'update:formState', value: FormStateObject): void
   }>()
