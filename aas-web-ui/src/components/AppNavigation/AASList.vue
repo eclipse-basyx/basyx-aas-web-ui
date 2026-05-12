@@ -13,7 +13,7 @@
             persistent-placeholder
             :placeholder="aasList.length.toString() + ' Shells'"
             variant="outlined"
-            @update:model-value="debouncedFilterAasList"
+            @update:model-value="onSearchInput"
           >
             <template #prepend>
               <v-tooltip :disabled="isMobile" location="bottom" open-delay="600">
@@ -32,6 +32,9 @@
             </template>
 
             <template #append>
+              <!-- AAS Filter -->
+              <FilterAAS @update:filters="onAttributeFiltersChange" @update:sort="setSortOptions" />
+
               <!-- Add AAS -->
               <v-menu v-if="editMode">
                 <template #activator="{ props }">
@@ -407,12 +410,23 @@
     scrollToIndex: (index: number) => void
   }
 
+  interface AASAttributeFilters {
+    manufacturerName: string
+    manufacturerProductDesignation: string
+    manufacturerProductFamily: string
+    manufacturerProductType: string
+    orderCodeOfManufacturer: string
+    productArticleNumberOfManufacturer: string
+    productClassificationSystem: string
+    productClassId: string
+  }
+
   // Vue Router
   const route = useRoute()
   const router = useRouter()
 
   // Composables
-  const { fetchAasShellListPage, aasIsAvailableById } = useAASHandling()
+  const { fetchAasShellListPage, aasIsAvailableById, fetchAas, fetchAasSmListById } = useAASHandling()
   const { nameToDisplay, descriptionToDisplay } = useReferableUtils()
   const { copyToClipboard } = useClipboardUtil()
 
@@ -441,7 +455,7 @@
   const allLoadedAas = ref([] as Array<any>) as Ref<Array<any>> // Variable to store all loaded AAS Data
   const searchValue = ref('')
   const loadedIds = ref(new Set<string>())
-  const debouncedFilterAasList = debounce(filterAasList, 300) // Debounced function to filter the AAS List
+  const debouncedApplyListFilters = debounce(applyListFilters, 300) // Debounced function to filter the AAS List
   const listLoading = computed(() => isLoadingInitialPage.value) // Variable to store if the AAS List is loading
   const deleteDialog = ref(false) // Variable to store if the Delete Dialog should be shown
   const downloadAASDialog = ref(false) // Variable to store if the DownloadAAS Dialog should be shown
@@ -457,6 +471,25 @@
   const instanceDialog = ref(false) // Variable to store if the Instance Creation Dialog should be shown
   const aasToInstantiate = ref({}) // Variable to store the AAS to be instantiated
   const qrScannerDialog = ref(false)
+
+  const sortField = ref('name')
+  const sortDirection = ref(1)
+  const attributeFilters = ref<AASAttributeFilters>({
+    manufacturerName: '',
+    manufacturerProductDesignation: '',
+    manufacturerProductFamily: '',
+    manufacturerProductType: '',
+    orderCodeOfManufacturer: '',
+    productArticleNumberOfManufacturer: '',
+    productClassificationSystem: '',
+    productClassId: '',
+  })
+  const enrichedAasIds = ref(new Set<string>())
+  const hydratedAasIds = ref(new Set<string>())
+  const attributeHydrationInProgress = ref(false)
+  const attributeHydrationCompleted = ref(false)
+  const attributeHydrationPromise = ref<Promise<void> | null>(null)
+  const attributeHydrationRunId = ref(0)
 
   const {
     hasMorePages,
@@ -492,7 +525,10 @@
 
       if (incomingItems.length > 0) {
         allLoadedAas.value = appendOrMergeSortedAasById(allLoadedAas.value, incomingItems)
-        applyCurrentFilter()
+        enrichAttributeFields(allLoadedAas.value)
+        sortAasList()
+        applyListFilters()
+        preloadAttributeDataInBackground()
       }
     },
   })
@@ -561,7 +597,7 @@
   watch(
     () => selectedAAS.value,
     () => {
-      applyCurrentFilter()
+      applyListFilters()
       scrollToSelectedAAS()
     },
     { deep: true },
@@ -658,38 +694,265 @@
     navigationStore.dispatchDrawerState(false)
   }
 
+  function normalizeStringValue (value: unknown): string {
+    if (typeof value === 'string') return value
+    if (typeof value === 'number' || typeof value === 'boolean') return value.toString()
+    return ''
+  }
+
+  function flattenPrimitiveValues (node: unknown, maxValues = 20): Array<string> {
+    const values: Array<string> = []
+    function traverse (currentNode: unknown): void {
+      if (values.length >= maxValues) return
+      if (Array.isArray(currentNode)) {
+        for (const entry of currentNode) traverse(entry)
+        return
+      }
+      if (currentNode && typeof currentNode === 'object') {
+        for (const entry of Object.values(currentNode as Record<string, unknown>)) traverse(entry)
+        return
+      }
+      const normalizedValue = normalizeStringValue(currentNode).trim()
+      if (normalizedValue !== '') values.push(normalizedValue)
+    }
+    traverse(node)
+    return values
+  }
+
+  function normalizeAlias (value: string): string {
+    return value.toLowerCase().replace(/[^a-z0-9]/g, '')
+  }
+
+  function isAliasMatch (candidate: unknown, targetAliases: Set<string>): boolean {
+    if (typeof candidate !== 'string') return false
+    const normalizedCandidate = normalizeAlias(candidate)
+    if (normalizedCandidate === '') return false
+    for (const targetAlias of targetAliases) {
+      if (normalizedCandidate === targetAlias || normalizedCandidate.includes(targetAlias)) return true
+    }
+    return false
+  }
+
+  function extractAttributeValue (item: any, aliases: Array<string>): string {
+    if (!item || Object.keys(item).length === 0 || aliases.length === 0) return ''
+    const targetAliases = new Set(aliases.map(alias => normalizeAlias(alias)))
+    const visited = new WeakSet<object>()
+    const collectedValues = [] as Array<string>
+
+    function addValues (node: unknown): void {
+      const valuesFromNode = flattenPrimitiveValues(node)
+      for (const value of valuesFromNode) {
+        const loweredValue = value.toLowerCase()
+        if (loweredValue !== '') collectedValues.push(loweredValue)
+      }
+    }
+
+    function traverse (node: unknown): void {
+      if (!node) return
+      if (Array.isArray(node)) {
+        for (const entry of node) traverse(entry)
+        return
+      }
+      if (node && typeof node === 'object') {
+        if (visited.has(node as object)) return
+        visited.add(node as object)
+
+        const nodeAsRecord = node as Record<string, unknown>
+        const nodeIdShort = typeof nodeAsRecord.idShort === 'string' ? nodeAsRecord.idShort : ''
+        const nodeName = typeof nodeAsRecord.name === 'string' ? nodeAsRecord.name : ''
+        const nodeKey = typeof nodeAsRecord.key === 'string' ? nodeAsRecord.key : ''
+
+        if (isAliasMatch(nodeIdShort, targetAliases) || isAliasMatch(nodeName, targetAliases) || isAliasMatch(nodeKey, targetAliases)) {
+          addValues(Object.hasOwn(nodeAsRecord, 'value') ? nodeAsRecord.value : nodeAsRecord)
+        }
+
+        for (const [entryKey, entryValue] of Object.entries(nodeAsRecord)) {
+          if (isAliasMatch(entryKey, targetAliases)) addValues(entryValue)
+        }
+
+        if (Array.isArray(nodeAsRecord.specificAssetIds) && nodeAsRecord.specificAssetIds.length > 0) {
+          for (const specificAssetId of (nodeAsRecord.specificAssetIds as Array<Record<string, unknown>>)) {
+            const specificNameCandidates = flattenPrimitiveValues(specificAssetId.name, 3)
+            const hasMatchingSpecificName = specificNameCandidates.some(nameCandidate => isAliasMatch(nameCandidate, targetAliases))
+            if (hasMatchingSpecificName) addValues(specificAssetId.value)
+          }
+        }
+        for (const entry of Object.values(nodeAsRecord)) traverse(entry)
+      }
+    }
+    traverse(item)
+    return Array.from(new Set(collectedValues)).join(' ')
+  }
+
+  function enrichAttributeFields (list: Array<any>): void {
+    for (const item of list) {
+      if (!item?.id || typeof item.id !== 'string' || item.id.trim() === '') continue
+      if (enrichedAasIds.value.has(item.id)) continue
+      item.manufacturerNameLower = extractAttributeValue(item, ['ManufacturerName', 'ManufactorName', 'Manufacturer', 'Manufactor'])
+      item.manufacturerProductDesignationLower = extractAttributeValue(item, ['ManufacturerProductDesignation', 'ProductDesignation'])
+      item.manufacturerProductFamilyLower = extractAttributeValue(item, ['ManufacturerProductFamily', 'ProductFamily'])
+      item.manufacturerProductTypeLower = extractAttributeValue(item, ['ManufacturerProductType', 'ProductType'])
+      item.orderCodeOfManufacturerLower = extractAttributeValue(item, ['OrderCodeOfManufacturer', 'OrderCode'])
+      item.productArticleNumberOfManufacturerLower = extractAttributeValue(item, ['ProductArticleNumberOfManufacturer', 'ProductArticleNumberOfManufacture', 'ArticleNumberOfManufacturer', 'ManufacturerCode', 'ArticleNumber'])
+      item.productClassificationSystemLower = extractAttributeValue(item, ['ProductClassificationSystem'])
+      item.productClassIdLower = extractAttributeValue(item, ['ProductClassId'])
+      enrichedAasIds.value.add(item.id)
+    }
+  }
+
+  function normalizeFilters (filters: AASAttributeFilters): AASAttributeFilters {
+    return {
+      manufacturerName: filters.manufacturerName.trim().toLowerCase(),
+      manufacturerProductDesignation: filters.manufacturerProductDesignation.trim().toLowerCase(),
+      manufacturerProductFamily: filters.manufacturerProductFamily.trim().toLowerCase(),
+      manufacturerProductType: filters.manufacturerProductType.trim().toLowerCase(),
+      orderCodeOfManufacturer: filters.orderCodeOfManufacturer.trim().toLowerCase(),
+      productArticleNumberOfManufacturer: filters.productArticleNumberOfManufacturer.trim().toLowerCase(),
+      productClassificationSystem: filters.productClassificationSystem.trim().toLowerCase(),
+      productClassId: filters.productClassId.trim().toLowerCase(),
+    }
+  }
+
+  function hasActiveAttributeFilters (filters: AASAttributeFilters): boolean {
+    return Object.values(normalizeFilters(filters)).some(value => value !== '')
+  }
+
+  function combineExtractedAttributeValue (sources: Array<any>, aliases: Array<string>): string {
+    if (!Array.isArray(sources) || sources.length === 0) return ''
+    return Array.from(new Set(sources.map(source => extractAttributeValue(source, aliases).trim()).filter(value => value !== ''))).join(' ')
+  }
+
+  function applyExtractedAttributeFields (targetItem: any, sources: Array<any>): void {
+    targetItem.manufacturerNameLower = combineExtractedAttributeValue(sources, ['ManufacturerName', 'ManufactorName', 'Manufacturer', 'Manufactor'])
+    targetItem.manufacturerProductDesignationLower = combineExtractedAttributeValue(sources, ['ManufacturerProductDesignation', 'ProductDesignation'])
+    targetItem.manufacturerProductFamilyLower = combineExtractedAttributeValue(sources, ['ManufacturerProductFamily', 'ProductFamily'])
+    targetItem.manufacturerProductTypeLower = combineExtractedAttributeValue(sources, ['ManufacturerProductType', 'ProductType'])
+    targetItem.orderCodeOfManufacturerLower = combineExtractedAttributeValue(sources, ['OrderCodeOfManufacturer', 'OrderCode'])
+    targetItem.productArticleNumberOfManufacturerLower = combineExtractedAttributeValue(sources, ['ProductArticleNumberOfManufacturer', 'ProductArticleNumberOfManufacture', 'ArticleNumberOfManufacturer', 'ManufacturerCode', 'ArticleNumber'])
+    targetItem.productClassificationSystemLower = combineExtractedAttributeValue(sources, ['ProductClassificationSystem'])
+    targetItem.productClassIdLower = combineExtractedAttributeValue(sources, ['ProductClassId'])
+  }
+
+  function hasMissingAttributeValues (item: any): boolean {
+    const keys = ['manufacturerNameLower', 'manufacturerProductDesignationLower', 'manufacturerProductFamilyLower', 'manufacturerProductTypeLower', 'orderCodeOfManufacturerLower', 'productArticleNumberOfManufacturerLower', 'productClassificationSystemLower', 'productClassIdLower']
+    return keys.some(key => typeof item?.[key] !== 'string' || item[key].trim() === '')
+  }
+
+  function resetAttributeHydrationState (): void {
+    enrichedAasIds.value.clear()
+    hydratedAasIds.value.clear()
+    attributeHydrationInProgress.value = false
+    attributeHydrationCompleted.value = false
+    attributeHydrationPromise.value = null
+    attributeHydrationRunId.value += 1
+  }
+
+  async function hydrateAttributeFieldsForList (list: Array<any>): Promise<void> {
+    const hydrateCandidates = list.filter(item => item && typeof item.id === 'string' && item.id.trim() !== '' && !hydratedAasIds.value.has(item.id) && hasMissingAttributeValues(item))
+    for (const item of hydrateCandidates) {
+      let fullAas = {} as any
+      let submodels = [] as Array<any>
+      if (typeof item.path === 'string' && item.path.trim() !== '') fullAas = await fetchAas(item.path)
+      if (typeof item.id === 'string' && item.id.trim() !== '') {
+        const fetchedSubmodels = await fetchAasSmListById(item.id)
+        if (Array.isArray(fetchedSubmodels) && fetchedSubmodels.length > 0) {
+          submodels = fetchedSubmodels.filter(submodel => submodel && Object.keys(submodel).length > 0)
+        }
+      }
+      const extractionSources = [] as Array<any>
+      if (fullAas && Object.keys(fullAas).length > 0) extractionSources.push(fullAas)
+      extractionSources.push(...submodels)
+      if (extractionSources.length > 0) applyExtractedAttributeFields(item, extractionSources)
+      hydratedAasIds.value.add(item.id)
+    }
+  }
+
+  async function ensureAttributeHydrationForCurrentList (): Promise<void> {
+    if (attributeHydrationCompleted.value) return
+    if (attributeHydrationPromise.value) {
+      await attributeHydrationPromise.value
+      return
+    }
+    const runId = attributeHydrationRunId.value
+    const currentList = allLoadedAas.value
+    attributeHydrationPromise.value = (async () => {
+      attributeHydrationInProgress.value = true
+      enrichAttributeFields(currentList)
+      await hydrateAttributeFieldsForList(currentList)
+      if (runId === attributeHydrationRunId.value) attributeHydrationCompleted.value = true
+    })().finally(() => {
+      if (runId === attributeHydrationRunId.value) {
+        attributeHydrationInProgress.value = false
+        attributeHydrationPromise.value = null
+      }
+    })
+    await attributeHydrationPromise.value
+  }
+
+  function preloadAttributeDataInBackground (): void {
+    if (attributeHydrationCompleted.value || attributeHydrationInProgress.value) return
+    void ensureAttributeHydrationForCurrentList().then(() => {
+      if (hasActiveAttributeFilters(attributeFilters.value)) applyListFilters()
+    })
+  }
+
+  function onSearchInput (value: string | null): void {
+    searchValue.value = value?.trim() ?? ''
+    debouncedApplyListFilters()
+  }
+
+  async function onAttributeFiltersChange (filters: AASAttributeFilters): Promise<void> {
+    attributeFilters.value = filters
+    if (hasActiveAttributeFilters(filters)) await ensureAttributeHydrationForCurrentList()
+    applyListFilters()
+  }
+
+  function applyListFilters (): void {
+    const globalSearch = searchValue.value.trim().toLowerCase()
+    const normalizedFilters = normalizeFilters(attributeFilters.value)
+
+    const filteredItems = allLoadedAas.value.filter((aasOrAasDescriptor: any) => {
+      const hasGlobalMatch = (searchTerm: string) => {
+        if (!searchTerm) return false
+        return (
+          aasOrAasDescriptor.idLower.includes(searchTerm)
+          || aasOrAasDescriptor.idShortLower.includes(searchTerm)
+          || aasOrAasDescriptor.nameLower.includes(searchTerm)
+          || aasOrAasDescriptor.descLower.includes(searchTerm)
+          || (typeof aasOrAasDescriptor.globalAssetId === 'string' && aasOrAasDescriptor.globalAssetId.toLowerCase().includes(searchTerm))
+        )
+      }
+
+      const globalSearchMatch = globalSearch === '' || hasGlobalMatch(globalSearch)
+      const manufacturerNameMatch = normalizedFilters.manufacturerName === '' || aasOrAasDescriptor.manufacturerNameLower.includes(normalizedFilters.manufacturerName)
+      const manufacturerProductDesignationMatch = normalizedFilters.manufacturerProductDesignation === '' || aasOrAasDescriptor.manufacturerProductDesignationLower.includes(normalizedFilters.manufacturerProductDesignation)
+      const manufacturerProductFamilyMatch = normalizedFilters.manufacturerProductFamily === '' || aasOrAasDescriptor.manufacturerProductFamilyLower.includes(normalizedFilters.manufacturerProductFamily)
+      const manufacturerProductTypeMatch = normalizedFilters.manufacturerProductType === '' || aasOrAasDescriptor.manufacturerProductTypeLower.includes(normalizedFilters.manufacturerProductType)
+      const orderCodeOfManufacturerMatch = normalizedFilters.orderCodeOfManufacturer === '' || aasOrAasDescriptor.orderCodeOfManufacturerLower.includes(normalizedFilters.orderCodeOfManufacturer)
+      const productArticleNumberOfManufacturerMatch = normalizedFilters.productArticleNumberOfManufacturer === '' || aasOrAasDescriptor.productArticleNumberOfManufacturerLower.includes(normalizedFilters.productArticleNumberOfManufacturer)
+      const productClassificationSystemMatch = normalizedFilters.productClassificationSystem === '' || aasOrAasDescriptor.productClassificationSystemLower.includes(normalizedFilters.productClassificationSystem)
+      const productClassIdMatch = normalizedFilters.productClassId === '' || aasOrAasDescriptor.productClassIdLower.includes(normalizedFilters.productClassId)
+
+      return (
+        globalSearchMatch && manufacturerNameMatch && manufacturerProductDesignationMatch && manufacturerProductFamilyMatch
+        && manufacturerProductTypeMatch && orderCodeOfManufacturerMatch && productArticleNumberOfManufacturerMatch
+        && productClassificationSystemMatch && productClassIdMatch
+      )
+    })
+
+    const pinnedSelectedItem = createPinnedSelectedItem()
+    aasList.value = pinnedSelectedItem ? [pinnedSelectedItem, ...filteredItems.filter(item => item?.id !== pinnedSelectedItem.id)] : filteredItems
+    scrollToSelectedAAS()
+  }
+
   function preprocessListItem (item: any): any {
     return {
       ...item,
       idLower: item?.id?.toLowerCase() || '',
       idShortLower: item?.idShort?.toLowerCase() || '',
-      nameLower: nameToDisplay(item).toLowerCase(),
-      descLower: descriptionToDisplay(item).toLowerCase(),
+      nameLower: flattenPrimitiveValues(item?.displayName || nameToDisplay(item)).join(' ').toLowerCase(),
+      descLower: flattenPrimitiveValues(item?.description || descriptionToDisplay(item)).join(' ').toLowerCase(),
     }
-  }
-
-  function applyCurrentFilter (): void {
-    const trimmedSearch = searchValue.value.trim().toLowerCase()
-    const filteredItems = trimmedSearch === ''
-      ? allLoadedAas.value
-      : allLoadedAas.value.filter(
-        aasOrAasDescriptor =>
-          aasOrAasDescriptor.idLower.includes(trimmedSearch)
-          || aasOrAasDescriptor.idShortLower.includes(trimmedSearch)
-          || aasOrAasDescriptor.nameLower.includes(trimmedSearch)
-          || aasOrAasDescriptor.descLower.includes(trimmedSearch),
-      )
-
-    const pinnedSelectedItem = createPinnedSelectedItem()
-    if (pinnedSelectedItem) {
-      aasList.value = [
-        pinnedSelectedItem,
-        ...filteredItems.filter(item => item?.id !== pinnedSelectedItem.id),
-      ]
-      return
-    }
-
-    aasList.value = filteredItems
   }
 
   function createPinnedSelectedItem (): any | undefined {
@@ -716,6 +979,7 @@
     allLoadedAas.value = []
     loadedIds.value.clear()
     resetPaginationStateInternal(enablePagination)
+    resetAttributeHydrationState()
     searchValue.value = ''
   }
 
@@ -725,10 +989,23 @@
     await initializePagination(scrollToSelectedAAS)
   }
 
-  function filterAasList (value: string | null): void {
-    searchValue.value = value?.trim() ?? ''
-    applyCurrentFilter()
-    scrollToSelectedAAS()
+  function setSortOptions (sortOptions: any) {
+    sortField.value = sortOptions.sortField
+    sortDirection.value = sortOptions.sortDirection
+    sortAasList()
+  }
+
+  function sortAasList () {
+    const compareFunctions: Record<string, (a: any, b: any) => number> = {
+      name: (a, b) => nameToDisplay(a).toLowerCase().localeCompare(nameToDisplay(b).toLowerCase()),
+      id: (a, b) => (a.idLower ?? '').localeCompare(b.idLower ?? ''),
+      idShort: (a, b) => (a.idShortLower ?? '').localeCompare(b.idShortLower ?? ''),
+      updatedAt: (a, b) => Date.parse(a.administration?.updatedAt ?? 0) - Date.parse(b.administration?.updatedAt ?? 0),
+      createdAt: (a, b) => Date.parse(a.administration?.createdAt ?? 0) - Date.parse(b.administration?.createdAt ?? 0),
+    }
+    const sortFunction = (a: any, b: any) => compareFunctions[sortField.value](a, b) * sortDirection.value
+    allLoadedAas.value = [...allLoadedAas.value].toSorted(sortFunction)
+    applyListFilters()
   }
 
   // Function to select an AAS
@@ -824,7 +1101,7 @@
   }
 
   function handleAasSelected (aasId: string): void {
-    filterAasList(aasId)
+    onSearchInput(aasId)
   }
 </script>
 
