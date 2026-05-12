@@ -77,14 +77,41 @@
         class="align-start"
       >
         <v-col cols="3">
-          <v-text-field
+          <!-- <v-text-field
             density="compact"
             hide-details="auto"
             label="Language"
             :model-value="entry.language"
             variant="outlined"
             @update:model-value="onLanguageChange(index, $event)"
-          />
+          /> -->
+          <v-combobox
+            clearable
+            :custom-filter="langFilter"
+            density="compact"
+            hide-details="auto"
+            item-title="name"
+            item-value="code"
+            :items="languageOptions"
+            label="Language"
+            :model-value="entry.language"
+            :return-object="false"
+            single-line
+            variant="outlined"
+            @update:model-value="onLanguageChange(index, $event)"
+          >
+            <template #selection="{ item }">
+              <span>{{ item.code }}</span>
+            </template>
+
+            <template #item="{ props: itemProps, item }">
+              <v-list-item v-bind="itemProps">
+                <template #append>
+                  <span class="ml-2">{{ item.code }}</span>
+                </template>
+              </v-list-item>
+            </template>
+          </v-combobox>
         </v-col>
 
         <v-col cols="8">
@@ -170,6 +197,7 @@
 <script lang="ts" setup>
   import type { FormStateValue, RangeFormValue } from '../../types/form'
   import type { TemplateElement } from '../../types/template'
+  import ISO6391 from 'iso-639-1'
   import { computed } from 'vue'
   import {
     isRepeatableElement, isRequiredElement,
@@ -200,6 +228,10 @@
   const emit = defineEmits<{
     (e: 'update:modelValue', value: FormStateValue): void
   }>()
+
+  const languageOptions = computed(() => {
+    return ISO6391.getLanguages(ISO6391.getAllCodes())
+  })
   // computed values
   const propertyValue = computed<string>(() => {
     return asString(props.modelValue)
@@ -263,7 +295,11 @@
   }
 
   function onLanguageChange (index: number, value: string | null): void {
-    emit('update:modelValue', updateLangStringLanguage(multiLanguageValue.value, index, value ?? ''))
+    emit('update:modelValue', updateLangStringLanguage(
+      multiLanguageValue.value,
+      index,
+      value ?? '',
+    ))
   }
 
   function onTextChange (index: number, value: string | null): void {
@@ -314,5 +350,46 @@
   }
   function onBooleanInput (value: boolean | null): void {
     emit('update:modelValue', value ? 'true' : 'false')
+  }
+  function langFilter (value: string, query: string): boolean {
+    if (!query || query === '') {
+      return true
+    }
+
+    const queryLower = query.toLowerCase()
+
+    const matchingLanguage = languageOptions.value.find(lang => {
+      const nameMatch = lang.name.toLowerCase().includes(queryLower)
+      const codeMatch = lang.code.toLowerCase().includes(queryLower)
+      return nameMatch || codeMatch
+    })
+
+    if (matchingLanguage) {
+      if (
+        typeof value === 'string'
+        && (
+          value.toLowerCase() === matchingLanguage.code.toLowerCase()
+          || value.toLowerCase() === matchingLanguage.name.toLowerCase()
+        )
+      ) {
+        return true
+      }
+
+      if (
+        typeof value === 'string'
+        && (
+          value.toLowerCase().includes(queryLower)
+          || queryLower.includes(value.toLowerCase())
+        )
+      ) {
+        return true
+      }
+    }
+
+    if (typeof value === 'string') {
+      return value.toLowerCase().includes(queryLower)
+    }
+
+    return false
   }
 </script>
