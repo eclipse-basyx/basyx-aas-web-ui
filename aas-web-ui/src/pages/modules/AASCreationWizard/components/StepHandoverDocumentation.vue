@@ -58,6 +58,10 @@
   import type { ValidationIssue } from '../types/validation'
   import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
   import { onMounted, ref } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { useInfrastructureStore } from '@/store/InfrastructureStore'
+  import { useNavigationStore } from '@/store/NavigationStore'
+  import { base64Encode } from '@/utils/EncodeDecodeUtils'
   import { buildHandoverDocumentation } from '../builders/buildHandoverDocumentation'
   import { useAASCreationSubmission } from '../composables/useAASCreationSubmission'
   import { useAASCreationStore } from '../stores/aasCreationForm'
@@ -78,6 +82,9 @@
 
   const store = useAASCreationStore()
   const { submitAll } = useAASCreationSubmission()
+  const infrastructureStore = useInfrastructureStore()
+  const navigationStore = useNavigationStore()
+  const router = useRouter()
 
   const isSubmitting = ref(false)
 
@@ -88,6 +95,8 @@
   const templateData = normalizeHandoverDocumentationTemplate(rawTemplate)
   const formValues = ref<FormStateObject>(createInitialFormState(templateData))
   const validationIssues = ref<ValidationIssue[]>([])
+  const createdAasId = ref<string | null>(null)
+  const createdSubmodelIdToOpen = ref<string | null>(null)
 
   onMounted(() => {
     console.log('handover template root elements:', templateData.submodelElements.map(element => ({
@@ -109,6 +118,9 @@
     const initialState = createInitialFormState(templateData)
     console.log('initial digital nameplate form state:', initialState)
   })
+  function withTrailingSlash (url: string): string {
+    return url.endsWith('/') ? url : `${url}/`
+  }
 
   async function handleSubmit (): Promise<void> {
     if (!props.isActiveComponent) {
@@ -162,12 +174,15 @@
     isSubmitting.value = true
     console.log('must now call the submitAll()')
     try {
-      const success = await submitAll()
-      if (!success) {
+      const result = await submitAll()
+      if (!result.success) {
         // window.alert('Submission failed')
-        showSubmissionError()
+        // showSubmissionError()
         return
       }
+
+      createdAasId.value = result.aasId
+      createdSubmodelIdToOpen.value = result.submodelIdToOpen
 
       showSubmissionSuccess()
       // window.alert('Submission was successful.')
@@ -175,6 +190,7 @@
       isSubmitting.value = false
     }
   }
+
   function onFormStateUpdate (value: FormStateObject): void {
     formValues.value = value
     updateValidationIssues()
@@ -233,13 +249,57 @@
     }
   }
 
-  function onSubmissionDialogConfirm (): void {
+  async function onSubmissionDialogConfirm (): Promise<void> {
     if (!shouldFinishAfterDialog.value) {
       return
     }
-
+    if (!createdAasId.value || !createdSubmodelIdToOpen.value) {
+      showSubmissionError()
+      return
+    }
     shouldFinishAfterDialog.value = false
+
+    const aasId = createdAasId.value
+    const submodelIdToOpen = createdSubmodelIdToOpen.value
+
     store.resetCreationState()
-    props.finish()
+    await navigateToCreatedAas(aasId, submodelIdToOpen)
   }
+
+  async function navigateToNewAas (newAasId: string, pcfSubmodelId: string): Promise<void> {
+    const aasRepoUrl = infrastructureStore.getAASRepoURL
+    let aasEndpoint = aasRepoUrl
+    if (!aasEndpoint.endsWith('/')) aasEndpoint += '/'
+    aasEndpoint += 'shells/' + base64Encode(newAasId)
+
+    const smRepoUrl = infrastructureStore.getSubmodelRepoURL
+    let pcfEndpoint = smRepoUrl
+    if (!pcfEndpoint.endsWith('/')) pcfEndpoint += '/'
+    pcfEndpoint += 'submodels/' + base64Encode(pcfSubmodelId)
+
+    await router.push({
+      path: '/aassmviewer',
+      query: {
+        aas: aasEndpoint,
+        path: pcfEndpoint,
+      },
+    })
+  }
+  async function navigateToCreatedAas (
+    aasId: string,
+    submodelIdToOpen: string,
+  ): Promise<void> {
+    const aasEndpoint = `${withTrailingSlash(infrastructureStore.getAASRepoURL)}shells/${base64Encode(aasId)}`
+
+    const submodelEndpoint = `${withTrailingSlash(infrastructureStore.getSubmodelRepoURL)}submodels/${base64Encode(submodelIdToOpen)}`
+
+    await router.push({
+      path: '/aassmviewer',
+      query: {
+        aas: aasEndpoint,
+        path: submodelEndpoint,
+      },
+    })
+  }
+
 </script>
