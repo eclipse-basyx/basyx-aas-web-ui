@@ -59,7 +59,7 @@
       <!-- Non Repeatable Property -->
       <v-text-field
         v-else-if="!isRepeatableElement(element)"
-        class="d-flex flex-column ga-3"
+        density="compact"
         :error="hasRequiredError"
         :error-messages="errorMessages"
         hide-details="auto"
@@ -73,8 +73,8 @@
     <div v-else-if="checkTemplateFields.isMultiLanguagePropertyElement(element)" class="d-flex flex-column ga-3">
       <v-row
         v-for="(entry, index) in multiLanguageValue"
-        :key="`{$element.idShort}-${index}`"
-        class="align-center"
+        :key="`${element.idShort}-${index}`"
+        class="align-start"
       >
         <v-col cols="3">
           <v-text-field

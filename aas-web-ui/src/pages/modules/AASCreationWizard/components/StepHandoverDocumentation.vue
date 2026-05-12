@@ -60,7 +60,6 @@
   import { onMounted, ref } from 'vue'
   import { useRouter } from 'vue-router'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
-  import { useNavigationStore } from '@/store/NavigationStore'
   import { base64Encode } from '@/utils/EncodeDecodeUtils'
   import { buildHandoverDocumentation } from '../builders/buildHandoverDocumentation'
   import { useAASCreationSubmission } from '../composables/useAASCreationSubmission'
@@ -83,7 +82,6 @@
   const store = useAASCreationStore()
   const { submitAll } = useAASCreationSubmission()
   const infrastructureStore = useInfrastructureStore()
-  const navigationStore = useNavigationStore()
   const router = useRouter()
 
   const isSubmitting = ref(false)
@@ -266,25 +264,6 @@
     await navigateToCreatedAas(aasId, submodelIdToOpen)
   }
 
-  async function navigateToNewAas (newAasId: string, pcfSubmodelId: string): Promise<void> {
-    const aasRepoUrl = infrastructureStore.getAASRepoURL
-    let aasEndpoint = aasRepoUrl
-    if (!aasEndpoint.endsWith('/')) aasEndpoint += '/'
-    aasEndpoint += 'shells/' + base64Encode(newAasId)
-
-    const smRepoUrl = infrastructureStore.getSubmodelRepoURL
-    let pcfEndpoint = smRepoUrl
-    if (!pcfEndpoint.endsWith('/')) pcfEndpoint += '/'
-    pcfEndpoint += 'submodels/' + base64Encode(pcfSubmodelId)
-
-    await router.push({
-      path: '/aassmviewer',
-      query: {
-        aas: aasEndpoint,
-        path: pcfEndpoint,
-      },
-    })
-  }
   async function navigateToCreatedAas (
     aasId: string,
     submodelIdToOpen: string,
