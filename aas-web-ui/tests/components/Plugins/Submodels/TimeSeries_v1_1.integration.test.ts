@@ -4,10 +4,17 @@ import TimeSeries from '@/components/Plugins/Submodels/TimeSeries_v1_1.vue'
 import { INFLUX_LINKED_AIR_QUALITY_SINGLE_TABLE } from './fixtures/influxdb-samples'
 import { createTimeSeriesSubmodelData } from './fixtures/timeseries-sample-data'
 
-const fetchCdsMock = vi.fn()
-const getRequestMock = vi.fn()
-const postRequestMock = vi.fn()
-const dispatchSnackbarMock = vi.fn()
+const {
+  fetchCdsMock,
+  getRequestMock,
+  postRequestMock,
+  dispatchSnackbarMock,
+} = vi.hoisted(() => ({
+  fetchCdsMock: vi.fn(),
+  getRequestMock: vi.fn(),
+  postRequestMock: vi.fn(),
+  dispatchSnackbarMock: vi.fn(),
+}))
 
 vi.mock('@/composables/AAS/ConceptDescriptionHandling', () => ({
   useConceptDescriptionHandling: () => ({

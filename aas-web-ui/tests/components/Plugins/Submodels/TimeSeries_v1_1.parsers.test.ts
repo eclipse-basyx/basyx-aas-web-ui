@@ -7,10 +7,17 @@ import {
 } from './fixtures/influxdb-samples'
 import { createTimeSeriesSubmodelData } from './fixtures/timeseries-sample-data'
 
-const fetchCdsMock = vi.fn()
-const getRequestMock = vi.fn()
-const postRequestMock = vi.fn()
-const dispatchSnackbarMock = vi.fn()
+const {
+  fetchCdsMock,
+  getRequestMock,
+  postRequestMock,
+  dispatchSnackbarMock,
+} = vi.hoisted(() => ({
+  fetchCdsMock: vi.fn(),
+  getRequestMock: vi.fn(),
+  postRequestMock: vi.fn(),
+  dispatchSnackbarMock: vi.fn(),
+}))
 
 vi.mock('@/composables/AAS/ConceptDescriptionHandling', () => ({
   useConceptDescriptionHandling: () => ({

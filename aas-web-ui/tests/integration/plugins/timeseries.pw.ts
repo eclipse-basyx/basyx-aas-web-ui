@@ -23,6 +23,6 @@ test('timeseries plugin is reachable in the example runtime', async ({ page }) =
   await page.getByRole('button', { name: 'Visualization' }).click()
 
   await expect(page.getByText('Preview Configuration:')).toBeVisible({ timeout: 30_000 })
-  await expect(page.getByText('Segment').first()).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByRole('combobox', { name: 'Segment' }).first()).toBeVisible({ timeout: 30_000 })
   await expect(page.getByText('Preview Chart:')).toBeVisible({ timeout: 30_000 })
 })

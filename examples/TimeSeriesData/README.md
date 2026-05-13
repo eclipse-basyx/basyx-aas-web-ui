@@ -17,7 +17,7 @@ The plugin supports the following segment types:
 ### Installing
 
 1. Clone the repository
-2. Run `docker-compose up -d` in this directory
+2. Run `docker compose up -d` in this directory
 
 You can now access the AAS Web UI (http://localhost:3000) and InfluxDB UI (http://localhost:8086) in your browser.
 The username and password for InfluxDB are `admin` and `influxpassword`.
@@ -57,7 +57,7 @@ Prerequisites:
 2. Select the `SensorExampleAAS` AAS and click on the `TimeSeries` submodel in the treeview
 3. In the `Visualization`-window select the `LinkedSegment` in the Segment dropdown
 4. Select `time` as time-value and for example `temperature` as y-value
-5. If you see an input field for the InfluxDB Token, copy the token from the docker-compose.yml file
+5. If you see an input field for the InfluxDB Token, copy the token from the docker-compose.yaml file
 6. Click on `Fetch Data`
 7. In the `Preview Chart`-window select a chart type
 8. You should now see a chart with the time series data

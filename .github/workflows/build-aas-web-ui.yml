@@ -167,10 +167,22 @@ jobs:
           cd aas-web-ui
           pnpm exec playwright install --with-deps chromium
 
+      - name: Build AAS UI Image From Current PR
+        run: |
+          docker build -t aas-web-ui-pr:${{ github.sha }} ./aas-web-ui
+
       - name: Start TimeSeries Example Stack
         run: |
+          cat > examples/TimeSeriesData/docker-compose.ci.override.yaml <<'EOF'
+          services:
+            influxdb:
+              image: influxdb:2.7.10
+            aas-web-ui:
+              image: aas-web-ui-pr:${{ github.sha }}
+          EOF
+
           cd examples/TimeSeriesData
-          docker compose up -d
+          docker compose -f docker-compose.yaml -f docker-compose.ci.override.yaml up -d
 
       - name: Wait for TimeSeries UI to become reachable
         run: |
@@ -188,9 +200,9 @@ jobs:
 
           echo "TimeSeries UI did not become fully ready within timeout"
           cd examples/TimeSeriesData
-          docker compose ps
+          docker compose -f docker-compose.yaml -f docker-compose.ci.override.yaml ps
           curl -sS -D - http://127.0.0.1:3000/ | sed -n '1,80p' || true
-          docker compose logs --no-color --tail=200
+          docker compose -f docker-compose.yaml -f docker-compose.ci.override.yaml logs --no-color --tail=200
           exit 1
 
       - name: Run TimeSeries Integration Test
@@ -202,8 +214,8 @@ jobs:
         if: failure()
         run: |
           cd examples/TimeSeriesData
-          docker compose ps
-          docker compose logs --no-color --tail=300
+          docker compose -f docker-compose.yaml -f docker-compose.ci.override.yaml ps
+          docker compose -f docker-compose.yaml -f docker-compose.ci.override.yaml logs --no-color --tail=300
 
       - name: Upload TimeSeries Integration Artifacts
         if: failure()
@@ -218,4 +230,4 @@ jobs:
         if: always()
         run: |
           cd examples/TimeSeriesData
-          docker compose down
+          docker compose -f docker-compose.yaml -f docker-compose.ci.override.yaml down
