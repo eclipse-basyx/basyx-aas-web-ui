@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "aas-web-ui/**"
+      - "examples/TimeSeriesData/**"
 
 permissions:
   contents: read
@@ -135,3 +136,98 @@ jobs:
           path: |
             aas-web-ui/playwright-report
             aas-web-ui/test-results
+
+  integration-timeseries:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: "aas-web-ui/pnpm-lock.yaml"
+
+      - name: Install Dependencies
+        run: |
+          cd aas-web-ui
+          pnpm install --frozen-lockfile
+
+      - name: Install Playwright Browser
+        run: |
+          cd aas-web-ui
+          pnpm exec playwright install --with-deps chromium
+
+      - name: Build AAS UI Image From Current PR
+        run: |
+          docker build -t aas-web-ui-pr:${{ github.sha }} ./aas-web-ui
+
+      - name: Start TimeSeries Example Stack
+        run: |
+          cat > examples/TimeSeriesData/docker-compose.ci.override.yaml <<'EOF'
+          services:
+            influxdb:
+              image: influxdb:2.7.10
+            aas-web-ui:
+              image: aas-web-ui-pr:${{ github.sha }}
+          EOF
+
+          cd examples/TimeSeriesData
+          docker compose -f docker-compose.yaml -f docker-compose.ci.override.yaml up -d
+
+      - name: Wait for TimeSeries UI to become reachable
+        run: |
+          set -euo pipefail
+          for i in {1..90}; do
+            if response="$(curl -fsS http://127.0.0.1:3000/ 2>/dev/null)"; then
+              if echo "$response" | grep -q '<div id="app"></div>'; then
+                echo "TimeSeries UI is reachable and serving app shell"
+                exit 0
+              fi
+              echo "TimeSeries UI responded but app shell not ready yet"
+            fi
+            sleep 2
+          done
+
+          echo "TimeSeries UI did not become fully ready within timeout"
+          cd examples/TimeSeriesData
+          docker compose -f docker-compose.yaml -f docker-compose.ci.override.yaml ps
+          curl -sS -D - http://127.0.0.1:3000/ | sed -n '1,80p' || true
+          docker compose -f docker-compose.yaml -f docker-compose.ci.override.yaml logs --no-color --tail=200
+          exit 1
+
+      - name: Run TimeSeries Integration Test
+        run: |
+          cd aas-web-ui
+          IT_TIMESERIES_URL=http://127.0.0.1:3000 pnpm test:integration:timeseries
+
+      - name: Dump TimeSeries Stack Logs On Failure
+        if: failure()
+        run: |
+          cd examples/TimeSeriesData
+          docker compose -f docker-compose.yaml -f docker-compose.ci.override.yaml ps
+          docker compose -f docker-compose.yaml -f docker-compose.ci.override.yaml logs --no-color --tail=300
+
+      - name: Upload TimeSeries Integration Artifacts
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: integration-timeseries-artifacts
+          path: |
+            aas-web-ui/playwright-report
+            aas-web-ui/test-results
+
+      - name: Stop TimeSeries Example Stack
+        if: always()
+        run: |
+          cd examples/TimeSeriesData
+          docker compose -f docker-compose.yaml -f docker-compose.ci.override.yaml down
