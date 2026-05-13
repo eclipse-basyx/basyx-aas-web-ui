@@ -7,9 +7,9 @@
         :v-chip-content="assetObject.assetKind"
       />
 
-      <v-divider v-if="assetInfo.id && assetInfo.id.trim() !== '' && urlRegex.test(assetInfo.id)" />
+      <v-divider v-if="assetInfo.id && assetInfo.id.trim() !== ''" />
 
-      <v-expansion-panels v-if="assetInfo.id && assetInfo.id.trim() !== '' && urlRegex.test(assetInfo.id)">
+      <v-expansion-panels v-if="assetInfo.id && assetInfo.id.trim() !== ''">
         <v-expansion-panel color="detailsCard" elevation="0" static tile>
           <v-expansion-panel-title class="px-2">
             <v-icon class="mr-2" icon="mdi-qrcode" size="small" />
@@ -17,19 +17,7 @@
           </v-expansion-panel-title>
 
           <v-expansion-panel-text class="py-2 bg-detailsCard">
-            <div class="qr-container">
-              <div v-if="assetInfo.id.includes('?.') && qrCodeUrl" class="qr-61406-2-container">
-                <div class="qr-61406-2">
-                  <div class="qr-61406-1-container">
-                    <img v-if="qrCodeUrl" class="qr-61406-1" :src="qrCodeUrl">
-                  </div>
-                </div>
-              </div>
-
-              <div v-else class="qr-61406-1-container">
-                <img v-if="qrCodeUrl" class="qr-61406-1" :src="qrCodeUrl">
-              </div>
-            </div>
+            <GlobalAssetQrCode :content="assetInfo.id" :margin="3" :scale="4" />
           </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
@@ -66,10 +54,10 @@
 </template>
 
 <script lang="ts" setup>
-  import QRCode from 'qrcode'
   import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+  import GlobalAssetQrCode from '@/components/UIComponents/GlobalAssetQrCode.vue'
   import { useTechnicalData_v1_2Utils } from '@/composables/AAS/SubmodelTemplates/TechnicalData_v1_2Utils'
-  import { urlRegex, useUrlUtils } from '@/composables/UrlUtils'
+  import { useUrlUtils } from '@/composables/UrlUtils'
   import { useAASStore } from '@/store/AASDataStore'
 
   // Composables
@@ -91,7 +79,6 @@
   const thumbnailSrc = ref('' as string)
   const thumbnailMaxHeight = ref(0 as number)
   const thumbnailCaption = ref('' as string)
-  const qrCodeUrl = ref('')
 
   // Computed
   const assetInfo = computed(() => {
@@ -127,19 +114,6 @@
       thumbnailSrc.value = ''
       thumbnailCaption.value = ''
       return
-    }
-
-    try {
-      qrCodeUrl.value = assetInfo.value.id && assetInfo.value.id.trim() !== ''
-        ? await QRCode.toDataURL(assetInfo.value.id, {
-          errorCorrectionLevel: 'Q',
-          margin: 3,
-          scale: 4, // module size
-        })
-        : ''
-    } catch (error) {
-      console.error(error)
-      qrCodeUrl.value = ''
     }
 
     if (
@@ -201,52 +175,7 @@
 </script>
 
 <style lang="css" scoped>
-    .qr-container {
-        margin-left: auto;
-        margin-right: auto;
-        width: fit-content;
-    }
-
-    .qr-61406-1-container {
-        background-color: black;
-        height: 100%;
-        width: 100%;
-    }
-
-    .qr-61406-1 {
-        --module-size: 4;
-        height: 100%;
-        width: 100%;
-        display: block;
-        border: calc(var(--module-size) * 1px) solid black;
-        clip-path: polygon(
-            0 0,
-            /* <-- top left */ 100% 0,
-            /* <-- top right */ 100% calc(100% - 24px),
-            /* <-- near bottom right */ calc(100% - 24px) 100%,
-            /* <-- a bit left from bottom right */ 0 100% /* <-- bottom left */
-        );
-    }
-
-    .qr-61406-2-container {
-        height: 100%;
-        width: 100%;
-    }
-
-    .qr-61406-2 {
-        height: 100%;
-        width: 100%;
-        display: block;
-        clip-path: polygon(
-            0 0,
-            /* <-- top left */ 100% 0,
-            /* <-- top right */ 100% calc(100% - 18px),
-            /* <-- near bottom right */ calc(100% - 18px) 100%,
-            /* <-- a bit left from bottom right */ 0 100% /* <-- bottom left */
-        );
-    }
-
-    :deep(.v-expansion-panel-text__wrapper) {
-        padding: 0 !important;
-    }
+  :deep(.v-expansion-panel-text__wrapper) {
+  padding: 0 !important;
+  }
 </style>
