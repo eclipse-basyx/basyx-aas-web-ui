@@ -2,7 +2,9 @@ import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import GlobalAssetQrCode from '@/components/UIComponents/GlobalAssetQrCode.vue'
 
-const toDataURLMock = vi.fn()
+const { toDataURLMock } = vi.hoisted(() => ({
+  toDataURLMock: vi.fn(),
+}))
 
 vi.mock('qrcode', () => ({
   default: {
