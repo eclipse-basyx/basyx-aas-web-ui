@@ -172,10 +172,38 @@ jobs:
           cd examples/TimeSeriesData
           docker compose up -d
 
+      - name: Wait for TimeSeries UI to become reachable
+        run: |
+          set -euo pipefail
+          for i in {1..90}; do
+            if response="$(curl -fsS http://127.0.0.1:3000/ 2>/dev/null)"; then
+              if echo "$response" | grep -q '<div id="app"></div>'; then
+                echo "TimeSeries UI is reachable and serving app shell"
+                exit 0
+              fi
+              echo "TimeSeries UI responded but app shell not ready yet"
+            fi
+            sleep 2
+          done
+
+          echo "TimeSeries UI did not become fully ready within timeout"
+          cd examples/TimeSeriesData
+          docker compose ps
+          curl -sS -D - http://127.0.0.1:3000/ | sed -n '1,80p' || true
+          docker compose logs --no-color --tail=200
+          exit 1
+
       - name: Run TimeSeries Integration Test
         run: |
           cd aas-web-ui
           IT_TIMESERIES_URL=http://127.0.0.1:3000 pnpm test:integration:timeseries
+
+      - name: Dump TimeSeries Stack Logs On Failure
+        if: failure()
+        run: |
+          cd examples/TimeSeriesData
+          docker compose ps
+          docker compose logs --no-color --tail=300
 
       - name: Upload TimeSeries Integration Artifacts
         if: failure()
