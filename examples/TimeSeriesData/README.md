@@ -27,7 +27,7 @@ The username and password for InfluxDB are `admin` and `influxpassword`.
 ### Internal Segment
 
 1. Open the AAS Web UI in your browser (http://localhost:3000)
-2. Select the `TimeSeriesDemo` AAS and click on the `TimeSeriesTest` submodel in the treeview
+2. Select the `SensorExampleAAS` AAS and click on the `TimeSeries` submodel in the treeview
 3. In the `Visualization`-window select the `InternalSegment` in the Segment dropdown
 4. Select `time` as time-value and for example`temperature` as y-value
 5. Click on `Fetch Data`
@@ -37,7 +37,7 @@ The username and password for InfluxDB are `admin` and `influxpassword`.
 ### External Segment
 
 1. Open the AAS Web UI in your browser (http://localhost:3000)
-2. Select the `TimeSeriesDemo` AAS and click on the `TimeSeriesTest` submodel in the treeview
+2. Select the `SensorExampleAAS` AAS and click on the `TimeSeries` submodel in the treeview
 3. In the `Visualization`-window select the `ExternalSegment` in the Segment dropdown
 4. Select `time` as time-value and for example `temperature` as y-value
 5. Click on `Fetch Data`
@@ -48,16 +48,16 @@ The username and password for InfluxDB are `admin` and `influxpassword`.
 
 Prerequisites:
 
-1. Check if the query property of the `LinkedSegment` corrosponds to the data you want to fetch from the database. If not, change the query property to the desired query (see images below).
+1. Check if the query property of the `LinkedSegment` corresponds to the data you want to fetch from the database. If not, change the query property to the desired query (see images below).
 
 ![InfluxDB Data Explorer](../../Docs/Figs/InfluxDBQuery.png)
 ![AAS Web UI query property](../../Docs/Figs//AASWebUIQuery.png)
 
 1. Open the AAS Web UI in your browser (http://localhost:3000)
-2. Select the `TimeSeriesDemo` AAS and click on the `TimeSeriesTest` submodel in the treeview
+2. Select the `SensorExampleAAS` AAS and click on the `TimeSeries` submodel in the treeview
 3. In the `Visualization`-window select the `LinkedSegment` in the Segment dropdown
 4. Select `time` as time-value and for example `temperature` as y-value
-5. If you see an input field for the InfluxDB Token, copy the token from the docker.compose.yml file
+5. If you see an input field for the InfluxDB Token, copy the token from the docker-compose.yml file
 6. Click on `Fetch Data`
 7. In the `Preview Chart`-window select a chart type
 8. You should now see a chart with the time series data

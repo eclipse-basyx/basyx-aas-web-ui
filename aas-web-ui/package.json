@@ -20,9 +20,10 @@
     "test:watch": "vitest --watch",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
-    "test:integration": "playwright test --config playwright.config.ts",
-    "test:integration:preview": "IT_TARGET=preview playwright test --config playwright.config.ts",
-    "test:integration:docker": "IT_TARGET=docker playwright test --config playwright.config.ts",
+    "test:integration": "playwright test --config playwright.config.ts --project=integration-core",
+    "test:integration:preview": "IT_TARGET=preview playwright test --config playwright.config.ts --project=integration-core",
+    "test:integration:docker": "IT_TARGET=docker playwright test --config playwright.config.ts --project=integration-core",
+    "test:integration:timeseries": "IT_DISABLE_WEBSERVER=true playwright test --config playwright.config.ts --project=integration-timeseries",
     "postinstall": "node ./scripts/postinstall.mjs"
   },
   "dependencies": {

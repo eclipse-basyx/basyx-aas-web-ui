@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "aas-web-ui/**"
+      - "examples/TimeSeriesData/**"
 
 permissions:
   contents: read
@@ -135,3 +136,58 @@ jobs:
           path: |
             aas-web-ui/playwright-report
             aas-web-ui/test-results
+
+  integration-timeseries:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: "aas-web-ui/pnpm-lock.yaml"
+
+      - name: Install Dependencies
+        run: |
+          cd aas-web-ui
+          pnpm install --frozen-lockfile
+
+      - name: Install Playwright Browser
+        run: |
+          cd aas-web-ui
+          pnpm exec playwright install --with-deps chromium
+
+      - name: Start TimeSeries Example Stack
+        run: |
+          cd examples/TimeSeriesData
+          docker compose up -d
+
+      - name: Run TimeSeries Integration Test
+        run: |
+          cd aas-web-ui
+          IT_TIMESERIES_URL=http://127.0.0.1:3000 pnpm test:integration:timeseries
+
+      - name: Upload TimeSeries Integration Artifacts
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: integration-timeseries-artifacts
+          path: |
+            aas-web-ui/playwright-report
+            aas-web-ui/test-results
+
+      - name: Stop TimeSeries Example Stack
+        if: always()
+        run: |
+          cd examples/TimeSeriesData
+          docker compose down
