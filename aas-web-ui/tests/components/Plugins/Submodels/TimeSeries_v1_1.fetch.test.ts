@@ -66,12 +66,12 @@ function createWrapper () {
         'v-col': true,
         'v-text-field': true,
         'v-btn': true,
-        LineChart: true,
-        AreaChart: true,
-        ScatterChart: true,
-        Histogram: true,
-        Gauge: true,
-        DisplayField: true,
+        'LineChart': true,
+        'AreaChart': true,
+        'ScatterChart': true,
+        'Histogram': true,
+        'Gauge': true,
+        'DisplayField': true,
       },
     },
   })
@@ -196,7 +196,7 @@ describe('TimeSeries_v1_1.vue fetch behavior', () => {
     expect(vm.timeSeriesValues[0]).toEqual([
       {
         time: '2026-05-13T19:15:53.340582794Z',
-        value: 398.98591876151926,
+        value: Number.parseFloat('398.98591876151926'),
       },
     ])
   })

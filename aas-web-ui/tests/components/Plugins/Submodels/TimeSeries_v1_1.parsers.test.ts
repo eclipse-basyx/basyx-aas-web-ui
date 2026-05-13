@@ -70,12 +70,12 @@ function createWrapper () {
         'v-col': true,
         'v-text-field': true,
         'v-btn': true,
-        LineChart: true,
-        AreaChart: true,
-        ScatterChart: true,
-        Histogram: true,
-        Gauge: true,
-        DisplayField: true,
+        'LineChart': true,
+        'AreaChart': true,
+        'ScatterChart': true,
+        'Histogram': true,
+        'Gauge': true,
+        'DisplayField': true,
       },
     },
   })
@@ -113,7 +113,7 @@ describe('TimeSeries_v1_1.vue parser and linked fetch behavior', () => {
     expect(vm.timeSeriesValues).toHaveLength(1)
     expect(vm.timeSeriesValues[0]).toHaveLength(4)
     expect(vm.timeSeriesValues[0][0].time).toBe('2026-05-13T19:15:53.340582794Z')
-    expect(vm.timeSeriesValues[0][0].value).toBeCloseTo(398.98591876151926)
+    expect(vm.timeSeriesValues[0][0].value).toBeCloseTo(Number.parseFloat('398.98591876151926'))
   })
 
   it('warns when selected y-variable is not present in linked data keys', async () => {
