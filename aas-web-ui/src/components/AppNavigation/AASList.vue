@@ -3,105 +3,125 @@
     <v-card color="card" elevation="0">
       <!-- Title bar -->
       <template v-if="!singleAas">
-        <v-card-title class="py-3" :class="editMode || allowUploading ? '' : 'pr-0'">
-          <v-text-field
-            clearable
-            density="compact"
-            hide-details
-            label="Search for AAS..."
-            :model-value="searchValue"
-            persistent-placeholder
-            :placeholder="aasList.length.toString() + ' Shells'"
-            variant="outlined"
-            @update:model-value="debouncedFilterAasList"
-          >
-            <template #prepend>
-              <v-tooltip :disabled="isMobile" location="bottom" open-delay="600">
-                <template #activator="{ props }">
-                  <v-icon
-                    aria-label="Reload AAS List"
-                    v-bind="props"
-                    icon="mdi-reload"
-                    :loading="listLoading"
-                    @click="initialize()"
-                  />
-                </template>
+        <v-card-title
+          class="px-0 py-3"
+          :class="editorMode || allowUploading ? '' : 'pr-0'"
+          style="height: 63px"
+        >
+          <div class="d-flex align-center">
 
-                <span>Reload AAS List</span>
-              </v-tooltip>
-            </template>
+            <v-tooltip
+              :disabled="isMobile"
+              location="bottom"
+              open-delay="600"
+            >
+              <template #activator="{ props }">
+                <v-btn
+                  class="ma-0"
+                  icon="mdi-reload"
+                  :loading="listLoading"
+                  variant="plain"
+                  v-bind="props"
+                  @click="initialize()"
+                />
 
-            <template v-if="editMode" #append>
-              <!-- Add AAS -->
-              <v-menu>
-                <template #activator="{ props }">
-                  <v-icon icon="mdi-dots-vertical" variant="plain" v-bind="props" />
-                </template>
+              </template>
 
-                <v-sheet border>
-                  <v-list class="py-0" density="compact">
-                    <!-- Open Upload Dialog -->
-                    <template v-if="allowUploading">
-                      <v-tooltip :disabled="isMobile" :location="editMode ? 'end' : 'bottom'" open-delay="600">
-                        <template #activator="{ props }">
-                          <v-list-item prepend-icon="mdi-upload" slim v-bind="props" @click="uploadAASDialog = true">
-                            <template #prepend>
-                              <v-icon size="small">mdi-upload</v-icon>
-                            </template>
-                            Upload AAS
-                          </v-list-item>
-                        </template>
+              <span>Reload AAS List</span>
+            </v-tooltip>
 
-                        <span>Upload AAS File to Environment</span>
-                      </v-tooltip>
+            <v-col class="">
+              <v-text-field
+                clearable
+                density="compact"
+                hide-details
+                label="Search for AAS..."
+                :model-value="searchValue"
+                persistent-placeholder
+                :placeholder="aasList.length.toString() + ' Shells'"
+                variant="outlined"
+                @update:model-value="debouncedFilterAasList"
+              />
+            </v-col>
 
-                      <v-divider />
-                    </template>
-                    <!-- Open AAS create dialog -->
-                    <v-tooltip location="end" open-delay="600">
+            <!-- Upload AAS -->
+            <v-tooltip v-if="editorMode && allowUploading" :disabled="isMobile" location="bottom" open-delay="600">
+              <template #activator="{ props }">
+                <v-btn
+                  class="mx-0"
+                  icon="mdi-upload"
+                  variant="plain"
+                  v-bind="props"
+                  @click="uploadAASDialog = true"
+                />
+              </template>
+
+              <span>Upload AAS File to Environment</span>
+            </v-tooltip>
+
+            <!-- QR Scanner -->
+            <v-tooltip :disabled="isMobile" location="bottom" open-delay="600">
+              <template #activator="{ props }">
+                <v-btn
+                  :class="editorMode? 'ml-n3':'ml-0'"
+                  icon="mdi-qrcode-scan"
+                  variant="plain"
+                  v-bind="props"
+                  @click="qrScannerDialog = true"
+                />
+              </template>
+
+              <span>Scan QR Code</span>
+            </v-tooltip>
+
+            <!-- AAS Editor Menu -->
+            <v-menu v-if="editorMode">
+              <template #activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  class="mr-0 ml-n2"
+                  icon="mdi-dots-vertical"
+                  variant="plain"
+                />
+              </template>
+
+              <v-sheet border>
+                <v-list class="py-0" density="compact">
+                  <!-- Open Upload Dialog -->
+                  <template v-if="allowUploading">
+                    <v-tooltip :disabled="isMobile" :location="editorMode ? 'end' : 'bottom'" open-delay="600">
                       <template #activator="{ props }">
-                        <v-list-item slim v-bind="props" @click="openEditDialog(true)">
+                        <v-list-item prepend-icon="mdi-upload" slim v-bind="props" @click="uploadAASDialog = true">
                           <template #prepend>
-                            <v-icon size="small">mdi-plus</v-icon>
+                            <v-icon size="small">mdi-upload</v-icon>
                           </template>
-                          Create AAS
+                          Upload AAS
                         </v-list-item>
                       </template>
 
-                      <span>Create a new AAS</span>
+                      <span>Upload AAS File to Environment</span>
                     </v-tooltip>
-                  </v-list>
-                </v-sheet>
-              </v-menu>
 
-              <v-tooltip v-else-if="allowUploading" :disabled="isMobile" :location="editMode ? 'end' : 'bottom'" open-delay="600">
-                <template #activator="{ props }">
-                  <v-icon
-                    aria-label="Upload AAS"
-                    v-bind="props"
-                    icon="mdi-upload"
-                    @click="uploadAASDialog = true"
-                  />
-                </template>
+                    <v-divider />
+                  </template>
+                  <!-- Open AAS create dialog -->
+                  <v-tooltip location="end" open-delay="600">
+                    <template #activator="{ props }">
+                      <v-list-item slim v-bind="props" @click="openEditDialog(true)">
+                        <template #prepend>
+                          <v-icon size="small">mdi-plus</v-icon>
+                        </template>
+                        Create AAS
+                      </v-list-item>
+                    </template>
 
-                <span>Upload AAS File to Environment</span>
-              </v-tooltip>
-              <!-- QR Scanner -->
-              <v-tooltip :disabled="isMobile" location="bottom" open-delay="600">
-                <template #activator="{ props }">
-                  <v-icon
-                    aria-label="Scan QR Code"
-                    class="ml-2"
-                    v-bind="props"
-                    icon="mdi-qrcode-scan"
-                    @click="qrScannerDialog = true"
-                  />
-                </template>
+                    <span>Create a new AAS</span>
+                  </v-tooltip>
+                </v-list>
+              </v-sheet>
+            </v-menu>
 
-                <span>Scan QR Code</span>
-              </v-tooltip>
-            </template>
-          </v-text-field>
+          </div>
         </v-card-title>
 
         <v-divider />
@@ -220,7 +240,7 @@
                     text-color="buttonText"
                   />
 
-                  <v-menu v-if="editMode">
+                  <v-menu v-if="editorMode">
                     <template #activator="{ props }">
                       <v-btn
                         color="listItemText"
@@ -516,7 +536,7 @@
         : 'calc(100vh - 64px - 64px - 48px - 40px - 2px)' // Full height - header - title - collapse button - footer - 2x divider
     }
   })
-  const editMode = computed(() => route.name === 'AASEditor') // Check if the current Route is the AAS Editor
+  const editorMode = computed(() => route.name === 'AASEditor') // Check if the current Route is the AAS Editor
   const allowUploading = computed(() => envStore.getAllowUploading) // Check if the current environment config allows uploading shells
   const statusCheck = computed(() => navigationStore.getStatusCheck)
   const copyIconAsRef = computed(() => copyIcon)

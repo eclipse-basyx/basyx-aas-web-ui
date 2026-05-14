@@ -22,6 +22,8 @@
                   density="compact"
                   hide-details
                   label="Search for Submodel ..."
+                  persistent-placeholder
+                  :placeholder="submodelList.length.toString() + ' Submodels'"
                   variant="outlined"
                   @update:model-value="filterSubmodelList"
                 />
