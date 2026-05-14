@@ -282,13 +282,12 @@
 
 <script lang="ts" setup>
   import type { AutoSyncType, StatusCheckType } from '@/types/Application'
-  import type { RouteRecordRaw } from 'vue-router'
   import { computed, onMounted, ref, watch } from 'vue'
   import { useRoute } from 'vue-router'
   import { useTheme } from 'vuetify'
   import Snackbar from '@/components/AppNavigation/Snackbar.vue'
+  import { useModuleHandling } from '@/composables/ModuleHandling'
   import { useGlobalShortcuts } from '@/composables/Shortcuts/useGlobalShortcuts'
-  import { useAASStore } from '@/store/AASDataStore'
   import { useEnvStore } from '@/store/EnvironmentStore'
   import { useNavigationStore } from '@/store/NavigationStore'
 
@@ -298,7 +297,9 @@
   // Stores
   const navigationStore = useNavigationStore()
   const envStore = useEnvStore()
-  const aasStore = useAASStore()
+
+  // Composables
+  const { determineFilteredAndOrderedModuleRoutes, isActiveModuleRoute } = useModuleHandling()
 
   // Vuetify
   const theme = useTheme()
@@ -327,9 +328,6 @@
   const currentRoute = computed(() => route.name) // get the current route name
   const isMobile = computed(() => navigationStore.getIsMobile)
   const isDark = computed(() => theme.global.current.value.dark)
-  const selectedAas = computed(() => aasStore.getSelectedAAS) // get selected AAS from Store
-  const selectedNode = computed(() => aasStore.getSelectedNode) // get selected AAS from Store
-  const moduleRoutes = computed(() => navigationStore.getModuleRoutes) // get the module routes
   const endpointConfigAvailable = computed(() => envStore.getEndpointConfigAvailable)
   const menuToggleTitle = computed(() => {
     if (route.path.startsWith('/modules/')) {
@@ -343,41 +341,6 @@
 
     if (route.meta?.title) return route.meta.title.toString()
     return route.meta?.name?.toString() || ''
-  })
-
-  const filteredAndOrderedModuleRoutes = computed(() => {
-    const filteredModuleRoutes = moduleRoutes.value.filter((moduleRoute: RouteRecordRaw) => {
-      if (isMobile.value && !moduleRoute?.meta?.isMobileModule) return false
-      if (!isMobile.value && !moduleRoute?.meta?.isDesktopModule) return false
-      if (
-        moduleRoute?.meta?.isOnlyVisibleWithSelectedAas
-        && (!selectedAas.value || Object.keys(selectedAas.value).length === 0)
-      )
-        return false
-      if (
-        moduleRoute?.meta?.isOnlyVisibleWithSelectedNode
-        && (!selectedNode.value || Object.keys(selectedNode.value).length === 0)
-      )
-        return false
-      if (
-        moduleRoute?.meta?.routeModule
-        && Array.isArray(moduleRoute.meta.routeModule)
-        && moduleRoute.meta.routeModule.length > 0
-        && !moduleRoute.meta.routeModule.map(item => item.toLowerCase()).includes((route.name as string).toLowerCase())
-      )
-        return false
-      return moduleRoute?.meta?.isVisibleModule === true || isActiveModuleRoute(moduleRoute.path)
-    })
-
-    const filteredAndOrderedModuleRoutes = filteredModuleRoutes.toSorted(
-      (moduleRouteA: RouteRecordRaw, moduleRouteB: RouteRecordRaw) => {
-        const moduleNameA: string = moduleRouteA?.name?.toString() || ''
-        const moduleNameB: string = moduleRouteB?.name?.toString() || ''
-        return moduleNameA.localeCompare(moduleNameB)
-      },
-    )
-
-    return filteredAndOrderedModuleRoutes
   })
   const showAASList = computed(() => ['AASViewer', 'AASEditor', 'AASSubmodelViewer'].includes(route.name as string))
   const drawerState = computed(() => navigationStore.getDrawerState)
@@ -413,6 +376,8 @@
       'AASCommander',
     ].includes(route.name as string)
   })
+
+  const filteredAndOrderedModuleRoutes = determineFilteredAndOrderedModuleRoutes()
 
   watch(
     () => drawerState.value,
@@ -486,7 +451,4 @@
     }
   }
 
-  function isActiveModuleRoute (routePath: string): boolean {
-    return route.path === routePath || route.path.startsWith(`${routePath}/`)
-  }
 </script>

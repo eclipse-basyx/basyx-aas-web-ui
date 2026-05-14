@@ -214,9 +214,9 @@
   import type { RouteRecordRaw } from 'vue-router'
   import { computed, onMounted, ref } from 'vue'
   import { useRoute } from 'vue-router'
+  import { useModuleHandling } from '@/composables/ModuleHandling'
   import { useAASStore } from '@/store/AASDataStore'
   import { useEnvStore } from '@/store/EnvironmentStore'
-  import { useNavigationStore } from '@/store/NavigationStore'
 
   // Extend the ComponentPublicInstance type to include scrollToIndex
   interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -229,7 +229,9 @@
   // Stores
   const aasStore = useAASStore()
   const envStore = useEnvStore()
-  const navigationStore = useNavigationStore()
+
+  // Composables
+  const { determineFilteredAndOrderedModuleRoutes } = useModuleHandling()
 
   // Emit
   const emit = defineEmits<{
@@ -241,48 +243,12 @@
   const currentTab: Ref<string> = ref('aas') // Current Tab Index
 
   // Computed Properties
-  const isMobile = computed(() => navigationStore.getIsMobile) // Check if the current Device is a Mobile Device
   const currentRoutePath = computed(() => route.path) // get the current route path
   const allowEditing = computed(() => envStore.getAllowEditing) // Check if the current environment allows showing the AAS resp. SM Editor
   const smViewerEditor = computed(() => envStore.getSmViewerEditor) // Check the current environment allows showing the SM Viewer/Editor
-  const moduleRoutes = computed(() => navigationStore.getModuleRoutes) // get the module routes
-  const selectedAas = computed(() => aasStore.getSelectedAAS) // get selected AAS from Store
   const selectedNode = computed(() => aasStore.getSelectedNode) // get selected AAS from Store
-  const filteredAndOrderedModuleRoutes = computed(() => {
-    const filteredModuleRoutes = moduleRoutes.value.filter((moduleRoute: RouteRecordRaw) => {
-      if (isMobile.value && !moduleRoute?.meta?.isMobileModule) return false
-      if (!isMobile.value && !moduleRoute?.meta?.isDesktopModule) return false
-      if (
-        moduleRoute?.meta?.isOnlyVisibleWithSelectedAas
-        && (!selectedAas.value || Object.keys(selectedAas.value).length === 0)
-      )
-        return false
-      if (
-        moduleRoute?.meta?.isOnlyVisibleWithSelectedNode
-        && (!selectedNode.value || Object.keys(selectedNode.value).length === 0)
-      )
-        return false
-      if (
-        moduleRoute?.meta?.routeModule
-        && Array.isArray(moduleRoute.meta.routeModule)
-        && moduleRoute.meta.routeModule.length > 0
-        && !moduleRoute.meta.routeModule.map(item => item.toLowerCase()).includes((route.name as string).toLowerCase())
-      )
-        return false
-      return moduleRoute?.meta?.isVisibleModule === true || isActiveRoutePath(moduleRoute.path)
-    })
 
-    const filteredAndOrderedModuleRoutes = filteredModuleRoutes.toSorted(
-      (moduleRouteA: RouteRecordRaw, moduleRouteB: RouteRecordRaw) => {
-        const moduleNameA: string = moduleRouteA?.name?.toString() || ''
-        const moduleNameB: string = moduleRouteB?.name?.toString() || ''
-
-        return moduleNameA.localeCompare(moduleNameB)
-      },
-    )
-
-    return filteredAndOrderedModuleRoutes
-  })
+  const filteredAndOrderedModuleRoutes = determineFilteredAndOrderedModuleRoutes()
 
   onMounted(async () => {
     scrollToSelectedModule()
@@ -300,7 +266,7 @@
   // Function to scroll to the active module
   function scrollToSelectedModule (): void {
     // Find the index of the selected item
-    const index = filteredAndOrderedModuleRoutes.value.findIndex((moduleRoute: RouteRecordRaw) =>
+    const index = filteredAndOrderedModuleRoutes.findIndex((moduleRoute: RouteRecordRaw) =>
       isActiveRoutePath(moduleRoute.path),
     )
 
@@ -327,4 +293,5 @@
       currentTab.value = 'modules'
     }
   }
+
 </script>
