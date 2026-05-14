@@ -262,6 +262,13 @@
         && (!selectedNode.value || Object.keys(selectedNode.value).length === 0)
       )
         return false
+      if (
+        moduleRoute?.meta?.routeModule
+        && Array.isArray(moduleRoute.meta.routeModule)
+        && moduleRoute.meta.routeModule.length > 0
+        && !moduleRoute.meta.routeModule.map(item => item.toLowerCase()).includes((route.name as string).toLowerCase())
+      )
+        return false
       return moduleRoute?.meta?.isVisibleModule === true || isActiveRoutePath(moduleRoute.path)
     })
 
@@ -273,6 +280,7 @@
         return moduleNameA.localeCompare(moduleNameB)
       },
     )
+
     return filteredAndOrderedModuleRoutes
   })
 

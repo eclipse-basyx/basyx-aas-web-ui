@@ -359,8 +359,16 @@
         && (!selectedNode.value || Object.keys(selectedNode.value).length === 0)
       )
         return false
+      if (
+        moduleRoute?.meta?.routeModule
+        && Array.isArray(moduleRoute.meta.routeModule)
+        && moduleRoute.meta.routeModule.length > 0
+        && !moduleRoute.meta.routeModule.map(item => item.toLowerCase()).includes((route.name as string).toLowerCase())
+      )
+        return false
       return moduleRoute?.meta?.isVisibleModule === true || isActiveModuleRoute(moduleRoute.path)
     })
+
     const filteredAndOrderedModuleRoutes = filteredModuleRoutes.toSorted(
       (moduleRouteA: RouteRecordRaw, moduleRouteB: RouteRecordRaw) => {
         const moduleNameA: string = moduleRouteA?.name?.toString() || ''
@@ -368,6 +376,7 @@
         return moduleNameA.localeCompare(moduleNameB)
       },
     )
+
     return filteredAndOrderedModuleRoutes
   })
   const showAASList = computed(() => ['AASViewer', 'AASEditor', 'AASSubmodelViewer'].includes(route.name as string))
